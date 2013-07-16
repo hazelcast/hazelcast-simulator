@@ -1,4 +1,4 @@
-hazelcast-heart-attack-tool
+hazelcast-heartattacker
 ===========================
 
 A tool for stress testing Hazelcast
