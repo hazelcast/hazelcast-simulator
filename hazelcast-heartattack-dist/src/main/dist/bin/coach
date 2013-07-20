@@ -11,4 +11,4 @@ java -cp "${HEART_ATTACK_HOME}/lib/*" ${JAVA_OPTS} \
     -DHEART_ATTACK_HOME=${HEART_ATTACK_HOME}  \
     -Dhazelcast.logging.type=log4j \
     -Dlog4j.configuration=file:${HEART_ATTACK_HOME}/conf/coach-log4j.xml \
-   com.hazelcast.heartattack.Coach "$@"
+   com.hazelcast.heartattacker.Coach "$@"
