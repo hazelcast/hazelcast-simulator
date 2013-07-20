@@ -22,11 +22,11 @@
             </excludes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../hazelcast-heartattack/conf</directory>
+            <directory>${project.basedir}/../heartattacker/conf</directory>
             <outputDirectory>/conf</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../hazelcast-heartattack/workouts</directory>
+            <directory>${project.basedir}/../heartattacker/workouts</directory>
             <outputDirectory>/workouts</outputDirectory>
         </fileSet>
     </fileSets>

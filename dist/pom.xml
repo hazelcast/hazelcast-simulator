@@ -37,7 +37,7 @@
                             <descriptors>
                                 <descriptor>src/main/config/build-distribution-archive.xml</descriptor>
                             </descriptors>
-                            <finalName>hazelcast-heartattack-${project.version}</finalName>
+                            <finalName>hazelcast-heartattacker-${project.version}</finalName>
                          </configuration>
                     </execution>
                 </executions>
