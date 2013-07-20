@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.heartattacker;
 
 import com.hazelcast.client.HazelcastClient;
@@ -24,19 +39,18 @@ import static java.lang.String.format;
 
 public class TraineeVmManager {
 
-    final static ILogger log = Logger.getLogger(TraineeVmManager.class);
-    private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
-    public final static File userDir = new File(System.getProperty("user.dir"));
-    public final static String classpath = System.getProperty("java.class.path");
-    public final static File heartAttackHome = getHeartAttackHome();
-    public final static String classpathSperator = System.getProperty("path.separator");
-    public final static AtomicLong TRAINEE_ID_GENERATOR = new AtomicLong();
-
+    private final static ILogger log = Logger.getLogger(TraineeVmManager.class);
+    private final static File USER_DIR = new File(System.getProperty("user.dir"));
+    private final static String CLASSPATH = System.getProperty("java.class.path");
+    private final static File HEART_ATTACK_HOME = getHeartAttackHome();
+    private final static String CLASSPATH_SPERATOR = System.getProperty("path.separator");
+    private final static AtomicLong TRAINEE_ID_GENERATOR = new AtomicLong();
 
     private final List<TraineeVm> traineeJvms = new CopyOnWriteArrayList<TraineeVm>();
     private final Coach coach;
     private HazelcastInstance traineeClient;
     private IExecutorService traineeExecutor;
+    private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
     public TraineeVmManager(Coach coach) {
         this.coach = coach;
@@ -120,11 +134,11 @@ public class TraineeVmManager {
         args.add("-DHEART_ATTACK_HOME=" + getHeartAttackHome());
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-DtraineeId=" + traineeId);
-        args.add("-Dlog4j.configuration=file:" + heartAttackHome + File.separator + "conf" + File.separator + "trainee-log4j.xml");
+        args.add("-Dlog4j.configuration=file:" + HEART_ATTACK_HOME + File.separator + "conf" + File.separator + "trainee-log4j.xml");
         args.add("-classpath");
 
         File libDir = new File(coach.getWorkoutHome(), "lib");
-        String s = classpath + classpathSperator + new File(libDir, "*").getAbsolutePath();
+        String s = CLASSPATH + CLASSPATH_SPERATOR + new File(libDir, "*").getAbsolutePath();
         args.add(s);
 
         args.addAll(Arrays.asList(clientVmOptionsArray));

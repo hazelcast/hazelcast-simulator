@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.heartattacker.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
@@ -33,8 +48,8 @@ public class TellTrainee implements Callable, Serializable, HazelcastInstanceAwa
     public Object call() throws Exception {
         try {
             Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
-            IExecutorService executorr = coach.getTraineeVmManager().getTraineeExecutor();
-            Future future = executorr.submit(task);
+            IExecutorService executor = coach.getTraineeVmManager().getTraineeExecutor();
+            Future future = executor.submit(task);
             return future.get(timeoutSec, TimeUnit.SECONDS);
         } catch (Exception e) {
             log.log(Level.SEVERE, "Failed to spawn Trainee Virtual Machines", e);
