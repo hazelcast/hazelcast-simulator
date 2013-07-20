@@ -26,9 +26,9 @@
     </properties>
 
     <modules>
-        <module>hazelcast-heartattack</module>
-        <module>hazelcast-heartattack-dist</module>
+        <module>heartattacker</module>
         <module>extra-exercises</module>
+        <module>dist</module>
     </modules>
 
     <build>
