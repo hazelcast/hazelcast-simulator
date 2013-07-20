@@ -5,15 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>hazelcast-heartattack</groupId>
-        <artifactId>hazelcast-heartattack-parent</artifactId>
+        <groupId>com.hazelcast.heartattacker</groupId>
+        <artifactId>heartattacker-root</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
     <name>Hazelcast Heart Attack Tool</name>
-    <artifactId>hazelcast-heartattack</artifactId>
+    <artifactId>heartattacker</artifactId>
 
-      <dependencies>
+    <dependencies>
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>

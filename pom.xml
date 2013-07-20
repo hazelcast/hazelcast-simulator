@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>hazelcast-heartattack</groupId>
-    <artifactId>hazelcast-heartattack-parent</artifactId>
+    <groupId>com.hazelcast.heartattacker</groupId>
+    <artifactId>heartattacker-root</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Hazelcast Heart Attack Tool - Parent</name>
