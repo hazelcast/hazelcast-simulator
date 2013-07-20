@@ -13,11 +13,6 @@
     <name>Extra exercises</name>
     <artifactId>extra-exercises</artifactId>
 
-    <properties>
-        <jackson.version>2.2.0</jackson.version>
-        <hazelcast.version>3.0-SNAPSHOT</hazelcast.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.hazelcast.heartattacker</groupId>
