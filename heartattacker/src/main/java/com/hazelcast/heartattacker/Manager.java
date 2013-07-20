@@ -77,24 +77,8 @@ public class Manager {
         return cleanGym;
     }
 
-    public String membersString() {
-        StringBuilder sb = new StringBuilder("\n\nMembers [");
-        final Set<Member> members = client.getCluster().getMembers();
-        sb.append(members != null ? members.size() : 0);
-        sb.append("] {");
-        if (members != null) {
-            for (Member member : members) {
-                sb.append("\n\t").append(member);
-            }
-        }
-        sb.append("\n}\n");
-        return sb.toString();
-    }
-
     private void run() throws Exception {
         initClient();
-
-        log.log(Level.INFO, membersString());
 
         if (cleanGym) {
             sendStatusUpdate("Starting cleanup gyms");
@@ -271,7 +255,7 @@ public class Manager {
             submitToOneTrainee(new GenericExerciseTask("globalTearDown"));
             sendStatusUpdate("Finished exercise global teardown");
 
-            return heartAttackList.size() > oldCount;
+            return heartAttackList.size() == oldCount;
         } catch (Exception e) {
             log.log(Level.SEVERE, "Failed", e);
             return false;

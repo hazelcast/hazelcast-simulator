@@ -197,7 +197,7 @@ public class TraineeVmManager {
         sb.append("[");
         sb.append(todo.get(0).getId());
         for (int l = 1; l < todo.size(); l++) {
-            sb.append(",").append(todo.get(l));
+            sb.append(",").append(todo.get(l).getId());
         }
         sb.append("]");
 
