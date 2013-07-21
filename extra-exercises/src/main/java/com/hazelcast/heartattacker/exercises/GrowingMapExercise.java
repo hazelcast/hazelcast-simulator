@@ -5,24 +5,24 @@ import com.hazelcast.core.IdGenerator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
+import java.util.Random;
 import java.util.logging.Level;
 
 public class GrowingMapExercise extends AbstractExercise {
 
     private final static ILogger log = Logger.getLogger(GrowingMapExercise.class);
 
-    private IMap<Long, String> map;
+    private IMap<Long, Long> map;
     private IdGenerator idGenerator;
 
+    //properties.
     public int threadCount = 10;
     public int growCount = 10000;
     public boolean usePut = true;
     public boolean useRemove = true;
-    public int valueSize = 10;
     public int logFrequency = 10000;
     public boolean removeOnStop = true;
-
-    private String value;
+    public boolean readValidation = true;
 
     @Override
     public void localSetup() throws Exception {
@@ -31,16 +31,6 @@ public class GrowingMapExercise extends AbstractExercise {
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
-
-        value = buildValue();
-    }
-
-    private String buildValue() {
-        StringBuffer sb = new StringBuffer();
-        for (int k = 0; k < valueSize; k++) {
-            sb.append(' ');
-        }
-        return sb.toString();
     }
 
     @Override
@@ -60,19 +50,25 @@ public class GrowingMapExercise extends AbstractExercise {
         public void run() {
             long insertIteration = 0;
             long deleteIteration = 0;
+            long readIteration = 0;
 
             long[] keys = new long[growCount];
+            long[] values = new long[growCount];
+
+            Random random = new Random();
 
             while (!stop) {
-                int keyIndex=-1;
+                int keyIndex = -1;
                 for (int k = 0; k < growCount; k++) {
                     if (stop) {
                         break;
                     }
 
                     long key = idGenerator.newId();
-                    keyIndex=k;
+                    long value = random.nextLong();
+                    keyIndex = k;
                     keys[keyIndex] = key;
+                    values[keyIndex] = value;
 
                     if (usePut) {
                         map.put(key, value);
@@ -86,16 +82,40 @@ public class GrowingMapExercise extends AbstractExercise {
                     }
                 }
 
+                if(readValidation){
+                    for (int k = 0; k <= keyIndex; k++) {
+                        if (stop) {
+                            break;
+                        }
+
+                        long key = keys[k];
+                        long value = values[k];
+
+                        long found =    map.get(key);
+                        if(found!=value){
+                            throw new RuntimeException("Unexpected value found");
+                        }
+
+                        readIteration++;
+                        if (readIteration % logFrequency == 0) {
+                            log.log(Level.INFO, Thread.currentThread().getName() + " At read iteration: " + readIteration);
+                        }
+                    }
+                }
+
                 for (int k = 0; k <= keyIndex; k++) {
                     if (stop && !removeOnStop) {
                         break;
                     }
 
                     long key = keys[k];
-                    keys[k] = 0;
+                    long value = values[k];
 
                     if (useRemove) {
-                        map.remove(key);
+                        long found = map.remove(key);
+                        if(found!=value){
+                            throw new RuntimeException("Unexpected value found");
+                        }
                     } else {
                         map.delete(key);
                     }

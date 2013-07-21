@@ -29,9 +29,11 @@ public class QueueExercise extends AbstractExercise {
 
     private IAtomicLong totalCounter;
     private IQueue[] queues;
-    private int queueLength = 100;
-    private int threadsPerQueue = 1;
-    private int messagesPerQueue = 1;
+
+    //properties
+    public int queueLength = 100;
+    public int threadsPerQueue = 1;
+    public int messagesPerQueue = 1;
 
     @Override
     public void localSetup() {

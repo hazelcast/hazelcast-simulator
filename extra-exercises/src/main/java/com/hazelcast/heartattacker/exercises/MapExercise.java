@@ -33,11 +33,13 @@ public class MapExercise extends AbstractExercise {
     private String[] values;
     private Random random = new Random();
 
+    //properties
     public int threadCount = 10;
-    private int keyLength = 10;
-    private int valueLength = 10;
-    private int keyCount = 10000;
-    private int valueCount = 10000;
+    public int keyLength = 10;
+    public int valueLength = 10;
+    public int keyCount = 10000;
+    public int valueCount = 10000;
+    public boolean usePut = true;
 
     @Override
     public void localSetup() throws Exception {
@@ -81,7 +83,13 @@ public class MapExercise extends AbstractExercise {
             while (!stop) {
                 Object key = keys[random.nextInt(keys.length)];
                 Object value = values[random.nextInt(values.length)];
-                map.put(key, value);
+
+                if (usePut) {
+                    map.put(key, value);
+                } else {
+                    map.set(key, value);
+                }
+
                 if (iteration % 10000 == 0) {
                     log.log(Level.INFO, Thread.currentThread().getName() + " At iteration: " + iteration);
                 }

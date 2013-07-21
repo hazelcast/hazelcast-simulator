@@ -31,9 +31,11 @@ public class ProducerConsumerExercise extends AbstractExercise {
     private IAtomicLong produced;
     private IQueue works;
     private IAtomicLong consumed;
-    private int producerCount = 4;
-    private int consumerCount = 4;
-    private int maxIntervalMillis = 1000;
+
+    //properties
+    public int producerCount = 4;
+    public int consumerCount = 4;
+    public int maxIntervalMillis = 1000;
 
     @Override
     public void localSetup() {
