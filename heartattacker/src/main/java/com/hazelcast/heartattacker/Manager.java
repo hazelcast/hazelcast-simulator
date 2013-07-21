@@ -152,9 +152,7 @@ public class Manager {
 
         String[] parts = traineeClassPath.split(";");
         List<File> files = new LinkedList<File>();
-        for (int k = 0; k < parts.length; k++) {
-            String filePath = parts[k];
-
+        for (String filePath : parts) {
             File file = new File(filePath);
 
             if (file.getName().contains("*")) {
@@ -182,7 +180,7 @@ public class Manager {
     private void runWorkout(Workout workout) throws Exception {
         sendStatusUpdate(format("Starting workout: %s", workout.getId()));
         sendStatusUpdate(format("Exercises in workout: %s", workout.size()));
-        sendStatusUpdate(format("Running time per exercise: %s seconds", workout.getDuration()));
+        sendStatusUpdate(format("Running time per exercise: %s ", secondsToHuman(workout.getDuration())));
         sendStatusUpdate(format("Expected total workout time: %s", secondsToHuman(workout.size() * workout.getDuration())));
 
         //we need to make sure that before we start, there are no trainees running anymore.
@@ -504,25 +502,4 @@ public class Manager {
         }
         return workout;
     }
-
-    private static Properties loadProperties(File file) {
-        Properties properties = new Properties();
-        final FileInputStream in;
-        try {
-            in = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            //should not be thrown since it is already verified that the property file exist.
-            throw new RuntimeException(e);
-        }
-        try {
-            properties.load(in);
-            return properties;
-        } catch (IOException e) {
-            throw new RuntimeException(format("Failed to load workout property file [%s]", file.getAbsolutePath()), e);
-        } finally {
-            Utils.closeQuietly(in);
-        }
-    }
-
-
 }

@@ -88,5 +88,10 @@ public class AtomicLongExercise extends AbstractExercise {
             totalCounter.addAndGet(iteration);
         }
     }
+
+    public static void main(String[] args) throws Exception {
+        AtomicLongExercise mapExercise = new AtomicLongExercise();
+        new ExerciseRunner().run(mapExercise, 20);
+    }
 }
 

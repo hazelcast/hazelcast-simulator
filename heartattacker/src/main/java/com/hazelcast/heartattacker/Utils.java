@@ -296,4 +296,23 @@ public final class Utils {
 
         return sb.toString();
     }
+
+    static Properties loadProperties(File file) {
+        Properties properties = new Properties();
+        final FileInputStream in;
+        try {
+            in = new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            //should not be thrown since it is already verified that the property file exist.
+            throw new RuntimeException(e);
+        }
+        try {
+            properties.load(in);
+            return properties;
+        } catch (IOException e) {
+            throw new RuntimeException(format("Failed to load workout property file [%s]", file.getAbsolutePath()), e);
+        } finally {
+            Utils.closeQuietly(in);
+        }
+    }
 }
