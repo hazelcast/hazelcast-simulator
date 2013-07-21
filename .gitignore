@@ -9,5 +9,7 @@ target/
 *.log
 *.log.lck
 *.heartattack
+*.exception
+*.oome
 heartattacker/gym/*
 heartattacker/logs/*

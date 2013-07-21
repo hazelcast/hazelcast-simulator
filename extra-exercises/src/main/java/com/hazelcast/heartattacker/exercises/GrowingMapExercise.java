@@ -50,8 +50,8 @@ public class GrowingMapExercise extends AbstractExercise {
 
     @Override
     public void globalVerify() throws Exception {
-        if(removeOnStop && !map.isEmpty()){
-            throw new RuntimeException("Map should be empty, but has size:"+map.size());
+        if (removeOnStop && !map.isEmpty()) {
+            throw new RuntimeException("Map should be empty, but has size:" + map.size());
         }
     }
 
@@ -61,20 +61,19 @@ public class GrowingMapExercise extends AbstractExercise {
             long insertIteration = 0;
             long deleteIteration = 0;
 
-            while (!stop) {
-                long beginKey = -1;
-                long endKey = -1;
+            long[] keys = new long[growCount];
 
+            while (!stop) {
+                int keyIndex=-1;
                 for (int k = 0; k < growCount; k++) {
-                    if(stop){
+                    if (stop) {
                         break;
                     }
 
                     long key = idGenerator.newId();
-                    if (beginKey == -1) {
-                        beginKey = key;
-                    }
-                    endKey = key;
+                    keyIndex=k;
+                    keys[keyIndex] = key;
+
                     if (usePut) {
                         map.put(key, value);
                     } else {
@@ -87,10 +86,13 @@ public class GrowingMapExercise extends AbstractExercise {
                     }
                 }
 
-                for (long key = beginKey; key <= endKey; key++) {
-                    if(stop && !removeOnStop){
+                for (int k = 0; k <= keyIndex; k++) {
+                    if (stop && !removeOnStop) {
                         break;
                     }
+
+                    long key = keys[k];
+                    keys[k] = 0;
 
                     if (useRemove) {
                         map.remove(key);
@@ -106,7 +108,6 @@ public class GrowingMapExercise extends AbstractExercise {
             }
         }
     }
-
 
     public static void main(String[] args) throws Exception {
         GrowingMapExercise mapExercise = new GrowingMapExercise();
