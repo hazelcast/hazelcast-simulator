@@ -276,4 +276,24 @@ public final class Utils {
 
     private Utils() {
     }
+
+    static String secondsToHuman(int seconds) {
+        StringBuffer sb = new StringBuffer();
+        int time = seconds;
+
+        int s = time % 60;
+        time = time / 60;
+        int m = time % 60;
+        time = time / 60;
+        int h = time % 60;
+        time = time / 24;
+        int days = time;
+
+        sb.append(days).append(" days ");
+        sb.append(h).append(" hours ");
+        sb.append(m).append(" minutes ");
+        sb.append(s).append(" seconds");
+
+        return sb.toString();
+    }
 }

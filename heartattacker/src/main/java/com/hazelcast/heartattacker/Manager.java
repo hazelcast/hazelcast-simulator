@@ -183,7 +183,7 @@ public class Manager {
         sendStatusUpdate(format("Starting workout: %s", workout.getId()));
         sendStatusUpdate(format("Exercises in workout: %s", workout.size()));
         sendStatusUpdate(format("Running time per exercise: %s seconds", workout.getDuration()));
-        sendStatusUpdate(format("Expected total workout time: %s seconds", workout.size() * workout.getDuration()));
+        sendStatusUpdate(format("Expected total workout time: %s", secondsToHuman(workout.size() * workout.getDuration())));
 
         //we need to make sure that before we start, there are no trainees running anymore.
         //log.log(Level.INFO, "Ensuring trainee all killed");
