@@ -103,8 +103,7 @@ public class InitExercise implements Callable, Serializable, HazelcastInstanceAw
             return clazz.getDeclaredField(property);
         } catch (NoSuchFieldException e) {
             Class superClass = clazz.getSuperclass();
-            if (superClass != null) return findField(clazz, property);
-            else return null;
+            return superClass != null ? findField(superClass, property) : null;
         }
     }
 
