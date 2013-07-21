@@ -20,6 +20,7 @@ public class GrowingMapExercise extends AbstractExercise {
     public boolean useRemove = true;
     public int valueSize = 10;
     public int logFrequency = 10000;
+    public boolean removeOnStop = true;
 
     private String value;
 
@@ -49,7 +50,7 @@ public class GrowingMapExercise extends AbstractExercise {
 
     @Override
     public void globalVerify() throws Exception {
-        if(!map.isEmpty()){
+        if(removeOnStop && !map.isEmpty()){
             throw new RuntimeException("Map should be empty, but has size:"+map.size());
         }
     }
@@ -64,7 +65,11 @@ public class GrowingMapExercise extends AbstractExercise {
                 long beginKey = -1;
                 long endKey = -1;
 
-                for (int k = 0; k < growCount && !stop; k++) {
+                for (int k = 0; k < growCount; k++) {
+                    if(stop){
+                        break;
+                    }
+
                     long key = idGenerator.newId();
                     if (beginKey == -1) {
                         beginKey = key;
@@ -83,6 +88,10 @@ public class GrowingMapExercise extends AbstractExercise {
                 }
 
                 for (long key = beginKey; key <= endKey; key++) {
+                    if(stop && !removeOnStop){
+                        break;
+                    }
+
                     if (useRemove) {
                         map.remove(key);
                     } else {
