@@ -31,13 +31,6 @@ public class MapTimeToLiveExercise extends AbstractExercise {
     final private String mapName = "map:"+exerciseId;
 
     @Override
-    public Config prepareConfig() throws Exception {
-        Config config = new Config();
-        config.getMapConfig(mapName).setTimeToLiveSeconds(ttlSeconds);
-        return config;
-    }
-
-    @Override
     public void globalTearDown() throws Exception {
         map.destroy();
     }

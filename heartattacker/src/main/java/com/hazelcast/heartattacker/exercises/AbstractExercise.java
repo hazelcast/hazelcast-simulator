@@ -54,11 +54,6 @@ public abstract class AbstractExercise implements Exercise {
     }
 
     @Override
-    public Config prepareConfig() throws Exception {
-        return null;
-    }
-
-    @Override
     public void globalSetup() throws Exception {
     }
 
