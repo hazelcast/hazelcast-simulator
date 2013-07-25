@@ -15,6 +15,7 @@
  */
 package com.hazelcast.heartattacker.exercises;
 
+import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
 
 /**
@@ -36,6 +37,15 @@ import com.hazelcast.core.HazelcastInstance;
 public interface Exercise {
 
     String EXERCISE_INSTANCE = "exerciseInstance";
+
+    /**
+     * Prepare hazelcast config to be set to hazelcast instance before initialization
+     * <p/>
+     * This method will be called on a all members of the cluster.
+     *
+     * @throws Exception
+     */
+    Config prepareConfig() throws Exception;
 
     /**
      * Sets up this ExerciseInstance

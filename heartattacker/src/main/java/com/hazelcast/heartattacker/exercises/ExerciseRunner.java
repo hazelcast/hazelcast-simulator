@@ -58,7 +58,7 @@ public class ExerciseRunner {
 
     public void run(Exercise exercise, int durationSec) throws Exception {
         if (hazelcastInstance == null) {
-            hazelcastInstance = Hazelcast.newHazelcastInstance();
+            hazelcastInstance = Hazelcast.newHazelcastInstance(exercise.prepareConfig());
         }
 
         exercise.setHazelcastInstance(hazelcastInstance);

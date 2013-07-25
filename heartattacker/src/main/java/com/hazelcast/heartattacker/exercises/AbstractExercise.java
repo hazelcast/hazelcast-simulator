@@ -15,6 +15,7 @@
  */
 package com.hazelcast.heartattacker.exercises;
 
+import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.heartattacker.Utils;
 import com.hazelcast.logging.ILogger;
@@ -50,6 +51,11 @@ public abstract class AbstractExercise implements Exercise {
 
     public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
         this.hazelcastInstance = hazelcastInstance;
+    }
+
+    @Override
+    public Config prepareConfig() throws Exception {
+        return null;
     }
 
     @Override
