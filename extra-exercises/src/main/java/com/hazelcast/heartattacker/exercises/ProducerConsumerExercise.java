@@ -97,7 +97,6 @@ public class ProducerConsumerExercise extends AbstractExercise {
         }
     }
 
-
     private class Consumer implements Runnable {
         Random rand = new Random(System.currentTimeMillis());
         int id;
