@@ -11,5 +11,6 @@ target/
 *.heartattack
 *.exception
 *.oome
+vtune/
 heartattacker/gym/*
 heartattacker/logs/*
