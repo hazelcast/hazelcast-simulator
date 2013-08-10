@@ -24,14 +24,13 @@ import com.hazelcast.logging.Logger;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
 
 public class AtomicLongExercise extends AbstractExercise {
 
     private final static ILogger log = Logger.getLogger(AtomicLongExercise.class);
 
-    private int countersLength = 1000;
-    private int threadCount = 1;
+    public int countersLength = 1000;
+    public int threadCount = 1;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
 
