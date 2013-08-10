@@ -157,7 +157,7 @@ public final class Utils {
                         continue;
                     }
 
-                    log.log(Level.FINE, "Zipping: " + file.getAbsolutePath());
+                    log.finest("Zipping: " + file.getAbsolutePath());
 
                     if (file.isDirectory()) {
                         String name = base.relativize(file.toURI()).getPath();
@@ -216,7 +216,7 @@ public final class Utils {
             String fileName = zipEntry.getName();
             File file = new File(destinationDir + File.separator + fileName);
 
-            log.log(Level.FINE, "Unzipping: " + file.getAbsolutePath());
+            log.finest("Unzipping: " + file.getAbsolutePath());
 
 
             if (zipEntry.isDirectory()) {

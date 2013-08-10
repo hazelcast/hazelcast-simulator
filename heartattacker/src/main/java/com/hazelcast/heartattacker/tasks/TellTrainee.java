@@ -52,7 +52,7 @@ public class TellTrainee implements Callable, Serializable, HazelcastInstanceAwa
             Future future = executor.submit(task);
             return future.get(timeoutSec, TimeUnit.SECONDS);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to spawn Trainee Virtual Machines", e);
+            log.severe("Failed to spawn Trainee Virtual Machines", e);
             throw e;
         }
     }

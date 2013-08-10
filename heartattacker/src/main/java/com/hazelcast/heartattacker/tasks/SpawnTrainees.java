@@ -40,14 +40,14 @@ public class SpawnTrainees implements Callable, Serializable, HazelcastInstanceA
 
     @Override
     public Object call() throws Exception {
-        log.log(Level.INFO, format("Spawning %s trainees", settings.getTraineeCount()));
+        log.info(format("Spawning %s trainees", settings.getTraineeCount()));
 
         try {
             Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
             coach.getTraineeVmManager().spawn(settings);
             return null;
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to spawn Trainee Virtual Machines", e);
+            log.severe( "Failed to spawn Trainee Virtual Machines", e);
             throw e;
         }
     }

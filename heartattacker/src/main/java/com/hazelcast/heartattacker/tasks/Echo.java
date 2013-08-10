@@ -33,7 +33,7 @@ public class Echo implements Callable, Serializable {
 
     @Override
     public Object call() throws Exception {
-        log.log(Level.INFO, msg);
+        log.info(msg);
         return null;
     }
 }

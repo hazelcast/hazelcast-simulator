@@ -39,7 +39,7 @@ public class ProducerConsumerExercise extends AbstractExercise {
 
     @Override
     public void localSetup() {
-        log.log(Level.INFO, "producer:" + producerCount + " consumer:" + consumerCount);
+        log.info( "producer:" + producerCount + " consumer:" + consumerCount);
 
         produced = hazelcastInstance.getAtomicLong(exerciseId + ":Produced");
         consumed = hazelcastInstance.getAtomicLong(exerciseId + ":Consumed");
@@ -88,7 +88,7 @@ public class ProducerConsumerExercise extends AbstractExercise {
                     works.offer(new Work());
                     iter++;
                     if(iter % 10 == 0) {
-                        log.log(Level.INFO, Thread.currentThread().getName() + " prod-id:" + id + " iteration: " + iter + " prodoced:" + produced.get() + " workqueue:" + works.size() + " consumed:" + consumed.get());
+                        log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: " + iter + " prodoced:" + produced.get() + " workqueue:" + works.size() + " consumed:" + consumed.get());
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -125,7 +125,7 @@ public class ProducerConsumerExercise extends AbstractExercise {
         }
 
         private void logState(long iter) {
-            log.log(Level.INFO, Thread.currentThread().getName() + " prod-id:" + id + " iteration: " + iter + " produced:"+produced.get() + " workqueue:" + works.size() + " consumed:"+consumed.get());
+            log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: " + iter + " produced:"+produced.get() + " workqueue:" + works.size() + " consumed:"+consumed.get());
         }
     }
 

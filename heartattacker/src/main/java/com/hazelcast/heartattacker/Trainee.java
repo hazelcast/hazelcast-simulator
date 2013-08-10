@@ -49,9 +49,9 @@ public class Trainee {
     }
 
     public void start() {
-        log.log(Level.INFO, "Creating Trainee HazelcastInstance");
+        log.info("Creating Trainee HazelcastInstance");
         this.hz = createHazelcastInstance();
-        log.log(Level.INFO, "Successfully created Trainee HazelcastInstance");
+        log.info("Successfully created Trainee HazelcastInstance");
 
         signalStartToCoach();
     }
@@ -93,17 +93,17 @@ public class Trainee {
     }
 
     private static void logSystemProperty(String name) {
-        log.log(Level.INFO, format("%s=%s", name, System.getProperty(name)));
+        log.info(format("%s=%s", name, System.getProperty(name)));
     }
 
     public static void main(String[] args) {
-        log.log(Level.INFO, "Starting Hazelcast Heart Attack Trainee");
+        log.info("Starting Hazelcast Heart Attack Trainee");
         logInterestingSystemProperties();
 
         String traineeId = args[0];
-        log.log(Level.INFO, "Trainee id:" + traineeId);
+        log.info( "Trainee id:" + traineeId);
         String traineeHzFile = args[1];
-        log.log(Level.INFO, "Trainee hz config file:" + traineeHzFile);
+        log.info( "Trainee hz config file:" + traineeHzFile);
 
         System.setProperty("traineeId", traineeId);
 
@@ -112,6 +112,6 @@ public class Trainee {
         trainee.setTraineeHzFile(traineeHzFile);
         trainee.start();
 
-        log.log(Level.INFO, "Successfully started Hazelcast Heart Attack Trainee:" + traineeId);
+        log.info( "Successfully started Hazelcast Heart Attack Trainee:" + traineeId);
     }
 }

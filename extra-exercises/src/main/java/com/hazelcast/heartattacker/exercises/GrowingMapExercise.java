@@ -78,7 +78,7 @@ public class GrowingMapExercise extends AbstractExercise {
 
                     insertIteration++;
                     if (insertIteration % logFrequency == 0) {
-                        log.log(Level.INFO, Thread.currentThread().getName() + " At insert iteration: " + insertIteration);
+                        log.info(Thread.currentThread().getName() + " At insert iteration: " + insertIteration);
                     }
                 }
 
@@ -98,7 +98,7 @@ public class GrowingMapExercise extends AbstractExercise {
 
                         readIteration++;
                         if (readIteration % logFrequency == 0) {
-                            log.log(Level.INFO, Thread.currentThread().getName() + " At read iteration: " + readIteration);
+                            log.info(Thread.currentThread().getName() + " At read iteration: " + readIteration);
                         }
                     }
                 }
@@ -122,7 +122,7 @@ public class GrowingMapExercise extends AbstractExercise {
 
                     deleteIteration++;
                     if (deleteIteration % logFrequency == 0) {
-                        log.log(Level.INFO, Thread.currentThread().getName() + " At delete iteration: " + deleteIteration);
+                        log.info(Thread.currentThread().getName() + " At delete iteration: " + deleteIteration);
                     }
                 }
             }

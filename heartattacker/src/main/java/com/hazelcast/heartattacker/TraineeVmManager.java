@@ -58,7 +58,7 @@ public class TraineeVmManager {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 for (TraineeVm jvm : traineeJvms) {
-                    log.log(Level.INFO, "Destroying trainee : " + jvm.getId());
+                    log.info( "Destroying trainee : " + jvm.getId());
                     jvm.getProcess().destroy();
                 }
             }
@@ -70,7 +70,7 @@ public class TraineeVmManager {
     }
 
     public void spawn(TraineeVmSettings settings) throws Exception {
-        log.log(Level.INFO, format("Starting %s trainee Java Virtual Machines using settings\n %s", settings.getTraineeCount(), settings));
+        log.info(format("Starting %s trainee Java Virtual Machines using settings\n %s", settings.getTraineeCount(), settings));
 
         File traineeHzFile = File.createTempFile("trainee-hazelcast", "xml");
         traineeHzFile.deleteOnExit();
@@ -97,7 +97,7 @@ public class TraineeVmManager {
 
         waitForTraineesStartup(trainees, settings.getTraineeStartupTimeout());
 
-        log.log(Level.INFO, format("Finished starting %s trainee Java Virtual Machines", settings.getTraineeCount()));
+        log.info(format("Finished starting %s trainee Java Virtual Machines", settings.getTraineeCount()));
     }
 
     private String getJavaHome(String javaVendor, String javaVersion) {
@@ -110,7 +110,7 @@ public class TraineeVmManager {
         //nothing is found so we are going to make use of a default.
         String javaHome = System.getProperty("java.home");
         if (javaHomePrinted.compareAndSet(false, true)) {
-            log.log(Level.INFO, "java.home=" + javaHome);
+            log.info("java.home=" + javaHome);
         }
 
         return javaHome;
@@ -182,7 +182,7 @@ public class TraineeVmManager {
                     if (member != null) {
                         it.remove();
                         jvm.setMember(member);
-                        log.log(Level.INFO, format("Trainee: %s Started %s of %s", jvm.getId(), trainees.size() - todo.size(), trainees.size()));
+                        log.info(format("Trainee: %s Started %s of %s", jvm.getId(), trainees.size() - todo.size(), trainees.size()));
                     }
                 }
             }
@@ -236,7 +236,7 @@ public class TraineeVmManager {
             }
 
             if (exitCode != 0) {
-                log.log(Level.INFO, format("trainee process %s exited with exit code: %s", jvm.getId(), exitCode));
+                log.info(format("trainee process %s exited with exit code: %s", jvm.getId(), exitCode));
             }
         }
     }

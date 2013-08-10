@@ -106,7 +106,7 @@ public class MapExercise extends AbstractExercise {
                 }
 
                 if (iteration % logFrequency == 0) {
-                    log.log(Level.INFO, Thread.currentThread().getName() + " At iteration: " + iteration);
+                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
                 if(iteration % logFrequency == 0){

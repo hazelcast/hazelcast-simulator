@@ -46,7 +46,7 @@ public class HeartAttackMonitor implements Runnable {
             try {
                 detect();
             } catch (Exception e) {
-                log.log(Level.SEVERE, "Failed to scan for heart attacks", e);
+                log.severe("Failed to scan for heart attacks", e);
             }
             Utils.sleepSeconds(1);
         }
@@ -85,7 +85,7 @@ public class HeartAttackMonitor implements Runnable {
                         file.delete();
 
                         String traineeId = name.substring(0, name.indexOf('.'));
-                        log.log(Level.INFO,"traineeId: "+traineeId);
+                        log.info("traineeId: "+traineeId);
                         TraineeVm jvm = traineeVmManager.getTrainee(traineeId);
                         HeartAttack heartAttack = new HeartAttack(
                                 "Exception thrown in trainee",

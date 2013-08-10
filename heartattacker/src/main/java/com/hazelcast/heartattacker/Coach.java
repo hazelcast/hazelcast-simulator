@@ -109,9 +109,9 @@ public class Coach {
     }
 
     public void terminateWorkout() {
-        log.log(Level.INFO, "Terminating workout");
+        log.info("Terminating workout");
         getTraineeVmManager().destroyAll();
-        log.log(Level.INFO, "Finished terminating workout");
+        log.info("Finished terminating workout");
     }
 
     protected HazelcastInstance initCoachHazelcastInstance() {
@@ -139,15 +139,15 @@ public class Coach {
                     HeartAttack heartAttack = (HeartAttack) messageObject;
                     final boolean isLocal = coachHz.getCluster().getLocalMember().getInetSocketAddress().equals(heartAttack.getCoachAddress());
                     if (isLocal) {
-                        log.log(Level.SEVERE, "Local heart attack detected:" + heartAttack);
+                        log.severe("Local heart attack detected:" + heartAttack);
                     } else {
-                        log.log(Level.SEVERE, "Remote machine heart attack detected:" + heartAttack);
+                        log.severe( "Remote machine heart attack detected:" + heartAttack);
                     }
                 } else if (messageObject instanceof Exception) {
                     Exception e = (Exception) messageObject;
-                    log.log(Level.SEVERE, e.getMessage(), e);
+                    log.severe(e);
                 } else {
-                    log.log(Level.INFO, messageObject.toString());
+                    log.severe(messageObject.toString());
                 }
             }
         });
@@ -233,13 +233,13 @@ public class Coach {
 
         initCoachHazelcastInstance();
 
-        log.log(Level.INFO, "Hazelcast Assistant Coach is Ready for action");
+        log.info("Hazelcast Assistant Coach is Ready for action");
     }
 
     public static void main(String[] args) throws Exception {
-        log.log(Level.INFO, "Hazelcast  Coach");
-        log.log(Level.INFO, format("Version: %s\n", getVersion()));
-        log.log(Level.INFO, format("HEART_ATTACK_HOME: %s\n", heartAttackHome));
+        log.info("Hazelcast  Coach");
+        log.info(format("Version: %s\n", getVersion()));
+        log.info(format("HEART_ATTACK_HOME: %s\n", heartAttackHome));
 
         OptionParser parser = new OptionParser();
         OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();

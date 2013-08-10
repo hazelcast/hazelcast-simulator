@@ -91,10 +91,10 @@ public class Manager {
 
         TraineeVmSettings traineeVmSettings = workout.getTraineeVmSettings();
         Set<Member> members = client.getCluster().getMembers();
-        log.log(Level.INFO, format("Trainee track logging: %s", traineeVmSettings.isTrackLogging()));
-        log.log(Level.INFO, format("Trainee's per coach: %s", traineeVmSettings.getTraineeCount()));
-        log.log(Level.INFO, format("Total number of coaches: %s", members.size()));
-        log.log(Level.INFO, format("Total number of trainees: %s", members.size() * traineeVmSettings.getTraineeCount()));
+        log.info(format("Trainee track logging: %s", traineeVmSettings.isTrackLogging()));
+        log.info(format("Trainee's per coach: %s", traineeVmSettings.getTraineeCount()));
+        log.info(format("Total number of coaches: %s", members.size()));
+        log.info(format("Total number of trainees: %s", members.size() * traineeVmSettings.getTraineeCount()));
 
         ITopic heartAttackTopic = client.getTopic(Coach.COACH_HEART_ATTACK_TOPIC);
         heartAttackTopic.addMessageListener(new MessageListener() {
@@ -104,12 +104,12 @@ public class Manager {
                 if (messageObject instanceof HeartAttack) {
                     HeartAttack heartAttack = (HeartAttack) messageObject;
                     heartAttackList.add(heartAttack);
-                    log.log(Level.SEVERE, "Remote machine heart attack detected:" + heartAttack);
+                    log.severe("Remote machine heart attack detected:" + heartAttack);
                 } else if (messageObject instanceof Exception) {
                     Exception e = (Exception) messageObject;
-                    log.log(Level.SEVERE, e.getMessage(), e);
+                    log.severe(e);
                 } else {
-                    log.log(Level.INFO, messageObject.toString());
+                    log.info(messageObject.toString());
                 }
             }
         });
@@ -119,19 +119,19 @@ public class Manager {
         runWorkout(workout);
 
         //the manager needs to sleep some to make sure that it will get heartattacks if they are there.
-        log.log(Level.INFO, "Starting cooldown (10 sec)");
+        log.info("Starting cooldown (10 sec)");
         Utils.sleepSeconds(10);
-        log.log(Level.INFO, "Finished cooldown");
+        log.info("Finished cooldown");
 
         client.getLifecycleService().shutdown();
 
         long elapsedMs = System.currentTimeMillis() - startMs;
-        log.log(Level.INFO, format("Total running time: %s seconds", elapsedMs / 1000));
+        log.info(format("Total running time: %s seconds", elapsedMs / 1000));
 
         if (heartAttackList.isEmpty()) {
-            log.log(Level.INFO, "-----------------------------------------------------------------------------");
-            log.log(Level.INFO, "No heart attacks have been detected!");
-            log.log(Level.INFO, "-----------------------------------------------------------------------------");
+            log.info("-----------------------------------------------------------------------------");
+            log.info("No heart attacks have been detected!");
+            log.info("-----------------------------------------------------------------------------");
             System.exit(0);
         } else {
             StringBuilder sb = new StringBuilder();
@@ -141,7 +141,7 @@ public class Manager {
                 sb.append(heartAttack).append('\n');
             }
             sb.append("-----------------------------------------------------------------------------\n");
-            log.log(Level.SEVERE, sb.toString());
+            log.severe(sb.toString());
             System.exit(1);
         }
     }
@@ -191,7 +191,7 @@ public class Manager {
         for (ExerciseRecipe exerciseRecipe : workout.getExerciseRecipeList()) {
             boolean success = run(workout, exerciseRecipe);
             if (!success && workout.isFailFast()) {
-                log.log(Level.INFO, "Aborting working due to failure");
+                log.info("Aborting working due to failure");
                 break;
             }
 
@@ -255,7 +255,7 @@ public class Manager {
 
             return heartAttackList.size() == oldCount;
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed", e);
+            log.severe("Failed", e);
             return false;
         }
     }
@@ -291,10 +291,10 @@ public class Manager {
         long startMs = System.currentTimeMillis();
         final int traineeCount = traineeVmSettings.getTraineeCount();
         final int totalTraineeCount = traineeCount * client.getCluster().getMembers().size();
-        log.log(Level.INFO, format("Starting a grand total of %s Trainee Java Virtual Machines", totalTraineeCount));
+        log.info(format("Starting a grand total of %s Trainee Java Virtual Machines", totalTraineeCount));
         submitToAllAndWait(coachExecutor, new SpawnTrainees(traineeVmSettings));
         long durationMs = System.currentTimeMillis() - startMs;
-        log.log(Level.INFO, (format("Finished starting a grand total of %s Trainees after %s ms\n", totalTraineeCount, durationMs)));
+        log.info((format("Finished starting a grand total of %s Trainees after %s ms\n", totalTraineeCount, durationMs)));
         return startMs;
     }
 
@@ -302,7 +302,7 @@ public class Manager {
         try {
             statusTopic.publish(s);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to echo to all members", e);
+            log.severe("Failed to echo to all members", e);
         }
     }
 
@@ -354,9 +354,9 @@ public class Manager {
     }
 
     public static void main(String[] args) throws Exception {
-        log.log(Level.INFO, "Hazelcast Heart Attack Manager");
-        log.log(Level.INFO, format("Version: %s", getVersion()));
-        log.log(Level.INFO, format("HEART_ATTACK_HOME: %s", HEART_ATTACK_HOME));
+        log.info("Hazelcast Heart Attack Manager");
+        log.info(format("Version: %s", getVersion()));
+        log.info(format("HEART_ATTACK_HOME: %s", HEART_ATTACK_HOME));
 
         OptionParser parser = new OptionParser();
         OptionSpec cleanGymSpec = parser.accepts("cleanGym", "Cleans the gym directory on all coaches");
@@ -451,7 +451,7 @@ public class Manager {
             manager.run();
             System.exit(0);
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to run workout", e);
+            log.severe("Failed to run workout", e);
             System.exit(1);
         }
     }

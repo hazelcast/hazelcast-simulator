@@ -38,14 +38,14 @@ public class PrepareCoachForExercise implements Callable, Serializable, Hazelcas
 
     @Override
     public Object call() throws Exception {
-        log.log(Level.INFO, "Preparing coach for exercise");
+        log.info("Preparing coach for exercise");
 
         try {
             Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
             coach.setExerciseRecipe(exerciseRecipe);
             return null;
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to init coach Exercise", e);
+            log.severe("Failed to init coach Exercise", e);
             throw e;
         }
     }

@@ -43,7 +43,7 @@ public class InitExercise implements Callable, Serializable, HazelcastInstanceAw
     @Override
     public Object call() throws Exception {
         try {
-            log.log(Level.INFO, "Init Exercise");
+            log.info("Init Exercise");
             String clazzName = exerciseRecipe.getClassname();
 
             Exercise exercise = (Exercise) InitExercise.class.getClassLoader().loadClass(clazzName).newInstance();
@@ -55,7 +55,7 @@ public class InitExercise implements Callable, Serializable, HazelcastInstanceAw
             hz.getUserContext().put(Exercise.EXERCISE_INSTANCE, exercise);
             return null;
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to init Exercise", e);
+            log.severe("Failed to init Exercise", e);
             throw e;
         }
     }

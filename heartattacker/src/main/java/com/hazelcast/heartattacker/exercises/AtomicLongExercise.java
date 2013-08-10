@@ -41,7 +41,7 @@ public class AtomicLongExercise extends AbstractExercise {
 
     @Override
     public void localSetup() {
-        log.log(Level.INFO, "countersLength:" + countersLength + " threadCount:" + threadCount);
+        log.info("countersLength:" + countersLength + " threadCount:" + threadCount);
 
         totalCounter = hazelcastInstance.getAtomicLong(exerciseId + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
@@ -94,7 +94,7 @@ public class AtomicLongExercise extends AbstractExercise {
                 int index = random.nextInt(counters.length);
                 counters[index].incrementAndGet();
                 if (iteration % logFrequency == 0) {
-                    log.log(Level.INFO, Thread.currentThread().getName() + " At iteration: " + iteration);
+                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
                 if(iteration % performanceUpdateFrequency == 0){

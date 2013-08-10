@@ -44,7 +44,7 @@ public class TraineeVmLogger extends Thread {
                 final String line = br.readLine();
                 if (line == null) break;
                 if (log.isLoggable(Level.INFO) && traineeTrackLogging) {
-                    log.log(Level.INFO, prefix + ": " + line);
+                    log.info(prefix + ": " + line);
                 }
             }
         } catch (IOException e) {

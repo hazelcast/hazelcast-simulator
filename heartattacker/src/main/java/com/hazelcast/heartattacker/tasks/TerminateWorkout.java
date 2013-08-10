@@ -34,7 +34,7 @@ public class TerminateWorkout implements Callable, Serializable, HazelcastInstan
 
     @Override
     public Object call() throws Exception {
-        log.log(Level.INFO, "TerminateWorkout");
+        log.info("TerminateWorkout");
 
         long startMs = System.currentTimeMillis();
 
@@ -42,7 +42,7 @@ public class TerminateWorkout implements Callable, Serializable, HazelcastInstan
         coach.terminateWorkout();
 
         long durationMs = System.currentTimeMillis() - startMs;
-        log.log(Level.INFO, format("TerminateWorkout finished in %s ms", durationMs));
+        log.info(format("TerminateWorkout finished in %s ms", durationMs));
         return null;
     }
 

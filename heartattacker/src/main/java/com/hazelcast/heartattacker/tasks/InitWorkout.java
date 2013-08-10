@@ -41,12 +41,12 @@ public class InitWorkout implements Callable, Serializable, HazelcastInstanceAwa
     @Override
     public Object call() throws Exception {
         try {
-            log.log(Level.INFO, "Init InitWorkout:"+workout.getId());
+            log.info("Init InitWorkout:"+workout.getId());
             Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
             coach.initWorkout(workout,content);
             return null;
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Failed to init InitWorkout", e);
+            log.severe("Failed to init InitWorkout", e);
             throw e;
         }
     }

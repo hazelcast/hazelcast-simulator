@@ -112,7 +112,7 @@ public abstract class AbstractExercise implements Exercise {
                 runnable.run();
             } catch (Throwable t) {
 
-                log.log(Level.SEVERE, "Error detected", t);
+                log.severe("Error detected", t);
                 Utils.sleepSeconds(2);
 
                 ExerciseUtils.signalHeartAttack(t);

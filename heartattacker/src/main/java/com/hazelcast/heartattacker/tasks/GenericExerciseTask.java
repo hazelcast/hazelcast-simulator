@@ -42,7 +42,7 @@ public class GenericExerciseTask implements Callable, Serializable, HazelcastIns
     @Override
     public Object call() throws Exception {
         try {
-            log.log(Level.INFO, "Calling exerciseInstance." + methodName + "()");
+            log.info("Calling exerciseInstance." + methodName + "()");
 
             Exercise exercise = (Exercise) hz.getUserContext().get(Exercise.EXERCISE_INSTANCE);
             if (exercise == null) {
@@ -51,10 +51,10 @@ public class GenericExerciseTask implements Callable, Serializable, HazelcastIns
 
             Method method = exercise.getClass().getMethod(methodName);
             method.invoke(exercise);
-            log.log(Level.INFO, "Finished calling exerciseInstance." + methodName + "()");
+            log.info("Finished calling exerciseInstance." + methodName + "()");
             return null;
         } catch (Exception e) {
-            log.log(Level.SEVERE, format("Failed to execute exercise.%s()", methodName), e);
+            log.severe(format("Failed to execute exercise.%s()", methodName), e);
             throw e;
         }
     }

@@ -126,7 +126,7 @@ public class LockExercise extends AbstractExercise {
                 }
 
                 if (iteration % logFrequency == 0) {
-                    log.log(Level.INFO, Thread.currentThread().getName() + " At iteration: " + iteration);
+                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
                 iteration++;

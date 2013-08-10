@@ -50,7 +50,7 @@ public class ExecutorExercise extends AbstractExercise {
 
     @Override
     public void localSetup() {
-        log.log(Level.INFO, "localSetup");
+        log.info("localSetup");
         executors = new IExecutorService[executorCount];
         for (int k = 0; k < executors.length; k++) {
             executors[k] = getHazelcastInstance().getExecutorService(exerciseId + ":Executor-" + k);
@@ -69,7 +69,7 @@ public class ExecutorExercise extends AbstractExercise {
         for (IExecutorService executor : executors) {
             executor.shutdownNow();
             if (!executor.awaitTermination(120, TimeUnit.SECONDS)) {
-                log.log(Level.SEVERE, "Time out while waiting for  shutdown of executor: " + executor.getId());
+                log.severe("Time out while waiting for  shutdown of executor: " + executor.getId());
             }
             executor.destroy();
         }
@@ -77,7 +77,7 @@ public class ExecutorExercise extends AbstractExercise {
 
     @Override
     public void globalVerify() throws Exception {
-        log.log(Level.INFO, "globalVerify called");
+        log.info( "globalVerify called");
         long actualCount = executedCounter.get();
         long expectedCount = expectedExecutedCounter.get();
         if (actualCount != expectedCount) {
@@ -115,7 +115,7 @@ public class ExecutorExercise extends AbstractExercise {
                 }
 
                 if (iteration % 10000 == 0) {
-                    log.log(Level.INFO, Thread.currentThread().getName() + " At iteration: " + iteration);
+                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
             }

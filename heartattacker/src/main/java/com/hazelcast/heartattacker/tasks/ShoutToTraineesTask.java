@@ -45,7 +45,7 @@ public class ShoutToTraineesTask implements Callable, Serializable, HazelcastIns
             Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
             coach.shoutToTrainees(task, taskDescription);
         } catch (Exception e) {
-            log.log(Level.SEVERE, format("Failed to execute [%s]", taskDescription), e);
+            log.severe(format("Failed to execute [%s]", taskDescription), e);
             throw e;
         }
 

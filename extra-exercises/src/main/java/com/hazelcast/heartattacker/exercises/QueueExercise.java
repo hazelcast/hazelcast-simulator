@@ -97,7 +97,7 @@ public class QueueExercise extends AbstractExercise {
                     long item = fromQueue.take();
                     toQueue.put(item + 1);
                     if (iteration % 2000 == 0) {
-                        log.log(Level.INFO, Thread.currentThread().getName() + " At iteration: " + iteration);
+                        log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                     }
                     iteration++;
                 }
