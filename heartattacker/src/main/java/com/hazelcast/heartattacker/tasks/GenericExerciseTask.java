@@ -50,9 +50,9 @@ public class GenericExerciseTask implements Callable, Serializable, HazelcastIns
             }
 
             Method method = exercise.getClass().getMethod(methodName);
-            method.invoke(exercise);
+            Object o = method.invoke(exercise);
             log.info("Finished calling exerciseInstance." + methodName + "()");
-            return null;
+            return o;
         } catch (Exception e) {
             log.severe(format("Failed to execute exercise.%s()", methodName), e);
             throw e;

@@ -19,6 +19,8 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.XmlClientConfigBuilder;
 import com.hazelcast.core.*;
+import com.hazelcast.heartattacker.performance.NotAvailable;
+import com.hazelcast.heartattacker.performance.Performance;
 import com.hazelcast.heartattacker.tasks.*;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -33,7 +35,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.Level;
 
 import static com.hazelcast.heartattacker.Utils.*;
 import static java.lang.String.format;
@@ -52,6 +53,7 @@ public class Manager {
     private volatile ExerciseRecipe exerciseRecipe;
     private String traineeClassPath;
     private boolean cleanGym;
+    private boolean monitorPerformance;
 
     public void setWorkout(Workout workout) {
         this.workout = workout;
@@ -237,6 +239,10 @@ public class Manager {
             submitToAllTrainesAndWait(new GenericExerciseTask("stop"), "exercise stop");
             sendStatusUpdate("Completed exercise stop");
 
+            if(monitorPerformance){
+               sendStatusUpdate(calcPerformance().toHumanString());
+            }
+
             sendStatusUpdate("Starting exercise global verify");
             submitToOneTrainee(new GenericExerciseTask("globalVerify"));
             sendStatusUpdate("Completed exercise global verify");
@@ -276,9 +282,34 @@ public class Manager {
             final float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, seconds, percentage);
             sendStatusUpdate(msg);
+            if(monitorPerformance){
+                sendStatusUpdate(calcPerformance().toHumanString());
+            }
         }
 
         Utils.sleepSeconds(small);
+    }
+
+    public Performance calcPerformance(){
+        ShoutToTraineesTask task = new ShoutToTraineesTask(new GenericExerciseTask("calcPerformance"),"calcPerformance");
+        Map<Member,Future<List<Performance>>> result = coachExecutor.submitToAllMembers(task);
+        Performance performance = null;
+        for(Future<List<Performance>> future : result.values()){
+            try {
+                List<Performance> results = future.get();
+                for(Performance p: results){
+                    if(performance == null){
+                        performance = p;
+                    }else{
+                        performance = performance.merge(p);
+                    }
+                }
+            } catch (InterruptedException e) {
+            } catch (ExecutionException e) {
+                log.severe(e);
+            }
+        }
+        return performance==null?new NotAvailable():performance;
     }
 
     private void stopTrainees() throws Exception {
@@ -371,6 +402,9 @@ public class Manager {
                 .withRequiredArg().ofType(String.class);
         OptionSpec<Integer> traineeStartupTimeoutSpec = parser.accepts("traineeStartupTimeout", "The startup timeout in seconds for a trainee")
                 .withRequiredArg().ofType(Integer.class).defaultsTo(60);
+        OptionSpec<Boolean> monitorPerformanceSpec = parser.accepts("monitorPerformance", "If performance monitoring should be done")
+                .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
         OptionSpec<Boolean> traineeRefreshSpec = parser.accepts("traineeFresh", "If the trainee VM's should be replaced after every workout")
                 .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
         OptionSpec<Boolean> failFastSpec = parser.accepts("failFast", "It the workout should fail immediately when an exercise from a workout fails instead of continuing ")
@@ -412,6 +446,8 @@ public class Manager {
                 exitWithError(format("Manager Hazelcast config file [%s] does not exist.\n", managerHzFile));
             }
             manager.managerHzFile = managerHzFile;
+
+            manager.monitorPerformance = options.valueOf(monitorPerformanceSpec);
 
             String workoutFileName = "workout.properties";
             List<String> workoutFiles = options.nonOptionArguments();

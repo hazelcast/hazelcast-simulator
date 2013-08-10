@@ -160,7 +160,7 @@ public class Coach {
         statusTopic.publish(heartAttack);
     }
 
-    public void shoutToTrainees(Callable task, String taskDescription) throws InterruptedException {
+    public List shoutToTrainees(Callable task, String taskDescription) throws InterruptedException {
         Map<TraineeVm, Future> futures = new HashMap<TraineeVm, Future>();
 
         for (TraineeVm traineeJvm : getTraineeVmManager().getTraineeJvms()) {
@@ -171,11 +171,13 @@ public class Coach {
             futures.put(traineeJvm, future);
         }
 
+        List results = new LinkedList();
         for (Map.Entry<TraineeVm, Future> entry : futures.entrySet()) {
             TraineeVm traineeJvm = entry.getKey();
             Future future = entry.getValue();
             try {
-                future.get();
+                Object result = future.get();
+                results.add(result);
             } catch (ExecutionException e) {
                 final HeartAttack heartAttack = new HeartAttack(
                         taskDescription,
@@ -188,6 +190,7 @@ public class Coach {
                 throw new HeartAttackAlreadyThrownRuntimeException(e);
             }
         }
+        return results;
     }
 
 

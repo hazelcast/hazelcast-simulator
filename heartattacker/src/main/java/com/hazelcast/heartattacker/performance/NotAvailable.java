@@ -1,6 +1,11 @@
 package com.hazelcast.heartattacker.performance;
 
-public class NotAvailable implements Performance{
+public class NotAvailable implements Performance<NotAvailable>{
+
+    @Override
+    public NotAvailable merge(NotAvailable performance) {
+        return this;
+    }
 
     @Override
     public String toHumanString() {

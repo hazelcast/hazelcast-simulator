@@ -1,6 +1,6 @@
 package com.hazelcast.heartattacker.performance;
 
-public class OperationsPerSecond implements Performance{
+public class OperationsPerSecond implements Performance<OperationsPerSecond>{
 
     private long operations;
     private long startMs;
@@ -28,6 +28,15 @@ public class OperationsPerSecond implements Performance{
 
     public void setEndMs(long endMs) {
         this.endMs = endMs;
+    }
+
+    @Override
+    public OperationsPerSecond merge(OperationsPerSecond that) {
+        OperationsPerSecond performance = new OperationsPerSecond();
+        performance.setStartMs(Math.min(that.getStartMs(), this.getStartMs()));
+        performance.setEndMs( Math.max(that.getEndMs(), this.getEndMs()));
+        performance.setOperations(this.getOperations()+that.getOperations());
+        return performance;
     }
 
     @Override

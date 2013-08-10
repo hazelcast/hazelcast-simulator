@@ -43,13 +43,11 @@ public class ShoutToTraineesTask implements Callable, Serializable, HazelcastIns
     public Object call() throws Exception {
         try {
             Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
-            coach.shoutToTrainees(task, taskDescription);
+            return coach.shoutToTrainees(task, taskDescription);
         } catch (Exception e) {
             log.severe(format("Failed to execute [%s]", taskDescription), e);
             throw e;
         }
-
-        return null;
     }
 
     @Override
