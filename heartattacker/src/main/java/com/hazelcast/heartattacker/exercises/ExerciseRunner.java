@@ -20,6 +20,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.heartattacker.Utils;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import org.apache.log4j.lf5.LogLevel;
 
 import java.util.UUID;
 import java.util.logging.Level;
@@ -40,7 +41,7 @@ public class ExerciseRunner {
         this.hazelcastInstance = hz;
     }
 
-    public void sleepSeconds(int seconds) {
+    public void sleepSeconds(Exercise exercise, int seconds) {
         int period = 30;
         int big = seconds / period;
         int small = seconds % period;
@@ -50,7 +51,8 @@ public class ExerciseRunner {
             final int elapsed = period * k;
             final float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, seconds, percentage);
-            log.log(Level.INFO, msg);
+            log.info(msg);
+            log.info(exercise.calcPerformance().toHumanString());
         }
 
         Utils.sleepSeconds(small);
@@ -64,41 +66,43 @@ public class ExerciseRunner {
         exercise.setHazelcastInstance(hazelcastInstance);
         exercise.setExerciseId(UUID.randomUUID().toString());
 
-        log.log(Level.INFO, "Starting localSetup");
+        log.info("Starting localSetup");
         exercise.localSetup();
-        log.log(Level.INFO, "Finished localSetup");
+        log.info( "Finished localSetup");
 
-        log.log(Level.INFO, "Starting globalSetup");
+        log.info( "Starting globalSetup");
         exercise.globalSetup();
-        log.log(Level.INFO, "Finished globalSetup");
+        log.info( "Finished globalSetup");
 
-        log.log(Level.INFO, "Starting start");
+        log.info("Starting start");
         exercise.start();
-        log.log(Level.INFO, "Finished start");
+        log.info( "Finished start");
 
-        sleepSeconds(durationSec);
+        sleepSeconds(exercise, durationSec);
 
-        log.log(Level.INFO, "Starting stop");
+        log.info("Starting stop");
         exercise.stop();
-        log.log(Level.INFO, "Finished stop");
+        log.info("Finished stop");
 
-        log.log(Level.INFO, "Starting globalVerify");
+        log.info(exercise.calcPerformance().toHumanString());
+
+        log.info("Starting globalVerify");
         exercise.globalVerify();
-        log.log(Level.INFO, "Finished globalVerify");
+        log.info("Finished globalVerify");
 
-        log.log(Level.INFO, "Starting localVerify");
+        log.info("Starting localVerify");
         exercise.localVerify();
-        log.log(Level.INFO, "Finished localVerify");
+        log.info( "Finished localVerify");
 
-        log.log(Level.INFO, "Starting localTearDown");
+        log.info("Starting localTearDown");
         exercise.localTearDown();
-        log.log(Level.INFO, "Finished localTearDown");
+        log.info( "Finished localTearDown");
 
-        log.log(Level.INFO, "Starting globalTearDown");
+        log.info( "Starting globalTearDown");
         exercise.globalTearDown();
-        log.log(Level.INFO, "Finished globalTearDown");
+        log.info("Finished globalTearDown");
 
         hazelcastInstance.getLifecycleService().shutdown();
-        System.out.println("Finished");
+        log.info("Finished");
     }
 }

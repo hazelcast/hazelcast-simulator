@@ -15,8 +15,8 @@
  */
 package com.hazelcast.heartattacker.exercises;
 
-import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.heartattacker.performance.Performance;
 
 /**
  * The ExerciseInstance is the 'thing' that contains the actual logic we want to run.
@@ -92,4 +92,6 @@ public interface Exercise {
     void setHazelcastInstance(HazelcastInstance hazelcastInstance);
 
     void setExerciseId(String id);
+
+    Performance calcPerformance();
 }

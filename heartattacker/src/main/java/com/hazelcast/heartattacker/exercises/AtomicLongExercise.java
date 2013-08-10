@@ -17,10 +17,13 @@ package com.hazelcast.heartattacker.exercises;
 
 
 import com.hazelcast.core.IAtomicLong;
+import com.hazelcast.heartattacker.performance.OperationsPerSecond;
+import com.hazelcast.heartattacker.performance.Performance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 public class AtomicLongExercise extends AbstractExercise {
@@ -29,9 +32,12 @@ public class AtomicLongExercise extends AbstractExercise {
 
     private int countersLength = 1000;
     private int threadCount = 1;
+    public int logFrequency = 10000;
+    public int performanceUpdateFrequency = 10000;
 
     private IAtomicLong totalCounter;
     private IAtomicLong[] counters;
+    private AtomicLong operations = new AtomicLong();
 
     @Override
     public void localSetup() {
@@ -69,6 +75,15 @@ public class AtomicLongExercise extends AbstractExercise {
         totalCounter.destroy();
     }
 
+    @Override
+    public Performance calcPerformance() {
+        OperationsPerSecond performance = new OperationsPerSecond();
+        performance.setStartMs(getStartTimeMs());
+        performance.setEndMs(getCurrentTimeMs());
+        performance.setOperations(operations.get());
+        return performance;
+    }
+
     private class Worker implements Runnable {
         private final Random random = new Random();
 
@@ -78,10 +93,13 @@ public class AtomicLongExercise extends AbstractExercise {
             while (!stop) {
                 int index = random.nextInt(counters.length);
                 counters[index].incrementAndGet();
-                if (iteration % 10000 == 0) {
+                if (iteration % logFrequency == 0) {
                     log.log(Level.INFO, Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
+                if(iteration % performanceUpdateFrequency == 0){
+                    operations.addAndGet(performanceUpdateFrequency);
+                }
                 iteration++;
             }
 
@@ -91,7 +109,7 @@ public class AtomicLongExercise extends AbstractExercise {
 
     public static void main(String[] args) throws Exception {
         AtomicLongExercise mapExercise = new AtomicLongExercise();
-        new ExerciseRunner().run(mapExercise, 20);
+        new ExerciseRunner().run(mapExercise, 60);
     }
 }
 

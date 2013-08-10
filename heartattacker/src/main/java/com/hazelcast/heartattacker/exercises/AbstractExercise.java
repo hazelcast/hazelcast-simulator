@@ -15,9 +15,10 @@
  */
 package com.hazelcast.heartattacker.exercises;
 
-import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.heartattacker.Utils;
+import com.hazelcast.heartattacker.performance.NotAvailable;
+import com.hazelcast.heartattacker.performance.Performance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
@@ -36,6 +37,7 @@ public abstract class AbstractExercise implements Exercise {
     protected volatile boolean stop = false;
     private final CountDownLatch startLatch = new CountDownLatch(1);
     private final Set<Thread> threads = new HashSet<Thread>();
+    private long startMs;
 
     public String getExerciseId() {
         return exerciseId;
@@ -83,6 +85,18 @@ public abstract class AbstractExercise implements Exercise {
         thread.start();
         return thread;
     }
+    public long getCurrentTimeMs(){
+        return hazelcastInstance.getCluster().getClusterTime();
+    }
+
+    public long getStartTimeMs(){
+        return startMs;
+    }
+
+    @Override
+    public Performance calcPerformance() {
+        return new NotAvailable();
+    }
 
     private class CatchingRunnable implements Runnable {
         private final Runnable runnable;
@@ -108,6 +122,7 @@ public abstract class AbstractExercise implements Exercise {
 
     @Override
     public void start() {
+        startMs = hazelcastInstance.getCluster().getClusterTime();
         startLatch.countDown();
     }
 

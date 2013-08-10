@@ -16,10 +16,13 @@
 package com.hazelcast.heartattacker.exercises;
 
 import com.hazelcast.core.IMap;
+import com.hazelcast.heartattacker.performance.OperationsPerSecond;
+import com.hazelcast.heartattacker.performance.Performance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 public class MapExercise extends AbstractExercise {
@@ -32,6 +35,7 @@ public class MapExercise extends AbstractExercise {
     private String[] keys;
     private String[] values;
     private Random random = new Random();
+    private final AtomicLong operations = new AtomicLong();
 
     //properties
     public int threadCount = 10;
@@ -39,6 +43,8 @@ public class MapExercise extends AbstractExercise {
     public int valueLength = 10;
     public int keyCount = 10000;
     public int valueCount = 10000;
+    public int logFrequency = 10000;
+    public int performanceUpdateFrequency = 10000;
     public boolean usePut = true;
 
     @Override
@@ -74,6 +80,15 @@ public class MapExercise extends AbstractExercise {
         map.destroy();
     }
 
+    @Override
+    public Performance calcPerformance() {
+        OperationsPerSecond performance = new OperationsPerSecond();
+        performance.setStartMs(getStartTimeMs());
+        performance.setEndMs(getCurrentTimeMs());
+        performance.setOperations(operations.get());
+        return performance;
+    }
+
     private class Worker implements Runnable {
         private final Random random = new Random();
 
@@ -90,9 +105,14 @@ public class MapExercise extends AbstractExercise {
                     map.set(key, value);
                 }
 
-                if (iteration % 10000 == 0) {
+                if (iteration % logFrequency == 0) {
                     log.log(Level.INFO, Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
+
+                if(iteration % logFrequency == 0){
+                    operations.addAndGet(logFrequency);
+                }
+
                 iteration++;
             }
         }
