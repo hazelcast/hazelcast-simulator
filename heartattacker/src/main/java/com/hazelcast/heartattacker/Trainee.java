@@ -25,7 +25,6 @@ import com.hazelcast.logging.Logger;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.InetSocketAddress;
-import java.util.logging.Level;
 
 import static com.hazelcast.heartattacker.Utils.writeObject;
 import static java.lang.String.format;

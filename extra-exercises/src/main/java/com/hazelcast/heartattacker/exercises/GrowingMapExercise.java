@@ -6,7 +6,6 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
 import java.util.Random;
-import java.util.logging.Level;
 
 public class GrowingMapExercise extends AbstractExercise {
 

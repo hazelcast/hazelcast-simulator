@@ -25,7 +25,6 @@ import com.hazelcast.logging.Logger;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.logging.Level;
 
 public abstract class AbstractExercise implements Exercise {
 

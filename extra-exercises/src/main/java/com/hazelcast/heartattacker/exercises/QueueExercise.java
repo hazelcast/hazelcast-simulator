@@ -21,7 +21,6 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
 import java.util.Queue;
-import java.util.logging.Level;
 
 public class QueueExercise extends AbstractExercise {
 

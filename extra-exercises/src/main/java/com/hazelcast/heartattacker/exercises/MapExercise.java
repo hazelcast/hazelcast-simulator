@@ -23,7 +23,6 @@ import com.hazelcast.logging.Logger;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
 
 public class MapExercise extends AbstractExercise {
 
@@ -109,8 +108,8 @@ public class MapExercise extends AbstractExercise {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
-                if(iteration % logFrequency == 0){
-                    operations.addAndGet(logFrequency);
+                if(iteration % performanceUpdateFrequency == 0){
+                    operations.addAndGet(performanceUpdateFrequency);
                 }
 
                 iteration++;

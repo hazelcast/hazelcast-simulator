@@ -23,7 +23,6 @@ import com.hazelcast.logging.Logger;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
 
 import static com.hazelcast.heartattacker.Utils.readObject;
 

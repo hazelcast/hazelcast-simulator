@@ -33,7 +33,6 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 
 import static com.hazelcast.heartattacker.Utils.*;
 import static java.lang.String.format;

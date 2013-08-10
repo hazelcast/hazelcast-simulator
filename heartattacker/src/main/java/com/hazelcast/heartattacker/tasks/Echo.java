@@ -20,7 +20,6 @@ import com.hazelcast.logging.Logger;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
 
 public class Echo implements Callable, Serializable {
     private final static ILogger log = Logger.getLogger(Echo.class);

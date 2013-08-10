@@ -22,7 +22,6 @@ import com.hazelcast.logging.Logger;
 
 import java.io.Serializable;
 import java.util.Random;
-import java.util.logging.Level;
 
 public class ProducerConsumerExercise extends AbstractExercise {
 

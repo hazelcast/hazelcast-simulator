@@ -32,7 +32,6 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
 
 import static com.hazelcast.heartattacker.Utils.getHeartAttackHome;
 import static java.lang.String.format;

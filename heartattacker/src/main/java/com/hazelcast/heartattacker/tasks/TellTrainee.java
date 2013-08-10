@@ -26,7 +26,6 @@ import java.io.Serializable;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 public class TellTrainee implements Callable, Serializable, HazelcastInstanceAware {
     private final static ILogger log = Logger.getLogger(TellTrainee.class);

@@ -15,8 +15,6 @@
  */
 package com.hazelcast.heartattacker.exercises;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
 
 import java.util.UUID;
@@ -27,6 +25,7 @@ public class MapTimeToLiveExercise extends AbstractExercise {
     public int workerCount = 3;
     public int putIntervalMillis = 10;
     public int waitAfterMillis = 2000;
+
     private IMap map;
     final private String mapName = "map:"+exerciseId;
 

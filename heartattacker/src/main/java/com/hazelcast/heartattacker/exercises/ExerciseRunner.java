@@ -20,10 +20,8 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.heartattacker.Utils;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import org.apache.log4j.lf5.LogLevel;
 
 import java.util.UUID;
-import java.util.logging.Level;
 
 import static java.lang.String.format;
 

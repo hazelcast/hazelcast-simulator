@@ -24,7 +24,6 @@ import com.hazelcast.logging.Logger;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
 
 import static java.lang.String.format;
 

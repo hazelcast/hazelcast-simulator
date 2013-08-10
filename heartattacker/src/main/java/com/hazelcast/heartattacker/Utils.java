@@ -21,7 +21,6 @@ import com.hazelcast.logging.Logger;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;

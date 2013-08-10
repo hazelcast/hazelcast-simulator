@@ -24,7 +24,6 @@ import com.hazelcast.logging.Logger;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
 
 public class PrepareCoachForExercise implements Callable, Serializable, HazelcastInstanceAware {
     private final static ILogger log = Logger.getLogger(PrepareCoachForExercise.class);
