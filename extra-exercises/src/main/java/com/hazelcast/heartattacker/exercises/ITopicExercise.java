@@ -83,7 +83,7 @@ public class ITopicExercise extends AbstractExercise{
     @Override
     public void stop() throws InterruptedException {
         super.stop();
-        boolean completed = listenersCompleteLatch.await(60, TimeUnit.SECONDS);
+        boolean completed = listenersCompleteLatch.await(60000, TimeUnit.SECONDS);
         if(!completed){
             throw new RuntimeException("Timeout while waiting TopicListeners to complete");
         }
