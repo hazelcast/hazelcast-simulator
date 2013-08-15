@@ -23,6 +23,7 @@ public class ITopicExercise extends AbstractExercise{
     public int listenersPerTopic = 1;
     public int logFrequency = 100000;
     public int performanceUpdateFrequency = 100000;
+    public int processingDelayMillis = 0;
 
     private IAtomicLong totalExpectedCounter;
     private IAtomicLong totalFoundCounter;
@@ -94,7 +95,16 @@ public class ITopicExercise extends AbstractExercise{
 
         @Override
         public void onMessage(Message<Long> message) {
+
+
             long l = message.getMessageObject();
+
+            if(processingDelayMillis>0){
+                try {
+                    Thread.sleep(processingDelayMillis);
+                } catch (InterruptedException e) {
+                }
+            }
 
             if(l<0){
                 totalFoundCounter.addAndGet(count);
