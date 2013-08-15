@@ -54,6 +54,16 @@ public class Manager {
     private String traineeClassPath;
     private boolean cleanGym;
     private boolean monitorPerformance;
+    private boolean verifyEnabled=true;
+    private Integer exerciseStopTimeoutMs;
+
+    public boolean isVerifyEnabled() {
+        return verifyEnabled;
+    }
+
+    public void setVerifyEnabled(boolean verifyEnabled) {
+        this.verifyEnabled = verifyEnabled;
+    }
 
     public void setWorkout(Workout workout) {
         this.workout = workout;
@@ -236,20 +246,24 @@ public class Manager {
             sendStatusUpdate("Exercise finished running");
 
             sendStatusUpdate("Starting exercise stop");
-            submitToAllTrainesAndWait(new GenericExerciseTask("stop"), "exercise stop");
+            stopExercise();
             sendStatusUpdate("Completed exercise stop");
 
             if(monitorPerformance){
                sendStatusUpdate(calcPerformance().toHumanString());
             }
 
-            sendStatusUpdate("Starting exercise global verify");
-            submitToOneTrainee(new GenericExerciseTask("globalVerify"));
-            sendStatusUpdate("Completed exercise global verify");
+            if (verifyEnabled) {
+                sendStatusUpdate("Starting exercise global verify");
+                submitToOneTrainee(new GenericExerciseTask("globalVerify"));
+                sendStatusUpdate("Completed exercise global verify");
 
-            sendStatusUpdate("Starting exercise local verify");
-            submitToAllTrainesAndWait(new GenericExerciseTask("localVerify"), "exercise local verify");
-            sendStatusUpdate("Completed exercise local verify");
+                sendStatusUpdate("Starting exercise local verify");
+                submitToAllTrainesAndWait(new GenericExerciseTask("localVerify"), "exercise local verify");
+                sendStatusUpdate("Completed exercise local verify");
+            } else {
+                sendStatusUpdate("Skipping exercise verification");
+            }
 
             sendStatusUpdate("Starting exercise local teardown");
             submitToAllTrainesAndWait(new GenericExerciseTask("localTearDown"), "exercise local tearDown");
@@ -264,6 +278,12 @@ public class Manager {
             log.severe("Failed", e);
             return false;
         }
+    }
+
+    private void stopExercise() throws ExecutionException, InterruptedException {
+        Callable task = new ShoutToTraineesTask(new GenericExerciseTask("stop"), "exercise stop");
+        Map<Member, Future> map = coachExecutor.submitToAllMembers(task);
+        getAllFutures(map.values(), exerciseStopTimeoutMs);
     }
 
     public void sleepSeconds(int seconds) {
@@ -362,9 +382,14 @@ public class Manager {
     }
 
     private void getAllFutures(Collection<Future> futures) throws InterruptedException, ExecutionException {
+        getAllFutures(futures, TimeUnit.SECONDS.toMillis(10000));
+    }
+
+    private void getAllFutures(Collection<Future> futures, long timeoutMs) throws InterruptedException, ExecutionException {
         for (Future future : futures) {
             try {
-                Object o = future.get(1000, TimeUnit.SECONDS);
+                //todo: we should calculate remaining timeoutMs
+                Object o = future.get(timeoutMs, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
                 statusTopic.publish(new HeartAttack("Timeout waiting for remote operation to complete", null, null, null, getExerciseRecipe(), e));
                 throw new RuntimeException(e);
@@ -404,7 +429,8 @@ public class Manager {
                 .withRequiredArg().ofType(Integer.class).defaultsTo(60);
         OptionSpec<Boolean> monitorPerformanceSpec = parser.accepts("monitorPerformance", "If performance monitoring should be done")
                 .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
-
+        OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled", "If exercise should be verified")
+                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
         OptionSpec<Boolean> traineeRefreshSpec = parser.accepts("traineeFresh", "If the trainee VM's should be replaced after every workout")
                 .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
         OptionSpec<Boolean> failFastSpec = parser.accepts("failFast", "It the workout should fail immediately when an exercise from a workout fails instead of continuing ")
@@ -421,6 +447,8 @@ public class Manager {
         OptionSpec<String> traineeJavaVersionSpec = parser.accepts("traineeJavaVersion", "The Java version (e.g. 1.6) of the JVM used by the trainee). " +
                 "If nothing is specified, the coach is free to pick a version.")
                 .withRequiredArg().ofType(String.class).defaultsTo("");
+        OptionSpec<Integer> exerciseStopTimeoutMsSpec = parser.accepts("exerciseStopTimeoutMs", "Maximum amount of time waiting for the exercise to stop")
+                .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
 
         OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
@@ -446,8 +474,9 @@ public class Manager {
                 exitWithError(format("Manager Hazelcast config file [%s] does not exist.\n", managerHzFile));
             }
             manager.managerHzFile = managerHzFile;
-
+            manager.verifyEnabled = options.valueOf(verifyEnabledSpec);
             manager.monitorPerformance = options.valueOf(monitorPerformanceSpec);
+            manager.exerciseStopTimeoutMs = options.valueOf(exerciseStopTimeoutMsSpec);
 
             String workoutFileName = "workout.properties";
             List<String> workoutFiles = options.nonOptionArguments();

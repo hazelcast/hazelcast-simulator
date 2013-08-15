@@ -27,7 +27,7 @@ import com.hazelcast.heartattacker.performance.Performance;
  * <li>{@link #localSetup()}</li>
  * <li>{@link #globalSetup()}</li>
  * <li>{@link #start()}</li>
- * <li>{@link #stop()}</li>
+ * <li>{@link #stop(long)}</li>
  * <li>{@link #localVerify()}</li>
  * <li>{@link #globalVerify()}</li>
  * <li>{@link #globalTearDown()}</li>
@@ -83,7 +83,7 @@ public interface Exercise {
      *
      * @throws Exception
      */
-    void stop() throws Exception;
+    void stop(long timeoutMs) throws Exception;
 
     void localVerify() throws Exception;
 

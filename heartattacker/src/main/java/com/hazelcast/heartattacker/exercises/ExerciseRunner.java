@@ -22,6 +22,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -30,6 +31,7 @@ public class ExerciseRunner {
     private final static ILogger log = Logger.getLogger(ExerciseRunner.class);
 
     private HazelcastInstance hazelcastInstance;
+    private long stopTimeoutMs = TimeUnit.SECONDS.toMillis(60);
 
     public HazelcastInstance getHazelcastInstance() {
         return hazelcastInstance;
@@ -37,6 +39,18 @@ public class ExerciseRunner {
 
     public void setHazelcastInstance(HazelcastInstance hz) {
         this.hazelcastInstance = hz;
+    }
+
+    public static ILogger getLog() {
+        return log;
+    }
+
+    public long getStopTimeoutMs() {
+        return stopTimeoutMs;
+    }
+
+    public void setStopTimeoutMs(long stopTimeoutMs) {
+        this.stopTimeoutMs = stopTimeoutMs;
     }
 
     public void sleepSeconds(Exercise exercise, int seconds) {
@@ -79,7 +93,7 @@ public class ExerciseRunner {
         sleepSeconds(exercise, durationSec);
 
         log.info("Starting stop");
-        exercise.stop();
+        exercise.stop(stopTimeoutMs);
         log.info("Finished stop");
 
         log.info(exercise.calcPerformance().toHumanString());

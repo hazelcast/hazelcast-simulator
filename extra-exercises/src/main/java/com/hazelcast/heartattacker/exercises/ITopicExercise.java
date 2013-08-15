@@ -24,6 +24,7 @@ public class ITopicExercise extends AbstractExercise{
     public int logFrequency = 100000;
     public int performanceUpdateFrequency = 100000;
     public int processingDelayMillis = 0;
+    public boolean waitForMessagesToComplete = true;
 
     private IAtomicLong totalExpectedCounter;
     private IAtomicLong totalFoundCounter;
@@ -43,7 +44,7 @@ public class ITopicExercise extends AbstractExercise{
             topics[k] = topic;
 
             for(int l=0;l<listenersPerTopic;l++){
-                topic.addMessageListener(new TopicListener());
+                new TopicListener(topic);
             }
         }
 
@@ -81,22 +82,29 @@ public class ITopicExercise extends AbstractExercise{
     }
 
     @Override
-    public void stop() throws InterruptedException {
-        super.stop();
-        boolean completed = listenersCompleteLatch.await(60000, TimeUnit.SECONDS);
+    public void stop(long timeoutMs) throws InterruptedException {
+        //todo: we should calculate remining timeout
+        super.stop(timeoutMs);
+
+        boolean completed = listenersCompleteLatch.await(timeoutMs,TimeUnit.MILLISECONDS);
         if(!completed){
             throw new RuntimeException("Timeout while waiting TopicListeners to complete");
         }
     }
 
     private class TopicListener implements MessageListener<Long>{
+        private final ITopic topic;
+        private final String registrationId;
         private long count;
         private boolean completed = false;
 
+        private TopicListener(ITopic topic){
+            this.topic = topic;
+            registrationId = topic.addMessageListener(this);
+        }
+
         @Override
         public void onMessage(Message<Long> message) {
-
-
             long l = message.getMessageObject();
 
             if(processingDelayMillis>0){
@@ -106,7 +114,9 @@ public class ITopicExercise extends AbstractExercise{
                 }
             }
 
-            if(l<0){
+            boolean stopped = (!waitForMessagesToComplete&&stop)||l<0;
+
+            if(stopped){
                 totalFoundCounter.addAndGet(count);
                 count = 0;
 
@@ -114,6 +124,7 @@ public class ITopicExercise extends AbstractExercise{
                     completed = true;
                     listenersCompleteLatch.countDown();
                 }
+                topic.removeMessageListener(registrationId);
             }else{
                 count+=message.getMessageObject();
             }

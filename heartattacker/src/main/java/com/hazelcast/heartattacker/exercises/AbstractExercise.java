@@ -126,10 +126,12 @@ public abstract class AbstractExercise implements Exercise {
     }
 
     @Override
-    public void stop() throws InterruptedException {
+    public void stop(long timeout) throws InterruptedException {
         stop = true;
+
         for (Thread thread : threads) {
-            thread.join();
+            //todo: we should calculate remaining timeout..
+            thread.join(timeout);
         }
         threads.clear();
     }
