@@ -281,9 +281,9 @@ public class Manager {
     }
 
     private void stopExercise() throws ExecutionException, InterruptedException {
-        Callable task = new ShoutToTraineesTask(new GenericExerciseTask("stop"), "exercise stop");
+        Callable task = new ShoutToTraineesTask(new StopTask(exerciseStopTimeoutMs), "exercise stop");
         Map<Member, Future> map = coachExecutor.submitToAllMembers(task);
-        getAllFutures(map.values(), exerciseStopTimeoutMs);
+        getAllFutures(map.values());
     }
 
     public void sleepSeconds(int seconds) {
