@@ -146,7 +146,7 @@ public class Coach {
                     Exception e = (Exception) messageObject;
                     log.severe(e);
                 } else {
-                    log.severe(messageObject.toString());
+                    log.info(messageObject.toString());
                 }
             }
         });

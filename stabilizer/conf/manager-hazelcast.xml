@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 
-<hazelcast-client xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.2.xsd"
-                  xmlns="http://www.hazelcast.com/schema/client-config"
-                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<hazelcast-client
+        xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.0.xsd"
+        xmlns="http://www.hazelcast.com/schema/client-config"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
     <group>
         <name>coach</name>
     </group>

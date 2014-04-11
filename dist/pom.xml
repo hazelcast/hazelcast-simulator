@@ -11,7 +11,7 @@
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <name>Hazelcast Stabilizer - Dist</name>
+    <name>Hazelcast Stabilizer Dist</name>
 
     <dependencies>
         <dependency>
