@@ -4,11 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.hazelcast.heartattacker</groupId>
-    <artifactId>heartattacker-root</artifactId>
+    <groupId>com.hazelcast.stabilizer</groupId>
+    <artifactId>stabalizer-root</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Hazelcast Heart Attack Tool - Root</name>
+    <name>Hazelcast Stabilizer Tool - Root</name>
 
     <repositories>
         <repository>
@@ -21,14 +21,14 @@
     <properties>
         <java.version>1.6</java.version>
         <junit.version>4.10</junit.version>
-        <hazelcast.version>3.2-SNAPSHOT</hazelcast.version>
+        <hazelcast.version>3.2</hazelcast.version>
         <jopt.version>4.4</jopt.version>
         <log4j.version>1.2.17</log4j.version>
 
     </properties>
 
     <modules>
-        <module>heartattacker</module>
+        <module>stabilizer</module>
         <module>extra-exercises</module>
         <module>dist</module>
     </modules>

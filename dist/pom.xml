@@ -6,8 +6,8 @@
     <packaging>jar</packaging>
 
     <parent>
-        <groupId>com.hazelcast.heartattacker</groupId>
-        <artifactId>heartattacker-root</artifactId>
+        <groupId>com.hazelcast.stabilizer</groupId>
+        <artifactId>stabalizer-root</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
@@ -15,8 +15,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hazelcast.heartattacker</groupId>
-            <artifactId>heartattacker</artifactId>
+            <groupId>com.hazelcast.stabilizer</groupId>
+            <artifactId>stabilizer</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
