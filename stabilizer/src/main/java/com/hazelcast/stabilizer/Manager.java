@@ -41,7 +41,7 @@ import static java.lang.String.format;
 
 public class Manager {
 
-    private final static File HEART_ATTACK_HOME = getHeartAttackHome();
+    private final static File STABILIZER_HOME = getStablizerHome();
     private final static ILogger log = Logger.getLogger(Manager.class);
 
     private Workout workout;
@@ -108,7 +108,7 @@ public class Manager {
         log.info(format("Total number of coaches: %s", members.size()));
         log.info(format("Total number of trainees: %s", members.size() * traineeVmSettings.getTraineeCount()));
 
-        ITopic heartAttackTopic = client.getTopic(Coach.COACH_HEART_ATTACK_TOPIC);
+        ITopic heartAttackTopic = client.getTopic(Coach.COACH_STABILIZEr_TOPIC);
         heartAttackTopic.addMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
@@ -406,13 +406,13 @@ public class Manager {
         ClientConfig clientConfig = new XmlClientConfigBuilder(new FileInputStream(managerHzFile)).build();
         client = HazelcastClient.newHazelcastClient(clientConfig);
         coachExecutor = client.getExecutorService("Coach:Executor");
-        statusTopic = client.getTopic(Coach.COACH_HEART_ATTACK_TOPIC);
+        statusTopic = client.getTopic(Coach.COACH_STABILIZEr_TOPIC);
     }
 
     public static void main(String[] args) throws Exception {
-        log.info("Hazelcast Heart Attack Manager");
+        log.info("Hazelcast Stabilizer Manager");
         log.info(format("Version: %s", getVersion()));
-        log.info(format("HEART_ATTACK_HOME: %s", HEART_ATTACK_HOME));
+        log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         OptionParser parser = new OptionParser();
         OptionSpec cleanGymSpec = parser.accepts("cleanGym", "Cleans the gym directory on all coaches");
@@ -438,9 +438,9 @@ public class Manager {
         OptionSpec<String> traineeVmOptionsSpec = parser.accepts("traineeVmOptions", "Trainee VM options (quotes can be used)")
                 .withRequiredArg().ofType(String.class).defaultsTo("");
         OptionSpec<String> traineeHzFileSpec = parser.accepts("traineeHzFile", "The Hazelcast xml configuration file for the trainee")
-                .withRequiredArg().ofType(String.class).defaultsTo(HEART_ATTACK_HOME + File.separator + "conf" + File.separator + "trainee-hazelcast.xml");
+                .withRequiredArg().ofType(String.class).defaultsTo(STABILIZER_HOME + File.separator + "conf" + File.separator + "trainee-hazelcast.xml");
         OptionSpec<String> managerHzFileSpec = parser.accepts("managerHzFile", "The client Hazelcast xml configuration file for the manager")
-                .withRequiredArg().ofType(String.class).defaultsTo(HEART_ATTACK_HOME + File.separator + "conf" + File.separator + "manager-hazelcast.xml");
+                .withRequiredArg().ofType(String.class).defaultsTo(STABILIZER_HOME + File.separator + "conf" + File.separator + "manager-hazelcast.xml");
         OptionSpec<String> traineeJavaVendorSpec = parser.accepts("traineeJavaVendor", "The Java vendor (e.g. openjdk or sun) of the JVM used by the trainee). " +
                 "If nothing is specified, the coach is free to pick a vendor.")
                 .withRequiredArg().ofType(String.class).defaultsTo("");

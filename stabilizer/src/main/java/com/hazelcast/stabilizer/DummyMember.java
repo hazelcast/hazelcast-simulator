@@ -15,12 +15,12 @@ import joptsimple.OptionSpec;
 import java.io.File;
 
 import static com.hazelcast.stabilizer.Utils.exitWithError;
-import static com.hazelcast.stabilizer.Utils.getHeartAttackHome;
+import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static java.lang.String.format;
 
 public class DummyMember {
-    private final static File HEART_ATTACK_HOME = getHeartAttackHome();
+    private final static File STABILIZER_HOME = getStablizerHome();
     private final static ILogger log = Logger.getLogger(DummyMember.class);
     private File hzFile;
 
@@ -36,11 +36,11 @@ public class DummyMember {
     public static void main(String[] args) throws Exception {
         log.info("Hazelcast Heart Attack Dummy Member");
         log.info(format("Version: %s", getVersion()));
-        log.info(format("HEART_ATTACK_HOME: %s", HEART_ATTACK_HOME));
+        log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         OptionParser parser = new OptionParser();
         OptionSpec<String> hzFileSpec = parser.accepts("hzFile", "The Hazelcast xml configuration file")
-                .withRequiredArg().ofType(String.class).defaultsTo(HEART_ATTACK_HOME + File.separator + "conf" + File.separator + "trainee-hazelcast.xml");
+                .withRequiredArg().ofType(String.class).defaultsTo(STABILIZER_HOME + File.separator + "conf" + File.separator + "trainee-hazelcast.xml");
 
         OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 

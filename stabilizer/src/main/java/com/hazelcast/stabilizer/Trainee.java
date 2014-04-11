@@ -85,7 +85,7 @@ public class Trainee {
         logSystemProperty("user.dir");
         logSystemProperty("user.home");
         logSystemProperty("user.name");
-        logSystemProperty("HEART_ATTACK_HOME");
+        logSystemProperty("STABILIZER_HOME");
         logSystemProperty("hazelcast.logging.type");
         logSystemProperty("traineeId");
         logSystemProperty("log4j.configuration");
@@ -96,7 +96,7 @@ public class Trainee {
     }
 
     public static void main(String[] args) {
-        log.info("Starting Hazelcast Heart Attack Trainee");
+        log.info("Starting Stabilizer Trainee");
         logInterestingSystemProperties();
 
         String traineeId = args[0];
@@ -111,6 +111,6 @@ public class Trainee {
         trainee.setTraineeHzFile(traineeHzFile);
         trainee.start();
 
-        log.info( "Successfully started Hazelcast Heart Attack Trainee:" + traineeId);
+        log.info( "Successfully started Hazelcast Stabilizer Trainee:" + traineeId);
     }
 }

@@ -242,12 +242,12 @@ public final class Utils {
     }
 
 
-    public static File getHeartAttackHome() {
-        String heartAttackHome = System.getenv("HEART_ATTACK_HOME");
-        if (heartAttackHome == null) {
+    public static File getStablizerHome() {
+        String home = System.getenv("STABILIZER_HOME");
+        if (home == null) {
             return new File(System.getProperty("user.dir"));
         } else {
-            return new File(heartAttackHome);
+            return new File(home);
         }
     }
 

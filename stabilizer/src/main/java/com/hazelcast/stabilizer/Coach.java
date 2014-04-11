@@ -40,13 +40,13 @@ import static java.lang.String.format;
 public class Coach {
 
     private final static ILogger log = Logger.getLogger(Coach.class);
-    private final static File HEART_ATTACK_HOME = getHeartAttackHome();
+    private final static File STABILIZER_HOME = getStablizerHome();
 
     public static final String KEY_COACH = "Coach";
-    public static final String COACH_HEART_ATTACK_TOPIC = "Coach:heartAttackTopic";
+    public static final String COACH_STABILIZEr_TOPIC = "Coach:stabilizerTopic";
 
-    public final static File heartAttackHome = getHeartAttackHome();
-    public final static File gymHome = new File(getHeartAttackHome(), "gym");
+    public final static File stabilizerHome = getStablizerHome();
+    public final static File gymHome = new File(getStablizerHome(), "gym");
 
     private File coachHzFile;
     private volatile HazelcastInstance coachHz;
@@ -129,7 +129,7 @@ public class Coach {
         }
         config.getUserContext().put(KEY_COACH, this);
         coachHz = Hazelcast.newHazelcastInstance(config);
-        statusTopic = coachHz.getTopic(COACH_HEART_ATTACK_TOPIC);
+        statusTopic = coachHz.getTopic(COACH_STABILIZEr_TOPIC);
         statusTopic.addMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
@@ -241,17 +241,17 @@ public class Coach {
     public static void main(String[] args) throws Exception {
         log.info("Hazelcast  Coach");
         log.info(format("Version: %s\n", getVersion()));
-        log.info(format("HEART_ATTACK_HOME: %s\n", heartAttackHome));
+        log.info(format("STABILIZER_HOME: %s\n", stabilizerHome));
 
         OptionParser parser = new OptionParser();
         OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
         OptionSpec<String> coachHzFileSpec = parser.accepts("coachHzFile", "The Hazelcast xml configuration file for the coach")
                 .withRequiredArg().ofType(String.class)
-                .defaultsTo(heartAttackHome + File.separator + "conf" + File.separator + "coach-hazelcast.xml");
+                .defaultsTo(stabilizerHome + File.separator + "conf" + File.separator + "coach-hazelcast.xml");
         OptionSpec<String> javaInstallationsFileSpec = parser.accepts("javaInstallationsFile",
                 "A property file containing the Java installations used by Trainees launched by this Coach ")
                 .withRequiredArg().ofType(String.class)
-                .defaultsTo(HEART_ATTACK_HOME + File.separator + "conf" + File.separator + "java-installations.properties");
+                .defaultsTo(STABILIZER_HOME + File.separator + "conf" + File.separator + "java-installations.properties");
 
         try {
             OptionSet options = parser.parse(args);

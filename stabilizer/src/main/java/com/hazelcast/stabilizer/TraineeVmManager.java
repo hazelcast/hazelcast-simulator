@@ -33,7 +33,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.Utils.getHeartAttackHome;
+import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static java.lang.String.format;
 
 public class TraineeVmManager {
@@ -41,7 +41,7 @@ public class TraineeVmManager {
     private final static ILogger log = Logger.getLogger(TraineeVmManager.class);
     private final static File USER_DIR = new File(System.getProperty("user.dir"));
     private final static String CLASSPATH = System.getProperty("java.class.path");
-    private final static File HEART_ATTACK_HOME = getHeartAttackHome();
+    private final static File STABILIZER_HOME = getStablizerHome();
     private final static String CLASSPATH_SPERATOR = System.getProperty("path.separator");
     private final static AtomicLong TRAINEE_ID_GENERATOR = new AtomicLong();
 
@@ -130,10 +130,10 @@ public class TraineeVmManager {
         List<String> args = new LinkedList<String>();
         args.add("java");
         args.add(format("-XX:OnOutOfMemoryError=\"\"touch %s.oome\"\"", traineeId));
-        args.add("-DHEART_ATTACK_HOME=" + getHeartAttackHome());
+        args.add("-DSTABILIZER_HOME=" + getStablizerHome());
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-DtraineeId=" + traineeId);
-        args.add("-Dlog4j.configuration=file:" + HEART_ATTACK_HOME + File.separator + "conf" + File.separator + "trainee-log4j.xml");
+        args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "trainee-log4j.xml");
         args.add("-classpath");
 
         File libDir = new File(coach.getWorkoutHome(), "lib");
