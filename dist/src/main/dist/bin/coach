@@ -6,7 +6,6 @@ fi
 
 echo  STABILIZER_HOME = ${STABILIZER_HOME}
 
-JAVA_EXTRA_OPTS=""
 export JAVA_OPTS="-Xms64m -Xmx1g -XX:MaxPermSize=256m -server ${JAVA_EXTRA_OPTS}"
 echo JAVA_OPTS = ${JAVA_OPTS}
 java -cp "${STABILIZER_HOME}/lib/*" ${JAVA_OPTS} \
