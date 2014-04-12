@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<hazelcast-client
+        xsi:schemaLocation="http://www.hazelcast.com/schema/client-config hazelcast-client-config-3.2.xsd"
+        xmlns="http://www.hazelcast.com/schema/client-config"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <group>
+        <name>coach</name>
+    </group>
+
+    <network>
+        <cluster-members>
+            <address>ec2-75-101-206-106.compute-1.amazonaws.com:8701</address>
+<address>ec2-54-198-163-157.compute-1.amazonaws.com:8701</address>
+<address>ec2-54-237-130-117.compute-1.amazonaws.com:8701</address>
+<address>ec2-54-81-211-99.compute-1.amazonaws.com:8701</address>
+
+        </cluster-members>
+        <smart-routing>true</smart-routing>
+        <redo-operation>true</redo-operation>
+    </network>
+
+</hazelcast-client>

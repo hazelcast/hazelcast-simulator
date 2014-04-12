@@ -1,0 +1,21 @@
+#!/bin/sh
+
+INSTANCE_COUNT=$1
+AMI=ami-15203f7c
+AVAILABILITY_ZONE=us-east-1a
+SECURITY_GROUP=open
+#15 gigs of ram, 8 vcpus  26 ecus.
+#INSTANCE_TYPE=c3.2xlarge
+#temporary usage of less powerful machine due to ec2 limitations.
+INSTANCE_TYPE=c1.xlarge
+KEY_PAIR=testmachine2
+
+echo Starting $INSTANCE_COUNT $INSTANCE_TYPE machines
+
+ec2-run-instances \
+	--availability-zone $AVAILABILITY_ZONE \
+	--instance-type $INSTANCE_TYPE \
+	--instance-count $INSTANCE_COUNT \
+	--group $SECURITY_GROUP \
+	--key $KEY_PAIR \
+	$AMI
