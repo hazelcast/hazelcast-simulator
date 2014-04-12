@@ -10,18 +10,16 @@ INSTANCE_COUNT=4
 
 #Amazon Linux AMI 2014.03
 AMI=ami-2f726546
-
-# AMI's
 #Red Hat Enterprise Linux 6.4 (64-bit)
-#ami-a25415cb
+#AMI=ami-a25415cb
 #Red Hat Enterprise Linux 6.5 (64-bit)
-#ami-63b6910a
+#AMI=ami-63b6910a
 #Amazon Linux AMI 2014.03 (64-bit)
-#ami-2f726546
+#AMI=ami-2f726546
 #Ubuntu Server 12.04 LTS (64-bit)
-#ami-59a4a230
+#AMI=ami-59a4a230
 #Ubuntu Server 13.10  (64-bit)
-#ami-35dbde5c
+#AMI=ami-35dbde5c
 
 AVAILABILITY_ZONE=us-east-1a
 SECURITY_GROUP=open
@@ -31,7 +29,7 @@ SECURITY_GROUP=open
 INSTANCE_TYPE=c1.xlarge
 KEY_PAIR=testmachine2
 USER=ec2-user
-LICENSE=/home/alarmnummer/Downloads/testmachine2.pem
+LICENSE=~/testmachine2.pem
 INSTALL_DIR=
 COACH_PORT=8701
 
