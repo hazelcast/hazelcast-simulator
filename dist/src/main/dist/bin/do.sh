@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ -z "${STABILIZER_HOME}" ] ; then
+    export STABILIZER_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
+fi
+
+echo  STABILIZER_HOME = ${STABILIZER_HOME}
+
 INSTANCE_COUNT=4
 
 #Amazon Linux AMI 2014.03
@@ -80,7 +86,7 @@ function install_stabilizer {
 
     echo "Copying stabilizer files"
     #we need to pull out this property
-    scp -i ${LICENSE} -r /java/projects/Hazelcast/hazelcast-stabilizer-0.1-SNAPSHOT/ ${USER}@${PRIVATE_IP}:
+    scp -i ${LICENSE} -r ${STABILIZER_HOME} ${USER}@${PRIVATE_IP}:
     #we need to override the hazelcast config file with the one we generated.
     scp -i ${LICENSE}  coach-hazelcast.xml ${USER}@${PRIVATE_IP}:hazelcast-stabilizer-0.1-SNAPSHOT/conf/
 
