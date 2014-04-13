@@ -6,4 +6,4 @@ fi
 
 echo  STABILIZER_HOME = ${STABILIZER_HOME}
 
-$STABILIZER_HOME/bin/start-machines 10
+$STABILIZER_HOME/bin/start-machines 1

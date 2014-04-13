@@ -8,34 +8,11 @@ echo  STABILIZER_HOME = ${STABILIZER_HOME}
 
 INSTANCE_COUNT=$1
 
-#Amazon Linux AMI 2014.03
-AMI=ami-2f726546
-#Red Hat Enterprise Linux 6.4 (64-bit)
-#AMI=ami-a25415cb
-#Red Hat Enterprise Linux 6.5 (64-bit)
-#AMI=ami-63b6910a
-#Amazon Linux AMI 2014.03 (64-bit)
-#AMI=ami-2f726546
-#Ubuntu Server 12.04 LTS (64-bit)
-#AMI=ami-59a4a230
-#Ubuntu Server 13.10  (64-bit)
-#AMI=ami-35dbde5c
-
-AVAILABILITY_ZONE=us-east-1a
-SECURITY_GROUP=open
-#15 gigs of ram, 8 vcpus  26 ecus.
-#INSTANCE_TYPE=c3.2xlarge
-#temporary usage of less powerful machine due to ec2 limitations
-INSTANCE_TYPE=c1.xlarge
-KEY_PAIR=testmachine2
-USER=ec2-user
-LICENSE=~/testmachine2.pem
-INSTALL_DIR=
-COACH_PORT=8701
+. ${STABILIZER_HOME}/start.properties
 
 function private_ip {
     local INSTANCE=$1
-    local PRIVATE_IP=$( ec2-describe-instances | grep $INSTANCE | cut -f 18 )
+    local PRIVATE_IP=$( ec2-describe-instances | grep ${INSTANCE} | cut -f 18 )
     echo $PRIVATE_IP
 }
 
@@ -46,20 +23,20 @@ function wait_started {
 
     for ATTEMPT in {1..300}
     do
-        local STATUS_CHECKS=$( ec2-describe-instance-status $INSTANCE | sed -n 1p | cut -f 4 )
-        local INSTANCE_STATUS=$( ec2-describe-instance-status $INSTANCE | sed -n 3p | cut -f 3 )
+        local STATUS_CHECKS=$( ec2-describe-instance-status ${INSTANCE} | sed -n 1p | cut -f 4 )
+        local INSTANCE_STATUS=$( ec2-describe-instance-status ${INSTANCE} | sed -n 3p | cut -f 3 )
 
         if [ "${INSTANCE_STATUS}" = "passed" ] ;
         then
-            echo Instance $INSTANCE is running
+            echo Instance ${INSTANCE} is running
             return
         else
-            echo [$ATTEMPT] Status: [$INSTANCE_STATUS]
+            echo [${ATTEMPT}] Status: [${INSTANCE_STATUS}]
         fi
     done
 
     echo ${INSTANCE} Failed to start
-    ec2-describe-instance-status $INSTANCE
+    ec2-describe-instance-status ${INSTANCE}
     exit
 }
 
@@ -67,7 +44,7 @@ function install_stabilizer {
     local PRIVATE_IP=$1
 
     echo ==============================================================
-    echo Installing Coach on $PRIVATE_IP
+    echo Installing Coach on ${PRIVATE_IP}
     echo ==============================================================
 
     local MEMBERS=""
