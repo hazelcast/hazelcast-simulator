@@ -1,5 +1,0 @@
-RESERVATION	r-4fb5a861	665466731577	open
-INSTANCE	i-dfbdbe8e	ami-2f726546			pending	testmachine2	1		c1.xlarge	2014-04-12T12:29:13+0000	us-east-1a	aki-919dcaf8			monitoring-disabled					ebs					paravirtual	xen		sg-e73b088c	default	false	
-INSTANCE	i-debdbe8f	ami-2f726546			pending	testmachine2	0		c1.xlarge	2014-04-12T12:29:13+0000	us-east-1a	aki-919dcaf8			monitoring-disabled					ebs					paravirtual	xen		sg-e73b088c	default	false	
-INSTANCE	i-a7bdbef6	ami-2f726546			pending	testmachine2	2		c1.xlarge	2014-04-12T12:29:13+0000	us-east-1a	aki-919dcaf8			monitoring-disabled					ebs					paravirtual	xen		sg-e73b088c	default	false	
-INSTANCE	i-a6bdbef7	ami-2f726546			pending	testmachine2	3		c1.xlarge	2014-04-12T12:29:13+0000	us-east-1a	aki-919dcaf8			monitoring-disabled					ebs					paravirtual	xen		sg-e73b088c	default	false	

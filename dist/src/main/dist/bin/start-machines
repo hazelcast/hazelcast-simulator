@@ -8,7 +8,7 @@ echo  STABILIZER_HOME = ${STABILIZER_HOME}
 
 INSTANCE_COUNT=$1
 
-. ${STABILIZER_HOME}/start.properties
+. ${STABILIZER_HOME}/bin/start.properties
 
 function private_ip {
     local INSTANCE=$1
