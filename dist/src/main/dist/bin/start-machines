@@ -82,6 +82,10 @@ function install_stabilizer {
     echo "Making SSH Connection"
     ssh -i ${LICENSE} -o StrictHostKeyChecking=no ${USER}@${PRIVATE_IP} "ls"
 
+    #install java under Ubuntu.
+    ssh -i ${LICENSE} -o StrictHostKeyChecking=no ${USER}@${PRIVATE_IP} "sudo apt-get update || true"
+    ssh -i ${LICENSE} -o StrictHostKeyChecking=no ${USER}@${PRIVATE_IP} "sudo apt-get install -y openjdk-7-jdk || true"
+
     echo "Copying stabilizer files"
     #we need to pull out this property
     scp -i ${LICENSE} -r ${STABILIZER_HOME} ${USER}@${PRIVATE_IP}:

@@ -29,7 +29,6 @@
 
     <modules>
         <module>stabilizer</module>
-        <module>extra-exercises</module>
         <module>dist</module>
     </modules>
 
