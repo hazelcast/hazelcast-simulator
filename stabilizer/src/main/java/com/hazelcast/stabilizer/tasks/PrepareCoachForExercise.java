@@ -17,10 +17,10 @@ package com.hazelcast.stabilizer.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.stabilizer.Coach;
-import com.hazelcast.stabilizer.ExerciseRecipe;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Coach;
+import com.hazelcast.stabilizer.ExerciseRecipe;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;

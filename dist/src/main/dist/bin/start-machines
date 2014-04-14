@@ -56,21 +56,19 @@ function install_stabilizer {
     cp coach-hazelcast-template.xml coach-hazelcast.xml
     cat coach-hazelcast.xml | sed -e "s@MEMBERS@$MEMBERS@" > coach-hazelcast.xml.bak && mv coach-hazelcast.xml.bak coach-hazelcast.xml
 
-    echo "Making SSH Connection"
-    ssh -i ${LICENSE} -o StrictHostKeyChecking=no ${USER}@${PRIVATE_IP} "ls"
-
+    echo "Installing missing Java"
     #install java under Ubuntu.
-    ssh -i ${LICENSE} -o StrictHostKeyChecking=no ${USER}@${PRIVATE_IP} "sudo apt-get update || true"
-    ssh -i ${LICENSE} -o StrictHostKeyChecking=no ${USER}@${PRIVATE_IP} "sudo apt-get install -y openjdk-7-jdk || true"
+    ssh -i ${LICENSE} -q -o StrictHostKeyChecking=no ${USER}@${PRIVATE_IP} "sudo apt-get update || true"
+    ssh -i ${LICENSE} -q -o StrictHostKeyChecking=no ${USER}@${PRIVATE_IP} "sudo apt-get install -y openjdk-7-jdk || true"
 
     echo "Copying stabilizer files"
     #we need to pull out this property
-    scp -i ${LICENSE} -r ${STABILIZER_HOME} ${USER}@${PRIVATE_IP}:
+    scp -i ${LICENSE} -q -r ${STABILIZER_HOME} ${USER}@${PRIVATE_IP}:
     #we need to override the hazelcast config file with the one we generated.
-    scp -i ${LICENSE}  coach-hazelcast.xml ${USER}@${PRIVATE_IP}:hazelcast-stabilizer-0.1-SNAPSHOT/conf/
+    scp -i ${LICENSE} -q coach-hazelcast.xml ${USER}@${PRIVATE_IP}:hazelcast-stabilizer-0.1-SNAPSHOT/conf/
 
     echo ==============================================================
-    echo Successfully installed Coach on $PRIVATE_IP
+    echo Successfully installed Coach on ${PRIVATE_IP}
     echo ==============================================================
 }
 

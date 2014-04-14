@@ -1,6 +1,6 @@
 package com.hazelcast.stabilizer.performance;
 
-public class OperationsPerSecond implements Performance<OperationsPerSecond>{
+public class OperationsPerSecond implements Performance<OperationsPerSecond> {
 
     private long operations;
     private long startMs;
@@ -34,19 +34,19 @@ public class OperationsPerSecond implements Performance<OperationsPerSecond>{
     public OperationsPerSecond merge(OperationsPerSecond that) {
         OperationsPerSecond performance = new OperationsPerSecond();
         performance.setStartMs(Math.min(that.getStartMs(), this.getStartMs()));
-        performance.setEndMs( Math.max(that.getEndMs(), this.getEndMs()));
-        performance.setOperations(this.getOperations()+that.getOperations());
+        performance.setEndMs(Math.max(that.getEndMs(), this.getEndMs()));
+        performance.setOperations(this.getOperations() + that.getOperations());
         return performance;
     }
 
     @Override
     public String toHumanString() {
-        long timeMs = endMs-startMs;
+        long timeMs = endMs - startMs;
         double performance;
-        if(timeMs == 0){
-             performance = 0;
-        }else{
-            performance = (operations*1000d)/timeMs;
+        if (timeMs == 0) {
+            performance = 0;
+        } else {
+            performance = (operations * 1000d) / timeMs;
         }
 
         StringBuffer sb = new StringBuffer();

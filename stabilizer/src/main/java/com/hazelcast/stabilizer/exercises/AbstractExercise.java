@@ -15,13 +15,16 @@
  */
 package com.hazelcast.stabilizer.exercises;
 
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 
+import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -37,6 +40,10 @@ public abstract class AbstractExercise implements Exercise {
     private final CountDownLatch startLatch = new CountDownLatch(1);
     private final Set<Thread> threads = new HashSet<Thread>();
     private long startMs;
+    private HazelcastInstance client;
+
+    //properties.
+    public boolean useClient = false;
 
     public String getExerciseId() {
         return exerciseId;
@@ -60,10 +67,28 @@ public abstract class AbstractExercise implements Exercise {
 
     @Override
     public void localSetup() throws Exception {
+        if (useClient) {
+            ClientConfig clientConfig = new ClientConfig();
+            InetSocketAddress localAddress = hazelcastInstance.getCluster().getLocalMember().getSocketAddress();
+            String localAddressString = localAddress.getAddress().getHostAddress() + ":" + localAddress.getPort();
+            clientConfig.getNetworkConfig().addAddress(localAddressString);
+            client = HazelcastClient.newHazelcastClient(clientConfig);
+        }
+    }
+
+    public HazelcastInstance getTargetInstance() {
+        if (useClient) {
+            return client;
+        } else {
+            return hazelcastInstance;
+        }
     }
 
     @Override
     public void localTearDown() throws Exception {
+        if (client != null){
+            client.shutdown();
+        }
     }
 
     @Override
@@ -84,11 +109,12 @@ public abstract class AbstractExercise implements Exercise {
         thread.start();
         return thread;
     }
-    public long getCurrentTimeMs(){
+
+    public long getCurrentTimeMs() {
         return hazelcastInstance.getCluster().getClusterTime();
     }
 
-    public long getStartTimeMs(){
+    public long getStartTimeMs() {
         return startMs;
     }
 
@@ -134,5 +160,6 @@ public abstract class AbstractExercise implements Exercise {
             thread.join(timeout);
         }
         threads.clear();
+
     }
 }

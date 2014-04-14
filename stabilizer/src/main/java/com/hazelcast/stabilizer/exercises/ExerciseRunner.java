@@ -17,9 +17,9 @@ package com.hazelcast.stabilizer.exercises;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Utils;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -80,15 +80,15 @@ public class ExerciseRunner {
 
         log.info("Starting localSetup");
         exercise.localSetup();
-        log.info( "Finished localSetup");
+        log.info("Finished localSetup");
 
-        log.info( "Starting globalSetup");
+        log.info("Starting globalSetup");
         exercise.globalSetup();
-        log.info( "Finished globalSetup");
+        log.info("Finished globalSetup");
 
         log.info("Starting start");
         exercise.start();
-        log.info( "Finished start");
+        log.info("Finished start");
 
         sleepSeconds(exercise, durationSec);
 
@@ -104,15 +104,15 @@ public class ExerciseRunner {
 
         log.info("Starting localVerify");
         exercise.localVerify();
-        log.info( "Finished localVerify");
+        log.info("Finished localVerify");
+
+       log.info("Starting globalTearDown");
+        exercise.globalTearDown();
+        log.info("Finished globalTearDown");
 
         log.info("Starting localTearDown");
         exercise.localTearDown();
-        log.info( "Finished localTearDown");
-
-        log.info( "Starting globalTearDown");
-        exercise.globalTearDown();
-        log.info("Finished globalTearDown");
+        log.info("Finished localTearDown");
 
         hazelcastInstance.getLifecycleService().shutdown();
         log.info("Finished");

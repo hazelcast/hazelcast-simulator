@@ -17,10 +17,10 @@ package com.hazelcast.stabilizer.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.stabilizer.Coach;
-import com.hazelcast.stabilizer.Workout;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Coach;
+import com.hazelcast.stabilizer.Workout;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
@@ -40,9 +40,9 @@ public class InitWorkout implements Callable, Serializable, HazelcastInstanceAwa
     @Override
     public Object call() throws Exception {
         try {
-            log.info("Init InitWorkout:"+workout.getId());
+            log.info("Init InitWorkout:" + workout.getId());
             Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
-            coach.initWorkout(workout,content);
+            coach.initWorkout(workout, content);
             return null;
         } catch (Exception e) {
             log.severe("Failed to init InitWorkout", e);

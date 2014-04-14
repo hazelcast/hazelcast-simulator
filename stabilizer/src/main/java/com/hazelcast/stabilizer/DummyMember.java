@@ -24,12 +24,12 @@ public class DummyMember {
     private final static ILogger log = Logger.getLogger(DummyMember.class);
     private File hzFile;
 
-    private void run()throws Exception {
+    private void run() throws Exception {
         Config config = new XmlConfigBuilder(hzFile.getAbsolutePath()).build();
         HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(config);
 
-        for(DistributedObject distributedObject: hazelcastInstance.getDistributedObjects()){
-            System.out.println(distributedObject.getClass()+" "+distributedObject.getName());
+        for (DistributedObject distributedObject : hazelcastInstance.getDistributedObjects()) {
+            System.out.println(distributedObject.getClass() + " " + distributedObject.getName());
         }
     }
 

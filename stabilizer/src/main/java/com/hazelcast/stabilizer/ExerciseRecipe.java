@@ -16,13 +16,18 @@
 package com.hazelcast.stabilizer;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class ExerciseRecipe implements Serializable {
     private static final long serialVersionUID = 1;
     private final String exerciseId = UUID.randomUUID().toString();
 
-    private Map<String, String> properties = new HashMap<String,String>();
+    private Map<String, String> properties = new HashMap<String, String>();
 
     public String getClassname() {
         return properties.get("class");
@@ -53,8 +58,8 @@ public class ExerciseRecipe implements Serializable {
         List<String> keys = new LinkedList<String>(properties.keySet());
         Collections.sort(keys);
 
-        for(String key : keys){
-            if(!"class".equals(key)){
+        for (String key : keys) {
+            if (!"class".equals(key)) {
                 sb.append("\n    , ").append(key).append("=").append(properties.get(key));
             }
         }

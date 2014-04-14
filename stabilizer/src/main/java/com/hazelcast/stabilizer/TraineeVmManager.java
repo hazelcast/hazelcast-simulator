@@ -28,7 +28,12 @@ import com.hazelcast.logging.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -57,7 +62,7 @@ public class TraineeVmManager {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 for (TraineeVm jvm : traineeJvms) {
-                    log.info( "Destroying trainee : " + jvm.getId());
+                    log.info("Destroying trainee : " + jvm.getId());
                     jvm.getProcess().destroy();
                 }
             }
@@ -100,8 +105,8 @@ public class TraineeVmManager {
     }
 
     private String getJavaHome(String javaVendor, String javaVersion) {
-        JavaInstallation installation = coach.getJavaInstallationRepository().get(javaVendor,javaVersion);
-        if(installation!=null){
+        JavaInstallation installation = coach.getJavaInstallationRepository().get(javaVendor, javaVersion);
+        if (installation != null) {
             //todo: we should send a signal
             return installation.getJavaHome();
         }
@@ -125,7 +130,7 @@ public class TraineeVmManager {
         }
 
         File workoutHome = coach.getWorkoutHome();
-        String javaHome = getJavaHome(settings.getJavaVendor(),settings.getJavaVersion());
+        String javaHome = getJavaHome(settings.getJavaVendor(), settings.getJavaVersion());
 
         List<String> args = new LinkedList<String>();
         args.add("java");
@@ -150,8 +155,8 @@ public class TraineeVmManager {
                 .redirectErrorStream(true);
 
         Map<String, String> environment = processBuilder.environment();
-        String path = javaHome+File.pathSeparator+"bin:"+environment.get("PATH");
-        environment.put("PATH",path);
+        String path = javaHome + File.pathSeparator + "bin:" + environment.get("PATH");
+        environment.put("PATH", path);
         environment.put("JAVA_HOME", javaHome);
 
         Process process = processBuilder.start();
@@ -258,8 +263,8 @@ public class TraineeVmManager {
     }
 
     public TraineeVm getTrainee(String traineeId) {
-        for(TraineeVm trainee: traineeJvms){
-            if(traineeId.equals(trainee.getId())){
+        for (TraineeVm trainee : traineeJvms) {
+            if (traineeId.equals(trainee.getId())) {
                 return trainee;
             }
         }

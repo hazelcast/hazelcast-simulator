@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.exercises.concurrent.atomiclong;
 
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
-import com.hazelcast.stabilizer.performance.OperationsPerSecond;
-import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.exercises.AbstractExercise;
+import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.performance.OperationsPerSecond;
+import com.hazelcast.stabilizer.performance.Performance;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -39,13 +42,17 @@ public class AtomicLongExercise extends AbstractExercise {
     private AtomicLong operations = new AtomicLong();
 
     @Override
-    public void localSetup() {
+    public void localSetup() throws Exception {
+        super.localSetup();
+
         log.info("countersLength:" + countersLength + " threadCount:" + threadCount);
 
-        totalCounter = hazelcastInstance.getAtomicLong(exerciseId + ":TotalCounter");
+        HazelcastInstance targetInstance = getTargetInstance();
+
+        totalCounter = targetInstance.getAtomicLong(exerciseId + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            counters[k] = hazelcastInstance.getAtomicLong(exerciseId + ":Counter-" + k);
+            counters[k] = targetInstance.getAtomicLong(exerciseId + ":Counter-" + k);
         }
 
         for (int k = 0; k < threadCount; k++) {
@@ -96,7 +103,7 @@ public class AtomicLongExercise extends AbstractExercise {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
-                if(iteration % performanceUpdateFrequency == 0){
+                if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
                 iteration++;

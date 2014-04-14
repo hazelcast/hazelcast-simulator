@@ -18,9 +18,9 @@ package com.hazelcast.stabilizer.tasks;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.IExecutorService;
-import com.hazelcast.stabilizer.Coach;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Coach;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;

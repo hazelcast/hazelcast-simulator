@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.exercises.queue;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.exercises.AbstractExercise;
+import com.hazelcast.stabilizer.exercises.ExerciseRunner;
 
 import java.util.Queue;
 
@@ -35,11 +38,15 @@ public class QueueExercise extends AbstractExercise {
     public int messagesPerQueue = 1;
 
     @Override
-    public void localSetup() {
-        totalCounter = hazelcastInstance.getAtomicLong(getExerciseId() + ":TotalCounter");
+    public void localSetup() throws Exception {
+        super.localSetup();
+
+        HazelcastInstance targetInstance = getTargetInstance();
+
+        totalCounter = targetInstance.getAtomicLong(getExerciseId() + ":TotalCounter");
         queues = new IQueue[queueLength];
         for (int k = 0; k < queues.length; k++) {
-            queues[k] = hazelcastInstance.getQueue(exerciseId + ":Queue-" + k);
+            queues[k] = targetInstance.getQueue(exerciseId + ":Queue-" + k);
         }
 
         for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {

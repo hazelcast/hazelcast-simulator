@@ -84,12 +84,12 @@ public class HeartAttackMonitor implements Runnable {
                         file.delete();
 
                         String traineeId = name.substring(0, name.indexOf('.'));
-                        log.info("traineeId: "+traineeId);
+                        log.info("traineeId: " + traineeId);
                         TraineeVm jvm = traineeVmManager.getTrainee(traineeId);
                         HeartAttack heartAttack = new HeartAttack(
                                 "Exception thrown in trainee",
                                 coach.getCoachHz().getCluster().getLocalMember().getInetSocketAddress(),
-                                jvm==null?null:jvm.getMember().getInetSocketAddress(),
+                                jvm == null ? null : jvm.getMember().getInetSocketAddress(),
                                 traineeId,
                                 coach.getExerciseRecipe(),
                                 cause);

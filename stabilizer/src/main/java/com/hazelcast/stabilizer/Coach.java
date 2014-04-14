@@ -17,7 +17,13 @@ package com.hazelcast.stabilizer;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.core.*;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IExecutorService;
+import com.hazelcast.core.ITopic;
+import com.hazelcast.core.Member;
+import com.hazelcast.core.Message;
+import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import joptsimple.OptionException;
@@ -29,12 +35,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import static com.hazelcast.stabilizer.Utils.*;
+import static com.hazelcast.stabilizer.Utils.closeQuietly;
+import static com.hazelcast.stabilizer.Utils.ensureExistingDirectory;
+import static com.hazelcast.stabilizer.Utils.exitWithError;
+import static com.hazelcast.stabilizer.Utils.getStablizerHome;
+import static com.hazelcast.stabilizer.Utils.getVersion;
 import static java.lang.String.format;
 
 public class Coach {
@@ -140,7 +154,7 @@ public class Coach {
                     if (isLocal) {
                         log.severe("Local heart attack detected:" + heartAttack);
                     } else {
-                        log.severe( "Remote machine heart attack detected:" + heartAttack);
+                        log.severe("Remote machine heart attack detected:" + heartAttack);
                     }
                 } else if (messageObject instanceof Exception) {
                     Exception e = (Exception) messageObject;

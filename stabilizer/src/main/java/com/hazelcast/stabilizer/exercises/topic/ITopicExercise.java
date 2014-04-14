@@ -1,20 +1,23 @@
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.exercises.topic;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import com.hazelcast.stabilizer.performance.OperationsPerSecond;
-import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.exercises.AbstractExercise;
+import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.performance.OperationsPerSecond;
+import com.hazelcast.stabilizer.performance.Performance;
 
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ITopicExercise extends AbstractExercise{
+public class ITopicExercise extends AbstractExercise {
 
     private final static ILogger log = Logger.getLogger(ITopicExercise.class);
 
@@ -33,17 +36,21 @@ public class ITopicExercise extends AbstractExercise{
     private CountDownLatch listenersCompleteLatch;
 
     @Override
-    public void localSetup() {
-        totalExpectedCounter = hazelcastInstance.getAtomicLong(exerciseId + ":TotalExpectedCounter");
-        totalFoundCounter = hazelcastInstance.getAtomicLong(exerciseId+":TotalFoundCounter");
+    public void localSetup() throws Exception {
+        super.localSetup();
+
+        HazelcastInstance targetInstance = getTargetInstance();
+
+        totalExpectedCounter = targetInstance.getAtomicLong(exerciseId + ":TotalExpectedCounter");
+        totalFoundCounter = targetInstance.getAtomicLong(exerciseId + ":TotalFoundCounter");
         topics = new ITopic[topicCount];
-        listenersCompleteLatch = new CountDownLatch(listenersPerTopic*topicCount);
+        listenersCompleteLatch = new CountDownLatch(listenersPerTopic * topicCount);
 
         for (int k = 0; k < topics.length; k++) {
-            ITopic<Long> topic = hazelcastInstance.getTopic(exerciseId + ":Topic-" + k);
+            ITopic<Long> topic = targetInstance.getTopic(exerciseId + ":Topic-" + k);
             topics[k] = topic;
 
-            for(int l=0;l<listenersPerTopic;l++){
+            for (int l = 0; l < listenersPerTopic; l++) {
                 new TopicListener(topic);
             }
         }
@@ -86,19 +93,19 @@ public class ITopicExercise extends AbstractExercise{
         //todo: we should calculate remining timeout
         super.stop(timeoutMs);
 
-        boolean completed = listenersCompleteLatch.await(timeoutMs,TimeUnit.MILLISECONDS);
-        if(!completed){
+        boolean completed = listenersCompleteLatch.await(timeoutMs, TimeUnit.MILLISECONDS);
+        if (!completed) {
             throw new RuntimeException("Timeout while waiting TopicListeners to complete");
         }
     }
 
-    private class TopicListener implements MessageListener<Long>{
+    private class TopicListener implements MessageListener<Long> {
         private final ITopic topic;
         private final String registrationId;
         private long count;
         private boolean completed = false;
 
-        private TopicListener(ITopic topic){
+        private TopicListener(ITopic topic) {
             this.topic = topic;
             registrationId = topic.addMessageListener(this);
         }
@@ -107,26 +114,26 @@ public class ITopicExercise extends AbstractExercise{
         public void onMessage(Message<Long> message) {
             long l = message.getMessageObject();
 
-            if(processingDelayMillis>0){
+            if (processingDelayMillis > 0) {
                 try {
                     Thread.sleep(processingDelayMillis);
                 } catch (InterruptedException e) {
                 }
             }
 
-            boolean stopped = (!waitForMessagesToComplete&&stop)||l<0;
+            boolean stopped = (!waitForMessagesToComplete && stop) || l < 0;
 
-            if(stopped){
+            if (stopped) {
                 totalFoundCounter.addAndGet(count);
                 count = 0;
 
-                if(!completed){
+                if (!completed) {
                     completed = true;
                     listenersCompleteLatch.countDown();
                 }
                 topic.removeMessageListener(registrationId);
-            }else{
-                count+=message.getMessageObject();
+            } else {
+                count += message.getMessageObject();
             }
         }
     }
@@ -143,7 +150,7 @@ public class ITopicExercise extends AbstractExercise{
                 ITopic topic = topics[index];
 
                 long msg = nextMessage();
-                count+=msg;
+                count += msg;
 
                 topic.publish(msg);
 
@@ -151,13 +158,13 @@ public class ITopicExercise extends AbstractExercise{
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
-                if(iteration % performanceUpdateFrequency == 0){
+                if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
                 iteration++;
             }
 
-            for(ITopic topic: topics){
+            for (ITopic topic : topics) {
                 topic.publish(-1l);
             }
 
@@ -165,8 +172,8 @@ public class ITopicExercise extends AbstractExercise{
         }
 
         private long nextMessage() {
-            long msg = random.nextLong()%1000;
-            if(msg <0){
+            long msg = random.nextLong() % 1000;
+            if (msg < 0) {
                 msg = -msg;
             }
             return msg;

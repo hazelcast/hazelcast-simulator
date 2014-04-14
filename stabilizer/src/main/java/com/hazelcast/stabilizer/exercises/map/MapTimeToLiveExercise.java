@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.exercises.map;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
+import com.hazelcast.stabilizer.exercises.AbstractExercise;
+import com.hazelcast.stabilizer.exercises.ExerciseRunner;
 
 import java.util.UUID;
 
@@ -27,7 +30,7 @@ public class MapTimeToLiveExercise extends AbstractExercise {
     public int waitAfterMillis = 2000;
 
     private IMap map;
-    final private String mapName = "map:"+exerciseId;
+    final private String mapName = "map:" + exerciseId;
 
     @Override
     public void globalTearDown() throws Exception {
@@ -36,7 +39,7 @@ public class MapTimeToLiveExercise extends AbstractExercise {
 
     @Override
     public void globalVerify() throws Exception {
-        Thread.sleep(ttlSeconds*1000 + waitAfterMillis);
+        Thread.sleep(ttlSeconds * 1000 + waitAfterMillis);
         int size = map.size();
         if (size > 0) {
             throw new RuntimeException("There are entries not evicted. Map size:" + size);
@@ -45,7 +48,11 @@ public class MapTimeToLiveExercise extends AbstractExercise {
 
     @Override
     public void localSetup() throws Exception {
-        map = hazelcastInstance.getMap(mapName);
+        super.localSetup();
+
+        HazelcastInstance targetInstance = getTargetInstance();
+
+        map = targetInstance.getMap(mapName);
         for (int k = 0; k < workerCount; k++) {
             spawn(new Worker());
         }
@@ -54,7 +61,7 @@ public class MapTimeToLiveExercise extends AbstractExercise {
     class Worker implements Runnable {
         @Override
         public void run() {
-            while(!stop) {
+            while (!stop) {
                 try {
                     map.put(UUID.randomUUID(), UUID.randomUUID());
                     Thread.sleep(putIntervalMillis);

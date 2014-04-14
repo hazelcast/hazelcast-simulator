@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.exercises.map;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.stabilizer.performance.OperationsPerSecond;
-import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.exercises.AbstractExercise;
+import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.performance.OperationsPerSecond;
+import com.hazelcast.stabilizer.performance.Performance;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -48,7 +51,11 @@ public class MapExercise extends AbstractExercise {
 
     @Override
     public void localSetup() throws Exception {
-        map = hazelcastInstance.getMap(exerciseId + ":Map");
+        super.localSetup();
+
+        HazelcastInstance targetInstance = getTargetInstance();
+
+        map = targetInstance.getMap(exerciseId + ":Map");
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
@@ -108,7 +115,7 @@ public class MapExercise extends AbstractExercise {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
-                if(iteration % performanceUpdateFrequency == 0){
+                if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
 
@@ -120,6 +127,7 @@ public class MapExercise extends AbstractExercise {
 
     public static void main(String[] args) throws Exception {
         MapExercise mapExercise = new MapExercise();
+        mapExercise.useClient = true;
         new ExerciseRunner().run(mapExercise, 20);
     }
 }

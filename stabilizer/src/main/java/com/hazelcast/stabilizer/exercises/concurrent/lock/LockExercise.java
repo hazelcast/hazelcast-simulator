@@ -1,9 +1,12 @@
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.exercises.concurrent.lock;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.exercises.AbstractExercise;
+import com.hazelcast.stabilizer.exercises.ExerciseRunner;
 
 import java.util.Random;
 
@@ -21,14 +24,18 @@ public class LockExercise extends AbstractExercise {
     private IAtomicLong totalMoney;
 
     @Override
-    public void localSetup() {
-        lockCounter = hazelcastInstance.getAtomicLong(getExerciseId() + ":LockCounter");
-        totalMoney = hazelcastInstance.getAtomicLong(getExerciseId() + ":TotalMoney");
+    public void localSetup() throws Exception {
+        super.localSetup();
+
+        HazelcastInstance targetInstance = getTargetInstance();
+
+        lockCounter = targetInstance.getAtomicLong(getExerciseId() + ":LockCounter");
+        totalMoney = targetInstance.getAtomicLong(getExerciseId() + ":TotalMoney");
 
         for (int k = 0; k < lockCount; k++) {
             long key = lockCounter.getAndIncrement();
-            hazelcastInstance.getLock(getLockId(key));
-            IAtomicLong account = hazelcastInstance.getAtomicLong(getAccountId(key));
+            targetInstance.getLock(getLockId(key));
+            IAtomicLong account = targetInstance.getAtomicLong(getAccountId(key));
             account.set(initialAmount);
             totalMoney.addAndGet(initialAmount);
         }
@@ -59,7 +66,7 @@ public class LockExercise extends AbstractExercise {
             if (account.get() < 0) {
                 throw new RuntimeException("Amount can't be smaller than zero on account");
             }
-            System.out.println("acount:"+account.get());
+            System.out.println("acount:" + account.get());
 
             foundTotal += account.get();
         }
@@ -72,7 +79,7 @@ public class LockExercise extends AbstractExercise {
     @Override
     public void globalTearDown() throws Exception {
         lockCounter.destroy();
-        totalMoney .destroy();
+        totalMoney.destroy();
 
         for (long k = 0; k < lockCounter.get(); k++) {
             hazelcastInstance.getLock(getLockId(k)).destroy();

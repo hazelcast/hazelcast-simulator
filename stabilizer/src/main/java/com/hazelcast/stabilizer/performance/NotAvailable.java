@@ -1,6 +1,6 @@
 package com.hazelcast.stabilizer.performance;
 
-public class NotAvailable implements Performance<NotAvailable>{
+public class NotAvailable implements Performance<NotAvailable> {
 
     @Override
     public NotAvailable merge(NotAvailable performance) {

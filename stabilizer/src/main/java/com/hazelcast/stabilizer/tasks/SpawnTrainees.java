@@ -17,10 +17,10 @@ package com.hazelcast.stabilizer.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.stabilizer.Coach;
-import com.hazelcast.stabilizer.TraineeVmSettings;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Coach;
+import com.hazelcast.stabilizer.TraineeVmSettings;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
@@ -46,7 +46,7 @@ public class SpawnTrainees implements Callable, Serializable, HazelcastInstanceA
             coach.getTraineeVmManager().spawn(settings);
             return null;
         } catch (Exception e) {
-            log.severe( "Failed to spawn Trainee Virtual Machines", e);
+            log.severe("Failed to spawn Trainee Virtual Machines", e);
             throw e;
         }
     }

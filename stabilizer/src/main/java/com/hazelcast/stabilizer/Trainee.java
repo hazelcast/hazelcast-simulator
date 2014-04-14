@@ -100,9 +100,9 @@ public class Trainee {
         logInterestingSystemProperties();
 
         String traineeId = args[0];
-        log.info( "Trainee id:" + traineeId);
+        log.info("Trainee id:" + traineeId);
         String traineeHzFile = args[1];
-        log.info( "Trainee hz config file:" + traineeHzFile);
+        log.info("Trainee hz config file:" + traineeHzFile);
 
         System.setProperty("traineeId", traineeId);
 
@@ -111,6 +111,6 @@ public class Trainee {
         trainee.setTraineeHzFile(traineeHzFile);
         trainee.start();
 
-        log.info( "Successfully started Hazelcast Stabilizer Trainee:" + traineeId);
+        log.info("Successfully started Hazelcast Stabilizer Trainee:" + traineeId);
     }
 }

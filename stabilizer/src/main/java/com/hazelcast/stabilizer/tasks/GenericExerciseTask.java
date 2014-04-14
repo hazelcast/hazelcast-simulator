@@ -17,9 +17,9 @@ package com.hazelcast.stabilizer.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.stabilizer.exercises.Exercise;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.exercises.Exercise;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -45,7 +45,7 @@ public class GenericExerciseTask implements Callable, Serializable, HazelcastIns
 
             Exercise exercise = (Exercise) hz.getUserContext().get(Exercise.EXERCISE_INSTANCE);
             if (exercise == null) {
-                throw new IllegalStateException("No ExerciseInstance found for method "+methodName+"()");
+                throw new IllegalStateException("No ExerciseInstance found for method " + methodName + "()");
             }
 
             Method method = exercise.getClass().getMethod(methodName);

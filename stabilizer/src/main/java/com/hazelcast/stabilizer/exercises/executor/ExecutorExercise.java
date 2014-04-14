@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.exercises.executor;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
@@ -21,6 +21,7 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.exercises.AbstractExercise;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -48,17 +49,20 @@ public class ExecutorExercise extends AbstractExercise {
     public int submitCount = 5;
 
     @Override
-    public void localSetup() {
-        log.info("localSetup");
+    public void localSetup() throws Exception {
+        super.localSetup();
+
+        HazelcastInstance targetInstance = getTargetInstance();
+
         executors = new IExecutorService[executorCount];
         for (int k = 0; k < executors.length; k++) {
-            executors[k] = getHazelcastInstance().getExecutorService(exerciseId + ":Executor-" + k);
+            executors[k] = targetInstance.getExecutorService(exerciseId + ":Executor-" + k);
         }
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
-        executedCounter = hazelcastInstance.getAtomicLong(exerciseId + ":ExecutedCounter");
-        expectedExecutedCounter = hazelcastInstance.getAtomicLong(exerciseId + ":ExpectedExecutedCounter");
+        executedCounter = targetInstance.getAtomicLong(exerciseId + ":ExecutedCounter");
+        expectedExecutedCounter = targetInstance.getAtomicLong(exerciseId + ":ExpectedExecutedCounter");
     }
 
     @Override
@@ -76,7 +80,7 @@ public class ExecutorExercise extends AbstractExercise {
 
     @Override
     public void globalVerify() throws Exception {
-        log.info( "globalVerify called");
+        log.info("globalVerify called");
         long actualCount = executedCounter.get();
         long expectedCount = expectedExecutedCounter.get();
         if (actualCount != expectedCount) {

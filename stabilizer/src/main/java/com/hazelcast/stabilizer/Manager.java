@@ -18,12 +18,26 @@ package com.hazelcast.stabilizer;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.XmlClientConfigBuilder;
-import com.hazelcast.core.*;
-import com.hazelcast.stabilizer.performance.NotAvailable;
-import com.hazelcast.stabilizer.performance.Performance;
-import com.hazelcast.stabilizer.tasks.*;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IExecutorService;
+import com.hazelcast.core.ITopic;
+import com.hazelcast.core.Member;
+import com.hazelcast.core.Message;
+import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.performance.NotAvailable;
+import com.hazelcast.stabilizer.performance.Performance;
+import com.hazelcast.stabilizer.tasks.CleanGym;
+import com.hazelcast.stabilizer.tasks.GenericExerciseTask;
+import com.hazelcast.stabilizer.tasks.InitExercise;
+import com.hazelcast.stabilizer.tasks.InitWorkout;
+import com.hazelcast.stabilizer.tasks.PrepareCoachForExercise;
+import com.hazelcast.stabilizer.tasks.ShoutToTraineesTask;
+import com.hazelcast.stabilizer.tasks.SpawnTrainees;
+import com.hazelcast.stabilizer.tasks.StopTask;
+import com.hazelcast.stabilizer.tasks.TellTrainee;
+import com.hazelcast.stabilizer.tasks.TerminateWorkout;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -33,10 +47,25 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.stabilizer.Utils.*;
+import static com.hazelcast.stabilizer.Utils.exitWithError;
+import static com.hazelcast.stabilizer.Utils.getStablizerHome;
+import static com.hazelcast.stabilizer.Utils.getVersion;
+import static com.hazelcast.stabilizer.Utils.loadProperties;
+import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
 
 public class Manager {
@@ -54,7 +83,7 @@ public class Manager {
     private String traineeClassPath;
     private boolean cleanGym;
     private boolean monitorPerformance;
-    private boolean verifyEnabled=true;
+    private boolean verifyEnabled = true;
     private Integer exerciseStopTimeoutMs;
 
     public boolean isVerifyEnabled() {
@@ -249,8 +278,8 @@ public class Manager {
             stopExercise();
             sendStatusUpdate("Completed exercise stop");
 
-            if(monitorPerformance){
-               sendStatusUpdate(calcPerformance().toHumanString());
+            if (monitorPerformance) {
+                sendStatusUpdate(calcPerformance().toHumanString());
             }
 
             if (verifyEnabled) {
@@ -265,13 +294,13 @@ public class Manager {
                 sendStatusUpdate("Skipping exercise verification");
             }
 
-            sendStatusUpdate("Starting exercise local teardown");
-            submitToAllTrainesAndWait(new GenericExerciseTask("localTearDown"), "exercise local tearDown");
-            sendStatusUpdate("Completed exercise local teardown");
-
             sendStatusUpdate("Starting exercise global teardown");
             submitToOneTrainee(new GenericExerciseTask("globalTearDown"));
             sendStatusUpdate("Finished exercise global teardown");
+
+            sendStatusUpdate("Starting exercise local teardown");
+            submitToAllTrainesAndWait(new GenericExerciseTask("localTearDown"), "exercise local tearDown");
+            sendStatusUpdate("Completed exercise local teardown");
 
             return heartAttackList.size() == oldCount;
         } catch (Exception e) {
@@ -302,7 +331,7 @@ public class Manager {
             final float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, seconds, percentage);
             sendStatusUpdate(msg);
-            if(monitorPerformance){
+            if (monitorPerformance) {
                 sendStatusUpdate(calcPerformance().toHumanString());
             }
         }
@@ -310,17 +339,17 @@ public class Manager {
         Utils.sleepSeconds(small);
     }
 
-    public Performance calcPerformance(){
-        ShoutToTraineesTask task = new ShoutToTraineesTask(new GenericExerciseTask("calcPerformance"),"calcPerformance");
-        Map<Member,Future<List<Performance>>> result = coachExecutor.submitToAllMembers(task);
+    public Performance calcPerformance() {
+        ShoutToTraineesTask task = new ShoutToTraineesTask(new GenericExerciseTask("calcPerformance"), "calcPerformance");
+        Map<Member, Future<List<Performance>>> result = coachExecutor.submitToAllMembers(task);
         Performance performance = null;
-        for(Future<List<Performance>> future : result.values()){
+        for (Future<List<Performance>> future : result.values()) {
             try {
                 List<Performance> results = future.get();
-                for(Performance p: results){
-                    if(performance == null){
+                for (Performance p : results) {
+                    if (performance == null) {
                         performance = p;
-                    }else{
+                    } else {
                         performance = performance.merge(p);
                     }
                 }
@@ -329,7 +358,7 @@ public class Manager {
                 log.severe(e);
             }
         }
-        return performance==null?new NotAvailable():performance;
+        return performance == null ? new NotAvailable() : performance;
     }
 
     private void stopTrainees() throws Exception {
@@ -568,12 +597,14 @@ public class Manager {
             if (recipe.getClassname() == null) {
                 if ("".equals(recipeId)) {
                     throw new RuntimeException(format("There is no class set for the in property file [%s]." +
-                            "Add class=YourExerciseClass",
-                            file.getAbsolutePath()));
+                                    "Add class=YourExerciseClass",
+                            file.getAbsolutePath()
+                    ));
                 } else {
                     throw new RuntimeException(format("There is no class set for exercise [%s] in property file [%s]." +
-                            "Add %s.class=YourExerciseClass",
-                            recipeId, file.getAbsolutePath(), recipeId));
+                                    "Add %s.class=YourExerciseClass",
+                            recipeId, file.getAbsolutePath(), recipeId
+                    ));
                 }
             }
             workout.addExercise(recipe);

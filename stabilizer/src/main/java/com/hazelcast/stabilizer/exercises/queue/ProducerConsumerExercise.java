@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.exercises.queue;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.exercises.AbstractExercise;
+import com.hazelcast.stabilizer.exercises.ExerciseRunner;
 
 import java.io.Serializable;
 import java.util.Random;
@@ -37,12 +40,16 @@ public class ProducerConsumerExercise extends AbstractExercise {
     public int maxIntervalMillis = 1000;
 
     @Override
-    public void localSetup() {
-        log.info( "producer:" + producerCount + " consumer:" + consumerCount);
+    public void localSetup() throws Exception {
+        super.localSetup();
 
-        produced = hazelcastInstance.getAtomicLong(exerciseId + ":Produced");
-        consumed = hazelcastInstance.getAtomicLong(exerciseId + ":Consumed");
-        works = hazelcastInstance.getQueue(exerciseId + ":WorkQueue");
+        log.info("producer:" + producerCount + " consumer:" + consumerCount);
+
+        HazelcastInstance targetInstance = getTargetInstance();
+
+        produced = targetInstance.getAtomicLong(exerciseId + ":Produced");
+        consumed = targetInstance.getAtomicLong(exerciseId + ":Consumed");
+        works = targetInstance.getQueue(exerciseId + ":WorkQueue");
 
         for (int k = 0; k < producerCount; k++) {
             spawn(new Producer(k));
@@ -86,8 +93,9 @@ public class ProducerConsumerExercise extends AbstractExercise {
                     produced.incrementAndGet();
                     works.offer(new Work());
                     iter++;
-                    if(iter % 10 == 0) {
-                        log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: " + iter + " prodoced:" + produced.get() + " workqueue:" + works.size() + " consumed:" + consumed.get());
+                    if (iter % 10 == 0) {
+                        log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: "
+                                + iter + " prodoced:" + produced.get() + " workqueue:" + works.size() + " consumed:" + consumed.get());
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -113,7 +121,7 @@ public class ProducerConsumerExercise extends AbstractExercise {
                     consumed.incrementAndGet();
                     Thread.sleep(rand.nextInt(maxIntervalMillis) * producerCount);
                     iter++;
-                    if(iter % 20 == 0) {
+                    if (iter % 20 == 0) {
                         logState(iter);
                     }
 
@@ -124,7 +132,8 @@ public class ProducerConsumerExercise extends AbstractExercise {
         }
 
         private void logState(long iter) {
-            log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: " + iter + " produced:"+produced.get() + " workqueue:" + works.size() + " consumed:"+consumed.get());
+            log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: " + iter
+                    + " produced:" + produced.get() + " workqueue:" + works.size() + " consumed:" + consumed.get());
         }
     }
 

@@ -1,9 +1,12 @@
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.exercises.map;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.IdGenerator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.exercises.AbstractExercise;
+import com.hazelcast.stabilizer.exercises.ExerciseRunner;
 
 import java.util.Random;
 
@@ -25,8 +28,11 @@ public class GrowingMapExercise extends AbstractExercise {
 
     @Override
     public void localSetup() throws Exception {
-        idGenerator = hazelcastInstance.getIdGenerator(exerciseId + ":IdGenerator");
-        map = hazelcastInstance.getMap(exerciseId + ":Map");
+        super.localSetup();
+
+        HazelcastInstance targetInstance = getTargetInstance();
+        idGenerator = targetInstance.getIdGenerator(exerciseId + ":IdGenerator");
+        map = targetInstance.getMap(exerciseId + ":Map");
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
@@ -81,7 +87,7 @@ public class GrowingMapExercise extends AbstractExercise {
                     }
                 }
 
-                if(readValidation){
+                if (readValidation) {
                     for (int k = 0; k <= keyIndex; k++) {
                         if (stop) {
                             break;
@@ -90,8 +96,8 @@ public class GrowingMapExercise extends AbstractExercise {
                         long key = keys[k];
                         long value = values[k];
 
-                        long found =    map.get(key);
-                        if(found!=value){
+                        long found = map.get(key);
+                        if (found != value) {
                             throw new RuntimeException("Unexpected value found");
                         }
 
@@ -112,7 +118,7 @@ public class GrowingMapExercise extends AbstractExercise {
 
                     if (useRemove) {
                         long found = map.remove(key);
-                        if(found!=value){
+                        if (found != value) {
                             throw new RuntimeException("Unexpected value found");
                         }
                     } else {

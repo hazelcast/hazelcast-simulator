@@ -6,7 +6,7 @@ import java.io.IOException;
 public class TestUtils {
 
     public static File writeToTempFile(String text) throws IOException {
-        File file = File.createTempFile("test","test");
+        File file = File.createTempFile("test", "test");
         file.deleteOnExit();
         Utils.writeText(text, file);
         return file;
