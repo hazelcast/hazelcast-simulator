@@ -92,10 +92,12 @@ public class TraineeVmManager {
             new TraineeVmLogger(traineeId, process.getInputStream(), settings.isTrackLogging()).start();
         }
         Config config = new XmlConfigBuilder(traineeHzFile.getAbsolutePath()).build();
-        ClientConfig clientConfig = new ClientConfig().addAddress("localhost:" + config.getNetworkConfig().getPort());
+        ClientConfig clientConfig = new ClientConfig();
         clientConfig.getGroupConfig()
                 .setName(config.getGroupConfig().getName())
                 .setPassword(config.getGroupConfig().getPassword());
+        clientConfig.getNetworkConfig().addAddress("localhost:" + config.getNetworkConfig().getPort());
+
         traineeClient = HazelcastClient.newHazelcastClient(clientConfig);
         traineeExecutor = traineeClient.getExecutorService(Trainee.TRAINEE_EXECUTOR);
 

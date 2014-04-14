@@ -17,6 +17,7 @@ package com.hazelcast.stabilizer.exercises;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
+import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -68,7 +69,12 @@ public abstract class AbstractExercise implements Exercise {
     @Override
     public void localSetup() throws Exception {
         if (useClient) {
+            Config config = hazelcastInstance.getConfig();
+
             ClientConfig clientConfig = new ClientConfig();
+            clientConfig.getGroupConfig().setName(config.getGroupConfig().getName());
+            clientConfig.getGroupConfig().setPassword(config.getGroupConfig().getPassword());
+            
             InetSocketAddress localAddress = hazelcastInstance.getCluster().getLocalMember().getSocketAddress();
             String localAddressString = localAddress.getAddress().getHostAddress() + ":" + localAddress.getPort();
             clientConfig.getNetworkConfig().addAddress(localAddressString);

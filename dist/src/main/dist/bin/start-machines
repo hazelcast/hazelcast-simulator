@@ -91,7 +91,7 @@ function init_trainee_file {
     local MEMBERS=""
     for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
     do
-        MEMBERS="$MEMBERS<address>$PRIVATE_IP</address>\n"
+        MEMBERS="$MEMBERS<member>$PRIVATE_IP</member>\n"
     done
 
     cp trainee-hazelcast-template.xml trainee-hazelcast.xml

@@ -4,15 +4,14 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
     <group>
-        <name>coach</name>
+        <name>trainees</name>
     </group>
 
     <network>
-        <port port-count="200" auto-increment="true">5701</port>
+        <port port-count="200" auto-increment="true">6701</port>
         <join>
             <multicast enabled="false"/>
             <tcp-ip enabled="true">
-                MEMBERS
             </tcp-ip>
         </join>
     </network>
