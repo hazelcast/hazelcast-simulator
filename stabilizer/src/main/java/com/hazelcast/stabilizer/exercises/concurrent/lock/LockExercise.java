@@ -14,7 +14,7 @@ public class LockExercise extends AbstractExercise {
 
     private final static ILogger log = Logger.getLogger(LockExercise.class);
 
-    public int lockCount = 50;
+    public int lockCount = 500;
     public int threadCount = 10;
     public int initialAmount = 1000;
     public int amount = 50;
@@ -72,7 +72,8 @@ public class LockExercise extends AbstractExercise {
         }
 
         if (foundTotal != totalMoney.get()) {
-            throw new RuntimeException("Money was lost/created: Found money was: " + foundTotal + " expected:" + totalMoney.get());
+            throw new RuntimeException("Money was lost/created: Found money was: "
+                    + foundTotal + " expected:" + totalMoney.get());
         }
     }
 

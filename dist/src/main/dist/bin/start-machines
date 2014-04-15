@@ -6,9 +6,46 @@ fi
 
 echo  STABILIZER_HOME = ${STABILIZER_HOME}
 
-INSTANCE_COUNT=$1
+CLUSTER_SIZE=small
+RESTART=false
 
 . ${STABILIZER_HOME}/bin/start.properties
+
+function init_environment {
+    for i in "$@"
+    do
+        case $i in
+            --clustersize=*)
+                CLUSTER_SIZE="${i#*=}";;
+            --restart)
+                RESTART=true;;
+            *)
+                # unknown option
+                echo Unknown option $1
+                exit
+                ;;
+        esac
+    done
+
+    case $CLUSTER_SIZE in
+        "single")
+                INSTANCE_COUNT=1;;
+        "small")
+                INSTANCE_COUNT=4;;
+        "medium")
+                INSTANCE_COUNT=6;;
+        "large")
+                INSTANCE_COUNT=10;;
+        "xlarge")
+                INSTANCE_COUNT=20;;
+        *)
+                echo Unknown cluster size $CLUSTER_SIZE
+                exit
+                ;;
+    esac
+
+    echo INSTANCE_COUNT $INSTANCE_COUNT CLUSTER_SIZE = $CLUSTER_SIZE
+}
 
 function private_ip {
     local INSTANCE=$1
@@ -113,6 +150,8 @@ function start_coach {
     echo Successfully Started Coach on $PRIVATE_IP
     echo ==============================================================
 }
+
+init_environment
 
 echo Starting $INSTANCE_COUNT $INSTANCE_TYPE machines
 

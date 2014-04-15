@@ -31,7 +31,7 @@ public class ProducerConsumerExercise extends AbstractExercise {
     private final static ILogger log = Logger.getLogger(ProducerConsumerExercise.class);
 
     private IAtomicLong produced;
-    private IQueue works;
+    private IQueue workQueue;
     private IAtomicLong consumed;
 
     //properties
@@ -49,7 +49,7 @@ public class ProducerConsumerExercise extends AbstractExercise {
 
         produced = targetInstance.getAtomicLong(exerciseId + ":Produced");
         consumed = targetInstance.getAtomicLong(exerciseId + ":Consumed");
-        works = targetInstance.getQueue(exerciseId + ":WorkQueue");
+        workQueue = targetInstance.getQueue(exerciseId + ":WorkQueue");
 
         for (int k = 0; k < producerCount; k++) {
             spawn(new Producer(k));
@@ -61,7 +61,7 @@ public class ProducerConsumerExercise extends AbstractExercise {
 
     @Override
     public void globalVerify() {
-        long total = works.size() + consumed.get();
+        long total = workQueue.size() + consumed.get();
         long produced = this.produced.get();
         if (produced != total) {
             throw new RuntimeException("Produced count: " + produced + " but total: " + total);
@@ -71,7 +71,7 @@ public class ProducerConsumerExercise extends AbstractExercise {
     @Override
     public void globalTearDown() throws Exception {
         produced.destroy();
-        works.destroy();
+        workQueue.destroy();
         consumed.destroy();
     }
 
@@ -91,11 +91,11 @@ public class ProducerConsumerExercise extends AbstractExercise {
                 try {
                     Thread.sleep(rand.nextInt(maxIntervalMillis) * consumerCount);
                     produced.incrementAndGet();
-                    works.offer(new Work());
+                    workQueue.offer(new Work());
                     iter++;
                     if (iter % 10 == 0) {
                         log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: "
-                                + iter + " prodoced:" + produced.get() + " workqueue:" + works.size() + " consumed:" + consumed.get());
+                                + iter + " prodoced:" + produced.get() + " workqueue:" + workQueue.size() + " consumed:" + consumed.get());
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -117,7 +117,7 @@ public class ProducerConsumerExercise extends AbstractExercise {
             long iter = 0;
             while (!stop) {
                 try {
-                    works.take();
+                    workQueue.take();
                     consumed.incrementAndGet();
                     Thread.sleep(rand.nextInt(maxIntervalMillis) * producerCount);
                     iter++;
@@ -133,7 +133,7 @@ public class ProducerConsumerExercise extends AbstractExercise {
 
         private void logState(long iter) {
             log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: " + iter
-                    + " produced:" + produced.get() + " workqueue:" + works.size() + " consumed:" + consumed.get());
+                    + " produced:" + produced.get() + " workqueue:" + workQueue.size() + " consumed:" + consumed.get());
         }
     }
 

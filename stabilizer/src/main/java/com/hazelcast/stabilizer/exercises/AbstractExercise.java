@@ -74,7 +74,7 @@ public abstract class AbstractExercise implements Exercise {
             ClientConfig clientConfig = new ClientConfig();
             clientConfig.getGroupConfig().setName(config.getGroupConfig().getName());
             clientConfig.getGroupConfig().setPassword(config.getGroupConfig().getPassword());
-            
+
             InetSocketAddress localAddress = hazelcastInstance.getCluster().getLocalMember().getSocketAddress();
             String localAddressString = localAddress.getAddress().getHostAddress() + ":" + localAddress.getPort();
             clientConfig.getNetworkConfig().addAddress(localAddressString);

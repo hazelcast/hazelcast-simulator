@@ -12,6 +12,7 @@
         <join>
             <multicast enabled="false"/>
             <tcp-ip enabled="true">
+                MEMBERS
             </tcp-ip>
         </join>
     </network>

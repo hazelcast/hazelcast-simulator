@@ -76,5 +76,4 @@ public class MapTimeToLiveExercise extends AbstractExercise {
         new ExerciseRunner().run(exercise, 50);
         System.exit(0);
     }
-
 }
