@@ -109,6 +109,15 @@ function install_stabilizer {
     echo ==============================================================
 }
 
+function install_stabilizer_on_all_machines {
+
+    for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
+    do
+        install_stabilizer $PRIVATE_IP
+    done
+    echo "Completed Installation"
+}
+
 function init_manager_file {
     local PRIVATE_IP=$1
 
@@ -151,7 +160,22 @@ function start_coach {
     echo ==============================================================
 }
 
-init_environment
+function start_coaches {
+    for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
+    do
+        start_coach $PRIVATE_IP
+    done
+    echo Coaches started
+}
+
+function list_machines {
+    for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
+    do
+        echo -- Coach $PRIVATE_IP
+    done
+}
+
+init_environment $@
 
 echo Starting $INSTANCE_COUNT $INSTANCE_TYPE machines
 
@@ -188,21 +212,8 @@ do
     PRIVATE_IP_LIST+=("$PRIVATE_IP")
 done
 
-for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
-do
-    install_stabilizer $PRIVATE_IP
-done
-
+install_stabilizer_on_all_machines
 init_manager_file
 init_trainee_file
-
-for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
-do
-    start_coach $PRIVATE_IP
-done
-
-echo Coaches started
-for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
-do
-    echo -- Coach $PRIVATE_IP
-done
+start_coaches
+list_machines
