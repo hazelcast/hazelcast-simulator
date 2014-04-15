@@ -205,21 +205,56 @@ function spawn_machines {
         echo "> [$INSTANCE]"
         wait_started $INSTANCE
     done
+
+    PRIVATE_IP_LIST=()
+    for INSTANCE in "${INSTANCES[@]}"
+    do
+        PRIVATE_IP=$( private_ip $INSTANCE )
+        PRIVATE_IP_LIST+=("$PRIVATE_IP")
+    done
+
+    echo ==============================================================
     echo Successfully started ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
+    echo ==============================================================
+}
+
+function restart_coaches {
+    echo Restarting ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
+
+    #temp hack writing to file to deal with loosing the linefeeds.
+    echo "$START_STATUS" > "out.txt"
+    STR=$( cat out.txt | grep INSTANCE |  awk '{print $2}' )
+    echo $STR
+
+    INSTANCES=(`echo $STR | tr "," "\n"`)
+
+    PRIVATE_IP_LIST=()
+    for INSTANCE in "${INSTANCES[@]}"
+    do
+        PRIVATE_IP=$( private_ip $INSTANCE )
+        PRIVATE_IP_LIST+=("$PRIVATE_IP")
+    done
+
+    start_coaches
+    list_machines
+
+    echo ==============================================================
+    echo Successfully Restarted  ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
+    echo ==============================================================
 }
 
 init_environment $@
-spawn_machines
 
-PRIVATE_IP_LIST=()
-for INSTANCE in "${INSTANCES[@]}"
-do
-    PRIVATE_IP=$( private_ip $INSTANCE )
-    PRIVATE_IP_LIST+=("$PRIVATE_IP")
-done
+if [ "${RESTART}" = "true" ] ;
+then
+    restart_coaches
+else
+    spawn_machines
+    install_stabilizer_on_all_machines
+    init_manager_file
+    init_trainee_file
+    start_coaches
+    list_machines
+fi
 
-install_stabilizer_on_all_machines
-init_manager_file
-init_trainee_file
-start_coaches
-list_machines
+
