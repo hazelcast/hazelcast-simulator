@@ -112,7 +112,7 @@ public class TraineeVmManager {
         StringBuffer members = new StringBuffer();
         for(Member member: coach.getCoachHazelcastInstance().getCluster().getMembers()){
             String hostAddress = member.getSocketAddress().getAddress().getHostAddress();
-            members.append("<member>").append(hostAddress).append(":6701").append("</member>/n");
+            members.append("<member>").append(hostAddress).append(":6701").append("</member>\n");
         }
 
         String enhancedHzConfig = hzConfig.replace("<!--$MEMBERS-->",members);
