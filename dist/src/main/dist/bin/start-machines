@@ -9,9 +9,9 @@ echo  STABILIZER_HOME = ${STABILIZER_HOME}
 CLUSTER_SIZE=small
 RESTART=false
 
-. ${STABILIZER_HOME}/bin/start.properties
-
 function init_environment {
+    . ${STABILIZER_HOME}/bin/start.properties
+
     for i in "$@"
     do
         case $i in
@@ -30,6 +30,8 @@ function init_environment {
     case $CLUSTER_SIZE in
         "single")
                 INSTANCE_COUNT=1;;
+        "tiny")
+               INSTANCE_COUNT=2;;
         "small")
                 INSTANCE_COUNT=4;;
         "medium")
@@ -175,35 +177,39 @@ function list_machines {
     done
 }
 
+function spawn_machines {
+    echo Starting ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
+
+    START_STATUS=$( ec2-run-instances \
+        --availability-zone $AVAILABILITY_ZONE \
+        --instance-type $INSTANCE_TYPE \
+        --instance-count $INSTANCE_COUNT \
+        --group $SECURITY_GROUP \
+        --key $KEY_PAIR \
+        $AMI )
+
+    echo ==============================================================
+    echo "$START_STATUS"
+    echo ==============================================================
+
+    #temp hack writing to file to deal with loosing the linefeeds.
+    echo "$START_STATUS" > "out.txt"
+    STR=$( cat out.txt | grep INSTANCE |  awk '{print $2}' )
+    echo $STR
+
+    INSTANCES=(`echo $STR | tr "," "\n"`)
+
+    echo instances
+    for INSTANCE in "${INSTANCES[@]}"
+    do
+        echo "> [$INSTANCE]"
+        wait_started $INSTANCE
+    done
+    echo Successfully started ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
+}
+
 init_environment $@
-
-echo Starting $INSTANCE_COUNT $INSTANCE_TYPE machines
-
-START_STATUS=$( ec2-run-instances \
-    --availability-zone $AVAILABILITY_ZONE \
-    --instance-type $INSTANCE_TYPE \
-    --instance-count $INSTANCE_COUNT \
-    --group $SECURITY_GROUP \
-    --key $KEY_PAIR \
-    $AMI )
-
-echo ==============================================================
-echo "$START_STATUS"
-echo ==============================================================
-
-#temp hack writing to file to deal with loosing the linefeeds.
-echo "$START_STATUS" > "out.txt"
-STR=$( cat out.txt | grep INSTANCE |  awk '{print $2}' )
-echo $STR
-
-INSTANCES=(`echo $STR | tr "," "\n"`)
-
-echo instances
-for INSTANCE in "${INSTANCES[@]}"
-do
-    echo "> [$INSTANCE]"
-    wait_started $INSTANCE
-done
+spawn_machines
 
 PRIVATE_IP_LIST=()
 for INSTANCE in "${INSTANCES[@]}"
