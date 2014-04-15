@@ -64,7 +64,7 @@ public class MapExercise extends AbstractExercise {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        map = targetInstance.getMap(exerciseId + ":Map");
+        map = targetInstance.getMap("Map-" + exerciseId);
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
@@ -81,12 +81,12 @@ public class MapExercise extends AbstractExercise {
 
         //if our threads are not going to do any writes, we must fill the map so that a read is possible. Otherwise
         //the map remains empty.
-        if(writeFrequency == 0){
+        if (writeFrequency == 0) {
             Random random = new Random();
             for (int k = 0; k < keys.length; k++) {
                 String key = keys[random.nextInt(keyCount)];
                 String value = values[random.nextInt(valueCount)];
-                map.put(key,value);
+                map.put(key, value);
             }
         }
     }
@@ -121,13 +121,10 @@ public class MapExercise extends AbstractExercise {
         @Override
         public void run() {
             long iteration = 0;
-            long readCount = 0;
             while (!stop) {
                 Object key = keys[random.nextInt(keys.length)];
 
-                boolean write = shouldWrite(iteration);
-
-                if (write) {
+                if (shouldWrite(iteration)) {
                     Object value = values[random.nextInt(values.length)];
                     if (usePut) {
                         map.put(key, value);
@@ -135,7 +132,6 @@ public class MapExercise extends AbstractExercise {
                         map.set(key, value);
                     }
                 } else {
-                    readCount++;
                     map.get(key);
                 }
 
@@ -149,8 +145,6 @@ public class MapExercise extends AbstractExercise {
 
                 iteration++;
             }
-
-            System.out.println("read ratio: " + (readCount * 1.0d / iteration));
         }
 
         private boolean shouldWrite(long iteration) {

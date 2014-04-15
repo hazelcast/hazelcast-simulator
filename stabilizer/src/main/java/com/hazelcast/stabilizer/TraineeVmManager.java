@@ -76,9 +76,7 @@ public class TraineeVmManager {
     public void spawn(TraineeVmSettings settings) throws Exception {
         log.info(format("Starting %s trainee Java Virtual Machines using settings\n %s", settings.getTraineeCount(), settings));
 
-        File traineeHzFile = File.createTempFile("trainee-hazelcast", "xml");
-        traineeHzFile.deleteOnExit();
-        Utils.writeText(settings.getHzConfig(), traineeHzFile);
+        File traineeHzFile = createHazelcastConfigFile(settings);
 
         List<TraineeVm> trainees = new LinkedList<TraineeVm>();
 
@@ -104,6 +102,22 @@ public class TraineeVmManager {
         waitForTraineesStartup(trainees, settings.getTraineeStartupTimeout());
 
         log.info(format("Finished starting %s trainee Java Virtual Machines", settings.getTraineeCount()));
+    }
+
+    private File createHazelcastConfigFile(TraineeVmSettings settings) throws IOException {
+        File traineeHzFile = File.createTempFile("trainee-hazelcast", "xml");
+        traineeHzFile.deleteOnExit();
+        String hzConfig = settings.getHzConfig();
+
+        StringBuffer members = new StringBuffer();
+        for(Member member: coach.getCoachHazelcastInstance().getCluster().getMembers()){
+            String hostAddress = member.getSocketAddress().getAddress().getHostAddress();
+            members.append("<member>").append(hostAddress).append(":6701").append("</member>/n");
+        }
+
+        hzConfig = hzConfig.replace("<!--$MEMBERS-->",members);
+        Utils.writeText(hzConfig, traineeHzFile);
+        return traineeHzFile;
     }
 
     private String getJavaHome(String javaVendor, String javaVersion) {

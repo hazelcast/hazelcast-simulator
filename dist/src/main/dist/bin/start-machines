@@ -133,18 +133,18 @@ function init_manager_file {
     cat manager-hazelcast.xml | sed -e "s@MEMBERS@$MEMBERS@" > manager-hazelcast.xml.bak && mv manager-hazelcast.xml.bak manager-hazelcast.xml
 }
 
-function init_trainee_file {
-    local PRIVATE_IP=$1
-
-    local MEMBERS=""
-    for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
-    do
-        MEMBERS="$MEMBERS<member>$PRIVATE_IP</member>\n"
-    done
-
-    cp trainee-hazelcast-template.xml trainee-hazelcast.xml
-    cat trainee-hazelcast.xml | sed -e "s@MEMBERS@$MEMBERS@" > trainee-hazelcast.xml.bak && mv trainee-hazelcast.xml.bak trainee-hazelcast.xml
-}
+#function init_trainee_file {
+#    local PRIVATE_IP=$1
+#
+#    local MEMBERS=""
+#    for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
+#    do
+#        MEMBERS="$MEMBERS<member>$PRIVATE_IP</member>\n"
+#    done
+#
+#    cp trainee-hazelcast-template.xml trainee-hazelcast.xml
+#    cat trainee-hazelcast.xml | sed -e "s@MEMBERS@$MEMBERS@" > trainee-hazelcast.xml.bak && mv trainee-hazelcast.xml.bak trainee-hazelcast.xml
+#}
 
 function start_coach {
     local PRIVATE_IP=$1
@@ -258,7 +258,6 @@ else
     spawn_machines
     install_stabilizer_on_all_machines
     init_manager_file
-    init_trainee_file
     start_coaches
     list_machines
 fi

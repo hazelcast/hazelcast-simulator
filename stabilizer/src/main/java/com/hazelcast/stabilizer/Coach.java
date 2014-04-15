@@ -150,7 +150,8 @@ public class Coach {
                 Object messageObject = message.getMessageObject();
                 if (messageObject instanceof HeartAttack) {
                     HeartAttack heartAttack = (HeartAttack) messageObject;
-                    final boolean isLocal = coachHz.getCluster().getLocalMember().getInetSocketAddress().equals(heartAttack.getCoachAddress());
+                    Member localMember = coachHz.getCluster().getLocalMember();
+                    final boolean isLocal = localMember.getInetSocketAddress().equals(heartAttack.getCoachAddress());
                     if (isLocal) {
                         log.severe("Local heart attack detected:" + heartAttack);
                     } else {
@@ -242,12 +243,12 @@ public class Coach {
     public void start() throws Exception {
         ensureExistingDirectory(gymHome);
 
+        initCoachHazelcastInstance();
+
         traineeVmManager = new TraineeVmManager(this);
         repository.load(javaInstallationsFile);
 
         new Thread(new HeartAttackMonitor(this)).start();
-
-        initCoachHazelcastInstance();
 
         log.info("Hazelcast Assistant Coach is Ready for action");
     }
@@ -259,7 +260,8 @@ public class Coach {
 
         OptionParser parser = new OptionParser();
         OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
-        OptionSpec<String> coachHzFileSpec = parser.accepts("coachHzFile", "The Hazelcast xml configuration file for the coach")
+        OptionSpec<String> coachHzFileSpec = parser.accepts("coachHzFile",
+                "The Hazelcast xml configuration file for the coach")
                 .withRequiredArg().ofType(String.class)
                 .defaultsTo(stabilizerHome + File.separator + "conf" + File.separator + "coach-hazelcast.xml");
         OptionSpec<String> javaInstallationsFileSpec = parser.accepts("javaInstallationsFile",

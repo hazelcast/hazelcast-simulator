@@ -39,9 +39,7 @@ import com.hazelcast.stabilizer.tasks.StopTask;
 import com.hazelcast.stabilizer.tasks.TellTrainee;
 import com.hazelcast.stabilizer.tasks.TerminateWorkout;
 import joptsimple.OptionException;
-import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -67,15 +65,16 @@ import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.loadProperties;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
+import static java.util.Collections.synchronizedList;
 
 public class Manager {
 
-    private final static File STABILIZER_HOME = getStablizerHome();
+    public final static File STABILIZER_HOME = getStablizerHome();
     private final static ILogger log = Logger.getLogger(Manager.class);
 
     private Workout workout;
     private File managerHzFile;
-    private final List<HeartAttack> heartAttackList = Collections.synchronizedList(new LinkedList<HeartAttack>());
+    private final List<HeartAttack> heartAttackList = synchronizedList(new LinkedList<HeartAttack>());
     private IExecutorService coachExecutor;
     private HazelcastInstance client;
     private ITopic statusTopic;
@@ -396,7 +395,8 @@ public class Manager {
             }
             throw new RuntimeException(e);
         } catch (TimeoutException e) {
-            statusTopic.publish(new HeartAttack("Timeout waiting for remote operation to complete", null, null, null, getExerciseRecipe(), e));
+            HeartAttack heartAttack = new HeartAttack("Timeout waiting for remote operation to complete", null, null, null, getExerciseRecipe(), e);
+            statusTopic.publish(heartAttack);
             throw new RuntimeException(e);
         }
     }
@@ -443,82 +443,33 @@ public class Manager {
         log.info(format("Version: %s", getVersion()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
-        OptionParser parser = new OptionParser();
-        OptionSpec cleanGymSpec = parser.accepts("cleanGym", "Cleans the gym directory on all coaches");
-
-        OptionSpec<Integer> durationSpec = parser.accepts("duration", "Number of seconds to run per workout)")
-                .withRequiredArg().ofType(Integer.class).defaultsTo(60);
-        OptionSpec traineeTrackLoggingSpec = parser.accepts("traineeTrackLogging", "If the coach is tracking trainee logging");
-        OptionSpec<Integer> traineeCountSpec = parser.accepts("traineeVmCount", "Number of trainee VM's per coach")
-                .withRequiredArg().ofType(Integer.class).defaultsTo(1);
-        OptionSpec<String> traineeClassPathSpec = parser.accepts("traineeClassPath", "A file/directory containing the " +
-                "classes/jars/resources that are going to be uploaded to the coaches. " +
-                "Use ';' as separator for multiple entries. Wildcard '*' can also be used.")
-                .withRequiredArg().ofType(String.class);
-        OptionSpec<Integer> traineeStartupTimeoutSpec = parser.accepts("traineeStartupTimeout", "The startup timeout in " +
-                "seconds for a trainee")
-                .withRequiredArg().ofType(Integer.class).defaultsTo(60);
-        OptionSpec<Boolean> monitorPerformanceSpec = parser.accepts("monitorPerformance", "If performance monitoring " +
-                "should be done")
-                .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
-        OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled", "If exercise should be verified")
-                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
-        OptionSpec<Boolean> traineeRefreshSpec = parser.accepts("traineeFresh", "If the trainee VM's should be replaced " +
-                "after every workout")
-                .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
-        OptionSpec<Boolean> failFastSpec = parser.accepts("failFast", "It the workout should fail immediately when an " +
-                "exercise from a workout fails instead of continuing ")
-                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
-        OptionSpec<String> traineeVmOptionsSpec = parser.accepts("traineeVmOptions", "Trainee VM options (quotes " +
-                "can be used)")
-                .withRequiredArg().ofType(String.class).defaultsTo("");
-        OptionSpec<String> traineeHzFileSpec = parser.accepts("traineeHzFile", "The Hazelcast xml configuration file " +
-                "for the trainee")
-                .withRequiredArg().ofType(String.class).defaultsTo(
-                        STABILIZER_HOME + File.separator + "conf" + File.separator + "trainee-hazelcast.xml");
-        OptionSpec<String> managerHzFileSpec = parser.accepts(
-                "managerHzFile", "The client Hazelcast xml configuration file for the manager")
-                .withRequiredArg().ofType(String.class).defaultsTo(
-                        STABILIZER_HOME + File.separator + "conf" + File.separator + "manager-hazelcast.xml");
-        OptionSpec<String> traineeJavaVendorSpec = parser.accepts("traineeJavaVendor", "The Java vendor (e.g. " +
-                "openjdk or sun) of the JVM used by the trainee). " +
-                "If nothing is specified, the coach is free to pick a vendor.")
-                .withRequiredArg().ofType(String.class).defaultsTo("");
-        OptionSpec<String> traineeJavaVersionSpec = parser.accepts("traineeJavaVersion", "The Java version (e.g. 1.6) " +
-                "of the JVM used by the trainee). " +
-                "If nothing is specified, the coach is free to pick a version.")
-                .withRequiredArg().ofType(String.class).defaultsTo("");
-        OptionSpec<Integer> exerciseStopTimeoutMsSpec = parser.accepts("exerciseStopTimeoutMs", "Maximum amount of time " +
-                "waiting for the exercise to stop")
-                .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
-
-        OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
+        ManagerOptionSpec optionSpec = new ManagerOptionSpec();
 
         OptionSet options;
         Manager manager = new Manager();
 
         try {
-            options = parser.parse(args);
+            options = optionSpec.parser.parse(args);
 
-            if (options.has(helpSpec)) {
-                parser.printHelpOn(System.out);
+            if (options.has(optionSpec.helpSpec)) {
+                optionSpec.parser.printHelpOn(System.out);
                 System.exit(0);
             }
 
-            manager.setCleanGym(options.has(cleanGymSpec));
+            manager.setCleanGym(options.has(optionSpec.cleanGymSpec));
 
-            if (options.has(traineeClassPathSpec)) {
-                manager.setTraineeClassPath(options.valueOf(traineeClassPathSpec));
+            if (options.has(optionSpec.traineeClassPathSpec)) {
+                manager.setTraineeClassPath(options.valueOf(optionSpec.traineeClassPathSpec));
             }
 
-            File managerHzFile = new File(options.valueOf(managerHzFileSpec));
+            File managerHzFile = new File(options.valueOf(optionSpec.managerHzFileSpec));
             if (!managerHzFile.exists()) {
                 exitWithError(format("Manager Hazelcast config file [%s] does not exist.\n", managerHzFile));
             }
             manager.managerHzFile = managerHzFile;
-            manager.verifyEnabled = options.valueOf(verifyEnabledSpec);
-            manager.monitorPerformance = options.valueOf(monitorPerformanceSpec);
-            manager.exerciseStopTimeoutMs = options.valueOf(exerciseStopTimeoutMsSpec);
+            manager.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
+            manager.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
+            manager.exerciseStopTimeoutMs = options.valueOf(optionSpec.exerciseStopTimeoutMsSpec);
 
             String workoutFileName = "workout.properties";
             List<String> workoutFiles = options.nonOptionArguments();
@@ -531,23 +482,18 @@ public class Manager {
             Workout workout = createWorkout(new File(workoutFileName));
 
             manager.setWorkout(workout);
-            workout.setDuration(options.valueOf(durationSpec));
-            workout.setFailFast(options.valueOf(failFastSpec));
-
-            File traineeHzFile = new File(options.valueOf(traineeHzFileSpec));
-            if (!traineeHzFile.exists()) {
-                exitWithError(format("Trainee Hazelcast config file [%s] does not exist.\n", traineeHzFile));
-            }
+            workout.setDuration(options.valueOf(optionSpec.durationSpec));
+            workout.setFailFast(options.valueOf(optionSpec.failFastSpec));
 
             TraineeVmSettings traineeVmSettings = new TraineeVmSettings();
-            traineeVmSettings.setTrackLogging(options.has(traineeTrackLoggingSpec));
-            traineeVmSettings.setVmOptions(options.valueOf(traineeVmOptionsSpec));
-            traineeVmSettings.setTraineeCount(options.valueOf(traineeCountSpec));
-            traineeVmSettings.setTraineeStartupTimeout(options.valueOf(traineeStartupTimeoutSpec));
-            traineeVmSettings.setHzConfig(Utils.asText(traineeHzFile));
-            traineeVmSettings.setRefreshJvm(options.valueOf(traineeRefreshSpec));
-            traineeVmSettings.setJavaVendor(options.valueOf(traineeJavaVendorSpec));
-            traineeVmSettings.setJavaVersion(options.valueOf(traineeJavaVersionSpec));
+            traineeVmSettings.setTrackLogging(options.has(optionSpec.traineeTrackLoggingSpec));
+            traineeVmSettings.setVmOptions(options.valueOf(optionSpec.traineeVmOptionsSpec));
+            traineeVmSettings.setTraineeCount(options.valueOf(optionSpec.traineeCountSpec));
+            traineeVmSettings.setTraineeStartupTimeout(options.valueOf(optionSpec.traineeStartupTimeoutSpec));
+            traineeVmSettings.setHzConfig(Utils.asText(buildTraineeHazelcastFile(optionSpec, options)));
+            traineeVmSettings.setRefreshJvm(options.valueOf(optionSpec.traineeRefreshSpec));
+            traineeVmSettings.setJavaVendor(options.valueOf(optionSpec.traineeJavaVendorSpec));
+            traineeVmSettings.setJavaVersion(options.valueOf(optionSpec.traineeJavaVersionSpec));
 
             workout.setTraineeVmSettings(traineeVmSettings);
         } catch (OptionException e) {
@@ -563,6 +509,14 @@ public class Manager {
         }
     }
 
+    private static File buildTraineeHazelcastFile(ManagerOptionSpec optionSpec, OptionSet options) {
+        File traineeHzFile = new File(options.valueOf(optionSpec.traineeHzFileSpec));
+        if (!traineeHzFile.exists()) {
+            exitWithError(format("Trainee Hazelcast config file [%s] does not exist.\n", traineeHzFile));
+        }
+
+        return traineeHzFile;
+    }
 
     private static Workout createWorkout(File file) throws Exception {
         Properties properties = loadProperties(file);
