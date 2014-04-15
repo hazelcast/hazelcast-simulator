@@ -40,7 +40,7 @@ public class MapExercise extends AbstractExercise {
     private final AtomicLong operations = new AtomicLong();
 
     //properties
-    public int writeFrequency = 10;
+    public int writePercentage = 10;
     public int threadCount = 10;
     public int keyLength = 10;
     public int valueLength = 10;
@@ -54,12 +54,12 @@ public class MapExercise extends AbstractExercise {
     public void localSetup() throws Exception {
         super.localSetup();
 
-        if (writeFrequency < 0) {
-            throw new IllegalArgumentException("Write Frequency can't be smaller than 0");
+        if (writePercentage < 0) {
+            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
         }
 
-        if (writeFrequency > 100) {
-            throw new IllegalArgumentException("Write Frequency can't be larger than 100");
+        if (writePercentage > 100) {
+            throw new IllegalArgumentException("Write percentage can't be larger than 100");
         }
 
         HazelcastInstance targetInstance = getTargetInstance();
@@ -81,7 +81,7 @@ public class MapExercise extends AbstractExercise {
 
         //if our threads are not going to do any writes, we must fill the map so that a read is possible. Otherwise
         //the map remains empty.
-        if (writeFrequency == 0) {
+        if (writePercentage == 0) {
             Random random = new Random();
             for (int k = 0; k < keys.length; k++) {
                 String key = keys[random.nextInt(keyCount)];
@@ -148,12 +148,12 @@ public class MapExercise extends AbstractExercise {
         }
 
         private boolean shouldWrite(long iteration) {
-            if (writeFrequency == 0) {
+            if (writePercentage == 0) {
                 return false;
-            } else if (writeFrequency == 100) {
+            } else if (writePercentage == 100) {
                 return true;
             } else {
-                return (iteration % 100) < writeFrequency;
+                return (iteration % 100) < writePercentage;
             }
         }
     }
@@ -161,7 +161,7 @@ public class MapExercise extends AbstractExercise {
     public static void main(String[] args) throws Exception {
         MapExercise mapExercise = new MapExercise();
         mapExercise.useClient = true;
-        mapExercise.writeFrequency = 0;
+        mapExercise.writePercentage = 0;
         new ExerciseRunner().run(mapExercise, 20);
     }
 }

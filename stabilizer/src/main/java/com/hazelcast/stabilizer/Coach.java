@@ -207,6 +207,7 @@ public class Coach {
         return results;
     }
 
+
     public File getWorkoutHome() {
         Workout _workout = workout;
         if (_workout == null) {
@@ -242,9 +243,10 @@ public class Coach {
     public void start() throws Exception {
         ensureExistingDirectory(gymHome);
 
+        traineeVmManager = new TraineeVmManager(this);
+
         initCoachHazelcastInstance();
 
-        traineeVmManager = new TraineeVmManager(this);
         repository.load(javaInstallationsFile);
 
         new Thread(new HeartAttackMonitor(this)).start();
