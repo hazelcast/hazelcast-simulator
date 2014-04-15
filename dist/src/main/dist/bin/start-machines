@@ -194,7 +194,7 @@ function spawn_machines {
 
     #temp hack writing to file to deal with loosing the linefeeds.
     echo "$START_STATUS" > "out.txt"
-    STR=$( cat out.txt | grep INSTANCE |  awk '{print $2}' )
+    local STR=$( cat out.txt | grep INSTANCE |  awk '{print $2}' )
     echo $STR
 
     INSTANCES=(`echo $STR | tr "," "\n"`)
@@ -222,8 +222,7 @@ function restart_coaches {
     echo Restarting ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
 
     #temp hack writing to file to deal with loosing the linefeeds.
-    echo "$START_STATUS" > "out.txt"
-    STR=$( cat out.txt | grep INSTANCE |  awk '{print $2}' )
+    local STR=$( cat out.txt | grep INSTANCE |  awk '{print $2}' )
     echo $STR
 
     INSTANCES=(`echo $STR | tr "," "\n"`)
@@ -235,7 +234,14 @@ function restart_coaches {
         PRIVATE_IP_LIST+=("$PRIVATE_IP")
     done
 
+    for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
+    do
+       ssh -o StrictHostKeyChecking=no -i ${LICENSE} ${USER}@${PRIVATE_IP}  "killall -9 java"
+    done
+
     start_coaches
+    echo Coaches started
+
     list_machines
 
     echo ==============================================================

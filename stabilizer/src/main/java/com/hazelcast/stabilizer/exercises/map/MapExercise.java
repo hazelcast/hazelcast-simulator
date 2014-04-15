@@ -40,6 +40,7 @@ public class MapExercise extends AbstractExercise {
     private final AtomicLong operations = new AtomicLong();
 
     //properties
+    public int writeFrequency = 10;
     public int threadCount = 10;
     public int keyLength = 10;
     public int valueLength = 10;
@@ -52,6 +53,14 @@ public class MapExercise extends AbstractExercise {
     @Override
     public void localSetup() throws Exception {
         super.localSetup();
+
+        if (writeFrequency < 0) {
+            throw new IllegalArgumentException("Write Frequency can't be smaller than 0");
+        }
+
+        if (writeFrequency > 100) {
+            throw new IllegalArgumentException("Write Frequency can't be larger than 100");
+        }
 
         HazelcastInstance targetInstance = getTargetInstance();
 
@@ -68,6 +77,17 @@ public class MapExercise extends AbstractExercise {
         values = new String[valueCount];
         for (int k = 0; k < values.length; k++) {
             values[k] = makeString(valueLength);
+        }
+
+        //if our threads are not going to do any writes, we must fill the map so that a read is possible. Otherwise
+        //the map remains empty.
+        if(writeFrequency == 0){
+            Random random = new Random();
+            for (int k = 0; k < keys.length; k++) {
+                String key = keys[random.nextInt(keyCount)];
+                String value = values[random.nextInt(valueCount)];
+                map.put(key,value);
+            }
         }
     }
 
@@ -101,14 +121,22 @@ public class MapExercise extends AbstractExercise {
         @Override
         public void run() {
             long iteration = 0;
+            long readCount = 0;
             while (!stop) {
                 Object key = keys[random.nextInt(keys.length)];
-                Object value = values[random.nextInt(values.length)];
 
-                if (usePut) {
-                    map.put(key, value);
+                boolean write = shouldWrite(iteration);
+
+                if (write) {
+                    Object value = values[random.nextInt(values.length)];
+                    if (usePut) {
+                        map.put(key, value);
+                    } else {
+                        map.set(key, value);
+                    }
                 } else {
-                    map.set(key, value);
+                    readCount++;
+                    map.get(key);
                 }
 
                 if (iteration % logFrequency == 0) {
@@ -121,13 +149,25 @@ public class MapExercise extends AbstractExercise {
 
                 iteration++;
             }
+
+            System.out.println("read ratio: " + (readCount * 1.0d / iteration));
+        }
+
+        private boolean shouldWrite(long iteration) {
+            if (writeFrequency == 0) {
+                return false;
+            } else if (writeFrequency == 100) {
+                return true;
+            } else {
+                return (iteration % 100) < writeFrequency;
+            }
         }
     }
-
 
     public static void main(String[] args) throws Exception {
         MapExercise mapExercise = new MapExercise();
         mapExercise.useClient = true;
+        mapExercise.writeFrequency = 0;
         new ExerciseRunner().run(mapExercise, 20);
     }
 }
