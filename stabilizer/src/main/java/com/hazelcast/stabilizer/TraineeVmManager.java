@@ -107,7 +107,7 @@ public class TraineeVmManager {
     private File createHazelcastConfigFile(TraineeVmSettings settings) throws IOException {
         File traineeHzFile = File.createTempFile("trainee-hazelcast", "xml");
         traineeHzFile.deleteOnExit();
-        String hzConfig = settings.getHzConfig();
+        final String hzConfig = settings.getHzConfig();
 
         StringBuffer members = new StringBuffer();
         for(Member member: coach.getCoachHazelcastInstance().getCluster().getMembers()){
@@ -115,8 +115,12 @@ public class TraineeVmManager {
             members.append("<member>").append(hostAddress).append(":6701").append("</member>/n");
         }
 
-        hzConfig = hzConfig.replace("<!--$MEMBERS-->",members);
-        Utils.writeText(hzConfig, traineeHzFile);
+        String enhancedHzConfig = hzConfig.replace("<!--$MEMBERS-->",members);
+        log.info("Added members:\n"+members);
+        log.info("Original config file: \n"+hzConfig);
+        log.info("Enhanced config file: \n"+enhancedHzConfig);
+
+        Utils.writeText(enhancedHzConfig, traineeHzFile);
         return traineeHzFile;
     }
 

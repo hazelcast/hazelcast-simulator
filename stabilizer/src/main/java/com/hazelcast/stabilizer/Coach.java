@@ -207,7 +207,6 @@ public class Coach {
         return results;
     }
 
-
     public File getWorkoutHome() {
         Workout _workout = workout;
         if (_workout == null) {
