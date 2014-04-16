@@ -42,7 +42,7 @@ function init_environment {
                 INSTANCE_COUNT=20;;
         "2xlarge")
                 INSTANCE_COUNT=40;;
-        "4xlarge")
+        "3xlarge")
                 INSTANCE_COUNT=100;;
         *)
                 echo Unknown cluster size ${CLUSTER_SIZE}
@@ -161,7 +161,7 @@ function start_coaches {
     echo Coaches started
 }
 
-function list_machines {
+function echo_list_machines {
     for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
     do
         echo -- Coach ${PRIVATE_IP}
@@ -183,9 +183,11 @@ function spawn_machines {
     echo "$START_STATUS"
     echo ==============================================================
 
+    TMP=$( mktemp )
+
     #temp hack writing to file to deal with loosing the linefeeds.
-    echo "$START_STATUS" > "out.txt"
-    local STR=$( cat out.txt | grep INSTANCE |  awk '{print $2}' )
+    echo "$START_STATUS" > $TMP
+    local STR=$( cat $TMP | grep INSTANCE |  awk '{print $2}' )
     echo $STR
 
     INSTANCES=(`echo $STR | tr "," "\n"`)
@@ -197,36 +199,26 @@ function spawn_machines {
         wait_started $INSTANCE
     done
 
+    echo ==============================================================
+    echo Successfully started ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
+    echo ==============================================================
+
     echo "" > machine_list.txt
     PRIVATE_IP_LIST=()
     for INSTANCE in "${INSTANCES[@]}"
     do
         PRIVATE_IP=$( private_ip $INSTANCE )
         PRIVATE_IP_LIST+=("$PRIVATE_IP")
-        echo "${PRIVATE_IP}\n" > machine_list.txt
+        echo -e "${PRIVATE_IP}" >> machine_list.txt
     done
-
-    echo ==============================================================
-    echo Successfully started ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
-    echo ==============================================================
 }
 
 function restart_coaches {
     echo Restarting ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
 
-    #temp hack writing to file to deal with loosing the linefeeds.
-    local STR=$( cat out.txt | grep INSTANCE |  awk '{print $2}' )
-    echo $STR
+    PRIVATE_IP_LIST=readarray PRIVATE_IP_LIST<machine_list.txt
 
-    INSTANCES=(`echo $STR | tr "," "\n"`)
-
-    PRIVATE_IP_LIST=()
-    for INSTANCE in "${INSTANCES[@]}"
-    do
-        PRIVATE_IP=$( private_ip $INSTANCE )
-        PRIVATE_IP_LIST+=("$PRIVATE_IP")
-    done
-
+    echo "Killing all Java Processes"
     for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
     do
        ssh -o StrictHostKeyChecking=no -i ${LICENSE} ${USER}@${PRIVATE_IP}  "killall -9 java"
@@ -252,7 +244,7 @@ else
     install_stabilizer_on_all_machines
     init_manager_file
     start_coaches
-    list_machines
+    echo_list_machines
 fi
 
 

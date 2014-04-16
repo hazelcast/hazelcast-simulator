@@ -27,9 +27,9 @@ import com.hazelcast.stabilizer.performance.Performance;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MapExercise extends AbstractExercise {
+public class StringMapExercise extends AbstractExercise {
 
-    private final static ILogger log = Logger.getLogger(MapExercise.class);
+    private final static ILogger log = Logger.getLogger(StringMapExercise.class);
 
     private final static String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
 
@@ -159,7 +159,7 @@ public class MapExercise extends AbstractExercise {
     }
 
     public static void main(String[] args) throws Exception {
-        MapExercise mapExercise = new MapExercise();
+        StringMapExercise mapExercise = new StringMapExercise();
         mapExercise.useClient = true;
         mapExercise.writePercentage = 0;
         new ExerciseRunner().run(mapExercise, 20);
