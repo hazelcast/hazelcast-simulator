@@ -146,7 +146,7 @@ function start_coach {
 
     #we need to pull out this property
     ssh -o StrictHostKeyChecking=no -i ${LICENSE} ${USER}@${PRIVATE_IP} \
-        "killall -9 java ; nohup hazelcast-stabilizer-0.1-SNAPSHOT/bin/coach  > foo.out 2> foo.err < /dev/null &"
+        "killall -9 java ; nohup hazelcast-stabilizer-0.1-SNAPSHOT/bin/coach  > coach.out 2> coach.err < /dev/null &"
 
     echo ==============================================================
     echo Successfully Started Coach on ${PRIVATE_IP}
