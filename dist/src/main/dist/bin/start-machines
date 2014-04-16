@@ -40,19 +40,23 @@ function init_environment {
                 INSTANCE_COUNT=10;;
         "xlarge")
                 INSTANCE_COUNT=20;;
+        "2xlarge")
+                INSTANCE_COUNT=40;;
+        "4xlarge")
+                INSTANCE_COUNT=100;;
         *)
-                echo Unknown cluster size $CLUSTER_SIZE
+                echo Unknown cluster size ${CLUSTER_SIZE}
                 exit
                 ;;
     esac
 
-    echo INSTANCE_COUNT $INSTANCE_COUNT CLUSTER_SIZE = $CLUSTER_SIZE
+    echo INSTANCE_COUNT ${INSTANCE_COUNT} CLUSTER_SIZE = ${CLUSTER_SIZE}
 }
 
 function private_ip {
     local INSTANCE=$1
     local PRIVATE_IP=$( ec2-describe-instances | grep ${INSTANCE} | cut -f 18 )
-    echo $PRIVATE_IP
+    echo ${PRIVATE_IP}
 }
 
 function wait_started {
@@ -133,24 +137,11 @@ function init_manager_file {
     cat manager-hazelcast.xml | sed -e "s@MEMBERS@$MEMBERS@" > manager-hazelcast.xml.bak && mv manager-hazelcast.xml.bak manager-hazelcast.xml
 }
 
-#function init_trainee_file {
-#    local PRIVATE_IP=$1
-#
-#    local MEMBERS=""
-#    for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
-#    do
-#        MEMBERS="$MEMBERS<member>$PRIVATE_IP</member>\n"
-#    done
-#
-#    cp trainee-hazelcast-template.xml trainee-hazelcast.xml
-#    cat trainee-hazelcast.xml | sed -e "s@MEMBERS@$MEMBERS@" > trainee-hazelcast.xml.bak && mv trainee-hazelcast.xml.bak trainee-hazelcast.xml
-#}
-
 function start_coach {
     local PRIVATE_IP=$1
 
     echo ==============================================================
-    echo Starting Coach on $PRIVATE_IP
+    echo Starting Coach on ${PRIVATE_IP}
     echo ==============================================================
 
     #we need to pull out this property
@@ -158,14 +149,14 @@ function start_coach {
         "killall -9 java ; nohup hazelcast-stabilizer-0.1-SNAPSHOT/bin/coach  > foo.out 2> foo.err < /dev/null &"
 
     echo ==============================================================
-    echo Successfully Started Coach on $PRIVATE_IP
+    echo Successfully Started Coach on ${PRIVATE_IP}
     echo ==============================================================
 }
 
 function start_coaches {
     for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
     do
-        start_coach $PRIVATE_IP
+        start_coach ${PRIVATE_IP}
     done
     echo Coaches started
 }
@@ -173,7 +164,7 @@ function start_coaches {
 function list_machines {
     for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
     do
-        echo -- Coach $PRIVATE_IP
+        echo -- Coach ${PRIVATE_IP}
     done
 }
 
@@ -206,11 +197,13 @@ function spawn_machines {
         wait_started $INSTANCE
     done
 
+    echo "" > machine_list.txt
     PRIVATE_IP_LIST=()
     for INSTANCE in "${INSTANCES[@]}"
     do
         PRIVATE_IP=$( private_ip $INSTANCE )
         PRIVATE_IP_LIST+=("$PRIVATE_IP")
+        echo "${PRIVATE_IP}\n" > machine_list.txt
     done
 
     echo ==============================================================
