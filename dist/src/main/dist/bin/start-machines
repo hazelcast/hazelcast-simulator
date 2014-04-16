@@ -6,6 +6,7 @@ fi
 
 echo  STABILIZER_HOME = ${STABILIZER_HOME}
 
+COMMAND=startmachines
 CLUSTER_SIZE=small
 RESTART=false
 
@@ -18,7 +19,9 @@ function init_environment {
             --clustersize=*)
                 CLUSTER_SIZE="${i#*=}";;
             --restart)
-                RESTART=true;;
+                COMMAND="restart";;
+            --download)
+                COMMAND="download";;
             *)
                 # unknown option
                 echo Unknown option $1
@@ -234,17 +237,46 @@ function restart_coaches {
     echo ==============================================================
 }
 
+function download {
+    echo ==============================================================
+    echo Download artifacts
+    echo ==============================================================
+
+   PRIVATE_IP_LIST=readarray PRIVATE_IP_LIST<machine_list.txt
+
+    echo "Killing all Java Processes"
+    for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
+    do
+       echo Downoading from $PRIVATE_IP
+       scp -i ${LICENSE} -q -r ${USER}@${PRIVATE_IP}:hazelcast-stabilizer-0.1-SNAPSHOT/conf/ ${STABILIZER_HOME}/gym/
+    done
+
+    echo "Copying stabilizer files"
+    #we need to pull out this property
+    scp -i ${LICENSE} -q -r ${STABILIZER_HOME} ${USER}@${PRIVATE_IP}:
+    #we need to override the hazelcast config file with the one we generated.
+    scp -i ${LICENSE} -q coach-hazelcast.xml ${USER}@${PRIVATE_IP}:hazelcast-stabilizer-0.1-SNAPSHOT/conf/
+
+    echo ==============================================================
+    echo Finished Downloading Artifacts 
+    echo ==============================================================
+}
+
 init_environment $@
 
-if [ "${RESTART}" = "true" ] ;
-then
-    restart_coaches
-else
-    spawn_machines
-    install_stabilizer_on_all_machines
-    init_manager_file
-    start_coaches
-    echo_list_machines
-fi
-
+case ${COMMAND} in
+    "startmachines")
+        spawn_machines
+        install_stabilizer_on_all_machines
+        init_manager_file
+        start_coaches
+        echo_list_machines
+        ;;
+    "restart")
+        restart_coaches
+        ;;
+    "download")
+        download
+        ;;
+esac
 
