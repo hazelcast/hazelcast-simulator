@@ -208,7 +208,8 @@ public class TraineeVmManager {
                     if (member != null) {
                         it.remove();
                         jvm.setMember(member);
-                        log.info(format("Trainee: %s Started %s of %s", jvm.getId(), trainees.size() - todo.size(), trainees.size()));
+                        log.info(format("Trainee: %s Started %s of %s",
+                                jvm.getId(), trainees.size() - todo.size(), trainees.size()));
                     }
                 }
             }
@@ -228,7 +229,8 @@ public class TraineeVmManager {
         sb.append("]");
 
         throw new RuntimeException(format("Timeout: trainees %s of workout %s on host %s didn't start within %s seconds",
-                sb, coach.getWorkout().getId(), coach.getCoachHz().getCluster().getLocalMember().getInetSocketAddress(), traineeTimeoutSec));
+                sb, coach.getWorkout().getId(), coach.getCoachHz().getCluster().getLocalMember().getInetSocketAddress(),
+                traineeTimeoutSec));
     }
 
     private InetSocketAddress readAddress(TraineeVm jvm) {

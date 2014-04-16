@@ -11,4 +11,4 @@ java -cp "${STABILIZER_HOME}/lib/*" ${JAVA_OPTS} \
     -DSTABILIZER_HOME=${STABILIZER_HOME} \
     -Dhazelcast.logging.type=log4j \
     -Dlog4j.configuration=file:${STABILIZER_HOME}/conf/manager-log4j.xml \
-    com.hazelcast.stabilizer.Manager "$@"
+    com.hazelcast.stabilizer.manager.Manager "$@"
