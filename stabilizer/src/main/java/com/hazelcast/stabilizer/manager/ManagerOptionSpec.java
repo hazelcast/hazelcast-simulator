@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.manager;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSpec;

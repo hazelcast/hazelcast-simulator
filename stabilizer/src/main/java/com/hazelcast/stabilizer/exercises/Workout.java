@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.exercises;
+
+import com.hazelcast.stabilizer.ExerciseRecipe;
+import com.hazelcast.stabilizer.trainee.TraineeVmSettings;
 
 import java.io.Serializable;
 import java.util.LinkedList;

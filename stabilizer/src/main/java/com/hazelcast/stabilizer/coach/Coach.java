@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.coach;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
@@ -26,6 +26,14 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.ExerciseRecipe;
+import com.hazelcast.stabilizer.HeartAttack;
+import com.hazelcast.stabilizer.HeartAttackAlreadyThrownRuntimeException;
+import com.hazelcast.stabilizer.JavaInstallationsRepository;
+import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.exercises.Workout;
+import com.hazelcast.stabilizer.trainee.TraineeVm;
+import com.hazelcast.stabilizer.trainee.TraineeVmManager;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;

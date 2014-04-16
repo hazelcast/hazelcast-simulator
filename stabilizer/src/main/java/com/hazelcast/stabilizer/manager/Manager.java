@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.manager;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -26,6 +26,13 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.coach.Coach;
+import com.hazelcast.stabilizer.ExerciseRecipe;
+import com.hazelcast.stabilizer.HeartAttack;
+import com.hazelcast.stabilizer.HeartAttackAlreadyThrownRuntimeException;
+import com.hazelcast.stabilizer.trainee.TraineeVmSettings;
+import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.exercises.Workout;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tasks.CleanGym;

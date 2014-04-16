@@ -20,7 +20,7 @@ import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.Coach;
+import com.hazelcast.stabilizer.coach.Coach;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;

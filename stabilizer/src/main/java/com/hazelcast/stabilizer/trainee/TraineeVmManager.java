@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.trainee;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -24,10 +24,15 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.coach.Coach;
+import com.hazelcast.stabilizer.JavaInstallation;
+import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -38,6 +43,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static java.lang.String.format;
 
@@ -137,7 +143,7 @@ public class TraineeVmManager {
     }
 
     private TraineeVm startTraineeJvm(TraineeVmSettings settings, File traineeHzFile) throws IOException {
-        String traineeId = "trainee-" + TRAINEE_ID_GENERATOR.incrementAndGet();
+        String traineeId = "trainee-"+getHostAddress()+"-"+TRAINEE_ID_GENERATOR.incrementAndGet();
 
         String traineeVmOptions = settings.getVmOptions();
         String[] clientVmOptionsArray = new String[]{};

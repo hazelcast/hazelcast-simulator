@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.coach;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.HeartAttack;
+import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.trainee.TraineeVm;
+import com.hazelcast.stabilizer.trainee.TraineeVmManager;
 
 import java.io.File;
 import java.util.LinkedList;

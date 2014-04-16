@@ -33,7 +33,8 @@ public class HeartAttack implements Serializable {
     private final ExerciseRecipe exerciseRecipe;
     private final Throwable cause;
 
-    public HeartAttack(String message, InetSocketAddress coachAddress, InetSocketAddress traineeAddress, String traineeId, ExerciseRecipe exerciseRecipe) {
+    public HeartAttack(String message, InetSocketAddress coachAddress, InetSocketAddress traineeAddress,
+                       String traineeId, ExerciseRecipe exerciseRecipe) {
         this.message = message;
         this.coachAddress = coachAddress;
         this.traineeId = traineeId;
@@ -43,7 +44,8 @@ public class HeartAttack implements Serializable {
         this.cause = null;
     }
 
-    public HeartAttack(String message, InetSocketAddress coachAddress, InetSocketAddress traineeAddress, String traineeId, ExerciseRecipe exerciseRecipe, Throwable cause) {
+    public HeartAttack(String message, InetSocketAddress coachAddress, InetSocketAddress traineeAddress,
+                       String traineeId, ExerciseRecipe exerciseRecipe, Throwable cause) {
         this.message = message;
         this.coachAddress = coachAddress;
         this.traineeId = traineeId;
@@ -83,7 +85,6 @@ public class HeartAttack implements Serializable {
 
     @Override
     public String toString() {
-
         StringBuffer sb = new StringBuffer();
         sb.append("HeartAttack[\n");
         sb.append("   message='").append(message).append("'\n");

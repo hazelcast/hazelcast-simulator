@@ -37,6 +37,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.Socket;
 import java.net.URI;
 import java.util.Deque;
 import java.util.HashSet;
@@ -52,6 +53,28 @@ import static java.lang.String.format;
 
 public final class Utils {
     private final static ILogger log = Logger.getLogger(Utils.class);
+
+    private static volatile String hostAddress;
+
+    public static String getHostAddress() {
+        if (hostAddress != null) {
+            return hostAddress;
+        }
+
+        synchronized (Utils.class) {
+            try {
+                if(hostAddress!=null){
+                    return hostAddress;
+                }
+                Socket s = new Socket("google.com", 80);
+                hostAddress = s.getLocalAddress().getHostAddress();
+                s.close();
+                return hostAddress;
+            } catch (IOException io) {
+                throw new RuntimeException(io);
+            }
+        }
+    }
 
     public static void writeObject(Object o, File file) {
         File tmpFile = new File(file.getParent(), file.getName() + ".tmp");
@@ -299,7 +322,7 @@ public final class Utils {
     private Utils() {
     }
 
-    static String secondsToHuman(int seconds) {
+    public static String secondsToHuman(int seconds) {
         StringBuffer sb = new StringBuffer();
         int time = seconds;
 
@@ -319,7 +342,7 @@ public final class Utils {
         return sb.toString();
     }
 
-    static Properties loadProperties(File file) {
+    public static Properties loadProperties(File file) {
         Properties properties = new Properties();
         final FileInputStream in;
         try {
