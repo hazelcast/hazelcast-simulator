@@ -1,11 +1,9 @@
 #!/usr/bin/env groovy
-import com.hazelcast.stabilizer.coach.Coach
 
 class Cluster {
 
     def COMMAND = "startmachines"
     def CLUSTER_SIZE = "small"
-    def INSTANCE_COUNT = 1
     def COACH_PORT = '8701'
     def config
     def STABILIZER_HOME
@@ -21,6 +19,7 @@ class Cluster {
         }
         config = new ConfigSlurper().parse(props)
 
+        if (!machineListFile.exists()) machineListFile.createNewFile()
         machineListFile.text.eachLine { String line -> privateIps << line }
 
         STABILIZER_HOME = new File(Cluster.class.protectionDomain.codeSource.location.path).parentFile.parent
@@ -32,43 +31,39 @@ class Cluster {
         echo "Installing Coach on ${ip}"
         echo "=============================================================="
 
+        //updating the coach-hazelcast.xml file
         String members = ""
         privateIps.each { String memberIp -> members += "<member>$memberIp:$COACH_PORT</member>\n" }
+        template "coach-hazelcast-template.xml", "coach-hazelcast.xml", "MEMBERS", members
 
-        "cp coach-hazelcast-template.xml coach-hazelcast.xml".execute()
-        "cat coach-hazelcast.xml | sed -e \"s:MEMBERS:$members:\" > coach-hazelcast.xml.bak && mv coach-hazelcast.xml.bak coach-hazelcast.xml".execute()
 
         echo "Installing missing Java"
         //install java under Ubuntu.
-        ssh(ip, "sudo apt-get update || true")
-        ssh(ip, "sudo apt-get install -y openjdk-7-jdk || true")
+        sshQuiet ip, "sudo apt-get update || true"
+        sshQuiet ip, "sudo apt-get install -y openjdk-7-jdk || true"
 
         echo "Copying stabilizer files"
-        println "scp -i ${config.LICENSE} -q -r ${STABILIZER_HOME} ${config.USER}@$ip:"
-        "scp -i ${config.LICENSE} -r ${STABILIZER_HOME} ${config.USER}@$ip:".execute()
+        scpToRemote ip, STABILIZER_HOME, ""
         //we need to override the hazelcast config file with the one we generated.
-        "scp -i ${config.LICENSE} coach-hazelcast.xml ${config.USER}@$ip:hazelcast-stabilizer-0.1-SNAPSHOT/conf/".execute()
+        scpToRemote ip, 'coach-hazelcast.xml', 'hazelcast-stabilizer-0.1-SNAPSHOT/conf/'
 
         echo "=============================================================="
         echo "Successfully installed Coach on ${ip}"
         echo "=============================================================="
     }
 
-    void installCoaches() {
-        privateIps.each { String ip -> installCoach(ip) }
-    }
 
-    void startCoaches(){
+    void startCoaches() {
         echo "=============================================================="
         echo "Starting Coaches"
         echo "=============================================================="
 
         privateIps.each { String ip ->
-            ssh(ip,  "killall -9 java || true")
+            ssh ip, "killall -9 java || true"
         }
 
         privateIps.each { String ip ->
-            ssh(ip,  "killall -9 java ; nohup hazelcast-stabilizer-0.1-SNAPSHOT/bin/coach  > coach.out 2> coach.err < /dev/null &")
+            ssh ip, "nohup hazelcast-stabilizer-0.1-SNAPSHOT/bin/coach > coach.out 2> coach.err < /dev/null &"
         }
 
         echo "=============================================================="
@@ -76,23 +71,39 @@ class Cluster {
         echo "=============================================================="
     }
 
-    void ssh(String ip, String command) {
-        String sshCommand = " ssh -i ${config.LICENSE} -q -o StrictHostKeyChecking=no ${config.USER}@$ip \"$command\""
-        echo sshCommand
-        Process p = sshCommand.execute()
-        if (p.waitFor() != 0) {
-            //echo "Failed to ssh to $ip"
-            //println p.text
+    void installCoaches() {
+        privateIps.each { String ip -> installCoach(ip) }
+    }
+
+    int calcSize(String sizeType) {
+        switch (sizeType) {
+            case "single": return 1
+            case "tiny": return 2
+            case "small": return 4
+            case "medium": return 6
+            case "large": return 10
+            case "xlarge": return 20
+            case "2xlarge": return 40
+            case "3xlarge": return 100
+            case "4xlarge": return 190
+            default:
+                println "Unknown size: sizeType"
+                System.exit(1)
         }
     }
 
-    void spawnMachines() {
-        echo "echo Starting ${INSTANCE_COUNT} ${config.INSTANCE_TYPE} machines"
+    void spawnMachines(String sizeType) {
+        int instanceCount = calcSize(sizeType)
+
+        machineListFile.write("")
+        privateIps.clear()
+
+        echo "echo Starting ${instanceCount} ${config.INSTANCE_TYPE} machines"
 
         def output = """ec2-run-instances \
         --availability-zone ${config.AVAILABILITY_ZONE} \
         --instance-type ${config.INSTANCE_TYPE} \
-        --instance-count $INSTANCE_COUNT \
+        --instance-count $instanceCount \
         --group ${config.SECURITY_GROUP} \
         --key ${config.KEY_PAIR} \
         ${config.AMI}""".execute().text
@@ -112,25 +123,20 @@ class Cluster {
         awaitStartup(ids)
 
         echo "=============================================================="
-        echo "Successfully started ${INSTANCE_COUNT} ${config.INSTANCE_TYPE} machines "
+        echo "Successfully started ${instanceCount} ${config.INSTANCE_TYPE} machines "
         echo "=============================================================="
 
         initPrivateIps(ids)
 
         echo "Coaches started"
-        privateIps.each { String ip -> println "-- Coach $ip" }
+        privateIps.each { String ip -> println "--  $ip" }
     }
 
-    void echo(Object s) {
-        println s
-    }
 
     void initManagerFile() {
         String members = ""
         privateIps.each { String memberIp -> members += "<address>$memberIp:$COACH_PORT</address>\n" }
-
-        "cp manager-hazelcast-template.xml manager-hazelcast.xml".execute()
-        "cat manager-hazelcast.xml | sed -e \"s:MEMBERS:$members:\" > manager-hazelcast.xml.bak && mv manager-hazelcast.xml.bak manager-hazelcast.xml".execute()
+        template "manager-hazelcast-template.xml", "manager-hazelcast.xml", "MEMBERS", members
     }
 
     void initPrivateIps(List<String> ids) {
@@ -138,21 +144,12 @@ class Cluster {
         x.eachLine { String line, count ->
             def columns = line.split()
             if ("INSTANCE" == columns[0]) {
-                for (int k = 0; k < columns.length; k++) {
-                    println "$k " + columns[k]
-                }
-
                 def id = columns[1]
                 if (ids.contains(id)) {
-                    //14 is private ip
-                    //privateIps << columns[14]
-                    //3 is public dns
-                    privateIps << columns[3]
+                    privateIps << columns[14]
                 }
             }
         }
-
-        echo "Private Ips: $privateIps"
 
         machineListFile.text = ""
         privateIps.each { String ip ->
@@ -162,8 +159,6 @@ class Cluster {
 
     void awaitStartup(List<String> ids) {
         def remainingIds = ids.clone()
-
-        echo "RemainingIds: $remainingIds"
 
         for (int k = 1; k < 600; k++) {
             def lines = "ec2-describe-instance-status".execute().text.split("\n")
@@ -192,11 +187,150 @@ class Cluster {
         echo remainingIds
         System.exit(1)
     }
+
+    def downloadArtifacts() {
+        echo "=============================================================="
+        echo "Download artifacts"
+        echo "=============================================================="
+
+        privateIps.each {String ip ->
+            echo "Downoading from $ip"
+            bash """rsync -av -e "ssh -i ${config.LICENSE} -o StrictHostKeyChecking=no" \
+                ${config.USER}@$ip:hazelcast-stabilizer-0.1-SNAPSHOT/gym/ \
+                ${STABILIZER_HOME}/gym"""
+        }
+
+        echo "=============================================================="
+        echo "Finished Downloading Artifacts"
+        echo "=============================================================="
+    }
+
+    void terminate(){
+        echo "=============================================================="
+        echo "Terminating cluster members"
+        echo "=============================================================="
+
+        def x = "ec2-describe-instances".execute().text
+        def ids = ""
+        x.eachLine { String line, count ->
+            def columns = line.split()
+            if ("INSTANCE" == columns[0]) {
+                def id = columns[1]
+                def ip = columns[14]
+                if(privateIps.contains(ip)){
+                    ids += "$id "
+                }
+            }
+        }
+
+
+
+        def output = "ec2kill $ids".execute().text
+        echo output
+
+        machineListFile.write("")
+
+        echo "=============================================================="
+        echo "Finished Terminating Cluster members"
+        echo "=============================================================="
+    }
+
+    void template(String templateFile, String resultFile, String token, String replacement) {
+        String cfg = new File(templateFile).text.replace(token, replacement);
+        def file = new File(resultFile)
+        file.createNewFile()
+        file.text = cfg
+    }
+
+    void bash(String command) {
+        def sout = new StringBuffer(), serr = new StringBuffer()
+
+        // create a process for the shell
+        ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
+        Process shell = pb.start();
+        shell.consumeProcessOutput(sout, serr)
+
+        // wait for the shell to finish and get the return code
+        int shellExitStatus = shell.waitFor();
+        if (shellExitStatus != 0) {
+            echo "Failed to execute [$command]"
+            println "out> $sout err> $serr"
+            System.exit 1
+        }
+    }
+
+    void scpToRemote(String ip, String src, String target) {
+        String command = "scp -i ${config.LICENSE} -r -o StrictHostKeyChecking=no $src ${STABILIZER_HOME} ${config.USER}@$ip:$target"
+        bash(command)
+    }
+
+    void ssh(String ip, String command) {
+        String sshCommand = "ssh -i ${config.LICENSE} -q -o StrictHostKeyChecking=no ${config.USER}@$ip \"$command\""
+        bash sshCommand
+    }
+
+    void sshQuiet(String ip, String command) {
+        String sshCommand = "ssh -i ${config.LICENSE} -q -o StrictHostKeyChecking=no ${config.USER}@$ip \"$command\" || true"
+        bash sshCommand
+    }
+
+    void echo(Object s) {
+        println s
+    }
+}
+
+def cli = new CliBuilder(
+        usage: 'cluster [options]',
+        header: '\nAvailable options (use -h for help):\n',
+        stopAtNonOption: false)
+cli.with {
+    h(longOpt: 'help', 'print this message')
+    r(longOpt: 'restart', ' Restarts all coaches')
+    d(longOpt: 'download', 'Downloads the logs')
+    s(longOpt: 'scale', args: 1, 'Scales the cluster')
+    t(longOpt: 'terminate','Terminate all members in the cluster')
+}
+
+OptionAccessor opt = cli.parse(args)
+
+if (!opt) {
+    println "Failure parsing options"
+    System.exit 1
+    return
+}
+
+if (opt.h) {
+    cli.usage()
+    System.exit 0
+}
+
+if (opt.r) {
+    def cluster = new Cluster()
+    cluster.startCoaches()
+    System.exit 0
+}
+
+if (opt.d) {
+    def cluster = new Cluster()
+    cluster.downloadArtifacts()
+    System.exit 0
+}
+
+if (opt.t) {
+    def cluster = new Cluster()
+    cluster.terminate()
+    System.exit 0
+}
+
+if (opt.s) {
+    def cluster = new Cluster()
+
+    String sizeType = opt.s
+    cluster.spawnMachines(sizeType)
+    cluster.initManagerFile()
+    cluster.installCoaches()
+    cluster.startCoaches()
+    System.exit 0
 }
 
 
-def cluster = new Cluster()
-cluster.spawnMachines()
-cluster.initManagerFile()
-cluster.installCoaches()
-cluster.startCoaches()
