@@ -20,8 +20,8 @@ function init_environment {
                 CLUSTER_SIZE="${i#*=}";;
             --restart)
                 COMMAND="restart";;
-            --download)
-                COMMAND="download";;
+            --downloadgyms)
+                COMMAND="download_gyms";;
             *)
                 # unknown option
                 echo Unknown option $1
@@ -47,13 +47,13 @@ function init_environment {
                 INSTANCE_COUNT=40;;
         "3xlarge")
                 INSTANCE_COUNT=100;;
+        "4xlarge")
+                INSTANCE_COUNT=200;;
         *)
                 echo Unknown cluster size ${CLUSTER_SIZE}
                 exit
                 ;;
     esac
-
-    echo INSTANCE_COUNT ${INSTANCE_COUNT} CLUSTER_SIZE = ${CLUSTER_SIZE}
 }
 
 function private_ip {
@@ -206,7 +206,7 @@ function spawn_machines {
     echo Successfully started ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
     echo ==============================================================
 
-    echo "" > machine_list.txt
+    > machine_list.txt
     PRIVATE_IP_LIST=()
     for INSTANCE in "${INSTANCES[@]}"
     do
@@ -219,7 +219,7 @@ function spawn_machines {
 function restart_coaches {
     echo Restarting ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
 
-    PRIVATE_IP_LIST=readarray PRIVATE_IP_LIST<machine_list.txt
+    readarray -t PRIVATE_IP_LIST<machine_list.txt
 
     echo "Killing all Java Processes"
     for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
@@ -230,35 +230,29 @@ function restart_coaches {
     start_coaches
     echo Coaches started
 
-    list_machines
+    echo_list_machines
 
     echo ==============================================================
     echo Successfully Restarted  ${INSTANCE_COUNT} ${INSTANCE_TYPE} machines
     echo ==============================================================
 }
 
-function download {
+function download_gyms {
     echo ==============================================================
     echo Download artifacts
     echo ==============================================================
 
-   PRIVATE_IP_LIST=readarray PRIVATE_IP_LIST<machine_list.txt
+    readarray -t PRIVATE_IP_LIST<machine_list.txt
 
-    echo "Killing all Java Processes"
+    mkdir ${STABILIZER_HOME}/gym/
     for PRIVATE_IP in "${PRIVATE_IP_LIST[@]}"
     do
        echo Downoading from $PRIVATE_IP
-       scp -i ${LICENSE} -q -r ${USER}@${PRIVATE_IP}:hazelcast-stabilizer-0.1-SNAPSHOT/conf/ ${STABILIZER_HOME}/gym/
+       rsync -av -e "ssh -i ${LICENSE}" ${USER}@${PRIVATE_IP}:hazelcast-stabilizer-0.1-SNAPSHOT/gym/ ${STABILIZER_HOME}/gym
     done
 
-    echo "Copying stabilizer files"
-    #we need to pull out this property
-    scp -i ${LICENSE} -q -r ${STABILIZER_HOME} ${USER}@${PRIVATE_IP}:
-    #we need to override the hazelcast config file with the one we generated.
-    scp -i ${LICENSE} -q coach-hazelcast.xml ${USER}@${PRIVATE_IP}:hazelcast-stabilizer-0.1-SNAPSHOT/conf/
-
     echo ==============================================================
-    echo Finished Downloading Artifacts 
+    echo Finished Downloading Artifacts
     echo ==============================================================
 }
 
@@ -275,8 +269,8 @@ case ${COMMAND} in
     "restart")
         restart_coaches
         ;;
-    "download")
-        download
+    "download_gyms")
+        download_gyms
         ;;
 esac
 
