@@ -25,7 +25,7 @@ import java.util.UUID;
 
 public class ExerciseRecipe implements Serializable {
     private static final long serialVersionUID = 1;
-    private final String exerciseId = UUID.randomUUID().toString();
+    private final String exerciseId = ""+System.currentTimeMillis();
 
     private Map<String, String> properties = new HashMap<String, String>();
 

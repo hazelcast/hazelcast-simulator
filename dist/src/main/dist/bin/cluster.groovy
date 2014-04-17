@@ -87,26 +87,32 @@ class Cluster {
             case "3xlarge": return 100
             case "4xlarge": return 190
             default:
-                println "Unknown size: sizeType"
-                System.exit(1)
+                println "Unknown size: $sizeType"
+                System.exit 1
         }
     }
 
-    void spawnMachines(String sizeType) {
-        int instanceCount = calcSize(sizeType)
+    void scale(String sizeType) {
+        int delta = calcSize(sizeType) - privateIps.size()
+        if (delta == 0) {
+            echo "Ignoring spawn machines, desired number of machines already exists"
+        } else if (delta < 0) {
+            terminate(-delta)
+        }else{
+            scaleUp(delta)
+        }
+    }
 
-        machineListFile.write("")
-        privateIps.clear()
-
-        echo "echo Starting ${instanceCount} ${config.INSTANCE_TYPE} machines"
+    private void scaleUp(int delta) {
+        echo "echo Starting ${delta} ${config.INSTANCE_TYPE} machines"
 
         def output = """ec2-run-instances \
-        --availability-zone ${config.AVAILABILITY_ZONE} \
-        --instance-type ${config.INSTANCE_TYPE} \
-        --instance-count $instanceCount \
-        --group ${config.SECURITY_GROUP} \
-        --key ${config.KEY_PAIR} \
-        ${config.AMI}""".execute().text
+            --availability-zone ${config.AVAILABILITY_ZONE} \
+            --instance-type ${config.INSTANCE_TYPE} \
+            --instance-count $delta \
+            --group ${config.SECURITY_GROUP} \
+            --key ${config.KEY_PAIR} \
+            ${config.AMI}""".execute().text
 
         echo "=============================================================="
         echo output
@@ -123,15 +129,18 @@ class Cluster {
         awaitStartup(ids)
 
         echo "=============================================================="
-        echo "Successfully started ${instanceCount} ${config.INSTANCE_TYPE} machines "
+        echo "Successfully started ${delta} ${config.INSTANCE_TYPE} machines "
         echo "=============================================================="
 
         initPrivateIps(ids)
 
         echo "Coaches started"
         privateIps.each { String ip -> println "--  $ip" }
-    }
 
+        initManagerFile()
+        installCoaches()
+        startCoaches()
+    }
 
     void initManagerFile() {
         String members = ""
@@ -151,7 +160,6 @@ class Cluster {
             }
         }
 
-        machineListFile.text = ""
         privateIps.each { String ip ->
             machineListFile.text += "$ip\n"
         }
@@ -193,7 +201,7 @@ class Cluster {
         echo "Download artifacts"
         echo "=============================================================="
 
-        privateIps.each {String ip ->
+        privateIps.each { String ip ->
             echo "Downoading from $ip"
             bash """rsync -av -e "ssh -i ${config.LICENSE} -o StrictHostKeyChecking=no" \
                 ${config.USER}@$ip:hazelcast-stabilizer-0.1-SNAPSHOT/gym/ \
@@ -205,30 +213,38 @@ class Cluster {
         echo "=============================================================="
     }
 
-    void terminate(){
+    void terminate(count=Integer.MAX_VALUE) {
         echo "=============================================================="
-        echo "Terminating cluster members"
+        echo "Terminating cluster members: count $count"
         echo "=============================================================="
 
         def x = "ec2-describe-instances".execute().text
         def ids = ""
-        x.eachLine { String line, count ->
+        int removedCount = 0
+        x.eachLine { String line, lineCount ->
+            if(removedCount == count){
+                return;
+            }
+
             def columns = line.split()
             if ("INSTANCE" == columns[0]) {
                 def id = columns[1]
                 def ip = columns[14]
-                if(privateIps.contains(ip)){
+                if (privateIps.contains(ip)) {
                     ids += "$id "
+                    removedCount++
+                    privateIps.remove(ip)
                 }
             }
         }
-
-
 
         def output = "ec2kill $ids".execute().text
         echo output
 
         machineListFile.write("")
+        privateIps.each { String ip ->
+            machineListFile.text += "$ip\n"
+        }
 
         echo "=============================================================="
         echo "Finished Terminating Cluster members"
@@ -288,7 +304,7 @@ cli.with {
     r(longOpt: 'restart', ' Restarts all coaches')
     d(longOpt: 'download', 'Downloads the logs')
     s(longOpt: 'scale', args: 1, 'Scales the cluster')
-    t(longOpt: 'terminate','Terminate all members in the cluster')
+    t(longOpt: 'terminate', 'Terminate all members in the cluster')
 }
 
 OptionAccessor opt = cli.parse(args)
@@ -326,10 +342,7 @@ if (opt.s) {
     def cluster = new Cluster()
 
     String sizeType = opt.s
-    cluster.spawnMachines(sizeType)
-    cluster.initManagerFile()
-    cluster.installCoaches()
-    cluster.startCoaches()
+    cluster.scale(sizeType)
     System.exit 0
 }
 
