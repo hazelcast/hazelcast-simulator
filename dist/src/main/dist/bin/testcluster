@@ -73,6 +73,21 @@ class Cluster {
         echo "=============================================================="
     }
 
+    void killAllCoaches(){
+        echo "=============================================================="
+        echo "Killing ${privateIps.size()} coaches"
+        echo "=============================================================="
+
+        privateIps.each { String ip ->
+            echo "Killing coach $ip"
+            ssh ip, "killall -9 java || true"
+        }
+
+        echo "=============================================================="
+        echo "Successfully killed ${privateIps.size()} coaches"
+        echo "=============================================================="
+    }
+
     void initManagerFile() {
         String members = ""
         privateIps.each { String memberIp -> members += "<address>$memberIp:$COACH_PORT</address>\n" }
@@ -280,7 +295,7 @@ class Cluster {
     }
 
     void scpToRemote(String ip, String src, String target) {
-        String command = "scp ${config.SSH_OPTIONS} $src ${STABILIZER_HOME} ${config.USER}@$ip:$target"
+        String command = "scp -r ${config.SSH_OPTIONS} $src ${config.USER}@$ip:$target"
         bash(command)
     }
 
@@ -309,6 +324,7 @@ cli.with {
     d(longOpt: 'download', 'Downloads the logs')
     s(longOpt: 'scale', args: 1, 'Scales the cluster')
     t(longOpt: 'terminate', 'Terminate all members in the cluster')
+    k(longOpt: 'kill', 'Kills all coaches')
 }
 
 OptionAccessor opt = cli.parse(args)
@@ -330,6 +346,13 @@ if (opt.r) {
     cluster.startCoaches()
     System.exit 0
 }
+
+if (opt.k) {
+    def cluster = new Cluster()
+    cluster.killAllCoaches()
+    System.exit 0
+}
+
 
 if (opt.d) {
     def cluster = new Cluster()

@@ -11,7 +11,7 @@
 
     <network>
         <cluster-members>
-            <!--$MEMBERS-->
+            <!--MEMBERS-->
         </cluster-members>
         <smart-routing>true</smart-routing>
         <redo-operation>true</redo-operation>

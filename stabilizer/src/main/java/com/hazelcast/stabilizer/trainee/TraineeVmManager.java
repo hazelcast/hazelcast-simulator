@@ -121,7 +121,7 @@ public class TraineeVmManager {
             members.append("<member>").append(hostAddress).append(":6701").append("</member>\n");
         }
 
-        String enhancedHzConfig = hzConfig.replace("<!--$MEMBERS-->", members);
+        String enhancedHzConfig = hzConfig.replace("<!--MEMBERS-->", members);
         Utils.writeText(enhancedHzConfig, traineeHzFile);
         return traineeHzFile;
     }
