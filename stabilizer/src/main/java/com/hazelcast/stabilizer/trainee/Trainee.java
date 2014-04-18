@@ -21,6 +21,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -103,6 +104,7 @@ public class Trainee {
         log.info("Trainee id:" + traineeId);
         String traineeHzFile = args[1];
         log.info("Trainee hz config file:" + traineeHzFile);
+        log.info(Utils.asText(new File(traineeHzFile)));
 
         System.setProperty("traineeId", traineeId);
 
