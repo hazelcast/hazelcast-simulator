@@ -203,11 +203,13 @@ class Cluster {
         echo "Download artifacts of ${privateIps.size()} machines"
         echo "=============================================================="
 
+        bash "mkdir -p gym"
+
         privateIps.each { String ip ->
             echo "Downoading from $ip"
-            bash """rsync -av -e "ssh -i ${config.LICENSE} -o StrictHostKeyChecking=no" \
+            bash """rsync -av -e "ssh ${config.SSH_OPTIONS}" \
                 ${config.USER}@$ip:hazelcast-stabilizer-0.1-SNAPSHOT/gym/ \
-                ${STABILIZER_HOME}/gym"""
+                gym"""
         }
 
         echo "=============================================================="
@@ -278,17 +280,17 @@ class Cluster {
     }
 
     void scpToRemote(String ip, String src, String target) {
-        String command = "scp -i ${config.LICENSE} -r -o StrictHostKeyChecking=no $src ${STABILIZER_HOME} ${config.USER}@$ip:$target"
+        String command = "scp ${config.SSH_OPTIONS} $src ${STABILIZER_HOME} ${config.USER}@$ip:$target"
         bash(command)
     }
 
     void ssh(String ip, String command) {
-        String sshCommand = "ssh -i ${config.LICENSE} -q -o StrictHostKeyChecking=no ${config.USER}@$ip \"$command\""
+        String sshCommand = "ssh ${config.SSH_OPTIONS} -q ${config.USER}@$ip \"$command\""
         bash sshCommand
     }
 
     void sshQuiet(String ip, String command) {
-        String sshCommand = "ssh -i ${config.LICENSE} -q -o StrictHostKeyChecking=no ${config.USER}@$ip \"$command\" || true"
+        String sshCommand = "${config.SSH_OPTIONS} -q ${config.USER}@$ip \"$command\" || true"
         bash sshCommand
     }
 
@@ -324,6 +326,7 @@ if (opt.h) {
 
 if (opt.r) {
     def cluster = new Cluster()
+    cluster.installCoaches()
     cluster.startCoaches()
     System.exit 0
 }
