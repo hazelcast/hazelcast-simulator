@@ -19,6 +19,7 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
+import com.hazelcast.core.Cluster;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.Member;
@@ -117,7 +118,8 @@ public class TraineeVmManager {
 
         StringBuffer members = new StringBuffer();
         HazelcastInstance coachHazelcastInstance = coach.getCoachHazelcastInstance();
-        for (Member member : coachHazelcastInstance.getCluster().getMembers()) {
+        Cluster cluster = coachHazelcastInstance.getCluster();
+        for (Member member : cluster.getMembers()) {
             String hostAddress = member.getSocketAddress().getAddress().getHostAddress();
             members.append("<member>").append(hostAddress).append(":6701").append("</member>\n");
         }
