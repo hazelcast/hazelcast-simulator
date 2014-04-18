@@ -49,12 +49,33 @@ public class ManagerOptionSpec {
             .withRequiredArg().ofType(String.class).defaultsTo("");
     OptionSpec<String> traineeHzFileSpec = parser.accepts("traineeHzFile", "The Hazelcast xml configuration file " +
             "for the trainee")
-            .withRequiredArg().ofType(String.class).defaultsTo(
-                    Manager.STABILIZER_HOME + File.separator + "conf" + File.separator + "trainee-hazelcast.xml");
+            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultTraineeHzFile());
+
+    static String getDefaultTraineeHzFile(){
+        File file = new File("trainee-hazelcast.xml");
+        //if something exists in the current working directory, use that.
+        if(file.exists()){
+            return file.getAbsolutePath();
+        }else{
+            return Manager.STABILIZER_HOME + File.separator + "conf" + File.separator + "trainee-hazelcast.xml";
+        }
+    }
+
     OptionSpec<String> managerHzFileSpec = parser.accepts(
             "managerHzFile", "The client Hazelcast xml configuration file for the manager")
             .withRequiredArg().ofType(String.class).defaultsTo(
-                    Manager.STABILIZER_HOME + File.separator + "conf" + File.separator + "manager-hazelcast.xml");
+                    getDefaultManagerHzFile());
+
+    static String getDefaultManagerHzFile(){
+        File file = new File("manager-hazelcast.xml");
+        //if something exists in the current working directory, use that.
+        if(file.exists()){
+            return file.getAbsolutePath();
+        }else{
+            return Manager.STABILIZER_HOME + File.separator + "conf" + File.separator + "manager-hazelcast.xml";
+        }
+    }
+
     OptionSpec<String> traineeJavaVendorSpec = parser.accepts("traineeJavaVendor", "The Java vendor (e.g. " +
             "openjdk or sun) of the JVM used by the trainee). " +
             "If nothing is specified, the coach is free to pick a vendor.")

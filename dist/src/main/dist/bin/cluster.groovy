@@ -54,7 +54,7 @@ class Cluster {
 
     void startCoaches() {
         echo "=============================================================="
-        echo "Starting Coaches"
+        echo "Starting ${privateIps.size()} coaches"
         echo "=============================================================="
 
         privateIps.each { String ip ->
@@ -68,7 +68,7 @@ class Cluster {
         }
 
         echo "=============================================================="
-        echo "Coaches started"
+        echo "Successfully started ${privateIps.size()} coaches"
         echo "=============================================================="
     }
 
@@ -200,7 +200,7 @@ class Cluster {
 
     def downloadArtifacts() {
         echo "=============================================================="
-        echo "Download artifacts"
+        echo "Download artifacts of ${privateIps.size()} machines"
         echo "=============================================================="
 
         privateIps.each { String ip ->
@@ -211,7 +211,7 @@ class Cluster {
         }
 
         echo "=============================================================="
-        echo "Finished Downloading Artifacts"
+        echo "Finished Downloading Artifacts of ${privateIps.size()} machines"
         echo "=============================================================="
     }
 
