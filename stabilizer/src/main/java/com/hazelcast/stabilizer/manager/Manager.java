@@ -53,12 +53,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -69,7 +66,6 @@ import java.util.concurrent.TimeoutException;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
-import static com.hazelcast.stabilizer.Utils.loadProperties;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
 import static java.util.Collections.synchronizedList;
@@ -489,7 +485,7 @@ public class Manager {
                 exitWithError("Too many workout files specified.");
             }
 
-            Workout workout = createWorkout(new File(workoutFileName));
+            Workout workout = Workout.createWorkout(new File(workoutFileName));
 
             manager.setWorkout(workout);
             workout.setDuration(getDuration(optionSpec, options));
@@ -538,7 +534,6 @@ public class Manager {
             } else {
                 return Integer.parseInt(value);
             }
-
         }catch(NumberFormatException e){
             exitWithError(format("Failed to parse duration [%s], cause: %s", value,e.getMessage()));
             return -1;
@@ -552,53 +547,5 @@ public class Manager {
         }
 
         return traineeHzFile;
-    }
-
-    private static Workout createWorkout(File file) throws Exception {
-        Properties properties = loadProperties(file);
-
-        Map<String, ExerciseRecipe> recipies = new HashMap<String, ExerciseRecipe>();
-        for (String property : properties.stringPropertyNames()) {
-            String value = (String) properties.get(property);
-            int indexOfDot = property.indexOf(".");
-
-            String recipeId = "";
-            String field = property;
-            if (indexOfDot > -1) {
-                recipeId = property.substring(0, indexOfDot);
-                field = property.substring(indexOfDot + 1);
-            }
-
-            ExerciseRecipe recipe = recipies.get(recipeId);
-            if (recipe == null) {
-                recipe = new ExerciseRecipe();
-                recipies.put(recipeId, recipe);
-            }
-
-            recipe.setProperty(field, value);
-        }
-
-        List<String> recipeIds = new LinkedList<String>(recipies.keySet());
-        Collections.sort(recipeIds);
-
-        Workout workout = new Workout();
-        for (String recipeId : recipeIds) {
-            ExerciseRecipe recipe = recipies.get(recipeId);
-            if (recipe.getClassname() == null) {
-                if ("".equals(recipeId)) {
-                    throw new RuntimeException(format("There is no class set for the in property file [%s]." +
-                                    "Add class=YourExerciseClass",
-                            file.getAbsolutePath()
-                    ));
-                } else {
-                    throw new RuntimeException(format("There is no class set for exercise [%s] in property file [%s]." +
-                                    "Add %s.class=YourExerciseClass",
-                            recipeId, file.getAbsolutePath(), recipeId
-                    ));
-                }
-            }
-            workout.addExercise(recipe);
-        }
-        return workout;
     }
 }

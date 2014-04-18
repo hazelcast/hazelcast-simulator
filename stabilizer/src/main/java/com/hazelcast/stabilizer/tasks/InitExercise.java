@@ -42,7 +42,8 @@ public class InitExercise implements Callable, Serializable, HazelcastInstanceAw
     @Override
     public Object call() throws Exception {
         try {
-            log.info("Init Exercise");
+            log.info("Init Exercise:\n"+exerciseRecipe);
+
             String clazzName = exerciseRecipe.getClassname();
 
             Exercise exercise = (Exercise) InitExercise.class.getClassLoader().loadClass(clazzName).newInstance();
