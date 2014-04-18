@@ -36,7 +36,6 @@ class Cluster {
         privateIps.each { String memberIp -> members += "<member>$memberIp:$COACH_PORT</member>\n" }
         template "coach-hazelcast-template.xml", "coach-hazelcast.xml", "MEMBERS", members
 
-
         echo "Installing missing Java"
         //install java under Ubuntu.
         sshQuiet ip, "sudo apt-get update || true"
@@ -57,6 +56,8 @@ class Cluster {
         echo "Starting ${privateIps.size()} coaches"
         echo "=============================================================="
 
+        initManagerFile()
+
         privateIps.each { String ip ->
             echo "Killing coach $ip"
             ssh ip, "killall -9 java || true"
@@ -70,6 +71,12 @@ class Cluster {
         echo "=============================================================="
         echo "Successfully started ${privateIps.size()} coaches"
         echo "=============================================================="
+    }
+
+    void initManagerFile() {
+        String members = ""
+        privateIps.each { String memberIp -> members += "<address>$memberIp:$COACH_PORT</address>\n" }
+        template "manager-hazelcast-template.xml", "manager-hazelcast.xml", "MEMBERS", members
     }
 
     void installCoaches() {
@@ -138,18 +145,11 @@ class Cluster {
         echo "Coaches started"
         privateIps.each { String ip -> println "--  $ip" }
 
-        initManagerFile()
         installCoaches()
         startCoaches()
     }
 
-    void initManagerFile() {
-        String members = ""
-        privateIps.each { String memberIp -> members += "<address>$memberIp:$COACH_PORT</address>\n" }
-        template "manager-hazelcast-template.xml", "manager-hazelcast.xml", "MEMBERS", members
-    }
-
-    void initPrivateIps(List<String> ids) {
+     void initPrivateIps(List<String> ids) {
         def x = "ec2-describe-instances".execute().text
         x.eachLine { String line, count ->
             def columns = line.split()
