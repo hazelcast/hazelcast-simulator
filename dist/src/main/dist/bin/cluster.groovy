@@ -52,17 +52,18 @@ class Cluster {
         echo "=============================================================="
     }
 
-
     void startCoaches() {
         echo "=============================================================="
         echo "Starting Coaches"
         echo "=============================================================="
 
         privateIps.each { String ip ->
+            echo "Killing coach $ip"
             ssh ip, "killall -9 java || true"
         }
 
         privateIps.each { String ip ->
+            echo "Starting coach $ip"
             ssh ip, "nohup hazelcast-stabilizer-0.1-SNAPSHOT/bin/coach > coach.out 2> coach.err < /dev/null &"
         }
 
@@ -160,6 +161,7 @@ class Cluster {
             }
         }
 
+        machineListFile.write("")
         privateIps.each { String ip ->
             machineListFile.text += "$ip\n"
         }

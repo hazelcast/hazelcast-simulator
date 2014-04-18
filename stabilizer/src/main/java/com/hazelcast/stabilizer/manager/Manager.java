@@ -26,12 +26,11 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.coach.Coach;
 import com.hazelcast.stabilizer.ExerciseRecipe;
 import com.hazelcast.stabilizer.HeartAttack;
 import com.hazelcast.stabilizer.HeartAttackAlreadyThrownRuntimeException;
-import com.hazelcast.stabilizer.trainee.TraineeVmSettings;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.coach.Coach;
 import com.hazelcast.stabilizer.exercises.Workout;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
@@ -45,6 +44,7 @@ import com.hazelcast.stabilizer.tasks.SpawnTrainees;
 import com.hazelcast.stabilizer.tasks.StopTask;
 import com.hazelcast.stabilizer.tasks.TellTrainee;
 import com.hazelcast.stabilizer.tasks.TerminateWorkout;
+import com.hazelcast.stabilizer.trainee.TraineeVmSettings;
 import joptsimple.OptionException;
 import joptsimple.OptionSet;
 
@@ -402,7 +402,8 @@ public class Manager {
             }
             throw new RuntimeException(e);
         } catch (TimeoutException e) {
-            HeartAttack heartAttack = new HeartAttack("Timeout waiting for remote operation to complete", null, null, null, getExerciseRecipe(), e);
+            HeartAttack heartAttack = new HeartAttack("Timeout waiting for remote operation to complete",
+                    null, null, null, getExerciseRecipe(), e);
             statusTopic.publish(heartAttack);
             throw new RuntimeException(e);
         }
@@ -427,7 +428,9 @@ public class Manager {
                 //todo: we should calculate remaining timeoutMs
                 Object o = future.get(timeoutMs, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
-                statusTopic.publish(new HeartAttack("Timeout waiting for remote operation to complete", null, null, null, getExerciseRecipe(), e));
+                HeartAttack heartAttack = new HeartAttack("Timeout waiting for remote operation to complete",
+                        null, null, null, getExerciseRecipe(), e);
+                statusTopic.publish(heartAttack);
                 throw new RuntimeException(e);
             } catch (ExecutionException e) {
                 if (!(e.getCause() instanceof HeartAttackAlreadyThrownRuntimeException)) {
@@ -489,7 +492,7 @@ public class Manager {
             Workout workout = createWorkout(new File(workoutFileName));
 
             manager.setWorkout(workout);
-            workout.setDuration(options.valueOf(optionSpec.durationSpec));
+            workout.setDuration(getDuration(optionSpec, options));
             workout.setFailFast(options.valueOf(optionSpec.failFastSpec));
 
             TraineeVmSettings traineeVmSettings = new TraineeVmSettings();
@@ -513,6 +516,32 @@ public class Manager {
         } catch (Exception e) {
             log.severe("Failed to run workout", e);
             System.exit(1);
+        }
+    }
+
+    private static int getDuration(ManagerOptionSpec optionSpec, OptionSet options) {
+        String value = options.valueOf(optionSpec.durationSpec);
+
+        try {
+            if (value.endsWith("s")) {
+                String sub = value.substring(0, value.length() - 1);
+                return Integer.parseInt(sub);
+            } else if (value.endsWith("m")) {
+                String sub = value.substring(0, value.length() - 1);
+                return (int) TimeUnit.MINUTES.toSeconds(Integer.parseInt(sub));
+            } else if (value.endsWith("h")) {
+                String sub = value.substring(0, value.length() - 1);
+                return (int) TimeUnit.HOURS.toSeconds(Integer.parseInt(sub));
+            } else if (value.endsWith("d")) {
+                String sub = value.substring(0, value.length() - 1);
+                return (int) TimeUnit.DAYS.toSeconds(Integer.parseInt(sub));
+            } else {
+                return Integer.parseInt(value);
+            }
+
+        }catch(NumberFormatException e){
+            exitWithError(format("Failed to parse duration [%s], cause: %s", value,e.getMessage()));
+            return -1;
         }
     }
 

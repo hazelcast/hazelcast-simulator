@@ -11,9 +11,9 @@ public class ManagerOptionSpec {
     OptionSpec cleanGymSpec = parser.accepts("cleanGym",
             "Cleans the gym directory on all coaches");
 
-    OptionSpec<Integer> durationSpec = parser.accepts("duration",
-            "Number of seconds to run per workout)")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(60);
+    OptionSpec<String> durationSpec = parser.accepts("duration",
+            "Amount of time to run per workout. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
+            .withRequiredArg().ofType(String.class).defaultsTo("60");
     OptionSpec traineeTrackLoggingSpec = parser.accepts("traineeTrackLogging",
             "If the coach is tracking trainee logging");
     OptionSpec<Integer> traineeCountSpec = parser.accepts("traineeVmCount",
