@@ -31,9 +31,7 @@ import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -54,13 +52,13 @@ public class TraineeVmManager {
     private final static File USER_DIR = new File(System.getProperty("user.dir"));
     private final static String CLASSPATH = System.getProperty("java.class.path");
     private final static File STABILIZER_HOME = getStablizerHome();
-    private final static String CLASSPATH_SPERATOR = System.getProperty("path.separator");
+    private final static String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
     private final static AtomicLong TRAINEE_ID_GENERATOR = new AtomicLong();
 
     private final List<TraineeVm> traineeJvms = new CopyOnWriteArrayList<TraineeVm>();
     private final Coach coach;
-    private HazelcastInstance traineeClient;
-    private IExecutorService traineeExecutor;
+    private volatile HazelcastInstance traineeClient;
+    private volatile IExecutorService traineeExecutor;
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
     public TraineeVmManager(Coach coach) {
@@ -74,6 +72,14 @@ public class TraineeVmManager {
                 }
             }
         });
+    }
+
+    public IExecutorService getTraineeExecutor() {
+        return traineeExecutor;
+    }
+
+    public HazelcastInstance getTraineeClient() {
+        return traineeClient;
     }
 
     public List<TraineeVm> getTraineeJvms() {
@@ -121,7 +127,7 @@ public class TraineeVmManager {
         Cluster cluster = coachHazelcastInstance.getCluster();
         for (Member member : cluster.getMembers()) {
             String hostAddress = member.getSocketAddress().getAddress().getHostAddress();
-            members.append("<member>").append(hostAddress).append(":6701").append("</member>\n");
+            members.append("<member>").append(hostAddress).append(":5701").append("</member>\n");
         }
 
         String enhancedHzConfig = hzConfig.replace("<!--MEMBERS-->", members);
@@ -167,7 +173,7 @@ public class TraineeVmManager {
         args.add("-classpath");
 
         File libDir = new File(coach.getWorkoutHome(), "lib");
-        String s = CLASSPATH + CLASSPATH_SPERATOR + new File(libDir, "*").getAbsolutePath();
+        String s = CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
         args.add(s);
 
         args.addAll(Arrays.asList(clientVmOptionsArray));
@@ -272,15 +278,7 @@ public class TraineeVmManager {
         }
     }
 
-    public IExecutorService getTraineeExecutor() {
-        return traineeExecutor;
-    }
-
-    public HazelcastInstance getTraineeClient() {
-        return traineeClient;
-    }
-
-    public void destroy(TraineeVm jvm) {
+      public void destroy(TraineeVm jvm) {
         jvm.getProcess().destroy();
         try {
             jvm.getProcess().waitFor();

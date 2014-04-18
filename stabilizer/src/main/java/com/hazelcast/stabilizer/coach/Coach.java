@@ -185,11 +185,11 @@ public class Coach {
     public List shoutToTrainees(Callable task, String taskDescription) throws InterruptedException {
         Map<TraineeVm, Future> futures = new HashMap<TraineeVm, Future>();
 
-        for (TraineeVm traineeJvm : getTraineeVmManager().getTraineeJvms()) {
+         for (TraineeVm traineeJvm : traineeVmManager.getTraineeJvms()) {
             Member member = traineeJvm.getMember();
             if (member == null) continue;
 
-            Future future = getTraineeVmManager().getTraineeExecutor().submitToMember(task, member);
+            Future future = traineeVmManager.getTraineeExecutor().submitToMember(task, member);
             futures.put(traineeJvm, future);
         }
 
