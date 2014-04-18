@@ -251,9 +251,9 @@ public class Coach {
     public void start() throws Exception {
         ensureExistingDirectory(gymHome);
 
-        traineeVmManager = new TraineeVmManager(this);
-
         initCoachHazelcastInstance();
+
+        traineeVmManager = new TraineeVmManager(this);
 
         repository.load(javaInstallationsFile);
 
