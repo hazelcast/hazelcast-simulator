@@ -34,7 +34,7 @@ class Cluster {
         //updating the coach-hazelcast.xml file
         String members = ""
         privateIps.each { String memberIp -> members += "<member>$memberIp:$COACH_PORT</member>\n" }
-        template "$STABILIZER_HOME/bin/coach-hazelcast-template.xml", "coach-hazelcast.xml", '<!--$MEMBERS-->', members
+        template "$STABILIZER_HOME/bin/coach-hazelcast-template.xml", "coach-hazelcast.xml", '<!--MEMBERS-->', members
 
         echo "Installing missing Java"
         //install java under Ubuntu.
@@ -91,7 +91,7 @@ class Cluster {
     void initManagerFile() {
         String members = ""
         privateIps.each { String memberIp -> members += "<address>$memberIp:$COACH_PORT</address>\n" }
-        template "$STABILIZER_HOME/bin/manager-hazelcast-template.xml", "manager-hazelcast.xml", '<!--$MEMBERS-->', members
+        template "$STABILIZER_HOME/bin/manager-hazelcast-template.xml", "manager-hazelcast.xml", '<!--MEMBERS-->', members
     }
 
     void installCoaches() {
