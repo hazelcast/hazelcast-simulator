@@ -3,10 +3,9 @@ package com.hazelcast.stabilizer.agent;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestRecipe;
-import com.hazelcast.stabilizer.tasks.AbortTest;
-import com.hazelcast.stabilizer.tasks.GenericTestTask;
-import com.hazelcast.stabilizer.tasks.InitTest;
-import com.hazelcast.stabilizer.tasks.StopTask;
+import com.hazelcast.stabilizer.worker.tasks.GenericTestTask;
+import com.hazelcast.stabilizer.worker.tasks.InitTest;
+import com.hazelcast.stabilizer.worker.tasks.StopTask;
 import com.hazelcast.stabilizer.worker.WorkerVmSettings;
 
 import javax.ws.rs.Consumes;
@@ -105,6 +104,7 @@ public class AgentService {
             throw e;
         }
     }
+
     @PUT
     @Produces(MediaType.TEXT_PLAIN)
     @Path("/stopTest")
@@ -112,7 +112,7 @@ public class AgentService {
         try {
             Agent agent = Agent.agent;
             //todo: timeout should be passed
-            agent.shoutToWorkers(new StopTask(30000),"Stopping test");
+            agent.shoutToWorkers(new StopTask(30000), "Stopping test");
             agent.getWorkerVmManager().terminateWorkers();
             return "OK";
         } catch (Exception e) {
@@ -129,7 +129,7 @@ public class AgentService {
         try {
             Agent agent = Agent.agent;
             GenericTestTask task = new GenericTestTask(methodName);
-            agent.shoutToWorkers(task,"Test "+methodName);
+            agent.shoutToWorkers(task, "Test " + methodName);
             return "OK";
         } catch (Exception e) {
             log.severe(format("Failed to execute test.%s()", methodName), e);

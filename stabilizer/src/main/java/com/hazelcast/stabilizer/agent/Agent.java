@@ -62,12 +62,9 @@ public class Agent {
 
     private final static ILogger log = Logger.getLogger(Agent.class);
     private final static File STABILIZER_HOME = getStablizerHome();
-
     public static final String KEY_AGENT = "Agent";
     public static final String AGENT_STABILIZER_TOPIC = "Agent:stabilizerTopic";
-
-    public final static File stabilizerHome = getStablizerHome();
-    public final static File workersHome = new File(getStablizerHome(), "workers");
+    public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
 
     public static volatile Agent agent;
 
@@ -120,12 +117,6 @@ public class Agent {
 
     public JavaInstallationsRepository getJavaInstallationRepository() {
         return repository;
-    }
-
-    public void abortWorkout() {
-        log.info("Terminating workout");
-        getWorkerVmManager().terminateWorkers();
-        log.info("Finished terminating workout");
     }
 
     protected HazelcastInstance initAgentHazelcastInstance() {
@@ -212,11 +203,11 @@ public class Agent {
             return null;
         }
 
-        return new File(workersHome, _workout.getId());
+        return new File(WORKERS_HOME, _workout.getId());
     }
 
     public void cleanWorkersHome() throws IOException {
-        for (File file : workersHome.listFiles()) {
+        for (File file : WORKERS_HOME.listFiles()) {
             Utils.delete(file);
         }
     }
@@ -227,7 +218,7 @@ public class Agent {
         this.workout = workout;
         this.testRecipe = null;
 
-        File workoutDir = new File(workersHome, workout.getId());
+        File workoutDir = new File(WORKERS_HOME, workout.getId());
         ensureExistingDirectory(workoutDir);
 
         File libDir = new File(workoutDir, "lib");
@@ -239,7 +230,7 @@ public class Agent {
     }
 
     public void start() throws Exception {
-        ensureExistingDirectory(workersHome);
+        ensureExistingDirectory(WORKERS_HOME);
         restServer.start();
         workerVmManager = new WorkerVmManager(this);
 
@@ -255,14 +246,14 @@ public class Agent {
     public static void main(String[] args) throws Exception {
         log.info("Stabilizer Agent");
         log.info(format("Version: %s\n", getVersion()));
-        log.info(format("STABILIZER_HOME: %s\n", stabilizerHome));
+        log.info(format("STABILIZER_HOME: %s\n", STABILIZER_HOME));
 
         OptionParser parser = new OptionParser();
         OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
         OptionSpec<String> agentHzFileSpec = parser.accepts("agentHzFile",
                 "The Hazelcast xml configuration file for the agent")
                 .withRequiredArg().ofType(String.class)
-                .defaultsTo(stabilizerHome + File.separator + "conf" + File.separator + "agent-hazelcast.xml");
+                .defaultsTo(STABILIZER_HOME + File.separator + "conf" + File.separator + "agent-hazelcast.xml");
         OptionSpec<String> javaInstallationsFileSpec = parser.accepts("javaInstallationsFile",
                 "A property file containing the Java installations used by Workers launched by this Agent")
                 .withRequiredArg().ofType(String.class)
@@ -293,5 +284,4 @@ public class Agent {
             exitWithError(e.getMessage() + "\nUse --help to get overview of the help options.");
         }
     }
-
 }

@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tasks;
+package com.hazelcast.stabilizer.worker.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;

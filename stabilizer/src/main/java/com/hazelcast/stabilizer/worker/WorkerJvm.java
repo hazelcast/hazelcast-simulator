@@ -27,7 +27,6 @@ public class WorkerJvm {
         this.process = process;
     }
 
-
     public Member getMember() {
         return member;
     }

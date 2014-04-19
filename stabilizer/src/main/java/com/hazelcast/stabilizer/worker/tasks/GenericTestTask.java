@@ -13,45 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.tasks;
+package com.hazelcast.stabilizer.worker.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.agent.Agent;
+import com.hazelcast.stabilizer.tests.Test;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
-public class TellWorker implements Callable, Serializable, HazelcastInstanceAware {
-    private final static ILogger log = Logger.getLogger(TellWorker.class);
+import static java.lang.String.format;
+
+public class GenericTestTask implements Callable, Serializable, HazelcastInstanceAware {
+
+    private final static ILogger log = Logger.getLogger(GenericTestTask.class);
 
     private transient HazelcastInstance hz;
-    private final Callable task;
-    private final long timeoutSec;
+    private final String methodName;
 
-    public TellWorker(Callable task) {
-        this(task, 60);
-    }
-
-    public TellWorker(Callable task, long timeoutSec) {
-        this.task = task;
-        this.timeoutSec = timeoutSec;
+    public GenericTestTask(String methodName) {
+        this.methodName = methodName;
     }
 
     @Override
     public Object call() throws Exception {
         try {
-            Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
-            IExecutorService executor = agent.getWorkerVmManager().getWorkerExecutor();
-            Future future = executor.submit(task);
-            return future.get(timeoutSec, TimeUnit.SECONDS);
+            log.info("Calling test." + methodName + "()");
+
+            Test test = (Test) hz.getUserContext().get(Test.TEST_INSTANCE);
+            if (test == null) {
+                throw new IllegalStateException("No test found for method " + methodName + "()");
+            }
+
+            Method method = test.getClass().getMethod(methodName);
+            Object o = method.invoke(test);
+            log.info("Finished calling test." + methodName + "()");
+            return o;
         } catch (Exception e) {
-            log.severe("Failed to spawn Worker Virtual Machines", e);
+            log.severe(format("Failed to execute test.%s()", methodName), e);
             throw e;
         }
     }

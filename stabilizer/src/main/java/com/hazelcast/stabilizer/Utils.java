@@ -175,7 +175,8 @@ public final class Utils {
         String version = "";
         try {
             Properties p = new Properties();
-            InputStream is = Utils.class.getResourceAsStream("/META-INF/maven/hazelcast-stabilizer/hazelcast-stabilizer/pom.properties");
+            InputStream is = Utils.class.getResourceAsStream(
+                    "/META-INF/maven/hazelcast-stabilizer/hazelcast-stabilizer/pom.properties");
             if (is != null) {
                 p.load(is);
                 return p.getProperty("version", "");
@@ -288,7 +289,6 @@ public final class Utils {
         zis.close();
     }
 
-
     public static File getStablizerHome() {
         String home = System.getenv("STABILIZER_HOME");
         if (home == null) {
@@ -313,7 +313,6 @@ public final class Utils {
             throw new RuntimeException(e);
         }
     }
-
 
     public static void exitWithError(String msg) {
         System.out.printf(msg);

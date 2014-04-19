@@ -254,6 +254,8 @@ public class WorkerVmManager {
     }
 
     public void terminateWorkers() {
+        log.info("Terminating workers");
+
         if (workerClient != null) {
             workerClient.getLifecycleService().shutdown();
         }
@@ -276,6 +278,8 @@ public class WorkerVmManager {
                 log.info(format("worker process %s exited with exit code: %s", jvm.getId(), exitCode));
             }
         }
+
+        log.info("Finished terminating workers");
     }
 
       public void destroy(WorkerJvm jvm) {

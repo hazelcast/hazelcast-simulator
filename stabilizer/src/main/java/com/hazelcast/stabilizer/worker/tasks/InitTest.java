@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.tasks;
+package com.hazelcast.stabilizer.worker.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
@@ -74,7 +74,8 @@ public class InitTest implements Callable, Serializable, HazelcastInstanceAware 
     private void bindProperty(Test test, String property, String value) throws IllegalAccessException {
         Field field = findField(test.getClass(), property);
         if (field == null) {
-            throw new RuntimeException(format("Could not found a field for property [%s] on class [%s]", property, test.getClass()));
+            throw new RuntimeException(
+                    format("Could not found a field for property [%s] on class [%s]", property, test.getClass()));
         }
         field.setAccessible(true);
         try {
@@ -91,10 +92,12 @@ public class InitTest implements Callable, Serializable, HazelcastInstanceAware 
             } else if (Double.class.equals(field.getType()) || Double.TYPE.equals(field.getType())) {
                 field.set(test, Double.parseDouble(value));
             } else {
-                throw new RuntimeException(format("Can't bind property [%s] to field of type [%s]", property, field.getType()));
+                throw new RuntimeException(
+                        format("Can't bind property [%s] to field of type [%s]", property, field.getType()));
             }
         } catch (NumberFormatException e) {
-            throw new RuntimeException(format("Failed to convert property [%s] value [%s] to type [%s]", property, value, field.getType()), e);
+            throw new RuntimeException(
+                    format("Failed to convert property [%s] value [%s] to type [%s]", property, value, field.getType()), e);
         }
     }
 

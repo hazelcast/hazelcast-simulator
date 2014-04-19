@@ -13,28 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.tasks;
+package com.hazelcast.stabilizer.worker.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.agent.Agent;
+import com.hazelcast.stabilizer.worker.WorkerVmSettings;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
 
-public class CleanWorkersHome implements Callable, Serializable, HazelcastInstanceAware {
+import static java.lang.String.format;
 
-    private final static ILogger log = Logger.getLogger(CleanWorkersHome.class);
+public class SpawnWorkers implements Callable, Serializable, HazelcastInstanceAware {
+    private final static ILogger log = Logger.getLogger(SpawnWorkers.class);
 
     private transient HazelcastInstance hz;
+    private final WorkerVmSettings settings;
+
+    public SpawnWorkers(WorkerVmSettings settings) {
+        this.settings = settings;
+    }
 
     @Override
     public Object call() throws Exception {
+        log.info(format("Spawning %s workers", settings.getWorkerCount()));
+
         try {
             Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
-            agent.cleanWorkersHome();
+            agent.getWorkerVmManager().spawn(settings);
             return null;
         } catch (Exception e) {
             log.severe("Failed to spawn Worker Virtual Machines", e);
@@ -47,4 +56,3 @@ public class CleanWorkersHome implements Callable, Serializable, HazelcastInstan
         this.hz = hz;
     }
 }
-
