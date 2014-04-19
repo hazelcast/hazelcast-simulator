@@ -1,20 +1,11 @@
-package com.hazelcast.stabilizer.exercises.regression;
+package com.hazelcast.stabilizer.tests.regression;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IQueue;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-
-import java.io.Serializable;
-import java.util.Map;
-import java.util.Queue;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.hazelcast.stabilizer.tests.AbstractTest;
 
 import static java.lang.String.format;
 
 //https://gist.github.com/mgrossmann/9620178
-public class Exercise2051 extends AbstractExercise {
+public class Test2051 extends AbstractTest {
 
 //    private ExecutorService pool;
 //    private volatile boolean stopRunning;

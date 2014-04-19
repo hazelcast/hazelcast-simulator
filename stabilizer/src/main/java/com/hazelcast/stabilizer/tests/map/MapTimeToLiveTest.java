@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises.map;
+package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.UUID;
 
-public class MapTimeToLiveExercise extends AbstractExercise {
+public class MapTimeToLiveTest extends AbstractTest {
 
     public int ttlSeconds = 1;
     public int workerCount = 3;
@@ -30,7 +30,7 @@ public class MapTimeToLiveExercise extends AbstractExercise {
     public int waitAfterMillis = 2000;
 
     private IMap map;
-    final private String mapName = "map:" + exerciseId;
+    final private String mapName = "map:" + testId;
 
     @Override
     public void globalTearDown() throws Exception {
@@ -72,8 +72,8 @@ public class MapTimeToLiveExercise extends AbstractExercise {
     }
 
     public static void main(String[] args) throws Exception {
-        MapTimeToLiveExercise exercise = new MapTimeToLiveExercise();
-        new ExerciseRunner().run(exercise, 50);
+        MapTimeToLiveTest test = new MapTimeToLiveTest();
+        new TestRunner().run(test, 50);
         System.exit(0);
     }
 }

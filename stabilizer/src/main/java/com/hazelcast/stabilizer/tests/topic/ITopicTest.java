@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.exercises.topic;
+package com.hazelcast.stabilizer.tests.topic;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
@@ -7,8 +7,8 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
 
@@ -17,9 +17,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ITopicExercise extends AbstractExercise {
+public class ITopicTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(ITopicExercise.class);
+    private final static ILogger log = Logger.getLogger(ITopicTest.class);
 
     public int topicCount = 1000;
     public int threadCount = 5;
@@ -41,13 +41,13 @@ public class ITopicExercise extends AbstractExercise {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        totalExpectedCounter = targetInstance.getAtomicLong(exerciseId + ":TotalExpectedCounter");
-        totalFoundCounter = targetInstance.getAtomicLong(exerciseId + ":TotalFoundCounter");
+        totalExpectedCounter = targetInstance.getAtomicLong(testId + ":TotalExpectedCounter");
+        totalFoundCounter = targetInstance.getAtomicLong(testId + ":TotalFoundCounter");
         topics = new ITopic[topicCount];
         listenersCompleteLatch = new CountDownLatch(listenersPerTopic * topicCount);
 
         for (int k = 0; k < topics.length; k++) {
-            ITopic<Long> topic = targetInstance.getTopic(exerciseId + ":Topic-" + k);
+            ITopic<Long> topic = targetInstance.getTopic(testId + ":Topic-" + k);
             topics[k] = topic;
 
             for (int l = 0; l < listenersPerTopic; l++) {
@@ -181,7 +181,7 @@ public class ITopicExercise extends AbstractExercise {
     }
 
     public static void main(String[] args) throws Exception {
-        ITopicExercise mapExercise = new ITopicExercise();
-        new ExerciseRunner().run(mapExercise, 10);
+        ITopicTest test = new ITopicTest();
+        new TestRunner().run(test, 10);
     }
 }

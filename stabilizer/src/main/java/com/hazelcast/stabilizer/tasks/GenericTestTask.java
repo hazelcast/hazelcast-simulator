@@ -19,32 +19,41 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.agent.Agent;
-import com.hazelcast.stabilizer.ExerciseRecipe;
+import com.hazelcast.stabilizer.tests.Test;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 
-public class PrepareAgentForExercise implements Callable, Serializable, HazelcastInstanceAware {
-    private final static ILogger log = Logger.getLogger(PrepareAgentForExercise.class);
+import static java.lang.String.format;
+
+public class GenericTestTask implements Callable, Serializable, HazelcastInstanceAware {
+
+    private final static ILogger log = Logger.getLogger(GenericTestTask.class);
 
     private transient HazelcastInstance hz;
-    private final ExerciseRecipe exerciseRecipe;
+    private final String methodName;
 
-    public PrepareAgentForExercise(ExerciseRecipe exerciseRecipe) {
-        this.exerciseRecipe = exerciseRecipe;
+    public GenericTestTask(String methodName) {
+        this.methodName = methodName;
     }
 
     @Override
     public Object call() throws Exception {
-        log.info("Preparing agent for exercise");
-
         try {
-            Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
-            agent.setExerciseRecipe(exerciseRecipe);
-            return null;
+            log.info("Calling test." + methodName + "()");
+
+            Test test = (Test) hz.getUserContext().get(Test.TEST_INSTANCE);
+            if (test == null) {
+                throw new IllegalStateException("No test found for method " + methodName + "()");
+            }
+
+            Method method = test.getClass().getMethod(methodName);
+            Object o = method.invoke(test);
+            log.info("Finished calling test." + methodName + "()");
+            return o;
         } catch (Exception e) {
-            log.severe("Failed to init agent Exercise", e);
+            log.severe(format("Failed to execute test.%s()", methodName), e);
             throw e;
         }
     }

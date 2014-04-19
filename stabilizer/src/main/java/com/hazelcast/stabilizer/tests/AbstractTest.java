@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -30,13 +30,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-public abstract class AbstractExercise implements Exercise {
+public abstract class AbstractTest implements Test {
 
-    private final static ILogger log = Logger.getLogger(AbstractExercise.class.getName());
+    private final static ILogger log = Logger.getLogger(AbstractTest.class.getName());
 
     protected HazelcastInstance hazelcastInstance;
 
-    protected String exerciseId;
+    protected String testId;
     protected volatile boolean stop = false;
     private final CountDownLatch startLatch = new CountDownLatch(1);
     private final Set<Thread> threads = new HashSet<Thread>();
@@ -46,12 +46,12 @@ public abstract class AbstractExercise implements Exercise {
     //properties.
     public boolean useClient = false;
 
-    public String getExerciseId() {
-        return exerciseId;
+    public String getTestId() {
+        return testId;
     }
 
-    public void setExerciseId(String exerciseId) {
-        this.exerciseId = exerciseId;
+    public void setTestId(String testId) {
+        this.testId = testId;
     }
 
     public HazelcastInstance getHazelcastInstance() {
@@ -146,7 +146,7 @@ public abstract class AbstractExercise implements Exercise {
                 log.severe("Error detected", t);
                 Utils.sleepSeconds(2);
 
-                ExerciseUtils.signalFailure(t);
+                TestUtils.signalFailure(t);
             }
         }
     }

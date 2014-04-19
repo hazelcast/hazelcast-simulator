@@ -11,7 +11,7 @@ public class ConsoleOptionSpec {
     OptionSpec cleanGymSpec = parser.accepts("cleanGym",
             "Cleans the gym directory on all agents");
     OptionSpec<String> durationSpec = parser.accepts("duration",
-            "Amount of time to run per exercise. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
+            "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");
     OptionSpec workerTrackLoggingSpec = parser.accepts("workerTrackLogging",
             "If the agent is tracking worker logging");
@@ -30,13 +30,13 @@ public class ConsoleOptionSpec {
             "If performance monitoring should be done")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
     OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
-            "If exercise should be verified")
+            "If test should be verified")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
     OptionSpec<Boolean> workerRefreshSpec = parser.accepts("workerFresh",
             "If the worker JVM's should be replaced after every workout")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
     OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
-            "It the workout should fail immediately when an exercise from a workout fails instead of continuing ")
+            "It the workout should fail immediately when a Test from a workout fails instead of continuing ")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
     OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
             "Worker VM options (quotes can be used)")
@@ -78,8 +78,8 @@ public class ConsoleOptionSpec {
             "of the JVM used by the worker). " +
             "If nothing is specified, the agent is free to pick a version.")
             .withRequiredArg().ofType(String.class).defaultsTo("");
-    OptionSpec<Integer> exerciseStopTimeoutMsSpec = parser.accepts("exerciseStopTimeoutMs", "Maximum amount of time " +
-            "waiting for the exercise to stop")
+    OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs", "Maximum amount of time " +
+            "waiting for the Test to stop")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
 
     OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();

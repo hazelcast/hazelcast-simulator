@@ -26,19 +26,19 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.ExerciseRecipe;
+import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
-import com.hazelcast.stabilizer.exercises.Workout;
+import com.hazelcast.stabilizer.tasks.GenericTestTask;
+import com.hazelcast.stabilizer.tasks.InitTest;
+import com.hazelcast.stabilizer.tasks.PrepareAgentForTest;
+import com.hazelcast.stabilizer.tests.Workout;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tasks.CleanGym;
-import com.hazelcast.stabilizer.tasks.GenericExerciseTask;
-import com.hazelcast.stabilizer.tasks.InitExercise;
 import com.hazelcast.stabilizer.tasks.InitWorkout;
-import com.hazelcast.stabilizer.tasks.PrepareAgentForExercise;
 import com.hazelcast.stabilizer.tasks.ShoutToWorkersTask;
 import com.hazelcast.stabilizer.tasks.SpawnWorkers;
 import com.hazelcast.stabilizer.tasks.StopTask;
@@ -81,12 +81,12 @@ public class Console {
     private IExecutorService agentExecutor;
     private HazelcastInstance client;
     private ITopic statusTopic;
-    private volatile ExerciseRecipe exerciseRecipe;
+    private volatile TestRecipe testRecipe;
     private String workerClassPath;
     private boolean cleanGym;
     private boolean monitorPerformance;
     private boolean verifyEnabled = true;
-    private Integer exerciseStopTimeoutMs;
+    private Integer testStopTimeoutMs;
 
     public boolean isVerifyEnabled() {
         return verifyEnabled;
@@ -100,8 +100,8 @@ public class Console {
         this.workout = workout;
     }
 
-    public ExerciseRecipe getExerciseRecipe() {
-        return exerciseRecipe;
+    public TestRecipe getTestRecipe() {
+        return testRecipe;
     }
 
     public void setWorkerClassPath(String workerClassPath) {
@@ -222,8 +222,8 @@ public class Console {
 
     private void runWorkout(Workout workout) throws Exception {
         sendStatusUpdate(format("Starting workout: %s", workout.getId()));
-        sendStatusUpdate(format("Exercises in workout: %s", workout.size()));
-        sendStatusUpdate(format("Running time per exercise: %s ", secondsToHuman(workout.getDuration())));
+        sendStatusUpdate(format("Tests in workout: %s", workout.size()));
+        sendStatusUpdate(format("Running time per test: %s ", secondsToHuman(workout.getDuration())));
         sendStatusUpdate(format("Expected total workout time: %s", secondsToHuman(workout.size() * workout.getDuration())));
 
         //we need to make sure that before we start, there are no workers running anymore.
@@ -231,8 +231,8 @@ public class Console {
         stopWorkers();
         startWorkers(workout.getWorkerVmSettings());
 
-        for (ExerciseRecipe exerciseRecipe : workout.getExerciseRecipeList()) {
-            boolean success = run(workout, exerciseRecipe);
+        for (TestRecipe testRecipe : workout.getTestRecipeList()) {
+            boolean success = run(workout, testRecipe);
             if (!success && workout.isFailFast()) {
                 log.info("Aborting working due to failure");
                 break;
@@ -247,62 +247,62 @@ public class Console {
         stopWorkers();
     }
 
-    private boolean run(Workout workout, ExerciseRecipe exerciseRecipe) {
-        sendStatusUpdate(format("Running exercise : %s", exerciseRecipe.getExerciseId()));
+    private boolean run(Workout workout, TestRecipe testRecipe) {
+        sendStatusUpdate(format("Running Test : %s", testRecipe.getTestId()));
 
-        this.exerciseRecipe = exerciseRecipe;
+        this.testRecipe = testRecipe;
         int oldCount = failureList.size();
         try {
-            sendStatusUpdate(exerciseRecipe.toString());
+            sendStatusUpdate(testRecipe.toString());
 
-            sendStatusUpdate("Starting Exercise initialization");
-            submitToAllAndWait(agentExecutor, new PrepareAgentForExercise(exerciseRecipe));
-            submitToAllTrainesAndWait(new InitExercise(exerciseRecipe), "exercise initializing");
-            sendStatusUpdate("Completed Exercise initialization");
+            sendStatusUpdate("Starting Test initialization");
+            submitToAllAndWait(agentExecutor, new PrepareAgentForTest(testRecipe));
+            submitToAllTrainesAndWait(new InitTest(testRecipe), "Test initializing");
+            sendStatusUpdate("Completed Test initialization");
 
-            sendStatusUpdate("Starting exercise local setup");
-            submitToAllTrainesAndWait(new GenericExerciseTask("localSetup"), "exercise local setup");
-            sendStatusUpdate("Completed exercise local setup");
+            sendStatusUpdate("Starting Test local setup");
+            submitToAllTrainesAndWait(new GenericTestTask("localSetup"), "Test local setup");
+            sendStatusUpdate("Completed Test local setup");
 
-            sendStatusUpdate("Starting exercise global setup");
-            submitToOneWorker(new GenericExerciseTask("globalSetup"));
-            sendStatusUpdate("Completed exercise global setup");
+            sendStatusUpdate("Starting Test global setup");
+            submitToOneWorker(new GenericTestTask("globalSetup"));
+            sendStatusUpdate("Completed Test global setup");
 
-            sendStatusUpdate("Starting exercise start");
-            submitToAllTrainesAndWait(new GenericExerciseTask("start"), "exercise start");
-            sendStatusUpdate("Completed exercise start");
+            sendStatusUpdate("Starting Test start");
+            submitToAllTrainesAndWait(new GenericTestTask("start"), "Test start");
+            sendStatusUpdate("Completed Test start");
 
-            sendStatusUpdate(format("Exercise running for %s seconds", workout.getDuration()));
+            sendStatusUpdate(format("Test running for %s seconds", workout.getDuration()));
             sleepSeconds(workout.getDuration());
-            sendStatusUpdate("Exercise finished running");
+            sendStatusUpdate("Test finished running");
 
-            sendStatusUpdate("Starting exercise stop");
-            stopExercise();
-            sendStatusUpdate("Completed exercise stop");
+            sendStatusUpdate("Starting Test stop");
+            stopTests();
+            sendStatusUpdate("Completed Test stop");
 
             if (monitorPerformance) {
                 sendStatusUpdate(calcPerformance().toHumanString());
             }
 
             if (verifyEnabled) {
-                sendStatusUpdate("Starting exercise global verify");
-                submitToOneWorker(new GenericExerciseTask("globalVerify"));
-                sendStatusUpdate("Completed exercise global verify");
+                sendStatusUpdate("Starting Test global verify");
+                submitToOneWorker(new GenericTestTask("globalVerify"));
+                sendStatusUpdate("Completed Test global verify");
 
-                sendStatusUpdate("Starting exercise local verify");
-                submitToAllTrainesAndWait(new GenericExerciseTask("localVerify"), "exercise local verify");
-                sendStatusUpdate("Completed exercise local verify");
+                sendStatusUpdate("Starting Test local verify");
+                submitToAllTrainesAndWait(new GenericTestTask("localVerify"), "Test local verify");
+                sendStatusUpdate("Completed Test local verify");
             } else {
-                sendStatusUpdate("Skipping exercise verification");
+                sendStatusUpdate("Skipping Test verification");
             }
 
-            sendStatusUpdate("Starting exercise global teardown");
-            submitToOneWorker(new GenericExerciseTask("globalTearDown"));
-            sendStatusUpdate("Finished exercise global teardown");
+            sendStatusUpdate("Starting Test global teardown");
+            submitToOneWorker(new GenericTestTask("globalTearDown"));
+            sendStatusUpdate("Finished Test global teardown");
 
-            sendStatusUpdate("Starting exercise local teardown");
-            submitToAllTrainesAndWait(new GenericExerciseTask("localTearDown"), "exercise local tearDown");
-            sendStatusUpdate("Completed exercise local teardown");
+            sendStatusUpdate("Starting Test local teardown");
+            submitToAllTrainesAndWait(new GenericTestTask("localTearDown"), "Test local tearDown");
+            sendStatusUpdate("Completed Test local teardown");
 
             return failureList.size() == oldCount;
         } catch (Exception e) {
@@ -311,8 +311,8 @@ public class Console {
         }
     }
 
-    private void stopExercise() throws ExecutionException, InterruptedException {
-        Callable task = new ShoutToWorkersTask(new StopTask(exerciseStopTimeoutMs), "exercise stop");
+    private void stopTests() throws ExecutionException, InterruptedException {
+        Callable task = new ShoutToWorkersTask(new StopTask(testStopTimeoutMs), "Test stop");
         Map<Member, Future> map = agentExecutor.submitToAllMembers(task);
         getAllFutures(map.values());
     }
@@ -324,7 +324,7 @@ public class Console {
 
         for (int k = 1; k <= big; k++) {
             if (failureList.size() > 0) {
-                sendStatusUpdate("Failure detected, aborting execution of exercise");
+                sendStatusUpdate("Failure detected, aborting execution of test");
                 return;
             }
 
@@ -342,7 +342,7 @@ public class Console {
     }
 
     public Performance calcPerformance() {
-        ShoutToWorkersTask task = new ShoutToWorkersTask(new GenericExerciseTask("calcPerformance"), "calcPerformance");
+        ShoutToWorkersTask task = new ShoutToWorkersTask(new GenericTestTask("calcPerformance"), "calcPerformance");
         Map<Member, Future<List<Performance>>> result = agentExecutor.submitToAllMembers(task);
         Performance performance = null;
         for (Future<List<Performance>> future : result.values()) {
@@ -394,12 +394,12 @@ public class Console {
             Object o = future.get(1000, TimeUnit.SECONDS);
         } catch (ExecutionException e) {
             if (!(e.getCause() instanceof FailureAlreadyThrownRuntimeException)) {
-                statusTopic.publish(new Failure(null, null, null, null, getExerciseRecipe(), e));
+                statusTopic.publish(new Failure(null, null, null, null, getTestRecipe(), e));
             }
             throw new RuntimeException(e);
         } catch (TimeoutException e) {
             Failure failure = new Failure("Timeout waiting for remote operation to complete",
-                    null, null, null, getExerciseRecipe(), e);
+                    null, null, null, getTestRecipe(), e);
             statusTopic.publish(failure);
             throw new RuntimeException(e);
         }
@@ -425,12 +425,12 @@ public class Console {
                 Object o = future.get(timeoutMs, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
                 Failure failure = new Failure("Timeout waiting for remote operation to complete",
-                        null, null, null, getExerciseRecipe(), e);
+                        null, null, null, getTestRecipe(), e);
                 statusTopic.publish(failure);
                 throw new RuntimeException(e);
             } catch (ExecutionException e) {
                 if (!(e.getCause() instanceof FailureAlreadyThrownRuntimeException)) {
-                    statusTopic.publish(new Failure(null, null, null, null, getExerciseRecipe(), e));
+                    statusTopic.publish(new Failure(null, null, null, null, getTestRecipe(), e));
                 }
                 throw new RuntimeException(e);
             }
@@ -475,7 +475,7 @@ public class Console {
             console.consoleHzFile = consoleHzFile;
             console.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
             console.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
-            console.exerciseStopTimeoutMs = options.valueOf(optionSpec.exerciseStopTimeoutMsSpec);
+            console.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
 
             String workoutFileName = "workout.properties";
             List<String> workoutFiles = options.nonOptionArguments();

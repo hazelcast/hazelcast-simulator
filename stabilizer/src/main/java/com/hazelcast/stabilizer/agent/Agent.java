@@ -26,12 +26,12 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.ExerciseRecipe;
+import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.JavaInstallationsRepository;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.exercises.Workout;
+import com.hazelcast.stabilizer.tests.Workout;
 import com.hazelcast.stabilizer.worker.WorkerJvm;
 import com.hazelcast.stabilizer.worker.WorkerVmManager;
 import joptsimple.OptionException;
@@ -74,7 +74,7 @@ public class Agent {
     private volatile HazelcastInstance agentHz;
     private volatile ITopic statusTopic;
     private volatile Workout workout;
-    private volatile ExerciseRecipe exerciseRecipe;
+    private volatile TestRecipe testRecipe;
     private final List<Failure> failures = Collections.synchronizedList(new LinkedList<Failure>());
     private IExecutorService agentExecutor;
     private WorkerVmManager workerVmManager;
@@ -97,12 +97,12 @@ public class Agent {
         return agentHz;
     }
 
-    public ExerciseRecipe getExerciseRecipe() {
-        return exerciseRecipe;
+    public TestRecipe getTestRecipe() {
+        return testRecipe;
     }
 
-    public void setExerciseRecipe(ExerciseRecipe exerciseRecipe) {
-        this.exerciseRecipe = exerciseRecipe;
+    public void setTestRecipe(TestRecipe testRecipe) {
+        this.testRecipe = testRecipe;
     }
 
     public void setAgentHzFile(File agentHzFile) {
@@ -206,7 +206,7 @@ public class Agent {
                         agentHz.getCluster().getLocalMember().getInetSocketAddress(),
                         workerJvm.getMember().getInetSocketAddress(),
                         workerJvm.getId(),
-                        exerciseRecipe,
+                        testRecipe,
                         e);
                 publishFailure(failure);
                 throw new FailureAlreadyThrownRuntimeException(e);
@@ -235,7 +235,7 @@ public class Agent {
         failures.clear();
 
         this.workout = workout;
-        this.exerciseRecipe = null;
+        this.testRecipe = null;
 
         File workoutDir = new File(gymHome, workout.getId());
         ensureExistingDirectory(workoutDir);

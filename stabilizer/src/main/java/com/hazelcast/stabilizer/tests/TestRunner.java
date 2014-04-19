@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -26,9 +26,9 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
-public class ExerciseRunner {
+public class TestRunner {
 
-    private final static ILogger log = Logger.getLogger(ExerciseRunner.class);
+    private final static ILogger log = Logger.getLogger(TestRunner.class);
 
     private HazelcastInstance hazelcastInstance;
     private long stopTimeoutMs = TimeUnit.SECONDS.toMillis(60);
@@ -53,7 +53,7 @@ public class ExerciseRunner {
         this.stopTimeoutMs = stopTimeoutMs;
     }
 
-    public void sleepSeconds(Exercise exercise, int seconds) {
+    public void sleepSeconds(Test test, int seconds) {
         int period = 30;
         int big = seconds / period;
         int small = seconds % period;
@@ -64,54 +64,54 @@ public class ExerciseRunner {
             final float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, seconds, percentage);
             log.info(msg);
-            log.info(exercise.calcPerformance().toHumanString());
+            log.info(test.calcPerformance().toHumanString());
         }
 
         Utils.sleepSeconds(small);
     }
 
-    public void run(Exercise exercise, int durationSec) throws Exception {
+    public void run(Test test, int durationSec) throws Exception {
         if (hazelcastInstance == null) {
             hazelcastInstance = Hazelcast.newHazelcastInstance();
         }
 
-        exercise.setHazelcastInstance(hazelcastInstance);
-        exercise.setExerciseId(UUID.randomUUID().toString());
+        test.setHazelcastInstance(hazelcastInstance);
+        test.setTestId(UUID.randomUUID().toString());
 
         log.info("Starting localSetup");
-        exercise.localSetup();
+        test.localSetup();
         log.info("Finished localSetup");
 
         log.info("Starting globalSetup");
-        exercise.globalSetup();
+        test.globalSetup();
         log.info("Finished globalSetup");
 
         log.info("Starting start");
-        exercise.start();
+        test.start();
         log.info("Finished start");
 
-        sleepSeconds(exercise, durationSec);
+        sleepSeconds(test, durationSec);
 
         log.info("Starting stop");
-        exercise.stop(stopTimeoutMs);
+        test.stop(stopTimeoutMs);
         log.info("Finished stop");
 
-        log.info(exercise.calcPerformance().toHumanString());
+        log.info(test.calcPerformance().toHumanString());
 
         log.info("Starting globalVerify");
-        exercise.globalVerify();
+        test.globalVerify();
         log.info("Finished globalVerify");
 
         log.info("Starting localVerify");
-        exercise.localVerify();
+        test.localVerify();
         log.info("Finished localVerify");
 
        log.info("Starting globalTearDown");
-        exercise.globalTearDown();
+        test.globalTearDown();
         log.info("Finished globalTearDown");
 
         log.info("Starting localTearDown");
-        exercise.localTearDown();
+        test.localTearDown();
         log.info("Finished localTearDown");
 
         hazelcastInstance.getLifecycleService().shutdown();

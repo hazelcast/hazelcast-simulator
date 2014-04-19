@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises.map;
+package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class StringMapExercise extends AbstractExercise {
+public class StringMapTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(StringMapExercise.class);
+    private final static ILogger log = Logger.getLogger(StringMapTest.class);
 
     private final static String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
 
@@ -64,7 +64,7 @@ public class StringMapExercise extends AbstractExercise {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        map = targetInstance.getMap("Map-" + exerciseId);
+        map = targetInstance.getMap("Map-" + testId);
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
@@ -159,9 +159,9 @@ public class StringMapExercise extends AbstractExercise {
     }
 
     public static void main(String[] args) throws Exception {
-        StringMapExercise mapExercise = new StringMapExercise();
-        mapExercise.useClient = true;
-        mapExercise.writePercentage = 0;
-        new ExerciseRunner().run(mapExercise, 20);
+        StringMapTest test = new StringMapTest();
+        test.useClient = true;
+        test.writePercentage = 0;
+        new TestRunner().run(test, 20);
     }
 }

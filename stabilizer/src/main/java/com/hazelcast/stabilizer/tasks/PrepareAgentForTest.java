@@ -19,41 +19,32 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.Exercise;
+import com.hazelcast.stabilizer.agent.Agent;
+import com.hazelcast.stabilizer.TestRecipe;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 
-import static java.lang.String.format;
-
-public class GenericExerciseTask implements Callable, Serializable, HazelcastInstanceAware {
-
-    private final static ILogger log = Logger.getLogger(GenericExerciseTask.class);
+public class PrepareAgentForTest implements Callable, Serializable, HazelcastInstanceAware {
+    private final static ILogger log = Logger.getLogger(PrepareAgentForTest.class);
 
     private transient HazelcastInstance hz;
-    private final String methodName;
+    private final TestRecipe testRecipe;
 
-    public GenericExerciseTask(String methodName) {
-        this.methodName = methodName;
+    public PrepareAgentForTest(TestRecipe testRecipe) {
+        this.testRecipe = testRecipe;
     }
 
     @Override
     public Object call() throws Exception {
+        log.info("Preparing agent for Test");
+
         try {
-            log.info("Calling exerciseInstance." + methodName + "()");
-
-            Exercise exercise = (Exercise) hz.getUserContext().get(Exercise.EXERCISE_INSTANCE);
-            if (exercise == null) {
-                throw new IllegalStateException("No ExerciseInstance found for method " + methodName + "()");
-            }
-
-            Method method = exercise.getClass().getMethod(methodName);
-            Object o = method.invoke(exercise);
-            log.info("Finished calling exerciseInstance." + methodName + "()");
-            return o;
+            Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
+            agent.setTestRecipe(testRecipe);
+            return null;
         } catch (Exception e) {
-            log.severe(format("Failed to execute exercise.%s()", methodName), e);
+            log.severe("Failed to init agent for Test", e);
             throw e;
         }
     }

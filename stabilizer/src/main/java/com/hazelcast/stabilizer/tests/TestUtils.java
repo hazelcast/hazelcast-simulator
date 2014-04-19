@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.tests;
 
 import java.io.File;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.Utils.writeObject;
 
-public class ExerciseUtils {
+public class TestUtils {
     public final static AtomicLong FAILURE_ID = new AtomicLong(1);
 
     public static String getWorkerId() {
@@ -32,6 +32,6 @@ public class ExerciseUtils {
         writeObject(cause, file);
     }
 
-    private ExerciseUtils() {
+    private TestUtils() {
     }
 }

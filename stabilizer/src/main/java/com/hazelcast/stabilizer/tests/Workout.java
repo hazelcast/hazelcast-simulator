@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.tests;
 
-import com.hazelcast.stabilizer.ExerciseRecipe;
+import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.worker.WorkerVmSettings;
 
 import java.io.File;
@@ -37,7 +37,7 @@ public class Workout implements Serializable {
     public static Workout createWorkout(File file) throws Exception {
         Properties properties = loadProperties(file);
 
-        Map<String, ExerciseRecipe> recipies = new HashMap<String, ExerciseRecipe>();
+        Map<String, TestRecipe> recipies = new HashMap<String, TestRecipe>();
         for (String property : properties.stringPropertyNames()) {
             String value = (String) properties.get(property);
             int indexOfDot = property.indexOf(".");
@@ -49,9 +49,9 @@ public class Workout implements Serializable {
                 field = property.substring(indexOfDot + 1);
             }
 
-            ExerciseRecipe recipe = recipies.get(recipeId);
+            TestRecipe recipe = recipies.get(recipeId);
             if (recipe == null) {
-                recipe = new ExerciseRecipe();
+                recipe = new TestRecipe();
                 recipies.put(recipeId, recipe);
             }
 
@@ -63,28 +63,28 @@ public class Workout implements Serializable {
 
         Workout workout = new Workout();
         for (String recipeId : recipeIds) {
-            ExerciseRecipe recipe = recipies.get(recipeId);
+            TestRecipe recipe = recipies.get(recipeId);
             if (recipe.getClassname() == null) {
                 if ("".equals(recipeId)) {
                     throw new RuntimeException(format("There is no class set for the in property file [%s]." +
-                                    "Add class=YourExerciseClass",
+                                    "Add class=YourTestClass",
                             file.getAbsolutePath()
                     ));
                 } else {
-                    throw new RuntimeException(format("There is no class set for exercise [%s] in property file [%s]." +
-                                    "Add %s.class=YourExerciseClass",
+                    throw new RuntimeException(format("There is no class set for test [%s] in property file [%s]." +
+                                    "Add %s.class=YourTestClass",
                             recipeId, file.getAbsolutePath(), recipeId
                     ));
                 }
             }
-            workout.addExercise(recipe);
+            workout.addTest(recipe);
         }
         return workout;
     }
 
     private final String id = "" + System.currentTimeMillis();
 
-    private List<ExerciseRecipe> exerciseRecipeList = new LinkedList<ExerciseRecipe>();
+    private List<TestRecipe> testRecipeList = new LinkedList<TestRecipe>();
     private int duration;
     private WorkerVmSettings workerVmSettings;
     private boolean failFast;
@@ -117,16 +117,16 @@ public class Workout implements Serializable {
         this.duration = duration;
     }
 
-    public void addExercise(ExerciseRecipe exerciseRecipe) {
-        exerciseRecipeList.add(exerciseRecipe);
+    public void addTest(TestRecipe testRecipe) {
+        testRecipeList.add(testRecipe);
     }
 
-    public List<ExerciseRecipe> getExerciseRecipeList() {
-        return exerciseRecipeList;
+    public List<TestRecipe> getTestRecipeList() {
+        return testRecipeList;
     }
 
     public int size() {
-        return exerciseRecipeList.size();
+        return testRecipeList.size();
     }
 
     @Override
@@ -134,7 +134,7 @@ public class Workout implements Serializable {
         return "Workout{" +
                 "duration=" + duration +
                 ", id='" + id + '\'' +
-                ", exerciseList=" + exerciseRecipeList +
+                ", testRecipeList=" + testRecipeList +
                 ", workerSettings=" + workerVmSettings +
                 ", failFast=" + failFast +
                 '}';

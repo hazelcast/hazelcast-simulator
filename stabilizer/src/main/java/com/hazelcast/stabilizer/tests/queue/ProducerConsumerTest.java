@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises.queue;
+package com.hazelcast.stabilizer.tests.queue;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.io.Serializable;
 import java.util.Random;
 
-public class ProducerConsumerExercise extends AbstractExercise {
+public class ProducerConsumerTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(ProducerConsumerExercise.class);
+    private final static ILogger log = Logger.getLogger(ProducerConsumerTest.class);
 
     private IAtomicLong produced;
     private IQueue workQueue;
@@ -47,9 +47,9 @@ public class ProducerConsumerExercise extends AbstractExercise {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        produced = targetInstance.getAtomicLong(exerciseId + ":Produced");
-        consumed = targetInstance.getAtomicLong(exerciseId + ":Consumed");
-        workQueue = targetInstance.getQueue(exerciseId + ":WorkQueue");
+        produced = targetInstance.getAtomicLong(testId + ":Produced");
+        consumed = targetInstance.getAtomicLong(testId + ":Consumed");
+        workQueue = targetInstance.getQueue(testId + ":WorkQueue");
 
         for (int k = 0; k < producerCount; k++) {
             spawn(new Producer(k));
@@ -141,8 +141,8 @@ public class ProducerConsumerExercise extends AbstractExercise {
     }
 
     public static void main(String[] args) throws Exception {
-        ProducerConsumerExercise exercise = new ProducerConsumerExercise();
-        new ExerciseRunner().run(exercise, 180);
+        ProducerConsumerTest test = new ProducerConsumerTest();
+        new TestRunner().run(test, 180);
         System.exit(0);
     }
 }

@@ -1,18 +1,18 @@
-package com.hazelcast.stabilizer.exercises.concurrent.lock;
+package com.hazelcast.stabilizer.tests.concurrent.lock;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.Random;
 
-public class LockExercise extends AbstractExercise {
+public class LockTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(LockExercise.class);
+    private final static ILogger log = Logger.getLogger(LockTest.class);
 
     public int lockCount = 500;
     public int threadCount = 10;
@@ -29,8 +29,8 @@ public class LockExercise extends AbstractExercise {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        lockCounter = targetInstance.getAtomicLong(getExerciseId() + ":LockCounter");
-        totalMoney = targetInstance.getAtomicLong(getExerciseId() + ":TotalMoney");
+        lockCounter = targetInstance.getAtomicLong(getTestId() + ":LockCounter");
+        totalMoney = targetInstance.getAtomicLong(getTestId() + ":TotalMoney");
 
         for (int k = 0; k < lockCount; k++) {
             long key = lockCounter.getAndIncrement();
@@ -46,11 +46,11 @@ public class LockExercise extends AbstractExercise {
     }
 
     private String getLockId(long key) {
-        return getExerciseId() + ":Lock" + key;
+        return getTestId() + ":Lock" + key;
     }
 
     private String getAccountId(long key) {
-        return getExerciseId() + ":Account" + key;
+        return getTestId() + ":Account" + key;
     }
 
     @Override
@@ -152,8 +152,8 @@ public class LockExercise extends AbstractExercise {
     }
 
     public static void main(String[] args) throws Exception {
-        LockExercise mapExercise = new LockExercise();
-        new ExerciseRunner().run(mapExercise, 20);
+        LockTest test = new LockTest();
+        new TestRunner().run(test, 20);
     }
 }
 

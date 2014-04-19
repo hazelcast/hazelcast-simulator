@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises.queue;
+package com.hazelcast.stabilizer.tests.queue;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.Queue;
 
-public class QueueExercise extends AbstractExercise {
+public class QueueTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(QueueExercise.class);
+    private final static ILogger log = Logger.getLogger(QueueTest.class);
 
     private IAtomicLong totalCounter;
     private IQueue[] queues;
@@ -43,10 +43,10 @@ public class QueueExercise extends AbstractExercise {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong(getExerciseId() + ":TotalCounter");
+        totalCounter = targetInstance.getAtomicLong(getTestId() + ":TotalCounter");
         queues = new IQueue[queueLength];
         for (int k = 0; k < queues.length; k++) {
-            queues[k] = targetInstance.getQueue(exerciseId + ":Queue-" + k);
+            queues[k] = targetInstance.getQueue(testId + ":Queue-" + k);
         }
 
         for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
@@ -118,8 +118,8 @@ public class QueueExercise extends AbstractExercise {
     }
 
     public static void main(String[] args) throws Exception {
-        QueueExercise exercise = new QueueExercise();
-        new ExerciseRunner().run(exercise, 60);
+        QueueTest test = new QueueTest();
+        new TestRunner().run(test, 60);
         System.exit(0);
     }
 }

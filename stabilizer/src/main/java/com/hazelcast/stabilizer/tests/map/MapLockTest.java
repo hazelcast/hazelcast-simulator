@@ -1,12 +1,11 @@
-package com.hazelcast.stabilizer.exercises.map;
+package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.map.AbstractEntryProcessor;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
 
@@ -16,9 +15,9 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MapEntryProcessorExercise extends AbstractExercise {
+public class MapLockTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(MapEntryProcessorExercise.class);
+    private final static ILogger log = Logger.getLogger(MapLockTest.class);
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();
@@ -36,12 +35,12 @@ public class MapEntryProcessorExercise extends AbstractExercise {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        map = targetInstance.getMap("Map-" + exerciseId);
+        map = targetInstance.getMap("Map-" + testId);
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
 
-        resultsPerWorker = targetInstance.getMap("ResultMap" + exerciseId);
+        resultsPerWorker = targetInstance.getMap("ResultMap" + testId);
     }
 
     @Override
@@ -107,7 +106,15 @@ public class MapEntryProcessorExercise extends AbstractExercise {
                 Integer key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
 
-                map.executeOnKey(key, new IncrementEntryProcessor(increment));
+                map.lock(key);
+                try {
+                    Long current = map.get(key);
+                    Long update = current + increment;
+                    map.put(key, update);
+                } finally {
+                    map.unlock(key);
+                }
+
                 increment(key,increment);
 
                 if (iteration % logFrequency == 0) {
@@ -129,24 +136,9 @@ public class MapEntryProcessorExercise extends AbstractExercise {
         }
     }
 
-    private static class IncrementEntryProcessor extends AbstractEntryProcessor<Integer,Long>{
-        private final long increment;
-
-        private IncrementEntryProcessor(long increment) {
-            this.increment = increment;
-        }
-
-        @Override
-        public Object process(Map.Entry<Integer, Long> entry) {
-            entry.setValue(entry.getValue()+increment);
-            return null;
-        }
-    }
-
     public static void main(String[] args) throws Exception {
-        MapEntryProcessorExercise mapExercise = new MapEntryProcessorExercise();
-        mapExercise.useClient = true;
-        new ExerciseRunner().run(mapExercise, 20);
+        MapLockTest test = new MapLockTest();
+        test.useClient = true;
+        new TestRunner().run(test, 20);
     }
 }
-

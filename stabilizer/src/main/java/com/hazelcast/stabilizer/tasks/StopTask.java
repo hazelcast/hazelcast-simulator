@@ -4,7 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.Exercise;
+import com.hazelcast.stabilizer.tests.Test;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
@@ -23,17 +23,17 @@ public class StopTask implements Callable, Serializable, HazelcastInstanceAware 
     @Override
     public Object call() throws Exception {
         try {
-            log.info("Calling exerciseInstance.stop");
+            log.info("Calling test.stop");
 
-            Exercise exercise = (Exercise) hz.getUserContext().get(Exercise.EXERCISE_INSTANCE);
-            if (exercise == null) {
-                throw new IllegalStateException("No ExerciseInstance to stop");
+            Test test = (Test) hz.getUserContext().get(Test.TEST_INSTANCE);
+            if (test == null) {
+                throw new IllegalStateException("No test to stop");
             }
-            exercise.stop(timeoutMs);
-            log.info("Finished calling exerciseInstance.stop()");
+            test.stop(timeoutMs);
+            log.info("Finished calling test.stop()");
             return null;
         } catch (Exception e) {
-            log.severe("Failed to execute exercise.stop", e);
+            log.severe("Failed to execute test.stop", e);
             throw e;
         }
     }

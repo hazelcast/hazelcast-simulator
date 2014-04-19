@@ -30,27 +30,27 @@ public class Failure implements Serializable {
     private final InetSocketAddress workerAddress;
     private final String workerId;
     private final Date time;
-    private final ExerciseRecipe exerciseRecipe;
+    private final TestRecipe testRecipe;
     private final Throwable cause;
 
     public Failure(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
-                   String workerId, ExerciseRecipe exerciseRecipe) {
+                   String workerId, TestRecipe testRecipe) {
         this.message = message;
         this.agentAddress = agentAddress;
         this.workerId = workerId;
         this.time = new Date();
-        this.exerciseRecipe = exerciseRecipe;
+        this.testRecipe = testRecipe;
         this.workerAddress = workerAddress;
         this.cause = null;
     }
 
     public Failure(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
-                   String workerId, ExerciseRecipe exerciseRecipe, Throwable cause) {
+                   String workerId, TestRecipe testRecipe, Throwable cause) {
         this.message = message;
         this.agentAddress = agentAddress;
         this.workerId = workerId;
         this.time = new Date();
-        this.exerciseRecipe = exerciseRecipe;
+        this.testRecipe = testRecipe;
         this.workerAddress = workerAddress;
         this.cause = cause;
     }
@@ -75,8 +75,8 @@ public class Failure implements Serializable {
         return time;
     }
 
-    public ExerciseRecipe getExerciseRecipe() {
-        return exerciseRecipe;
+    public TestRecipe getTestRecipe() {
+        return testRecipe;
     }
 
     public InetSocketAddress getWorkerAddress() {
@@ -92,14 +92,14 @@ public class Failure implements Serializable {
         sb.append("   time=").append(time).append("\n");
         sb.append("   workerAddress=").append(workerAddress).append("\n");
         sb.append("   workerId=").append(workerId).append("\n");
-        if (exerciseRecipe != null) {
-            String[] exerciseString = exerciseRecipe.toString().split("\n");
-            sb.append("   exercise=").append(exerciseString[0]).append("\n");
-            for (int k = 1; k < exerciseString.length; k++) {
-                sb.append("    ").append(exerciseString[k]).append("\n");
+        if (testRecipe != null) {
+            String[] testString = testRecipe.toString().split("\n");
+            sb.append("   test=").append(testString[0]).append("\n");
+            for (int k = 1; k < testString.length; k++) {
+                sb.append("    ").append(testString[k]).append("\n");
             }
         } else {
-            sb.append("   exercise=").append("null").append("\n");
+            sb.append("   test=").append("null").append("\n");
         }
 
         if (cause != null) {

@@ -21,11 +21,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-public class ExerciseRecipe implements Serializable {
+public class TestRecipe implements Serializable {
     private static final long serialVersionUID = 1;
-    private final String exerciseId = ""+System.currentTimeMillis();
+    private final String testId = ""+System.currentTimeMillis();
 
     private Map<String, String> properties = new HashMap<String, String>();
 
@@ -33,8 +32,8 @@ public class ExerciseRecipe implements Serializable {
         return properties.get("class");
     }
 
-    public String getExerciseId() {
-        return exerciseId;
+    public String getTestId() {
+        return testId;
     }
 
     public String getProperty(String name) {
@@ -51,8 +50,8 @@ public class ExerciseRecipe implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("ExerciseRecipe{");
-        sb.append("\n      ").append("exerciseId=").append(exerciseId);
+        StringBuilder sb = new StringBuilder("TestRecipe{");
+        sb.append("\n      ").append("testId=").append(testId);
         sb.append("\n    , ").append("class=").append(getClassname());
 
         List<String> keys = new LinkedList<String>(properties.keySet());

@@ -1,18 +1,18 @@
-package com.hazelcast.stabilizer.exercises.map;
+package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.IdGenerator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.Random;
 
-public class GrowingMapExercise extends AbstractExercise {
+public class GrowingMapTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(GrowingMapExercise.class);
+    private final static ILogger log = Logger.getLogger(GrowingMapTest.class);
 
     private IMap<Long, Long> map;
     private IdGenerator idGenerator;
@@ -31,8 +31,8 @@ public class GrowingMapExercise extends AbstractExercise {
         super.localSetup();
 
         HazelcastInstance targetInstance = getTargetInstance();
-        idGenerator = targetInstance.getIdGenerator(exerciseId + ":IdGenerator");
-        map = targetInstance.getMap(exerciseId + ":Map");
+        idGenerator = targetInstance.getIdGenerator(testId + ":IdGenerator");
+        map = targetInstance.getMap(testId + ":Map");
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
@@ -135,7 +135,7 @@ public class GrowingMapExercise extends AbstractExercise {
     }
 
     public static void main(String[] args) throws Exception {
-        GrowingMapExercise mapExercise = new GrowingMapExercise();
-        new ExerciseRunner().run(mapExercise, 20);
+        GrowingMapTest test = new GrowingMapTest();
+        new TestRunner().run(test, 20);
     }
 }

@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises.concurrent.atomiclong;
+package com.hazelcast.stabilizer.tests.concurrent.atomiclong;
 
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class AtomicLongExercise extends AbstractExercise {
+public class AtomicLongTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(AtomicLongExercise.class);
+    private final static ILogger log = Logger.getLogger(AtomicLongTest.class);
 
     public int countersLength = 1000;
     public int threadCount = 1;
@@ -49,10 +49,10 @@ public class AtomicLongExercise extends AbstractExercise {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong(exerciseId + ":TotalCounter");
+        totalCounter = targetInstance.getAtomicLong(testId + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            counters[k] = targetInstance.getAtomicLong(exerciseId + ":Counter-" + k);
+            counters[k] = targetInstance.getAtomicLong(testId + ":Counter-" + k);
         }
 
         for (int k = 0; k < threadCount; k++) {
@@ -114,8 +114,8 @@ public class AtomicLongExercise extends AbstractExercise {
     }
 
     public static void main(String[] args) throws Exception {
-        AtomicLongExercise mapExercise = new AtomicLongExercise();
-        new ExerciseRunner().run(mapExercise, 60);
+        AtomicLongTest test = new AtomicLongTest();
+        new TestRunner().run(test, 60);
     }
 }
 

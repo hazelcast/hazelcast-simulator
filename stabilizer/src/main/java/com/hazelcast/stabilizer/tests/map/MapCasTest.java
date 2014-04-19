@@ -1,11 +1,11 @@
-package com.hazelcast.stabilizer.exercises.map;
+package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
 
@@ -15,9 +15,18 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MapLockExercise extends AbstractExercise {
+/**
+ * This tests the cas method: replace. So for optimistic concurrency control.
+ *
+ * We have a bunch of predefined keys, and we are going to concurrently increment the value
+ * and we protect ourselves against lost updates using cas method replace.
+ *
+ * Locally we keep track of all increments, and if the sum of these local increments matches the
+ * global increment, we are done
+ */
+public class MapCasTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(MapLockExercise.class);
+    private final static ILogger log = Logger.getLogger(MapCasTest.class);
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();
@@ -35,12 +44,12 @@ public class MapLockExercise extends AbstractExercise {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        map = targetInstance.getMap("Map-" + exerciseId);
+        map = targetInstance.getMap("Map-" + testId);
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
 
-        resultsPerWorker = targetInstance.getMap("ResultMap" + exerciseId);
+        resultsPerWorker = targetInstance.getMap("ResultMap" + testId);
     }
 
     @Override
@@ -72,13 +81,13 @@ public class MapLockExercise extends AbstractExercise {
         for (int k = 0; k < keyCount; k++) {
             long expected = amount[k];
             long found = map.get(k);
-            if (expected != found) {
+            if(expected!=found){
                 failures++;
             }
         }
 
-        if (failures > 0) {
-            throw new IllegalStateException("Failures found:" + failures);
+        if(failures>0){
+            throw new IllegalStateException("Failures found:"+failures);
         }
     }
 
@@ -106,16 +115,14 @@ public class MapLockExercise extends AbstractExercise {
                 Integer key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
 
-                map.lock(key);
-                try {
+                for (; ; ) {
                     Long current = map.get(key);
                     Long update = current + increment;
-                    map.put(key, update);
-                } finally {
-                    map.unlock(key);
+                    if (map.replace(key, current, update)) {
+                        increment(key, increment);
+                        break;
+                    }
                 }
-
-                increment(key,increment);
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -137,8 +144,8 @@ public class MapLockExercise extends AbstractExercise {
     }
 
     public static void main(String[] args) throws Exception {
-        MapLockExercise mapExercise = new MapLockExercise();
-        mapExercise.useClient = true;
-        new ExerciseRunner().run(mapExercise, 20);
+        MapCasTest test = new MapCasTest();
+        test.useClient = true;
+        new TestRunner().run(test, 20);
     }
 }

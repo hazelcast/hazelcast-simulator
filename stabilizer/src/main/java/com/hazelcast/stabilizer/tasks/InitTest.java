@@ -19,8 +19,8 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.ExerciseRecipe;
-import com.hazelcast.stabilizer.exercises.Exercise;
+import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.tests.Test;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -29,67 +29,67 @@ import java.util.concurrent.Callable;
 
 import static java.lang.String.format;
 
-public class InitExercise implements Callable, Serializable, HazelcastInstanceAware {
-    private final static ILogger log = Logger.getLogger(InitExercise.class);
+public class InitTest implements Callable, Serializable, HazelcastInstanceAware {
+    private final static ILogger log = Logger.getLogger(InitTest.class);
 
     private transient HazelcastInstance hz;
-    private final ExerciseRecipe exerciseRecipe;
+    private final TestRecipe testRecipe;
 
-    public InitExercise(ExerciseRecipe exerciseRecipe) {
-        this.exerciseRecipe = exerciseRecipe;
+    public InitTest(TestRecipe testRecipe) {
+        this.testRecipe = testRecipe;
     }
 
     @Override
     public Object call() throws Exception {
         try {
-            log.info("Init Exercise:\n"+exerciseRecipe);
+            log.info("Init Test:\n" + testRecipe);
 
-            String clazzName = exerciseRecipe.getClassname();
+            String clazzName = testRecipe.getClassname();
 
-            Exercise exercise = (Exercise) InitExercise.class.getClassLoader().loadClass(clazzName).newInstance();
-            exercise.setHazelcastInstance(hz);
-            exercise.setExerciseId(exerciseRecipe.getExerciseId());
+            Test test = (Test) InitTest.class.getClassLoader().loadClass(clazzName).newInstance();
+            test.setHazelcastInstance(hz);
+            test.setTestId(testRecipe.getTestId());
 
-            bindProperties(exercise);
+            bindProperties(test);
 
-            hz.getUserContext().put(Exercise.EXERCISE_INSTANCE, exercise);
+            hz.getUserContext().put(Test.TEST_INSTANCE, test);
             return null;
         } catch (Exception e) {
-            log.severe("Failed to init Exercise", e);
+            log.severe("Failed to init Test", e);
             throw e;
         }
     }
 
-    private void bindProperties(Exercise exercise) throws NoSuchFieldException, IllegalAccessException {
-        for (Map.Entry<String, String> entry : exerciseRecipe.getProperties().entrySet()) {
+    private void bindProperties(Test test) throws NoSuchFieldException, IllegalAccessException {
+        for (Map.Entry<String, String> entry : testRecipe.getProperties().entrySet()) {
             String property = entry.getKey();
             if ("class".equals(property)) {
                 continue;
             }
             String value = entry.getValue();
-            bindProperty(exercise, property, value);
+            bindProperty(test, property, value);
         }
     }
 
-    private void bindProperty(Exercise exercise, String property, String value) throws IllegalAccessException {
-        Field field = findField(exercise.getClass(), property);
+    private void bindProperty(Test test, String property, String value) throws IllegalAccessException {
+        Field field = findField(test.getClass(), property);
         if (field == null) {
-            throw new RuntimeException(format("Could not found a field for property [%s] on class [%s]", property, exercise.getClass()));
+            throw new RuntimeException(format("Could not found a field for property [%s] on class [%s]", property, test.getClass()));
         }
         field.setAccessible(true);
         try {
             if (Boolean.class.equals(field.getType()) || Boolean.TYPE.equals(field.getType())) {
-                field.set(exercise, Boolean.parseBoolean(value));
+                field.set(test, Boolean.parseBoolean(value));
             } else if (String.class.equals(field.getType())) {
-                field.set(exercise, value);
+                field.set(test, value);
             } else if (Integer.class.equals(field.getType()) || Integer.TYPE.equals(field.getType())) {
-                field.set(exercise, Integer.parseInt(value));
+                field.set(test, Integer.parseInt(value));
             } else if (Long.class.equals(field.getType()) || Long.TYPE.equals(field.getType())) {
-                field.set(exercise, Long.parseLong(value));
+                field.set(test, Long.parseLong(value));
             } else if (Float.class.equals(field.getType()) || Float.TYPE.equals(field.getType())) {
-                field.set(exercise, Float.parseFloat(value));
+                field.set(test, Float.parseFloat(value));
             } else if (Double.class.equals(field.getType()) || Double.TYPE.equals(field.getType())) {
-                field.set(exercise, Double.parseDouble(value));
+                field.set(test, Double.parseDouble(value));
             } else {
                 throw new RuntimeException(format("Can't bind property [%s] to field of type [%s]", property, field.getType()));
             }

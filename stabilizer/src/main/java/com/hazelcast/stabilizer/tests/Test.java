@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises;
+package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.stabilizer.performance.Performance;
 
 /**
- * The ExerciseInstance is the 'thing' that contains the actual logic we want to run.
+ * The Test is the 'thing' that contains the actual logic we want to run.
  * information.
  * <p/>
  * Order of lifecycle methods:
@@ -34,12 +34,12 @@ import com.hazelcast.stabilizer.performance.Performance;
  * <li>{@link #localTearDown()}</li>
  * </ol>
  */
-public interface Exercise {
+public interface Test {
 
-    String EXERCISE_INSTANCE = "exerciseInstance";
+    String TEST_INSTANCE = "testInstance";
 
     /**
-     * Sets up this ExerciseInstance
+     * Sets up this Test
      * <p/>
      * This method will only be called on a single members of the cluster.
      *
@@ -48,7 +48,7 @@ public interface Exercise {
     void globalSetup() throws Exception;
 
     /**
-     * Sets up this ExerciseInstance
+     * Sets up this Test
      * <p/>
      * This method will be called on a all members of the cluster.
      *
@@ -57,7 +57,7 @@ public interface Exercise {
     void localSetup() throws Exception;
 
     /**
-     * Tears down this ExerciseInstance
+     * Tears down this Test
      * <p/>
      * This method will  be called on a all members of the cluster.
      *
@@ -66,7 +66,7 @@ public interface Exercise {
     void localTearDown() throws Exception;
 
     /**
-     * Tears down this ExerciseInstance
+     * Tears down this Test
      * <p/>
      * This method will only be called on a single member of the cluster.
      *
@@ -77,9 +77,9 @@ public interface Exercise {
     void start() throws Exception;
 
     /**
-     * Stops this ExerciseInstance.
+     * Stops this Test.
      * <p/>
-     * This method is synchronous, so after this method completes, the ExerciseInstance really should be stopped.
+     * This method is synchronous, so after this method completes, the Test really should be stopped.
      *
      * @throws Exception
      */
@@ -91,7 +91,7 @@ public interface Exercise {
 
     void setHazelcastInstance(HazelcastInstance hazelcastInstance);
 
-    void setExerciseId(String id);
+    void setTestId(String id);
 
     Performance calcPerformance();
 }

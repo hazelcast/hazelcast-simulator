@@ -1,11 +1,12 @@
-package com.hazelcast.stabilizer.exercises.map;
+package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
-import com.hazelcast.stabilizer.exercises.ExerciseRunner;
+import com.hazelcast.map.AbstractEntryProcessor;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
 
@@ -15,18 +16,9 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * This exercise test the cas method: replace. So for optimistic concurrency control.
- *
- * We have a bunch of predefined keys, and we are going to concurrently increment the value
- * and we protect ourselves against lost updates using cas method replace.
- *
- * Locally we keep track of all increments, and if the sum of these local increments matches the
- * global increment, we are done
- */
-public class MapCasExercise extends AbstractExercise {
+public class MapEntryProcessorTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(MapCasExercise.class);
+    private final static ILogger log = Logger.getLogger(MapEntryProcessorTest.class);
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();
@@ -44,12 +36,12 @@ public class MapCasExercise extends AbstractExercise {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        map = targetInstance.getMap("Map-" + exerciseId);
+        map = targetInstance.getMap("Map-" + testId);
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
 
-        resultsPerWorker = targetInstance.getMap("ResultMap" + exerciseId);
+        resultsPerWorker = targetInstance.getMap("ResultMap" + testId);
     }
 
     @Override
@@ -81,13 +73,13 @@ public class MapCasExercise extends AbstractExercise {
         for (int k = 0; k < keyCount; k++) {
             long expected = amount[k];
             long found = map.get(k);
-            if(expected!=found){
+            if (expected != found) {
                 failures++;
             }
         }
 
-        if(failures>0){
-            throw new IllegalStateException("Failures found:"+failures);
+        if (failures > 0) {
+            throw new IllegalStateException("Failures found:" + failures);
         }
     }
 
@@ -115,14 +107,8 @@ public class MapCasExercise extends AbstractExercise {
                 Integer key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
 
-                for (; ; ) {
-                    Long current = map.get(key);
-                    Long update = current + increment;
-                    if (map.replace(key, current, update)) {
-                        increment(key, increment);
-                        break;
-                    }
-                }
+                map.executeOnKey(key, new IncrementEntryProcessor(increment));
+                increment(key,increment);
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -143,9 +129,24 @@ public class MapCasExercise extends AbstractExercise {
         }
     }
 
+    private static class IncrementEntryProcessor extends AbstractEntryProcessor<Integer,Long>{
+        private final long increment;
+
+        private IncrementEntryProcessor(long increment) {
+            this.increment = increment;
+        }
+
+        @Override
+        public Object process(Map.Entry<Integer, Long> entry) {
+            entry.setValue(entry.getValue()+increment);
+            return null;
+        }
+    }
+
     public static void main(String[] args) throws Exception {
-        MapCasExercise mapExercise = new MapCasExercise();
-        mapExercise.useClient = true;
-        new ExerciseRunner().run(mapExercise, 20);
+        MapEntryProcessorTest test = new MapEntryProcessorTest();
+        test.useClient = true;
+        new TestRunner().run(test, 20);
     }
 }
+

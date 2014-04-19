@@ -96,7 +96,7 @@ public class FailureMonitor implements Runnable {
                                 agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                                 jvm == null ? null : jvm.getMember().getInetSocketAddress(),
                                 workerId,
-                                agent.getExerciseRecipe(),
+                                agent.getTestRecipe(),
                                 cause);
                         agent.publishFailure(failure);
                         workerVmManager.destroy(jvm);
@@ -119,7 +119,7 @@ public class FailureMonitor implements Runnable {
                     agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                     jvm.getMember().getInetSocketAddress(),
                     jvm.getId(),
-                    agent.getExerciseRecipe());
+                    agent.getTestRecipe());
         }
 
         return null;
@@ -156,7 +156,7 @@ public class FailureMonitor implements Runnable {
                 agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                 jvm.getMember().getInetSocketAddress(),
                 jvm.getId(),
-                agent.getExerciseRecipe());
+                agent.getTestRecipe());
         jvm.getProcess().destroy();
         return failure;
     }
@@ -170,7 +170,7 @@ public class FailureMonitor implements Runnable {
                         agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                         jvm.getMember().getInetSocketAddress(),
                         jvm.getId(),
-                        agent.getExerciseRecipe());
+                        agent.getTestRecipe());
             }
         } catch (IllegalThreadStateException ignore) {
         }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.exercises.executor;
+package com.hazelcast.stabilizer.tests.executor;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
@@ -21,7 +21,7 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.exercises.AbstractExercise;
+import com.hazelcast.stabilizer.tests.AbstractTest;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -31,9 +31,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class ExecutorExercise extends AbstractExercise {
+public class ExecutorTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(ExecutorExercise.class);
+    private final static ILogger log = Logger.getLogger(ExecutorTest.class);
 
     private IExecutorService[] executors;
     private IAtomicLong executedCounter;
@@ -56,13 +56,13 @@ public class ExecutorExercise extends AbstractExercise {
 
         executors = new IExecutorService[executorCount];
         for (int k = 0; k < executors.length; k++) {
-            executors[k] = targetInstance.getExecutorService(exerciseId + ":Executor-" + k);
+            executors[k] = targetInstance.getExecutorService(testId + ":Executor-" + k);
         }
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
-        executedCounter = targetInstance.getAtomicLong(exerciseId + ":ExecutedCounter");
-        expectedExecutedCounter = targetInstance.getAtomicLong(exerciseId + ":ExpectedExecutedCounter");
+        executedCounter = targetInstance.getAtomicLong(testId + ":ExecutedCounter");
+        expectedExecutedCounter = targetInstance.getAtomicLong(testId + ":ExpectedExecutedCounter");
     }
 
     @Override
@@ -132,8 +132,8 @@ public class ExecutorExercise extends AbstractExercise {
 
         @Override
         public void run() {
-            ExecutorExercise exerciseInstance = (ExecutorExercise) hz.getUserContext().get(EXERCISE_INSTANCE);
-            exerciseInstance.executedCounter.incrementAndGet();
+            ExecutorTest test = (ExecutorTest) hz.getUserContext().get(TEST_INSTANCE);
+            test.executedCounter.incrementAndGet();
         }
 
         @Override
