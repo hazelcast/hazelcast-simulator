@@ -305,7 +305,7 @@ class Cluster {
     }
 
     void sshQuiet(String ip, String command) {
-        String sshCommand = "${config.SSH_OPTIONS} -q ${config.USER}@$ip \"$command\" || true"
+        String sshCommand = "ssh ${config.SSH_OPTIONS} -q ${config.USER}@$ip \"$command\" || true"
         bash sshCommand
     }
 
