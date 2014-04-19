@@ -146,7 +146,7 @@ public abstract class AbstractExercise implements Exercise {
                 log.severe("Error detected", t);
                 Utils.sleepSeconds(2);
 
-                ExerciseUtils.signalHeartAttack(t);
+                ExerciseUtils.signalFailure(t);
             }
         }
     }

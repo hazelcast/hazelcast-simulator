@@ -21,14 +21,14 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.stabilizer.Utils.writeObject;
 
 public class ExerciseUtils {
-    public final static AtomicLong HEART_ATTACK_ID = new AtomicLong(1);
+    public final static AtomicLong FAILURE_ID = new AtomicLong(1);
 
     public static String getWorkerId() {
         return System.getProperty("workerId");
     }
 
-    public static void signalHeartAttack(Throwable cause) {
-        final File file = new File(getWorkerId() + "." + HEART_ATTACK_ID.incrementAndGet() + ".exception");
+    public static void signalFailure(Throwable cause) {
+        final File file = new File(getWorkerId() + "." + FAILURE_ID.incrementAndGet() + ".exception");
         writeObject(cause, file);
     }
 

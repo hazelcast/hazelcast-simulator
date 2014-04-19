@@ -27,8 +27,8 @@ import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.ExerciseRecipe;
-import com.hazelcast.stabilizer.HeartAttack;
-import com.hazelcast.stabilizer.HeartAttackAlreadyThrownRuntimeException;
+import com.hazelcast.stabilizer.Failure;
+import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.exercises.Workout;
@@ -77,7 +77,7 @@ public class Console {
 
     private Workout workout;
     private File consoleHzFile;
-    private final List<HeartAttack> heartAttackList = synchronizedList(new LinkedList<HeartAttack>());
+    private final List<Failure> failureList = synchronizedList(new LinkedList<Failure>());
     private IExecutorService agentExecutor;
     private HazelcastInstance client;
     private ITopic statusTopic;
@@ -139,15 +139,15 @@ public class Console {
         log.info(format("Total number of agents: %s", members.size()));
         log.info(format("Total number of workers: %s", members.size() * workerVmSettings.getWorkerCount()));
 
-        ITopic heartAttackTopic = client.getTopic(Agent.AGENT_STABILIZER_TOPIC);
-        heartAttackTopic.addMessageListener(new MessageListener() {
+        ITopic failureTopic = client.getTopic(Agent.AGENT_STABILIZER_TOPIC);
+        failureTopic.addMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
                 Object messageObject = message.getMessageObject();
-                if (messageObject instanceof HeartAttack) {
-                    HeartAttack heartAttack = (HeartAttack) messageObject;
-                    heartAttackList.add(heartAttack);
-                    log.severe("Remote machine heart attack detected:" + heartAttack);
+                if (messageObject instanceof Failure) {
+                    Failure failure = (Failure) messageObject;
+                    failureList.add(failure);
+                    log.severe("Remote failure detected:" + failure);
                 } else if (messageObject instanceof Exception) {
                     Exception e = (Exception) messageObject;
                     log.severe(e);
@@ -161,7 +161,7 @@ public class Console {
 
         runWorkout(workout);
 
-        //the console needs to sleep some to make sure that it will get heartattacks if they are there.
+        //the console needs to sleep some to make sure that it will get failures if they are there.
         log.info("Starting cooldown (10 sec)");
         Utils.sleepSeconds(10);
         log.info("Finished cooldown");
@@ -171,17 +171,17 @@ public class Console {
         long elapsedMs = System.currentTimeMillis() - startMs;
         log.info(format("Total running time: %s seconds", elapsedMs / 1000));
 
-        if (heartAttackList.isEmpty()) {
+        if (failureList.isEmpty()) {
             log.info("-----------------------------------------------------------------------------");
-            log.info("No heart attacks have been detected!");
+            log.info("No failures have been detected!");
             log.info("-----------------------------------------------------------------------------");
             System.exit(0);
         } else {
             StringBuilder sb = new StringBuilder();
-            sb.append(heartAttackList.size()).append(" Heart attacks have been detected!!!\n");
-            for (HeartAttack heartAttack : heartAttackList) {
+            sb.append(failureList.size()).append(" Failures have been detected!!!\n");
+            for (Failure failure : failureList) {
                 sb.append("-----------------------------------------------------------------------------\n");
-                sb.append(heartAttack).append('\n');
+                sb.append(failure).append('\n');
             }
             sb.append("-----------------------------------------------------------------------------\n");
             log.severe(sb.toString());
@@ -251,7 +251,7 @@ public class Console {
         sendStatusUpdate(format("Running exercise : %s", exerciseRecipe.getExerciseId()));
 
         this.exerciseRecipe = exerciseRecipe;
-        int oldCount = heartAttackList.size();
+        int oldCount = failureList.size();
         try {
             sendStatusUpdate(exerciseRecipe.toString());
 
@@ -304,7 +304,7 @@ public class Console {
             submitToAllTrainesAndWait(new GenericExerciseTask("localTearDown"), "exercise local tearDown");
             sendStatusUpdate("Completed exercise local teardown");
 
-            return heartAttackList.size() == oldCount;
+            return failureList.size() == oldCount;
         } catch (Exception e) {
             log.severe("Failed", e);
             return false;
@@ -323,8 +323,8 @@ public class Console {
         int small = seconds % period;
 
         for (int k = 1; k <= big; k++) {
-            if (heartAttackList.size() > 0) {
-                sendStatusUpdate("Heart attack detected, aborting execution of exercise");
+            if (failureList.size() > 0) {
+                sendStatusUpdate("Failure detected, aborting execution of exercise");
                 return;
             }
 
@@ -393,14 +393,14 @@ public class Console {
         try {
             Object o = future.get(1000, TimeUnit.SECONDS);
         } catch (ExecutionException e) {
-            if (!(e.getCause() instanceof HeartAttackAlreadyThrownRuntimeException)) {
-                statusTopic.publish(new HeartAttack(null, null, null, null, getExerciseRecipe(), e));
+            if (!(e.getCause() instanceof FailureAlreadyThrownRuntimeException)) {
+                statusTopic.publish(new Failure(null, null, null, null, getExerciseRecipe(), e));
             }
             throw new RuntimeException(e);
         } catch (TimeoutException e) {
-            HeartAttack heartAttack = new HeartAttack("Timeout waiting for remote operation to complete",
+            Failure failure = new Failure("Timeout waiting for remote operation to complete",
                     null, null, null, getExerciseRecipe(), e);
-            statusTopic.publish(heartAttack);
+            statusTopic.publish(failure);
             throw new RuntimeException(e);
         }
     }
@@ -424,13 +424,13 @@ public class Console {
                 //todo: we should calculate remaining timeoutMs
                 Object o = future.get(timeoutMs, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
-                HeartAttack heartAttack = new HeartAttack("Timeout waiting for remote operation to complete",
+                Failure failure = new Failure("Timeout waiting for remote operation to complete",
                         null, null, null, getExerciseRecipe(), e);
-                statusTopic.publish(heartAttack);
+                statusTopic.publish(failure);
                 throw new RuntimeException(e);
             } catch (ExecutionException e) {
-                if (!(e.getCause() instanceof HeartAttackAlreadyThrownRuntimeException)) {
-                    statusTopic.publish(new HeartAttack(null, null, null, null, getExerciseRecipe(), e));
+                if (!(e.getCause() instanceof FailureAlreadyThrownRuntimeException)) {
+                    statusTopic.publish(new Failure(null, null, null, null, getExerciseRecipe(), e));
                 }
                 throw new RuntimeException(e);
             }

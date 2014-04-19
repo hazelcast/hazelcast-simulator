@@ -175,7 +175,7 @@ public final class Utils {
         String version = "";
         try {
             Properties p = new Properties();
-            InputStream is = Utils.class.getResourceAsStream("/META-INF/maven/hazelcast-heartattack/hazelcast-heartattack/pom.properties");
+            InputStream is = Utils.class.getResourceAsStream("/META-INF/maven/hazelcast-stabilizer/hazelcast-stabilizer/pom.properties");
             if (is != null) {
                 p.load(is);
                 return p.getProperty("version", "");

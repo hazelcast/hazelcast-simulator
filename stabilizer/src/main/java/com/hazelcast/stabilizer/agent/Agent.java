@@ -27,8 +27,8 @@ import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.ExerciseRecipe;
-import com.hazelcast.stabilizer.HeartAttack;
-import com.hazelcast.stabilizer.HeartAttackAlreadyThrownRuntimeException;
+import com.hazelcast.stabilizer.Failure;
+import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.JavaInstallationsRepository;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.exercises.Workout;
@@ -75,7 +75,7 @@ public class Agent {
     private volatile ITopic statusTopic;
     private volatile Workout workout;
     private volatile ExerciseRecipe exerciseRecipe;
-    private final List<HeartAttack> heartAttacks = Collections.synchronizedList(new LinkedList<HeartAttack>());
+    private final List<Failure> failures = Collections.synchronizedList(new LinkedList<Failure>());
     private IExecutorService agentExecutor;
     private WorkerVmManager workerVmManager;
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
@@ -156,14 +156,14 @@ public class Agent {
             @Override
             public void onMessage(Message message) {
                 Object messageObject = message.getMessageObject();
-                if (messageObject instanceof HeartAttack) {
-                    HeartAttack heartAttack = (HeartAttack) messageObject;
+                if (messageObject instanceof Failure) {
+                    Failure failure = (Failure) messageObject;
                     Member localMember = agentHz.getCluster().getLocalMember();
-                    final boolean isLocal = localMember.getInetSocketAddress().equals(heartAttack.getAgentAddress());
+                    final boolean isLocal = localMember.getInetSocketAddress().equals(failure.getAgentAddress());
                     if (isLocal) {
-                        log.severe("Local heart attack detected:" + heartAttack);
+                        log.severe("Local failure detected:" + failure);
                     } else {
-                        log.severe("Remote machine heart attack detected:" + heartAttack);
+                        log.severe("Remote failure detected:" + failure);
                     }
                 } else if (messageObject instanceof Exception) {
                     Exception e = (Exception) messageObject;
@@ -178,8 +178,8 @@ public class Agent {
         return agentHz;
     }
 
-    public void heartAttack(HeartAttack heartAttack) {
-        statusTopic.publish(heartAttack);
+    public void publishFailure(Failure failure) {
+        statusTopic.publish(failure);
     }
 
     public List shoutToWorkers(Callable task, String taskDescription) throws InterruptedException {
@@ -201,15 +201,15 @@ public class Agent {
                 Object result = future.get();
                 results.add(result);
             } catch (ExecutionException e) {
-                final HeartAttack heartAttack = new HeartAttack(
+                final Failure failure = new Failure(
                         taskDescription,
                         agentHz.getCluster().getLocalMember().getInetSocketAddress(),
                         workerJvm.getMember().getInetSocketAddress(),
                         workerJvm.getId(),
                         exerciseRecipe,
                         e);
-                heartAttack(heartAttack);
-                throw new HeartAttackAlreadyThrownRuntimeException(e);
+                publishFailure(failure);
+                throw new FailureAlreadyThrownRuntimeException(e);
             }
         }
         return results;
@@ -232,7 +232,7 @@ public class Agent {
     }
 
     public void initWorkout(Workout workout, byte[] content) throws IOException {
-        heartAttacks.clear();
+        failures.clear();
 
         this.workout = workout;
         this.exerciseRecipe = null;
@@ -257,7 +257,7 @@ public class Agent {
 
         repository.load(javaInstallationsFile);
 
-        new Thread(new HeartAttackMonitor(this)).start();
+        new Thread(new FailureMonitor(this)).start();
 
         log.info("Hazelcast Assistant Agent is Ready for action");
     }

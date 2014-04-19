@@ -100,7 +100,7 @@ class Cluster {
 
     int calcSize(String sizeType) {
         switch (sizeType) {
-            case "single": return 1
+            case "micro": return 1
             case "tiny": return 2
             case "small": return 4
             case "medium": return 6

@@ -19,7 +19,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.HeartAttack;
+import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.worker.WorkerJvm;
 import com.hazelcast.stabilizer.worker.WorkerVmManager;
@@ -30,18 +30,19 @@ import java.util.List;
 
 import static com.hazelcast.stabilizer.Utils.readObject;
 
-public class HeartAttackMonitor implements Runnable {
-    final static ILogger log = Logger.getLogger(HeartAttackMonitor.class);
+public class FailureMonitor implements Runnable {
+    final static ILogger log = Logger.getLogger(FailureMonitor.class);
 
     private Agent agent;
 
-    public HeartAttackMonitor(Agent agent) {
+    public FailureMonitor(Agent agent) {
         this.agent = agent;
     }
 
-    private void addIfNotNull(List<HeartAttack> heartAttacks, HeartAttack h) {
-        if (h != null)
-            heartAttacks.add(h);
+    private void addIfNotNull(List<Failure> failures, Failure h) {
+        if (h != null) {
+            failures.add(h);
+        }
     }
 
     public void run() {
@@ -49,7 +50,7 @@ public class HeartAttackMonitor implements Runnable {
             try {
                 detect();
             } catch (Exception e) {
-                log.severe("Failed to scan for heart attacks", e);
+                log.severe("Failed to scan for failures", e);
             }
             Utils.sleepSeconds(1);
         }
@@ -60,19 +61,19 @@ public class HeartAttackMonitor implements Runnable {
 
         for (WorkerJvm jvm : workerVmManager.getWorkerJvms()) {
 
-            List<HeartAttack> heartAttacks = new LinkedList<HeartAttack>();
+            List<Failure> failures = new LinkedList<Failure>();
 
-            addIfNotNull(heartAttacks, detectOomeHeartAttackFile(jvm));
+            addIfNotNull(failures, detectOomeFailureFile(jvm));
 
-            addIfNotNull(heartAttacks, detectUnexpectedExit(jvm));
+            addIfNotNull(failures, detectUnexpectedExit(jvm));
 
-            addIfNotNull(heartAttacks, detectMembershipFailure(jvm));
+            addIfNotNull(failures, detectMembershipFailure(jvm));
 
-            if (!heartAttacks.isEmpty()) {
+            if (!failures.isEmpty()) {
                 workerVmManager.destroy(jvm);
 
-                for (HeartAttack heartAttack : heartAttacks) {
-                    agent.heartAttack(heartAttack);
+                for (Failure failure : failures) {
+                    agent.publishFailure(failure);
                 }
             }
         }
@@ -90,14 +91,14 @@ public class HeartAttackMonitor implements Runnable {
                         String workerId = name.substring(0, name.indexOf('.'));
                         log.info("workerId: " + workerId);
                         WorkerJvm jvm = workerVmManager.getWorker(workerId);
-                        HeartAttack heartAttack = new HeartAttack(
+                        Failure failure = new Failure(
                                 "Exception thrown in worker",
                                 agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                                 jvm == null ? null : jvm.getMember().getInetSocketAddress(),
                                 workerId,
                                 agent.getExerciseRecipe(),
                                 cause);
-                        agent.heartAttack(heartAttack);
+                        agent.publishFailure(failure);
                         workerVmManager.destroy(jvm);
                     }
                 }
@@ -105,7 +106,7 @@ public class HeartAttackMonitor implements Runnable {
         }
     }
 
-    private HeartAttack detectMembershipFailure(WorkerJvm jvm) {
+    private Failure detectMembershipFailure(WorkerJvm jvm) {
         //if the jvm is not assigned a hazelcast address yet.
         if (jvm.getMember() == null) {
             return null;
@@ -114,7 +115,7 @@ public class HeartAttackMonitor implements Runnable {
         Member member = findMember(jvm);
         if (member == null) {
             jvm.getProcess().destroy();
-            return new HeartAttack("Hazelcast membership failure (member missing)",
+            return new Failure("Hazelcast membership failure (member missing)",
                     agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                     jvm.getMember().getInetSocketAddress(),
                     jvm.getId(),
@@ -139,7 +140,7 @@ public class HeartAttackMonitor implements Runnable {
         return null;
     }
 
-    private HeartAttack detectOomeHeartAttackFile(WorkerJvm jvm) {
+    private Failure detectOomeFailureFile(WorkerJvm jvm) {
         File workoutDir = agent.getWorkoutHome();
         if (workoutDir == null) {
             return null;
@@ -150,21 +151,21 @@ public class HeartAttackMonitor implements Runnable {
             return null;
         }
 
-        HeartAttack heartAttack = new HeartAttack(
+        Failure failure = new Failure(
                 "out of memory",
                 agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                 jvm.getMember().getInetSocketAddress(),
                 jvm.getId(),
                 agent.getExerciseRecipe());
         jvm.getProcess().destroy();
-        return heartAttack;
+        return failure;
     }
 
-    private HeartAttack detectUnexpectedExit(WorkerJvm jvm) {
+    private Failure detectUnexpectedExit(WorkerJvm jvm) {
         Process process = jvm.getProcess();
         try {
             if (process.exitValue() != 0) {
-                return new HeartAttack(
+                return new Failure(
                         "exit code not 0",
                         agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                         jvm.getMember().getInetSocketAddress(),

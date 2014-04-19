@@ -21,7 +21,7 @@ import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import java.util.Date;
 
-public class HeartAttack implements Serializable {
+public class Failure implements Serializable {
 
     private static final long serialVersionUID = 1;
 
@@ -33,8 +33,8 @@ public class HeartAttack implements Serializable {
     private final ExerciseRecipe exerciseRecipe;
     private final Throwable cause;
 
-    public HeartAttack(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
-                       String workerId, ExerciseRecipe exerciseRecipe) {
+    public Failure(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
+                   String workerId, ExerciseRecipe exerciseRecipe) {
         this.message = message;
         this.agentAddress = agentAddress;
         this.workerId = workerId;
@@ -44,8 +44,8 @@ public class HeartAttack implements Serializable {
         this.cause = null;
     }
 
-    public HeartAttack(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
-                       String workerId, ExerciseRecipe exerciseRecipe, Throwable cause) {
+    public Failure(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
+                   String workerId, ExerciseRecipe exerciseRecipe, Throwable cause) {
         this.message = message;
         this.agentAddress = agentAddress;
         this.workerId = workerId;
@@ -86,7 +86,7 @@ public class HeartAttack implements Serializable {
     @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("HeartAttack[\n");
+        sb.append("Failure[\n");
         sb.append("   message='").append(message).append("'\n");
         sb.append("   agentAddress=").append(agentAddress).append("\n");
         sb.append("   time=").append(time).append("\n");

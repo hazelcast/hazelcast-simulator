@@ -8,7 +8,7 @@ target/
 .DS_Store
 *.log
 *.log.lck
-*.heartattack
+*.failure
 *.exception
 *.oome
 vtune/

@@ -15,9 +15,9 @@
  */
 package com.hazelcast.stabilizer;
 
-public class HeartAttackAlreadyThrownRuntimeException extends RuntimeException {
+public class FailureAlreadyThrownRuntimeException extends RuntimeException {
 
-    public HeartAttackAlreadyThrownRuntimeException(Throwable cause) {
+    public FailureAlreadyThrownRuntimeException(Throwable cause) {
         super(cause);
     }
 
