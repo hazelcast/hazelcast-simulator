@@ -19,7 +19,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.coach.Coach;
+import com.hazelcast.stabilizer.agent.Agent;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
@@ -32,8 +32,8 @@ public class CleanGym implements Callable, Serializable, HazelcastInstanceAware 
     @Override
     public Object call() throws Exception {
         try {
-            Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
-            coach.cleanGym();
+            Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
+            agent.cleanGym();
             return null;
         } catch (Exception e) {
             log.severe("Failed to spawn Trainee Virtual Machines", e);

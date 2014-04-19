@@ -26,17 +26,17 @@ public class HeartAttack implements Serializable {
     private static final long serialVersionUID = 1;
 
     private final String message;
-    private final InetSocketAddress coachAddress;
+    private final InetSocketAddress agentAddress;
     private final InetSocketAddress traineeAddress;
     private final String traineeId;
     private final Date time;
     private final ExerciseRecipe exerciseRecipe;
     private final Throwable cause;
 
-    public HeartAttack(String message, InetSocketAddress coachAddress, InetSocketAddress traineeAddress,
+    public HeartAttack(String message, InetSocketAddress agentAddress, InetSocketAddress traineeAddress,
                        String traineeId, ExerciseRecipe exerciseRecipe) {
         this.message = message;
-        this.coachAddress = coachAddress;
+        this.agentAddress = agentAddress;
         this.traineeId = traineeId;
         this.time = new Date();
         this.exerciseRecipe = exerciseRecipe;
@@ -44,10 +44,10 @@ public class HeartAttack implements Serializable {
         this.cause = null;
     }
 
-    public HeartAttack(String message, InetSocketAddress coachAddress, InetSocketAddress traineeAddress,
+    public HeartAttack(String message, InetSocketAddress agentAddress, InetSocketAddress traineeAddress,
                        String traineeId, ExerciseRecipe exerciseRecipe, Throwable cause) {
         this.message = message;
-        this.coachAddress = coachAddress;
+        this.agentAddress = agentAddress;
         this.traineeId = traineeId;
         this.time = new Date();
         this.exerciseRecipe = exerciseRecipe;
@@ -67,8 +67,8 @@ public class HeartAttack implements Serializable {
         return traineeId;
     }
 
-    public InetSocketAddress getCoachAddress() {
-        return coachAddress;
+    public InetSocketAddress getAgentAddress() {
+        return agentAddress;
     }
 
     public Date getTime() {
@@ -88,7 +88,7 @@ public class HeartAttack implements Serializable {
         StringBuffer sb = new StringBuffer();
         sb.append("HeartAttack[\n");
         sb.append("   message='").append(message).append("'\n");
-        sb.append("   coachAddress=").append(coachAddress).append("\n");
+        sb.append("   agentAddress=").append(agentAddress).append("\n");
         sb.append("   time=").append(time).append("\n");
         sb.append("   traineeAddress=").append(traineeAddress).append("\n");
         sb.append("   traineeId=").append(traineeId).append("\n");

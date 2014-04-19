@@ -9,18 +9,18 @@ public class ManagerOptionSpec {
 
     OptionParser parser = new OptionParser();
     OptionSpec cleanGymSpec = parser.accepts("cleanGym",
-            "Cleans the gym directory on all coaches");
+            "Cleans the gym directory on all agents");
     OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to run per exercise. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");
     OptionSpec traineeTrackLoggingSpec = parser.accepts("traineeTrackLogging",
-            "If the coach is tracking trainee logging");
+            "If the agent is tracking trainee logging");
     OptionSpec<Integer> traineeCountSpec = parser.accepts("traineeVmCount",
-            "Number of trainee VM's per coach")
+            "Number of trainee VM's per agent")
             .withRequiredArg().ofType(Integer.class).defaultsTo(1);
     OptionSpec<String> traineeClassPathSpec = parser.accepts("traineeClassPath",
             "A file/directory containing the " +
-                    "classes/jars/resources that are going to be uploaded to the coaches. " +
+                    "classes/jars/resources that are going to be uploaded to the agents. " +
                     "Use ';' as separator for multiple entries. Wildcard '*' can also be used.")
             .withRequiredArg().ofType(String.class);
     OptionSpec<Integer> traineeStartupTimeoutSpec = parser.accepts("traineeStartupTimeout",
@@ -72,11 +72,11 @@ public class ManagerOptionSpec {
 
     OptionSpec<String> traineeJavaVendorSpec = parser.accepts("traineeJavaVendor", "The Java vendor (e.g. " +
             "openjdk or sun) of the JVM used by the trainee). " +
-            "If nothing is specified, the coach is free to pick a vendor.")
+            "If nothing is specified, the agent is free to pick a vendor.")
             .withRequiredArg().ofType(String.class).defaultsTo("");
     OptionSpec<String> traineeJavaVersionSpec = parser.accepts("traineeJavaVersion", "The Java version (e.g. 1.6) " +
             "of the JVM used by the trainee). " +
-            "If nothing is specified, the coach is free to pick a version.")
+            "If nothing is specified, the agent is free to pick a version.")
             .withRequiredArg().ofType(String.class).defaultsTo("");
     OptionSpec<Integer> exerciseStopTimeoutMsSpec = parser.accepts("exerciseStopTimeoutMs", "Maximum amount of time " +
             "waiting for the exercise to stop")

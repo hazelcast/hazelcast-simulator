@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.coach;
+package com.hazelcast.stabilizer.agent;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
@@ -59,24 +59,24 @@ import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static java.lang.String.format;
 
-public class Coach {
+public class Agent {
 
-    private final static ILogger log = Logger.getLogger(Coach.class);
+    private final static ILogger log = Logger.getLogger(Agent.class);
     private final static File STABILIZER_HOME = getStablizerHome();
 
-    public static final String KEY_COACH = "Coach";
-    public static final String COACH_STABILIZEr_TOPIC = "Coach:stabilizerTopic";
+    public static final String KEY_AGENT = "Agent";
+    public static final String AGENT_STABILIZER_TOPIC = "Agent:stabilizerTopic";
 
     public final static File stabilizerHome = getStablizerHome();
     public final static File gymHome = new File(getStablizerHome(), "gym");
 
-    private File coachHzFile;
-    private volatile HazelcastInstance coachHz;
+    private File agentHzFile;
+    private volatile HazelcastInstance agentHz;
     private volatile ITopic statusTopic;
     private volatile Workout workout;
     private volatile ExerciseRecipe exerciseRecipe;
     private final List<HeartAttack> heartAttacks = Collections.synchronizedList(new LinkedList<HeartAttack>());
-    private IExecutorService coachExecutor;
+    private IExecutorService agentExecutor;
     private TraineeVmManager traineeVmManager;
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
     private File javaInstallationsFile;
@@ -93,8 +93,8 @@ public class Coach {
         return traineeVmManager;
     }
 
-    public HazelcastInstance getCoachHazelcastInstance() {
-        return coachHz;
+    public HazelcastInstance getAgentHazelcastInstance() {
+        return agentHz;
     }
 
     public ExerciseRecipe getExerciseRecipe() {
@@ -105,16 +105,16 @@ public class Coach {
         this.exerciseRecipe = exerciseRecipe;
     }
 
-    public void setCoachHzFile(File coachHzFile) {
-        this.coachHzFile = coachHzFile;
+    public void setAgentHzFile(File agentHzFile) {
+        this.agentHzFile = agentHzFile;
     }
 
-    public HazelcastInstance getCoachHz() {
-        return coachHz;
+    public HazelcastInstance getAgentHz() {
+        return agentHz;
     }
 
-    public File getCoachHzFile() {
-        return coachHzFile;
+    public File getAgentHzFile() {
+        return agentHzFile;
     }
 
     public void setJavaInstallationsFile(File javaInstallationsFile) {
@@ -135,10 +135,10 @@ public class Coach {
         log.info("Finished terminating workout");
     }
 
-    protected HazelcastInstance initCoachHazelcastInstance() {
+    protected HazelcastInstance initAgentHazelcastInstance() {
         FileInputStream in;
         try {
-            in = new FileInputStream(coachHzFile);
+            in = new FileInputStream(agentHzFile);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -149,17 +149,17 @@ public class Coach {
         } finally {
             closeQuietly(in);
         }
-        config.getUserContext().put(KEY_COACH, this);
-        coachHz = Hazelcast.newHazelcastInstance(config);
-        statusTopic = coachHz.getTopic(COACH_STABILIZEr_TOPIC);
+        config.getUserContext().put(KEY_AGENT, this);
+        agentHz = Hazelcast.newHazelcastInstance(config);
+        statusTopic = agentHz.getTopic(AGENT_STABILIZER_TOPIC);
         statusTopic.addMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
                 Object messageObject = message.getMessageObject();
                 if (messageObject instanceof HeartAttack) {
                     HeartAttack heartAttack = (HeartAttack) messageObject;
-                    Member localMember = coachHz.getCluster().getLocalMember();
-                    final boolean isLocal = localMember.getInetSocketAddress().equals(heartAttack.getCoachAddress());
+                    Member localMember = agentHz.getCluster().getLocalMember();
+                    final boolean isLocal = localMember.getInetSocketAddress().equals(heartAttack.getAgentAddress());
                     if (isLocal) {
                         log.severe("Local heart attack detected:" + heartAttack);
                     } else {
@@ -173,9 +173,9 @@ public class Coach {
                 }
             }
         });
-        coachExecutor = coachHz.getExecutorService("Coach:Executor");
+        agentExecutor = agentHz.getExecutorService("Agent:Executor");
 
-        return coachHz;
+        return agentHz;
     }
 
     public void heartAttack(HeartAttack heartAttack) {
@@ -203,7 +203,7 @@ public class Coach {
             } catch (ExecutionException e) {
                 final HeartAttack heartAttack = new HeartAttack(
                         taskDescription,
-                        coachHz.getCluster().getLocalMember().getInetSocketAddress(),
+                        agentHz.getCluster().getLocalMember().getInetSocketAddress(),
                         traineeJvm.getMember().getInetSocketAddress(),
                         traineeJvm.getId(),
                         exerciseRecipe,
@@ -253,28 +253,28 @@ public class Coach {
 
         traineeVmManager = new TraineeVmManager(this);
 
-        initCoachHazelcastInstance();
+        initAgentHazelcastInstance();
 
         repository.load(javaInstallationsFile);
 
         new Thread(new HeartAttackMonitor(this)).start();
 
-        log.info("Hazelcast Assistant Coach is Ready for action");
+        log.info("Hazelcast Assistant Agent is Ready for action");
     }
 
     public static void main(String[] args) throws Exception {
-        log.info("Hazelcast  Coach");
+        log.info("Hazelcast Stabilizer Agent");
         log.info(format("Version: %s\n", getVersion()));
         log.info(format("STABILIZER_HOME: %s\n", stabilizerHome));
 
         OptionParser parser = new OptionParser();
         OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
-        OptionSpec<String> coachHzFileSpec = parser.accepts("coachHzFile",
-                "The Hazelcast xml configuration file for the coach")
+        OptionSpec<String> agentHzFileSpec = parser.accepts("agentHzFile",
+                "The Hazelcast xml configuration file for the agent")
                 .withRequiredArg().ofType(String.class)
-                .defaultsTo(stabilizerHome + File.separator + "conf" + File.separator + "coach-hazelcast.xml");
+                .defaultsTo(stabilizerHome + File.separator + "conf" + File.separator + "agent-hazelcast.xml");
         OptionSpec<String> javaInstallationsFileSpec = parser.accepts("javaInstallationsFile",
-                "A property file containing the Java installations used by Trainees launched by this Coach ")
+                "A property file containing the Java installations used by Trainees launched by this Agent")
                 .withRequiredArg().ofType(String.class)
                 .defaultsTo(STABILIZER_HOME + File.separator + "conf" + File.separator + "java-installations.properties");
 
@@ -285,20 +285,20 @@ public class Coach {
                 parser.printHelpOn(System.out);
                 System.exit(0);
             }
-            Coach coach = new Coach();
+            Agent agent = new Agent();
 
             File javaInstallationsFile = new File(options.valueOf(javaInstallationsFileSpec));
             if (!javaInstallationsFile.exists()) {
                 exitWithError(format("Java Installations config file [%s] does not exist\n", javaInstallationsFile));
             }
-            coach.setJavaInstallationsFile(javaInstallationsFile);
+            agent.setJavaInstallationsFile(javaInstallationsFile);
 
-            File coachHzFile = new File(options.valueOf(coachHzFileSpec));
-            if (!coachHzFile.exists()) {
-                exitWithError(format("Coach Hazelcast config file [%s] does not exist\n", coachHzFile));
+            File agentHzFile = new File(options.valueOf(agentHzFileSpec));
+            if (!agentHzFile.exists()) {
+                exitWithError(format("Agent Hazelcast config file [%s] does not exist\n", agentHzFile));
             }
-            coach.setCoachHzFile(coachHzFile);
-            coach.start();
+            agent.setAgentHzFile(agentHzFile);
+            agent.start();
         } catch (OptionException e) {
             exitWithError(e.getMessage() + "\nUse --help to get overview of the help options.");
         }

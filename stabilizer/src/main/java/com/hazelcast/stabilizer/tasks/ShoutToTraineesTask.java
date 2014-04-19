@@ -19,7 +19,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.coach.Coach;
+import com.hazelcast.stabilizer.agent.Agent;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
@@ -41,8 +41,8 @@ public class ShoutToTraineesTask implements Callable, Serializable, HazelcastIns
     @Override
     public Object call() throws Exception {
         try {
-            Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
-            return coach.shoutToTrainees(task, taskDescription);
+            Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
+            return agent.shoutToTrainees(task, taskDescription);
         } catch (Exception e) {
             log.severe(format("Failed to execute [%s]", taskDescription), e);
             throw e;

@@ -20,7 +20,7 @@ import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.coach.Coach;
+import com.hazelcast.stabilizer.agent.Agent;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
@@ -46,8 +46,8 @@ public class TellTrainee implements Callable, Serializable, HazelcastInstanceAwa
     @Override
     public Object call() throws Exception {
         try {
-            Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
-            IExecutorService executor = coach.getTraineeVmManager().getTraineeExecutor();
+            Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
+            IExecutorService executor = agent.getTraineeVmManager().getTraineeExecutor();
             Future future = executor.submit(task);
             return future.get(timeoutSec, TimeUnit.SECONDS);
         } catch (Exception e) {

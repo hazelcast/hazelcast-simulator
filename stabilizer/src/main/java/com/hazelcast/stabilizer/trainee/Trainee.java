@@ -53,10 +53,10 @@ public class Trainee {
         this.hz = createHazelcastInstance();
         log.info("Successfully created Trainee HazelcastInstance");
 
-        signalStartToCoach();
+        signalStartToAgent();
     }
 
-    private void signalStartToCoach() {
+    private void signalStartToAgent() {
         InetSocketAddress address = hz.getCluster().getLocalMember().getInetSocketAddress();
         File file = new File(traineeId + ".address");
         writeObject(address, file);

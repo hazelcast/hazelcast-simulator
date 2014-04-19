@@ -19,7 +19,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.coach.Coach;
+import com.hazelcast.stabilizer.agent.Agent;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
@@ -37,8 +37,8 @@ public class TerminateWorkout implements Callable, Serializable, HazelcastInstan
 
         long startMs = System.currentTimeMillis();
 
-        Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
-        coach.terminateWorkout();
+        Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
+        agent.terminateWorkout();
 
         long durationMs = System.currentTimeMillis() - startMs;
         log.info(format("TerminateWorkout finished in %s ms", durationMs));

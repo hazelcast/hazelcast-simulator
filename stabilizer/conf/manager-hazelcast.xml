@@ -7,7 +7,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
     <group>
-        <name>coach</name>
+        <name>agent</name>
     </group>
 
     <network>

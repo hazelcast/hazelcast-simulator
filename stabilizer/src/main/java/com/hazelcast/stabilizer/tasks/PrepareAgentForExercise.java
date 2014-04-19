@@ -19,32 +19,32 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.coach.Coach;
+import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.ExerciseRecipe;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
 
-public class PrepareCoachForExercise implements Callable, Serializable, HazelcastInstanceAware {
-    private final static ILogger log = Logger.getLogger(PrepareCoachForExercise.class);
+public class PrepareAgentForExercise implements Callable, Serializable, HazelcastInstanceAware {
+    private final static ILogger log = Logger.getLogger(PrepareAgentForExercise.class);
 
     private transient HazelcastInstance hz;
     private final ExerciseRecipe exerciseRecipe;
 
-    public PrepareCoachForExercise(ExerciseRecipe exerciseRecipe) {
+    public PrepareAgentForExercise(ExerciseRecipe exerciseRecipe) {
         this.exerciseRecipe = exerciseRecipe;
     }
 
     @Override
     public Object call() throws Exception {
-        log.info("Preparing coach for exercise");
+        log.info("Preparing agent for exercise");
 
         try {
-            Coach coach = (Coach) hz.getUserContext().get(Coach.KEY_COACH);
-            coach.setExerciseRecipe(exerciseRecipe);
+            Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
+            agent.setExerciseRecipe(exerciseRecipe);
             return null;
         } catch (Exception e) {
-            log.severe("Failed to init coach Exercise", e);
+            log.severe("Failed to init agent Exercise", e);
             throw e;
         }
     }

@@ -11,5 +11,5 @@ echo JAVA_OPTS = ${JAVA_OPTS}
 java -cp "${STABILIZER_HOME}/lib/*" ${JAVA_OPTS} \
     -DSTABILIZER_HOME=${STABILIZER_HOME}  \
     -Dhazelcast.logging.type=log4j \
-    -Dlog4j.configuration=file:${STABILIZER_HOME}/conf/coach-log4j.xml \
-   com.hazelcast.stabilizer.coach.Coach "$@"
+    -Dlog4j.configuration=file:${STABILIZER_HOME}/conf/agent-log4j.xml \
+   com.hazelcast.stabilizer.agent.Agent "$@"

@@ -3,13 +3,14 @@
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
+    <group>
+        <name>agent</name>
+    </group>
+
     <network>
         <join>
             <multicast enabled="true"/>
         </join>
     </network>
 
-    <group>
-        <name>coach</name>
-    </group>
 </hazelcast>

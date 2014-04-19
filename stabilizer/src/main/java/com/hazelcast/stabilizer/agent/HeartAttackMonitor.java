@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.coach;
+package com.hazelcast.stabilizer.agent;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
@@ -33,10 +33,10 @@ import static com.hazelcast.stabilizer.Utils.readObject;
 public class HeartAttackMonitor implements Runnable {
     final static ILogger log = Logger.getLogger(HeartAttackMonitor.class);
 
-    private Coach coach;
+    private Agent agent;
 
-    public HeartAttackMonitor(Coach coach) {
-        this.coach = coach;
+    public HeartAttackMonitor(Agent agent) {
+        this.agent = agent;
     }
 
     private void addIfNotNull(List<HeartAttack> heartAttacks, HeartAttack h) {
@@ -56,7 +56,7 @@ public class HeartAttackMonitor implements Runnable {
     }
 
     private void detect() {
-        final TraineeVmManager traineeVmManager = coach.getTraineeVmManager();
+        final TraineeVmManager traineeVmManager = agent.getTraineeVmManager();
 
         for (TraineeVm jvm : traineeVmManager.getTraineeJvms()) {
 
@@ -72,12 +72,12 @@ public class HeartAttackMonitor implements Runnable {
                 traineeVmManager.destroy(jvm);
 
                 for (HeartAttack heartAttack : heartAttacks) {
-                    coach.heartAttack(heartAttack);
+                    agent.heartAttack(heartAttack);
                 }
             }
         }
 
-        File workoutHome = coach.getWorkoutHome();
+        File workoutHome = agent.getWorkoutHome();
         if (workoutHome != null) {
             File[] files = workoutHome.listFiles();
             if (files != null) {
@@ -92,12 +92,12 @@ public class HeartAttackMonitor implements Runnable {
                         TraineeVm jvm = traineeVmManager.getTrainee(traineeId);
                         HeartAttack heartAttack = new HeartAttack(
                                 "Exception thrown in trainee",
-                                coach.getCoachHz().getCluster().getLocalMember().getInetSocketAddress(),
+                                agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                                 jvm == null ? null : jvm.getMember().getInetSocketAddress(),
                                 traineeId,
-                                coach.getExerciseRecipe(),
+                                agent.getExerciseRecipe(),
                                 cause);
-                        coach.heartAttack(heartAttack);
+                        agent.heartAttack(heartAttack);
                         traineeVmManager.destroy(jvm);
                     }
                 }
@@ -115,17 +115,17 @@ public class HeartAttackMonitor implements Runnable {
         if (member == null) {
             jvm.getProcess().destroy();
             return new HeartAttack("Hazelcast membership failure (member missing)",
-                    coach.getCoachHz().getCluster().getLocalMember().getInetSocketAddress(),
+                    agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                     jvm.getMember().getInetSocketAddress(),
                     jvm.getId(),
-                    coach.getExerciseRecipe());
+                    agent.getExerciseRecipe());
         }
 
         return null;
     }
 
     private Member findMember(TraineeVm jvm) {
-        final HazelcastInstance traineeClient = coach.getTraineeVmManager().getTraineeClient();
+        final HazelcastInstance traineeClient = agent.getTraineeVmManager().getTraineeClient();
         if (traineeClient == null) return null;
 
         for (Member member : traineeClient.getCluster().getMembers()) {
@@ -138,7 +138,7 @@ public class HeartAttackMonitor implements Runnable {
     }
 
     private HeartAttack detectOomeHeartAttackFile(TraineeVm jvm) {
-        File workoutDir = coach.getWorkoutHome();
+        File workoutDir = agent.getWorkoutHome();
         if (workoutDir == null) {
             return null;
         }
@@ -150,10 +150,10 @@ public class HeartAttackMonitor implements Runnable {
 
         HeartAttack heartAttack = new HeartAttack(
                 "out of memory",
-                coach.getCoachHz().getCluster().getLocalMember().getInetSocketAddress(),
+                agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                 jvm.getMember().getInetSocketAddress(),
                 jvm.getId(),
-                coach.getExerciseRecipe());
+                agent.getExerciseRecipe());
         jvm.getProcess().destroy();
         return heartAttack;
     }
@@ -164,10 +164,10 @@ public class HeartAttackMonitor implements Runnable {
             if (process.exitValue() != 0) {
                 return new HeartAttack(
                         "exit code not 0",
-                        coach.getCoachHz().getCluster().getLocalMember().getInetSocketAddress(),
+                        agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                         jvm.getMember().getInetSocketAddress(),
                         jvm.getId(),
-                        coach.getExerciseRecipe());
+                        agent.getExerciseRecipe());
             }
         } catch (IllegalThreadStateException ignore) {
         }

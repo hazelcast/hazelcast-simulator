@@ -30,7 +30,7 @@ import com.hazelcast.stabilizer.ExerciseRecipe;
 import com.hazelcast.stabilizer.HeartAttack;
 import com.hazelcast.stabilizer.HeartAttackAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.coach.Coach;
+import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.exercises.Workout;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
@@ -38,7 +38,7 @@ import com.hazelcast.stabilizer.tasks.CleanGym;
 import com.hazelcast.stabilizer.tasks.GenericExerciseTask;
 import com.hazelcast.stabilizer.tasks.InitExercise;
 import com.hazelcast.stabilizer.tasks.InitWorkout;
-import com.hazelcast.stabilizer.tasks.PrepareCoachForExercise;
+import com.hazelcast.stabilizer.tasks.PrepareAgentForExercise;
 import com.hazelcast.stabilizer.tasks.ShoutToTraineesTask;
 import com.hazelcast.stabilizer.tasks.SpawnTrainees;
 import com.hazelcast.stabilizer.tasks.StopTask;
@@ -78,7 +78,7 @@ public class Manager {
     private Workout workout;
     private File managerHzFile;
     private final List<HeartAttack> heartAttackList = synchronizedList(new LinkedList<HeartAttack>());
-    private IExecutorService coachExecutor;
+    private IExecutorService agentExecutor;
     private HazelcastInstance client;
     private ITopic statusTopic;
     private volatile ExerciseRecipe exerciseRecipe;
@@ -125,21 +125,21 @@ public class Manager {
 
         if (cleanGym) {
             sendStatusUpdate("Starting cleanup gyms");
-            submitToAllAndWait(coachExecutor, new CleanGym());
+            submitToAllAndWait(agentExecutor, new CleanGym());
             sendStatusUpdate("Finished cleanup gyms");
         }
 
         byte[] bytes = createUpload();
-        submitToAllAndWait(coachExecutor, new InitWorkout(workout, bytes));
+        submitToAllAndWait(agentExecutor, new InitWorkout(workout, bytes));
 
         TraineeVmSettings traineeVmSettings = workout.getTraineeVmSettings();
         Set<Member> members = client.getCluster().getMembers();
         log.info(format("Trainee track logging: %s", traineeVmSettings.isTrackLogging()));
-        log.info(format("Trainee's per coach: %s", traineeVmSettings.getTraineeCount()));
-        log.info(format("Total number of coaches: %s", members.size()));
+        log.info(format("Trainee's per agent: %s", traineeVmSettings.getTraineeCount()));
+        log.info(format("Total number of agents: %s", members.size()));
         log.info(format("Total number of trainees: %s", members.size() * traineeVmSettings.getTraineeCount()));
 
-        ITopic heartAttackTopic = client.getTopic(Coach.COACH_STABILIZEr_TOPIC);
+        ITopic heartAttackTopic = client.getTopic(Agent.AGENT_STABILIZER_TOPIC);
         heartAttackTopic.addMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
@@ -256,7 +256,7 @@ public class Manager {
             sendStatusUpdate(exerciseRecipe.toString());
 
             sendStatusUpdate("Starting Exercise initialization");
-            submitToAllAndWait(coachExecutor, new PrepareCoachForExercise(exerciseRecipe));
+            submitToAllAndWait(agentExecutor, new PrepareAgentForExercise(exerciseRecipe));
             submitToAllTrainesAndWait(new InitExercise(exerciseRecipe), "exercise initializing");
             sendStatusUpdate("Completed Exercise initialization");
 
@@ -313,7 +313,7 @@ public class Manager {
 
     private void stopExercise() throws ExecutionException, InterruptedException {
         Callable task = new ShoutToTraineesTask(new StopTask(exerciseStopTimeoutMs), "exercise stop");
-        Map<Member, Future> map = coachExecutor.submitToAllMembers(task);
+        Map<Member, Future> map = agentExecutor.submitToAllMembers(task);
         getAllFutures(map.values());
     }
 
@@ -343,7 +343,7 @@ public class Manager {
 
     public Performance calcPerformance() {
         ShoutToTraineesTask task = new ShoutToTraineesTask(new GenericExerciseTask("calcPerformance"), "calcPerformance");
-        Map<Member, Future<List<Performance>>> result = coachExecutor.submitToAllMembers(task);
+        Map<Member, Future<List<Performance>>> result = agentExecutor.submitToAllMembers(task);
         Performance performance = null;
         for (Future<List<Performance>> future : result.values()) {
             try {
@@ -365,7 +365,7 @@ public class Manager {
 
     private void stopTrainees() throws Exception {
         sendStatusUpdate("Stopping all remaining trainees");
-        submitToAllAndWait(coachExecutor, new TerminateWorkout());
+        submitToAllAndWait(agentExecutor, new TerminateWorkout());
         sendStatusUpdate("All remaining trainees have been terminated");
     }
 
@@ -374,7 +374,7 @@ public class Manager {
         final int traineeCount = traineeVmSettings.getTraineeCount();
         final int totalTraineeCount = traineeCount * client.getCluster().getMembers().size();
         log.info(format("Starting a grand total of %s Trainee Java Virtual Machines", totalTraineeCount));
-        submitToAllAndWait(coachExecutor, new SpawnTrainees(traineeVmSettings));
+        submitToAllAndWait(agentExecutor, new SpawnTrainees(traineeVmSettings));
         long durationMs = System.currentTimeMillis() - startMs;
         log.info((format("Finished starting a grand total of %s Trainees after %s ms\n", totalTraineeCount, durationMs)));
         return startMs;
@@ -389,7 +389,7 @@ public class Manager {
     }
 
     private void submitToOneTrainee(Callable task) throws InterruptedException, ExecutionException {
-        Future future = coachExecutor.submit(new TellTrainee(task));
+        Future future = agentExecutor.submit(new TellTrainee(task));
         try {
             Object o = future.get(1000, TimeUnit.SECONDS);
         } catch (ExecutionException e) {
@@ -406,7 +406,7 @@ public class Manager {
     }
 
     private void submitToAllTrainesAndWait(Callable task, String taskDescription) throws InterruptedException, ExecutionException {
-        submitToAllAndWait(coachExecutor, new ShoutToTraineesTask(task, taskDescription));
+        submitToAllAndWait(agentExecutor, new ShoutToTraineesTask(task, taskDescription));
     }
 
     private void submitToAllAndWait(IExecutorService executorService, Callable task) throws InterruptedException, ExecutionException {
@@ -440,8 +440,8 @@ public class Manager {
     private void initClient() throws FileNotFoundException {
         ClientConfig clientConfig = new XmlClientConfigBuilder(new FileInputStream(managerHzFile)).build();
         client = HazelcastClient.newHazelcastClient(clientConfig);
-        coachExecutor = client.getExecutorService("Coach:Executor");
-        statusTopic = client.getTopic(Coach.COACH_STABILIZEr_TOPIC);
+        agentExecutor = client.getExecutorService("Agent:Executor");
+        statusTopic = client.getTopic(Agent.AGENT_STABILIZER_TOPIC);
     }
 
     public static void main(String[] args) throws Exception {

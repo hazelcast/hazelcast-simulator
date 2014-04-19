@@ -25,7 +25,7 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.coach.Coach;
+import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.JavaInstallation;
 import com.hazelcast.stabilizer.Utils;
 
@@ -56,13 +56,13 @@ public class TraineeVmManager {
     private final static AtomicLong TRAINEE_ID_GENERATOR = new AtomicLong();
 
     private final List<TraineeVm> traineeJvms = new CopyOnWriteArrayList<TraineeVm>();
-    private final Coach coach;
+    private final Agent agent;
     private volatile HazelcastInstance traineeClient;
     private volatile IExecutorService traineeExecutor;
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
-    public TraineeVmManager(Coach coach) {
-        this.coach = coach;
+    public TraineeVmManager(Agent agent) {
+        this.agent = agent;
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -123,8 +123,8 @@ public class TraineeVmManager {
         final String hzConfig = settings.getHzConfig();
 
         StringBuffer members = new StringBuffer();
-        HazelcastInstance coachHazelcastInstance = coach.getCoachHazelcastInstance();
-        Cluster cluster = coachHazelcastInstance.getCluster();
+        HazelcastInstance agentHazelcastInstance = agent.getAgentHazelcastInstance();
+        Cluster cluster = agentHazelcastInstance.getCluster();
         for (Member member : cluster.getMembers()) {
             String hostAddress = member.getSocketAddress().getAddress().getHostAddress();
             members.append("<member>").append(hostAddress).append(":5701").append("</member>\n");
@@ -136,7 +136,7 @@ public class TraineeVmManager {
     }
 
     private String getJavaHome(String javaVendor, String javaVersion) {
-        JavaInstallation installation = coach.getJavaInstallationRepository().get(javaVendor, javaVersion);
+        JavaInstallation installation = agent.getJavaInstallationRepository().get(javaVendor, javaVersion);
         if (installation != null) {
             //todo: we should send a signal
             return installation.getJavaHome();
@@ -160,7 +160,7 @@ public class TraineeVmManager {
             clientVmOptionsArray = traineeVmOptions.split("\\s+");
         }
 
-        File workoutHome = coach.getWorkoutHome();
+        File workoutHome = agent.getWorkoutHome();
         String javaHome = getJavaHome(settings.getJavaVendor(), settings.getJavaVersion());
 
         List<String> args = new LinkedList<String>();
@@ -172,7 +172,7 @@ public class TraineeVmManager {
         args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "trainee-log4j.xml");
         args.add("-classpath");
 
-        File libDir = new File(coach.getWorkoutHome(), "lib");
+        File libDir = new File(agent.getWorkoutHome(), "lib");
         String s = CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
         args.add(s);
 
@@ -238,12 +238,12 @@ public class TraineeVmManager {
         sb.append("]");
 
         throw new RuntimeException(format("Timeout: trainees %s of workout %s on host %s didn't start within %s seconds",
-                sb, coach.getWorkout().getId(), coach.getCoachHz().getCluster().getLocalMember().getInetSocketAddress(),
+                sb, agent.getWorkout().getId(), agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                 traineeTimeoutSec));
     }
 
     private InetSocketAddress readAddress(TraineeVm jvm) {
-        File workoutHome = coach.getWorkoutHome();
+        File workoutHome = agent.getWorkoutHome();
 
         File file = new File(workoutHome, jvm.getId() + ".address");
         if (!file.exists()) {
