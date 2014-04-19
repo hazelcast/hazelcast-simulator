@@ -10,5 +10,5 @@ export JAVA_OPTS="-Xms64m -Xmx1g -XX:MaxPermSize=256m -server"
 java -cp "${STABILIZER_HOME}/lib/*" ${JAVA_OPTS} \
     -DSTABILIZER_HOME=${STABILIZER_HOME} \
     -Dhazelcast.logging.type=log4j \
-    -Dlog4j.configuration=file:${STABILIZER_HOME}/conf/manager-log4j.xml \
-    com.hazelcast.stabilizer.manager.Manager "$@"
+    -Dlog4j.configuration=file:${STABILIZER_HOME}/conf/console-log4j.xml \
+    com.hazelcast.stabilizer.console.Console "$@"

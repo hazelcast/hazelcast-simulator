@@ -1,11 +1,11 @@
-package com.hazelcast.stabilizer.manager;
+package com.hazelcast.stabilizer.console;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSpec;
 
 import java.io.File;
 
-public class ManagerOptionSpec {
+public class ConsoleOptionSpec {
 
     OptionParser parser = new OptionParser();
     OptionSpec cleanGymSpec = parser.accepts("cleanGym",
@@ -51,22 +51,22 @@ public class ManagerOptionSpec {
         if(file.exists()){
             return file.getAbsolutePath();
         }else{
-            return Manager.STABILIZER_HOME + File.separator + "conf" + File.separator + "trainee-hazelcast.xml";
+            return Console.STABILIZER_HOME + File.separator + "conf" + File.separator + "trainee-hazelcast.xml";
         }
     }
 
-    OptionSpec<String> managerHzFileSpec = parser.accepts(
-            "managerHzFile", "The client Hazelcast xml configuration file for the manager")
+    OptionSpec<String> consoleHzFileSpec = parser.accepts(
+            "consoleHzFile", "The client Hazelcast xml configuration file for the console")
             .withRequiredArg().ofType(String.class).defaultsTo(
-                    getDefaultManagerHzFile());
+                    getDefaultConsoleHzFile());
 
-    static String getDefaultManagerHzFile(){
-        File file = new File("manager-hazelcast.xml");
+    static String getDefaultConsoleHzFile(){
+        File file = new File("console-hazelcast.xml");
         //if something exists in the current working directory, use that.
         if(file.exists()){
             return file.getAbsolutePath();
         }else{
-            return Manager.STABILIZER_HOME + File.separator + "conf" + File.separator + "manager-hazelcast.xml";
+            return Console.STABILIZER_HOME + File.separator + "conf" + File.separator + "console-hazelcast.xml";
         }
     }
 

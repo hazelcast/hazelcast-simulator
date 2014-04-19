@@ -56,7 +56,7 @@ class Cluster {
         echo "Starting ${privateIps.size()} agents"
         echo "=============================================================="
 
-        initManagerFile()
+        initConsoleHazelcastConfig()
 
         privateIps.each { String ip ->
             echo "Killing agent $ip"
@@ -88,10 +88,10 @@ class Cluster {
         echo "=============================================================="
     }
 
-    void initManagerFile() {
+    void initConsoleHazelcastConfig() {
         String members = ""
         privateIps.each { String memberIp -> members += "<address>$memberIp:$AGENT_PORT</address>\n" }
-        template "$STABILIZER_HOME/bin/manager-hazelcast-template.xml", "manager-hazelcast.xml", '<!--MEMBERS-->', members
+        template "$STABILIZER_HOME/bin/console-hazelcast-template.xml", "console-hazelcast.xml", '<!--MEMBERS-->', members
     }
 
     void installAgents() {

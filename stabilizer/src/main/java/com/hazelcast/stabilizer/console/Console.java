@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.manager;
+package com.hazelcast.stabilizer.console;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -70,13 +70,13 @@ import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
 import static java.util.Collections.synchronizedList;
 
-public class Manager {
+public class Console {
 
     public final static File STABILIZER_HOME = getStablizerHome();
-    private final static ILogger log = Logger.getLogger(Manager.class);
+    private final static ILogger log = Logger.getLogger(Console.class);
 
     private Workout workout;
-    private File managerHzFile;
+    private File consoleHzFile;
     private final List<HeartAttack> heartAttackList = synchronizedList(new LinkedList<HeartAttack>());
     private IExecutorService agentExecutor;
     private HazelcastInstance client;
@@ -161,7 +161,7 @@ public class Manager {
 
         runWorkout(workout);
 
-        //the manager needs to sleep some to make sure that it will get heartattacks if they are there.
+        //the console needs to sleep some to make sure that it will get heartattacks if they are there.
         log.info("Starting cooldown (10 sec)");
         Utils.sleepSeconds(10);
         log.info("Finished cooldown");
@@ -438,21 +438,21 @@ public class Manager {
     }
 
     private void initClient() throws FileNotFoundException {
-        ClientConfig clientConfig = new XmlClientConfigBuilder(new FileInputStream(managerHzFile)).build();
+        ClientConfig clientConfig = new XmlClientConfigBuilder(new FileInputStream(consoleHzFile)).build();
         client = HazelcastClient.newHazelcastClient(clientConfig);
         agentExecutor = client.getExecutorService("Agent:Executor");
         statusTopic = client.getTopic(Agent.AGENT_STABILIZER_TOPIC);
     }
 
     public static void main(String[] args) throws Exception {
-        log.info("Hazelcast Stabilizer Manager");
+        log.info("Hazelcast Stabilizer Console");
         log.info(format("Version: %s", getVersion()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
-        ManagerOptionSpec optionSpec = new ManagerOptionSpec();
+        ConsoleOptionSpec optionSpec = new ConsoleOptionSpec();
 
         OptionSet options;
-        Manager manager = new Manager();
+        Console console = new Console();
 
         try {
             options = optionSpec.parser.parse(args);
@@ -462,20 +462,20 @@ public class Manager {
                 System.exit(0);
             }
 
-            manager.setCleanGym(options.has(optionSpec.cleanGymSpec));
+            console.setCleanGym(options.has(optionSpec.cleanGymSpec));
 
             if (options.has(optionSpec.traineeClassPathSpec)) {
-                manager.setTraineeClassPath(options.valueOf(optionSpec.traineeClassPathSpec));
+                console.setTraineeClassPath(options.valueOf(optionSpec.traineeClassPathSpec));
             }
 
-            File managerHzFile = new File(options.valueOf(optionSpec.managerHzFileSpec));
-            if (!managerHzFile.exists()) {
-                exitWithError(format("Manager Hazelcast config file [%s] does not exist.\n", managerHzFile));
+            File consoleHzFile = new File(options.valueOf(optionSpec.consoleHzFileSpec));
+            if (!consoleHzFile.exists()) {
+                exitWithError(format("Console Hazelcast config file [%s] does not exist.\n", consoleHzFile));
             }
-            manager.managerHzFile = managerHzFile;
-            manager.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
-            manager.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
-            manager.exerciseStopTimeoutMs = options.valueOf(optionSpec.exerciseStopTimeoutMsSpec);
+            console.consoleHzFile = consoleHzFile;
+            console.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
+            console.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
+            console.exerciseStopTimeoutMs = options.valueOf(optionSpec.exerciseStopTimeoutMsSpec);
 
             String workoutFileName = "workout.properties";
             List<String> workoutFiles = options.nonOptionArguments();
@@ -487,7 +487,7 @@ public class Manager {
 
             Workout workout = Workout.createWorkout(new File(workoutFileName));
 
-            manager.setWorkout(workout);
+            console.setWorkout(workout);
             workout.setDuration(getDuration(optionSpec, options));
             workout.setFailFast(options.valueOf(optionSpec.failFastSpec));
 
@@ -507,7 +507,7 @@ public class Manager {
         }
 
         try {
-            manager.run();
+            console.run();
             System.exit(0);
         } catch (Exception e) {
             log.severe("Failed to run workout", e);
@@ -515,7 +515,7 @@ public class Manager {
         }
     }
 
-    private static int getDuration(ManagerOptionSpec optionSpec, OptionSet options) {
+    private static int getDuration(ConsoleOptionSpec optionSpec, OptionSet options) {
         String value = options.valueOf(optionSpec.durationSpec);
 
         try {
@@ -540,7 +540,7 @@ public class Manager {
         }
     }
 
-    private static File buildTraineeHazelcastFile(ManagerOptionSpec optionSpec, OptionSet options) {
+    private static File buildTraineeHazelcastFile(ConsoleOptionSpec optionSpec, OptionSet options) {
         File traineeHzFile = new File(options.valueOf(optionSpec.traineeHzFileSpec));
         if (!traineeHzFile.exists()) {
             exitWithError(format("Trainee Hazelcast config file [%s] does not exist.\n", traineeHzFile));
