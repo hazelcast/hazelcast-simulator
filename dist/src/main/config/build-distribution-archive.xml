@@ -26,8 +26,8 @@
             <outputDirectory>/conf</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../stabilizer/workouts</directory>
-            <outputDirectory>/workouts</outputDirectory>
+            <directory>${project.basedir}/../stabilizer/tests</directory>
+            <outputDirectory>/tests</outputDirectory>
         </fileSet>
     </fileSets>
     <dependencySets>

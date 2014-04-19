@@ -24,8 +24,8 @@ import com.hazelcast.stabilizer.agent.Agent;
 import java.io.Serializable;
 import java.util.concurrent.Callable;
 
-public class CleanGym implements Callable, Serializable, HazelcastInstanceAware {
-    private final static ILogger log = Logger.getLogger(CleanGym.class);
+public class CleanWorkersHome implements Callable, Serializable, HazelcastInstanceAware {
+    private final static ILogger log = Logger.getLogger(CleanWorkersHome.class);
 
     private transient HazelcastInstance hz;
 
@@ -33,7 +33,7 @@ public class CleanGym implements Callable, Serializable, HazelcastInstanceAware 
     public Object call() throws Exception {
         try {
             Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
-            agent.cleanGym();
+            agent.cleanWorkers();
             return null;
         } catch (Exception e) {
             log.severe("Failed to spawn Worker Virtual Machines", e);

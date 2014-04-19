@@ -8,8 +8,8 @@ import java.io.File;
 public class ConsoleOptionSpec {
 
     OptionParser parser = new OptionParser();
-    OptionSpec cleanGymSpec = parser.accepts("cleanGym",
-            "Cleans the gym directory on all agents");
+    OptionSpec cleanWorkersHome = parser.accepts("cleanWorkersHome",
+            "Cleans the workers home on all agents");
     OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");

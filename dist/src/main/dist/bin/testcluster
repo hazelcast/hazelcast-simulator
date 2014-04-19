@@ -218,13 +218,13 @@ class Cluster {
         echo "Download artifacts of ${privateIps.size()} machines"
         echo "=============================================================="
 
-        bash "mkdir -p gym"
+        bash "mkdir -p workers"
 
         privateIps.each { String ip ->
             echo "Downoading from $ip"
             bash """rsync -av -e "ssh ${config.SSH_OPTIONS}" \
-                ${config.USER}@$ip:hazelcast-stabilizer-0.1-SNAPSHOT/gym/ \
-                gym"""
+                ${config.USER}@$ip:hazelcast-stabilizer-0.1-SNAPSHOT/workers/ \
+                workers"""
         }
 
         echo "=============================================================="

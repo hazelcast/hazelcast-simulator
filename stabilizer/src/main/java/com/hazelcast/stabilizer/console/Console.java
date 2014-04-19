@@ -31,13 +31,13 @@ import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
+import com.hazelcast.stabilizer.tasks.CleanWorkersHome;
 import com.hazelcast.stabilizer.tasks.GenericTestTask;
 import com.hazelcast.stabilizer.tasks.InitTest;
 import com.hazelcast.stabilizer.tasks.PrepareAgentForTest;
 import com.hazelcast.stabilizer.tests.Workout;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
-import com.hazelcast.stabilizer.tasks.CleanGym;
 import com.hazelcast.stabilizer.tasks.InitWorkout;
 import com.hazelcast.stabilizer.tasks.ShoutToWorkersTask;
 import com.hazelcast.stabilizer.tasks.SpawnWorkers;
@@ -83,18 +83,10 @@ public class Console {
     private ITopic statusTopic;
     private volatile TestRecipe testRecipe;
     private String workerClassPath;
-    private boolean cleanGym;
+    private boolean cleanWorkersHome;
     private boolean monitorPerformance;
     private boolean verifyEnabled = true;
     private Integer testStopTimeoutMs;
-
-    public boolean isVerifyEnabled() {
-        return verifyEnabled;
-    }
-
-    public void setVerifyEnabled(boolean verifyEnabled) {
-        this.verifyEnabled = verifyEnabled;
-    }
 
     public void setWorkout(Workout workout) {
         this.workout = workout;
@@ -108,25 +100,17 @@ public class Console {
         this.workerClassPath = workerClassPath;
     }
 
-    public String getWorkerClassPath() {
-        return workerClassPath;
-    }
-
-    public void setCleanGym(boolean cleanGym) {
-        this.cleanGym = cleanGym;
-    }
-
-    public boolean isCleanGym() {
-        return cleanGym;
+     public void setCleanWorkersHome(boolean cleanWorkersHome) {
+        this.cleanWorkersHome = cleanWorkersHome;
     }
 
     private void run() throws Exception {
         initClient();
 
-        if (cleanGym) {
-            sendStatusUpdate("Starting cleanup gyms");
-            submitToAllAndWait(agentExecutor, new CleanGym());
-            sendStatusUpdate("Finished cleanup gyms");
+        if (cleanWorkersHome) {
+            sendStatusUpdate("Starting cleanup workers home");
+            submitToAllAndWait(agentExecutor, new CleanWorkersHome());
+            sendStatusUpdate("Finished cleanup workers home");
         }
 
         byte[] bytes = createUpload();
@@ -462,7 +446,7 @@ public class Console {
                 System.exit(0);
             }
 
-            console.setCleanGym(options.has(optionSpec.cleanGymSpec));
+            console.setCleanWorkersHome(options.has(optionSpec.cleanWorkersHome));
 
             if (options.has(optionSpec.workerClassPathSpec)) {
                 console.setWorkerClassPath(options.valueOf(optionSpec.workerClassPathSpec));

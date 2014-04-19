@@ -68,7 +68,7 @@ public class Agent {
     public static final String AGENT_STABILIZER_TOPIC = "Agent:stabilizerTopic";
 
     public final static File stabilizerHome = getStablizerHome();
-    public final static File gymHome = new File(getStablizerHome(), "gym");
+    public final static File workersHome = new File(getStablizerHome(), "workers");
 
     private File agentHzFile;
     private volatile HazelcastInstance agentHz;
@@ -222,11 +222,11 @@ public class Agent {
             return null;
         }
 
-        return new File(gymHome, _workout.getId());
+        return new File(workersHome, _workout.getId());
     }
 
-    public void cleanGym() throws IOException {
-        for (File file : gymHome.listFiles()) {
+    public void cleanWorkers() throws IOException {
+        for (File file : workersHome.listFiles()) {
             Utils.delete(file);
         }
     }
@@ -237,7 +237,7 @@ public class Agent {
         this.workout = workout;
         this.testRecipe = null;
 
-        File workoutDir = new File(gymHome, workout.getId());
+        File workoutDir = new File(workersHome, workout.getId());
         ensureExistingDirectory(workoutDir);
 
         File libDir = new File(workoutDir, "lib");
@@ -249,7 +249,7 @@ public class Agent {
     }
 
     public void start() throws Exception {
-        ensureExistingDirectory(gymHome);
+        ensureExistingDirectory(workersHome);
 
         workerVmManager = new WorkerVmManager(this);
 

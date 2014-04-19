@@ -12,5 +12,5 @@ target/
 *.exception
 *.oome
 vtune/
-stabilizer/gym/*
+stabilizer/workers/*
 stabilizer/logs/*
