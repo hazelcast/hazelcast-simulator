@@ -32,8 +32,8 @@ import com.hazelcast.stabilizer.HeartAttackAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.JavaInstallationsRepository;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.exercises.Workout;
-import com.hazelcast.stabilizer.trainee.TraineeVm;
-import com.hazelcast.stabilizer.trainee.TraineeVmManager;
+import com.hazelcast.stabilizer.worker.WorkerJvm;
+import com.hazelcast.stabilizer.worker.WorkerVmManager;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -77,7 +77,7 @@ public class Agent {
     private volatile ExerciseRecipe exerciseRecipe;
     private final List<HeartAttack> heartAttacks = Collections.synchronizedList(new LinkedList<HeartAttack>());
     private IExecutorService agentExecutor;
-    private TraineeVmManager traineeVmManager;
+    private WorkerVmManager workerVmManager;
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
     private File javaInstallationsFile;
 
@@ -89,8 +89,8 @@ public class Agent {
         return statusTopic;
     }
 
-    public TraineeVmManager getTraineeVmManager() {
-        return traineeVmManager;
+    public WorkerVmManager getWorkerVmManager() {
+        return workerVmManager;
     }
 
     public HazelcastInstance getAgentHazelcastInstance() {
@@ -131,7 +131,7 @@ public class Agent {
 
     public void terminateWorkout() {
         log.info("Terminating workout");
-        getTraineeVmManager().destroyAll();
+        getWorkerVmManager().destroyAll();
         log.info("Finished terminating workout");
     }
 
@@ -182,20 +182,20 @@ public class Agent {
         statusTopic.publish(heartAttack);
     }
 
-    public List shoutToTrainees(Callable task, String taskDescription) throws InterruptedException {
-        Map<TraineeVm, Future> futures = new HashMap<TraineeVm, Future>();
+    public List shoutToWorkers(Callable task, String taskDescription) throws InterruptedException {
+        Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
-         for (TraineeVm traineeJvm : traineeVmManager.getTraineeJvms()) {
-            Member member = traineeJvm.getMember();
+         for (WorkerJvm workerJvm : workerVmManager.getWorkerJvms()) {
+            Member member = workerJvm.getMember();
             if (member == null) continue;
 
-            Future future = traineeVmManager.getTraineeExecutor().submitToMember(task, member);
-            futures.put(traineeJvm, future);
+            Future future = workerVmManager.getWorkerExecutor().submitToMember(task, member);
+            futures.put(workerJvm, future);
         }
 
         List results = new LinkedList();
-        for (Map.Entry<TraineeVm, Future> entry : futures.entrySet()) {
-            TraineeVm traineeJvm = entry.getKey();
+        for (Map.Entry<WorkerJvm, Future> entry : futures.entrySet()) {
+            WorkerJvm workerJvm = entry.getKey();
             Future future = entry.getValue();
             try {
                 Object result = future.get();
@@ -204,8 +204,8 @@ public class Agent {
                 final HeartAttack heartAttack = new HeartAttack(
                         taskDescription,
                         agentHz.getCluster().getLocalMember().getInetSocketAddress(),
-                        traineeJvm.getMember().getInetSocketAddress(),
-                        traineeJvm.getId(),
+                        workerJvm.getMember().getInetSocketAddress(),
+                        workerJvm.getId(),
                         exerciseRecipe,
                         e);
                 heartAttack(heartAttack);
@@ -251,7 +251,7 @@ public class Agent {
     public void start() throws Exception {
         ensureExistingDirectory(gymHome);
 
-        traineeVmManager = new TraineeVmManager(this);
+        workerVmManager = new WorkerVmManager(this);
 
         initAgentHazelcastInstance();
 
@@ -274,7 +274,7 @@ public class Agent {
                 .withRequiredArg().ofType(String.class)
                 .defaultsTo(stabilizerHome + File.separator + "conf" + File.separator + "agent-hazelcast.xml");
         OptionSpec<String> javaInstallationsFileSpec = parser.accepts("javaInstallationsFile",
-                "A property file containing the Java installations used by Trainees launched by this Agent")
+                "A property file containing the Java installations used by Workers launched by this Agent")
                 .withRequiredArg().ofType(String.class)
                 .defaultsTo(STABILIZER_HOME + File.separator + "conf" + File.separator + "java-installations.properties");
 

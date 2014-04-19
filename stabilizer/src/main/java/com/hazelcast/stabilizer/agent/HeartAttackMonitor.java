@@ -21,8 +21,8 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.HeartAttack;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.trainee.TraineeVm;
-import com.hazelcast.stabilizer.trainee.TraineeVmManager;
+import com.hazelcast.stabilizer.worker.WorkerJvm;
+import com.hazelcast.stabilizer.worker.WorkerVmManager;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -56,9 +56,9 @@ public class HeartAttackMonitor implements Runnable {
     }
 
     private void detect() {
-        final TraineeVmManager traineeVmManager = agent.getTraineeVmManager();
+        final WorkerVmManager workerVmManager = agent.getWorkerVmManager();
 
-        for (TraineeVm jvm : traineeVmManager.getTraineeJvms()) {
+        for (WorkerJvm jvm : workerVmManager.getWorkerJvms()) {
 
             List<HeartAttack> heartAttacks = new LinkedList<HeartAttack>();
 
@@ -69,7 +69,7 @@ public class HeartAttackMonitor implements Runnable {
             addIfNotNull(heartAttacks, detectMembershipFailure(jvm));
 
             if (!heartAttacks.isEmpty()) {
-                traineeVmManager.destroy(jvm);
+                workerVmManager.destroy(jvm);
 
                 for (HeartAttack heartAttack : heartAttacks) {
                     agent.heartAttack(heartAttack);
@@ -87,25 +87,25 @@ public class HeartAttackMonitor implements Runnable {
                         Throwable cause = (Throwable) readObject(file);
                         file.delete();
 
-                        String traineeId = name.substring(0, name.indexOf('.'));
-                        log.info("traineeId: " + traineeId);
-                        TraineeVm jvm = traineeVmManager.getTrainee(traineeId);
+                        String workerId = name.substring(0, name.indexOf('.'));
+                        log.info("workerId: " + workerId);
+                        WorkerJvm jvm = workerVmManager.getWorker(workerId);
                         HeartAttack heartAttack = new HeartAttack(
-                                "Exception thrown in trainee",
+                                "Exception thrown in worker",
                                 agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                                 jvm == null ? null : jvm.getMember().getInetSocketAddress(),
-                                traineeId,
+                                workerId,
                                 agent.getExerciseRecipe(),
                                 cause);
                         agent.heartAttack(heartAttack);
-                        traineeVmManager.destroy(jvm);
+                        workerVmManager.destroy(jvm);
                     }
                 }
             }
         }
     }
 
-    private HeartAttack detectMembershipFailure(TraineeVm jvm) {
+    private HeartAttack detectMembershipFailure(WorkerJvm jvm) {
         //if the jvm is not assigned a hazelcast address yet.
         if (jvm.getMember() == null) {
             return null;
@@ -124,11 +124,13 @@ public class HeartAttackMonitor implements Runnable {
         return null;
     }
 
-    private Member findMember(TraineeVm jvm) {
-        final HazelcastInstance traineeClient = agent.getTraineeVmManager().getTraineeClient();
-        if (traineeClient == null) return null;
+    private Member findMember(WorkerJvm jvm) {
+        final HazelcastInstance workerClient = agent.getWorkerVmManager().getWorkerClient();
+        if (workerClient == null) {
+            return null;
+        }
 
-        for (Member member : traineeClient.getCluster().getMembers()) {
+        for (Member member : workerClient.getCluster().getMembers()) {
             if (member.getInetSocketAddress().equals(jvm.getMember().getInetSocketAddress())) {
                 return member;
             }
@@ -137,7 +139,7 @@ public class HeartAttackMonitor implements Runnable {
         return null;
     }
 
-    private HeartAttack detectOomeHeartAttackFile(TraineeVm jvm) {
+    private HeartAttack detectOomeHeartAttackFile(WorkerJvm jvm) {
         File workoutDir = agent.getWorkoutHome();
         if (workoutDir == null) {
             return null;
@@ -158,7 +160,7 @@ public class HeartAttackMonitor implements Runnable {
         return heartAttack;
     }
 
-    private HeartAttack detectUnexpectedExit(TraineeVm jvm) {
+    private HeartAttack detectUnexpectedExit(WorkerJvm jvm) {
         Process process = jvm.getProcess();
         try {
             if (process.exitValue() != 0) {

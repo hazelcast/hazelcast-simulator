@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.trainee;
+package com.hazelcast.stabilizer.worker;
 
 import java.io.Serializable;
 
-public class TraineeVmSettings implements Serializable {
+public class WorkerVmSettings implements Serializable {
     private String vmOptions;
     private boolean trackLogging;
     private String hzConfig;
-    private int traineeCount;
-    private int traineeStartupTimeout;
+    private int workerCount;
+    private int workerStartupTimeout;
     private boolean refreshJvm;
     private String javaVendor;
     private String javaVersion;
@@ -43,12 +43,12 @@ public class TraineeVmSettings implements Serializable {
         this.javaVersion = javaVersion;
     }
 
-    public int getTraineeStartupTimeout() {
-        return traineeStartupTimeout;
+    public int getWorkerStartupTimeout() {
+        return workerStartupTimeout;
     }
 
-    public void setTraineeStartupTimeout(int traineeStartupTimeout) {
-        this.traineeStartupTimeout = traineeStartupTimeout;
+    public void setWorkerStartupTimeout(int workerStartupTimeout) {
+        this.workerStartupTimeout = workerStartupTimeout;
     }
 
     public boolean isRefreshJvm() {
@@ -75,12 +75,12 @@ public class TraineeVmSettings implements Serializable {
         this.trackLogging = trackLogging;
     }
 
-    public int getTraineeCount() {
-        return traineeCount;
+    public int getWorkerCount() {
+        return workerCount;
     }
 
-    public void setTraineeCount(int traineeCount) {
-        this.traineeCount = traineeCount;
+    public void setWorkerCount(int workerCount) {
+        this.workerCount = workerCount;
     }
 
     public String getVmOptions() {
@@ -93,11 +93,11 @@ public class TraineeVmSettings implements Serializable {
 
     @Override
     public String toString() {
-        return "TraineeSettings{" +
+        return "WorkerSettings{" +
                 "\n  vmOptions='" + vmOptions + '\'' +
                 "\n, trackLogging=" + trackLogging +
-                "\n, traineeVmCount=" + traineeCount +
-                "\n, traineeStartupTimeout=" + traineeStartupTimeout +
+                "\n, workerJVmCount=" + workerCount +
+                "\n, workerStartupTimeout=" + workerStartupTimeout +
                 "\n, refreshJvm=" + refreshJvm +
                 "\n, javaVendor=" + javaVendor +
                 "\n, javaVersion=" + javaVersion +

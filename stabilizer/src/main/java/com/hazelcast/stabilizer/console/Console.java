@@ -39,12 +39,12 @@ import com.hazelcast.stabilizer.tasks.GenericExerciseTask;
 import com.hazelcast.stabilizer.tasks.InitExercise;
 import com.hazelcast.stabilizer.tasks.InitWorkout;
 import com.hazelcast.stabilizer.tasks.PrepareAgentForExercise;
-import com.hazelcast.stabilizer.tasks.ShoutToTraineesTask;
-import com.hazelcast.stabilizer.tasks.SpawnTrainees;
+import com.hazelcast.stabilizer.tasks.ShoutToWorkersTask;
+import com.hazelcast.stabilizer.tasks.SpawnWorkers;
 import com.hazelcast.stabilizer.tasks.StopTask;
-import com.hazelcast.stabilizer.tasks.TellTrainee;
+import com.hazelcast.stabilizer.tasks.TellWorker;
 import com.hazelcast.stabilizer.tasks.TerminateWorkout;
-import com.hazelcast.stabilizer.trainee.TraineeVmSettings;
+import com.hazelcast.stabilizer.worker.WorkerVmSettings;
 import joptsimple.OptionException;
 import joptsimple.OptionSet;
 
@@ -82,7 +82,7 @@ public class Console {
     private HazelcastInstance client;
     private ITopic statusTopic;
     private volatile ExerciseRecipe exerciseRecipe;
-    private String traineeClassPath;
+    private String workerClassPath;
     private boolean cleanGym;
     private boolean monitorPerformance;
     private boolean verifyEnabled = true;
@@ -104,12 +104,12 @@ public class Console {
         return exerciseRecipe;
     }
 
-    public void setTraineeClassPath(String traineeClassPath) {
-        this.traineeClassPath = traineeClassPath;
+    public void setWorkerClassPath(String workerClassPath) {
+        this.workerClassPath = workerClassPath;
     }
 
-    public String getTraineeClassPath() {
-        return traineeClassPath;
+    public String getWorkerClassPath() {
+        return workerClassPath;
     }
 
     public void setCleanGym(boolean cleanGym) {
@@ -132,12 +132,12 @@ public class Console {
         byte[] bytes = createUpload();
         submitToAllAndWait(agentExecutor, new InitWorkout(workout, bytes));
 
-        TraineeVmSettings traineeVmSettings = workout.getTraineeVmSettings();
+        WorkerVmSettings workerVmSettings = workout.getWorkerVmSettings();
         Set<Member> members = client.getCluster().getMembers();
-        log.info(format("Trainee track logging: %s", traineeVmSettings.isTrackLogging()));
-        log.info(format("Trainee's per agent: %s", traineeVmSettings.getTraineeCount()));
+        log.info(format("Worker track logging: %s", workerVmSettings.isTrackLogging()));
+        log.info(format("Workers per agent: %s", workerVmSettings.getWorkerCount()));
         log.info(format("Total number of agents: %s", members.size()));
-        log.info(format("Total number of trainees: %s", members.size() * traineeVmSettings.getTraineeCount()));
+        log.info(format("Total number of workers: %s", members.size() * workerVmSettings.getWorkerCount()));
 
         ITopic heartAttackTopic = client.getTopic(Agent.AGENT_STABILIZER_TOPIC);
         heartAttackTopic.addMessageListener(new MessageListener() {
@@ -190,10 +190,10 @@ public class Console {
     }
 
     private byte[] createUpload() throws IOException {
-        if (traineeClassPath == null)
+        if (workerClassPath == null)
             return null;
 
-        String[] parts = traineeClassPath.split(";");
+        String[] parts = workerClassPath.split(";");
         List<File> files = new LinkedList<File>();
         for (String filePath : parts) {
             File file = new File(filePath);
@@ -226,10 +226,10 @@ public class Console {
         sendStatusUpdate(format("Running time per exercise: %s ", secondsToHuman(workout.getDuration())));
         sendStatusUpdate(format("Expected total workout time: %s", secondsToHuman(workout.size() * workout.getDuration())));
 
-        //we need to make sure that before we start, there are no trainees running anymore.
-        //log.log(Level.INFO, "Ensuring trainee all killed");
-        stopTrainees();
-        startTrainees(workout.getTraineeVmSettings());
+        //we need to make sure that before we start, there are no workers running anymore.
+        //log.log(Level.INFO, "Ensuring workers all killed");
+        stopWorkers();
+        startWorkers(workout.getWorkerVmSettings());
 
         for (ExerciseRecipe exerciseRecipe : workout.getExerciseRecipeList()) {
             boolean success = run(workout, exerciseRecipe);
@@ -238,13 +238,13 @@ public class Console {
                 break;
             }
 
-            if (!success || workout.getTraineeVmSettings().isRefreshJvm()) {
-                stopTrainees();
-                startTrainees(workout.getTraineeVmSettings());
+            if (!success || workout.getWorkerVmSettings().isRefreshJvm()) {
+                stopWorkers();
+                startWorkers(workout.getWorkerVmSettings());
             }
         }
 
-        stopTrainees();
+        stopWorkers();
     }
 
     private boolean run(Workout workout, ExerciseRecipe exerciseRecipe) {
@@ -265,7 +265,7 @@ public class Console {
             sendStatusUpdate("Completed exercise local setup");
 
             sendStatusUpdate("Starting exercise global setup");
-            submitToOneTrainee(new GenericExerciseTask("globalSetup"));
+            submitToOneWorker(new GenericExerciseTask("globalSetup"));
             sendStatusUpdate("Completed exercise global setup");
 
             sendStatusUpdate("Starting exercise start");
@@ -286,7 +286,7 @@ public class Console {
 
             if (verifyEnabled) {
                 sendStatusUpdate("Starting exercise global verify");
-                submitToOneTrainee(new GenericExerciseTask("globalVerify"));
+                submitToOneWorker(new GenericExerciseTask("globalVerify"));
                 sendStatusUpdate("Completed exercise global verify");
 
                 sendStatusUpdate("Starting exercise local verify");
@@ -297,7 +297,7 @@ public class Console {
             }
 
             sendStatusUpdate("Starting exercise global teardown");
-            submitToOneTrainee(new GenericExerciseTask("globalTearDown"));
+            submitToOneWorker(new GenericExerciseTask("globalTearDown"));
             sendStatusUpdate("Finished exercise global teardown");
 
             sendStatusUpdate("Starting exercise local teardown");
@@ -312,7 +312,7 @@ public class Console {
     }
 
     private void stopExercise() throws ExecutionException, InterruptedException {
-        Callable task = new ShoutToTraineesTask(new StopTask(exerciseStopTimeoutMs), "exercise stop");
+        Callable task = new ShoutToWorkersTask(new StopTask(exerciseStopTimeoutMs), "exercise stop");
         Map<Member, Future> map = agentExecutor.submitToAllMembers(task);
         getAllFutures(map.values());
     }
@@ -342,7 +342,7 @@ public class Console {
     }
 
     public Performance calcPerformance() {
-        ShoutToTraineesTask task = new ShoutToTraineesTask(new GenericExerciseTask("calcPerformance"), "calcPerformance");
+        ShoutToWorkersTask task = new ShoutToWorkersTask(new GenericExerciseTask("calcPerformance"), "calcPerformance");
         Map<Member, Future<List<Performance>>> result = agentExecutor.submitToAllMembers(task);
         Performance performance = null;
         for (Future<List<Performance>> future : result.values()) {
@@ -363,20 +363,20 @@ public class Console {
         return performance == null ? new NotAvailable() : performance;
     }
 
-    private void stopTrainees() throws Exception {
-        sendStatusUpdate("Stopping all remaining trainees");
+    private void stopWorkers() throws Exception {
+        sendStatusUpdate("Stopping all remaining workers");
         submitToAllAndWait(agentExecutor, new TerminateWorkout());
-        sendStatusUpdate("All remaining trainees have been terminated");
+        sendStatusUpdate("All remaining workers have been terminated");
     }
 
-    private long startTrainees(TraineeVmSettings traineeVmSettings) throws Exception {
+    private long startWorkers(WorkerVmSettings workerVmSettings) throws Exception {
         long startMs = System.currentTimeMillis();
-        final int traineeCount = traineeVmSettings.getTraineeCount();
-        final int totalTraineeCount = traineeCount * client.getCluster().getMembers().size();
-        log.info(format("Starting a grand total of %s Trainee Java Virtual Machines", totalTraineeCount));
-        submitToAllAndWait(agentExecutor, new SpawnTrainees(traineeVmSettings));
+        final int workerCount = workerVmSettings.getWorkerCount();
+        final int totalWorkerCount = workerCount * client.getCluster().getMembers().size();
+        log.info(format("Starting a grand total of %s Worker Java Virtual Machines", totalWorkerCount));
+        submitToAllAndWait(agentExecutor, new SpawnWorkers(workerVmSettings));
         long durationMs = System.currentTimeMillis() - startMs;
-        log.info((format("Finished starting a grand total of %s Trainees after %s ms\n", totalTraineeCount, durationMs)));
+        log.info((format("Finished starting a grand total of %s Workers after %s ms\n", totalWorkerCount, durationMs)));
         return startMs;
     }
 
@@ -388,8 +388,8 @@ public class Console {
         }
     }
 
-    private void submitToOneTrainee(Callable task) throws InterruptedException, ExecutionException {
-        Future future = agentExecutor.submit(new TellTrainee(task));
+    private void submitToOneWorker(Callable task) throws InterruptedException, ExecutionException {
+        Future future = agentExecutor.submit(new TellWorker(task));
         try {
             Object o = future.get(1000, TimeUnit.SECONDS);
         } catch (ExecutionException e) {
@@ -406,7 +406,7 @@ public class Console {
     }
 
     private void submitToAllTrainesAndWait(Callable task, String taskDescription) throws InterruptedException, ExecutionException {
-        submitToAllAndWait(agentExecutor, new ShoutToTraineesTask(task, taskDescription));
+        submitToAllAndWait(agentExecutor, new ShoutToWorkersTask(task, taskDescription));
     }
 
     private void submitToAllAndWait(IExecutorService executorService, Callable task) throws InterruptedException, ExecutionException {
@@ -464,8 +464,8 @@ public class Console {
 
             console.setCleanGym(options.has(optionSpec.cleanGymSpec));
 
-            if (options.has(optionSpec.traineeClassPathSpec)) {
-                console.setTraineeClassPath(options.valueOf(optionSpec.traineeClassPathSpec));
+            if (options.has(optionSpec.workerClassPathSpec)) {
+                console.setWorkerClassPath(options.valueOf(optionSpec.workerClassPathSpec));
             }
 
             File consoleHzFile = new File(options.valueOf(optionSpec.consoleHzFileSpec));
@@ -491,17 +491,17 @@ public class Console {
             workout.setDuration(getDuration(optionSpec, options));
             workout.setFailFast(options.valueOf(optionSpec.failFastSpec));
 
-            TraineeVmSettings traineeVmSettings = new TraineeVmSettings();
-            traineeVmSettings.setTrackLogging(options.has(optionSpec.traineeTrackLoggingSpec));
-            traineeVmSettings.setVmOptions(options.valueOf(optionSpec.traineeVmOptionsSpec));
-            traineeVmSettings.setTraineeCount(options.valueOf(optionSpec.traineeCountSpec));
-            traineeVmSettings.setTraineeStartupTimeout(options.valueOf(optionSpec.traineeStartupTimeoutSpec));
-            traineeVmSettings.setHzConfig(Utils.asText(buildTraineeHazelcastFile(optionSpec, options)));
-            traineeVmSettings.setRefreshJvm(options.valueOf(optionSpec.traineeRefreshSpec));
-            traineeVmSettings.setJavaVendor(options.valueOf(optionSpec.traineeJavaVendorSpec));
-            traineeVmSettings.setJavaVersion(options.valueOf(optionSpec.traineeJavaVersionSpec));
+            WorkerVmSettings workerVmSettings = new WorkerVmSettings();
+            workerVmSettings.setTrackLogging(options.has(optionSpec.workerTrackLoggingSpec));
+            workerVmSettings.setVmOptions(options.valueOf(optionSpec.workerVmOptionsSpec));
+            workerVmSettings.setWorkerCount(options.valueOf(optionSpec.workerCountSpec));
+            workerVmSettings.setWorkerStartupTimeout(options.valueOf(optionSpec.workerStartupTimeoutSpec));
+            workerVmSettings.setHzConfig(Utils.asText(buildWorkerHazelcastFile(optionSpec, options)));
+            workerVmSettings.setRefreshJvm(options.valueOf(optionSpec.workerRefreshSpec));
+            workerVmSettings.setJavaVendor(options.valueOf(optionSpec.workerJavaVendorSpec));
+            workerVmSettings.setJavaVersion(options.valueOf(optionSpec.workerJavaVersionSpec));
 
-            workout.setTraineeVmSettings(traineeVmSettings);
+            workout.setWorkerVmSettings(workerVmSettings);
         } catch (OptionException e) {
             Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");
         }
@@ -540,12 +540,12 @@ public class Console {
         }
     }
 
-    private static File buildTraineeHazelcastFile(ConsoleOptionSpec optionSpec, OptionSet options) {
-        File traineeHzFile = new File(options.valueOf(optionSpec.traineeHzFileSpec));
-        if (!traineeHzFile.exists()) {
-            exitWithError(format("Trainee Hazelcast config file [%s] does not exist.\n", traineeHzFile));
+    private static File buildWorkerHazelcastFile(ConsoleOptionSpec optionSpec, OptionSet options) {
+        File workerHzFile = new File(options.valueOf(optionSpec.workerHzFileSpec));
+        if (!workerHzFile.exists()) {
+            exitWithError(format("Worker Hazelcast config file [%s] does not exist.\n", workerHzFile));
         }
 
-        return traineeHzFile;
+        return workerHzFile;
     }
 }

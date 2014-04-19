@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.trainee;
+package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.core.Member;
 
-public class TraineeVm {
+public class WorkerJvm {
     private final Process process;
     private final String id;
     private volatile Member member;
 
-    public TraineeVm(String id, Process process) {
+    public WorkerJvm(String id, Process process) {
         this.id = id;
         this.process = process;
     }

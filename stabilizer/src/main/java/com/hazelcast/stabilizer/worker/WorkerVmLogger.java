@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.trainee;
+package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -24,17 +24,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 
-public class TraineeVmLogger extends Thread {
-    private final static ILogger log = Logger.getLogger(TraineeVmLogger.class.getName());
+public class WorkerVmLogger extends Thread {
+    private final static ILogger log = Logger.getLogger(WorkerVmLogger.class.getName());
 
     private final InputStream inputStream;
     private final String prefix;
-    private final boolean traineeTrackLogging;
+    private final boolean workerTrackLogging;
 
-    public TraineeVmLogger(String prefix, InputStream inputStream, boolean traineeTrackLogging) {
+    public WorkerVmLogger(String prefix, InputStream inputStream, boolean workerTrackLogging) {
         this.inputStream = inputStream;
         this.prefix = prefix;
-        this.traineeTrackLogging = traineeTrackLogging;
+        this.workerTrackLogging = workerTrackLogging;
     }
 
     public void run() {
@@ -43,7 +43,7 @@ public class TraineeVmLogger extends Thread {
             for (; ; ) {
                 final String line = br.readLine();
                 if (line == null) break;
-                if (log.isLoggable(Level.INFO) && traineeTrackLogging) {
+                if (log.isLoggable(Level.INFO) && workerTrackLogging) {
                     log.info(prefix + ": " + line);
                 }
             }

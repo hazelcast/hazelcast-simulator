@@ -53,38 +53,38 @@ class Cluster {
 
     void startAgents() {
         echo "=============================================================="
-        echo "Starting ${privateIps.size()} agents"
+        echo "Starting ${privateIps.size()} Agents"
         echo "=============================================================="
 
         initConsoleHazelcastConfig()
 
         privateIps.each { String ip ->
-            echo "Killing agent $ip"
+            echo "Killing Agent $ip"
             ssh ip, "killall -9 java || true"
         }
 
         privateIps.each { String ip ->
-            echo "Starting agent $ip"
+            echo "Starting Agent $ip"
             ssh ip, "nohup hazelcast-stabilizer-0.1-SNAPSHOT/bin/agent > agent.out 2> agent.err < /dev/null &"
         }
 
         echo "=============================================================="
-        echo "Successfully started ${privateIps.size()} agents"
+        echo "Successfully started ${privateIps.size()} Agents"
         echo "=============================================================="
     }
 
     void killAgents(){
         echo "=============================================================="
-        echo "Killing ${privateIps.size()} agents"
+        echo "Killing ${privateIps.size()} Agents"
         echo "=============================================================="
 
         privateIps.each { String ip ->
-            echo "Killing agent $ip"
+            echo "Killing Agent $ip"
             ssh ip, "killall -9 java || true"
         }
 
         echo "=============================================================="
-        echo "Successfully killed ${privateIps.size()} agents"
+        echo "Successfully killed ${privateIps.size()} Agents"
         echo "=============================================================="
     }
 

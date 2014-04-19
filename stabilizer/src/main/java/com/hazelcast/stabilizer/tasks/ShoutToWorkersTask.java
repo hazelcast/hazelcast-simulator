@@ -17,47 +17,41 @@ package com.hazelcast.stabilizer.tasks;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.agent.Agent;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
-public class TellTrainee implements Callable, Serializable, HazelcastInstanceAware {
-    private final static ILogger log = Logger.getLogger(TellTrainee.class);
+import static java.lang.String.format;
 
-    private transient HazelcastInstance hz;
+public class ShoutToWorkersTask implements Callable, Serializable, HazelcastInstanceAware {
+    private final static ILogger log = Logger.getLogger(ShoutToWorkersTask.class);
+
     private final Callable task;
-    private final long timeoutSec;
+    private final String taskDescription;
+    private transient HazelcastInstance hz;
 
-    public TellTrainee(Callable task) {
-        this(task, 60);
-    }
-
-    public TellTrainee(Callable task, long timeoutSec) {
+    public ShoutToWorkersTask(Callable task, String taskDescription) {
         this.task = task;
-        this.timeoutSec = timeoutSec;
+        this.taskDescription = taskDescription;
     }
 
     @Override
     public Object call() throws Exception {
         try {
             Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
-            IExecutorService executor = agent.getTraineeVmManager().getTraineeExecutor();
-            Future future = executor.submit(task);
-            return future.get(timeoutSec, TimeUnit.SECONDS);
+            return agent.shoutToWorkers(task, taskDescription);
         } catch (Exception e) {
-            log.severe("Failed to spawn Trainee Virtual Machines", e);
+            log.severe(format("Failed to execute [%s]", taskDescription), e);
             throw e;
         }
     }
 
     @Override
-    public void setHazelcastInstance(HazelcastInstance hz) {
-        this.hz = hz;
+    public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+        this.hz = hazelcastInstance;
     }
 }
+

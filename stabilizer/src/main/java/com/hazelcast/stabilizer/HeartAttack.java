@@ -27,31 +27,31 @@ public class HeartAttack implements Serializable {
 
     private final String message;
     private final InetSocketAddress agentAddress;
-    private final InetSocketAddress traineeAddress;
-    private final String traineeId;
+    private final InetSocketAddress workerAddress;
+    private final String workerId;
     private final Date time;
     private final ExerciseRecipe exerciseRecipe;
     private final Throwable cause;
 
-    public HeartAttack(String message, InetSocketAddress agentAddress, InetSocketAddress traineeAddress,
-                       String traineeId, ExerciseRecipe exerciseRecipe) {
+    public HeartAttack(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
+                       String workerId, ExerciseRecipe exerciseRecipe) {
         this.message = message;
         this.agentAddress = agentAddress;
-        this.traineeId = traineeId;
+        this.workerId = workerId;
         this.time = new Date();
         this.exerciseRecipe = exerciseRecipe;
-        this.traineeAddress = traineeAddress;
+        this.workerAddress = workerAddress;
         this.cause = null;
     }
 
-    public HeartAttack(String message, InetSocketAddress agentAddress, InetSocketAddress traineeAddress,
-                       String traineeId, ExerciseRecipe exerciseRecipe, Throwable cause) {
+    public HeartAttack(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
+                       String workerId, ExerciseRecipe exerciseRecipe, Throwable cause) {
         this.message = message;
         this.agentAddress = agentAddress;
-        this.traineeId = traineeId;
+        this.workerId = workerId;
         this.time = new Date();
         this.exerciseRecipe = exerciseRecipe;
-        this.traineeAddress = traineeAddress;
+        this.workerAddress = workerAddress;
         this.cause = cause;
     }
 
@@ -63,8 +63,8 @@ public class HeartAttack implements Serializable {
         return message;
     }
 
-    public String getTraineeId() {
-        return traineeId;
+    public String getWorkerId() {
+        return workerId;
     }
 
     public InetSocketAddress getAgentAddress() {
@@ -79,8 +79,8 @@ public class HeartAttack implements Serializable {
         return exerciseRecipe;
     }
 
-    public InetSocketAddress getTraineeAddress() {
-        return traineeAddress;
+    public InetSocketAddress getWorkerAddress() {
+        return workerAddress;
     }
 
     @Override
@@ -90,8 +90,8 @@ public class HeartAttack implements Serializable {
         sb.append("   message='").append(message).append("'\n");
         sb.append("   agentAddress=").append(agentAddress).append("\n");
         sb.append("   time=").append(time).append("\n");
-        sb.append("   traineeAddress=").append(traineeAddress).append("\n");
-        sb.append("   traineeId=").append(traineeId).append("\n");
+        sb.append("   workerAddress=").append(workerAddress).append("\n");
+        sb.append("   workerId=").append(workerId).append("\n");
         if (exerciseRecipe != null) {
             String[] exerciseString = exerciseRecipe.toString().split("\n");
             sb.append("   exercise=").append(exerciseString[0]).append("\n");

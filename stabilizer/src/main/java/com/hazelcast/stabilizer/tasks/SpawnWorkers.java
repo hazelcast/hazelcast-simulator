@@ -20,33 +20,33 @@ import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.agent.Agent;
-import com.hazelcast.stabilizer.trainee.TraineeVmSettings;
+import com.hazelcast.stabilizer.worker.WorkerVmSettings;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
 
 import static java.lang.String.format;
 
-public class SpawnTrainees implements Callable, Serializable, HazelcastInstanceAware {
-    private final static ILogger log = Logger.getLogger(SpawnTrainees.class);
+public class SpawnWorkers implements Callable, Serializable, HazelcastInstanceAware {
+    private final static ILogger log = Logger.getLogger(SpawnWorkers.class);
 
     private transient HazelcastInstance hz;
-    private final TraineeVmSettings settings;
+    private final WorkerVmSettings settings;
 
-    public SpawnTrainees(TraineeVmSettings settings) {
+    public SpawnWorkers(WorkerVmSettings settings) {
         this.settings = settings;
     }
 
     @Override
     public Object call() throws Exception {
-        log.info(format("Spawning %s trainees", settings.getTraineeCount()));
+        log.info(format("Spawning %s workers", settings.getWorkerCount()));
 
         try {
             Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
-            agent.getTraineeVmManager().spawn(settings);
+            agent.getWorkerVmManager().spawn(settings);
             return null;
         } catch (Exception e) {
-            log.severe("Failed to spawn Trainee Virtual Machines", e);
+            log.severe("Failed to spawn Worker Virtual Machines", e);
             throw e;
         }
     }

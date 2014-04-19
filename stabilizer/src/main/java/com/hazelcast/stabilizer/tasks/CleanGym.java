@@ -36,7 +36,7 @@ public class CleanGym implements Callable, Serializable, HazelcastInstanceAware 
             agent.cleanGym();
             return null;
         } catch (Exception e) {
-            log.severe("Failed to spawn Trainee Virtual Machines", e);
+            log.severe("Failed to spawn Worker Virtual Machines", e);
             throw e;
         }
     }

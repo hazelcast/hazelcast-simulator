@@ -23,12 +23,12 @@ import static com.hazelcast.stabilizer.Utils.writeObject;
 public class ExerciseUtils {
     public final static AtomicLong HEART_ATTACK_ID = new AtomicLong(1);
 
-    public static String getTraineeId() {
-        return System.getProperty("traineeId");
+    public static String getWorkerId() {
+        return System.getProperty("workerId");
     }
 
     public static void signalHeartAttack(Throwable cause) {
-        final File file = new File(getTraineeId() + "." + HEART_ATTACK_ID.incrementAndGet() + ".exception");
+        final File file = new File(getWorkerId() + "." + HEART_ATTACK_ID.incrementAndGet() + ".exception");
         writeObject(cause, file);
     }
 

@@ -16,7 +16,7 @@
 package com.hazelcast.stabilizer.exercises;
 
 import com.hazelcast.stabilizer.ExerciseRecipe;
-import com.hazelcast.stabilizer.trainee.TraineeVmSettings;
+import com.hazelcast.stabilizer.worker.WorkerVmSettings;
 
 import java.io.File;
 import java.io.Serializable;
@@ -86,7 +86,7 @@ public class Workout implements Serializable {
 
     private List<ExerciseRecipe> exerciseRecipeList = new LinkedList<ExerciseRecipe>();
     private int duration;
-    private TraineeVmSettings traineeVmSettings;
+    private WorkerVmSettings workerVmSettings;
     private boolean failFast;
 
     public String getId() {
@@ -101,12 +101,12 @@ public class Workout implements Serializable {
         this.failFast = failFast;
     }
 
-    public TraineeVmSettings getTraineeVmSettings() {
-        return traineeVmSettings;
+    public WorkerVmSettings getWorkerVmSettings() {
+        return workerVmSettings;
     }
 
-    public void setTraineeVmSettings(TraineeVmSettings traineeVmSettings) {
-        this.traineeVmSettings = traineeVmSettings;
+    public void setWorkerVmSettings(WorkerVmSettings workerVmSettings) {
+        this.workerVmSettings = workerVmSettings;
     }
 
     public int getDuration() {
@@ -135,7 +135,7 @@ public class Workout implements Serializable {
                 "duration=" + duration +
                 ", id='" + id + '\'' +
                 ", exerciseList=" + exerciseRecipeList +
-                ", traineeSettings=" + traineeVmSettings +
+                ", workerSettings=" + workerVmSettings +
                 ", failFast=" + failFast +
                 '}';
     }
