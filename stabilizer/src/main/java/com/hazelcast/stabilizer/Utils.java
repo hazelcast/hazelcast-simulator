@@ -45,6 +45,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -327,10 +328,13 @@ public final class Utils {
         int time = seconds;
 
         int s = time % 60;
+
         time = time / 60;
         int m = time % 60;
+
         time = time / 60;
-        int h = time % 60;
+        int h = time % 24;
+
         time = time / 24;
         int days = time;
 
