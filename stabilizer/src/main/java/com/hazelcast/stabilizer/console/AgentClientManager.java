@@ -5,9 +5,11 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Workout;
 import com.hazelcast.stabilizer.worker.WorkerVmSettings;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,12 +30,15 @@ public class AgentClientManager {
 
     private final ExecutorService agentExecutor = Executors.newFixedThreadPool(100);
 
-    public AgentClientManager(Console console) {
+    public AgentClientManager(Console console, File machineListFile) {
         this.console = console;
 
-        AgentClient agentClient = new AgentClient("127.0.0.1");
-        agentClient.start();
-        agents.add(agentClient);
+        String content = Utils.asText(machineListFile);
+        for (String line : content.split("\n")) {
+            AgentClient client = new AgentClient(line);
+            client.start();
+            agents.add(client);
+        }
     }
 
     public void prepareAgentsForTests(final TestRecipe testRecipe) {
@@ -138,7 +143,7 @@ public class AgentClientManager {
                     try {
                         agentClient.initTest(testRecipe);
                         return null;
-                    }catch(RuntimeException t){
+                    } catch (RuntimeException t) {
                         log.severe(t);
                         throw t;
                     }

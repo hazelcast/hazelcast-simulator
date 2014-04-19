@@ -45,7 +45,9 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.stabilizer.Utils.asText;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
+import static com.hazelcast.stabilizer.Utils.getFile;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
@@ -68,7 +70,8 @@ public class Console {
     private boolean monitorPerformance;
     private boolean verifyEnabled = true;
     private Integer testStopTimeoutMs;
-    private AgentClientManager agentClientManager = new AgentClientManager(this);
+    private AgentClientManager agentClientManager ;
+    private File machineListFile;
 
     public void setWorkout(Workout workout) {
         this.workout = workout;
@@ -88,6 +91,8 @@ public class Console {
 
     private void run() throws Exception {
         initClient();
+
+       agentClientManager = new AgentClientManager(this,machineListFile);
 
         if (cleanWorkersHome) {
             sendStatusUpdate("Starting cleanup workers home");
@@ -402,14 +407,11 @@ public class Console {
                 console.setWorkerClassPath(options.valueOf(optionSpec.workerClassPathSpec));
             }
 
-            File consoleHzFile = new File(options.valueOf(optionSpec.consoleHzFileSpec));
-            if (!consoleHzFile.exists()) {
-                exitWithError(format("Console Hazelcast config file [%s] does not exist.\n", consoleHzFile));
-            }
-            console.consoleHzFile = consoleHzFile;
+            console.consoleHzFile = getFile(optionSpec.consoleHzFileSpec, options,"Console Hazelcast config file");
             console.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
             console.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
             console.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
+            console.machineListFile = getFile(optionSpec.machineListFileSpec,options,"Machine list file");
 
             String workoutFileName = "workout.properties";
             List<String> workoutFiles = options.nonOptionArguments();
@@ -430,7 +432,7 @@ public class Console {
             workerVmSettings.setVmOptions(options.valueOf(optionSpec.workerVmOptionsSpec));
             workerVmSettings.setWorkerCount(options.valueOf(optionSpec.workerCountSpec));
             workerVmSettings.setWorkerStartupTimeout(options.valueOf(optionSpec.workerStartupTimeoutSpec));
-            workerVmSettings.setHzConfig(Utils.asText(buildWorkerHazelcastFile(optionSpec, options)));
+            workerVmSettings.setHzConfig(asText(getFile(optionSpec.workerHzFileSpec, options, "Worker Hazelcast config file")));
             workerVmSettings.setRefreshJvm(options.valueOf(optionSpec.workerRefreshSpec));
             workerVmSettings.setJavaVendor(options.valueOf(optionSpec.workerJavaVendorSpec));
             workerVmSettings.setJavaVersion(options.valueOf(optionSpec.workerJavaVersionSpec));
@@ -474,12 +476,4 @@ public class Console {
         }
     }
 
-    private static File buildWorkerHazelcastFile(ConsoleOptionSpec optionSpec, OptionSet options) {
-        File workerHzFile = new File(options.valueOf(optionSpec.workerHzFileSpec));
-        if (!workerHzFile.exists()) {
-            exitWithError(format("Worker Hazelcast config file [%s] does not exist.\n", workerHzFile));
-        }
-
-        return workerHzFile;
-    }
 }

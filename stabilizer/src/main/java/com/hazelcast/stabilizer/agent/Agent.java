@@ -25,10 +25,10 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.JavaInstallationsRepository;
+import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Workout;
 import com.hazelcast.stabilizer.worker.WorkerJvm;
@@ -37,11 +37,15 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -54,11 +58,14 @@ import java.util.concurrent.Future;
 import static com.hazelcast.stabilizer.Utils.closeQuietly;
 import static com.hazelcast.stabilizer.Utils.ensureExistingDirectory;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
+import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static java.lang.String.format;
 
 public class Agent {
+
+    public static final String BASE_URI = format("http://%s:8080/agent/", getHostAddress());
 
     private final static ILogger log = Logger.getLogger(Agent.class);
     private final static File STABILIZER_HOME = getStablizerHome();
@@ -74,16 +81,15 @@ public class Agent {
     private volatile Workout workout;
     private volatile TestRecipe testRecipe;
     private final List<Failure> failures = Collections.synchronizedList(new LinkedList<Failure>());
-    private WorkerVmManager workerVmManager;
+    private final WorkerVmManager workerVmManager = new WorkerVmManager(this);
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
     private File javaInstallationsFile;
-    private AgentRestServer restServer = new AgentRestServer();
 
-    public Agent(){
+    public Agent() {
         agent = this;
     }
 
-    public void echo(String msg){
+    public void echo(String msg) {
         log.info(msg);
     }
 
@@ -95,7 +101,7 @@ public class Agent {
         return workerVmManager;
     }
 
-     public TestRecipe getTestRecipe() {
+    public TestRecipe getTestRecipe() {
         return testRecipe;
     }
 
@@ -167,7 +173,7 @@ public class Agent {
     public List shoutToWorkers(Callable task, String taskDescription) throws InterruptedException {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
-         for (WorkerJvm workerJvm : workerVmManager.getWorkerJvms()) {
+        for (WorkerJvm workerJvm : workerVmManager.getWorkerJvms()) {
             Member member = workerJvm.getMember();
             if (member == null) continue;
 
@@ -231,8 +237,8 @@ public class Agent {
 
     public void start() throws Exception {
         ensureExistingDirectory(WORKERS_HOME);
-        restServer.start();
-        workerVmManager = new WorkerVmManager(this);
+
+        startRestServer();
 
         initAgentHazelcastInstance();
 
@@ -241,6 +247,12 @@ public class Agent {
         new Thread(new FailureMonitor(this)).start();
 
         log.info("Stabilizer Agent is ready for action");
+    }
+
+    private void startRestServer() throws IOException {
+        ResourceConfig rc = new ResourceConfig().packages("com.hazelcast.stabilizer.agent");
+        HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
+        server.start();
     }
 
     public static void main(String[] args) throws Exception {
@@ -268,17 +280,8 @@ public class Agent {
             }
             Agent agent = new Agent();
 
-            File javaInstallationsFile = new File(options.valueOf(javaInstallationsFileSpec));
-            if (!javaInstallationsFile.exists()) {
-                exitWithError(format("Java Installations config file [%s] does not exist\n", javaInstallationsFile));
-            }
-            agent.setJavaInstallationsFile(javaInstallationsFile);
-
-            File agentHzFile = new File(options.valueOf(agentHzFileSpec));
-            if (!agentHzFile.exists()) {
-                exitWithError(format("Agent Hazelcast config file [%s] does not exist\n", agentHzFile));
-            }
-            agent.setAgentHzFile(agentHzFile);
+            agent.setJavaInstallationsFile(Utils.getFile(javaInstallationsFileSpec, options, "Java Installations config file"));
+            agent.setAgentHzFile(Utils.getFile(agentHzFileSpec, options, "Agent Hazelcast config file"));
             agent.start();
         } catch (OptionException e) {
             exitWithError(e.getMessage() + "\nUse --help to get overview of the help options.");

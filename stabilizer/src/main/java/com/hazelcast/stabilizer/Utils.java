@@ -17,6 +17,8 @@ package com.hazelcast.stabilizer;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -362,5 +364,13 @@ public final class Utils {
         } finally {
             Utils.closeQuietly(in);
         }
+    }
+
+    public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
+        File file = new File(options.valueOf(spec));
+        if (!file.exists()) {
+            exitWithError(format("%s [%s] does not exist\n", desc, file));
+        }
+        return file;
     }
 }

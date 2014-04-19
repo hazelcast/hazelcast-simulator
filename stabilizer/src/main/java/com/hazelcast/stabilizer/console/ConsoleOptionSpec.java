@@ -41,6 +41,10 @@ public class ConsoleOptionSpec {
     OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
             "Worker VM options (quotes can be used)")
             .withRequiredArg().ofType(String.class).defaultsTo("");
+    OptionSpec<String> machineListFileSpec = parser.accepts("machineListFile",
+            "The file containing the list of agent machines")
+            .withRequiredArg().ofType(String.class).defaultsTo("machine_list.txt");
+
     OptionSpec<String> workerHzFileSpec = parser.accepts("workerHzFile",
             "The Hazelcast xml configuration file for the worker")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultWorkerHzFile());
