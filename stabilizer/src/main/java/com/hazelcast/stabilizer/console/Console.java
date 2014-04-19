@@ -19,31 +19,18 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.XmlClientConfigBuilder;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Failure;
-import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
+import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
-import com.hazelcast.stabilizer.tasks.CleanWorkersHome;
-import com.hazelcast.stabilizer.tasks.GenericTestTask;
-import com.hazelcast.stabilizer.tasks.InitTest;
-import com.hazelcast.stabilizer.tasks.PrepareAgentForTest;
-import com.hazelcast.stabilizer.tests.Workout;
-import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
-import com.hazelcast.stabilizer.tasks.InitWorkout;
-import com.hazelcast.stabilizer.tasks.ShoutToWorkersTask;
-import com.hazelcast.stabilizer.tasks.SpawnWorkers;
-import com.hazelcast.stabilizer.tasks.StopTask;
-import com.hazelcast.stabilizer.tasks.TellWorker;
-import com.hazelcast.stabilizer.tasks.TerminateWorkout;
+import com.hazelcast.stabilizer.tests.Workout;
 import com.hazelcast.stabilizer.worker.WorkerVmSettings;
 import joptsimple.OptionException;
 import joptsimple.OptionSet;
@@ -52,16 +39,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
@@ -78,15 +60,15 @@ public class Console {
     private Workout workout;
     private File consoleHzFile;
     private final List<Failure> failureList = synchronizedList(new LinkedList<Failure>());
-    private IExecutorService agentExecutor;
     private HazelcastInstance client;
-    private ITopic statusTopic;
+    ITopic statusTopic;
     private volatile TestRecipe testRecipe;
     private String workerClassPath;
     private boolean cleanWorkersHome;
     private boolean monitorPerformance;
     private boolean verifyEnabled = true;
     private Integer testStopTimeoutMs;
+    private AgentClientManager agentClientManager = new AgentClientManager(this);
 
     public void setWorkout(Workout workout) {
         this.workout = workout;
@@ -100,7 +82,7 @@ public class Console {
         this.workerClassPath = workerClassPath;
     }
 
-     public void setCleanWorkersHome(boolean cleanWorkersHome) {
+    public void setCleanWorkersHome(boolean cleanWorkersHome) {
         this.cleanWorkersHome = cleanWorkersHome;
     }
 
@@ -109,12 +91,12 @@ public class Console {
 
         if (cleanWorkersHome) {
             sendStatusUpdate("Starting cleanup workers home");
-            submitToAllAndWait(agentExecutor, new CleanWorkersHome());
+            agentClientManager.cleanWorkersHome();
             sendStatusUpdate("Finished cleanup workers home");
         }
 
         byte[] bytes = createUpload();
-        submitToAllAndWait(agentExecutor, new InitWorkout(workout, bytes));
+        agentClientManager.initWorkout(workout, bytes);
 
         WorkerVmSettings workerVmSettings = workout.getWorkerVmSettings();
         Set<Member> members = client.getCluster().getMembers();
@@ -212,7 +194,7 @@ public class Console {
 
         //we need to make sure that before we start, there are no workers running anymore.
         //log.log(Level.INFO, "Ensuring workers all killed");
-        stopWorkers();
+        terminateWorkers();
         startWorkers(workout.getWorkerVmSettings());
 
         for (TestRecipe testRecipe : workout.getTestRecipeList()) {
@@ -223,12 +205,12 @@ public class Console {
             }
 
             if (!success || workout.getWorkerVmSettings().isRefreshJvm()) {
-                stopWorkers();
+                terminateWorkers();
                 startWorkers(workout.getWorkerVmSettings());
             }
         }
 
-        stopWorkers();
+        terminateWorkers();
     }
 
     private boolean run(Workout workout, TestRecipe testRecipe) {
@@ -240,20 +222,20 @@ public class Console {
             sendStatusUpdate(testRecipe.toString());
 
             sendStatusUpdate("Starting Test initialization");
-            submitToAllAndWait(agentExecutor, new PrepareAgentForTest(testRecipe));
-            submitToAllTrainesAndWait(new InitTest(testRecipe), "Test initializing");
+            agentClientManager.prepareAgentsForTests(testRecipe);
+            agentClientManager.initTest(testRecipe);
             sendStatusUpdate("Completed Test initialization");
 
             sendStatusUpdate("Starting Test local setup");
-            submitToAllTrainesAndWait(new GenericTestTask("localSetup"), "Test local setup");
+            agentClientManager.globalGenericTestTask("localSetup");
             sendStatusUpdate("Completed Test local setup");
 
             sendStatusUpdate("Starting Test global setup");
-            submitToOneWorker(new GenericTestTask("globalSetup"));
+            agentClientManager.singleGenericTestTask("globalSet");
             sendStatusUpdate("Completed Test global setup");
 
             sendStatusUpdate("Starting Test start");
-            submitToAllTrainesAndWait(new GenericTestTask("start"), "Test start");
+            agentClientManager.globalGenericTestTask("start");
             sendStatusUpdate("Completed Test start");
 
             sendStatusUpdate(format("Test running for %s seconds", workout.getDuration()));
@@ -261,7 +243,7 @@ public class Console {
             sendStatusUpdate("Test finished running");
 
             sendStatusUpdate("Starting Test stop");
-            stopTests();
+            agentClientManager.stopTest();
             sendStatusUpdate("Completed Test stop");
 
             if (monitorPerformance) {
@@ -270,22 +252,23 @@ public class Console {
 
             if (verifyEnabled) {
                 sendStatusUpdate("Starting Test global verify");
-                submitToOneWorker(new GenericTestTask("globalVerify"));
+                agentClientManager.singleGenericTestTask("globalVerify");
                 sendStatusUpdate("Completed Test global verify");
 
                 sendStatusUpdate("Starting Test local verify");
-                submitToAllTrainesAndWait(new GenericTestTask("localVerify"), "Test local verify");
+                agentClientManager.globalGenericTestTask("localVerify");
                 sendStatusUpdate("Completed Test local verify");
             } else {
                 sendStatusUpdate("Skipping Test verification");
             }
 
             sendStatusUpdate("Starting Test global teardown");
-            submitToOneWorker(new GenericTestTask("globalTearDown"));
+            agentClientManager.singleGenericTestTask("globalTearDown");
             sendStatusUpdate("Finished Test global teardown");
 
             sendStatusUpdate("Starting Test local teardown");
-            submitToAllTrainesAndWait(new GenericTestTask("localTearDown"), "Test local tearDown");
+            agentClientManager.globalGenericTestTask("localTearDown");
+
             sendStatusUpdate("Completed Test local teardown");
 
             return failureList.size() == oldCount;
@@ -295,13 +278,7 @@ public class Console {
         }
     }
 
-    private void stopTests() throws ExecutionException, InterruptedException {
-        Callable task = new ShoutToWorkersTask(new StopTask(testStopTimeoutMs), "Test stop");
-        Map<Member, Future> map = agentExecutor.submitToAllMembers(task);
-        getAllFutures(map.values());
-    }
-
-    public void sleepSeconds(int seconds) {
+      public void sleepSeconds(int seconds) {
         int period = 30;
         int big = seconds / period;
         int small = seconds % period;
@@ -326,31 +303,32 @@ public class Console {
     }
 
     public Performance calcPerformance() {
-        ShoutToWorkersTask task = new ShoutToWorkersTask(new GenericTestTask("calcPerformance"), "calcPerformance");
-        Map<Member, Future<List<Performance>>> result = agentExecutor.submitToAllMembers(task);
-        Performance performance = null;
-        for (Future<List<Performance>> future : result.values()) {
-            try {
-                List<Performance> results = future.get();
-                for (Performance p : results) {
-                    if (performance == null) {
-                        performance = p;
-                    } else {
-                        performance = performance.merge(p);
-                    }
-                }
-            } catch (InterruptedException e) {
-            } catch (ExecutionException e) {
-                log.severe(e);
-            }
-        }
-        return performance == null ? new NotAvailable() : performance;
+        return null;
+//        ShoutToWorkersTask task = new ShoutToWorkersTask(new GenericTestTask("calcPerformance"), "calcPerformance");
+//        Map<Member, Future<List<Performance>>> result = agentExecutor.submitToAllMembers(task);
+//        Performance performance = null;
+//        for (Future<List<Performance>> future : result.values()) {
+//            try {
+//                List<Performance> results = future.get();
+//                for (Performance p : results) {
+//                    if (performance == null) {
+//                        performance = p;
+//                    } else {
+//                        performance = performance.merge(p);
+//                    }
+//                }
+//            } catch (InterruptedException e) {
+//            } catch (ExecutionException e) {
+//                log.severe(e);
+//            }
+//        }
+//        return performance == null ? new NotAvailable() : performance;
     }
 
-    private void stopWorkers() throws Exception {
-        sendStatusUpdate("Stopping all remaining workers");
-        submitToAllAndWait(agentExecutor, new TerminateWorkout());
-        sendStatusUpdate("All remaining workers have been terminated");
+    private void terminateWorkers() throws Exception {
+        sendStatusUpdate("Stopping workers");
+        agentClientManager.terminateWorkers();
+        sendStatusUpdate("All workers have been terminated");
     }
 
     private long startWorkers(WorkerVmSettings workerVmSettings) throws Exception {
@@ -358,7 +336,7 @@ public class Console {
         final int workerCount = workerVmSettings.getWorkerCount();
         final int totalWorkerCount = workerCount * client.getCluster().getMembers().size();
         log.info(format("Starting a grand total of %s Worker Java Virtual Machines", totalWorkerCount));
-        submitToAllAndWait(agentExecutor, new SpawnWorkers(workerVmSettings));
+        agentClientManager.spawnWorkers(workerVmSettings);
         long durationMs = System.currentTimeMillis() - startMs;
         log.info((format("Finished starting a grand total of %s Workers after %s ms\n", totalWorkerCount, durationMs)));
         return startMs;
@@ -372,59 +350,31 @@ public class Console {
         }
     }
 
-    private void submitToOneWorker(Callable task) throws InterruptedException, ExecutionException {
-        Future future = agentExecutor.submit(new TellWorker(task));
-        try {
-            Object o = future.get(1000, TimeUnit.SECONDS);
-        } catch (ExecutionException e) {
-            if (!(e.getCause() instanceof FailureAlreadyThrownRuntimeException)) {
-                statusTopic.publish(new Failure(null, null, null, null, getTestRecipe(), e));
-            }
-            throw new RuntimeException(e);
-        } catch (TimeoutException e) {
-            Failure failure = new Failure("Timeout waiting for remote operation to complete",
-                    null, null, null, getTestRecipe(), e);
-            statusTopic.publish(failure);
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void submitToAllTrainesAndWait(Callable task, String taskDescription) throws InterruptedException, ExecutionException {
-        submitToAllAndWait(agentExecutor, new ShoutToWorkersTask(task, taskDescription));
-    }
-
-    private void submitToAllAndWait(IExecutorService executorService, Callable task) throws InterruptedException, ExecutionException {
-        Map<Member, Future> map = executorService.submitToAllMembers(task);
-        getAllFutures(map.values());
-    }
-
-    private void getAllFutures(Collection<Future> futures) throws InterruptedException, ExecutionException {
-        getAllFutures(futures, TimeUnit.SECONDS.toMillis(10000));
-    }
-
-    private void getAllFutures(Collection<Future> futures, long timeoutMs) throws InterruptedException, ExecutionException {
-        for (Future future : futures) {
-            try {
-                //todo: we should calculate remaining timeoutMs
-                Object o = future.get(timeoutMs, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                Failure failure = new Failure("Timeout waiting for remote operation to complete",
-                        null, null, null, getTestRecipe(), e);
-                statusTopic.publish(failure);
-                throw new RuntimeException(e);
-            } catch (ExecutionException e) {
-                if (!(e.getCause() instanceof FailureAlreadyThrownRuntimeException)) {
-                    statusTopic.publish(new Failure(null, null, null, null, getTestRecipe(), e));
-                }
-                throw new RuntimeException(e);
-            }
-        }
-    }
+//    private void submitToOneWorker(Callable task) throws InterruptedException, ExecutionException {
+//        Future future = agentExecutor.submit(new TellWorker(task));
+//        try {
+//            Object o = future.get(1000, TimeUnit.SECONDS);
+//        } catch (ExecutionException e) {
+//            if (!(e.getCause() instanceof FailureAlreadyThrownRuntimeException)) {
+//                statusTopic.publish(new Failure(null, null, null, null, getTestRecipe(), e));
+//            }
+//            throw new RuntimeException(e);
+//        } catch (TimeoutException e) {
+//            Failure failure = new Failure("Timeout waiting for remote operation to complete",
+//                    null, null, null, getTestRecipe(), e);
+//            statusTopic.publish(failure);
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//    private void submitToAllWorkersAndWait(Callable task, String taskDescription) throws InterruptedException, ExecutionException {
+//        ShoutToWorkersTask task1 = new ShoutToWorkersTask(task, taskDescription);
+//        submitToAllAgentsAndWait(task1);
+//    }
 
     private void initClient() throws FileNotFoundException {
         ClientConfig clientConfig = new XmlClientConfigBuilder(new FileInputStream(consoleHzFile)).build();
         client = HazelcastClient.newHazelcastClient(clientConfig);
-        agentExecutor = client.getExecutorService("Agent:Executor");
         statusTopic = client.getTopic(Agent.AGENT_STABILIZER_TOPIC);
     }
 
@@ -518,8 +468,8 @@ public class Console {
             } else {
                 return Integer.parseInt(value);
             }
-        }catch(NumberFormatException e){
-            exitWithError(format("Failed to parse duration [%s], cause: %s", value,e.getMessage()));
+        } catch (NumberFormatException e) {
+            exitWithError(format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
             return -1;
         }
     }

@@ -15,17 +15,19 @@
  */
 package com.hazelcast.stabilizer.worker;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
+@XmlRootElement
 public class WorkerVmSettings implements Serializable {
-    private String vmOptions;
-    private boolean trackLogging;
-    private String hzConfig;
-    private int workerCount;
-    private int workerStartupTimeout;
-    private boolean refreshJvm;
-    private String javaVendor;
-    private String javaVersion;
+    public String vmOptions;
+    public boolean trackLogging;
+    public String hzConfig;
+    public int workerCount;
+    public int workerStartupTimeout;
+    public boolean refreshJvm;
+    public String javaVendor;
+    public String javaVersion;
 
     public String getJavaVendor() {
         return javaVendor;

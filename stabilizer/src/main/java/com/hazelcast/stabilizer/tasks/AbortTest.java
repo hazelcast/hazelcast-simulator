@@ -26,27 +26,23 @@ import java.util.concurrent.Callable;
 
 import static java.lang.String.format;
 
-public class ShoutToWorkersTask implements Callable, Serializable, HazelcastInstanceAware {
-    private final static ILogger log = Logger.getLogger(ShoutToWorkersTask.class);
+public class AbortTest implements Callable, Serializable, HazelcastInstanceAware {
+    private final static ILogger log = Logger.getLogger(AbortTest.class);
 
-    private final Callable task;
-    private final String taskDescription;
     private transient HazelcastInstance hz;
-
-    public ShoutToWorkersTask(Callable task, String taskDescription) {
-        this.task = task;
-        this.taskDescription = taskDescription;
-    }
 
     @Override
     public Object call() throws Exception {
-        try {
-            Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
-            return agent.shoutToWorkers(task, taskDescription);
-        } catch (Exception e) {
-            log.severe(format("Failed to execute [%s]", taskDescription), e);
-            throw e;
-        }
+        log.info("AbortWorkout");
+
+        long startMs = System.currentTimeMillis();
+
+        Agent agent = (Agent) hz.getUserContext().get(Agent.KEY_AGENT);
+        agent.abortWorkout();
+
+        long durationMs = System.currentTimeMillis() - startMs;
+        log.info(format("AbortWorkout finished in %s ms", durationMs));
+        return null;
     }
 
     @Override
@@ -54,4 +50,3 @@ public class ShoutToWorkersTask implements Callable, Serializable, HazelcastInst
         this.hz = hazelcastInstance;
     }
 }
-

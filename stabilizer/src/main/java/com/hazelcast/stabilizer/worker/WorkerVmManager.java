@@ -123,7 +123,7 @@ public class WorkerVmManager {
         final String hzConfig = settings.getHzConfig();
 
         StringBuffer members = new StringBuffer();
-        HazelcastInstance agentHazelcastInstance = agent.getAgentHazelcastInstance();
+        HazelcastInstance agentHazelcastInstance = agent.getAgentHz();
         Cluster cluster = agentHazelcastInstance.getCluster();
         for (Member member : cluster.getMembers()) {
             String hostAddress = member.getSocketAddress().getAddress().getHostAddress();
@@ -253,7 +253,7 @@ public class WorkerVmManager {
         return (InetSocketAddress) Utils.readObject(file);
     }
 
-    public void destroyAll() {
+    public void terminateWorkers() {
         if (workerClient != null) {
             workerClient.getLifecycleService().shutdown();
         }

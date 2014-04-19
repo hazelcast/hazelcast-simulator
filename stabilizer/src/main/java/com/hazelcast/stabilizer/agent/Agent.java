@@ -19,7 +19,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Message;
@@ -70,34 +69,36 @@ public class Agent {
     public final static File stabilizerHome = getStablizerHome();
     public final static File workersHome = new File(getStablizerHome(), "workers");
 
+    public static volatile Agent agent;
+
     private File agentHzFile;
     private volatile HazelcastInstance agentHz;
     private volatile ITopic statusTopic;
     private volatile Workout workout;
     private volatile TestRecipe testRecipe;
     private final List<Failure> failures = Collections.synchronizedList(new LinkedList<Failure>());
-    private IExecutorService agentExecutor;
     private WorkerVmManager workerVmManager;
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
     private File javaInstallationsFile;
+    private AgentRestServer restServer = new AgentRestServer();
+
+    public Agent(){
+        agent = this;
+    }
+
+    public void echo(String msg){
+        log.info(msg);
+    }
 
     public Workout getWorkout() {
         return workout;
-    }
-
-    public ITopic getStatusTopic() {
-        return statusTopic;
     }
 
     public WorkerVmManager getWorkerVmManager() {
         return workerVmManager;
     }
 
-    public HazelcastInstance getAgentHazelcastInstance() {
-        return agentHz;
-    }
-
-    public TestRecipe getTestRecipe() {
+     public TestRecipe getTestRecipe() {
         return testRecipe;
     }
 
@@ -113,25 +114,17 @@ public class Agent {
         return agentHz;
     }
 
-    public File getAgentHzFile() {
-        return agentHzFile;
-    }
-
     public void setJavaInstallationsFile(File javaInstallationsFile) {
         this.javaInstallationsFile = javaInstallationsFile;
-    }
-
-    public File getJavaInstallationsFile() {
-        return javaInstallationsFile;
     }
 
     public JavaInstallationsRepository getJavaInstallationRepository() {
         return repository;
     }
 
-    public void terminateWorkout() {
+    public void abortWorkout() {
         log.info("Terminating workout");
-        getWorkerVmManager().destroyAll();
+        getWorkerVmManager().terminateWorkers();
         log.info("Finished terminating workout");
     }
 
@@ -173,8 +166,6 @@ public class Agent {
                 }
             }
         });
-        agentExecutor = agentHz.getExecutorService("Agent:Executor");
-
         return agentHz;
     }
 
@@ -215,7 +206,6 @@ public class Agent {
         return results;
     }
 
-
     public File getWorkoutHome() {
         Workout _workout = workout;
         if (_workout == null) {
@@ -225,7 +215,7 @@ public class Agent {
         return new File(workersHome, _workout.getId());
     }
 
-    public void cleanWorkers() throws IOException {
+    public void cleanWorkersHome() throws IOException {
         for (File file : workersHome.listFiles()) {
             Utils.delete(file);
         }
@@ -250,7 +240,7 @@ public class Agent {
 
     public void start() throws Exception {
         ensureExistingDirectory(workersHome);
-
+        restServer.start();
         workerVmManager = new WorkerVmManager(this);
 
         initAgentHazelcastInstance();
@@ -259,11 +249,11 @@ public class Agent {
 
         new Thread(new FailureMonitor(this)).start();
 
-        log.info("Hazelcast Assistant Agent is Ready for action");
+        log.info("Stabilizer Agent is ready for action");
     }
 
     public static void main(String[] args) throws Exception {
-        log.info("Hazelcast Stabilizer Agent");
+        log.info("Stabilizer Agent");
         log.info(format("Version: %s\n", getVersion()));
         log.info(format("STABILIZER_HOME: %s\n", stabilizerHome));
 

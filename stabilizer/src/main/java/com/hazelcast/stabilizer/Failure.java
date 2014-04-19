@@ -15,23 +15,25 @@
  */
 package com.hazelcast.stabilizer;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import java.util.Date;
 
+@XmlRootElement
 public class Failure implements Serializable {
 
     private static final long serialVersionUID = 1;
 
-    private final String message;
-    private final InetSocketAddress agentAddress;
-    private final InetSocketAddress workerAddress;
-    private final String workerId;
-    private final Date time;
-    private final TestRecipe testRecipe;
-    private final Throwable cause;
+    public String message;
+    public InetSocketAddress agentAddress;
+    public InetSocketAddress workerAddress;
+    public String workerId;
+    public Date time;
+    public TestRecipe testRecipe;
+    public Throwable cause;
 
     public Failure(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
                    String workerId, TestRecipe testRecipe) {
