@@ -5,6 +5,7 @@ class Cluster {
     def AGENT_PORT = '8701'
     def config
     def STABILIZER_HOME
+    def STABILIZER_VERSION = "0.1-SNAPSHOT"
     def machineListFile = new File("machine_list.txt")
     def knownHostsFile = new File(new File(System.getProperty("user.home"), ".ssh"), "known_hosts")
 
@@ -37,11 +38,9 @@ class Cluster {
 
         echo "Copying stabilizer files"
         //first we remove the old files
-        sshQuiet ip, "rm -fr hazelcast-stabilizer-0.1-SNAPSHOT"
+        sshQuiet ip, "rm -fr hazelcast-stabilizer-${STABILIZER_VERSION}"
         //then we copy the stabilizer directory
         scpToRemote ip, STABILIZER_HOME, ""
-        //we need to override the hazelcast config file with the one we generated.
-        scpToRemote ip, 'agent-hazelcast.xml', 'hazelcast-stabilizer-0.1-SNAPSHOT/conf/'
 
         echo "=============================================================="
         echo "Successfully installed Agent on ${ip}"
@@ -60,7 +59,7 @@ class Cluster {
 
         privateIps.each { String ip ->
             echo "Starting Agent $ip"
-            ssh ip, "nohup hazelcast-stabilizer-0.1-SNAPSHOT/bin/agent > agent.out 2> agent.err < /dev/null &"
+            ssh ip, "nohup hazelcast-stabilizer-${STABILIZER_VERSION}/bin/agent > agent.out 2> agent.err < /dev/null &"
         }
 
         echo "=============================================================="
@@ -99,8 +98,12 @@ class Cluster {
             case "3xlarge": return 100
             case "4xlarge": return 190
             default:
-                println "Unknown size: $sizeType"
-                System.exit 1
+                try {
+                    return Integer.parseInt(sizeType)
+                }catch(NumberFormatException e) {
+                    println "Unknown size: $sizeType"
+                    System.exit 1
+                }
         }
     }
 
@@ -116,7 +119,8 @@ class Cluster {
     }
 
     private void scaleUp(int delta) {
-        echo "echo Starting ${delta} ${config.INSTANCE_TYPE} machines"
+        echo "Starting ${delta} ${config.INSTANCE_TYPE} machines"
+        echo "On EC2 this will take +/- 100 'scans'."
 
         def output = """ec2-run-instances \
             --availability-zone ${config.AVAILABILITY_ZONE} \
@@ -216,7 +220,7 @@ class Cluster {
         privateIps.each { String ip ->
             echo "Downoading from $ip"
             bash """rsync -av -e "ssh ${config.SSH_OPTIONS}" \
-                ${config.USER}@$ip:hazelcast-stabilizer-0.1-SNAPSHOT/workers/ \
+                ${config.USER}@$ip:hazelcast-stabilizer-${STABILIZER_VERSION}/workers/ \
                 workers"""
         }
 
