@@ -47,7 +47,7 @@ public class AgentRestService {
             agent.getWorkerJvmManager().spawn(settings);
             return "OK";
         } catch (Exception e) {
-            e.printStackTrace();
+            log.severe("Failed to spawn workers",e);
             throw e;
         }
     }
@@ -89,7 +89,7 @@ public class AgentRestService {
             agent.getWorkerJvmManager().cleanWorkersHome();
             return "OK";
         } catch (Exception e) {
-            e.printStackTrace();
+            log.severe("Failed to clean workers home", e);
             throw e;
         }
     }
@@ -102,7 +102,7 @@ public class AgentRestService {
             agent.getWorkerJvmManager().terminateWorkers();
             return "OK";
         } catch (Exception e) {
-            e.printStackTrace();
+            log.severe("Failed to terminate workers", e);
             throw e;
         }
     }
@@ -118,7 +118,7 @@ public class AgentRestService {
             workerJvmManager.terminateWorkers();
             return "OK";
         } catch (Exception e) {
-            e.printStackTrace();
+            log.severe("Failed to stop test", e);
             throw e;
         }
     }
@@ -148,7 +148,7 @@ public class AgentRestService {
             agent.echo(msg);
             return "OK";
         } catch (Exception e) {
-            e.printStackTrace();
+            log.severe("Failed to echo", e);
             throw e;
         }
     }
