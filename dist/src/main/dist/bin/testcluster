@@ -36,6 +36,9 @@ class Cluster {
         sshQuiet ip, "sudo apt-get install -y openjdk-7-jdk || true"
 
         echo "Copying stabilizer files"
+        //first we remove the old files
+        sshQuiet ip, "rm -fr hazelcast-stabilizer-0.1-SNAPSHOT"
+        //then we copy the stabilizer directory
         scpToRemote ip, STABILIZER_HOME, ""
         //we need to override the hazelcast config file with the one we generated.
         scpToRemote ip, 'agent-hazelcast.xml', 'hazelcast-stabilizer-0.1-SNAPSHOT/conf/'
@@ -114,7 +117,6 @@ class Cluster {
 
     private void scaleUp(int delta) {
         echo "echo Starting ${delta} ${config.INSTANCE_TYPE} machines"
-
 
         def output = """ec2-run-instances \
             --availability-zone ${config.AVAILABILITY_ZONE} \

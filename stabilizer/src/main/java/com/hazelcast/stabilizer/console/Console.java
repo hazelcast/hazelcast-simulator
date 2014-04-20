@@ -262,10 +262,10 @@ public class Console {
         long startMs = System.currentTimeMillis();
         final int workerCount = workerJvmSettings.workerCount;
         final int totalWorkerCount = workerCount * agentClientManager.getAgentCount();
-        log.info(format("Starting a grand total of %s Worker Java Virtual Machines", totalWorkerCount));
+        log.info(format("Starting a grand total of %s Worker JVM's", totalWorkerCount));
         agentClientManager.spawnWorkers(workerJvmSettings);
         long durationMs = System.currentTimeMillis() - startMs;
-        log.info((format("Finished starting a grand total of %s Workers after %s ms\n", totalWorkerCount, durationMs)));
+        log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms\n", totalWorkerCount, durationMs)));
         return startMs;
     }
 

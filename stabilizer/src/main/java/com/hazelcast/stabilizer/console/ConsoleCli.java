@@ -20,16 +20,21 @@ import static java.lang.String.format;
 public class ConsoleCli {
 
     private final OptionParser parser = new OptionParser();
+
     private final OptionSpec cleanWorkersHome = parser.accepts("cleanWorkersHome",
             "Cleans the workers home on all agents");
+
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");
+
     private final OptionSpec workerTrackLoggingSpec = parser.accepts("workerTrackLogging",
             "If the agent is tracking worker logging");
+
     private final OptionSpec<Integer> workerCountSpec = parser.accepts("workerVmCount",
             "Number of worker JVM's per agent")
             .withRequiredArg().ofType(Integer.class).defaultsTo(1);
+
     private final OptionSpec<String> workerClassPathSpec = parser.accepts("workerClassPath",
             "A file/directory containing the " +
                     "classes/jars/resources that are going to be uploaded to the agents. " +
@@ -39,21 +44,27 @@ public class ConsoleCli {
     private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
             "The startup timeout in seconds for a worker")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
+
     private final OptionSpec<Boolean> monitorPerformanceSpec = parser.accepts("monitorPerformance",
             "If performance monitoring should be done")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
             "If test should be verified")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
     private final OptionSpec<Boolean> workerRefreshSpec = parser.accepts("workerFresh",
             "If the worker JVM's should be replaced after every workout")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
     private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
             "It the workout should fail immediately when a Test from a workout fails instead of continuing ")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
             "Worker VM options (quotes can be used)")
             .withRequiredArg().ofType(String.class).defaultsTo("");
+
     private final OptionSpec<String> machineListFileSpec = parser.accepts("machineListFile",
             "The file containing the list of agent machines")
             .withRequiredArg().ofType(String.class).defaultsTo("machine_list.txt");
@@ -62,13 +73,15 @@ public class ConsoleCli {
             "The Hazelcast xml configuration file for the worker")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultWorkerHzFile());
 
-       private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
-               "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
-            "If nothing is specified, the agent is free to pick a vendor.")
+    private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
+            "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
+                    "If nothing is specified, the agent is free to pick a vendor."
+    )
             .withRequiredArg().ofType(String.class).defaultsTo("");
     private final OptionSpec<String> workerJavaVersionSpec = parser.accepts("workerJavaVersion",
             "The Java version (e.g. 1.6) of the JVM used by the worker). " +
-            "If nothing is specified, the agent is free to pick a version.")
+                    "If nothing is specified, the agent is free to pick a version."
+    )
             .withRequiredArg().ofType(String.class).defaultsTo("");
     private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs",
             "Maximum amount of time waiting for the Test to stop")
