@@ -199,7 +199,6 @@ public class FailureMonitor {
     private class DetectThread extends Thread {
         public DetectThread() {
             super("FailureMonitorThread");
-            setDaemon(true);
         }
 
         public void run() {

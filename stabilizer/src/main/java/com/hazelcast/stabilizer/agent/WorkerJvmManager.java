@@ -19,7 +19,6 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.core.Cluster;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.Member;
@@ -132,7 +131,7 @@ public class WorkerJvmManager {
         return workerJvms;
     }
 
-    public void spawn(WorkerVmSettings settings) throws Exception {
+    public void spawn(WorkerJvmSettings settings) throws Exception {
         log.info(format("Starting %s worker Java Virtual Machines using settings\n %s", settings.workerCount, settings));
 
         File workerHzFile = createHazelcastConfigFile(settings);
@@ -163,21 +162,10 @@ public class WorkerJvmManager {
         log.info(format("Finished starting %s worker Java Virtual Machines", settings.workerCount));
     }
 
-    private File createHazelcastConfigFile(WorkerVmSettings settings) throws IOException {
+    private File createHazelcastConfigFile(WorkerJvmSettings settings) throws IOException {
         File workerHzFile = File.createTempFile("worker-hazelcast", "xml");
         workerHzFile.deleteOnExit();
-        final String hzConfig = settings.hzConfig;
-
-        StringBuffer members = new StringBuffer();
-        HazelcastInstance agentHazelcastInstance = null;//agent.getAgentHz();
-        Cluster cluster = agentHazelcastInstance.getCluster();
-        for (Member member : cluster.getMembers()) {
-            String hostAddress = member.getSocketAddress().getAddress().getHostAddress();
-            members.append("<member>").append(hostAddress).append(":5701").append("</member>\n");
-        }
-
-        String enhancedHzConfig = hzConfig.replace("<!--MEMBERS-->", members);
-        Utils.writeText(enhancedHzConfig, workerHzFile);
+        Utils.writeText(settings.hzConfig,workerHzFile);
         return workerHzFile;
     }
 
@@ -197,7 +185,7 @@ public class WorkerJvmManager {
         return javaHome;
     }
 
-    private WorkerJvm startWorkerJvm(WorkerVmSettings settings, File workerHzFile) throws IOException {
+    private WorkerJvm startWorkerJvm(WorkerJvmSettings settings, File workerHzFile) throws IOException {
         String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet();
 
         String workerVmOptions = settings.vmOptions;

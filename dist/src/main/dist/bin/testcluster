@@ -2,8 +2,6 @@
 
 class Cluster {
 
-    def COMMAND = "startmachines"
-    def CLUSTER_SIZE = "small"
     def AGENT_PORT = '8701'
     def config
     def STABILIZER_HOME

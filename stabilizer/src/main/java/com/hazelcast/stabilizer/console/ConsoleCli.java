@@ -1,7 +1,7 @@
 package com.hazelcast.stabilizer.console;
 
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.agent.WorkerVmSettings;
+import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.Workout;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -121,16 +121,16 @@ public class ConsoleCli {
             workout.duration = getDuration(optionSpec, options);
             workout.failFast = options.valueOf(optionSpec.failFastSpec);
 
-            WorkerVmSettings workerVmSettings = new WorkerVmSettings();
-            workerVmSettings.trackLogging = options.has(optionSpec.workerTrackLoggingSpec);
-            workerVmSettings.vmOptions = options.valueOf(optionSpec.workerVmOptionsSpec);
-            workerVmSettings.workerCount = options.valueOf(optionSpec.workerCountSpec);
-            workerVmSettings.workerStartupTimeout = options.valueOf(optionSpec.workerStartupTimeoutSpec);
-            workerVmSettings.hzConfig = asText(getFile(optionSpec.workerHzFileSpec, options, "Worker Hazelcast config file"));
-            workerVmSettings.refreshJvm = options.valueOf(optionSpec.workerRefreshSpec);
-            workerVmSettings.javaVendor = options.valueOf(optionSpec.workerJavaVendorSpec);
-            workerVmSettings.javaVersion = options.valueOf(optionSpec.workerJavaVersionSpec);
-            workout.workerVmSettings = workerVmSettings;
+            WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
+            workerJvmSettings.trackLogging = options.has(optionSpec.workerTrackLoggingSpec);
+            workerJvmSettings.vmOptions = options.valueOf(optionSpec.workerVmOptionsSpec);
+            workerJvmSettings.workerCount = options.valueOf(optionSpec.workerCountSpec);
+            workerJvmSettings.workerStartupTimeout = options.valueOf(optionSpec.workerStartupTimeoutSpec);
+            workerJvmSettings.hzConfig = asText(getFile(optionSpec.workerHzFileSpec, options, "Worker Hazelcast config file"));
+            workerJvmSettings.refreshJvm = options.valueOf(optionSpec.workerRefreshSpec);
+            workerJvmSettings.javaVendor = options.valueOf(optionSpec.workerJavaVendorSpec);
+            workerJvmSettings.javaVersion = options.valueOf(optionSpec.workerJavaVersionSpec);
+            workout.workerJvmSettings = workerJvmSettings;
         } catch (OptionException e) {
             Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");
         }

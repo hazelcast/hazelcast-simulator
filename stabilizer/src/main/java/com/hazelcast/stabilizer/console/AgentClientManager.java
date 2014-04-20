@@ -7,7 +7,7 @@ import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Workout;
-import com.hazelcast.stabilizer.agent.WorkerVmSettings;
+import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 
 import java.io.File;
 import java.util.Collection;
@@ -45,7 +45,7 @@ public class AgentClientManager {
         return agents.size();
     }
 
-    public List<String> getHostNames(){
+    public List<String> getHostAddresses(){
         List<String> result = new LinkedList();
         for(AgentClient client: agents){
             result.add(client.getHost());
@@ -177,13 +177,13 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public void spawnWorkers(final WorkerVmSettings workerVmSettings) {
+    public void spawnWorkers(final WorkerJvmSettings workerJvmSettings) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.spawnWorkers(workerVmSettings);
+                    agentClient.spawnWorkers(workerJvmSettings);
                     return null;
                 }
             });

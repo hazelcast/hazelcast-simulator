@@ -3,7 +3,7 @@ package com.hazelcast.stabilizer.console;
 import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.tests.Workout;
-import com.hazelcast.stabilizer.agent.WorkerVmSettings;
+import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -44,7 +44,7 @@ public class AgentClient {
         target = c.target(baseUrl);
     }
 
-    public void spawnWorkers(WorkerVmSettings settings) {
+    public void spawnWorkers(WorkerJvmSettings settings) {
         Response response = target
                 .path("agent/spawnWorkers")
                 .request(MediaType.TEXT_PLAIN)

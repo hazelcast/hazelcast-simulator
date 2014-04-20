@@ -20,7 +20,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.agent.WorkerVmSettings;
+import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.Workout;
 
@@ -53,8 +53,7 @@ public class Console {
 
     //internal state.
     private final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
-    private volatile TestRecipe testRecipe;
-    private AgentClientManager agentClientManager;
+   private AgentClientManager agentClientManager;
 
     private void run() throws Exception {
         agentClientManager = new AgentClientManager(this, machineListFile);
@@ -70,12 +69,14 @@ public class Console {
         byte[] bytes = createUpload();
         agentClientManager.initWorkout(workout, bytes);
 
-        WorkerVmSettings workerVmSettings = workout.workerVmSettings;
+        WorkerJvmSettings workerJvmSettings = workout.workerJvmSettings;
+        initWorkerConfig(workerJvmSettings);
+
         int agentCount = agentClientManager.getAgentCount();
-        log.info(format("Worker track logging: %s", workerVmSettings.trackLogging));
-        log.info(format("Workers per agent: %s", workerVmSettings.workerCount));
+        log.info(format("Worker track logging: %s", workerJvmSettings.trackLogging));
+        log.info(format("Workers per agent: %s", workerJvmSettings.workerCount));
         log.info(format("Total number of agents: %s", agentCount));
-        log.info(format("Total number of workers: %s", agentCount * workerVmSettings.workerCount));
+        log.info(format("Total number of workers: %s", agentCount * workerJvmSettings.workerCount));
 
         long startMs = System.currentTimeMillis();
 
@@ -105,6 +106,15 @@ public class Console {
             log.severe(sb.toString());
             System.exit(1);
         }
+    }
+
+    private void initWorkerConfig(WorkerJvmSettings settings){
+        StringBuffer members = new StringBuffer();
+        for (String hostAddress:agentClientManager.getHostAddresses()) {
+            members.append("<member>").append(hostAddress).append(":5701").append("</member>\n");
+        }
+
+        settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->",members);
     }
 
     private byte[] createUpload() throws IOException {
@@ -148,7 +158,7 @@ public class Console {
         //we need to make sure that before we start, there are no workers running anymore.
         //log.log(Level.INFO, "Ensuring workers all killed");
         terminateWorkers();
-        startWorkers(workout.workerVmSettings);
+        startWorkers(workout.workerJvmSettings);
 
         for (TestRecipe testRecipe : workout.testRecipeList) {
             boolean success = run(workout, testRecipe);
@@ -157,9 +167,9 @@ public class Console {
                 break;
             }
 
-            if (!success || workout.workerVmSettings.refreshJvm) {
+            if (!success || workout.workerJvmSettings.refreshJvm) {
                 terminateWorkers();
-                startWorkers(workout.workerVmSettings);
+                startWorkers(workout.workerJvmSettings);
             }
         }
 
@@ -169,7 +179,6 @@ public class Console {
     private boolean run(Workout workout, TestRecipe testRecipe) {
         echo(format("Running Test : %s", testRecipe.getTestId()));
 
-        this.testRecipe = testRecipe;
         int oldCount = failureList.size();
         try {
             echo(testRecipe.toString());
@@ -284,12 +293,12 @@ public class Console {
         echo("All workers have been terminated");
     }
 
-    private long startWorkers(WorkerVmSettings workerVmSettings) throws Exception {
+    private long startWorkers(WorkerJvmSettings workerJvmSettings) throws Exception {
         long startMs = System.currentTimeMillis();
-        final int workerCount = workerVmSettings.workerCount;
+        final int workerCount = workerJvmSettings.workerCount;
         final int totalWorkerCount = workerCount * agentClientManager.getAgentCount();
         log.info(format("Starting a grand total of %s Worker Java Virtual Machines", totalWorkerCount));
-        agentClientManager.spawnWorkers(workerVmSettings);
+        agentClientManager.spawnWorkers(workerJvmSettings);
         long durationMs = System.currentTimeMillis() - startMs;
         log.info((format("Finished starting a grand total of %s Workers after %s ms\n", totalWorkerCount, durationMs)));
         return startMs;

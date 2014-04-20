@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 @XmlRootElement
-public class WorkerVmSettings implements Serializable {
+public class WorkerJvmSettings implements Serializable {
     public String vmOptions;
     public boolean trackLogging;
     public String hzConfig;

@@ -38,7 +38,7 @@ public class AgentRestService {
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/spawnWorkers")
-    public String spawnWorkers(WorkerVmSettings settings) throws Exception {
+    public String spawnWorkers(WorkerJvmSettings settings) throws Exception {
         try {
             Agent agent = Agent.agent;
             agent.getWorkerJvmManager().spawn(settings);
