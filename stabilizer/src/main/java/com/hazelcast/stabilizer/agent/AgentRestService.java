@@ -16,7 +16,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
 
 import static java.lang.String.format;
 
@@ -24,12 +23,17 @@ import static java.lang.String.format;
 public class AgentRestService {
     private final static ILogger log = Logger.getLogger(AgentRestService.class);
 
+    private Agent agent;
+
+    public AgentRestService(Agent agent) {
+        this.agent = agent;
+    }
+
     @GET
     @Produces(MediaType.APPLICATION_XML)
     @Path("/failures")
     public ArrayList<Failure> getFailures() {
         ArrayList<Failure> failures = new ArrayList<Failure>();
-        Agent agent = Agent.agent;
         agent.getFailureMonitor().drainFailures(failures);
         return failures;
     }
@@ -40,22 +44,7 @@ public class AgentRestService {
     @Path("/spawnWorkers")
     public String spawnWorkers(WorkerJvmSettings settings) throws Exception {
         try {
-            Agent agent = Agent.agent;
             agent.getWorkerJvmManager().spawn(settings);
-            return "OK";
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
-    }
-
-    @PUT
-    @Produces(MediaType.TEXT_PLAIN)
-    @Consumes(MediaType.APPLICATION_XML)
-    @Path("/execute")
-    public String execute(Callable command) throws Exception {
-        try {
-            System.out.println("Processing callable:" + command);
             return "OK";
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,10 +58,6 @@ public class AgentRestService {
     @Path("/initTest")
     public String initTest(TestRecipe testRecipe) throws Exception {
         try {
-            log.info("Init Test:\n" + testRecipe);
-
-            Agent agent = Agent.agent;
-
             InitTest initTest = new InitTest(testRecipe);
             agent.getWorkerJvmManager().executeOnWorkers(initTest, "Test Initializing");
             return "OK";
@@ -88,7 +73,6 @@ public class AgentRestService {
     @Path("/initWorkout")
     public String initWorkout(Workout workout) throws Exception {
         try {
-            Agent agent = Agent.agent;
             agent.initWorkout(workout, null);
             return "OK";
         } catch (Exception e) {
@@ -102,7 +86,6 @@ public class AgentRestService {
     @Path("/cleanWorkersHome")
     public String cleanWorkersHome() throws Exception {
         try {
-            Agent agent = Agent.agent;
             agent.getWorkerJvmManager().cleanWorkersHome();
             return "OK";
         } catch (Exception e) {
@@ -116,7 +99,6 @@ public class AgentRestService {
     @Path("/terminateWorkers")
     public String terminateWorkers() throws Exception {
         try {
-            Agent agent = Agent.agent;
             agent.getWorkerJvmManager().terminateWorkers();
             return "OK";
         } catch (Exception e) {
@@ -130,7 +112,6 @@ public class AgentRestService {
     @Path("/stopTest")
     public String stopTest() throws Exception {
         try {
-            Agent agent = Agent.agent;
             //todo: timeout should be passed
             WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
             workerJvmManager.executeOnWorkers(new StopTask(30000), "Stopping test");
@@ -148,7 +129,6 @@ public class AgentRestService {
     @Path("/genericTestTask")
     public Object genericTestTask(String methodName) throws Exception {
         try {
-            Agent agent = Agent.agent;
             GenericTestTask task = new GenericTestTask(methodName);
             WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
             workerJvmManager.executeOnWorkers(task, "Test " + methodName);
@@ -165,7 +145,6 @@ public class AgentRestService {
     @Path("/echo")
     public String echo(String msg) throws Exception {
         try {
-            Agent agent = Agent.agent;
             agent.echo(msg);
             return "OK";
         } catch (Exception e) {
@@ -180,12 +159,10 @@ public class AgentRestService {
     @Path("/prepareForTest")
     public String prepareForTest(TestRecipe testRecipe) throws Exception {
         try {
-            log.info("Init Test:\n" + testRecipe);
-            Agent agent = Agent.agent;
             agent.setTestRecipe(testRecipe);
             return "OK";
         } catch (Exception e) {
-            log.severe("Failed to init Test", e);
+            log.severe("Failed to prepareForTest", e);
             throw e;
         }
     }

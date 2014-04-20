@@ -127,7 +127,8 @@ public class Agent {
     }
 
     private void startRestServer() throws IOException {
-        ResourceConfig rc = new ResourceConfig().packages("com.hazelcast.stabilizer.agent");
+        AgentRestService agentRestService = new AgentRestService(this);
+        ResourceConfig rc = new ResourceConfig().registerInstances(agentRestService);
         HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
         server.start();
     }
