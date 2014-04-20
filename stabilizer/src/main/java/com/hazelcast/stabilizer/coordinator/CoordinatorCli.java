@@ -65,9 +65,9 @@ public class CoordinatorCli {
             "Worker VM options (quotes can be used)")
             .withRequiredArg().ofType(String.class).defaultsTo("");
 
-    private final OptionSpec<String> machineListFileSpec = parser.accepts("machineListFile",
+    private final OptionSpec<String> machinesFileSpec = parser.accepts("machinesFile",
             "The file containing the list of agent machines")
-            .withRequiredArg().ofType(String.class).defaultsTo("machine_list.txt");
+            .withRequiredArg().ofType(String.class).defaultsTo("machines.txt");
 
     private final OptionSpec<String> workerHzFileSpec = parser.accepts("workerHzFile",
             "The Hazelcast xml configuration file for the worker")
@@ -119,7 +119,7 @@ public class CoordinatorCli {
             coordinator.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
             coordinator.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
             coordinator.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
-            coordinator.machineListFile = getFile(optionSpec.machineListFileSpec, options, "Machine list file");
+            coordinator.machinesFile = getFile(optionSpec.machinesFileSpec, options, "Machines file");
 
             String workoutFileName = "workout.properties";
             List<String> workoutFiles = options.nonOptionArguments();

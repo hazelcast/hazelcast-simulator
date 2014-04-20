@@ -6,7 +6,7 @@ class Cluster {
     def config
     def STABILIZER_HOME
     def STABILIZER_VERSION = "0.1-SNAPSHOT"
-    def machineListFile = new File("machine_list.txt")
+    def machineListFile = new File("machines.txt")
     def knownHostsFile = new File(new File(System.getProperty("user.home"), ".ssh"), "known_hosts")
 
     List<String> privateIps = []

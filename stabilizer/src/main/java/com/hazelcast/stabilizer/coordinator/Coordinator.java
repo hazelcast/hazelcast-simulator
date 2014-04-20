@@ -46,7 +46,7 @@ public class Coordinator {
     public String workerClassPath;
     public boolean cleanWorkersHome;
     public Integer testStopTimeoutMs;
-    public File machineListFile;
+    public File machinesFile;
     public Workout workout;
 
     //internal state.
@@ -54,7 +54,7 @@ public class Coordinator {
     private AgentClientManager agentClientManager;
 
     private void start() throws Exception {
-        agentClientManager = new AgentClientManager(this, machineListFile);
+        agentClientManager = new AgentClientManager(this, machinesFile);
         agentClientManager.getFailures();
         new FailureMonitorThread().start();
 
