@@ -17,6 +17,8 @@ package com.hazelcast.stabilizer;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -35,7 +37,9 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.net.Socket;
 import java.net.URI;
@@ -175,7 +179,8 @@ public final class Utils {
         String version = "";
         try {
             Properties p = new Properties();
-            InputStream is = Utils.class.getResourceAsStream("/META-INF/maven/hazelcast-stabilizer/hazelcast-stabilizer/pom.properties");
+            InputStream is = Utils.class.getResourceAsStream(
+                    "/META-INF/maven/hazelcast-stabilizer/hazelcast-stabilizer/pom.properties");
             if (is != null) {
                 p.load(is);
                 return p.getProperty("version", "");
@@ -251,6 +256,12 @@ public final class Utils {
         }
     }
 
+    public static String throwableToString(Throwable t){
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
+    }
+
     public static void unzip(byte[] content, final File destinationDir) throws IOException {
         byte[] buffer = new byte[1024];
 
@@ -288,7 +299,6 @@ public final class Utils {
         zis.close();
     }
 
-
     public static File getStablizerHome() {
         String home = System.getenv("STABILIZER_HOME");
         if (home == null) {
@@ -313,7 +323,6 @@ public final class Utils {
             throw new RuntimeException(e);
         }
     }
-
 
     public static void exitWithError(String msg) {
         System.out.printf(msg);
@@ -363,5 +372,13 @@ public final class Utils {
         } finally {
             Utils.closeQuietly(in);
         }
+    }
+
+    public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
+        File file = new File(options.valueOf(spec));
+        if (!file.exists()) {
+            exitWithError(format("%s [%s] does not exist\n", desc, file));
+        }
+        return file;
     }
 }

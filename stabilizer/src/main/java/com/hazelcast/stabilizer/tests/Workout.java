@@ -16,8 +16,9 @@
 package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.stabilizer.TestRecipe;
-import com.hazelcast.stabilizer.worker.WorkerVmSettings;
+import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collections;
@@ -30,6 +31,7 @@ import java.util.Properties;
 import static com.hazelcast.stabilizer.Utils.loadProperties;
 import static java.lang.String.format;
 
+@XmlRootElement
 public class Workout implements Serializable {
 
     private static final long serialVersionUID = 1;
@@ -82,47 +84,14 @@ public class Workout implements Serializable {
         return workout;
     }
 
-    private final String id = "" + System.currentTimeMillis();
-
-    private List<TestRecipe> testRecipeList = new LinkedList<TestRecipe>();
-    private int duration;
-    private WorkerVmSettings workerVmSettings;
-    private boolean failFast;
-
-    public String getId() {
-        return id;
-    }
-
-    public boolean isFailFast() {
-        return failFast;
-    }
-
-    public void setFailFast(boolean failFast) {
-        this.failFast = failFast;
-    }
-
-    public WorkerVmSettings getWorkerVmSettings() {
-        return workerVmSettings;
-    }
-
-    public void setWorkerVmSettings(WorkerVmSettings workerVmSettings) {
-        this.workerVmSettings = workerVmSettings;
-    }
-
-    public int getDuration() {
-        return duration;
-    }
-
-    public void setDuration(int duration) {
-        this.duration = duration;
-    }
+    public final String id = "" + System.currentTimeMillis();
+    public List<TestRecipe> testRecipeList = new LinkedList<TestRecipe>();
+    public int duration;
+    public WorkerJvmSettings workerJvmSettings;
+    public boolean failFast;
 
     public void addTest(TestRecipe testRecipe) {
         testRecipeList.add(testRecipe);
-    }
-
-    public List<TestRecipe> getTestRecipeList() {
-        return testRecipeList;
     }
 
     public int size() {
@@ -135,7 +104,7 @@ public class Workout implements Serializable {
                 "duration=" + duration +
                 ", id='" + id + '\'' +
                 ", testRecipeList=" + testRecipeList +
-                ", workerSettings=" + workerVmSettings +
+                ", workerSettings=" + workerJvmSettings +
                 ", failFast=" + failFast +
                 '}';
     }

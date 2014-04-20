@@ -2,8 +2,6 @@
 
 class Cluster {
 
-    def COMMAND = "startmachines"
-    def CLUSTER_SIZE = "small"
     def AGENT_PORT = '8701'
     def config
     def STABILIZER_HOME
@@ -31,11 +29,6 @@ class Cluster {
         echo "Installing Agent on ${ip}"
         echo "=============================================================="
 
-        //updating the agent-hazelcast.xml file
-        String members = ""
-        privateIps.each { String memberIp -> members += "<member>$memberIp:$AGENT_PORT</member>\n" }
-        template "$STABILIZER_HOME/bin/agent-hazelcast-template.xml", "agent-hazelcast.xml", '<!--MEMBERS-->', members
-
         echo "Installing missing Java"
         //install java under Ubuntu.
         sshQuiet ip, "sudo apt-get update || true"
@@ -55,8 +48,6 @@ class Cluster {
         echo "=============================================================="
         echo "Starting ${privateIps.size()} Agents"
         echo "=============================================================="
-
-        initConsoleHazelcastConfig()
 
         privateIps.each { String ip ->
             echo "Killing Agent $ip"
@@ -86,12 +77,6 @@ class Cluster {
         echo "=============================================================="
         echo "Successfully killed ${privateIps.size()} Agents"
         echo "=============================================================="
-    }
-
-    void initConsoleHazelcastConfig() {
-        String members = ""
-        privateIps.each { String memberIp -> members += "<address>$memberIp:$AGENT_PORT</address>\n" }
-        template "$STABILIZER_HOME/bin/console-hazelcast-template.xml", "console-hazelcast.xml", '<!--MEMBERS-->', members
     }
 
     void installAgents() {
@@ -270,14 +255,7 @@ class Cluster {
         echo "=============================================================="
     }
 
-    void template(String templateFile, String resultFile, String token, String replacement) {
-        String cfg = new File(templateFile).text.replace(token, replacement);
-        def file = new File(resultFile)
-        file.createNewFile()
-        file.text = cfg
-    }
-
-    void bash(String command) {
+     void bash(String command) {
         def sout = new StringBuffer(), serr = new StringBuffer()
 
         // create a process for the shell

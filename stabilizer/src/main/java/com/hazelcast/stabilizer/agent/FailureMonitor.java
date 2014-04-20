@@ -20,23 +20,39 @@ import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Failure;
-import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.worker.WorkerJvm;
-import com.hazelcast.stabilizer.worker.WorkerVmManager;
 
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
+import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.readObject;
+import static com.hazelcast.stabilizer.Utils.sleepSeconds;
+import static com.hazelcast.stabilizer.Utils.throwableToString;
 
-public class FailureMonitor implements Runnable {
+public class FailureMonitor {
     final static ILogger log = Logger.getLogger(FailureMonitor.class);
 
-    private Agent agent;
+    private final Agent agent;
+    private final BlockingQueue<Failure> failureQueue = new LinkedBlockingQueue<Failure>();
 
     public FailureMonitor(Agent agent) {
         this.agent = agent;
+    }
+
+    public void drainFailures(List<Failure> failures) {
+        failureQueue.drainTo(failures);
+    }
+
+    public void publish(Failure failure) {
+        log.severe("Failure detected: " + failure);
+        failureQueue.add(failure);
+    }
+
+    public void start() {
+        new DetectThread().start();
     }
 
     private void addIfNotNull(List<Failure> failures, Failure h) {
@@ -45,62 +61,61 @@ public class FailureMonitor implements Runnable {
         }
     }
 
-    public void run() {
-        for (; ; ) {
-            try {
-                detect();
-            } catch (Exception e) {
-                log.severe("Failed to scan for failures", e);
-            }
-            Utils.sleepSeconds(1);
-        }
-    }
-
     private void detect() {
-        final WorkerVmManager workerVmManager = agent.getWorkerVmManager();
+        final WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
 
-        for (WorkerJvm jvm : workerVmManager.getWorkerJvms()) {
+        for (WorkerJvm jvm : workerJvmManager.getWorkerJvms()) {
 
             List<Failure> failures = new LinkedList<Failure>();
 
-            addIfNotNull(failures, detectOomeFailureFile(jvm));
+            addIfNotNull(failures, detectOomeFailure(jvm));
 
             addIfNotNull(failures, detectUnexpectedExit(jvm));
 
             addIfNotNull(failures, detectMembershipFailure(jvm));
 
             if (!failures.isEmpty()) {
-                workerVmManager.destroy(jvm);
+                workerJvmManager.destroy(jvm);
 
                 for (Failure failure : failures) {
-                    agent.publishFailure(failure);
+                    publish(failure);
                 }
             }
         }
 
-        File workoutHome = agent.getWorkoutHome();
-        if (workoutHome != null) {
-            File[] files = workoutHome.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    final String name = file.getName();
-                    if (name.endsWith(".exception")) {
-                        Throwable cause = (Throwable) readObject(file);
-                        file.delete();
+        detectExceptions(workerJvmManager);
+    }
 
-                        String workerId = name.substring(0, name.indexOf('.'));
-                        log.info("workerId: " + workerId);
-                        WorkerJvm jvm = workerVmManager.getWorker(workerId);
-                        Failure failure = new Failure(
-                                "Exception thrown in worker",
-                                agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
-                                jvm == null ? null : jvm.getMember().getInetSocketAddress(),
-                                workerId,
-                                agent.getTestRecipe(),
-                                cause);
-                        agent.publishFailure(failure);
-                        workerVmManager.destroy(jvm);
-                    }
+    private void detectExceptions(WorkerJvmManager workerJvmManager) {
+        File workoutHome = agent.getWorkoutHome();
+        if (workoutHome == null) {
+            return;
+        }
+        File[] files = workoutHome.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File file : files) {
+            String name = file.getName();
+            if (name.endsWith(".exception")) {
+                Throwable cause = (Throwable) readObject(file);
+                file.delete();
+
+                String workerId = name.substring(0, name.indexOf('.'));
+                log.info("workerId: " + workerId);
+                WorkerJvm jvm = workerJvmManager.getWorker(workerId);
+
+                Failure failure = new Failure();
+                failure.message = "Exception thrown in worker";
+                failure.agentAddress = getHostAddress();
+                failure.workerAddress = jvm == null ? null : jvm.getMember().getInetSocketAddress().getHostString();
+                failure.workerId = workerId;
+                failure.testRecipe = agent.getTestRecipe();
+                failure.cause = throwableToString(cause);
+                publish(failure);
+
+                if (jvm != null) {
+                    workerJvmManager.destroy(jvm);
                 }
             }
         }
@@ -115,18 +130,20 @@ public class FailureMonitor implements Runnable {
         Member member = findMember(jvm);
         if (member == null) {
             jvm.getProcess().destroy();
-            return new Failure("Hazelcast membership failure (member missing)",
-                    agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
-                    jvm.getMember().getInetSocketAddress(),
-                    jvm.getId(),
-                    agent.getTestRecipe());
+            Failure failure = new Failure();
+            failure.message = "Hazelcast membership failure (member missing)";
+            failure.agentAddress = getHostAddress();
+            failure.workerAddress = jvm.getMember().getInetSocketAddress().getHostString();
+            failure.workerId = jvm.getId();
+            failure.testRecipe = agent.getTestRecipe();
+            return failure;
         }
 
         return null;
     }
 
     private Member findMember(WorkerJvm jvm) {
-        final HazelcastInstance workerClient = agent.getWorkerVmManager().getWorkerClient();
+        final HazelcastInstance workerClient = agent.getWorkerJvmManager().getWorkerClient();
         if (workerClient == null) {
             return null;
         }
@@ -140,7 +157,7 @@ public class FailureMonitor implements Runnable {
         return null;
     }
 
-    private Failure detectOomeFailureFile(WorkerJvm jvm) {
+    private Failure detectOomeFailure(WorkerJvm jvm) {
         File workoutDir = agent.getWorkoutHome();
         if (workoutDir == null) {
             return null;
@@ -151,12 +168,12 @@ public class FailureMonitor implements Runnable {
             return null;
         }
 
-        Failure failure = new Failure(
-                "out of memory",
-                agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
-                jvm.getMember().getInetSocketAddress(),
-                jvm.getId(),
-                agent.getTestRecipe());
+        Failure failure = new Failure();
+        failure.message = "Out of memory";
+        failure.agentAddress = getHostAddress();
+        failure.workerAddress = jvm.getMember().getInetSocketAddress().getHostString();
+        failure.workerId = jvm.getId();
+        failure.testRecipe = agent.getTestRecipe();
         jvm.getProcess().destroy();
         return failure;
     }
@@ -164,16 +181,35 @@ public class FailureMonitor implements Runnable {
     private Failure detectUnexpectedExit(WorkerJvm jvm) {
         Process process = jvm.getProcess();
         try {
-            if (process.exitValue() != 0) {
-                return new Failure(
-                        "exit code not 0",
-                        agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
-                        jvm.getMember().getInetSocketAddress(),
-                        jvm.getId(),
-                        agent.getTestRecipe());
+            int exitCode = process.exitValue();
+            if (exitCode != 0) {
+                Failure failure = new Failure();
+                failure.message = "Exit code not 0, but was " + exitCode;
+                failure.agentAddress = getHostAddress();
+                failure.workerAddress = jvm.getMember().getInetSocketAddress().getHostString();
+                failure.workerId = jvm.getId();
+                failure.testRecipe = agent.getTestRecipe();
+                return failure;
             }
         } catch (IllegalThreadStateException ignore) {
         }
         return null;
+    }
+
+    private class DetectThread extends Thread {
+        public DetectThread() {
+            super("FailureMonitorThread");
+        }
+
+        public void run() {
+            for (; ; ) {
+                try {
+                    detect();
+                } catch (Exception e) {
+                    log.severe("Failed to scan for failures", e);
+                }
+                sleepSeconds(1);
+            }
+        }
     }
 }

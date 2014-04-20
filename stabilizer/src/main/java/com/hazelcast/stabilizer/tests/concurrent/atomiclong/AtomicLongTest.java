@@ -107,6 +107,10 @@ public class AtomicLongTest extends AbstractTest {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
                 iteration++;
+
+                if(iteration > 100){
+                    throw new RuntimeException();
+                }
             }
 
             totalCounter.addAndGet(iteration);

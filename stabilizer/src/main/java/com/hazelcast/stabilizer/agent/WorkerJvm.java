@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.worker;
+package com.hazelcast.stabilizer.agent;
 
 import com.hazelcast.core.Member;
 
@@ -26,7 +26,6 @@ public class WorkerJvm {
         this.id = id;
         this.process = process;
     }
-
 
     public Member getMember() {
         return member;
