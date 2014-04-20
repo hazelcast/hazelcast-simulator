@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.worker;
+package com.hazelcast.stabilizer.agent;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
@@ -28,70 +28,6 @@ public class WorkerVmSettings implements Serializable {
     public boolean refreshJvm;
     public String javaVendor;
     public String javaVersion;
-
-    public String getJavaVendor() {
-        return javaVendor;
-    }
-
-    public void setJavaVendor(String javaVendor) {
-        this.javaVendor = javaVendor;
-    }
-
-    public String getJavaVersion() {
-        return javaVersion;
-    }
-
-    public void setJavaVersion(String javaVersion) {
-        this.javaVersion = javaVersion;
-    }
-
-    public int getWorkerStartupTimeout() {
-        return workerStartupTimeout;
-    }
-
-    public void setWorkerStartupTimeout(int workerStartupTimeout) {
-        this.workerStartupTimeout = workerStartupTimeout;
-    }
-
-    public boolean isRefreshJvm() {
-        return refreshJvm;
-    }
-
-    public void setRefreshJvm(boolean refreshJvm) {
-        this.refreshJvm = refreshJvm;
-    }
-
-    public String getHzConfig() {
-        return hzConfig;
-    }
-
-    public void setHzConfig(String hzConfig) {
-        this.hzConfig = hzConfig;
-    }
-
-    public boolean isTrackLogging() {
-        return trackLogging;
-    }
-
-    public void setTrackLogging(boolean trackLogging) {
-        this.trackLogging = trackLogging;
-    }
-
-    public int getWorkerCount() {
-        return workerCount;
-    }
-
-    public void setWorkerCount(int workerCount) {
-        this.workerCount = workerCount;
-    }
-
-    public String getVmOptions() {
-        return vmOptions;
-    }
-
-    public void setVmOptions(String vmOptions) {
-        this.vmOptions = vmOptions;
-    }
 
     @Override
     public String toString() {

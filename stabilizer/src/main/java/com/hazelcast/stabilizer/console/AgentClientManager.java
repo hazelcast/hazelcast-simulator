@@ -7,7 +7,7 @@ import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Workout;
-import com.hazelcast.stabilizer.worker.WorkerVmSettings;
+import com.hazelcast.stabilizer.agent.WorkerVmSettings;
 
 import java.io.File;
 import java.util.Collection;
@@ -41,6 +41,34 @@ public class AgentClientManager {
         }
     }
 
+    public List<Failure> getFailures() {
+        List<Future> futures = new LinkedList<Future>();
+        for (final AgentClient agentClient : agents) {
+            Future f = agentExecutor.submit(new Callable() {
+                @Override
+                public Object call() throws Exception {
+                    return agentClient.getFailures();
+                }
+            });
+            futures.add(f);
+        }
+
+        List<Failure> result = new LinkedList<Failure>();
+        for (Future<List<Failure>> f : futures) {
+            try {
+                List<Failure> c = f.get(30, TimeUnit.SECONDS);
+                result.addAll(c);
+            } catch (InterruptedException e) {
+                log.severe(e);
+            } catch (ExecutionException e) {
+                log.severe(e);
+            } catch (TimeoutException e) {
+                log.severe(e);
+            }
+        }
+        return result;
+    }
+
     public void prepareAgentsForTests(final TestRecipe testRecipe) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
@@ -57,7 +85,7 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public void cleanWorkersHome() {
+     public void cleanWorkersHome() {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
@@ -83,13 +111,20 @@ public class AgentClientManager {
                 //todo: we should calculate remaining timeoutMs
                 Object o = future.get(timeoutMs, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
-                Failure failure = new Failure("Timeout waiting for remote operation to complete",
-                        null, null, null, console.getTestRecipe(), e);
-                console.statusTopic.publish(failure);
+//                Failure failure = new Failure();
+//                failure.message = "Timeout waiting for remote operation to complete";
+//                failure.agentAddress = getHostAddress();
+//                failure.testRecipe = console.getTestRecipe();
+//                failure.cause = e;
+//                console.statusTopic.publish(failure);
                 throw new RuntimeException(e);
             } catch (ExecutionException e) {
                 if (!(e.getCause() instanceof FailureAlreadyThrownRuntimeException)) {
-                    console.statusTopic.publish(new Failure(null, null, null, null, console.getTestRecipe(), e));
+//                    Failure failure = new Failure();
+//                    failure.agentAddress = getHostAddress();
+//                    failure.testRecipe = console.getTestRecipe();
+//                    failure.cause = e;
+//                    console.statusTopic.publish(failure);
                 }
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
@@ -98,8 +133,20 @@ public class AgentClientManager {
         }
     }
 
-    public void initWorkout(Workout workout, byte[] bytes) {
+    public void initWorkout(final Workout workout, byte[] bytes) {
+        List<Future> futures = new LinkedList<Future>();
+        for (final AgentClient agentClient : agents) {
+            Future f = agentExecutor.submit(new Callable() {
+                @Override
+                public Object call() throws Exception {
+                    agentClient.initWorkout(workout);
+                    return null;
+                }
+            });
+            futures.add(f);
+        }
 
+        getAllFutures(futures);
     }
 
     public void terminateWorkers() {

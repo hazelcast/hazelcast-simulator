@@ -1,11 +1,23 @@
 package com.hazelcast.stabilizer.console;
 
+import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.tests.Workout;
+import com.hazelcast.stabilizer.agent.WorkerVmSettings;
+import joptsimple.OptionException;
 import joptsimple.OptionParser;
+import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import java.io.File;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-public class ConsoleOptionSpec {
+import static com.hazelcast.stabilizer.Utils.asText;
+import static com.hazelcast.stabilizer.Utils.exitWithError;
+import static com.hazelcast.stabilizer.Utils.getFile;
+import static java.lang.String.format;
+
+public class ConsoleCli {
 
     OptionParser parser = new OptionParser();
     OptionSpec cleanWorkersHome = parser.accepts("cleanWorkersHome",
@@ -21,7 +33,8 @@ public class ConsoleOptionSpec {
     OptionSpec<String> workerClassPathSpec = parser.accepts("workerClassPath",
             "A file/directory containing the " +
                     "classes/jars/resources that are going to be uploaded to the agents. " +
-                    "Use ';' as separator for multiple entries. Wildcard '*' can also be used.")
+                    "Use ';' as separator for multiple entries. Wildcard '*' can also be used."
+    )
             .withRequiredArg().ofType(String.class);
     OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
             "The startup timeout in seconds for a worker")
@@ -89,4 +102,79 @@ public class ConsoleOptionSpec {
     OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
 
+    public static void init(Console console, String[] args)throws Exception{
+        ConsoleCli optionSpec = new ConsoleCli();
+
+        try {
+            OptionSet options = optionSpec.parser.parse(args);
+
+            if (options.has(optionSpec.helpSpec)) {
+                optionSpec.parser.printHelpOn(System.out);
+                System.exit(0);
+            }
+
+            console.cleanWorkersHome = options.has(optionSpec.cleanWorkersHome);
+
+            if (options.has(optionSpec.workerClassPathSpec)) {
+                console.workerClassPath = options.valueOf(optionSpec.workerClassPathSpec);
+            }
+
+            console.consoleHzFile = getFile(optionSpec.consoleHzFileSpec, options,"Console Hazelcast config file");
+            console.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
+            console.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
+            console.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
+            console.machineListFile = getFile(optionSpec.machineListFileSpec,options,"Machine list file");
+
+            String workoutFileName = "workout.properties";
+            List<String> workoutFiles = options.nonOptionArguments();
+            if (workoutFiles.size() == 1) {
+                workoutFileName = workoutFiles.get(0);
+            } else if (workoutFiles.size() > 1) {
+                exitWithError("Too many workout files specified.");
+            }
+
+            Workout workout = Workout.createWorkout(new File(workoutFileName));
+            console.workout = workout;
+            workout.duration = getDuration(optionSpec, options);
+            workout.failFast = options.valueOf(optionSpec.failFastSpec);
+
+            WorkerVmSettings workerVmSettings = new WorkerVmSettings();
+            workerVmSettings.trackLogging = options.has(optionSpec.workerTrackLoggingSpec);
+            workerVmSettings.vmOptions = options.valueOf(optionSpec.workerVmOptionsSpec);
+            workerVmSettings.workerCount = options.valueOf(optionSpec.workerCountSpec);
+            workerVmSettings.workerStartupTimeout = options.valueOf(optionSpec.workerStartupTimeoutSpec);
+            workerVmSettings.hzConfig = asText(getFile(optionSpec.workerHzFileSpec, options, "Worker Hazelcast config file"));
+            workerVmSettings.refreshJvm = options.valueOf(optionSpec.workerRefreshSpec);
+            workerVmSettings.javaVendor = options.valueOf(optionSpec.workerJavaVendorSpec);
+            workerVmSettings.javaVersion = options.valueOf(optionSpec.workerJavaVersionSpec);
+            workout.workerVmSettings = workerVmSettings;
+        } catch (OptionException e) {
+            Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");
+        }
+    }
+
+    private static int getDuration(ConsoleCli optionSpec, OptionSet options) {
+        String value = options.valueOf(optionSpec.durationSpec);
+
+        try {
+            if (value.endsWith("s")) {
+                String sub = value.substring(0, value.length() - 1);
+                return Integer.parseInt(sub);
+            } else if (value.endsWith("m")) {
+                String sub = value.substring(0, value.length() - 1);
+                return (int) TimeUnit.MINUTES.toSeconds(Integer.parseInt(sub));
+            } else if (value.endsWith("h")) {
+                String sub = value.substring(0, value.length() - 1);
+                return (int) TimeUnit.HOURS.toSeconds(Integer.parseInt(sub));
+            } else if (value.endsWith("d")) {
+                String sub = value.substring(0, value.length() - 1);
+                return (int) TimeUnit.DAYS.toSeconds(Integer.parseInt(sub));
+            } else {
+                return Integer.parseInt(value);
+            }
+        } catch (NumberFormatException e) {
+            exitWithError(format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
+            return -1;
+        }
+    }
 }

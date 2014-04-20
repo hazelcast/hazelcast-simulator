@@ -2,11 +2,12 @@ package com.hazelcast.stabilizer.agent;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.tests.Workout;
 import com.hazelcast.stabilizer.worker.tasks.GenericTestTask;
 import com.hazelcast.stabilizer.worker.tasks.InitTest;
 import com.hazelcast.stabilizer.worker.tasks.StopTask;
-import com.hazelcast.stabilizer.worker.WorkerVmSettings;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -14,19 +15,23 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 import static java.lang.String.format;
 
 @Path("agent")
-public class AgentService {
-    private final static ILogger log = Logger.getLogger(AgentService.class);
+public class AgentRestService {
+    private final static ILogger log = Logger.getLogger(AgentRestService.class);
 
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    @Path("/getIt")
-    public String getIt() {
-        return "Got it!";
+    @Produces(MediaType.APPLICATION_XML)
+    @Path("/failures")
+    public ArrayList<Failure> getFailures() {
+        ArrayList<Failure> failures = new ArrayList<Failure>();
+        Agent agent = Agent.agent;
+        agent.getFailureMonitor().drainFailures(failures);
+        return failures;
     }
 
     @PUT
@@ -36,7 +41,7 @@ public class AgentService {
     public String spawnWorkers(WorkerVmSettings settings) throws Exception {
         try {
             Agent agent = Agent.agent;
-            agent.getWorkerVmManager().spawn(settings);
+            agent.getWorkerJvmManager().spawn(settings);
             return "OK";
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,10 +74,25 @@ public class AgentService {
             Agent agent = Agent.agent;
 
             InitTest initTest = new InitTest(testRecipe);
-            agent.shoutToWorkers(initTest, "Test Initializing");
+            agent.getWorkerJvmManager().executeOnWorkers(initTest, "Test Initializing");
             return "OK";
         } catch (Exception e) {
             log.severe("Failed to init Test", e);
+            throw e;
+        }
+    }
+
+    @PUT
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_XML)
+    @Path("/initWorkout")
+    public String initWorkout(Workout workout) throws Exception {
+        try {
+            Agent agent = Agent.agent;
+            agent.initWorkout(workout, null);
+            return "OK";
+        } catch (Exception e) {
+            log.severe("Failed to init workout", e);
             throw e;
         }
     }
@@ -83,7 +103,7 @@ public class AgentService {
     public String cleanWorkersHome() throws Exception {
         try {
             Agent agent = Agent.agent;
-            agent.cleanWorkersHome();
+            agent.getWorkerJvmManager().cleanWorkersHome();
             return "OK";
         } catch (Exception e) {
             e.printStackTrace();
@@ -97,7 +117,7 @@ public class AgentService {
     public String terminateWorkers() throws Exception {
         try {
             Agent agent = Agent.agent;
-            agent.getWorkerVmManager().terminateWorkers();
+            agent.getWorkerJvmManager().terminateWorkers();
             return "OK";
         } catch (Exception e) {
             e.printStackTrace();
@@ -112,8 +132,9 @@ public class AgentService {
         try {
             Agent agent = Agent.agent;
             //todo: timeout should be passed
-            agent.shoutToWorkers(new StopTask(30000), "Stopping test");
-            agent.getWorkerVmManager().terminateWorkers();
+            WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
+            workerJvmManager.executeOnWorkers(new StopTask(30000), "Stopping test");
+            workerJvmManager.terminateWorkers();
             return "OK";
         } catch (Exception e) {
             e.printStackTrace();
@@ -129,7 +150,8 @@ public class AgentService {
         try {
             Agent agent = Agent.agent;
             GenericTestTask task = new GenericTestTask(methodName);
-            agent.shoutToWorkers(task, "Test " + methodName);
+            WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
+            workerJvmManager.executeOnWorkers(task, "Test " + methodName);
             return "OK";
         } catch (Exception e) {
             log.severe(format("Failed to execute test.%s()", methodName), e);

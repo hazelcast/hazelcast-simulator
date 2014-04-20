@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.worker;
+package com.hazelcast.stabilizer.agent;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -25,35 +25,43 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.agent.Agent;
+import com.hazelcast.stabilizer.Failure;
+import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.JavaInstallation;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.worker.Worker;
+import com.hazelcast.stabilizer.worker.WorkerVmLogger;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
+import static com.hazelcast.stabilizer.Utils.throwableToString;
 import static java.lang.String.format;
 
-public class WorkerVmManager {
+public class WorkerJvmManager {
 
-    private final static ILogger log = Logger.getLogger(WorkerVmManager.class);
-    private final static File USER_DIR = new File(System.getProperty("user.dir"));
+    private final static ILogger log = Logger.getLogger(WorkerJvmManager.class);
     private final static String CLASSPATH = System.getProperty("java.class.path");
     private final static File STABILIZER_HOME = getStablizerHome();
     private final static String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
     private final static AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
+    public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
 
     private final List<WorkerJvm> workerJvms = new CopyOnWriteArrayList<WorkerJvm>();
     private final Agent agent;
@@ -61,7 +69,7 @@ public class WorkerVmManager {
     private volatile IExecutorService workerExecutor;
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
-    public WorkerVmManager(Agent agent) {
+    public WorkerJvmManager(Agent agent) {
         this.agent = agent;
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -72,6 +80,45 @@ public class WorkerVmManager {
                 }
             }
         });
+    }
+
+    public List executeOnWorkers(Callable task, String taskDescription) throws InterruptedException {
+        Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
+
+        for (WorkerJvm workerJvm : getWorkerJvms()) {
+            Member member = workerJvm.getMember();
+            if (member == null) continue;
+
+            Future future = getWorkerExecutor().submitToMember(task, member);
+            futures.put(workerJvm, future);
+        }
+
+        List results = new LinkedList();
+        for (Map.Entry<WorkerJvm, Future> entry : futures.entrySet()) {
+            WorkerJvm workerJvm = entry.getKey();
+            Future future = entry.getValue();
+            try {
+                Object result = future.get();
+                results.add(result);
+            } catch (ExecutionException e) {
+                Failure failure = new Failure();
+                failure.message = taskDescription;
+                failure.agentAddress = getHostAddress();
+                failure.workerAddress = workerJvm.getMember().getInetSocketAddress().getHostString();
+                failure.workerId = workerJvm.getId();
+                failure.testRecipe = agent.getTestRecipe();
+                failure.cause = throwableToString(e);
+                agent.getFailureMonitor().publish(failure);
+                throw new FailureAlreadyThrownRuntimeException(e);
+            }
+        }
+        return results;
+    }
+
+      public void cleanWorkersHome() throws IOException {
+        for (File file : WORKERS_HOME.listFiles()) {
+            Utils.delete(file);
+        }
     }
 
     public IExecutorService getWorkerExecutor() {
@@ -87,20 +134,20 @@ public class WorkerVmManager {
     }
 
     public void spawn(WorkerVmSettings settings) throws Exception {
-        log.info(format("Starting %s worker Java Virtual Machines using settings\n %s", settings.getWorkerCount(), settings));
+        log.info(format("Starting %s worker Java Virtual Machines using settings\n %s", settings.workerCount, settings));
 
         File workerHzFile = createHazelcastConfigFile(settings);
 
         List<WorkerJvm> workers = new LinkedList<WorkerJvm>();
 
-        for (int k = 0; k < settings.getWorkerCount(); k++) {
+        for (int k = 0; k < settings.workerCount; k++) {
             WorkerJvm worker = startWorkerJvm(settings, workerHzFile);
             Process process = worker.getProcess();
             String workerId = worker.getId();
 
             workers.add(worker);
 
-            new WorkerVmLogger(workerId, process.getInputStream(), settings.isTrackLogging()).start();
+            new WorkerVmLogger(workerId, process.getInputStream(), settings.trackLogging).start();
         }
         Config config = new XmlConfigBuilder(workerHzFile.getAbsolutePath()).build();
         ClientConfig clientConfig = new ClientConfig();
@@ -112,15 +159,15 @@ public class WorkerVmManager {
         workerClient = HazelcastClient.newHazelcastClient(clientConfig);
         workerExecutor = workerClient.getExecutorService(Worker.WORKER_EXECUTOR);
 
-        waitForWorkersStartup(workers, settings.getWorkerStartupTimeout());
+        waitForWorkersStartup(workers, settings.workerStartupTimeout);
 
-        log.info(format("Finished starting %s worker Java Virtual Machines", settings.getWorkerCount()));
+        log.info(format("Finished starting %s worker Java Virtual Machines", settings.workerCount));
     }
 
     private File createHazelcastConfigFile(WorkerVmSettings settings) throws IOException {
         File workerHzFile = File.createTempFile("worker-hazelcast", "xml");
         workerHzFile.deleteOnExit();
-        final String hzConfig = settings.getHzConfig();
+        final String hzConfig = settings.hzConfig;
 
         StringBuffer members = new StringBuffer();
         HazelcastInstance agentHazelcastInstance = agent.getAgentHz();
@@ -152,16 +199,16 @@ public class WorkerVmManager {
     }
 
     private WorkerJvm startWorkerJvm(WorkerVmSettings settings, File workerHzFile) throws IOException {
-        String workerId = "worker-"+getHostAddress()+"-"+ WORKER_ID_GENERATOR.incrementAndGet();
+        String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet();
 
-        String workerVmOptions = settings.getVmOptions();
+        String workerVmOptions = settings.vmOptions;
         String[] clientVmOptionsArray = new String[]{};
         if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
             clientVmOptionsArray = workerVmOptions.split("\\s+");
         }
 
         File workoutHome = agent.getWorkoutHome();
-        String javaHome = getJavaHome(settings.getJavaVendor(), settings.getJavaVersion());
+        String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
 
         List<String> args = new LinkedList<String>();
         args.add("java");
@@ -238,7 +285,7 @@ public class WorkerVmManager {
         sb.append("]");
 
         throw new RuntimeException(format("Timeout: workers %s of workout %s on host %s didn't start within %s seconds",
-                sb, agent.getWorkout().getId(), agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
+                sb, agent.getWorkout().id, agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
                 workerTimeoutSec));
     }
 
@@ -282,7 +329,7 @@ public class WorkerVmManager {
         log.info("Finished terminating workers");
     }
 
-      public void destroy(WorkerJvm jvm) {
+    public void destroy(WorkerJvm jvm) {
         jvm.getProcess().destroy();
         try {
             jvm.getProcess().waitFor();

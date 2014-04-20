@@ -16,10 +16,7 @@
 package com.hazelcast.stabilizer;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.io.StringWriter;
-import java.net.InetSocketAddress;
 import java.util.Date;
 
 @XmlRootElement
@@ -28,62 +25,12 @@ public class Failure implements Serializable {
     private static final long serialVersionUID = 1;
 
     public String message;
-    public InetSocketAddress agentAddress;
-    public InetSocketAddress workerAddress;
+    public String agentAddress;
+    public String workerAddress;
     public String workerId;
     public Date time;
     public TestRecipe testRecipe;
-    public Throwable cause;
-
-    public Failure(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
-                   String workerId, TestRecipe testRecipe) {
-        this.message = message;
-        this.agentAddress = agentAddress;
-        this.workerId = workerId;
-        this.time = new Date();
-        this.testRecipe = testRecipe;
-        this.workerAddress = workerAddress;
-        this.cause = null;
-    }
-
-    public Failure(String message, InetSocketAddress agentAddress, InetSocketAddress workerAddress,
-                   String workerId, TestRecipe testRecipe, Throwable cause) {
-        this.message = message;
-        this.agentAddress = agentAddress;
-        this.workerId = workerId;
-        this.time = new Date();
-        this.testRecipe = testRecipe;
-        this.workerAddress = workerAddress;
-        this.cause = cause;
-    }
-
-    public Throwable getCause() {
-        return cause;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public String getWorkerId() {
-        return workerId;
-    }
-
-    public InetSocketAddress getAgentAddress() {
-        return agentAddress;
-    }
-
-    public Date getTime() {
-        return time;
-    }
-
-    public TestRecipe getTestRecipe() {
-        return testRecipe;
-    }
-
-    public InetSocketAddress getWorkerAddress() {
-        return workerAddress;
-    }
+    public String cause;
 
     @Override
     public String toString() {
@@ -105,9 +52,7 @@ public class Failure implements Serializable {
         }
 
         if (cause != null) {
-            StringWriter sw = new StringWriter();
-            cause.printStackTrace(new PrintWriter(sw));
-            sb.append("   cause=").append(sw.toString()).append("\n");
+            sb.append("   cause=").append(cause).append("\n");
         } else {
             sb.append("   cause=").append("null").append("\n");
         }

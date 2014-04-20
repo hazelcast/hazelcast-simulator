@@ -37,7 +37,9 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.net.Socket;
 import java.net.URI;
@@ -252,6 +254,12 @@ public final class Utils {
         } finally {
             in.close();
         }
+    }
+
+    public static String throwableToString(Throwable t){
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
     }
 
     public static void unzip(byte[] content, final File destinationDir) throws IOException {
