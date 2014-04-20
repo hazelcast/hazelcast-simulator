@@ -37,8 +37,8 @@ class Cluster {
         sshQuiet ip, "sudo apt-get install -y openjdk-7-jdk || true"
 
         echo "Copying stabilizer files"
-        //first we remove the old files
-        sshQuiet ip, "rm -fr hazelcast-stabilizer-${STABILIZER_VERSION}"
+        //first we remove the old lib files to prevent different versions of the same jar to bite us.
+        sshQuiet ip, "rm -fr hazelcast-stabilizer-${STABILIZER_VERSION}/lib"
         //then we copy the stabilizer directory
         scpToRemote ip, STABILIZER_HOME, ""
 
@@ -235,7 +235,7 @@ class Cluster {
         }
 
         echo "=============================================================="
-        echo "Terminating cluster members: count $count"
+        echo "Terminating $count ec2 machines"
         echo "=============================================================="
 
         def x = "ec2-describe-instances".execute().text
@@ -267,7 +267,7 @@ class Cluster {
         }
 
         echo "=============================================================="
-        echo "Finished Terminating Cluster members"
+        echo "Finished terminating $count ec2 machines"
         echo "=============================================================="
     }
 
