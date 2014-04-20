@@ -6,10 +6,11 @@ import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.tests.Workout;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
+import com.hazelcast.stabilizer.tests.Workout;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,13 +42,13 @@ public class AgentClientManager {
         }
     }
 
-    public int getAgentCount(){
+    public int getAgentCount() {
         return agents.size();
     }
 
-    public List<String> getHostAddresses(){
+    public List<String> getHostAddresses() {
         List<String> result = new LinkedList();
-        for(AgentClient client: agents){
+        for (AgentClient client : agents) {
             result.add(client.getHost());
         }
         return result;
@@ -97,7 +98,7 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-     public void cleanWorkersHome() {
+    public void cleanWorkersHome() {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
@@ -230,8 +231,21 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public void singleGenericTestTask(String name) {
-        System.out.println();
+    public void singleGenericTestTask(final String name) {
+        if (agents.isEmpty()) {
+            return;
+        }
+
+        Future f = agentExecutor.submit(new Callable() {
+            @Override
+            public Object call() throws Exception {
+                AgentClient agentClient = agents.get(0);
+                agentClient.genericTestTask(name);
+                return null;
+            }
+        });
+
+        getAllFutures(Arrays.asList(f));
     }
 
     public void echo(final String msg) {

@@ -108,7 +108,7 @@ public class FailureMonitor {
                 Failure failure = new Failure();
                 failure.message = "Exception thrown in worker";
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = jvm == null ? null : jvm.getMember().getInetSocketAddress().getHostString();
+                failure.workerAddress = jvm == null ? null : jvm.getMember().getSocketAddress().getHostString();
                 failure.workerId = workerId;
                 failure.testRecipe = agent.getTestRecipe();
                 failure.cause = throwableToString(cause);
@@ -133,7 +133,7 @@ public class FailureMonitor {
             Failure failure = new Failure();
             failure.message = "Hazelcast membership failure (member missing)";
             failure.agentAddress = getHostAddress();
-            failure.workerAddress = jvm.getMember().getInetSocketAddress().getHostString();
+            failure.workerAddress = jvm.getMember().getSocketAddress().getHostString();
             failure.workerId = jvm.getId();
             failure.testRecipe = agent.getTestRecipe();
             return failure;
@@ -149,7 +149,7 @@ public class FailureMonitor {
         }
 
         for (Member member : workerClient.getCluster().getMembers()) {
-            if (member.getInetSocketAddress().equals(jvm.getMember().getInetSocketAddress())) {
+            if (member.getSocketAddress().equals(jvm.getMember().getSocketAddress())) {
                 return member;
             }
         }
@@ -171,7 +171,7 @@ public class FailureMonitor {
         Failure failure = new Failure();
         failure.message = "Out of memory";
         failure.agentAddress = getHostAddress();
-        failure.workerAddress = jvm.getMember().getInetSocketAddress().getHostString();
+        failure.workerAddress = jvm.getMember().getSocketAddress().getHostString();
         failure.workerId = jvm.getId();
         failure.testRecipe = agent.getTestRecipe();
         jvm.getProcess().destroy();
@@ -186,7 +186,7 @@ public class FailureMonitor {
                 Failure failure = new Failure();
                 failure.message = "Exit code not 0, but was " + exitCode;
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = jvm.getMember().getInetSocketAddress().getHostString();
+                failure.workerAddress = jvm.getMember().getSocketAddress().getHostString();
                 failure.workerId = jvm.getId();
                 failure.testRecipe = agent.getTestRecipe();
                 return failure;

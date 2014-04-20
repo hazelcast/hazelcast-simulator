@@ -85,7 +85,9 @@ public class WorkerJvmManager {
 
         for (WorkerJvm workerJvm : getWorkerJvms()) {
             Member member = workerJvm.getMember();
-            if (member == null) continue;
+            if (member == null) {
+                continue;
+            }
 
             Future future = getWorkerExecutor().submitToMember(task, member);
             futures.put(workerJvm, future);
@@ -113,7 +115,7 @@ public class WorkerJvmManager {
         return results;
     }
 
-      public void cleanWorkersHome() throws IOException {
+    public void cleanWorkersHome() throws IOException {
         for (File file : WORKERS_HOME.listFiles()) {
             Utils.delete(file);
         }
@@ -165,7 +167,7 @@ public class WorkerJvmManager {
     private File createHazelcastConfigFile(WorkerJvmSettings settings) throws IOException {
         File workerHzFile = File.createTempFile("worker-hazelcast", "xml");
         workerHzFile.deleteOnExit();
-        Utils.writeText(settings.hzConfig,workerHzFile);
+        Utils.writeText(settings.hzConfig, workerHzFile);
         return workerHzFile;
     }
 
@@ -242,7 +244,7 @@ public class WorkerJvmManager {
                 if (address != null) {
                     Member member = null;
                     for (Member m : workerClient.getCluster().getMembers()) {
-                        if (m.getInetSocketAddress().equals(address)) {
+                        if (m.getSocketAddress().equals(address)) {
                             member = m;
                             break;
                         }

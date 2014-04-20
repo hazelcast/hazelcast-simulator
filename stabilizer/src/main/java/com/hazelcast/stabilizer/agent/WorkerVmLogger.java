@@ -42,7 +42,9 @@ public class WorkerVmLogger extends Thread {
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
             for (; ; ) {
                 final String line = br.readLine();
-                if (line == null) break;
+                if (line == null) {
+                    break;
+                }
                 if (log.isLoggable(Level.INFO) && workerTrackLogging) {
                     log.info(prefix + ": " + line);
                 }

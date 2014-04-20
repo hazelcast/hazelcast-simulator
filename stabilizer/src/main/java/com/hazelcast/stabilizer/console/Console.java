@@ -53,9 +53,9 @@ public class Console {
 
     //internal state.
     private final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
-   private AgentClientManager agentClientManager;
+    private AgentClientManager agentClientManager;
 
-    private void run() throws Exception {
+    private void start() throws Exception {
         agentClientManager = new AgentClientManager(this, machineListFile);
         agentClientManager.getFailures();
         new FailureMonitorThread().start();
@@ -70,7 +70,7 @@ public class Console {
         agentClientManager.initWorkout(workout, bytes);
 
         WorkerJvmSettings workerJvmSettings = workout.workerJvmSettings;
-        initWorkerConfig(workerJvmSettings);
+        initWorkerHzConfig(workerJvmSettings);
 
         int agentCount = agentClientManager.getAgentCount();
         log.info(format("Worker track logging: %s", workerJvmSettings.trackLogging));
@@ -83,9 +83,9 @@ public class Console {
         runWorkout(workout);
 
         //the console needs to sleep some to make sure that it will get failures if they are there.
-        log.info("Starting cooldown (10 sec)");
-        Utils.sleepSeconds(10);
-        log.info("Finished cooldown");
+        log.info("Starting cool down (20 sec)");
+        Utils.sleepSeconds(20);
+        log.info("Finished cool down");
 
         long elapsedMs = System.currentTimeMillis() - startMs;
         log.info(format("Total running time: %s seconds", elapsedMs / 1000));
@@ -108,13 +108,13 @@ public class Console {
         }
     }
 
-    private void initWorkerConfig(WorkerJvmSettings settings){
+    private void initWorkerHzConfig(WorkerJvmSettings settings) {
         StringBuffer members = new StringBuffer();
-        for (String hostAddress:agentClientManager.getHostAddresses()) {
+        for (String hostAddress : agentClientManager.getHostAddresses()) {
             members.append("<member>").append(hostAddress).append(":5701").append("</member>\n");
         }
 
-        settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->",members);
+        settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
     }
 
     private byte[] createUpload() throws IOException {
@@ -156,7 +156,6 @@ public class Console {
         echo(format("Expected total workout time: %s", secondsToHuman(workout.size() * workout.duration)));
 
         //we need to make sure that before we start, there are no workers running anymore.
-        //log.log(Level.INFO, "Ensuring workers all killed");
         terminateWorkers();
         startWorkers(workout.workerJvmSettings);
 
@@ -193,7 +192,7 @@ public class Console {
             echo("Completed Test local setup");
 
             echo("Starting Test global setup");
-            agentClientManager.singleGenericTestTask("globalSet");
+            agentClientManager.singleGenericTestTask("globalSetup");
             echo("Completed Test global setup");
 
             echo("Starting Test start");
@@ -288,7 +287,7 @@ public class Console {
     }
 
     private void terminateWorkers() throws Exception {
-        echo("Stopping workers");
+        echo("Terminating workers");
         agentClientManager.terminateWorkers();
         echo("All workers have been terminated");
     }
@@ -340,7 +339,7 @@ public class Console {
         init(console, args);
 
         try {
-            console.run();
+            console.start();
             System.exit(0);
         } catch (Exception e) {
             log.severe("Failed to run workout", e);
