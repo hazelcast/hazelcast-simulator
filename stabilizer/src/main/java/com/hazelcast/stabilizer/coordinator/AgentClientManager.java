@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.console;
+package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -35,13 +35,13 @@ public class AgentClientManager {
 
     private final static ILogger log = Logger.getLogger(AgentClientManager.class);
 
-    private final Console console;
+    private final Coordinator coordinator;
     private List<AgentClient> agents = new LinkedList<AgentClient>();
 
     private final ExecutorService agentExecutor = Executors.newFixedThreadPool(100);
 
-    public AgentClientManager(Console console, File machineListFile) {
-        this.console = console;
+    public AgentClientManager(Coordinator coordinator, File machineListFile) {
+        this.coordinator = coordinator;
 
         String content = Utils.asText(machineListFile);
         for (String line : content.split("\n")) {
@@ -386,7 +386,8 @@ public class AgentClientManager {
             List<Failure> response = target
                     .path("agent/failures")
                     .request(MediaType.APPLICATION_XML)
-                    .get(new GenericType<List<Failure>>() {});
+                    .get(new GenericType<List<Failure>>() {
+                    });
             //System.out.println(response);
              return response;
         }

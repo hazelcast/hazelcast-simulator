@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.console;
+package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
@@ -17,7 +17,7 @@ import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.getFile;
 import static java.lang.String.format;
 
-public class ConsoleCli {
+public class CoordinatorCli {
 
     private final OptionParser parser = new OptionParser();
 
@@ -95,12 +95,12 @@ public class ConsoleCli {
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
-            return Console.STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-hazelcast.xml";
+            return Coordinator.STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-hazelcast.xml";
         }
     }
 
-    public static void init(Console console, String[] args) throws Exception {
-        ConsoleCli optionSpec = new ConsoleCli();
+    public static void init(Coordinator coordinator, String[] args) throws Exception {
+        CoordinatorCli optionSpec = new CoordinatorCli();
 
         try {
             OptionSet options = optionSpec.parser.parse(args);
@@ -110,16 +110,16 @@ public class ConsoleCli {
                 System.exit(0);
             }
 
-            console.cleanWorkersHome = options.has(optionSpec.cleanWorkersHome);
+            coordinator.cleanWorkersHome = options.has(optionSpec.cleanWorkersHome);
 
             if (options.has(optionSpec.workerClassPathSpec)) {
-                console.workerClassPath = options.valueOf(optionSpec.workerClassPathSpec);
+                coordinator.workerClassPath = options.valueOf(optionSpec.workerClassPathSpec);
             }
 
-            console.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
-            console.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
-            console.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
-            console.machineListFile = getFile(optionSpec.machineListFileSpec, options, "Machine list file");
+            coordinator.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
+            coordinator.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
+            coordinator.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
+            coordinator.machineListFile = getFile(optionSpec.machineListFileSpec, options, "Machine list file");
 
             String workoutFileName = "workout.properties";
             List<String> workoutFiles = options.nonOptionArguments();
@@ -130,7 +130,7 @@ public class ConsoleCli {
             }
 
             Workout workout = Workout.createWorkout(new File(workoutFileName));
-            console.workout = workout;
+            coordinator.workout = workout;
             workout.duration = getDuration(optionSpec, options);
             workout.failFast = options.valueOf(optionSpec.failFastSpec);
 
@@ -149,7 +149,7 @@ public class ConsoleCli {
         }
     }
 
-    private static int getDuration(ConsoleCli optionSpec, OptionSet options) {
+    private static int getDuration(CoordinatorCli optionSpec, OptionSet options) {
         String value = options.valueOf(optionSpec.durationSpec);
 
         try {

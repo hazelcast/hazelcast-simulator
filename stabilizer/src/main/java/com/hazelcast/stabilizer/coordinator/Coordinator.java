@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.console;
+package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -32,13 +32,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
-import static com.hazelcast.stabilizer.console.ConsoleCli.init;
+import static com.hazelcast.stabilizer.coordinator.CoordinatorCli.init;
 import static java.lang.String.format;
 
-public class Console {
+public class Coordinator {
 
     public final static File STABILIZER_HOME = getStablizerHome();
-    private final static ILogger log = Logger.getLogger(Console.class);
+    private final static ILogger log = Logger.getLogger(Coordinator.class);
 
     //options.
     public boolean monitorPerformance;
@@ -80,7 +80,7 @@ public class Console {
 
         runWorkout(workout);
 
-        //the console needs to sleep some to make sure that it will get failures if they are there.
+        //the coordinator needs to sleep some to make sure that it will get failures if they are there.
         log.info("Starting cool down (20 sec)");
         Utils.sleepSeconds(20);
         log.info("Finished cool down");
@@ -275,15 +275,15 @@ public class Console {
     }
 
     public static void main(String[] args) throws Exception {
-        log.info("Hazelcast Stabilizer Console");
+        log.info("Hazelcast Stabilizer Coordinator");
         log.info(format("Version: %s", getVersion()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
-        Console console = new Console();
-        init(console, args);
+        Coordinator coordinator = new Coordinator();
+        init(coordinator, args);
 
         try {
-            console.start();
+            coordinator.start();
             System.exit(0);
         } catch (Exception e) {
             log.severe("Failed to run workout", e);
