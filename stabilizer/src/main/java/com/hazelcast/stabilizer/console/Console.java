@@ -15,27 +15,19 @@
  */
 package com.hazelcast.stabilizer.console;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.client.config.XmlClientConfigBuilder;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Failure;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.agent.WorkerVmSettings;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.Workout;
-import com.hazelcast.stabilizer.agent.WorkerVmSettings;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -53,7 +45,6 @@ public class Console {
     //options.
     public boolean monitorPerformance;
     public boolean verifyEnabled = true;
-    public File consoleHzFile;
     public String workerClassPath;
     public boolean cleanWorkersHome;
     public Integer testStopTimeoutMs;
@@ -62,36 +53,10 @@ public class Console {
 
     //internal state.
     private final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
-    private HazelcastInstance client;
     private volatile TestRecipe testRecipe;
     private AgentClientManager agentClientManager;
 
-    public TestRecipe getTestRecipe() {
-        return testRecipe;
-    }
-
-    private class FailureMonitorThread extends Thread {
-        public FailureMonitorThread() {
-            super("FailureMonitorThread");
-            setDaemon(true);
-        }
-
-        public void run() {
-            for (; ; ) {
-                Utils.sleepSeconds(1);
-
-                List<Failure> failures = agentClientManager.getFailures();
-                for (Failure failure : failures) {
-                    failureList.add(failure);
-                    log.severe("Remote failure detected:" + failure);
-                }
-            }
-        }
-    }
-
     private void run() throws Exception {
-        initClient();
-
         agentClientManager = new AgentClientManager(this, machineListFile);
         agentClientManager.getFailures();
         new FailureMonitorThread().start();
@@ -106,29 +71,11 @@ public class Console {
         agentClientManager.initWorkout(workout, bytes);
 
         WorkerVmSettings workerVmSettings = workout.workerVmSettings;
-        Set<Member> members = client.getCluster().getMembers();
+        int agentCount = agentClientManager.getAgentCount();
         log.info(format("Worker track logging: %s", workerVmSettings.trackLogging));
         log.info(format("Workers per agent: %s", workerVmSettings.workerCount));
-        log.info(format("Total number of agents: %s", members.size()));
-        log.info(format("Total number of workers: %s", members.size() * workerVmSettings.workerCount));
-
-//        ITopic failureTopic = client.getTopic(Agent.AGENT_STABILIZER_TOPIC);
-//        failureTopic.addMessageListener(new MessageListener() {
-//            @Override
-//            public void onMessage(Message message) {
-//                Object messageObject = message.getMessageObject();
-//                if (messageObject instanceof Failure) {
-//                    Failure failure = (Failure) messageObject;
-//                    failureList.add(failure);
-//                    log.severe("Remote failure detected:" + failure);
-//                } else if (messageObject instanceof Exception) {
-//                    Exception e = (Exception) messageObject;
-//                    log.severe(e);
-//                } else {
-//                    log.info(messageObject.toString());
-//                }
-//            }
-//        });
+        log.info(format("Total number of agents: %s", agentCount));
+        log.info(format("Total number of workers: %s", agentCount * workerVmSettings.workerCount));
 
         long startMs = System.currentTimeMillis();
 
@@ -138,8 +85,6 @@ public class Console {
         log.info("Starting cooldown (10 sec)");
         Utils.sleepSeconds(10);
         log.info("Finished cooldown");
-
-        client.getLifecycleService().shutdown();
 
         long elapsedMs = System.currentTimeMillis() - startMs;
         log.info(format("Total running time: %s seconds", elapsedMs / 1000));
@@ -163,8 +108,9 @@ public class Console {
     }
 
     private byte[] createUpload() throws IOException {
-        if (workerClassPath == null)
+        if (workerClassPath == null) {
             return null;
+        }
 
         String[] parts = workerClassPath.split(";");
         List<File> files = new LinkedList<File>();
@@ -341,7 +287,7 @@ public class Console {
     private long startWorkers(WorkerVmSettings workerVmSettings) throws Exception {
         long startMs = System.currentTimeMillis();
         final int workerCount = workerVmSettings.workerCount;
-        final int totalWorkerCount = workerCount * client.getCluster().getMembers().size();
+        final int totalWorkerCount = workerCount * agentClientManager.getAgentCount();
         log.info(format("Starting a grand total of %s Worker Java Virtual Machines", totalWorkerCount));
         agentClientManager.spawnWorkers(workerVmSettings);
         long durationMs = System.currentTimeMillis() - startMs;
@@ -376,11 +322,6 @@ public class Console {
 //        submitToAllAgentsAndWait(task1);
 //    }
 
-    private void initClient() throws FileNotFoundException {
-        ClientConfig clientConfig = new XmlClientConfigBuilder(new FileInputStream(consoleHzFile)).build();
-        client = HazelcastClient.newHazelcastClient(clientConfig);
-    }
-
     public static void main(String[] args) throws Exception {
         log.info("Hazelcast Stabilizer Console");
         log.info(format("Version: %s", getVersion()));
@@ -395,6 +336,26 @@ public class Console {
         } catch (Exception e) {
             log.severe("Failed to run workout", e);
             System.exit(1);
+        }
+    }
+
+    private class FailureMonitorThread extends Thread {
+        public FailureMonitorThread() {
+            super("FailureMonitorThread");
+            setDaemon(true);
+        }
+
+        public void run() {
+            for (; ; ) {
+                //todo: this delay should be configurable.
+                Utils.sleepSeconds(1);
+
+                List<Failure> failures = agentClientManager.getFailures();
+                for (Failure failure : failures) {
+                    failureList.add(failure);
+                    log.severe("Remote failure detected:" + failure);
+                }
+            }
         }
     }
 }

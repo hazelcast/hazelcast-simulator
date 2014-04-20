@@ -15,10 +15,6 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.JavaInstallationsRepository;
@@ -31,12 +27,9 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 
-import static com.hazelcast.stabilizer.Utils.closeQuietly;
 import static com.hazelcast.stabilizer.Utils.ensureExistingDirectory;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
@@ -51,17 +44,14 @@ public class Agent {
 
     private final static ILogger log = Logger.getLogger(Agent.class);
     public final static File STABILIZER_HOME = getStablizerHome();
-    public static final String KEY_AGENT = "Agent";
 
     //for the agentservice
     public static volatile Agent agent;
 
     //cli properties
-    public File agentHzFile;
     public File javaInstallationsFile;
 
     //internal state
-    private volatile HazelcastInstance agentHz;
     private volatile Workout workout;
     private volatile TestRecipe testRecipe;
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
@@ -105,33 +95,8 @@ public class Agent {
         this.testRecipe = testRecipe;
     }
 
-    public HazelcastInstance getAgentHz() {
-        return agentHz;
-    }
-
     public JavaInstallationsRepository getJavaInstallationRepository() {
         return repository;
-    }
-
-    //todo: this will go.
-    protected HazelcastInstance startAgentHazelcastInstance() {
-        FileInputStream in;
-        try {
-            in = new FileInputStream(agentHzFile);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
-        Config config;
-        try {
-            config = new XmlConfigBuilder(in).build();
-        } finally {
-            closeQuietly(in);
-        }
-        config.getUserContext().put(KEY_AGENT, this);
-        agentHz = Hazelcast.newHazelcastInstance(config);
-
-        return agentHz;
     }
 
     public void initWorkout(Workout workout, byte[] content) throws IOException {
@@ -153,8 +118,6 @@ public class Agent {
         ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
 
         startRestServer();
-
-        startAgentHazelcastInstance();
 
         repository.load(javaInstallationsFile);
 

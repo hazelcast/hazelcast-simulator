@@ -30,7 +30,6 @@ import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.JavaInstallation;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.worker.Worker;
-import com.hazelcast.stabilizer.worker.WorkerVmLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -170,7 +169,7 @@ public class WorkerJvmManager {
         final String hzConfig = settings.hzConfig;
 
         StringBuffer members = new StringBuffer();
-        HazelcastInstance agentHazelcastInstance = agent.getAgentHz();
+        HazelcastInstance agentHazelcastInstance = null;//agent.getAgentHz();
         Cluster cluster = agentHazelcastInstance.getCluster();
         for (Member member : cluster.getMembers()) {
             String hostAddress = member.getSocketAddress().getAddress().getHostAddress();
@@ -285,7 +284,7 @@ public class WorkerJvmManager {
         sb.append("]");
 
         throw new RuntimeException(format("Timeout: workers %s of workout %s on host %s didn't start within %s seconds",
-                sb, agent.getWorkout().id, agent.getAgentHz().getCluster().getLocalMember().getInetSocketAddress(),
+                sb, agent.getWorkout().id, getHostAddress(),
                 workerTimeoutSec));
     }
 

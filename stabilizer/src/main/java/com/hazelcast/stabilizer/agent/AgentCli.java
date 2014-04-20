@@ -13,10 +13,6 @@ public class AgentCli {
 
     private final OptionParser parser = new OptionParser();
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
-    private final OptionSpec<String> agentHzFileSpec = parser.accepts("agentHzFile",
-            "The Hazelcast xml configuration file for the agent")
-            .withRequiredArg().ofType(String.class)
-            .defaultsTo(Agent.STABILIZER_HOME + File.separator + "conf" + File.separator + "agent-hazelcast.xml");
     private final OptionSpec<String> javaInstallationsFileSpec = parser.accepts("javaInstallationsFile",
             "A property file containing the Java installations used by Workers launched by this Agent")
             .withRequiredArg().ofType(String.class)
@@ -35,9 +31,5 @@ public class AgentCli {
                 agentOptionSpec.javaInstallationsFileSpec,
                 options,
                 "Java Installations config file");
-        agent.agentHzFile = getFile(
-                agentOptionSpec.agentHzFileSpec,
-                options,
-                "Agent Hazelcast config file");
     }
 }

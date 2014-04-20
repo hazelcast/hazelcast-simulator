@@ -41,6 +41,18 @@ public class AgentClientManager {
         }
     }
 
+    public int getAgentCount(){
+        return agents.size();
+    }
+
+    public List<String> getHostNames(){
+        List<String> result = new LinkedList();
+        for(AgentClient client: agents){
+            result.add(client.getHost());
+        }
+        return result;
+    }
+
     public List<Failure> getFailures() {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
