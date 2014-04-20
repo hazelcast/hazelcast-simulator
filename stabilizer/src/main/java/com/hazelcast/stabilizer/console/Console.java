@@ -25,8 +25,6 @@ import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.Workout;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -66,7 +64,7 @@ public class Console {
             echo("Finished cleanup workers home");
         }
 
-        byte[] bytes = createUpload();
+        byte[] bytes = Utils.createUpload(workerClassPath);
         agentClientManager.initWorkout(workout, bytes);
 
         WorkerJvmSettings workerJvmSettings = workout.workerJvmSettings;
@@ -115,38 +113,6 @@ public class Console {
         }
 
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
-    }
-
-    private byte[] createUpload() throws IOException {
-        if (workerClassPath == null) {
-            return null;
-        }
-
-        String[] parts = workerClassPath.split(";");
-        List<File> files = new LinkedList<File>();
-        for (String filePath : parts) {
-            File file = new File(filePath);
-
-            if (file.getName().contains("*")) {
-                File parent = file.getParentFile();
-                if (!parent.isDirectory()) {
-                    throw new IOException(format("Can't create upload, file [%s] is not a directory", parent));
-                }
-
-                String regex = file.getName().replace("*", "(.*)");
-                for (File child : parent.listFiles()) {
-                    if (child.getName().matches(regex)) {
-                        files.add(child);
-                    }
-                }
-            } else if (file.exists()) {
-                files.add(file);
-            } else {
-                throw new IOException(format("Can't create upload, file [%s] doesn't exist", filePath));
-            }
-        }
-
-        return Utils.zip(files);
     }
 
     private void runWorkout(Workout workout) throws Exception {
@@ -223,14 +189,14 @@ public class Console {
                 echo("Skipping Test verification");
             }
 
-            echo("Starting Test global teardown");
+            echo("Starting Test global tear down");
             agentClientManager.singleGenericTestTask("globalTearDown");
-            echo("Finished Test global teardown");
+            echo("Finished Test global tear down");
 
-            echo("Starting Test local teardown");
+            echo("Starting Test local tear down");
             agentClientManager.globalGenericTestTask("localTearDown");
 
-            echo("Completed Test local teardown");
+            echo("Completed Test local tear down");
 
             return failureList.size() == oldCount;
         } catch (Exception e) {
@@ -307,28 +273,6 @@ public class Console {
         agentClientManager.echo(msg);
         log.info(msg);
     }
-
-//    private void submitToOneWorker(Callable task) throws InterruptedException, ExecutionException {
-//        Future future = agentExecutor.submit(new TellWorker(task));
-//        try {
-//            Object o = future.get(1000, TimeUnit.SECONDS);
-//        } catch (ExecutionException e) {
-//            if (!(e.getCause() instanceof FailureAlreadyThrownRuntimeException)) {
-//                statusTopic.publish(new Failure(null, null, null, null, getTestRecipe(), e));
-//            }
-//            throw new RuntimeException(e);
-//        } catch (TimeoutException e) {
-//            Failure failure = new Failure("Timeout waiting for remote operation to complete",
-//                    null, null, null, getTestRecipe(), e);
-//            statusTopic.publish(failure);
-//            throw new RuntimeException(e);
-//        }
-//    }
-//
-//    private void submitToAllWorkersAndWait(Callable task, String taskDescription) throws InterruptedException, ExecutionException {
-//        ShoutToWorkersTask task1 = new ShoutToWorkersTask(task, taskDescription);
-//        submitToAllAgentsAndWait(task1);
-//    }
 
     public static void main(String[] args) throws Exception {
         log.info("Hazelcast Stabilizer Console");

@@ -381,4 +381,36 @@ public final class Utils {
         }
         return file;
     }
+
+    public static byte[] createUpload(String workerClassPath) throws IOException {
+        if (workerClassPath == null) {
+            return null;
+        }
+
+        String[] parts = workerClassPath.split(";");
+        List<File> files = new LinkedList<File>();
+        for (String filePath : parts) {
+            File file = new File(filePath);
+
+            if (file.getName().contains("*")) {
+                File parent = file.getParentFile();
+                if (!parent.isDirectory()) {
+                    throw new IOException(format("Can't create upload, file [%s] is not a directory", parent));
+                }
+
+                String regex = file.getName().replace("*", "(.*)");
+                for (File child : parent.listFiles()) {
+                    if (child.getName().matches(regex)) {
+                        files.add(child);
+                    }
+                }
+            } else if (file.exists()) {
+                files.add(file);
+            } else {
+                throw new IOException(format("Can't create upload, file [%s] doesn't exist", filePath));
+            }
+        }
+
+        return zip(files);
+    }
 }

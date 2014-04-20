@@ -62,6 +62,20 @@ public class ConsoleCli {
             "The Hazelcast xml configuration file for the worker")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultWorkerHzFile());
 
+       private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
+               "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
+            "If nothing is specified, the agent is free to pick a vendor.")
+            .withRequiredArg().ofType(String.class).defaultsTo("");
+    private final OptionSpec<String> workerJavaVersionSpec = parser.accepts("workerJavaVersion",
+            "The Java version (e.g. 1.6) of the JVM used by the worker). " +
+            "If nothing is specified, the agent is free to pick a version.")
+            .withRequiredArg().ofType(String.class).defaultsTo("");
+    private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs",
+            "Maximum amount of time waiting for the Test to stop")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
+
+    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
+
     private static String getDefaultWorkerHzFile() {
         File file = new File("worker-hazelcast.xml");
         //if something exists in the current working directory, use that.
@@ -71,20 +85,6 @@ public class ConsoleCli {
             return Console.STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-hazelcast.xml";
         }
     }
-
-    private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor", "The Java vendor (e.g. " +
-            "openjdk or sun) of the JVM used by the worker). " +
-            "If nothing is specified, the agent is free to pick a vendor.")
-            .withRequiredArg().ofType(String.class).defaultsTo("");
-    private final OptionSpec<String> workerJavaVersionSpec = parser.accepts("workerJavaVersion", "The Java version (e.g. 1.6) " +
-            "of the JVM used by the worker). " +
-            "If nothing is specified, the agent is free to pick a version.")
-            .withRequiredArg().ofType(String.class).defaultsTo("");
-    private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs", "Maximum amount of time " +
-            "waiting for the Test to stop")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
-
-    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     public static void init(Console console, String[] args) throws Exception {
         ConsoleCli optionSpec = new ConsoleCli();

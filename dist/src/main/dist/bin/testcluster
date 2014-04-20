@@ -6,6 +6,7 @@ class Cluster {
     def config
     def STABILIZER_HOME
     def machineListFile = new File("machine_list.txt")
+    def knownHostsFile = new File(new File(System.getProperty("user.home"), ".ssh"), "known_hosts")
 
     List<String> privateIps = []
 
@@ -22,7 +23,7 @@ class Cluster {
 
         STABILIZER_HOME = new File(Cluster.class.protectionDomain.codeSource.location.path).parentFile.parent
         echo "STABILIZER_HOME $STABILIZER_HOME"
-    }
+   }
 
     void installAgent(String ip) {
         echo "=============================================================="
@@ -64,7 +65,7 @@ class Cluster {
         echo "=============================================================="
     }
 
-    void killAgents(){
+    void killAgents() {
         echo "=============================================================="
         echo "Killing ${privateIps.size()} Agents"
         echo "=============================================================="
@@ -106,13 +107,14 @@ class Cluster {
             echo "Ignoring spawn machines, desired number of machines already exists"
         } else if (delta < 0) {
             terminate(-delta)
-        }else{
+        } else {
             scaleUp(delta)
         }
     }
 
     private void scaleUp(int delta) {
         echo "echo Starting ${delta} ${config.INSTANCE_TYPE} machines"
+
 
         def output = """ec2-run-instances \
             --availability-zone ${config.AVAILABILITY_ZONE} \
@@ -149,7 +151,7 @@ class Cluster {
         startAgents()
     }
 
-     void initPrivateIps(List<String> ids) {
+    void initPrivateIps(List<String> ids) {
         def x = "ec2-describe-instances".execute().text
         x.eachLine { String line, count ->
             def columns = line.split()
@@ -168,11 +170,10 @@ class Cluster {
     }
 
     void awaitStartup(List<String> ids) {
-        def remainingIds = ids.clone()
+        List<String> remainingIds = ids.clone()
 
         for (int k = 1; k < 600; k++) {
             def lines = "ec2-describe-instance-status".execute().text.split("\n")
-            echo "Status scan $k"
             for (int l = 0; l < (lines.length / 3); l++) {
                 def instanceLine = lines[l * 3].split()
                 def systemStatusLine = lines[l * 3 + 1].split()
@@ -185,16 +186,21 @@ class Cluster {
                     if (started) {
                         remainingIds.remove(id)
                     } else {
-                        println "    $id $status"
+                        //enable this line if you want to see the status.
+                        //println "    $id $status"
                     }
                 }
 
                 if (remainingIds.size == 0) return
             }
+
+            echo "Status scan $k started ${ids.size()-remainingIds.size()}/${ids.size()}"
         }
 
         echo "Timeout waiting for all instances to start, failed instances:"
-        echo remainingIds
+        remainingIds.each {String id ->
+            echo "  $id"
+        }
         System.exit(1)
     }
 
@@ -217,7 +223,11 @@ class Cluster {
         echo "=============================================================="
     }
 
-    void terminate(count=Integer.MAX_VALUE) {
+    void terminate(count = Integer.MAX_VALUE) {
+        if(count>privateIps.size()){
+            count=privateIps.size()
+        }
+
         echo "=============================================================="
         echo "Terminating cluster members: count $count"
         echo "=============================================================="
@@ -226,7 +236,7 @@ class Cluster {
         def ids = ""
         int removedCount = 0
         x.eachLine { String line, lineCount ->
-            if(removedCount == count){
+            if (removedCount == count) {
                 return;
             }
 
@@ -255,7 +265,7 @@ class Cluster {
         echo "=============================================================="
     }
 
-     void bash(String command) {
+    void bash(String command) {
         def sout = new StringBuffer(), serr = new StringBuffer()
 
         // create a process for the shell
