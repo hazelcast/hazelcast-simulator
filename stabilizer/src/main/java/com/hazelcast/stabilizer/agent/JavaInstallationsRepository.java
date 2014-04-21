@@ -16,7 +16,6 @@
 package com.hazelcast.stabilizer.agent;
 
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.agent.JavaInstallation;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,7 +33,9 @@ public class JavaInstallationsRepository {
     private final List<JavaInstallation> installationList = new LinkedList<JavaInstallation>();
 
     public JavaInstallation getAny() {
-        if (installationList.isEmpty()) return null;
+        if (installationList.isEmpty()) {
+            return null;
+        }
         return installationList.get(0);
     }
 
@@ -45,7 +46,8 @@ public class JavaInstallationsRepository {
         for (String key : properties.stringPropertyNames()) {
             String[] tokens = key.split("\\.");
             if (tokens.length != 2) {
-                throw new RuntimeException(format("Invalid java-installations properties: property key [%s] should be of form x.y", key));
+                throw new RuntimeException(
+                        format("Invalid java-installations properties: property key [%s] should be of form x.y", key));
             }
 
             String value = properties.getProperty(key);
@@ -65,7 +67,8 @@ public class JavaInstallationsRepository {
             } else if ("javaHome".equalsIgnoreCase(property)) {
                 installation.setJavaHome(value);
             } else {
-                throw new RuntimeException(format("Invalid java-installations properties: property key [%s] is not unrecognized", key));
+                throw new RuntimeException(
+                        format("Invalid java-installations properties: property key [%s] is not unrecognized", key));
             }
         }
 
