@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.tests;
+
+import com.hazelcast.stabilizer.TestRecipe;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;

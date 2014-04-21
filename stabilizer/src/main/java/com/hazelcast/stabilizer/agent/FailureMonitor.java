@@ -19,7 +19,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.Failure;
+import com.hazelcast.stabilizer.tests.Failure;
 
 import java.io.File;
 import java.util.LinkedList;

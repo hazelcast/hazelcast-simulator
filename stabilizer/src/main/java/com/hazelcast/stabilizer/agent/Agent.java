@@ -17,7 +17,6 @@ package com.hazelcast.stabilizer.agent;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.JavaInstallationsRepository;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Workout;

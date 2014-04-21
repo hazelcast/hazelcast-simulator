@@ -1,5 +1,7 @@
 package com.hazelcast.stabilizer;
 
+import com.hazelcast.stabilizer.agent.JavaInstallation;
+import com.hazelcast.stabilizer.agent.JavaInstallationsRepository;
 import org.junit.Test;
 
 import java.io.File;

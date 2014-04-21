@@ -2,8 +2,8 @@ package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.Failure;
-import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
+import com.hazelcast.stabilizer.tests.Failure;
+import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;

@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.agent;
+
+import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.agent.JavaInstallation;
 
 import java.io.File;
 import java.io.FileInputStream;

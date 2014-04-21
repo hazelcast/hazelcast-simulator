@@ -27,12 +27,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-cloud</artifactId>
-            <version>${hazelcast.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>net.sf.jopt-simple</groupId>
             <artifactId>jopt-simple</artifactId>
             <version>${jopt.version}</version>
@@ -45,12 +39,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <version>2.2.2</version>
-        </dependency>
-
-         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
             <version>2.0</version>
@@ -78,16 +66,7 @@
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
             <version>2.7</version>
-         </dependency>
-
-
-
-        <!-- uncomment this to get JSON support:
-         <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-moxy</artifactId>
         </dependency>
-        -->
 
         <dependency>
             <groupId>junit</groupId>

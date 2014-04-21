@@ -24,9 +24,7 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.Failure;
-import com.hazelcast.stabilizer.FailureAlreadyThrownRuntimeException;
-import com.hazelcast.stabilizer.JavaInstallation;
+import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.worker.Worker;
 
