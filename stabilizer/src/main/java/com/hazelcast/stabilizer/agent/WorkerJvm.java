@@ -27,6 +27,10 @@ public class WorkerJvm {
         this.process = process;
     }
 
+    public String getHostString(){
+        return  member.getSocketAddress().getHostString();
+    }
+
     public Member getMember() {
         return member;
     }

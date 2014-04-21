@@ -24,8 +24,8 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.worker.Worker;
 
 import java.io.File;
@@ -65,6 +65,22 @@ public class WorkerJvmManager {
     private volatile IExecutorService workerExecutor;
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
+    public void cleanWorkersHome() throws IOException {
+        for (File file : WORKERS_HOME.listFiles()) {
+            Utils.delete(file);
+        }
+    }
+
+    public HazelcastInstance getWorkerClient() {
+        return workerClient;
+    }
+
+    public List<WorkerJvm> getWorkerJvms() {
+        return workerJvms;
+    }
+
+
+
     public WorkerJvmManager(Agent agent) {
         this.agent = agent;
 
@@ -78,6 +94,26 @@ public class WorkerJvmManager {
         });
     }
 
+    public Boolean isClusterMember(WorkerJvm jvm) {
+        Member jvmMember = jvm.getMember();
+        if(jvmMember == null){
+            return null;
+        }
+
+        final HazelcastInstance workerClient = getWorkerClient();
+        if (workerClient == null) {
+            return false;
+        }
+
+        for (Member member : workerClient.getCluster().getMembers()) {
+            if (member.getSocketAddress().equals(jvmMember)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public List executeOnWorkers(Callable task, String taskDescription) throws InterruptedException {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
@@ -87,7 +123,7 @@ public class WorkerJvmManager {
                 continue;
             }
 
-            Future future = getWorkerExecutor().submitToMember(task, member);
+            Future future = workerExecutor.submitToMember(task, member);
             futures.put(workerJvm, future);
         }
 
@@ -102,7 +138,7 @@ public class WorkerJvmManager {
                 Failure failure = new Failure();
                 failure.message = taskDescription;
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = workerJvm.getMember().getInetSocketAddress().getHostString();
+                failure.workerAddress = workerJvm.getHostString();
                 failure.workerId = workerJvm.getId();
                 failure.testRecipe = agent.getTestRecipe();
                 failure.cause = throwableToString(e);
@@ -113,23 +149,6 @@ public class WorkerJvmManager {
         return results;
     }
 
-    public void cleanWorkersHome() throws IOException {
-        for (File file : WORKERS_HOME.listFiles()) {
-            Utils.delete(file);
-        }
-    }
-
-    public IExecutorService getWorkerExecutor() {
-        return workerExecutor;
-    }
-
-    public HazelcastInstance getWorkerClient() {
-        return workerClient;
-    }
-
-    public List<WorkerJvm> getWorkerJvms() {
-        return workerJvms;
-    }
 
     public void spawn(WorkerJvmSettings settings) throws Exception {
         log.info(format("Starting %s worker Java Virtual Machines using settings\n %s", settings.workerCount, settings));

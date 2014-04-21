@@ -20,5 +20,4 @@ public class FailureAlreadyThrownRuntimeException extends RuntimeException {
     public FailureAlreadyThrownRuntimeException(Throwable cause) {
         super(cause);
     }
-
 }

@@ -15,8 +15,7 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Member;
+
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.Failure;
@@ -91,10 +90,12 @@ public class FailureMonitor {
         if (workoutHome == null) {
             return;
         }
+
         File[] files = workoutHome.listFiles();
         if (files == null) {
             return;
         }
+
         for (File file : files) {
             String name = file.getName();
             if (name.endsWith(".exception")) {
@@ -108,7 +109,7 @@ public class FailureMonitor {
                 Failure failure = new Failure();
                 failure.message = "Exception thrown in worker";
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = jvm == null ? null : jvm.getMember().getSocketAddress().getHostString();
+                failure.workerAddress = jvm == null ? null : jvm.getHostString();
                 failure.workerId = workerId;
                 failure.testRecipe = agent.getTestRecipe();
                 failure.cause = throwableToString(cause);
@@ -122,36 +123,17 @@ public class FailureMonitor {
     }
 
     private Failure detectMembershipFailure(WorkerJvm jvm) {
-        //if the jvm is not assigned a hazelcast address yet.
-        if (jvm.getMember() == null) {
-            return null;
-        }
+        Boolean isMember = agent.getWorkerJvmManager().isClusterMember(jvm);
 
-        Member member = findMember(jvm);
-        if (member == null) {
+        if (Boolean.FALSE.equals(isMember)) {
             jvm.getProcess().destroy();
             Failure failure = new Failure();
             failure.message = "Hazelcast membership failure (member missing)";
             failure.agentAddress = getHostAddress();
-            failure.workerAddress = jvm.getMember().getSocketAddress().getHostString();
+            failure.workerAddress = jvm.getHostString();
             failure.workerId = jvm.getId();
             failure.testRecipe = agent.getTestRecipe();
             return failure;
-        }
-
-        return null;
-    }
-
-    private Member findMember(WorkerJvm jvm) {
-        final HazelcastInstance workerClient = agent.getWorkerJvmManager().getWorkerClient();
-        if (workerClient == null) {
-            return null;
-        }
-
-        for (Member member : workerClient.getCluster().getMembers()) {
-            if (member.getSocketAddress().equals(jvm.getMember().getSocketAddress())) {
-                return member;
-            }
         }
 
         return null;
@@ -171,7 +153,7 @@ public class FailureMonitor {
         Failure failure = new Failure();
         failure.message = "Out of memory";
         failure.agentAddress = getHostAddress();
-        failure.workerAddress = jvm.getMember().getSocketAddress().getHostString();
+        failure.workerAddress = jvm.getHostString();
         failure.workerId = jvm.getId();
         failure.testRecipe = agent.getTestRecipe();
         jvm.getProcess().destroy();
@@ -186,7 +168,7 @@ public class FailureMonitor {
                 Failure failure = new Failure();
                 failure.message = "Exit code not 0, but was " + exitCode;
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = jvm.getMember().getSocketAddress().getHostString();
+                failure.workerAddress = jvm.getHostString();
                 failure.workerId = jvm.getId();
                 failure.testRecipe = agent.getTestRecipe();
                 return failure;

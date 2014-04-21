@@ -44,9 +44,6 @@ public class Agent {
     private final static ILogger log = Logger.getLogger(Agent.class);
     public final static File STABILIZER_HOME = getStablizerHome();
 
-    //for the agentservice
-    public static volatile Agent agent;
-
     //cli properties
     public File javaInstallationsFile;
 
@@ -57,10 +54,6 @@ public class Agent {
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
     private final FailureMonitor failureMonitor = new FailureMonitor(this);
 
-    public Agent() {
-        agent = this;
-    }
-
     public void echo(String msg) {
         log.info(msg);
     }
@@ -70,7 +63,7 @@ public class Agent {
     }
 
     public File getWorkoutHome() {
-        Workout _workout = agent.getWorkout();
+        Workout _workout = workout;
         if (_workout == null) {
             return null;
         }
