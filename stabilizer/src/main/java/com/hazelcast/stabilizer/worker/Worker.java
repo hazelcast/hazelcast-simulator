@@ -168,7 +168,7 @@ public class Worker {
                     sendResponse(asList(response));
 
                     List<TestCommandResponse> responses = new LinkedList<TestCommandResponse>();
-                    responseQueue.drainTo(responseQueue);
+                    responseQueue.drainTo(responses);
 
                     sendResponse(responses);
                 } catch (Exception e) {
