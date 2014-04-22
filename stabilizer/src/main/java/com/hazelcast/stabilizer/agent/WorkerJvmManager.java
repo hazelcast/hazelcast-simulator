@@ -128,10 +128,23 @@ public class WorkerJvmManager {
         return workerJvms.values();
     }
 
-    public List executeOnWorkers(TestCommand testCommand, String taskDescription) throws InterruptedException {
+    public Object executeOnSingleWorker(TestCommand testCommand)throws Exception {
+        Collection<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms.values());
+        if(workers.isEmpty()){
+            throw new RuntimeException("No worker JVM's found");
+        }
+        List list = executeOnWorkers(testCommand, workers);
+        return list.get(0);
+    }
+
+    public List executeOnAllWorkers(TestCommand testCommand) throws Exception {
+        return executeOnWorkers(testCommand, workerJvms.values());
+    }
+
+    private List executeOnWorkers(TestCommand testCommand, Collection<WorkerJvm> workers) throws Exception {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
-        for (WorkerJvm workerJvm : getWorkerJvms()) {
+        for (WorkerJvm workerJvm : workers) {
             TestCommandFuture future = new TestCommandFuture();
             TestCommandRequest request = new TestCommandRequest();
             request.id = requestIdGenerator.incrementAndGet();
@@ -162,7 +175,7 @@ public class WorkerJvmManager {
                 results.add(result);
             } catch (ExecutionException e) {
                 Failure failure = new Failure();
-                failure.message = taskDescription;
+                failure.message = e.getMessage();
                 failure.agentAddress = getHostAddress();
                 failure.workerAddress = workerJvm.memberAddress;
                 failure.workerId = workerJvm.id;
@@ -174,6 +187,7 @@ public class WorkerJvmManager {
         }
         return results;
     }
+
 
     public void spawn(WorkerJvmSettings settings) throws Exception {
         log.info(format("Starting %s worker Java Virtual Machines using settings\n %s", settings.workerCount, settings));
@@ -379,6 +393,7 @@ public class WorkerJvmManager {
     public WorkerJvm getWorker(String workerId) {
         return workerJvms.get(workerId);
     }
+
 
     private class PollThread extends Thread {
         public PollThread() {

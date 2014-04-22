@@ -19,15 +19,17 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class AgentRemoteService {
-    private final static ILogger log = Logger.getLogger(AgentRemoteService.class);
     public static final String SERVICE_SPAWN_WORKERS = "spawnWorkers";
     public static final String SERVICE_INIT_WORKOUT = "initWorkout";
     public static final String SERVICE_CLEAN_WORKERS_HOME = "cleanWorkersHome";
     public static final String SERVICE_TERMINATE_WORKERS = "terminateWorkers";
-    public static final String SERVICE_TEST_COMMAND = "testCommand";
+    public static final String SERVICE_EXECUTE_ALL_WORKERS = "executeOnAllWorkers";
+    public static final String SERVICE_EXECUTE_SINGLE_WORKER = "executeOnSingleWorker";
     public static final String SERVICE_ECHO = "echo";
     public static final String SERVICE_PREPARE_FOR_TEST = "prepareForTest";
     public static final String SERVICE_GET_FAILURES = "failures";
+
+    private final static ILogger log = Logger.getLogger(AgentRemoteService.class);
 
     private Agent agent;
     private ServerSocket serverSocket;
@@ -86,9 +88,14 @@ public class AgentRemoteService {
                         cleanWorkersHome();
                     } else if (SERVICE_TERMINATE_WORKERS.equals(service)) {
                         terminateWorkers();
-                    } else if (SERVICE_TEST_COMMAND.equals(service)) {
-                        TestCommand testCommand =(TestCommand) in.readObject();
-                        agent.getWorkerJvmManager().executeOnWorkers(testCommand, testCommand.toString());
+                    } else if (SERVICE_EXECUTE_ALL_WORKERS.equals(service)) {
+                        TestCommand testCommand = (TestCommand) in.readObject();
+                        WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
+                        workerJvmManager.executeOnAllWorkers(testCommand);
+                    }else if (SERVICE_EXECUTE_SINGLE_WORKER.equals(service)) {
+                        TestCommand testCommand = (TestCommand) in.readObject();
+                        WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
+                        workerJvmManager.executeOnSingleWorker(testCommand);
                     } else if (SERVICE_ECHO.equals(service)) {
                         String msg = (String) in.readObject();
                         echo(msg);

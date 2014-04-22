@@ -9,7 +9,6 @@ import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.Workout;
-import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 
 import java.io.File;
@@ -66,7 +65,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    return agentClient.getFailures();
+                    return agentClient.execute(AgentRemoteService.SERVICE_GET_FAILURES);
                 }
             });
             futures.add(f);
@@ -94,7 +93,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.prepareAgentForTest(testRecipe);
+                    agentClient.execute(AgentRemoteService.SERVICE_PREPARE_FOR_TEST, testRecipe);
                     return null;
                 }
             });
@@ -110,7 +109,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.cleanWorkersHome();
+                    agentClient.execute(AgentRemoteService.SERVICE_CLEAN_WORKERS_HOME);
                     return null;
                 }
             });
@@ -158,7 +157,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.initWorkout(workout);
+                    agentClient.execute(AgentRemoteService.SERVICE_INIT_WORKOUT, workout);
                     return null;
                 }
             });
@@ -174,7 +173,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.terminateWorkers();
+                    agentClient.execute(AgentRemoteService.SERVICE_TERMINATE_WORKERS);
                     return null;
                 }
             });
@@ -190,7 +189,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.spawnWorkers(workerJvmSettings);
+                    agentClient.execute(AgentRemoteService.SERVICE_SPAWN_WORKERS, workerJvmSettings);
                     return null;
                 }
             });
@@ -200,14 +199,14 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public void testCommand(final TestCommand testCommand) {
+    public void executeOnAllWorkers(final TestCommand testCommand) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
                     try {
-                        agentClient.testCommand(testCommand);
+                        agentClient.execute(AgentRemoteService.SERVICE_EXECUTE_ALL_WORKERS, testCommand);
                         return null;
                     } catch (RuntimeException t) {
                         log.severe(t);
@@ -221,7 +220,7 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public void singleGenericTestTask(final String name) {
+    public void executeOnSingleWorker(final TestCommand testCommand) {
         if (agents.isEmpty()) {
             return;
         }
@@ -230,9 +229,7 @@ public class AgentClientManager {
             @Override
             public Object call() throws Exception {
                 AgentClient agentClient = agents.get(0);
-                GenericTestCommand testCommand = new GenericTestCommand(name);
-                //todo: the problem here is that you are going to ask all member and not a single member.
-                agentClient.testCommand(testCommand);
+                agentClient.execute(AgentRemoteService.SERVICE_EXECUTE_SINGLE_WORKER, testCommand);
                 return null;
             }
         });
@@ -246,7 +243,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.echo(msg);
+                    agentClient.execute(AgentRemoteService.SERVICE_ECHO, msg);
                     return null;
                 }
             });
@@ -284,38 +281,6 @@ public class AgentClientManager {
             } finally {
                 Utils.closeQuietly(socket);
             }
-        }
-
-        public void spawnWorkers(WorkerJvmSettings settings) throws Exception {
-            execute(AgentRemoteService.SERVICE_SPAWN_WORKERS, settings);
-        }
-
-        public void cleanWorkersHome() throws Exception {
-            execute(AgentRemoteService.SERVICE_CLEAN_WORKERS_HOME);
-        }
-
-        public void testCommand(TestCommand testCommand) throws Exception {
-            execute(AgentRemoteService.SERVICE_TEST_COMMAND, testCommand);
-        }
-
-        public void echo(String msg) throws Exception {
-            execute(AgentRemoteService.SERVICE_ECHO, msg);
-        }
-
-        public void prepareAgentForTest(TestRecipe testRecipe) throws Exception {
-            execute(AgentRemoteService.SERVICE_PREPARE_FOR_TEST, testRecipe);
-        }
-
-        public void initWorkout(Workout workout) throws Exception {
-            execute(AgentRemoteService.SERVICE_INIT_WORKOUT, workout);
-        }
-
-        public void terminateWorkers() throws Exception {
-            execute(AgentRemoteService.SERVICE_TERMINATE_WORKERS);
-        }
-
-        public List<Failure> getFailures() throws Exception {
-            return (List<Failure>) execute(AgentRemoteService.SERVICE_GET_FAILURES);
         }
     }
 }

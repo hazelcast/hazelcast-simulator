@@ -152,19 +152,19 @@ public class Coordinator {
 
             echo("Starting Test initialization");
             agentClientManager.prepareAgentsForTests(testRecipe);
-            agentClientManager.testCommand(new InitTestCommand(testRecipe));
+            agentClientManager.executeOnAllWorkers(new InitTestCommand(testRecipe));
             echo("Completed Test initialization");
 
             echo("Starting Test local setup");
-            agentClientManager.testCommand(new GenericTestCommand("localSetup"));
+            agentClientManager.executeOnAllWorkers(new GenericTestCommand("localSetup"));
             echo("Completed Test local setup");
 
             echo("Starting Test global setup");
-            agentClientManager.singleGenericTestTask("globalSetup");
+            agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalSetup"));
             echo("Completed Test global setup");
 
             echo("Starting Test start");
-            agentClientManager.testCommand(new GenericTestCommand("start"));
+            agentClientManager.executeOnAllWorkers(new GenericTestCommand("start"));
             echo("Completed Test start");
 
             echo(format("Test running for %s seconds", workout.duration));
@@ -172,7 +172,7 @@ public class Coordinator {
             echo("Test finished running");
 
             echo("Starting Test stop");
-            agentClientManager.testCommand(new StopTestCommand());
+            agentClientManager.executeOnAllWorkers(new StopTestCommand());
             echo("Completed Test stop");
 
             if (monitorPerformance) {
@@ -181,22 +181,22 @@ public class Coordinator {
 
             if (verifyEnabled) {
                 echo("Starting Test global verify");
-                agentClientManager.singleGenericTestTask("globalVerify");
+                agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalVerify"));
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
-                agentClientManager.testCommand(new GenericTestCommand("localVerify"));
+                agentClientManager.executeOnAllWorkers(new GenericTestCommand("localVerify"));
                 echo("Completed Test local verify");
             } else {
                 echo("Skipping Test verification");
             }
 
             echo("Starting Test global tear down");
-            agentClientManager.singleGenericTestTask("globalTearDown");
+            agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalTearDown"));
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentClientManager.testCommand(new GenericTestCommand("localTearDown"));
+            agentClientManager.executeOnAllWorkers(new GenericTestCommand("localTearDown"));
 
             echo("Completed Test local tear down");
 
