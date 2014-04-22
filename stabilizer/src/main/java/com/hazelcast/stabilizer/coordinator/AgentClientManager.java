@@ -1,21 +1,21 @@
 package com.hazelcast.stabilizer.coordinator;
 
+
 import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.agent.AgentRemoteService;
+import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
+import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.Workout;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -28,12 +28,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static java.lang.String.format;
-import static javax.ws.rs.client.Entity.entity;
-
 public class AgentClientManager {
 
-    private final static ILogger log = Logger.getLogger(AgentClientManager.class);
+    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentClientManager.class.getName());
 
     private final Coordinator coordinator;
     private List<AgentClient> agents = new LinkedList<AgentClient>();
@@ -46,7 +43,6 @@ public class AgentClientManager {
         String content = Utils.asText(machineListFile);
         for (String line : content.split("\n")) {
             AgentClient client = new AgentClient(line);
-            client.start();
             agents.add(client);
         }
     }
@@ -69,7 +65,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    return agentClient.getFailures();
+                    return agentClient.execute(AgentRemoteService.SERVICE_GET_FAILURES);
                 }
             });
             futures.add(f);
@@ -97,7 +93,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.prepareAgentForTest(testRecipe);
+                    agentClient.execute(AgentRemoteService.SERVICE_PREPARE_FOR_TEST, testRecipe);
                     return null;
                 }
             });
@@ -113,7 +109,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.cleanWorkersHome();
+                    agentClient.execute(AgentRemoteService.SERVICE_CLEAN_WORKERS_HOME);
                     return null;
                 }
             });
@@ -161,7 +157,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.initWorkout(workout);
+                    agentClient.execute(AgentRemoteService.SERVICE_INIT_WORKOUT, workout);
                     return null;
                 }
             });
@@ -177,7 +173,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.terminateWorkers();
+                    agentClient.execute(AgentRemoteService.SERVICE_TERMINATE_WORKERS);
                     return null;
                 }
             });
@@ -193,7 +189,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.spawnWorkers(workerJvmSettings);
+                    agentClient.execute(AgentRemoteService.SERVICE_SPAWN_WORKERS, workerJvmSettings);
                     return null;
                 }
             });
@@ -203,14 +199,14 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public void initTest(final TestRecipe testRecipe) {
+    public void executeOnAllWorkers(final TestCommand testCommand) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
                     try {
-                        agentClient.initTest(testRecipe);
+                        agentClient.execute(AgentRemoteService.SERVICE_EXECUTE_ALL_WORKERS, testCommand);
                         return null;
                     } catch (RuntimeException t) {
                         log.severe(t);
@@ -224,23 +220,7 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public void globalGenericTestTask(final String name) {
-        List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    agentClient.genericTestTask(name);
-                    return null;
-                }
-            });
-            futures.add(f);
-        }
-
-        getAllFutures(futures);
-    }
-
-    public void singleGenericTestTask(final String name) {
+    public void executeOnSingleWorker(final TestCommand testCommand) {
         if (agents.isEmpty()) {
             return;
         }
@@ -249,7 +229,7 @@ public class AgentClientManager {
             @Override
             public Object call() throws Exception {
                 AgentClient agentClient = agents.get(0);
-                agentClient.genericTestTask(name);
+                agentClient.execute(AgentRemoteService.SERVICE_EXECUTE_SINGLE_WORKER, testCommand);
                 return null;
             }
         });
@@ -263,7 +243,7 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.echo(msg);
+                    agentClient.execute(AgentRemoteService.SERVICE_ECHO, msg);
                     return null;
                 }
             });
@@ -273,123 +253,34 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public void stopTest() {
-        List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    agentClient.stopTest();
-                    return null;
-                }
-            });
-            futures.add(f);
-        }
-
-        getAllFutures(futures);
-    }
-
-    //https://jersey.java.net/nonav/documentation/latest/user-guide.html
     public static class AgentClient {
 
         private final String host;
-        private final String baseUrl;
-        private WebTarget target;
 
         public AgentClient(String host) {
             this.host = host;
-            this.baseUrl = format("http://%s:8080/", host);
         }
 
         public String getHost() {
             return host;
         }
 
-        public void start() {
-            Client c = ClientBuilder.newClient();
-            target = c.target(baseUrl);
-        }
+        private Object execute(String service, Object... args) throws Exception {
+            Socket socket = new Socket(InetAddress.getByName(host), 9000);
 
-        public void spawnWorkers(WorkerJvmSettings settings) {
-            Response response = target
-                    .path("agent/spawnWorkers")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity(settings, MediaType.APPLICATION_JSON));
-            //System.out.println(response);
-        }
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                oos.writeObject(service);
+                for (Object arg : args) {
+                    oos.writeObject(arg);
+                }
+                oos.flush();
 
-        public void cleanWorkersHome() {
-            Response response = target
-                    .path("agent/cleanWorkersHome")
-                    .request(MediaType.TEXT_PLAIN)
-                    .post(null);
-            //System.out.println(response);
-        }
-
-        public void genericTestTask(String methodName) {
-            Response response = target
-                    .path("agent/genericTestTask")
-                    .request(MediaType.APPLICATION_JSON)
-                    .put(entity(methodName, MediaType.TEXT_PLAIN_TYPE));
-            //System.out.println(response);
-        }
-
-        public void echo(String msg) {
-            Response response = target
-                    .path("agent/echo")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity(msg, MediaType.TEXT_PLAIN_TYPE));
-            //System.out.println(response);
-        }
-
-        public void prepareAgentForTest(TestRecipe testRecipe) {
-            Response response = target
-                    .path("agent/prepareForTest")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity(testRecipe, MediaType.APPLICATION_XML));
-            //System.out.println(response);
-        }
-
-        public void initWorkout(Workout workout) {
-            Response response = target
-                    .path("agent/initWorkout")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity(workout, MediaType.APPLICATION_XML));
-            //System.out.println(response);
-        }
-
-        public void initTest(TestRecipe testRecipe) {
-            Response response = target
-                    .path("agent/initTest")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity(testRecipe, MediaType.APPLICATION_XML));
-            //System.out.println(response);
-        }
-
-        public void terminateWorkers() {
-            Response response = target
-                    .path("agent/terminateWorkers")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity("", MediaType.TEXT_PLAIN_TYPE));
-            //System.out.println(response);
-        }
-
-        public void stopTest() {
-            Response response = target
-                    .path("agent/stopTest")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity("", MediaType.TEXT_PLAIN_TYPE));
-            //System.out.println(response);
-        }
-
-        public List<Failure> getFailures() {
-            List<Failure> response = target
-                    .path("agent/failures")
-                    .request(MediaType.APPLICATION_XML)
-                    .get(new GenericType<List<Failure>>() {
-                    });
-            //System.out.println(response);
-             return response;
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                return in.readObject();
+            } finally {
+                Utils.closeQuietly(socket);
+            }
         }
     }
 }

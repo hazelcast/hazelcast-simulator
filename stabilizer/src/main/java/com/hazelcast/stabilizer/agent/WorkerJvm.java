@@ -15,31 +15,19 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.core.Member;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class WorkerJvm {
-    private final Process process;
-    private final String id;
-    private volatile Member member;
+    public final String id;
+    public volatile String memberAddress;
+    public Process process;
 
-    public WorkerJvm(String id, Process process) {
+    public final BlockingQueue<TestCommandRequest> commandQueue = new LinkedBlockingQueue<TestCommandRequest>();
+
+    public WorkerJvm(String id) {
         this.id = id;
-        this.process = process;
-    }
-
-    public Member getMember() {
-        return member;
-    }
-
-    public void setMember(Member member) {
-        this.member = member;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public Process getProcess() {
-        return process;
     }
 }

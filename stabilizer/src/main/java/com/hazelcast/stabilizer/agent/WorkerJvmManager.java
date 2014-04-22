@@ -15,32 +15,36 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IExecutorService;
-import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.worker.Worker;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -52,6 +56,9 @@ import static java.lang.String.format;
 
 public class WorkerJvmManager {
 
+    public final static String SERVICE_POLL_WORK = "poll";
+    public final static String COMMAND_PUSH_RESPONSE = "push";
+
     private final static ILogger log = Logger.getLogger(WorkerJvmManager.class);
     private final static String CLASSPATH = System.getProperty("java.class.path");
     private final static File STABILIZER_HOME = getStablizerHome();
@@ -59,36 +66,70 @@ public class WorkerJvmManager {
     private final static AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
     public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
 
-    private final List<WorkerJvm> workerJvms = new CopyOnWriteArrayList<WorkerJvm>();
+    private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
-    private volatile HazelcastInstance workerClient;
-    private volatile IExecutorService workerExecutor;
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
+
+    private final ConcurrentMap<Long, TestCommandFuture> futureMap = new ConcurrentHashMap<Long, TestCommandFuture>();
+    private final AtomicLong requestIdGenerator = new AtomicLong(0);
+
+    private ServerSocket serverSocket;
+    private final Executor executor = Executors.newFixedThreadPool(20);
+
 
     public WorkerJvmManager(Agent agent) {
         this.agent = agent;
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                for (WorkerJvm jvm : workerJvms) {
-                    log.info("Destroying Worker : " + jvm.getId());
-                    jvm.getProcess().destroy();
+                for (WorkerJvm jvm : workerJvms.values()) {
+                    log.info("Destroying Worker : " + jvm.id);
+                    jvm.process.destroy();
                 }
             }
         });
     }
 
-    public List executeOnWorkers(Callable task, String taskDescription) throws InterruptedException {
+
+    public void start() throws Exception {
+        serverSocket = new ServerSocket(10000, 0, InetAddress.getByName(null));
+
+        new AcceptorThread().start();
+    }
+
+    public void cleanWorkersHome() throws IOException {
+        for (File file : WORKERS_HOME.listFiles()) {
+            Utils.delete(file);
+        }
+    }
+
+    public Collection<WorkerJvm> getWorkerJvms() {
+        return workerJvms.values();
+    }
+
+    public Object executeOnSingleWorker(TestCommand testCommand) throws Exception {
+        Collection<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms.values());
+        if (workers.isEmpty()) {
+            throw new RuntimeException("No worker JVM's found");
+        }
+        List list = executeOnWorkers(testCommand, workers);
+        return list.get(0);
+    }
+
+    public List executeOnAllWorkers(TestCommand testCommand) throws Exception {
+        return executeOnWorkers(testCommand, workerJvms.values());
+    }
+
+    private List executeOnWorkers(TestCommand testCommand, Collection<WorkerJvm> workers) throws Exception {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
-        for (WorkerJvm workerJvm : getWorkerJvms()) {
-            Member member = workerJvm.getMember();
-            if (member == null) {
-                continue;
-            }
-
-            Future future = getWorkerExecutor().submitToMember(task, member);
-            futures.put(workerJvm, future);
+        for (WorkerJvm workerJvm : workers) {
+            TestCommandFuture future = new TestCommandFuture();
+            TestCommandRequest request = new TestCommandRequest();
+            request.id = requestIdGenerator.incrementAndGet();
+            request.task = testCommand;
+            futureMap.put(request.id, future);
+            workerJvm.commandQueue.add(request);
         }
 
         List results = new LinkedList();
@@ -100,36 +141,19 @@ public class WorkerJvmManager {
                 results.add(result);
             } catch (ExecutionException e) {
                 Failure failure = new Failure();
-                failure.message = taskDescription;
+                failure.message = e.getMessage();
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = workerJvm.getMember().getInetSocketAddress().getHostString();
-                failure.workerId = workerJvm.getId();
+                failure.workerAddress = workerJvm.memberAddress;
+                failure.workerId = workerJvm.id;
                 failure.testRecipe = agent.getTestRecipe();
                 failure.cause = throwableToString(e);
-                agent.getFailureMonitor().publish(failure);
+                agent.getWorkerJvmFailureMonitor().publish(failure);
                 throw new FailureAlreadyThrownRuntimeException(e);
             }
         }
         return results;
     }
 
-    public void cleanWorkersHome() throws IOException {
-        for (File file : WORKERS_HOME.listFiles()) {
-            Utils.delete(file);
-        }
-    }
-
-    public IExecutorService getWorkerExecutor() {
-        return workerExecutor;
-    }
-
-    public HazelcastInstance getWorkerClient() {
-        return workerClient;
-    }
-
-    public List<WorkerJvm> getWorkerJvms() {
-        return workerJvms;
-    }
 
     public void spawn(WorkerJvmSettings settings) throws Exception {
         log.info(format("Starting %s worker Java Virtual Machines using settings\n %s", settings.workerCount, settings));
@@ -140,23 +164,14 @@ public class WorkerJvmManager {
 
         for (int k = 0; k < settings.workerCount; k++) {
             WorkerJvm worker = startWorkerJvm(settings, workerHzFile);
-            Process process = worker.getProcess();
-            String workerId = worker.getId();
+
+            Process process = worker.process;
+            String workerId = worker.id;
 
             workers.add(worker);
 
             new WorkerVmLogger(workerId, process.getInputStream(), settings.trackLogging).start();
         }
-        Config config = new XmlConfigBuilder(workerHzFile.getAbsolutePath()).build();
-        ClientConfig clientConfig = new ClientConfig();
-        clientConfig.getGroupConfig()
-                .setName(config.getGroupConfig().getName())
-                .setPassword(config.getGroupConfig().getPassword());
-        clientConfig.getNetworkConfig().addAddress("localhost:" + config.getNetworkConfig().getPort());
-
-        workerClient = HazelcastClient.newHazelcastClient(clientConfig);
-        workerExecutor = workerClient.getExecutorService(Worker.WORKER_EXECUTOR);
-
         waitForWorkersStartup(workers, settings.workerStartupTimeout);
 
         log.info(format("Finished starting %s worker Java Virtual Machines", settings.workerCount));
@@ -188,34 +203,16 @@ public class WorkerJvmManager {
     private WorkerJvm startWorkerJvm(WorkerJvmSettings settings, File workerHzFile) throws IOException {
         String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet();
 
-        String workerVmOptions = settings.vmOptions;
-        String[] clientVmOptionsArray = new String[]{};
-        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
-            clientVmOptionsArray = workerVmOptions.split("\\s+");
-        }
-
         File workoutHome = agent.getWorkoutHome();
+        workoutHome.mkdirs();
+
         String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
 
-        List<String> args = new LinkedList<String>();
-        args.add("java");
-        args.add(format("-XX:OnOutOfMemoryError=\"\"touch %s.oome\"\"", workerId));
-        args.add("-DSTABILIZER_HOME=" + getStablizerHome());
-        args.add("-Dhazelcast.logging.type=log4j");
-        args.add("-DworkerId=" + workerId);
-        args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-log4j.xml");
-        args.add("-classpath");
+        WorkerJvm workerJvm = new WorkerJvm(workerId);
 
-        File libDir = new File(agent.getWorkoutHome(), "lib");
-        String s = CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
-        args.add(s);
+        String[] args = buildArgs(settings, workerHzFile, workerId);
 
-        args.addAll(Arrays.asList(clientVmOptionsArray));
-        args.add(Worker.class.getName());
-        args.add(workerId);
-        args.add(workerHzFile.getAbsolutePath());
-
-        ProcessBuilder processBuilder = new ProcessBuilder(args.toArray(new String[args.size()]))
+        ProcessBuilder processBuilder = new ProcessBuilder(args)
                 .directory(workoutHome)
                 .redirectErrorStream(true);
 
@@ -225,9 +222,39 @@ public class WorkerJvmManager {
         environment.put("JAVA_HOME", javaHome);
 
         Process process = processBuilder.start();
-        final WorkerJvm workerJvm = new WorkerJvm(workerId, process);
-        workerJvms.add(workerJvm);
+        workerJvm.process = process;
+        workerJvms.put(workerId, workerJvm);
         return workerJvm;
+    }
+
+    private String[] buildArgs(WorkerJvmSettings settings, File workerHzFile, String workerId) {
+        List<String> args = new LinkedList<String>();
+        args.add("java");
+        args.add(format("-XX:OnOutOfMemoryError=\"\"touch %s.oome\"\"", workerId));
+        args.add("-DSTABILIZER_HOME=" + STABILIZER_HOME);
+        args.add("-Dhazelcast.logging.type=log4j");
+        args.add("-DworkerId=" + workerId);
+        args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-log4j.xml");
+        args.add("-classpath");
+
+        File libDir = new File(agent.getWorkoutHome(), "lib");
+        String s = CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
+        args.add(s);
+
+        args.addAll(getClientVmOptions(settings));
+        args.add(Worker.class.getName());
+        args.add(workerId);
+        args.add(workerHzFile.getAbsolutePath());
+        return args.toArray(new String[args.size()]);
+    }
+
+    private List<String> getClientVmOptions(WorkerJvmSettings settings) {
+        String workerVmOptions = settings.vmOptions;
+        String[] clientVmOptionsArray = new String[]{};
+        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
+            clientVmOptionsArray = workerVmOptions.split("\\s+");
+        }
+        return Arrays.asList(clientVmOptionsArray);
     }
 
     private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) throws InterruptedException {
@@ -240,34 +267,26 @@ public class WorkerJvmManager {
                 InetSocketAddress address = readAddress(jvm);
 
                 if (address != null) {
-                    Member member = null;
-                    for (Member m : workerClient.getCluster().getMembers()) {
-                        if (m.getSocketAddress().equals(address)) {
-                            member = m;
-                            break;
-                        }
-                    }
+                    jvm.memberAddress = address.getAddress().getHostAddress();
 
-                    if (member != null) {
-                        it.remove();
-                        jvm.setMember(member);
-                        log.info(format("Worker: %s Started %s of %s",
-                                jvm.getId(), workers.size() - todo.size(), workers.size()));
-                    }
+                    it.remove();
+                    log.info(format("Worker: %s Started %s of %s",
+                            jvm.id, workers.size() - todo.size(), workers.size()));
                 }
             }
 
-            if (todo.isEmpty())
+            if (todo.isEmpty()) {
                 return;
+            }
 
             Utils.sleepSeconds(1);
         }
 
         StringBuffer sb = new StringBuffer();
         sb.append("[");
-        sb.append(todo.get(0).getId());
+        sb.append(todo.get(0).id);
         for (int l = 1; l < todo.size(); l++) {
-            sb.append(",").append(todo.get(l).getId());
+            sb.append(",").append(todo.get(l).id);
         }
         sb.append("]");
 
@@ -279,7 +298,7 @@ public class WorkerJvmManager {
     private InetSocketAddress readAddress(WorkerJvm jvm) {
         File workoutHome = agent.getWorkoutHome();
 
-        File file = new File(workoutHome, jvm.getId() + ".address");
+        File file = new File(workoutHome, jvm.id + ".address");
         if (!file.exists()) {
             return null;
         }
@@ -290,47 +309,110 @@ public class WorkerJvmManager {
     public void terminateWorkers() {
         log.info("Terminating workers");
 
-        if (workerClient != null) {
-            workerClient.getLifecycleService().shutdown();
-        }
-
-        List<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms);
+        List<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms.values());
         workerJvms.clear();
 
         for (WorkerJvm jvm : workers) {
-            jvm.getProcess().destroy();
+            jvm.process.destroy();
         }
 
         for (WorkerJvm jvm : workers) {
             int exitCode = 0;
             try {
-                exitCode = jvm.getProcess().waitFor();
+                exitCode = jvm.process.waitFor();
             } catch (InterruptedException e) {
             }
 
             if (exitCode != 0) {
-                log.info(format("worker process %s exited with exit code: %s", jvm.getId(), exitCode));
+                log.info(format("worker process %s exited with exit code: %s", jvm.id, exitCode));
             }
         }
 
         log.info("Finished terminating workers");
     }
 
-    public void destroy(WorkerJvm jvm) {
-        jvm.getProcess().destroy();
+    public void terminateWorker(WorkerJvm jvm) {
+        jvm.process.destroy();
         try {
-            jvm.getProcess().waitFor();
+            jvm.process.waitFor();
         } catch (InterruptedException e) {
         }
         workerJvms.remove(jvm);
     }
 
     public WorkerJvm getWorker(String workerId) {
-        for (WorkerJvm worker : workerJvms) {
-            if (workerId.equals(worker.getId())) {
-                return worker;
+        return workerJvms.get(workerId);
+    }
+
+    private class ClientSocketTask implements Runnable {
+        private final Socket clientSocket;
+
+        private ClientSocketTask(Socket clientSocket) {
+            this.clientSocket = clientSocket;
+        }
+
+        @Override
+        public void run() {
+            try {
+                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                out.flush();
+
+                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                String service = (String) in.readObject();
+                String workerId = (String) in.readObject();
+                WorkerJvm workerJvm = workerJvms.get(workerId);
+                if (workerId == null) {
+                    log.warning("No worker JVM found for id: " + workerId);
+                }
+
+                Object result = null;
+                try {
+                    if (SERVICE_POLL_WORK.equals(service)) {
+                        List<TestCommandRequest> commands = new LinkedList<TestCommandRequest>();
+                        workerJvm.commandQueue.drainTo(commands);
+                        result = commands;
+                    } else if (COMMAND_PUSH_RESPONSE.equals(service)) {
+                        TestCommandResponse response = (TestCommandResponse) in.readObject();
+                        log.info("Received response: " + response.commandId);
+                        TestCommandFuture f = futureMap.remove(response.commandId);
+                        if (f != null) {
+                            f.set(response.result);
+                        } else {
+                            log.severe("No future found for commandId: " + response.commandId);
+                        }
+                    } else {
+                        throw new RuntimeException("Unknown service:" + service);
+                    }
+                } catch (IOException e) {
+                    throw e;
+                } catch (Exception e) {
+                    result = e;
+                }
+
+                out.writeObject(result);
+                out.flush();
+                clientSocket.close();
+            } catch (Exception e) {
+                log.severe(e);
             }
         }
-        return null;
+    }
+
+    private class AcceptorThread extends Thread {
+        public AcceptorThread() {
+            super("AcceptorThread");
+        }
+
+        public void run() {
+            for (; ; ) {
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    log.info("Accepted client request from: " + clientSocket.getRemoteSocketAddress());
+                    executor.execute(new ClientSocketTask(clientSocket));
+                } catch (IOException e) {
+                    log.severe(e);
+                }
+            }
+        }
     }
 }

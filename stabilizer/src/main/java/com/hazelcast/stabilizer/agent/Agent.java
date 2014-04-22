@@ -21,17 +21,12 @@ import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Workout;
 import joptsimple.OptionException;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 
 import static com.hazelcast.stabilizer.Utils.ensureExistingDirectory;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
-import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.agent.AgentCli.init;
@@ -39,13 +34,8 @@ import static java.lang.String.format;
 
 public class Agent {
 
-    public static final String BASE_URI = format("http://%s:8080/", getHostAddress());
-
-    private final static ILogger log = Logger.getLogger(Agent.class);
+   private final static ILogger log = Logger.getLogger(Agent.class);
     public final static File STABILIZER_HOME = getStablizerHome();
-
-    //for the agentservice
-    public static volatile Agent agent;
 
     //cli properties
     public File javaInstallationsFile;
@@ -55,11 +45,7 @@ public class Agent {
     private volatile TestRecipe testRecipe;
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
-    private final FailureMonitor failureMonitor = new FailureMonitor(this);
-
-    public Agent() {
-        agent = this;
-    }
+    private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
 
     public void echo(String msg) {
         log.info(msg);
@@ -70,7 +56,7 @@ public class Agent {
     }
 
     public File getWorkoutHome() {
-        Workout _workout = agent.getWorkout();
+        Workout _workout = workout;
         if (_workout == null) {
             return null;
         }
@@ -78,8 +64,8 @@ public class Agent {
         return new File(WorkerJvmManager.WORKERS_HOME, _workout.id);
     }
 
-    public FailureMonitor getFailureMonitor() {
-        return failureMonitor;
+    public WorkerJvmFailureMonitor getWorkerJvmFailureMonitor() {
+        return workerJvmFailureMonitor;
     }
 
     public WorkerJvmManager getWorkerJvmManager() {
@@ -120,16 +106,16 @@ public class Agent {
 
         repository.load(javaInstallationsFile);
 
-        failureMonitor.start();
+        workerJvmFailureMonitor.start();
+
+        workerJvmManager.start();
 
         log.info("Stabilizer Agent is ready for action");
     }
 
     private void startRestServer() throws IOException {
-        AgentRestService agentRestService = new AgentRestService(this);
-        ResourceConfig rc = new ResourceConfig().registerInstances(agentRestService);
-        HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
-        server.start();
+        AgentRemoteService agentRemoteService = new AgentRemoteService(this);
+        agentRemoteService.start();
     }
 
     public static void main(String[] args) throws Exception {

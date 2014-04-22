@@ -17,12 +17,15 @@ package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 import com.hazelcast.stabilizer.performance.Performance;
+import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.Workout;
+import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 
 import java.io.File;
 import java.util.List;
@@ -38,7 +41,7 @@ import static java.lang.String.format;
 public class Coordinator {
 
     public final static File STABILIZER_HOME = getStablizerHome();
-    private final static ILogger log = Logger.getLogger(Coordinator.class);
+    private final static ILogger log = Logger.getLogger(Coordinator.class.getName());
 
     //options.
     public boolean monitorPerformance;
@@ -150,19 +153,19 @@ public class Coordinator {
 
             echo("Starting Test initialization");
             agentClientManager.prepareAgentsForTests(testRecipe);
-            agentClientManager.initTest(testRecipe);
+            agentClientManager.executeOnAllWorkers(new InitTestCommand(testRecipe));
             echo("Completed Test initialization");
 
             echo("Starting Test local setup");
-            agentClientManager.globalGenericTestTask("localSetup");
+            agentClientManager.executeOnAllWorkers(new GenericTestCommand("localSetup"));
             echo("Completed Test local setup");
 
             echo("Starting Test global setup");
-            agentClientManager.singleGenericTestTask("globalSetup");
+            agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalSetup"));
             echo("Completed Test global setup");
 
             echo("Starting Test start");
-            agentClientManager.globalGenericTestTask("start");
+            agentClientManager.executeOnAllWorkers(new GenericTestCommand("start"));
             echo("Completed Test start");
 
             echo(format("Test running for %s seconds", workout.duration));
@@ -170,7 +173,7 @@ public class Coordinator {
             echo("Test finished running");
 
             echo("Starting Test stop");
-            agentClientManager.stopTest();
+            agentClientManager.executeOnAllWorkers(new StopTestCommand());
             echo("Completed Test stop");
 
             if (monitorPerformance) {
@@ -179,22 +182,22 @@ public class Coordinator {
 
             if (verifyEnabled) {
                 echo("Starting Test global verify");
-                agentClientManager.singleGenericTestTask("globalVerify");
+                agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalVerify"));
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
-                agentClientManager.globalGenericTestTask("localVerify");
+                agentClientManager.executeOnAllWorkers(new GenericTestCommand("localVerify"));
                 echo("Completed Test local verify");
             } else {
                 echo("Skipping Test verification");
             }
 
             echo("Starting Test global tear down");
-            agentClientManager.singleGenericTestTask("globalTearDown");
+            agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalTearDown"));
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentClientManager.globalGenericTestTask("localTearDown");
+            agentClientManager.executeOnAllWorkers(new GenericTestCommand("localTearDown"));
 
             echo("Completed Test local tear down");
 

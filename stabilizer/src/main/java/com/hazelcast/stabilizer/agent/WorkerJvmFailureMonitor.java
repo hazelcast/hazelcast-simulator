@@ -15,8 +15,7 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Member;
+
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.Failure;
@@ -32,13 +31,15 @@ import static com.hazelcast.stabilizer.Utils.readObject;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static com.hazelcast.stabilizer.Utils.throwableToString;
 
-public class FailureMonitor {
-    final static ILogger log = Logger.getLogger(FailureMonitor.class);
+public class WorkerJvmFailureMonitor {
+    final static ILogger log = Logger.getLogger(WorkerJvmFailureMonitor.class);
 
     private final Agent agent;
     private final BlockingQueue<Failure> failureQueue = new LinkedBlockingQueue<Failure>();
+    private volatile boolean stop = false;
+    private final DetectThread detectThread = new DetectThread();
 
-    public FailureMonitor(Agent agent) {
+    public WorkerJvmFailureMonitor(Agent agent) {
         this.agent = agent;
     }
 
@@ -52,17 +53,21 @@ public class FailureMonitor {
     }
 
     public void start() {
-        new DetectThread().start();
+        detectThread.start();
     }
 
-    private void addIfNotNull(List<Failure> failures, Failure h) {
-        if (h != null) {
-            failures.add(h);
+    public void stop() {
+        stop = true;
+        detectThread.interrupt();
+        try {
+            detectThread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
     private void detect() {
-        final WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
+        WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
 
         for (WorkerJvm jvm : workerJvmManager.getWorkerJvms()) {
 
@@ -72,10 +77,8 @@ public class FailureMonitor {
 
             addIfNotNull(failures, detectUnexpectedExit(jvm));
 
-            addIfNotNull(failures, detectMembershipFailure(jvm));
-
             if (!failures.isEmpty()) {
-                workerJvmManager.destroy(jvm);
+                workerJvmManager.terminateWorker(jvm);
 
                 for (Failure failure : failures) {
                     publish(failure);
@@ -83,18 +86,26 @@ public class FailureMonitor {
             }
         }
 
-        detectExceptions(workerJvmManager);
+        detectExceptions();
     }
 
-    private void detectExceptions(WorkerJvmManager workerJvmManager) {
+    private void addIfNotNull(List<Failure> failures, Failure failure) {
+        if (failure != null) {
+            failures.add(failure);
+        }
+    }
+
+    private void detectExceptions() {
         File workoutHome = agent.getWorkoutHome();
         if (workoutHome == null) {
             return;
         }
+
         File[] files = workoutHome.listFiles();
         if (files == null) {
             return;
         }
+
         for (File file : files) {
             String name = file.getName();
             if (name.endsWith(".exception")) {
@@ -103,58 +114,22 @@ public class FailureMonitor {
 
                 String workerId = name.substring(0, name.indexOf('.'));
                 log.info("workerId: " + workerId);
-                WorkerJvm jvm = workerJvmManager.getWorker(workerId);
+                WorkerJvm jvm = agent.getWorkerJvmManager().getWorker(workerId);
 
                 Failure failure = new Failure();
                 failure.message = "Exception thrown in worker";
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = jvm == null ? null : jvm.getMember().getSocketAddress().getHostString();
+                failure.workerAddress = jvm == null ? null : jvm.memberAddress;
                 failure.workerId = workerId;
                 failure.testRecipe = agent.getTestRecipe();
                 failure.cause = throwableToString(cause);
                 publish(failure);
 
                 if (jvm != null) {
-                    workerJvmManager.destroy(jvm);
+                    agent.getWorkerJvmManager().terminateWorker(jvm);
                 }
             }
         }
-    }
-
-    private Failure detectMembershipFailure(WorkerJvm jvm) {
-        //if the jvm is not assigned a hazelcast address yet.
-        if (jvm.getMember() == null) {
-            return null;
-        }
-
-        Member member = findMember(jvm);
-        if (member == null) {
-            jvm.getProcess().destroy();
-            Failure failure = new Failure();
-            failure.message = "Hazelcast membership failure (member missing)";
-            failure.agentAddress = getHostAddress();
-            failure.workerAddress = jvm.getMember().getSocketAddress().getHostString();
-            failure.workerId = jvm.getId();
-            failure.testRecipe = agent.getTestRecipe();
-            return failure;
-        }
-
-        return null;
-    }
-
-    private Member findMember(WorkerJvm jvm) {
-        final HazelcastInstance workerClient = agent.getWorkerJvmManager().getWorkerClient();
-        if (workerClient == null) {
-            return null;
-        }
-
-        for (Member member : workerClient.getCluster().getMembers()) {
-            if (member.getSocketAddress().equals(jvm.getMember().getSocketAddress())) {
-                return member;
-            }
-        }
-
-        return null;
     }
 
     private Failure detectOomeFailure(WorkerJvm jvm) {
@@ -163,7 +138,7 @@ public class FailureMonitor {
             return null;
         }
 
-        File file = new File(workoutDir, jvm.getId() + ".oome");
+        File file = new File(workoutDir, jvm.id + ".oome");
         if (!file.exists()) {
             return null;
         }
@@ -171,23 +146,23 @@ public class FailureMonitor {
         Failure failure = new Failure();
         failure.message = "Out of memory";
         failure.agentAddress = getHostAddress();
-        failure.workerAddress = jvm.getMember().getSocketAddress().getHostString();
-        failure.workerId = jvm.getId();
+        failure.workerAddress = jvm.memberAddress;
+        failure.workerId = jvm.id;
         failure.testRecipe = agent.getTestRecipe();
-        jvm.getProcess().destroy();
+        jvm.process.destroy();
         return failure;
     }
 
     private Failure detectUnexpectedExit(WorkerJvm jvm) {
-        Process process = jvm.getProcess();
+        Process process = jvm.process;
         try {
             int exitCode = process.exitValue();
             if (exitCode != 0) {
                 Failure failure = new Failure();
                 failure.message = "Exit code not 0, but was " + exitCode;
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = jvm.getMember().getSocketAddress().getHostString();
-                failure.workerId = jvm.getId();
+                failure.workerAddress = jvm.memberAddress;
+                failure.workerId = jvm.id;
                 failure.testRecipe = agent.getTestRecipe();
                 return failure;
             }

@@ -18,6 +18,11 @@ package com.hazelcast.stabilizer.tests;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.stabilizer.performance.Performance;
 
+import java.lang.reflect.Field;
+import java.util.Map;
+
+import static java.lang.String.format;
+
 /**
  * The Test is the 'thing' that contains the actual logic we want to run.
  * information.
@@ -94,4 +99,6 @@ public interface Test {
     void setTestId(String id);
 
     Performance calcPerformance();
+
+
 }

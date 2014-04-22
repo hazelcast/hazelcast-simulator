@@ -13,11 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.agent;
+package com.hazelcast.stabilizer.worker.testcommands;
 
-public class FailureAlreadyThrownRuntimeException extends RuntimeException {
+import com.hazelcast.stabilizer.TestRecipe;
 
-    public FailureAlreadyThrownRuntimeException(Throwable cause) {
-        super(cause);
+public class InitTestCommand extends TestCommand {
+
+    public static final long serialVersionUID = 0l;
+
+    public TestRecipe testRecipe;
+
+    public InitTestCommand(TestRecipe testRecipe) {
+        this.testRecipe = testRecipe;
+    }
+
+    @Override
+    public String toString() {
+        return "InitTestCommand{" +
+                "testRecipe=" + testRecipe +
+                '}';
     }
 }
+

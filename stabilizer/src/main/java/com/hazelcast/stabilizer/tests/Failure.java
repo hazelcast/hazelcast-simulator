@@ -17,11 +17,9 @@ package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.stabilizer.TestRecipe;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
 
-@XmlRootElement
 public class Failure implements Serializable {
 
     private static final long serialVersionUID = 1;

@@ -15,10 +15,8 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
-@XmlRootElement
 public class WorkerJvmSettings implements Serializable {
     public String vmOptions;
     public boolean trackLogging;
