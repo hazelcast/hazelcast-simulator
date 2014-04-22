@@ -22,16 +22,14 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestRecipe;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Test;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
-import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
+import com.hazelcast.stabilizer.worker.testcommands.TestResponse;
 
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -73,15 +71,13 @@ public class Worker {
         log.info("Successfully created Worker HazelcastInstance");
 
         Socket socket = new Socket(InetAddress.getByName(null), 10000);
-        log.info("Socket created: "+socket.getRemoteSocketAddress());
+        log.info("Socket created: " + socket.getRemoteSocketAddress());
 
         OutputStream outputStream = socket.getOutputStream();
         out = new ObjectOutputStream(outputStream);
         out.flush();
 
-        InputStream inputStream = socket.getInputStream();
-
-        in = new ObjectInputStream(inputStream);
+        in = new ObjectInputStream(socket.getInputStream());
 
         out.writeObject(workerId);
         out.flush();
@@ -159,20 +155,13 @@ public class Worker {
         @Override
         public void run() {
             for (; ; ) {
-                log.info("Waiting to receive from remote");
                 try {
-                    Object o = in.readObject();
-                    if (o != null && o instanceof TestCommandRequest) {
-                        log.info("----------------------------- received from remote: "+o);
-                        TestCommandRequest taskRequest = (TestCommandRequest)o;
-                        doProcess(taskRequest.id, taskRequest.task);
-                    } else {
-                        log.severe("Unrecognized command: " + o);
-                    }
-                }  catch (Exception e) {
+                    TestCommandRequest request = (TestCommandRequest) in.readObject();
+                    doProcess(request.id, request.task);
+                } catch (Exception e) {
                     log.severe(e);
                 }
-           }
+            }
         }
 
         private void doProcess(long id, TestCommand testCommand) {
@@ -191,13 +180,13 @@ public class Worker {
                 result = e;
             }
 
-            TestCommandResponse response = new TestCommandResponse();
-            response.taskId = id;
+            TestResponse response = new TestResponse();
+            response.commandId = id;
             response.result = result;
             try {
                 out.writeObject(response);
                 out.flush();
-                log.info("Successfully wrote response for task id:"+id);
+                log.info("Successfully wrote response for task id:" + id);
             } catch (IOException e) {
                 log.severe(e);
             }

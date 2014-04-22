@@ -27,8 +27,8 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.worker.Worker;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.TestResponse;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
-import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +54,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.Utils.closeQuietly;
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.throwableToString;
@@ -453,14 +452,12 @@ public class WorkerJvmManager {
             try {
                 if (workerJvm.in2.available() > 0) {
                     log.info("Waiting for object");
-                    TestCommandResponse response = (TestCommandResponse) in.readObject();
-                    log.info("Received response: "+response.taskId);
-                    TestCommandFuture f = futureMap.remove(response.taskId);
+                    TestResponse response = (TestResponse) in.readObject();
+                    log.info("Received response: "+response.commandId);
+                    TestCommandFuture f = futureMap.remove(response.commandId);
                     if (f != null) {
                         f.set(response.result);
                     }
-                }else{
-                    log.info("Nothing found for: "+workerJvm.id);
                 }
             } catch (Exception e) {
                 log.severe("Failed to poll result for jvm:" + workerJvm.id, e);

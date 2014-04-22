@@ -21,17 +21,12 @@ import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Workout;
 import joptsimple.OptionException;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 
 import static com.hazelcast.stabilizer.Utils.ensureExistingDirectory;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
-import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.agent.AgentCli.init;
@@ -39,9 +34,7 @@ import static java.lang.String.format;
 
 public class Agent {
 
-    public static final String BASE_URI = format("http://%s:8080/", getHostAddress());
-
-    private final static ILogger log = Logger.getLogger(Agent.class);
+   private final static ILogger log = Logger.getLogger(Agent.class);
     public final static File STABILIZER_HOME = getStablizerHome();
 
     //cli properties
@@ -53,7 +46,6 @@ public class Agent {
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
-    private HttpServer server;
 
     public void echo(String msg) {
         log.info(msg);
@@ -122,10 +114,8 @@ public class Agent {
     }
 
     private void startRestServer() throws IOException {
-        AgentRestService agentRestService = new AgentRestService(this);
-        ResourceConfig rc = new ResourceConfig().registerInstances(agentRestService);
-        server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
-        server.start();
+        AgentRemoteService agentRemoteService = new AgentRemoteService(this);
+        agentRemoteService.start();
     }
 
     public static void main(String[] args) throws Exception {

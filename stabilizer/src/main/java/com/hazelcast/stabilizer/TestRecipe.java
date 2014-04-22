@@ -15,7 +15,6 @@
  */
 package com.hazelcast.stabilizer;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-@XmlRootElement
 public class TestRecipe implements Serializable {
     public String testId = "" + System.currentTimeMillis();
     public HashMap<String, String> properties = new HashMap<String, String>();

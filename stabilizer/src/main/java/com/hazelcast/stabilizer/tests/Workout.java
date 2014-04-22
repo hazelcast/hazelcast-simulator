@@ -18,7 +18,6 @@ package com.hazelcast.stabilizer.tests;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collections;
@@ -31,7 +30,6 @@ import java.util.Properties;
 import static com.hazelcast.stabilizer.Utils.loadProperties;
 import static java.lang.String.format;
 
-@XmlRootElement
 public class Workout implements Serializable {
 
     private static final long serialVersionUID = 1;

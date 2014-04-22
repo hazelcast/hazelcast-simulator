@@ -2,20 +2,23 @@ package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.agent.AgentRemoteService;
+import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
+import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.Workout;
+import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -27,9 +30,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import static java.lang.String.format;
-import static javax.ws.rs.client.Entity.entity;
 
 public class AgentClientManager {
 
@@ -46,7 +46,6 @@ public class AgentClientManager {
         String content = Utils.asText(machineListFile);
         for (String line : content.split("\n")) {
             AgentClient client = new AgentClient(line);
-            client.start();
             agents.add(client);
         }
     }
@@ -210,7 +209,9 @@ public class AgentClientManager {
                 @Override
                 public Object call() throws Exception {
                     try {
-                        agentClient.initTest(testRecipe);
+                        InitTestCommand initTestCommand = new InitTestCommand();
+                        initTestCommand.testRecipe = testRecipe;
+                        agentClient.testCommand(initTestCommand);
                         return null;
                     } catch (RuntimeException t) {
                         log.severe(t);
@@ -230,7 +231,9 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.genericTestTask(name);
+                    GenericTestCommand testCommand = new GenericTestCommand();
+                    testCommand.methodName = name;
+                    agentClient.testCommand(testCommand);
                     return null;
                 }
             });
@@ -249,8 +252,10 @@ public class AgentClientManager {
             @Override
             public Object call() throws Exception {
                 AgentClient agentClient = agents.get(0);
+                GenericTestCommand testCommand = new GenericTestCommand();
+                testCommand.methodName = name;
                 //todo: the problem here is that you are going to ask all member and not a single member.
-                agentClient.genericTestTask(name);
+                agentClient.testCommand(testCommand);
                 return null;
             }
         });
@@ -280,7 +285,8 @@ public class AgentClientManager {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.stopTest();
+                    StopTestCommand command = new StopTestCommand();
+                    agentClient.testCommand(command);
                     return null;
                 }
             });
@@ -290,107 +296,66 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    //https://jersey.java.net/nonav/documentation/latest/user-guide.html
     public static class AgentClient {
 
         private final String host;
-        private final String baseUrl;
-        private WebTarget target;
 
         public AgentClient(String host) {
             this.host = host;
-            this.baseUrl = format("http://%s:8080/", host);
         }
 
         public String getHost() {
             return host;
         }
 
-        public void start() {
-            Client c = ClientBuilder.newClient();
-            target = c.target(baseUrl);
+        private Object execute(String service, Object... args) throws Exception {
+            Socket socket = new Socket(InetAddress.getByName(host), 9000);
+
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                oos.writeObject(service);
+                for (Object arg : args) {
+                    oos.writeObject(arg);
+                }
+                oos.flush();
+
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                return in.readObject();
+            } finally {
+                Utils.closeQuietly(socket);
+            }
         }
 
-        public void spawnWorkers(WorkerJvmSettings settings) {
-            Response response = target
-                    .path("agent/spawnWorkers")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity(settings, MediaType.APPLICATION_JSON));
-            //System.out.println(response);
+        public void spawnWorkers(WorkerJvmSettings settings) throws Exception {
+            execute(AgentRemoteService.SERVICE_SPAWN_WORKERS, settings);
         }
 
-        public void cleanWorkersHome() {
-            Response response = target
-                    .path("agent/cleanWorkersHome")
-                    .request(MediaType.TEXT_PLAIN)
-                    .post(null);
-            //System.out.println(response);
+        public void cleanWorkersHome() throws Exception {
+            execute(AgentRemoteService.SERVICE_CLEAN_WORKERS_HOME);
         }
 
-        public void genericTestTask(String methodName) {
-            Response response = target
-                    .path("agent/genericTestTask")
-                    .request(MediaType.APPLICATION_JSON)
-                    .put(entity(methodName, MediaType.TEXT_PLAIN_TYPE));
-            //System.out.println(response);
+        public void testCommand(TestCommand testCommand) throws Exception {
+            execute(AgentRemoteService.SERVICE_TEST_COMMAND, testCommand);
         }
 
-        public void echo(String msg) {
-            Response response = target
-                    .path("agent/echo")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity(msg, MediaType.TEXT_PLAIN_TYPE));
-            //System.out.println(response);
+        public void echo(String msg) throws Exception {
+            execute(AgentRemoteService.SERVICE_ECHO, msg);
         }
 
-        public void prepareAgentForTest(TestRecipe testRecipe) {
-            Response response = target
-                    .path("agent/prepareForTest")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity(testRecipe, MediaType.APPLICATION_XML));
-            //System.out.println(response);
+        public void prepareAgentForTest(TestRecipe testRecipe) throws Exception {
+            execute(AgentRemoteService.SERVICE_PREPARE_FOR_TEST, testRecipe);
         }
 
-        public void initWorkout(Workout workout) {
-            Response response = target
-                    .path("agent/initWorkout")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity(workout, MediaType.APPLICATION_XML));
-            //System.out.println(response);
+        public void initWorkout(Workout workout) throws Exception {
+            execute(AgentRemoteService.SERVICE_INIT_WORKOUT, workout);
         }
 
-        public void initTest(TestRecipe testRecipe) {
-            Response response = target
-                    .path("agent/initTest")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity(testRecipe, MediaType.APPLICATION_XML));
-            //System.out.println(response);
+          public void terminateWorkers() throws Exception {
+            execute(AgentRemoteService.SERVICE_TERMINATE_WORKERS);
         }
 
-        public void terminateWorkers() {
-            Response response = target
-                    .path("agent/terminateWorkers")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity("", MediaType.TEXT_PLAIN_TYPE));
-            //System.out.println(response);
-        }
-
-        public void stopTest() {
-            Response response = target
-                    .path("agent/stopTest")
-                    .request(MediaType.TEXT_PLAIN)
-                    .put(entity("", MediaType.TEXT_PLAIN_TYPE));
-            //System.out.println(response);
-        }
-
-        public List<Failure> getFailures() {
-            List<Failure> response = target
-                    .path("agent/failures")
-                    .request(MediaType.APPLICATION_XML)
-                    .get(new GenericType<List<Failure>>() {
-                    });
-            //System.out.println(response);
-             return response;
+        public List<Failure> getFailures() throws Exception {
+            return (List<Failure>) execute(AgentRemoteService.SERVICE_GET_FAILURES);
         }
     }
 }
