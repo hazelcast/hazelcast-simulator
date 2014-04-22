@@ -73,8 +73,6 @@ public class Worker {
     }
 
     public void start() throws IOException {
-        Socket socket = new Socket(InetAddress.getByName(null), 10000);
-        log.info("Socket created: " + socket.getRemoteSocketAddress());
 
         log.info("Creating Worker HazelcastInstance");
         this.hz = createHazelcastInstance();
@@ -130,9 +128,9 @@ public class Worker {
         try {
             logInterestingSystemProperties();
 
-            String workerId = args[0];
+            String workerId = System.getProperty("workerId");
             log.info("Worker id:" + workerId);
-            String workerHzFile = args[1];
+            String workerHzFile = args[0];
             log.info("Worker hz config file:" + workerHzFile);
             log.info(asText(new File(workerHzFile)));
 
@@ -183,8 +181,10 @@ public class Worker {
             }
         }
 
+        //we create a new socket for every request because don't want to depend on the state of a socket
+        //because we are going to do nasty stuff.
         private <E> E execute(String service, Object... args) throws Exception {
-            Socket socket = new Socket(InetAddress.getByName(null), 10000);
+            Socket socket = new Socket(InetAddress.getByName(null), 9001);
 
             try {
                 ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());

@@ -36,7 +36,6 @@ public class WorkerJvmFailureMonitor {
 
     private final Agent agent;
     private final BlockingQueue<Failure> failureQueue = new LinkedBlockingQueue<Failure>();
-    private volatile boolean stop = false;
     private final DetectThread detectThread = new DetectThread();
 
     public WorkerJvmFailureMonitor(Agent agent) {
@@ -57,7 +56,6 @@ public class WorkerJvmFailureMonitor {
     }
 
     public void stop() {
-        stop = true;
         detectThread.interrupt();
         try {
             detectThread.join();

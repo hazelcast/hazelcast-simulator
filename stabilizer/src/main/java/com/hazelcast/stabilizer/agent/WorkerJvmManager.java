@@ -92,7 +92,7 @@ public class WorkerJvmManager {
 
 
     public void start() throws Exception {
-        serverSocket = new ServerSocket(10000, 0, InetAddress.getByName(null));
+        serverSocket = new ServerSocket(9001, 0, InetAddress.getByName(null));
 
         new AcceptorThread().start();
     }
@@ -187,7 +187,6 @@ public class WorkerJvmManager {
     private String getJavaHome(String javaVendor, String javaVersion) {
         JavaInstallation installation = agent.getJavaInstallationRepository().get(javaVendor, javaVersion);
         if (installation != null) {
-            //todo: we should send a signal
             return installation.getJavaHome();
         }
 
@@ -236,19 +235,19 @@ public class WorkerJvmManager {
         args.add("-DworkerId=" + workerId);
         args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-log4j.xml");
         args.add("-classpath");
-
-        File libDir = new File(agent.getWorkoutHome(), "lib");
-        String s = CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
-        args.add(s);
-
-        args.addAll(getClientVmOptions(settings));
+        args.add(getClasspath());
+        args.addAll(getJvmOptions(settings));
         args.add(Worker.class.getName());
-        args.add(workerId);
         args.add(workerHzFile.getAbsolutePath());
         return args.toArray(new String[args.size()]);
     }
 
-    private List<String> getClientVmOptions(WorkerJvmSettings settings) {
+    private String getClasspath() {
+        File libDir = new File(agent.getWorkoutHome(), "lib");
+        return CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
+    }
+
+    private List<String> getJvmOptions(WorkerJvmSettings settings) {
         String workerVmOptions = settings.vmOptions;
         String[] clientVmOptionsArray = new String[]{};
         if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
