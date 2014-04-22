@@ -11,7 +11,7 @@ Please join the mail group if you are interested in using or developing Hazelcas
 
 #### License
 
-Hazelcast HeartAttacker is available under the Apache 2 License.
+Hazelcast Stabilizer is available under the Apache 2 License.
 
 #### Copyright
 
