@@ -16,6 +16,7 @@
 package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
@@ -40,7 +41,7 @@ import static java.lang.String.format;
 public class Coordinator {
 
     public final static File STABILIZER_HOME = getStablizerHome();
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(Coordinator.class.getName());
+    private final static ILogger log = Logger.getLogger(Coordinator.class.getName());
 
     //options.
     public boolean monitorPerformance;

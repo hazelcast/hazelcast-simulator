@@ -42,20 +42,7 @@ public class AgentRemoteService {
     public void start() throws IOException {
         serverSocket = new ServerSocket(9000, 0, InetAddress.getByName(Utils.getHostAddress()));
         log.info("Started on: " + serverSocket.getInetAddress());
-
-        new Thread() {
-            public void run() {
-                for (; ; ) {
-                    try {
-                        Socket clientSocket = serverSocket.accept();
-                        log.info("Accepted client request from: " + clientSocket.getRemoteSocketAddress());
-                        executor.execute(new ClientSocketTask(clientSocket));
-                    } catch (IOException e) {
-                        log.severe(e);
-                    }
-                }
-            }
-        }.start();
+        new AcceptorThread().start();
     }
 
     private class ClientSocketTask implements Runnable {
@@ -92,7 +79,7 @@ public class AgentRemoteService {
                         TestCommand testCommand = (TestCommand) in.readObject();
                         WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
                         workerJvmManager.executeOnAllWorkers(testCommand);
-                    }else if (SERVICE_EXECUTE_SINGLE_WORKER.equals(service)) {
+                    } else if (SERVICE_EXECUTE_SINGLE_WORKER.equals(service)) {
                         TestCommand testCommand = (TestCommand) in.readObject();
                         WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
                         workerJvmManager.executeOnSingleWorker(testCommand);
@@ -118,65 +105,84 @@ public class AgentRemoteService {
                 log.severe(e);
             }
         }
-    }
 
-    public ArrayList<Failure> getFailures() {
-        ArrayList<Failure> failures = new ArrayList<Failure>();
-        agent.getWorkerJvmFailureMonitor().drainFailures(failures);
-        return failures;
-    }
+        private ArrayList<Failure> getFailures() {
+            ArrayList<Failure> failures = new ArrayList<Failure>();
+            agent.getWorkerJvmFailureMonitor().drainFailures(failures);
+            return failures;
+        }
 
-    public void spawnWorkers(WorkerJvmSettings settings) throws Exception {
-        try {
-            agent.getWorkerJvmManager().spawn(settings);
-        } catch (Exception e) {
-            log.severe("Failed to spawn workers from settings:" + settings, e);
-            throw e;
+        private void spawnWorkers(WorkerJvmSettings settings) throws Exception {
+            try {
+                agent.getWorkerJvmManager().spawn(settings);
+            } catch (Exception e) {
+                log.severe("Failed to spawn workers from settings:" + settings, e);
+                throw e;
+            }
+        }
+
+        private void initWorkout(Workout workout) throws Exception {
+            try {
+                agent.initWorkout(workout, null);
+            } catch (Exception e) {
+                log.severe("Failed to init workout: " + workout, e);
+                throw e;
+            }
+        }
+
+        private void cleanWorkersHome() throws Exception {
+            try {
+                agent.getWorkerJvmManager().cleanWorkersHome();
+            } catch (Exception e) {
+                log.severe("Failed to clean workers home", e);
+                throw e;
+            }
+        }
+
+        private void terminateWorkers() throws Exception {
+            try {
+                agent.getWorkerJvmManager().terminateWorkers();
+            } catch (Exception e) {
+                log.severe("Failed to terminate workers", e);
+                throw e;
+            }
+        }
+
+        private void echo(String msg) throws Exception {
+            try {
+                agent.echo(msg);
+            } catch (Exception e) {
+                log.severe("Failed to echo", e);
+                throw e;
+            }
+        }
+
+        private void prepareForTest(TestRecipe testRecipe) throws Exception {
+            try {
+                agent.setTestRecipe(testRecipe);
+            } catch (Exception e) {
+                log.severe("Failed to prepareForTest for recipe:" + testRecipe, e);
+                throw e;
+            }
         }
     }
 
-    public void initWorkout(Workout workout) throws Exception {
-        try {
-            agent.initWorkout(workout, null);
-        } catch (Exception e) {
-            log.severe("Failed to init workout: " + workout, e);
-            throw e;
-        }
-    }
 
-    public void cleanWorkersHome() throws Exception {
-        try {
-            agent.getWorkerJvmManager().cleanWorkersHome();
-        } catch (Exception e) {
-            log.severe("Failed to clean workers home", e);
-            throw e;
+    private class AcceptorThread extends Thread {
+        public AcceptorThread() {
+            super("AcceptorThread");
         }
-    }
 
-    public void terminateWorkers() throws Exception {
-        try {
-            agent.getWorkerJvmManager().terminateWorkers();
-        } catch (Exception e) {
-            log.severe("Failed to terminate workers", e);
-            throw e;
-        }
-    }
-
-    public void echo(String msg) throws Exception {
-        try {
-            agent.echo(msg);
-        } catch (Exception e) {
-            log.severe("Failed to echo", e);
-            throw e;
-        }
-    }
-
-    public void prepareForTest(TestRecipe testRecipe) throws Exception {
-        try {
-            agent.setTestRecipe(testRecipe);
-        } catch (Exception e) {
-            log.severe("Failed to prepareForTest for recipe:" + testRecipe, e);
-            throw e;
+        public void run() {
+            for (; ; ) {
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    log.info("Accepted client request from: " + clientSocket.getRemoteSocketAddress());
+                    executor.execute(new ClientSocketTask(clientSocket));
+                } catch (IOException e) {
+                    log.severe(e);
+                }
+            }
         }
     }
 }

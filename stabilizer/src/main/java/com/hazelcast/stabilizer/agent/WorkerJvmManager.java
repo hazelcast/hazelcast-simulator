@@ -22,11 +22,10 @@ import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.worker.Worker;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
-import com.hazelcast.stabilizer.worker.testcommands.TestResponse;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
@@ -44,6 +43,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -54,6 +55,9 @@ import static com.hazelcast.stabilizer.Utils.throwableToString;
 import static java.lang.String.format;
 
 public class WorkerJvmManager {
+
+    public final static String SERVICE_POLL_WORK = "poll";
+    public final static String COMMAND_PUSH_RESPONSE = "push";
 
     private final static ILogger log = Logger.getLogger(WorkerJvmManager.class);
     private final static String CLASSPATH = System.getProperty("java.class.path");
@@ -70,6 +74,8 @@ public class WorkerJvmManager {
     private final AtomicLong requestIdGenerator = new AtomicLong(0);
 
     private ServerSocket serverSocket;
+    private final Executor executor = Executors.newFixedThreadPool(20);
+
 
     public WorkerJvmManager(Agent agent) {
         this.agent = agent;
@@ -84,38 +90,11 @@ public class WorkerJvmManager {
         });
     }
 
-    public void start() throws Exception {
-        new PollThread().start();
 
+    public void start() throws Exception {
         serverSocket = new ServerSocket(10000, 0, InetAddress.getByName(null));
 
-        new Thread() {
-            public void run() {
-                for (; ; ) {
-                    try {
-                        Socket clientSocket = serverSocket.accept();
-                        log.info("Received accept from " + clientSocket.getRemoteSocketAddress());
-
-                        ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                        out.flush();
-
-                        InputStream inputStream = clientSocket.getInputStream();
-                        ObjectInputStream in = new ObjectInputStream(inputStream);
-
-                        log.info("Waiting for confirmation of worker process");
-                        String id = (String) in.readObject();
-                        WorkerJvm jvm = workerJvms.get(id);
-                        log.info("JVM: " + jvm);
-                        jvm.out = out;
-                        jvm.in = in;
-                        jvm.in2 = inputStream;
-                        jvm.socket = clientSocket;
-                    } catch (Exception e) {
-                        log.severe(e);
-                    }
-                }
-            }
-        }.start();
+        new AcceptorThread().start();
     }
 
     public void cleanWorkersHome() throws IOException {
@@ -128,9 +107,9 @@ public class WorkerJvmManager {
         return workerJvms.values();
     }
 
-    public Object executeOnSingleWorker(TestCommand testCommand)throws Exception {
+    public Object executeOnSingleWorker(TestCommand testCommand) throws Exception {
         Collection<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms.values());
-        if(workers.isEmpty()){
+        if (workers.isEmpty()) {
             throw new RuntimeException("No worker JVM's found");
         }
         List list = executeOnWorkers(testCommand, workers);
@@ -150,20 +129,7 @@ public class WorkerJvmManager {
             request.id = requestIdGenerator.incrementAndGet();
             request.task = testCommand;
             futureMap.put(request.id, future);
-            try {
-                ObjectOutputStream out = workerJvm.out;
-                if (out == null) {
-                    log.severe("jvm: " + workerJvm.id + " has no out");
-                } else {
-                    out.writeObject(request);
-                    out.flush();
-                    log.info("Successfully send " + testCommand + " to worker: " + workerJvm.id);
-                }
-                futures.put(workerJvm, future);
-            } catch (IOException e) {
-                future.set(e);
-                throw new RuntimeException(e);
-            }
+            workerJvm.commandQueue.add(request);
         }
 
         List results = new LinkedList();
@@ -306,19 +272,7 @@ public class WorkerJvmManager {
                     it.remove();
                     log.info(format("Worker: %s Started %s of %s",
                             jvm.id, workers.size() - todo.size(), workers.size()));
-
-                    //hack
-                    for (; ; ) {
-                        if (jvm.out != null && jvm.in != null) {
-                            break;
-                        }
-
-                        log.info("JVM.in and out not yet set");
-
-                        Thread.sleep(100);
-                    }
                 }
-
             }
 
             if (todo.isEmpty()) {
@@ -360,10 +314,6 @@ public class WorkerJvmManager {
 
         for (WorkerJvm jvm : workers) {
             jvm.process.destroy();
-            Socket socket = jvm.socket;
-            if (socket != null) {
-                Utils.closeQuietly(socket);
-            }
         }
 
         for (WorkerJvm jvm : workers) {
@@ -394,41 +344,74 @@ public class WorkerJvmManager {
         return workerJvms.get(workerId);
     }
 
+    private class ClientSocketTask implements Runnable {
+        private final Socket clientSocket;
 
-    private class PollThread extends Thread {
-        public PollThread() {
-            super("PollThread");
+        private ClientSocketTask(Socket clientSocket) {
+            this.clientSocket = clientSocket;
+        }
+
+        @Override
+        public void run() {
+            try {
+                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                out.flush();
+
+                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                String service = (String) in.readObject();
+                String workerId = (String) in.readObject();
+                WorkerJvm workerJvm = workerJvms.get(workerId);
+                if (workerId == null) {
+                    log.warning("No worker JVM found for id: " + workerId);
+                }
+
+                Object result = null;
+                try {
+                    if (SERVICE_POLL_WORK.equals(service)) {
+                        List<TestCommandRequest> commands = new LinkedList<TestCommandRequest>();
+                        workerJvm.commandQueue.drainTo(commands);
+                        result = commands;
+                    } else if (COMMAND_PUSH_RESPONSE.equals(service)) {
+                        TestCommandResponse response = (TestCommandResponse) in.readObject();
+                        log.info("Received response: " + response.commandId);
+                        TestCommandFuture f = futureMap.remove(response.commandId);
+                        if (f != null) {
+                            f.set(response.result);
+                        } else {
+                            log.severe("No future found for commandId: " + response.commandId);
+                        }
+                    } else {
+                        throw new RuntimeException("Unknown service:" + service);
+                    }
+                } catch (IOException e) {
+                    throw e;
+                } catch (Exception e) {
+                    result = e;
+                }
+
+                out.writeObject(result);
+                out.flush();
+                clientSocket.close();
+            } catch (Exception e) {
+                log.severe(e);
+            }
+        }
+    }
+
+    private class AcceptorThread extends Thread {
+        public AcceptorThread() {
+            super("AcceptorThread");
         }
 
         public void run() {
             for (; ; ) {
-                for (WorkerJvm workerJvm : workerJvms.values()) {
-                    poll(workerJvm);
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    log.info("Accepted client request from: " + clientSocket.getRemoteSocketAddress());
+                    executor.execute(new ClientSocketTask(clientSocket));
+                } catch (IOException e) {
+                    log.severe(e);
                 }
-                Utils.sleepSeconds(1);
-            }
-        }
-
-        private void poll(WorkerJvm workerJvm) {
-            ObjectInputStream in = workerJvm.in;
-
-            //could be that the in is not yet set.
-            if (in == null) {
-                return;
-            }
-
-            try {
-                if (workerJvm.in2.available() > 0) {
-                    log.info("Waiting for object");
-                    TestResponse response = (TestResponse) in.readObject();
-                    log.info("Received response: " + response.commandId);
-                    TestCommandFuture f = futureMap.remove(response.commandId);
-                    if (f != null) {
-                        f.set(response.result);
-                    }
-                }
-            } catch (Exception e) {
-                log.severe("Failed to poll result for jvm:" + workerJvm.id, e);
             }
         }
     }

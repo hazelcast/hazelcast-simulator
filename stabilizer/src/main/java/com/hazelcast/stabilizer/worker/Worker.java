@@ -22,29 +22,36 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.agent.WorkerJvmManager;
 import com.hazelcast.stabilizer.tests.Test;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
-import com.hazelcast.stabilizer.worker.testcommands.TestResponse;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.stabilizer.Utils.asText;
 import static com.hazelcast.stabilizer.Utils.writeObject;
 import static com.hazelcast.stabilizer.tests.TestUtils.bindProperties;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 
 public class Worker {
 
@@ -53,8 +60,9 @@ public class Worker {
     private String workerId;
     private HazelcastInstance hz;
     private String workerHzFile;
-    private ObjectInputStream in;
-    private ObjectOutputStream out;
+
+    private BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
+    private BlockingQueue<TestCommandResponse> responseQueue = new LinkedBlockingQueue<TestCommandResponse>();
 
     public void setWorkerId(String workerId) {
         this.workerId = workerId;
@@ -68,20 +76,12 @@ public class Worker {
         Socket socket = new Socket(InetAddress.getByName(null), 10000);
         log.info("Socket created: " + socket.getRemoteSocketAddress());
 
-        OutputStream outputStream = socket.getOutputStream();
-        out = new ObjectOutputStream(outputStream);
-        out.flush();
-
-        in = new ObjectInputStream(socket.getInputStream());
-
-        out.writeObject(workerId);
-        out.flush();
-
         log.info("Creating Worker HazelcastInstance");
         this.hz = createHazelcastInstance();
         log.info("Successfully created Worker HazelcastInstance");
 
-        new TestCommandProcessingThread().start();
+        new TestCommandRequestProcessingThread().start();
+        new SocketThread().start();
 
         signalStartToAgent();
     }
@@ -150,12 +150,65 @@ public class Worker {
         }
     }
 
-    private class TestCommandProcessingThread extends Thread {
+    private class SocketThread extends Thread {
         @Override
         public void run() {
             for (; ; ) {
                 try {
-                    TestCommandRequest request = (TestCommandRequest) in.readObject();
+                    List<TestCommandRequest> requests = execute(WorkerJvmManager.SERVICE_POLL_WORK, workerId);
+                    for (TestCommandRequest request : requests) {
+                        requestQueue.add(request);
+                    }
+
+                    TestCommandResponse response = responseQueue.poll(1, TimeUnit.SECONDS);
+                    if (response == null) {
+                        continue;
+                    }
+
+                    sendResponse(asList(response));
+
+                    List<TestCommandResponse> responses = new LinkedList<TestCommandResponse>();
+                    responseQueue.drainTo(responseQueue);
+
+                    sendResponse(responses);
+                } catch (Exception e) {
+                    log.severe(e);
+                }
+            }
+        }
+
+        private void sendResponse(List<TestCommandResponse> responses) throws Exception {
+            for (TestCommandResponse response : responses) {
+                execute(WorkerJvmManager.COMMAND_PUSH_RESPONSE, workerId, response);
+            }
+        }
+
+        private <E> E execute(String service, Object... args) throws Exception {
+            Socket socket = new Socket(InetAddress.getByName(null), 10000);
+
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                oos.writeObject(service);
+                for (Object arg : args) {
+                    oos.writeObject(arg);
+                }
+                oos.flush();
+
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                return (E) in.readObject();
+            } finally {
+                Utils.closeQuietly(socket);
+            }
+        }
+    }
+
+    private class TestCommandRequestProcessingThread extends Thread {
+
+        @Override
+        public void run() {
+            for (; ; ) {
+                try {
+                    TestCommandRequest request = requestQueue.take();
                     doProcess(request.id, request.task);
                 } catch (Exception e) {
                     log.severe(e);
@@ -179,16 +232,10 @@ public class Worker {
                 result = e;
             }
 
-            TestResponse response = new TestResponse();
+            TestCommandResponse response = new TestCommandResponse();
             response.commandId = id;
             response.result = result;
-            try {
-                out.writeObject(response);
-                out.flush();
-                log.info("Successfully wrote response for task id:" + id);
-            } catch (IOException e) {
-                log.severe(e);
-            }
+            responseQueue.add(response);
         }
 
         public Object process(GenericTestCommand genericTestTask) throws Exception {

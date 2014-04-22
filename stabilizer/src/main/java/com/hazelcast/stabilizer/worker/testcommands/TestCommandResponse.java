@@ -2,7 +2,7 @@ package com.hazelcast.stabilizer.worker.testcommands;
 
 import java.io.Serializable;
 
-public class TestResponse implements Serializable{
+public class TestCommandResponse implements Serializable{
 
     public static final long serialVersionUID = 0l;
 
