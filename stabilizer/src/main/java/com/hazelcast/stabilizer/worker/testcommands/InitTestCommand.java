@@ -23,6 +23,10 @@ public class InitTestCommand extends TestCommand {
 
     public TestRecipe testRecipe;
 
+    public InitTestCommand(TestRecipe testRecipe) {
+        this.testRecipe = testRecipe;
+    }
+
     @Override
     public String toString() {
         return "InitTestCommand{" +

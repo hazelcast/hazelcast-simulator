@@ -15,8 +15,6 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.core.Member;
-
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -24,7 +22,7 @@ import java.net.Socket;
 
 public class WorkerJvm {
     public final String id;
-    public volatile Member member;
+    public volatile String memberAddress;
     public Process process;
 
     public volatile ObjectInputStream in;
@@ -34,9 +32,5 @@ public class WorkerJvm {
 
     public WorkerJvm(String id) {
         this.id = id;
-   }
-
-    public String getHostString(){
-        return  member.getSocketAddress().getHostString();
     }
 }

@@ -1,7 +1,7 @@
 package com.hazelcast.stabilizer.coordinator;
 
+
 import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.AgentRemoteService;
@@ -10,8 +10,6 @@ import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.Workout;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 
 import java.io.File;
@@ -33,7 +31,7 @@ import java.util.concurrent.TimeoutException;
 
 public class AgentClientManager {
 
-    private final static ILogger log = Logger.getLogger(AgentClientManager.class);
+    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentClientManager.class.getName());
 
     private final Coordinator coordinator;
     private List<AgentClient> agents = new LinkedList<AgentClient>();
@@ -202,39 +200,19 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public void initTest(final TestRecipe testRecipe) {
+    public void testCommand(final TestCommand testCommand) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
                     try {
-                        InitTestCommand initTestCommand = new InitTestCommand();
-                        initTestCommand.testRecipe = testRecipe;
-                        agentClient.testCommand(initTestCommand);
+                        agentClient.testCommand(testCommand);
                         return null;
                     } catch (RuntimeException t) {
                         log.severe(t);
                         throw t;
                     }
-                }
-            });
-            futures.add(f);
-        }
-
-        getAllFutures(futures);
-    }
-
-    public void globalGenericTestTask(final String name) {
-        List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    GenericTestCommand testCommand = new GenericTestCommand();
-                    testCommand.methodName = name;
-                    agentClient.testCommand(testCommand);
-                    return null;
                 }
             });
             futures.add(f);
@@ -252,8 +230,7 @@ public class AgentClientManager {
             @Override
             public Object call() throws Exception {
                 AgentClient agentClient = agents.get(0);
-                GenericTestCommand testCommand = new GenericTestCommand();
-                testCommand.methodName = name;
+                GenericTestCommand testCommand = new GenericTestCommand(name);
                 //todo: the problem here is that you are going to ask all member and not a single member.
                 agentClient.testCommand(testCommand);
                 return null;
@@ -270,23 +247,6 @@ public class AgentClientManager {
                 @Override
                 public Object call() throws Exception {
                     agentClient.echo(msg);
-                    return null;
-                }
-            });
-            futures.add(f);
-        }
-
-        getAllFutures(futures);
-    }
-
-    public void stopTest() {
-        List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    StopTestCommand command = new StopTestCommand();
-                    agentClient.testCommand(command);
                     return null;
                 }
             });
@@ -350,7 +310,7 @@ public class AgentClientManager {
             execute(AgentRemoteService.SERVICE_INIT_WORKOUT, workout);
         }
 
-          public void terminateWorkers() throws Exception {
+        public void terminateWorkers() throws Exception {
             execute(AgentRemoteService.SERVICE_TERMINATE_WORKERS);
         }
 

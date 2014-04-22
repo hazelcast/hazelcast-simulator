@@ -33,7 +33,6 @@ import com.hazelcast.stabilizer.worker.testcommands.TestResponse;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -66,10 +65,6 @@ public class Worker {
     }
 
     public void start() throws IOException {
-        log.info("Creating Worker HazelcastInstance");
-        this.hz = createHazelcastInstance();
-        log.info("Successfully created Worker HazelcastInstance");
-
         Socket socket = new Socket(InetAddress.getByName(null), 10000);
         log.info("Socket created: " + socket.getRemoteSocketAddress());
 
@@ -81,6 +76,10 @@ public class Worker {
 
         out.writeObject(workerId);
         out.flush();
+
+        log.info("Creating Worker HazelcastInstance");
+        this.hz = createHazelcastInstance();
+        log.info("Successfully created Worker HazelcastInstance");
 
         new TestCommandProcessingThread().start();
 

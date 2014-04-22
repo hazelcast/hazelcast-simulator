@@ -56,7 +56,6 @@ public class WorkerJvmFailureMonitor {
         detectThread.start();
     }
 
-
     public void stop() {
         stop = true;
         detectThread.interrupt();
@@ -77,8 +76,6 @@ public class WorkerJvmFailureMonitor {
             addIfNotNull(failures, detectOomeFailure(jvm));
 
             addIfNotNull(failures, detectUnexpectedExit(jvm));
-
-            addIfNotNull(failures, detectMembershipFailure(jvm));
 
             if (!failures.isEmpty()) {
                 workerJvmManager.terminateWorker(jvm);
@@ -122,7 +119,7 @@ public class WorkerJvmFailureMonitor {
                 Failure failure = new Failure();
                 failure.message = "Exception thrown in worker";
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = jvm == null ? null : jvm.getHostString();
+                failure.workerAddress = jvm == null ? null : jvm.memberAddress;
                 failure.workerId = workerId;
                 failure.testRecipe = agent.getTestRecipe();
                 failure.cause = throwableToString(cause);
@@ -133,23 +130,6 @@ public class WorkerJvmFailureMonitor {
                 }
             }
         }
-    }
-
-    private Failure detectMembershipFailure(WorkerJvm jvm) {
-        Boolean isMember = agent.getWorkerJvmManager().isClusterMember(jvm);
-
-        if (Boolean.FALSE.equals(isMember)) {
-            jvm.process.destroy();
-            Failure failure = new Failure();
-            failure.message = "Hazelcast membership failure (member missing)";
-            failure.agentAddress = getHostAddress();
-            failure.workerAddress = jvm.getHostString();
-            failure.workerId = jvm.id;
-            failure.testRecipe = agent.getTestRecipe();
-            return failure;
-        }
-
-        return null;
     }
 
     private Failure detectOomeFailure(WorkerJvm jvm) {
@@ -166,7 +146,7 @@ public class WorkerJvmFailureMonitor {
         Failure failure = new Failure();
         failure.message = "Out of memory";
         failure.agentAddress = getHostAddress();
-        failure.workerAddress = jvm.getHostString();
+        failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
         failure.testRecipe = agent.getTestRecipe();
         jvm.process.destroy();
@@ -181,7 +161,7 @@ public class WorkerJvmFailureMonitor {
                 Failure failure = new Failure();
                 failure.message = "Exit code not 0, but was " + exitCode;
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = jvm.getHostString();
+                failure.workerAddress = jvm.memberAddress;
                 failure.workerId = jvm.id;
                 failure.testRecipe = agent.getTestRecipe();
                 return failure;
@@ -190,7 +170,6 @@ public class WorkerJvmFailureMonitor {
         }
         return null;
     }
-
 
     private class DetectThread extends Thread {
         public DetectThread() {

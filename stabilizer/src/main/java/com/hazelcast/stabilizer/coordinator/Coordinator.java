@@ -16,13 +16,15 @@
 package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 import com.hazelcast.stabilizer.performance.Performance;
+import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.Workout;
+import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 
 import java.io.File;
 import java.util.List;
@@ -38,7 +40,7 @@ import static java.lang.String.format;
 public class Coordinator {
 
     public final static File STABILIZER_HOME = getStablizerHome();
-    private final static ILogger log = Logger.getLogger(Coordinator.class);
+    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(Coordinator.class.getName());
 
     //options.
     public boolean monitorPerformance;
@@ -150,11 +152,11 @@ public class Coordinator {
 
             echo("Starting Test initialization");
             agentClientManager.prepareAgentsForTests(testRecipe);
-            agentClientManager.initTest(testRecipe);
+            agentClientManager.testCommand(new InitTestCommand(testRecipe));
             echo("Completed Test initialization");
 
             echo("Starting Test local setup");
-            agentClientManager.globalGenericTestTask("localSetup");
+            agentClientManager.testCommand(new GenericTestCommand("localSetup"));
             echo("Completed Test local setup");
 
             echo("Starting Test global setup");
@@ -162,7 +164,7 @@ public class Coordinator {
             echo("Completed Test global setup");
 
             echo("Starting Test start");
-            agentClientManager.globalGenericTestTask("start");
+            agentClientManager.testCommand(new GenericTestCommand("start"));
             echo("Completed Test start");
 
             echo(format("Test running for %s seconds", workout.duration));
@@ -170,7 +172,7 @@ public class Coordinator {
             echo("Test finished running");
 
             echo("Starting Test stop");
-            agentClientManager.stopTest();
+            agentClientManager.testCommand(new StopTestCommand());
             echo("Completed Test stop");
 
             if (monitorPerformance) {
@@ -183,7 +185,7 @@ public class Coordinator {
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
-                agentClientManager.globalGenericTestTask("localVerify");
+                agentClientManager.testCommand(new GenericTestCommand("localVerify"));
                 echo("Completed Test local verify");
             } else {
                 echo("Skipping Test verification");
@@ -194,7 +196,7 @@ public class Coordinator {
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentClientManager.globalGenericTestTask("localTearDown");
+            agentClientManager.testCommand(new GenericTestCommand("localTearDown"));
 
             echo("Completed Test local tear down");
 

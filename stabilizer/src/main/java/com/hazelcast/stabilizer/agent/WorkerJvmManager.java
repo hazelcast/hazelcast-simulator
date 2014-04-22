@@ -15,20 +15,14 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.worker.Worker;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.TestResponse;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
+import com.hazelcast.stabilizer.worker.testcommands.TestResponse;
 
 import java.io.File;
 import java.io.IOException;
@@ -75,7 +69,6 @@ public class WorkerJvmManager {
     private final ConcurrentMap<Long, TestCommandFuture> futureMap = new ConcurrentHashMap<Long, TestCommandFuture>();
     private final AtomicLong requestIdGenerator = new AtomicLong(0);
 
-    private volatile HazelcastInstance workerClient;
     private ServerSocket serverSocket;
 
     public WorkerJvmManager(Agent agent) {
@@ -135,25 +128,6 @@ public class WorkerJvmManager {
         return workerJvms.values();
     }
 
-    public Boolean isClusterMember(WorkerJvm jvm) {
-        Member jvmMember = jvm.member;
-        if (jvmMember == null) {
-            return null;
-        }
-
-        if (workerClient == null) {
-            return false;
-        }
-
-        for (Member member : workerClient.getCluster().getMembers()) {
-            if (member.getSocketAddress().equals(jvmMember.getSocketAddress())) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public List executeOnWorkers(TestCommand testCommand, String taskDescription) throws InterruptedException {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
@@ -170,7 +144,7 @@ public class WorkerJvmManager {
                 } else {
                     out.writeObject(request);
                     out.flush();
-                    log.info("Successfully send "+testCommand+" to worker: "+workerJvm.id);
+                    log.info("Successfully send " + testCommand + " to worker: " + workerJvm.id);
                 }
                 futures.put(workerJvm, future);
             } catch (IOException e) {
@@ -190,7 +164,7 @@ public class WorkerJvmManager {
                 Failure failure = new Failure();
                 failure.message = taskDescription;
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = workerJvm.getHostString();
+                failure.workerAddress = workerJvm.memberAddress;
                 failure.workerId = workerJvm.id;
                 failure.testRecipe = agent.getTestRecipe();
                 failure.cause = throwableToString(e);
@@ -218,15 +192,6 @@ public class WorkerJvmManager {
 
             new WorkerVmLogger(workerId, process.getInputStream(), settings.trackLogging).start();
         }
-        Config config = new XmlConfigBuilder(workerHzFile.getAbsolutePath()).build();
-        ClientConfig clientConfig = new ClientConfig();
-        clientConfig.getGroupConfig()
-                .setName(config.getGroupConfig().getName())
-                .setPassword(config.getGroupConfig().getPassword());
-        clientConfig.getNetworkConfig().addAddress("localhost:" + config.getNetworkConfig().getPort());
-
-        workerClient = HazelcastClient.newHazelcastClient(clientConfig);
-
         waitForWorkersStartup(workers, settings.workerStartupTimeout);
 
         log.info(format("Finished starting %s worker Java Virtual Machines", settings.workerCount));
@@ -322,32 +287,24 @@ public class WorkerJvmManager {
                 InetSocketAddress address = readAddress(jvm);
 
                 if (address != null) {
-                    Member member = null;
-                    for (Member m : workerClient.getCluster().getMembers()) {
-                        if (m.getSocketAddress().equals(address)) {
-                            member = m;
+                    jvm.memberAddress = address.getAddress().getHostAddress();
+
+                    it.remove();
+                    log.info(format("Worker: %s Started %s of %s",
+                            jvm.id, workers.size() - todo.size(), workers.size()));
+
+                    //hack
+                    for (; ; ) {
+                        if (jvm.out != null && jvm.in != null) {
                             break;
                         }
-                    }
 
-                    if (member != null) {
-                        it.remove();
-                        jvm.member = member;
-                        log.info(format("Worker: %s Started %s of %s",
-                                jvm.id, workers.size() - todo.size(), workers.size()));
+                        log.info("JVM.in and out not yet set");
 
-                        //hack
-                        for (; ; ) {
-                            if (jvm.out != null && jvm.in != null) {
-                                break;
-                            }
-
-                            log.info("JVM.in and out not yet set");
-
-                            Thread.sleep(100);
-                        }
+                        Thread.sleep(100);
                     }
                 }
+
             }
 
             if (todo.isEmpty()) {
@@ -384,17 +341,13 @@ public class WorkerJvmManager {
     public void terminateWorkers() {
         log.info("Terminating workers");
 
-        if (workerClient != null) {
-            workerClient.getLifecycleService().shutdown();
-        }
-
         List<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms.values());
         workerJvms.clear();
 
         for (WorkerJvm jvm : workers) {
             jvm.process.destroy();
             Socket socket = jvm.socket;
-            if(socket!=null) {
+            if (socket != null) {
                 Utils.closeQuietly(socket);
             }
         }
@@ -453,7 +406,7 @@ public class WorkerJvmManager {
                 if (workerJvm.in2.available() > 0) {
                     log.info("Waiting for object");
                     TestResponse response = (TestResponse) in.readObject();
-                    log.info("Received response: "+response.commandId);
+                    log.info("Received response: " + response.commandId);
                     TestCommandFuture f = futureMap.remove(response.commandId);
                     if (f != null) {
                         f.set(response.result);
