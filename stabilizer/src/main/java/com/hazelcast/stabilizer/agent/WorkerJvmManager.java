@@ -46,6 +46,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -137,7 +138,7 @@ public class WorkerJvmManager {
             WorkerJvm workerJvm = entry.getKey();
             Future future = entry.getValue();
             try {
-                Object result = future.get();
+                Object result = future.get(30, TimeUnit.SECONDS);
                 results.add(result);
             } catch (ExecutionException e) {
                 Failure failure = new Failure();

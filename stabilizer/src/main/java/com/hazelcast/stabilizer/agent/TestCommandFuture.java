@@ -7,8 +7,8 @@ import java.util.concurrent.TimeoutException;
 
 public class TestCommandFuture<E> implements Future<E> {
 
-    private final static Object NO_RESULT = new Object(){
-        public String toString(){
+    private final static Object NO_RESULT = new Object() {
+        public String toString() {
             return "NO_RESULT";
         }
     };
@@ -53,6 +53,25 @@ public class TestCommandFuture<E> implements Future<E> {
 
     @Override
     public E get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        throw new UnsupportedOperationException();
+        long remainingTimeoutMs = unit.toMillis(timeout);
+
+        synchronized (this) {
+            for (; ; ) {
+                if (result != NO_RESULT) {
+                    if (result instanceof Throwable) {
+                        throw new ExecutionException((Throwable) result);
+                    }
+                    return (E) result;
+                }
+
+                if (remainingTimeoutMs <= 0) {
+                    throw new TimeoutException();
+                }
+
+                long startMs = System.currentTimeMillis();
+                wait(remainingTimeoutMs);
+                remainingTimeoutMs -= System.currentTimeMillis() - startMs;
+            }
+        }
     }
 }
