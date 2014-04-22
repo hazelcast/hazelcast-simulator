@@ -324,6 +324,14 @@ public final class Utils {
         }
     }
 
+    public static void sleepMillis(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void exitWithError(String msg) {
         System.out.printf(msg);
         System.exit(1);

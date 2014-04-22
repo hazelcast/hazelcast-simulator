@@ -52,7 +52,8 @@ public class Agent {
     private volatile TestRecipe testRecipe;
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
-    private final FailureMonitor failureMonitor = new FailureMonitor(this);
+    private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
+    private HttpServer server;
 
     public void echo(String msg) {
         log.info(msg);
@@ -71,8 +72,8 @@ public class Agent {
         return new File(WorkerJvmManager.WORKERS_HOME, _workout.id);
     }
 
-    public FailureMonitor getFailureMonitor() {
-        return failureMonitor;
+    public WorkerJvmFailureMonitor getWorkerJvmFailureMonitor() {
+        return workerJvmFailureMonitor;
     }
 
     public WorkerJvmManager getWorkerJvmManager() {
@@ -113,7 +114,9 @@ public class Agent {
 
         repository.load(javaInstallationsFile);
 
-        failureMonitor.start();
+        workerJvmFailureMonitor.start();
+
+        workerJvmManager.start();
 
         log.info("Stabilizer Agent is ready for action");
     }
@@ -121,7 +124,7 @@ public class Agent {
     private void startRestServer() throws IOException {
         AgentRestService agentRestService = new AgentRestService(this);
         ResourceConfig rc = new ResourceConfig().registerInstances(agentRestService);
-        HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
+        server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
         server.start();
     }
 

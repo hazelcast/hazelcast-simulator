@@ -13,28 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.agent;
+package com.hazelcast.stabilizer.worker.testcommands;
 
-import com.hazelcast.core.Member;
+import com.hazelcast.stabilizer.TestRecipe;
 
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+public class InitTestCommand extends TestCommand {
 
-public class WorkerJvm {
-    public final String id;
-    public volatile Member member;
-    public Process process;
+    public static final long serialVersionUID = 0l;
 
-    public volatile ObjectInputStream in;
-    public volatile ObjectOutputStream out;
-    public volatile InputStream in2;
+    public TestRecipe testRecipe;
 
-    public WorkerJvm(String id) {
-        this.id = id;
-   }
-
-    public String getHostString(){
-        return  member.getSocketAddress().getHostString();
+    @Override
+    public String toString() {
+        return "InitTestCommand{" +
+                "testRecipe=" + testRecipe +
+                '}';
     }
 }
+

@@ -20,10 +20,10 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
-import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -97,8 +97,9 @@ public class AtomicLongTest extends AbstractTest {
         public void run() {
             long iteration = 0;
             while (!stop) {
-                int index = random.nextInt(counters.length);
-                counters[index].incrementAndGet();
+                IAtomicLong counter = getRandomCounter();
+                counter.incrementAndGet();
+
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
@@ -110,6 +111,11 @@ public class AtomicLongTest extends AbstractTest {
             }
 
             totalCounter.addAndGet(iteration);
+        }
+
+        private IAtomicLong getRandomCounter() {
+            int index = random.nextInt(counters.length);
+            return counters[index];
         }
     }
 

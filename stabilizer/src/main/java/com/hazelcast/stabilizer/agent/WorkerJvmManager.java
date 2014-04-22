@@ -20,26 +20,35 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.worker.Worker;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
+import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -59,11 +68,61 @@ public class WorkerJvmManager {
     private final static AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
     public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
 
-    private final List<WorkerJvm> workerJvms = new CopyOnWriteArrayList<WorkerJvm>();
+    private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
-    private volatile HazelcastInstance workerClient;
-    private volatile IExecutorService workerExecutor;
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
+
+    private final ConcurrentMap<Long, TestCommandFuture> futureMap = new ConcurrentHashMap<Long, TestCommandFuture>();
+    private final AtomicLong requestIdGenerator = new AtomicLong(0);
+
+    private volatile HazelcastInstance workerClient;
+    private ServerSocket serverSocket;
+
+    public WorkerJvmManager(Agent agent) {
+        this.agent = agent;
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                for (WorkerJvm jvm : workerJvms.values()) {
+                    log.info("Destroying Worker : " + jvm.id);
+                    jvm.process.destroy();
+                }
+            }
+        });
+    }
+
+    public void start() throws Exception {
+        new PollThread().start();
+
+        serverSocket = new ServerSocket(10000, 0, InetAddress.getByName(null));
+
+        new Thread() {
+            public void run() {
+                for (; ; ) {
+                    try {
+                        Socket clientSocket = serverSocket.accept();
+                        log.info("Received accept from " + clientSocket.getRemoteSocketAddress());
+
+                        ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                        out.flush();
+
+                        InputStream inputStream = clientSocket.getInputStream();
+                        ObjectInputStream in = new ObjectInputStream(inputStream);
+
+                        log.info("Waiting for confirmation of worker process");
+                        String id = (String) in.readObject();
+                        WorkerJvm jvm = workerJvms.get(id);
+                        log.info("JVM: " + jvm);
+                        jvm.out = out;
+                        jvm.in = in;
+                        jvm.in2 = inputStream;
+                    } catch (Exception e) {
+                        log.severe(e);
+                    }
+                }
+            }
+        }.start();
+    }
 
     public void cleanWorkersHome() throws IOException {
         for (File file : WORKERS_HOME.listFiles()) {
@@ -71,42 +130,22 @@ public class WorkerJvmManager {
         }
     }
 
-    public HazelcastInstance getWorkerClient() {
-        return workerClient;
-    }
-
-    public List<WorkerJvm> getWorkerJvms() {
-        return workerJvms;
-    }
-
-
-
-    public WorkerJvmManager(Agent agent) {
-        this.agent = agent;
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                for (WorkerJvm jvm : workerJvms) {
-                    log.info("Destroying Worker : " + jvm.getId());
-                    jvm.getProcess().destroy();
-                }
-            }
-        });
+    public Collection<WorkerJvm> getWorkerJvms() {
+        return workerJvms.values();
     }
 
     public Boolean isClusterMember(WorkerJvm jvm) {
-        Member jvmMember = jvm.getMember();
-        if(jvmMember == null){
+        Member jvmMember = jvm.member;
+        if (jvmMember == null) {
             return null;
         }
 
-        final HazelcastInstance workerClient = getWorkerClient();
         if (workerClient == null) {
             return false;
         }
 
         for (Member member : workerClient.getCluster().getMembers()) {
-            if (member.getSocketAddress().equals(jvmMember)) {
+            if (member.getSocketAddress().equals(jvmMember.getSocketAddress())) {
                 return true;
             }
         }
@@ -114,17 +153,30 @@ public class WorkerJvmManager {
         return false;
     }
 
-    public List executeOnWorkers(Callable task, String taskDescription) throws InterruptedException {
+    public List executeOnWorkers(TestCommand testCommand, String taskDescription) throws InterruptedException {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
         for (WorkerJvm workerJvm : getWorkerJvms()) {
-            Member member = workerJvm.getMember();
-            if (member == null) {
-                continue;
-            }
+            TestCommandFuture future = new TestCommandFuture();
+            TestCommandRequest request = new TestCommandRequest();
+            request.id = requestIdGenerator.incrementAndGet();
+            request.task = testCommand;
+            futureMap.put(request.id, future);
+            try {
+                ObjectOutputStream out = workerJvm.out;
+                if (out == null) {
+                    log.severe("jvm: " + workerJvm.id + " has no out");
+                } else {
 
-            Future future = workerExecutor.submitToMember(task, member);
-            futures.put(workerJvm, future);
+                    out.writeObject(request);
+                    out.flush();
+                    log.info("Successfully send "+testCommand+" to worker: "+workerJvm.id);
+                }
+                futures.put(workerJvm, future);
+            } catch (IOException e) {
+                future.set(e);
+                throw new RuntimeException(e);
+            }
         }
 
         List results = new LinkedList();
@@ -139,16 +191,15 @@ public class WorkerJvmManager {
                 failure.message = taskDescription;
                 failure.agentAddress = getHostAddress();
                 failure.workerAddress = workerJvm.getHostString();
-                failure.workerId = workerJvm.getId();
+                failure.workerId = workerJvm.id;
                 failure.testRecipe = agent.getTestRecipe();
                 failure.cause = throwableToString(e);
-                agent.getFailureMonitor().publish(failure);
+                agent.getWorkerJvmFailureMonitor().publish(failure);
                 throw new FailureAlreadyThrownRuntimeException(e);
             }
         }
         return results;
     }
-
 
     public void spawn(WorkerJvmSettings settings) throws Exception {
         log.info(format("Starting %s worker Java Virtual Machines using settings\n %s", settings.workerCount, settings));
@@ -159,8 +210,9 @@ public class WorkerJvmManager {
 
         for (int k = 0; k < settings.workerCount; k++) {
             WorkerJvm worker = startWorkerJvm(settings, workerHzFile);
-            Process process = worker.getProcess();
-            String workerId = worker.getId();
+
+            Process process = worker.process;
+            String workerId = worker.id;
 
             workers.add(worker);
 
@@ -174,7 +226,6 @@ public class WorkerJvmManager {
         clientConfig.getNetworkConfig().addAddress("localhost:" + config.getNetworkConfig().getPort());
 
         workerClient = HazelcastClient.newHazelcastClient(clientConfig);
-        workerExecutor = workerClient.getExecutorService(Worker.WORKER_EXECUTOR);
 
         waitForWorkersStartup(workers, settings.workerStartupTimeout);
 
@@ -207,34 +258,16 @@ public class WorkerJvmManager {
     private WorkerJvm startWorkerJvm(WorkerJvmSettings settings, File workerHzFile) throws IOException {
         String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet();
 
-        String workerVmOptions = settings.vmOptions;
-        String[] clientVmOptionsArray = new String[]{};
-        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
-            clientVmOptionsArray = workerVmOptions.split("\\s+");
-        }
-
         File workoutHome = agent.getWorkoutHome();
+        workoutHome.mkdirs();
+
         String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
 
-        List<String> args = new LinkedList<String>();
-        args.add("java");
-        args.add(format("-XX:OnOutOfMemoryError=\"\"touch %s.oome\"\"", workerId));
-        args.add("-DSTABILIZER_HOME=" + getStablizerHome());
-        args.add("-Dhazelcast.logging.type=log4j");
-        args.add("-DworkerId=" + workerId);
-        args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-log4j.xml");
-        args.add("-classpath");
+        WorkerJvm workerJvm = new WorkerJvm(workerId);
 
-        File libDir = new File(agent.getWorkoutHome(), "lib");
-        String s = CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
-        args.add(s);
+        String[] args = buildArgs(settings, workerHzFile, workerId);
 
-        args.addAll(Arrays.asList(clientVmOptionsArray));
-        args.add(Worker.class.getName());
-        args.add(workerId);
-        args.add(workerHzFile.getAbsolutePath());
-
-        ProcessBuilder processBuilder = new ProcessBuilder(args.toArray(new String[args.size()]))
+        ProcessBuilder processBuilder = new ProcessBuilder(args)
                 .directory(workoutHome)
                 .redirectErrorStream(true);
 
@@ -244,9 +277,39 @@ public class WorkerJvmManager {
         environment.put("JAVA_HOME", javaHome);
 
         Process process = processBuilder.start();
-        final WorkerJvm workerJvm = new WorkerJvm(workerId, process);
-        workerJvms.add(workerJvm);
+        workerJvm.process = process;
+        workerJvms.put(workerId, workerJvm);
         return workerJvm;
+    }
+
+    private String[] buildArgs(WorkerJvmSettings settings, File workerHzFile, String workerId) {
+        List<String> args = new LinkedList<String>();
+        args.add("java");
+        args.add(format("-XX:OnOutOfMemoryError=\"\"touch %s.oome\"\"", workerId));
+        args.add("-DSTABILIZER_HOME=" + STABILIZER_HOME);
+        args.add("-Dhazelcast.logging.type=log4j");
+        args.add("-DworkerId=" + workerId);
+        args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-log4j.xml");
+        args.add("-classpath");
+
+        File libDir = new File(agent.getWorkoutHome(), "lib");
+        String s = CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
+        args.add(s);
+
+        args.addAll(getClientVmOptions(settings));
+        args.add(Worker.class.getName());
+        args.add(workerId);
+        args.add(workerHzFile.getAbsolutePath());
+        return args.toArray(new String[args.size()]);
+    }
+
+    private List<String> getClientVmOptions(WorkerJvmSettings settings) {
+        String workerVmOptions = settings.vmOptions;
+        String[] clientVmOptionsArray = new String[]{};
+        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
+            clientVmOptionsArray = workerVmOptions.split("\\s+");
+        }
+        return Arrays.asList(clientVmOptionsArray);
     }
 
     private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) throws InterruptedException {
@@ -269,24 +332,36 @@ public class WorkerJvmManager {
 
                     if (member != null) {
                         it.remove();
-                        jvm.setMember(member);
+                        jvm.member = member;
                         log.info(format("Worker: %s Started %s of %s",
-                                jvm.getId(), workers.size() - todo.size(), workers.size()));
+                                jvm.id, workers.size() - todo.size(), workers.size()));
+
+                        //hack
+                        for (; ; ) {
+                            if (jvm.out != null && jvm.in != null) {
+                                break;
+                            }
+
+                            log.info("JVM.in and out not yet set");
+
+                            Thread.sleep(100);
+                        }
                     }
                 }
             }
 
-            if (todo.isEmpty())
+            if (todo.isEmpty()) {
                 return;
+            }
 
             Utils.sleepSeconds(1);
         }
 
         StringBuffer sb = new StringBuffer();
         sb.append("[");
-        sb.append(todo.get(0).getId());
+        sb.append(todo.get(0).id);
         for (int l = 1; l < todo.size(); l++) {
-            sb.append(",").append(todo.get(l).getId());
+            sb.append(",").append(todo.get(l).id);
         }
         sb.append("]");
 
@@ -298,7 +373,7 @@ public class WorkerJvmManager {
     private InetSocketAddress readAddress(WorkerJvm jvm) {
         File workoutHome = agent.getWorkoutHome();
 
-        File file = new File(workoutHome, jvm.getId() + ".address");
+        File file = new File(workoutHome, jvm.id + ".address");
         if (!file.exists()) {
             return null;
         }
@@ -313,43 +388,78 @@ public class WorkerJvmManager {
             workerClient.getLifecycleService().shutdown();
         }
 
-        List<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms);
+        List<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms.values());
         workerJvms.clear();
 
         for (WorkerJvm jvm : workers) {
-            jvm.getProcess().destroy();
+            jvm.process.destroy();
         }
 
         for (WorkerJvm jvm : workers) {
             int exitCode = 0;
             try {
-                exitCode = jvm.getProcess().waitFor();
+                exitCode = jvm.process.waitFor();
             } catch (InterruptedException e) {
             }
 
             if (exitCode != 0) {
-                log.info(format("worker process %s exited with exit code: %s", jvm.getId(), exitCode));
+                log.info(format("worker process %s exited with exit code: %s", jvm.id, exitCode));
             }
         }
 
         log.info("Finished terminating workers");
     }
 
-    public void destroy(WorkerJvm jvm) {
-        jvm.getProcess().destroy();
+    public void terminateWorker(WorkerJvm jvm) {
+        jvm.process.destroy();
         try {
-            jvm.getProcess().waitFor();
+            jvm.process.waitFor();
         } catch (InterruptedException e) {
         }
         workerJvms.remove(jvm);
     }
 
     public WorkerJvm getWorker(String workerId) {
-        for (WorkerJvm worker : workerJvms) {
-            if (workerId.equals(worker.getId())) {
-                return worker;
+        return workerJvms.get(workerId);
+    }
+
+    private class PollThread extends Thread {
+        public PollThread() {
+            super("PollThread");
+        }
+
+        public void run() {
+            for (; ; ) {
+                for (WorkerJvm workerJvm : workerJvms.values()) {
+                    poll(workerJvm);
+                }
+                Utils.sleepSeconds(1);
             }
         }
-        return null;
+
+        private void poll(WorkerJvm workerJvm) {
+            ObjectInputStream in = workerJvm.in;
+
+            //could be that the in is not yet set.
+            if (in == null) {
+                return;
+            }
+
+            try {
+                if (workerJvm.in2.available() > 0) {
+                    log.info("Waiting for object");
+                    TestCommandResponse response = (TestCommandResponse) in.readObject();
+                    log.info("Received response: "+response.taskId);
+                    TestCommandFuture f = futureMap.remove(response.taskId);
+                    if (f != null) {
+                        f.set(response.result);
+                    }
+                }else{
+                    log.info("Nothing found for: "+workerJvm.id);
+                }
+            } catch (Exception e) {
+                log.severe("Failed to poll result for jvm:" + workerJvm.id, e);
+            }
+        }
     }
 }

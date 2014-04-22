@@ -249,6 +249,7 @@ public class AgentClientManager {
             @Override
             public Object call() throws Exception {
                 AgentClient agentClient = agents.get(0);
+                //todo: the problem here is that you are going to ask all member and not a single member.
                 agentClient.genericTestTask(name);
                 return null;
             }

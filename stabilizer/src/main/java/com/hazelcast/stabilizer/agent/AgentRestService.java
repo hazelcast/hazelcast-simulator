@@ -5,9 +5,9 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.tests.Workout;
-import com.hazelcast.stabilizer.worker.tasks.GenericTestTask;
-import com.hazelcast.stabilizer.worker.tasks.InitTest;
-import com.hazelcast.stabilizer.worker.tasks.StopTask;
+import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -34,7 +34,7 @@ public class AgentRestService {
     @Path("/failures")
     public ArrayList<Failure> getFailures() {
         ArrayList<Failure> failures = new ArrayList<Failure>();
-        agent.getFailureMonitor().drainFailures(failures);
+        agent.getWorkerJvmFailureMonitor().drainFailures(failures);
         return failures;
     }
 
@@ -47,7 +47,7 @@ public class AgentRestService {
             agent.getWorkerJvmManager().spawn(settings);
             return "OK";
         } catch (Exception e) {
-            log.severe("Failed to spawn workers",e);
+            log.severe("Failed to spawn workers from settings:"+settings,e);
             throw e;
         }
     }
@@ -58,11 +58,12 @@ public class AgentRestService {
     @Path("/initTest")
     public String initTest(TestRecipe testRecipe) throws Exception {
         try {
-            InitTest initTest = new InitTest(testRecipe);
-            agent.getWorkerJvmManager().executeOnWorkers(initTest, "Test Initializing");
+            InitTestCommand initTestCommand = new InitTestCommand();
+            initTestCommand.testRecipe = testRecipe;
+            agent.getWorkerJvmManager().executeOnWorkers(initTestCommand, "Test Initializing");
             return "OK";
         } catch (Exception e) {
-            log.severe("Failed to init Test", e);
+            log.severe("Failed to init Test from recipe:"+testRecipe, e);
             throw e;
         }
     }
@@ -76,7 +77,7 @@ public class AgentRestService {
             agent.initWorkout(workout, null);
             return "OK";
         } catch (Exception e) {
-            log.severe("Failed to init workout", e);
+            log.severe("Failed to init workout: "+workout, e);
             throw e;
         }
     }
@@ -114,7 +115,9 @@ public class AgentRestService {
         try {
             //todo: timeout should be passed
             WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
-            workerJvmManager.executeOnWorkers(new StopTask(30000), "Stopping test");
+            StopTestCommand task = new StopTestCommand();
+            task.timeoutMs = 30000;
+            workerJvmManager.executeOnWorkers(task, "Stopping test");
             workerJvmManager.terminateWorkers();
             return "OK";
         } catch (Exception e) {
@@ -129,7 +132,8 @@ public class AgentRestService {
     @Path("/genericTestTask")
     public Object genericTestTask(String methodName) throws Exception {
         try {
-            GenericTestTask task = new GenericTestTask(methodName);
+            GenericTestCommand task = new GenericTestCommand();
+            task.methodName = methodName;
             WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
             workerJvmManager.executeOnWorkers(task, "Test " + methodName);
             return "OK";
@@ -162,7 +166,7 @@ public class AgentRestService {
             agent.setTestRecipe(testRecipe);
             return "OK";
         } catch (Exception e) {
-            log.severe("Failed to prepareForTest", e);
+            log.severe("Failed to prepareForTest for recipe:"+testRecipe, e);
             throw e;
         }
     }
