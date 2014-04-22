@@ -1,4 +1,4 @@
-hazelcast-heartattacker
+hazelcast-stabilizer
 ===========================
 
 A tool for stress testing Hazelcast
