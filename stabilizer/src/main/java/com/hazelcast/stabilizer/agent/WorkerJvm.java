@@ -20,6 +20,7 @@ import com.hazelcast.core.Member;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.Socket;
 
 public class WorkerJvm {
     public final String id;
@@ -29,6 +30,7 @@ public class WorkerJvm {
     public volatile ObjectInputStream in;
     public volatile ObjectOutputStream out;
     public volatile InputStream in2;
+    public volatile Socket socket;
 
     public WorkerJvm(String id) {
         this.id = id;

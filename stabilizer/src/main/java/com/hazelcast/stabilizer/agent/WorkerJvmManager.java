@@ -54,6 +54,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.Utils.closeQuietly;
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.throwableToString;
@@ -116,6 +117,7 @@ public class WorkerJvmManager {
                         jvm.out = out;
                         jvm.in = in;
                         jvm.in2 = inputStream;
+                        jvm.socket = clientSocket;
                     } catch (Exception e) {
                         log.severe(e);
                     }
@@ -167,7 +169,6 @@ public class WorkerJvmManager {
                 if (out == null) {
                     log.severe("jvm: " + workerJvm.id + " has no out");
                 } else {
-
                     out.writeObject(request);
                     out.flush();
                     log.info("Successfully send "+testCommand+" to worker: "+workerJvm.id);
@@ -393,6 +394,10 @@ public class WorkerJvmManager {
 
         for (WorkerJvm jvm : workers) {
             jvm.process.destroy();
+            Socket socket = jvm.socket;
+            if(socket!=null) {
+                Utils.closeQuietly(socket);
+            }
         }
 
         for (WorkerJvm jvm : workers) {
