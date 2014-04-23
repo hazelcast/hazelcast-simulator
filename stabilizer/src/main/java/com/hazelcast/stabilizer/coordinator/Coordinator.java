@@ -266,7 +266,7 @@ public class Coordinator {
         long startMs = System.currentTimeMillis();
 
         int agentCount = agentClientManager.getAgentCount();
-        if (masterSettings.memberWorkerCount == -1) {
+        if (masterSettings.memberWorkerCount == -1 && masterSettings.mixedWorkerCount==0) {
             masterSettings.memberWorkerCount = agentCount;
         }
 

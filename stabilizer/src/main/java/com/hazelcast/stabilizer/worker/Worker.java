@@ -78,7 +78,7 @@ public class Worker {
             this.serverInstance = createServerHazelcastInstance();
         } else if ("client".equals(workerMode)) {
             this.clientInstance = createClientHazelcastInstance();
-        } else if ("combi".equals(workerMode)) {
+        } else if ("mixed".equals(workerMode)) {
             this.serverInstance = createServerHazelcastInstance();
             this.clientInstance = createClientHazelcastInstance();
         } else {
@@ -158,7 +158,6 @@ public class Worker {
         logSystemProperty("STABILIZER_HOME");
         logSystemProperty("hazelcast.logging.type");
         logSystemProperty("log4j.configuration");
-        logSystemProperty("agent.mode");
     }
 
     private static void logSystemProperty(String name) {
@@ -172,14 +171,13 @@ public class Worker {
 
             String workerId = System.getProperty("workerId");
             log.info("Worker id:" + workerId);
+
             String workerHzFile = args[0];
             log.info("Worker hz config file:" + workerHzFile);
             log.info(asText(new File(workerHzFile)));
 
             String workerMode = System.getProperty("workerMode");
             log.info("Worker mode:" + workerMode);
-
-            System.setProperty("workerId", workerId);
 
             Worker worker = new Worker();
             worker.workerId = workerId;
