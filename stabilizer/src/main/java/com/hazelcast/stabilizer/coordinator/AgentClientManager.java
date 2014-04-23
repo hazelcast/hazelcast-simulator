@@ -8,7 +8,7 @@ import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.tests.Workout;
+import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 
 import java.io.File;
@@ -151,13 +151,13 @@ public class AgentClientManager {
         }
     }
 
-    public void initWorkout(final Workout workout, byte[] bytes) {
+    public void initTestSuite(final TestSuite testSuite, byte[] bytes) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_INIT_WORKOUT, workout);
+                    agentClient.execute(AgentRemoteService.SERVICE_INIT_TESTSUITE, testSuite);
                     return null;
                 }
             });

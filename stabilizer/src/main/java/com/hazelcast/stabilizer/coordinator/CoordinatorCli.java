@@ -2,7 +2,7 @@ package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
-import com.hazelcast.stabilizer.tests.Workout;
+import com.hazelcast.stabilizer.tests.TestSuite;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -54,11 +54,11 @@ public class CoordinatorCli {
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<Boolean> workerRefreshSpec = parser.accepts("workerFresh",
-            "If the worker JVM's should be replaced after every workout")
+            "If the worker JVM's should be replaced after every testsuite")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
-            "It the workout should fail immediately when a Test from a workout fails instead of continuing ")
+            "It the testsuite should fail immediately when a Test from a testsuite fails instead of continuing ")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
@@ -121,18 +121,18 @@ public class CoordinatorCli {
             coordinator.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
             coordinator.machinesFile = getFile(optionSpec.machinesFileSpec, options, "Machines file");
 
-            String workoutFileName = "workout.properties";
-            List<String> workoutFiles = options.nonOptionArguments();
-            if (workoutFiles.size() == 1) {
-                workoutFileName = workoutFiles.get(0);
-            } else if (workoutFiles.size() > 1) {
-                exitWithError("Too many workout files specified.");
+            String testsuiteFileName = "testsuite.properties";
+            List<String> testsuiteFiles = options.nonOptionArguments();
+            if (testsuiteFiles.size() == 1) {
+                testsuiteFileName = testsuiteFiles.get(0);
+            } else if (testsuiteFiles.size() > 1) {
+                exitWithError("Too many testsuite files specified.");
             }
 
-            Workout workout = Workout.createWorkout(new File(workoutFileName));
-            coordinator.workout = workout;
-            workout.duration = getDuration(optionSpec, options);
-            workout.failFast = options.valueOf(optionSpec.failFastSpec);
+            TestSuite testSuite = TestSuite.createTestSuite(new File(testsuiteFileName));
+            coordinator.testSuite = testSuite;
+            testSuite.duration = getDuration(optionSpec, options);
+            testSuite.failFast = options.valueOf(optionSpec.failFastSpec);
 
             WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
             workerJvmSettings.trackLogging = options.has(optionSpec.workerTrackLoggingSpec);
@@ -143,7 +143,7 @@ public class CoordinatorCli {
             workerJvmSettings.refreshJvm = options.valueOf(optionSpec.workerRefreshSpec);
             workerJvmSettings.javaVendor = options.valueOf(optionSpec.workerJavaVendorSpec);
             workerJvmSettings.javaVersion = options.valueOf(optionSpec.workerJavaVersionSpec);
-            workout.workerJvmSettings = workerJvmSettings;
+            testSuite.workerJvmSettings = workerJvmSettings;
         } catch (OptionException e) {
             Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");
         }

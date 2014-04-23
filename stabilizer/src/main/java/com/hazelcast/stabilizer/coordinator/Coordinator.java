@@ -22,7 +22,7 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.tests.Workout;
+import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
@@ -50,7 +50,7 @@ public class Coordinator {
     public boolean cleanWorkersHome;
     public Integer testStopTimeoutMs;
     public File machinesFile;
-    public Workout workout;
+    public TestSuite testSuite;
 
     //internal state.
     private final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
@@ -68,9 +68,9 @@ public class Coordinator {
         }
 
         byte[] bytes = Utils.createUpload(workerClassPath);
-        agentClientManager.initWorkout(workout, bytes);
+        agentClientManager.initTestSuite(testSuite, bytes);
 
-        WorkerJvmSettings workerJvmSettings = workout.workerJvmSettings;
+        WorkerJvmSettings workerJvmSettings = testSuite.workerJvmSettings;
         initWorkerHzConfig(workerJvmSettings);
 
         int agentCount = agentClientManager.getAgentCount();
@@ -81,7 +81,7 @@ public class Coordinator {
 
         long startMs = System.currentTimeMillis();
 
-        runWorkout(workout);
+        runTestSuite(testSuite);
 
         //the coordinator needs to sleep some to make sure that it will get failures if they are there.
         log.info("Starting cool down (20 sec)");
@@ -118,33 +118,33 @@ public class Coordinator {
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
     }
 
-    private void runWorkout(Workout workout) throws Exception {
-        echo(format("Starting workout: %s", workout.id));
-        echo(format("Tests in workout: %s", workout.size()));
-        echo(format("Running time per test: %s ", secondsToHuman(workout.duration)));
-        echo(format("Expected total workout time: %s", secondsToHuman(workout.size() * workout.duration)));
+    private void runTestSuite(TestSuite testSuite) throws Exception {
+        echo(format("Starting testsuite: %s", testSuite.id));
+        echo(format("Tests in testsuite: %s", testSuite.size()));
+        echo(format("Running time per test: %s ", secondsToHuman(testSuite.duration)));
+        echo(format("Expected total testsuite time: %s", secondsToHuman(testSuite.size() * testSuite.duration)));
 
         //we need to make sure that before we start, there are no workers running anymore.
         terminateWorkers();
-        startWorkers(workout.workerJvmSettings);
+        startWorkers(testSuite.workerJvmSettings);
 
-        for (TestRecipe testRecipe : workout.testRecipeList) {
-            boolean success = run(workout, testRecipe);
-            if (!success && workout.failFast) {
+        for (TestRecipe testRecipe : testSuite.testRecipeList) {
+            boolean success = run(testSuite, testRecipe);
+            if (!success && testSuite.failFast) {
                 log.info("Aborting working due to failure");
                 break;
             }
 
-            if (!success || workout.workerJvmSettings.refreshJvm) {
+            if (!success || testSuite.workerJvmSettings.refreshJvm) {
                 terminateWorkers();
-                startWorkers(workout.workerJvmSettings);
+                startWorkers(testSuite.workerJvmSettings);
             }
         }
 
         terminateWorkers();
     }
 
-    private boolean run(Workout workout, TestRecipe testRecipe) {
+    private boolean run(TestSuite testSuite, TestRecipe testRecipe) {
         echo(format("Running Test : %s", testRecipe.getTestId()));
 
         int oldCount = failureList.size();
@@ -168,8 +168,8 @@ public class Coordinator {
             agentClientManager.executeOnAllWorkers(new GenericTestCommand("start"));
             echo("Completed Test start");
 
-            echo(format("Test running for %s seconds", workout.duration));
-            sleepSeconds(workout.duration);
+            echo(format("Test running for %s seconds", testSuite.duration));
+            sleepSeconds(testSuite.duration);
             echo("Test finished running");
 
             echo("Starting Test stop");
@@ -289,7 +289,7 @@ public class Coordinator {
             coordinator.start();
             System.exit(0);
         } catch (Exception e) {
-            log.severe("Failed to run workout", e);
+            log.severe("Failed to run testsuite", e);
             System.exit(1);
         }
     }

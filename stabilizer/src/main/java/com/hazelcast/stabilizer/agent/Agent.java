@@ -19,7 +19,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.tests.Workout;
+import com.hazelcast.stabilizer.tests.TestSuite;
 import joptsimple.OptionException;
 
 import java.io.File;
@@ -41,7 +41,7 @@ public class Agent {
     public File javaInstallationsFile;
 
     //internal state
-    private volatile Workout workout;
+    private volatile TestSuite testSuite;
     private volatile TestRecipe testRecipe;
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
@@ -51,17 +51,17 @@ public class Agent {
         log.info(msg);
     }
 
-    public Workout getWorkout() {
-        return workout;
+    public TestSuite getTestSuite() {
+        return testSuite;
     }
 
-    public File getWorkoutHome() {
-        Workout _workout = workout;
-        if (_workout == null) {
+    public File getTestSuiteHome() {
+        TestSuite _testSuite = testSuite;
+        if (_testSuite == null) {
             return null;
         }
 
-        return new File(WorkerJvmManager.WORKERS_HOME, _workout.id);
+        return new File(WorkerJvmManager.WORKERS_HOME, _testSuite.id);
     }
 
     public WorkerJvmFailureMonitor getWorkerJvmFailureMonitor() {
@@ -84,14 +84,14 @@ public class Agent {
         return repository;
     }
 
-    public void initWorkout(Workout workout, byte[] content) throws IOException {
-        this.workout = workout;
+    public void initTestSuite(TestSuite testSuite, byte[] content) throws IOException {
+        this.testSuite = testSuite;
         this.testRecipe = null;
 
-        File workoutDir = new File(WorkerJvmManager.WORKERS_HOME, workout.id);
-        ensureExistingDirectory(workoutDir);
+        File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
+        ensureExistingDirectory(testSuiteDir);
 
-        File libDir = new File(workoutDir, "lib");
+        File libDir = new File(testSuiteDir, "lib");
         ensureExistingDirectory(libDir);
 
         if (content != null) {

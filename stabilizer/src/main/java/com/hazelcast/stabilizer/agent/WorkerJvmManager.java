@@ -203,8 +203,8 @@ public class WorkerJvmManager {
     private WorkerJvm startWorkerJvm(WorkerJvmSettings settings, File workerHzFile) throws IOException {
         String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet();
 
-        File workoutHome = agent.getWorkoutHome();
-        workoutHome.mkdirs();
+        File testSuiteHome = agent.getTestSuiteHome();
+        testSuiteHome.mkdirs();
 
         String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
 
@@ -213,7 +213,7 @@ public class WorkerJvmManager {
         String[] args = buildArgs(settings, workerHzFile, workerId);
 
         ProcessBuilder processBuilder = new ProcessBuilder(args)
-                .directory(workoutHome)
+                .directory(testSuiteHome)
                 .redirectErrorStream(true);
 
         Map<String, String> environment = processBuilder.environment();
@@ -244,7 +244,7 @@ public class WorkerJvmManager {
     }
 
     private String getClasspath() {
-        File libDir = new File(agent.getWorkoutHome(), "lib");
+        File libDir = new File(agent.getTestSuiteHome(), "lib");
         return CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
     }
 
@@ -290,15 +290,15 @@ public class WorkerJvmManager {
         }
         sb.append("]");
 
-        throw new RuntimeException(format("Timeout: workers %s of workout %s on host %s didn't start within %s seconds",
-                sb, agent.getWorkout().id, getHostAddress(),
+        throw new RuntimeException(format("Timeout: workers %s of testsuite %s on host %s didn't start within %s seconds",
+                sb, agent.getTestSuite().id, getHostAddress(),
                 workerTimeoutSec));
     }
 
     private InetSocketAddress readAddress(WorkerJvm jvm) {
-        File workoutHome = agent.getWorkoutHome();
+        File testSuiteHome = agent.getTestSuiteHome();
 
-        File file = new File(workoutHome, jvm.id + ".address");
+        File file = new File(testSuiteHome, jvm.id + ".address");
         if (!file.exists()) {
             return null;
         }

@@ -376,7 +376,7 @@ public final class Utils {
             properties.load(in);
             return properties;
         } catch (IOException e) {
-            throw new RuntimeException(format("Failed to load workout property file [%s]", file.getAbsolutePath()), e);
+            throw new RuntimeException(format("Failed to load testsuite property file [%s]", file.getAbsolutePath()), e);
         } finally {
             Utils.closeQuietly(in);
         }

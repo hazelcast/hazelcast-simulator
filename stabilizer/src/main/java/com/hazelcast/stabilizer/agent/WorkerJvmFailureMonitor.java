@@ -94,12 +94,12 @@ public class WorkerJvmFailureMonitor {
     }
 
     private void detectExceptions() {
-        File workoutHome = agent.getWorkoutHome();
-        if (workoutHome == null) {
+        File testsuiteHome = agent.getTestSuiteHome();
+        if (testsuiteHome == null) {
             return;
         }
 
-        File[] files = workoutHome.listFiles();
+        File[] files = testsuiteHome.listFiles();
         if (files == null) {
             return;
         }
@@ -131,12 +131,12 @@ public class WorkerJvmFailureMonitor {
     }
 
     private Failure detectOomeFailure(WorkerJvm jvm) {
-        File workoutDir = agent.getWorkoutHome();
-        if (workoutDir == null) {
+        File testsuiteDir = agent.getTestSuiteHome();
+        if (testsuiteDir == null) {
             return null;
         }
 
-        File file = new File(workoutDir, jvm.id + ".oome");
+        File file = new File(testsuiteDir, jvm.id + ".oome");
         if (!file.exists()) {
             return null;
         }

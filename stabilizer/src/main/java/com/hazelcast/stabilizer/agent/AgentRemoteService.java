@@ -5,7 +5,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.tests.Workout;
+import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 
 public class AgentRemoteService {
     public static final String SERVICE_SPAWN_WORKERS = "spawnWorkers";
-    public static final String SERVICE_INIT_WORKOUT = "initWorkout";
+    public static final String SERVICE_INIT_TESTSUITE = "initTestSuite";
     public static final String SERVICE_CLEAN_WORKERS_HOME = "cleanWorkersHome";
     public static final String SERVICE_TERMINATE_WORKERS = "terminateWorkers";
     public static final String SERVICE_EXECUTE_ALL_WORKERS = "executeOnAllWorkers";
@@ -68,9 +68,9 @@ public class AgentRemoteService {
                     } else if (SERVICE_SPAWN_WORKERS.equals(service)) {
                         WorkerJvmSettings settings = (WorkerJvmSettings) in.readObject();
                         spawnWorkers(settings);
-                    } else if (SERVICE_INIT_WORKOUT.equals(service)) {
-                        Workout workout = (Workout) in.readObject();
-                        initWorkout(workout);
+                    } else if (SERVICE_INIT_TESTSUITE.equals(service)) {
+                        TestSuite testSuite = (TestSuite) in.readObject();
+                        initTestSuite(testSuite);
                     } else if (SERVICE_CLEAN_WORKERS_HOME.equals(service)) {
                         cleanWorkersHome();
                     } else if (SERVICE_TERMINATE_WORKERS.equals(service)) {
@@ -121,11 +121,11 @@ public class AgentRemoteService {
             }
         }
 
-        private void initWorkout(Workout workout) throws Exception {
+        private void initTestSuite(TestSuite testSuite) throws Exception {
             try {
-                agent.initWorkout(workout, null);
+                agent.initTestSuite(testSuite, null);
             } catch (Exception e) {
-                log.severe("Failed to init workout: " + workout, e);
+                log.severe("Failed to init testsuite: " + testSuite, e);
                 throw e;
             }
         }

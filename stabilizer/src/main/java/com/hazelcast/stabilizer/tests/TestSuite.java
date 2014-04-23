@@ -30,11 +30,11 @@ import java.util.Properties;
 import static com.hazelcast.stabilizer.Utils.loadProperties;
 import static java.lang.String.format;
 
-public class Workout implements Serializable {
+public class TestSuite implements Serializable {
 
     private static final long serialVersionUID = 1;
 
-    public static Workout createWorkout(File file) throws Exception {
+    public static TestSuite createTestSuite(File file) throws Exception {
         Properties properties = loadProperties(file);
 
         Map<String, TestRecipe> recipies = new HashMap<String, TestRecipe>();
@@ -61,7 +61,7 @@ public class Workout implements Serializable {
         List<String> recipeIds = new LinkedList<String>(recipies.keySet());
         Collections.sort(recipeIds);
 
-        Workout workout = new Workout();
+        TestSuite testSuite = new TestSuite();
         for (String recipeId : recipeIds) {
             TestRecipe recipe = recipies.get(recipeId);
             if (recipe.getClassname() == null) {
@@ -77,9 +77,9 @@ public class Workout implements Serializable {
                     ));
                 }
             }
-            workout.addTest(recipe);
+            testSuite.addTest(recipe);
         }
-        return workout;
+        return testSuite;
     }
 
     public final String id = "" + System.currentTimeMillis();
@@ -98,7 +98,7 @@ public class Workout implements Serializable {
 
     @Override
     public String toString() {
-        return "Workout{" +
+        return "TestSuite{" +
                 "duration=" + duration +
                 ", id='" + id + '\'' +
                 ", testRecipeList=" + testRecipeList +
