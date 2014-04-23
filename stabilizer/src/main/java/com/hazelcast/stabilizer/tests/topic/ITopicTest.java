@@ -7,10 +7,10 @@ import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
-import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
@@ -37,8 +37,6 @@ public class ITopicTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         HazelcastInstance targetInstance = getTargetInstance();
 
         totalExpectedCounter = targetInstance.getAtomicLong(testId + ":TotalExpectedCounter");

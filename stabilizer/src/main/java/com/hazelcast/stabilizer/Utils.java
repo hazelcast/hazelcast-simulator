@@ -49,7 +49,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -61,6 +60,8 @@ public final class Utils {
 
     private static volatile String hostAddress;
 
+    public final static String FILE_SEPERATOR = System.getProperty("file.separator");
+
     public static String getHostAddress() {
         if (hostAddress != null) {
             return hostAddress;
@@ -68,7 +69,7 @@ public final class Utils {
 
         synchronized (Utils.class) {
             try {
-                if(hostAddress!=null){
+                if (hostAddress != null) {
                     return hostAddress;
                 }
                 Socket s = new Socket("google.com", 80);
@@ -106,7 +107,7 @@ public final class Utils {
             FileInputStream fis = new FileInputStream(file);
             try {
                 ObjectInputStream in = new ObjectInputStream(fis);
-                return (E)in.readObject();
+                return (E) in.readObject();
             } finally {
                 Utils.closeQuietly(fis);
             }
@@ -256,7 +257,7 @@ public final class Utils {
         }
     }
 
-    public static String throwableToString(Throwable t){
+    public static String throwableToString(Throwable t) {
         StringWriter sw = new StringWriter();
         t.printStackTrace(new PrintWriter(sw));
         return sw.toString();

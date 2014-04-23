@@ -15,9 +15,6 @@
  */
 package com.hazelcast.stabilizer.tests;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -25,7 +22,6 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
 
-import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -34,17 +30,14 @@ public abstract class AbstractTest implements Test {
 
     private final static ILogger log = Logger.getLogger(AbstractTest.class.getName());
 
-    protected HazelcastInstance hazelcastInstance;
+    protected HazelcastInstance serverInstance;
+    protected HazelcastInstance clientInstance;
 
     protected String testId;
     protected volatile boolean stop = false;
     private final CountDownLatch startLatch = new CountDownLatch(1);
     private final Set<Thread> threads = new HashSet<Thread>();
     private long startMs;
-    private HazelcastInstance client;
-
-    //properties.
-    public boolean useClient = false;
 
     public String getTestId() {
         return testId;
@@ -54,12 +47,10 @@ public abstract class AbstractTest implements Test {
         this.testId = testId;
     }
 
-    public HazelcastInstance getHazelcastInstance() {
-        return hazelcastInstance;
-    }
-
-    public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
-        this.hazelcastInstance = hazelcastInstance;
+    @Override
+    public void setHazelcastInstances(HazelcastInstance serverInstance, HazelcastInstance clientInstance) {
+        this.serverInstance = serverInstance;
+        this.clientInstance = clientInstance;
     }
 
     @Override
@@ -68,33 +59,18 @@ public abstract class AbstractTest implements Test {
 
     @Override
     public void localSetup() throws Exception {
-        if (useClient) {
-            Config config = hazelcastInstance.getConfig();
-
-            ClientConfig clientConfig = new ClientConfig();
-            clientConfig.getGroupConfig().setName(config.getGroupConfig().getName());
-            clientConfig.getGroupConfig().setPassword(config.getGroupConfig().getPassword());
-
-            InetSocketAddress localAddress = hazelcastInstance.getCluster().getLocalMember().getSocketAddress();
-            String localAddressString = localAddress.getAddress().getHostAddress() + ":" + localAddress.getPort();
-            clientConfig.getNetworkConfig().addAddress(localAddressString);
-            client = HazelcastClient.newHazelcastClient(clientConfig);
-        }
     }
 
     public HazelcastInstance getTargetInstance() {
-        if (useClient) {
-            return client;
+        if (clientInstance != null) {
+            return clientInstance;
         } else {
-            return hazelcastInstance;
+            return serverInstance;
         }
     }
 
     @Override
     public void localTearDown() throws Exception {
-        if (client != null){
-            client.shutdown();
-        }
     }
 
     @Override
@@ -117,7 +93,7 @@ public abstract class AbstractTest implements Test {
     }
 
     public long getCurrentTimeMs() {
-        return hazelcastInstance.getCluster().getClusterTime();
+        return getTargetInstance().getCluster().getClusterTime();
     }
 
     public long getStartTimeMs() {
@@ -153,7 +129,7 @@ public abstract class AbstractTest implements Test {
 
     @Override
     public void start() {
-        startMs = hazelcastInstance.getCluster().getClusterTime();
+        startMs = getCurrentTimeMs();
         startLatch.countDown();
     }
 

@@ -4,10 +4,10 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
-import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,8 +31,6 @@ public class MapLockTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         HazelcastInstance targetInstance = getTargetInstance();
 
         map = targetInstance.getMap("Map-" + testId);
@@ -115,7 +113,7 @@ public class MapLockTest extends AbstractTest {
                     map.unlock(key);
                 }
 
-                increment(key,increment);
+                increment(key, increment);
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -138,7 +136,6 @@ public class MapLockTest extends AbstractTest {
 
     public static void main(String[] args) throws Exception {
         MapLockTest test = new MapLockTest();
-        test.useClient = true;
         new TestRunner().run(test, 20);
     }
 }

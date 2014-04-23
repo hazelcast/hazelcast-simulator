@@ -34,7 +34,7 @@ public class TestSuite implements Serializable {
 
     private static final long serialVersionUID = 1;
 
-    public static TestSuite createTestSuite(File file) throws Exception {
+    public static TestSuite loadTestSuite(File file) throws Exception {
         Properties properties = loadProperties(file);
 
         Map<String, TestRecipe> recipies = new HashMap<String, TestRecipe>();

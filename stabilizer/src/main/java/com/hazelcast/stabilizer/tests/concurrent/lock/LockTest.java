@@ -25,8 +25,6 @@ public class LockTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         HazelcastInstance targetInstance = getTargetInstance();
 
         lockCounter = targetInstance.getAtomicLong(getTestId() + ":LockCounter");
@@ -57,12 +55,12 @@ public class LockTest extends AbstractTest {
     public void globalVerify() {
         long foundTotal = 0;
         for (long k = 0; k < lockCounter.get(); k++) {
-            ILock lock = hazelcastInstance.getLock(getLockId(k));
+            ILock lock = serverInstance.getLock(getLockId(k));
             if (lock.isLocked()) {
                 throw new RuntimeException("Lock should be unlocked");
             }
 
-            IAtomicLong account = hazelcastInstance.getAtomicLong(getAccountId(k));
+            IAtomicLong account = serverInstance.getAtomicLong(getAccountId(k));
             if (account.get() < 0) {
                 throw new RuntimeException("Amount can't be smaller than zero on account");
             }
@@ -83,8 +81,8 @@ public class LockTest extends AbstractTest {
         totalMoney.destroy();
 
         for (long k = 0; k < lockCounter.get(); k++) {
-            hazelcastInstance.getLock(getLockId(k)).destroy();
-            hazelcastInstance.getAtomicLong(getAccountId(k)).destroy();
+            serverInstance.getLock(getLockId(k)).destroy();
+            serverInstance.getAtomicLong(getAccountId(k)).destroy();
         }
     }
 
@@ -99,10 +97,10 @@ public class LockTest extends AbstractTest {
                 long key2 = getRandomAccountKey();
                 int a = random.nextInt(amount);
 
-                IAtomicLong account1 = hazelcastInstance.getAtomicLong(getAccountId(key1));
-                ILock lock1 = hazelcastInstance.getLock(getLockId(key1));
-                IAtomicLong account2 = hazelcastInstance.getAtomicLong(getAccountId(key2));
-                ILock lock2 = hazelcastInstance.getLock(getLockId(key2));
+                IAtomicLong account1 = serverInstance.getAtomicLong(getAccountId(key1));
+                ILock lock1 = serverInstance.getLock(getLockId(key1));
+                IAtomicLong account2 = serverInstance.getAtomicLong(getAccountId(key2));
+                ILock lock2 = serverInstance.getLock(getLockId(key2));
 
                 if (!lock1.tryLock()) {
                     continue;

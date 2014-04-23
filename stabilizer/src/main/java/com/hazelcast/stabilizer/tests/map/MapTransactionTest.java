@@ -37,8 +37,6 @@ public class MapTransactionTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         targetInstance = getTargetInstance();
 
         mapName = "Map-" + testId;
@@ -147,7 +145,6 @@ public class MapTransactionTest extends AbstractTest {
 
     public static void main(String[] args) throws Exception {
         MapTransactionTest test = new MapTransactionTest();
-        test.useClient = false;
         new TestRunner().run(test, 20);
     }
 }

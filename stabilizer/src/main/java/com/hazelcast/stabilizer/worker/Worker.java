@@ -15,7 +15,11 @@
  */
 package com.hazelcast.stabilizer.worker;
 
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.client.config.ClientConfig;
+import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.GroupConfig;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -39,7 +43,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,6 +51,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.stabilizer.Utils.asText;
+import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.writeObject;
 import static com.hazelcast.stabilizer.tests.TestUtils.bindProperties;
 import static java.lang.String.format;
@@ -57,25 +61,29 @@ public class Worker {
 
     final static ILogger log = Logger.getLogger(Worker.class.getName());
 
-    private String workerId;
-    private HazelcastInstance hz;
+    private HazelcastInstance serverInstance;
+    private HazelcastInstance clientInstance;
+
     private String workerHzFile;
+    private String workerMode;
+    private String workerId;
+
+    public volatile Test test;
 
     private BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
     private BlockingQueue<TestCommandResponse> responseQueue = new LinkedBlockingQueue<TestCommandResponse>();
 
-    public void setWorkerId(String workerId) {
-        this.workerId = workerId;
-    }
-
-    public void setWorkerHzFile(String workerHzFile) {
-        this.workerHzFile = workerHzFile;
-    }
-
     public void start() throws IOException {
-        log.info("Creating Worker HazelcastInstance");
-        this.hz = createHazelcastInstance();
-        log.info("Successfully created Worker HazelcastInstance");
+        if ("server".equals(workerMode)) {
+            this.serverInstance = createServerHazelcastInstance();
+        } else if ("client".equals(workerMode)) {
+            this.clientInstance = createClientHazelcastInstance();
+        } else if ("combi".equals(workerMode)) {
+            this.serverInstance = createServerHazelcastInstance();
+            this.clientInstance = createClientHazelcastInstance();
+        } else {
+            throw new IllegalStateException("Unknown worker mode:" + workerMode);
+        }
 
         new TestCommandRequestProcessingThread().start();
         new SocketThread().start();
@@ -84,12 +92,47 @@ public class Worker {
     }
 
     private void signalStartToAgent() {
-        String address = hz.getCluster().getLocalMember().getSocketAddress().getHostString();
+        String address;
+        if (serverInstance != null) {
+            address = serverInstance.getCluster().getLocalMember().getSocketAddress().getHostString();
+        } else {
+            address = "client:" + getHostAddress();
+        }
         File file = new File(workerId + ".address");
         writeObject(address, file);
     }
 
-    private HazelcastInstance createHazelcastInstance() {
+    private HazelcastInstance createClientHazelcastInstance() {
+        log.info("Creating Client HazelcastInstance");
+
+        Config config = loadServerConfig();
+
+        //todo: instead of manually creating one, this should be send from the controller using a template
+        ClientConfig clientConfig = new ClientConfig();
+        GroupConfig clientGroupConfig = clientConfig.getGroupConfig();
+        clientGroupConfig.setName(config.getGroupConfig().getName());
+        clientGroupConfig.setPassword(config.getGroupConfig().getPassword());
+
+        ClientNetworkConfig clientNetworkConfig = clientConfig.getNetworkConfig();
+        for (String address : config.getNetworkConfig().getJoin().getTcpIpConfig().getMembers()) {
+            clientNetworkConfig.addAddress(address);
+        }
+
+        HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
+        log.info("Successfully created Client HazelcastInstance");
+        return client;
+    }
+
+    private HazelcastInstance createServerHazelcastInstance() {
+        log.info("Creating Server HazelcastInstance");
+
+        Config config = loadServerConfig();
+        HazelcastInstance server = Hazelcast.newHazelcastInstance(config);
+        log.info("Successfully created Server HazelcastInstance");
+        return server;
+    }
+
+    private Config loadServerConfig() {
         XmlConfigBuilder configBuilder;
         try {
             configBuilder = new XmlConfigBuilder(workerHzFile);
@@ -97,8 +140,7 @@ public class Worker {
             throw new RuntimeException(e);
         }
 
-        Config config = configBuilder.build();
-        return Hazelcast.newHazelcastInstance(config);
+        return configBuilder.build();
     }
 
     private static void logInterestingSystemProperties() {
@@ -116,6 +158,7 @@ public class Worker {
         logSystemProperty("STABILIZER_HOME");
         logSystemProperty("hazelcast.logging.type");
         logSystemProperty("log4j.configuration");
+        logSystemProperty("agent.mode");
     }
 
     private static void logSystemProperty(String name) {
@@ -133,11 +176,15 @@ public class Worker {
             log.info("Worker hz config file:" + workerHzFile);
             log.info(asText(new File(workerHzFile)));
 
+            String workerMode = System.getProperty("workerMode");
+            log.info("Worker mode:" + workerMode);
+
             System.setProperty("workerId", workerId);
 
             Worker worker = new Worker();
-            worker.setWorkerId(workerId);
-            worker.setWorkerHzFile(workerHzFile);
+            worker.workerId = workerId;
+            worker.workerHzFile = workerHzFile;
+            worker.workerMode = workerMode;
             worker.start();
 
             log.info("Successfully started Hazelcast Stabilizer Worker:" + workerId);
@@ -242,9 +289,8 @@ public class Worker {
             try {
                 log.info("Calling test." + methodName + "()");
 
-                Test test = (Test) hz.getUserContext().get(Test.TEST_INSTANCE);
                 if (test == null) {
-                    throw new IllegalStateException("No test found for method " + methodName + "()");
+                    throw new IllegalStateException("No running test to execute test." + methodName + "()");
                 }
 
                 Method method = test.getClass().getMethod(methodName);
@@ -264,13 +310,15 @@ public class Worker {
 
                 String clazzName = testRecipe.getClassname();
 
-                Test test = (Test) InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
-                test.setHazelcastInstance(hz);
+                test = (Test) InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
+                test.setHazelcastInstances(serverInstance, clientInstance);
                 test.setTestId(testRecipe.getTestId());
 
                 bindProperties(test, testRecipe);
 
-                hz.getUserContext().put(Test.TEST_INSTANCE, test);
+                if (serverInstance != null) {
+                    serverInstance.getUserContext().put(Test.TEST_INSTANCE, test);
+                }
             } catch (Exception e) {
                 log.severe("Failed to init Test", e);
                 throw e;
@@ -281,7 +329,6 @@ public class Worker {
             try {
                 log.info("Calling test.stop");
 
-                Test test = (Test) hz.getUserContext().get(Test.TEST_INSTANCE);
                 if (test == null) {
                     throw new IllegalStateException("No test to stop");
                 }

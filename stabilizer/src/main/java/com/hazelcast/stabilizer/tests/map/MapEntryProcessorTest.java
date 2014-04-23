@@ -5,10 +5,10 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.map.AbstractEntryProcessor;
-import com.hazelcast.stabilizer.tests.AbstractTest;
-import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,8 +32,6 @@ public class MapEntryProcessorTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         HazelcastInstance targetInstance = getTargetInstance();
 
         map = targetInstance.getMap("Map-" + testId);
@@ -108,7 +106,7 @@ public class MapEntryProcessorTest extends AbstractTest {
                 long increment = random.nextInt(100);
 
                 map.executeOnKey(key, new IncrementEntryProcessor(increment));
-                increment(key,increment);
+                increment(key, increment);
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -129,7 +127,7 @@ public class MapEntryProcessorTest extends AbstractTest {
         }
     }
 
-    private static class IncrementEntryProcessor extends AbstractEntryProcessor<Integer,Long>{
+    private static class IncrementEntryProcessor extends AbstractEntryProcessor<Integer, Long> {
         private final long increment;
 
         private IncrementEntryProcessor(long increment) {
@@ -138,14 +136,13 @@ public class MapEntryProcessorTest extends AbstractTest {
 
         @Override
         public Object process(Map.Entry<Integer, Long> entry) {
-            entry.setValue(entry.getValue()+increment);
+            entry.setValue(entry.getValue() + increment);
             return null;
         }
     }
 
     public static void main(String[] args) throws Exception {
         MapEntryProcessorTest test = new MapEntryProcessorTest();
-        test.useClient = true;
         new TestRunner().run(test, 20);
     }
 }

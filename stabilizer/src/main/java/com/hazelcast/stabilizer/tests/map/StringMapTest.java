@@ -19,10 +19,10 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
-import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -52,8 +52,6 @@ public class StringMapTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         if (writePercentage < 0) {
             throw new IllegalArgumentException("Write percentage can't be smaller than 0");
         }
@@ -160,7 +158,6 @@ public class StringMapTest extends AbstractTest {
 
     public static void main(String[] args) throws Exception {
         StringMapTest test = new StringMapTest();
-        test.useClient = true;
         test.writePercentage = 0;
         new TestRunner().run(test, 20);
     }

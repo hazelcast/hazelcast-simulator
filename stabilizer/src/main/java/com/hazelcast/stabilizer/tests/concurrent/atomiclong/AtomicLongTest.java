@@ -43,8 +43,6 @@ public class AtomicLongTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         log.info("countersLength:" + countersLength + " threadCount:" + threadCount);
 
         HazelcastInstance targetInstance = getTargetInstance();

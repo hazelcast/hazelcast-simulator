@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.stabilizer.Utils.asText;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.getFile;
+import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
 import static java.lang.String.format;
 
 public class CoordinatorCli {
@@ -121,7 +122,11 @@ public class CoordinatorCli {
             coordinator.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
             coordinator.machinesFile = getFile(optionSpec.machinesFileSpec, options, "Machines file");
 
-            String testsuiteFileName = "testsuite.properties";
+            String testsuiteFileName = new File(
+                    Coordinator.STABILIZER_HOME + Utils.FILE_SEPERATOR + "tests" + Utils.FILE_SEPERATOR,
+                    "map.properties"
+            ).getAbsolutePath();
+
             List<String> testsuiteFiles = options.nonOptionArguments();
             if (testsuiteFiles.size() == 1) {
                 testsuiteFileName = testsuiteFiles.get(0);
@@ -129,7 +134,12 @@ public class CoordinatorCli {
                 exitWithError("Too many testsuite files specified.");
             }
 
-            TestSuite testSuite = TestSuite.createTestSuite(new File(testsuiteFileName));
+            File testSuiteFile = new File(testsuiteFileName);
+            if (!testSuiteFile.exists()) {
+                Utils.exitWithError(format("Can't find testsuite file [%s]", testSuiteFile));
+            }
+
+            TestSuite testSuite = loadTestSuite(testSuiteFile);
             coordinator.testSuite = testSuite;
             testSuite.duration = getDuration(optionSpec, options);
             testSuite.failFast = options.valueOf(optionSpec.failFastSpec);

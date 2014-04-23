@@ -2,12 +2,11 @@ package com.hazelcast.stabilizer.tests.regression;
 
 import com.hazelcast.stabilizer.tests.AbstractTest;
 
-import static java.lang.String.format;
-
 //https://gist.github.com/mgrossmann/9620178
 public class Test2051 extends AbstractTest {
 
-//    private ExecutorService pool;
+
+    //    private ExecutorService pool;
 //    private volatile boolean stopRunning;
 //    private IQueue<Data> activityQueue;
 //    private Map<String, Data> activeDataMap;

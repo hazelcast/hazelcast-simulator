@@ -41,10 +41,6 @@ public class ProducerConsumerTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
-        log.info("producer:" + producerCount + " consumer:" + consumerCount);
-
         HazelcastInstance targetInstance = getTargetInstance();
 
         produced = targetInstance.getAtomicLong(testId + ":Produced");

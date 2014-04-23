@@ -28,7 +28,7 @@ public class Write {
                         try {
                             out.writeObject(k);
                             out.flush();
-                        }finally{
+                        } finally {
                             lock.release();
                         }
                     } catch (IOException e) {

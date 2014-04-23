@@ -107,7 +107,7 @@ public class WorkerJvmFailureMonitor {
         for (File file : files) {
             String name = file.getName();
             if (name.endsWith(".exception")) {
-                Throwable cause = (Throwable) readObject(file);
+                Throwable cause = readObject(file);
                 file.delete();
 
                 String workerId = name.substring(0, name.indexOf('.'));

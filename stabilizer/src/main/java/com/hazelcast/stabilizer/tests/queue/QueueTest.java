@@ -39,8 +39,6 @@ public class QueueTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         HazelcastInstance targetInstance = getTargetInstance();
 
         totalCounter = targetInstance.getAtomicLong(getTestId() + ":TotalCounter");

@@ -48,8 +48,6 @@ public class MapTimeToLiveTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         HazelcastInstance targetInstance = getTargetInstance();
 
         map = targetInstance.getMap(mapName);

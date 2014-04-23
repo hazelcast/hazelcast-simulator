@@ -50,8 +50,6 @@ public class ExecutorTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         HazelcastInstance targetInstance = getTargetInstance();
 
         executors = new IExecutorService[executorCount];

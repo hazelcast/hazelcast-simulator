@@ -4,10 +4,10 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
-import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
+import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,10 +17,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This tests the cas method: replace. So for optimistic concurrency control.
- *
+ * <p/>
  * We have a bunch of predefined keys, and we are going to concurrently increment the value
  * and we protect ourselves against lost updates using cas method replace.
- *
+ * <p/>
  * Locally we keep track of all increments, and if the sum of these local increments matches the
  * global increment, we are done
  */
@@ -30,18 +30,16 @@ public class MapCasTest extends AbstractTest {
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();
+    private IMap<String, Map<Integer, Long>> resultsPerWorker;
 
     //properties
     public int threadCount = 10;
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    private IMap<String, Map<Integer, Long>> resultsPerWorker;
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         HazelcastInstance targetInstance = getTargetInstance();
 
         map = targetInstance.getMap("Map-" + testId);
@@ -81,13 +79,13 @@ public class MapCasTest extends AbstractTest {
         for (int k = 0; k < keyCount; k++) {
             long expected = amount[k];
             long found = map.get(k);
-            if(expected!=found){
+            if (expected != found) {
                 failures++;
             }
         }
 
-        if(failures>0){
-            throw new IllegalStateException("Failures found:"+failures);
+        if (failures > 0) {
+            throw new IllegalStateException("Failures found:" + failures);
         }
     }
 
@@ -145,7 +143,6 @@ public class MapCasTest extends AbstractTest {
 
     public static void main(String[] args) throws Exception {
         MapCasTest test = new MapCasTest();
-        test.useClient = true;
         new TestRunner().run(test, 20);
     }
 }

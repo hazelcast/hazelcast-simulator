@@ -28,8 +28,6 @@ public class GrowingMapTest extends AbstractTest {
 
     @Override
     public void localSetup() throws Exception {
-        super.localSetup();
-
         HazelcastInstance targetInstance = getTargetInstance();
         idGenerator = targetInstance.getIdGenerator(testId + ":IdGenerator");
         map = targetInstance.getMap(testId + ":Map");

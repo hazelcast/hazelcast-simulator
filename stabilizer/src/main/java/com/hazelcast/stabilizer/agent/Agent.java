@@ -34,7 +34,7 @@ import static java.lang.String.format;
 
 public class Agent {
 
-   private final static ILogger log = Logger.getLogger(Agent.class);
+    private final static ILogger log = Logger.getLogger(Agent.class);
     public final static File STABILIZER_HOME = getStablizerHome();
 
     //cli properties

@@ -75,7 +75,7 @@ public class TestRunner {
             hazelcastInstance = Hazelcast.newHazelcastInstance();
         }
 
-        test.setHazelcastInstance(hazelcastInstance);
+        test.setHazelcastInstances(hazelcastInstance, null);
         test.setTestId(UUID.randomUUID().toString());
 
         log.info("Starting localSetup");
@@ -106,7 +106,7 @@ public class TestRunner {
         test.localVerify();
         log.info("Finished localVerify");
 
-       log.info("Starting globalTearDown");
+        log.info("Starting globalTearDown");
         test.globalTearDown();
         log.info("Finished globalTearDown");
 

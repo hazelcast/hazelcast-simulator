@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -234,6 +233,7 @@ public class WorkerJvmManager {
         args.add("-DSTABILIZER_HOME=" + STABILIZER_HOME);
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-DworkerId=" + workerId);
+        args.add("-DworkerMode=combi");
         args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-log4j.xml");
         args.add("-classpath");
         args.add(getClasspath());
