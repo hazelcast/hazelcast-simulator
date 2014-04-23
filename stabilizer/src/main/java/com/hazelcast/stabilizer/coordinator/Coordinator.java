@@ -276,7 +276,7 @@ public class Coordinator {
 
         WorkerJvmSettings[] settingsArray = new WorkerJvmSettings[agentCount];
         for (int k = 0; k < agentCount; k++) {
-            WorkerJvmSettings s = new WorkerJvmSettings();
+            WorkerJvmSettings s = new WorkerJvmSettings(masterSettings);
             s.memberWorkerCount = 0;
             s.mixedWorkerCount = 0;
             s.clientWorkerCount = 0;
@@ -303,7 +303,8 @@ public class Coordinator {
         agentClientManager.spawnWorkers(settingsArray);
 
         long durationMs = System.currentTimeMillis() - startMs;
-        log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms\n", masterSettings.mixedWorkerCount, durationMs)));
+        log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms\n",
+                masterSettings.totalWorkerCount(), durationMs)));
         return startMs;
     }
 

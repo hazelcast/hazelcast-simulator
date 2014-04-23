@@ -32,7 +32,7 @@ public class CoordinatorCli {
     private final OptionSpec workerTrackLoggingSpec = parser.accepts("workerTrackLogging",
             "If the agent is tracking worker logging");
 
-    private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("clusterMemberWorkerVmCount",
+    private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerVmCount",
             "Number of Cluster member Worker JVM's. If no value is specified, then th number of cluster members" +
                     "will be equal to the number of machines in the machines file"
     )

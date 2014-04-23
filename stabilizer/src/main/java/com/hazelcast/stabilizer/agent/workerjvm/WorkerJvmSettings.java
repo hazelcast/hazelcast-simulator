@@ -51,8 +51,6 @@ public class WorkerJvmSettings implements Serializable {
         return memberWorkerCount+clientWorkerCount+mixedWorkerCount;
     }
 
-
-
     @Override
     public String toString() {
         return "WorkerSettings{" +
