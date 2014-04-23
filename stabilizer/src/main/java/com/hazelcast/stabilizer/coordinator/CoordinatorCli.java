@@ -1,7 +1,7 @@
 package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
+import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -32,9 +32,19 @@ public class CoordinatorCli {
     private final OptionSpec workerTrackLoggingSpec = parser.accepts("workerTrackLogging",
             "If the agent is tracking worker logging");
 
-    private final OptionSpec<Integer> workerCountSpec = parser.accepts("workerVmCount",
-            "Number of worker JVM's per agent")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(1);
+    private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("clusterMemberWorkerVmCount",
+            "Number of Cluster member Worker JVM's. If no value is specified, then th number of cluster members" +
+                    "will be equal to the number of machines in the machines file"
+    )
+            .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
+
+    private final OptionSpec<Integer> clientWorkerCountSpec = parser.accepts("clientWorkerCount",
+            "Number of Cluster Client Worker JVM's")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
+
+    private final OptionSpec<Integer> mixedWorkerCountSpec = parser.accepts("mixedWorkerCount",
+            "Number of Mixed Cluster member JVM's (a client hz + member hz and all communication through client)")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     private final OptionSpec<String> workerClassPathSpec = parser.accepts("workerClassPath",
             "A file/directory containing the " +
@@ -122,24 +132,7 @@ public class CoordinatorCli {
             coordinator.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
             coordinator.machinesFile = getFile(optionSpec.machinesFileSpec, options, "Machines file");
 
-            String testsuiteFileName = new File(
-                    Coordinator.STABILIZER_HOME + Utils.FILE_SEPERATOR + "tests" + Utils.FILE_SEPERATOR,
-                    "map.properties"
-            ).getAbsolutePath();
-
-            List<String> testsuiteFiles = options.nonOptionArguments();
-            if (testsuiteFiles.size() == 1) {
-                testsuiteFileName = testsuiteFiles.get(0);
-            } else if (testsuiteFiles.size() > 1) {
-                exitWithError("Too many testsuite files specified.");
-            }
-
-            File testSuiteFile = new File(testsuiteFileName);
-            if (!testSuiteFile.exists()) {
-                Utils.exitWithError(format("Can't find testsuite file [%s]", testSuiteFile));
-            }
-
-            TestSuite testSuite = loadTestSuite(testSuiteFile);
+            TestSuite testSuite = loadTestSuite(getTestSuiteFile(options));
             coordinator.testSuite = testSuite;
             testSuite.duration = getDuration(optionSpec, options);
             testSuite.failFast = options.valueOf(optionSpec.failFastSpec);
@@ -147,16 +140,38 @@ public class CoordinatorCli {
             WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
             workerJvmSettings.trackLogging = options.has(optionSpec.workerTrackLoggingSpec);
             workerJvmSettings.vmOptions = options.valueOf(optionSpec.workerVmOptionsSpec);
-            workerJvmSettings.workerCount = options.valueOf(optionSpec.workerCountSpec);
+            workerJvmSettings.memberWorkerCount = options.valueOf(optionSpec.memberWorkerCountSpec);
+            workerJvmSettings.clientWorkerCount = options.valueOf(optionSpec.clientWorkerCountSpec);
+            workerJvmSettings.mixedWorkerCount = options.valueOf(optionSpec.mixedWorkerCountSpec);
             workerJvmSettings.workerStartupTimeout = options.valueOf(optionSpec.workerStartupTimeoutSpec);
             workerJvmSettings.hzConfig = asText(getFile(optionSpec.workerHzFileSpec, options, "Worker Hazelcast config file"));
             workerJvmSettings.refreshJvm = options.valueOf(optionSpec.workerRefreshSpec);
             workerJvmSettings.javaVendor = options.valueOf(optionSpec.workerJavaVendorSpec);
             workerJvmSettings.javaVersion = options.valueOf(optionSpec.workerJavaVersionSpec);
-            testSuite.workerJvmSettings = workerJvmSettings;
+            coordinator.workerJvmSettings = workerJvmSettings;
         } catch (OptionException e) {
             Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");
         }
+    }
+
+    private static File getTestSuiteFile(OptionSet options) {
+        String testsuiteFileName = new File(
+                Coordinator.STABILIZER_HOME + Utils.FILE_SEPERATOR + "tests" + Utils.FILE_SEPERATOR,
+                "map.properties"
+        ).getAbsolutePath();
+
+        List<String> testsuiteFiles = options.nonOptionArguments();
+        if (testsuiteFiles.size() == 1) {
+            testsuiteFileName = testsuiteFiles.get(0);
+        } else if (testsuiteFiles.size() > 1) {
+            exitWithError("Too many testsuite files specified.");
+        }
+
+        File testSuiteFile = new File(testsuiteFileName);
+        if (!testSuiteFile.exists()) {
+            Utils.exitWithError(format("Can't find testsuite file [%s]", testSuiteFile));
+        }
+        return testSuiteFile;
     }
 
     private static int getDuration(CoordinatorCli optionSpec, OptionSet options) {

@@ -19,7 +19,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
+import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
@@ -55,6 +55,7 @@ public class Coordinator {
     //internal state.
     private final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
     private AgentClientManager agentClientManager;
+    public WorkerJvmSettings workerJvmSettings;
 
     private void start() throws Exception {
         agentClientManager = new AgentClientManager(this, machinesFile);
@@ -70,14 +71,14 @@ public class Coordinator {
         byte[] bytes = Utils.createUpload(workerClassPath);
         agentClientManager.initTestSuite(testSuite, bytes);
 
-        WorkerJvmSettings workerJvmSettings = testSuite.workerJvmSettings;
         initWorkerHzConfig(workerJvmSettings);
 
         int agentCount = agentClientManager.getAgentCount();
         log.info(format("Worker track logging: %s", workerJvmSettings.trackLogging));
-        log.info(format("Workers per agent: %s", workerJvmSettings.workerCount));
         log.info(format("Total number of agents: %s", agentCount));
-        log.info(format("Total number of workers: %s", agentCount * workerJvmSettings.workerCount));
+        log.info(format("Total number of Hazelcast Cluster Member workers: %s", workerJvmSettings.memberWorkerCount));
+        log.info(format("Total number of Hazelcast Cluster Client workers: %s", workerJvmSettings.clientWorkerCount));
+        log.info(format("Total number of Hazelcast Cluster Client & Member Workers: %s", workerJvmSettings.mixedWorkerCount));
 
         long startMs = System.currentTimeMillis();
 
@@ -124,9 +125,9 @@ public class Coordinator {
         echo(format("Running time per test: %s ", secondsToHuman(testSuite.duration)));
         echo(format("Expected total testsuite time: %s", secondsToHuman(testSuite.size() * testSuite.duration)));
 
-        //we need to make sure that before we start, there are no workers running anymore.
+        //we need to make sure that before we launch, there are no workers running anymore.
         terminateWorkers();
-        startWorkers(testSuite.workerJvmSettings);
+        startWorkers(workerJvmSettings);
 
         for (TestRecipe testRecipe : testSuite.testRecipeList) {
             boolean success = run(testSuite, testRecipe);
@@ -135,9 +136,9 @@ public class Coordinator {
                 break;
             }
 
-            if (!success || testSuite.workerJvmSettings.refreshJvm) {
+            if (!success || workerJvmSettings.refreshJvm) {
                 terminateWorkers();
-                startWorkers(testSuite.workerJvmSettings);
+                startWorkers(workerJvmSettings);
             }
         }
 
@@ -261,14 +262,48 @@ public class Coordinator {
         echo("All workers have been terminated");
     }
 
-    private long startWorkers(WorkerJvmSettings workerJvmSettings) throws Exception {
+    private long startWorkers(WorkerJvmSettings masterSettings) throws Exception {
         long startMs = System.currentTimeMillis();
-        final int workerCount = workerJvmSettings.workerCount;
-        final int totalWorkerCount = workerCount * agentClientManager.getAgentCount();
-        log.info(format("Starting a grand total of %s Worker JVM's", totalWorkerCount));
-        agentClientManager.spawnWorkers(workerJvmSettings);
+
+        int agentCount = agentClientManager.getAgentCount();
+        if (masterSettings.memberWorkerCount == -1) {
+            masterSettings.memberWorkerCount = agentCount;
+        }
+
+        log.info(format("Starting %s Server Worker JVM's", masterSettings.memberWorkerCount));
+        log.info(format("Starting %s Client Worker JVM's", masterSettings.clientWorkerCount));
+        log.info(format("Starting %s Mixed Worker JVM's", masterSettings.mixedWorkerCount));
+
+        WorkerJvmSettings[] settingsArray = new WorkerJvmSettings[agentCount];
+        for (int k = 0; k < agentCount; k++) {
+            WorkerJvmSettings s = new WorkerJvmSettings();
+            s.memberWorkerCount = 0;
+            s.mixedWorkerCount = 0;
+            s.clientWorkerCount = 0;
+            settingsArray[k] = s;
+        }
+
+        int index = 0;
+        for (int k = 0; k < masterSettings.memberWorkerCount; k++) {
+            WorkerJvmSettings s = settingsArray[index % agentCount];
+            s.memberWorkerCount++;
+            index++;
+        }
+        for (int k = 0; k < masterSettings.clientWorkerCount; k++) {
+            WorkerJvmSettings s = settingsArray[index % agentCount];
+            s.clientWorkerCount++;
+            index++;
+        }
+        for (int k = 0; k < masterSettings.mixedWorkerCount; k++) {
+            WorkerJvmSettings s = settingsArray[index % agentCount];
+            s.mixedWorkerCount++;
+            index++;
+        }
+
+        agentClientManager.spawnWorkers(settingsArray);
+
         long durationMs = System.currentTimeMillis() - startMs;
-        log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms\n", totalWorkerCount, durationMs)));
+        log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms\n", masterSettings.mixedWorkerCount, durationMs)));
         return startMs;
     }
 

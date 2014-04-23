@@ -6,7 +6,8 @@ import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
-import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
+import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvm;
+import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
@@ -183,17 +184,22 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public void spawnWorkers(final WorkerJvmSettings workerJvmSettings) {
+    public void spawnWorkers(final WorkerJvmSettings[] workerJvmSettingsArray) {
         List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
+
+        for(int k=0;k<agents.size();k++){
+            final int index = k;
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_SPAWN_WORKERS, workerJvmSettings);
+                    AgentClient agentClient = agents.get(index);
+                    WorkerJvmSettings settings = workerJvmSettingsArray[index];
+                    agentClient.execute(AgentRemoteService.SERVICE_SPAWN_WORKERS, settings);
                     return null;
                 }
             });
             futures.add(f);
+
         }
 
         getAllFutures(futures);

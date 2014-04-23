@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.agent;
+package com.hazelcast.stabilizer.agent.workerjvm;
 
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.tests.Failure;
 
 import java.io.File;

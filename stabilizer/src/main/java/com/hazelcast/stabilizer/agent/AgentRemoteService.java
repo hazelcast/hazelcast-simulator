@@ -4,6 +4,8 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
@@ -177,7 +179,9 @@ public class AgentRemoteService {
             for (; ; ) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    log.info("Accepted client request from: " + clientSocket.getRemoteSocketAddress());
+                    if (log.isFinestEnabled()) {
+                        log.finest("Accepted client request from: " + clientSocket.getRemoteSocketAddress());
+                    }
                     executor.execute(new ClientSocketTask(clientSocket));
                 } catch (IOException e) {
                     log.severe(e);

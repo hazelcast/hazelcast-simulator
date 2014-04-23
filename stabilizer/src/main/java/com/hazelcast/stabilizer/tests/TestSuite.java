@@ -16,7 +16,6 @@
 package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.stabilizer.TestRecipe;
-import com.hazelcast.stabilizer.agent.WorkerJvmSettings;
 
 import java.io.File;
 import java.io.Serializable;
@@ -85,7 +84,6 @@ public class TestSuite implements Serializable {
     public final String id = "" + System.currentTimeMillis();
     public List<TestRecipe> testRecipeList = new LinkedList<TestRecipe>();
     public int duration;
-    public WorkerJvmSettings workerJvmSettings;
     public boolean failFast;
 
     public void addTest(TestRecipe testRecipe) {
@@ -102,7 +100,6 @@ public class TestSuite implements Serializable {
                 "duration=" + duration +
                 ", id='" + id + '\'' +
                 ", testRecipeList=" + testRecipeList +
-                ", workerSettings=" + workerJvmSettings +
                 ", failFast=" + failFast +
                 '}';
     }

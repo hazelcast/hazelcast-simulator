@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.agent;
+package com.hazelcast.stabilizer.agent.workerjvm;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.agent.Agent;
+import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
+import com.hazelcast.stabilizer.agent.TestCommandFuture;
 import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.worker.Worker;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
@@ -31,11 +33,8 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +45,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
@@ -60,22 +58,16 @@ public class WorkerJvmManager {
     public final static String COMMAND_PUSH_RESPONSE = "push";
 
     private final static ILogger log = Logger.getLogger(WorkerJvmManager.class);
-    private final static String CLASSPATH = System.getProperty("java.class.path");
-    private final static File STABILIZER_HOME = getStablizerHome();
-    private final static String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
-    private final static AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
     public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
 
     private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
-    private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
     private final ConcurrentMap<Long, TestCommandFuture> futureMap = new ConcurrentHashMap<Long, TestCommandFuture>();
     private final AtomicLong requestIdGenerator = new AtomicLong(0);
 
     private ServerSocket serverSocket;
     private final Executor executor = Executors.newFixedThreadPool(20);
-
 
     public WorkerJvmManager(Agent agent) {
         this.agent = agent;
@@ -90,10 +82,8 @@ public class WorkerJvmManager {
         });
     }
 
-
     public void start() throws Exception {
         serverSocket = new ServerSocket(9001, 0, InetAddress.getByName(null));
-
         new AcceptorThread().start();
     }
 
@@ -154,156 +144,9 @@ public class WorkerJvmManager {
         return results;
     }
 
-
     public void spawn(WorkerJvmSettings settings) throws Exception {
-        log.info(format("Starting %s worker Java Virtual Machines using settings\n %s", settings.workerCount, settings));
-
-        File workerHzFile = createHazelcastConfigFile(settings);
-
-        List<WorkerJvm> workers = new LinkedList<WorkerJvm>();
-
-        for (int k = 0; k < settings.workerCount; k++) {
-            WorkerJvm worker = startWorkerJvm(settings, workerHzFile);
-
-            Process process = worker.process;
-            String workerId = worker.id;
-
-            workers.add(worker);
-
-            new WorkerVmLogger(workerId, process.getInputStream(), settings.trackLogging).start();
-        }
-        waitForWorkersStartup(workers, settings.workerStartupTimeout);
-
-        log.info(format("Finished starting %s worker Java Virtual Machines", settings.workerCount));
-    }
-
-    private File createHazelcastConfigFile(WorkerJvmSettings settings) throws IOException {
-        File workerHzFile = File.createTempFile("worker-hazelcast", "xml");
-        workerHzFile.deleteOnExit();
-        Utils.writeText(settings.hzConfig, workerHzFile);
-        return workerHzFile;
-    }
-
-    private String getJavaHome(String javaVendor, String javaVersion) {
-        JavaInstallation installation = agent.getJavaInstallationRepository().get(javaVendor, javaVersion);
-        if (installation != null) {
-            return installation.getJavaHome();
-        }
-
-        //nothing is found so we are going to make use of a default.
-        String javaHome = System.getProperty("java.home");
-        if (javaHomePrinted.compareAndSet(false, true)) {
-            log.info("java.home=" + javaHome);
-        }
-
-        return javaHome;
-    }
-
-    private WorkerJvm startWorkerJvm(WorkerJvmSettings settings, File workerHzFile) throws IOException {
-        String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet();
-
-        File testSuiteHome = agent.getTestSuiteDir();
-        testSuiteHome.mkdirs();
-
-        String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
-
-        WorkerJvm workerJvm = new WorkerJvm(workerId);
-
-        String[] args = buildArgs(settings, workerHzFile, workerId);
-
-        ProcessBuilder processBuilder = new ProcessBuilder(args)
-                .directory(testSuiteHome)
-                .redirectErrorStream(true);
-
-        Map<String, String> environment = processBuilder.environment();
-        String path = javaHome + File.pathSeparator + "bin:" + environment.get("PATH");
-        environment.put("PATH", path);
-        environment.put("JAVA_HOME", javaHome);
-
-        Process process = processBuilder.start();
-        workerJvm.process = process;
-        workerJvms.put(workerId, workerJvm);
-        return workerJvm;
-    }
-
-    private String[] buildArgs(WorkerJvmSettings settings, File workerHzFile, String workerId) {
-        List<String> args = new LinkedList<String>();
-        args.add("java");
-        args.add(format("-XX:OnOutOfMemoryError=\"\"touch %s.oome\"\"", workerId));
-        args.add("-DSTABILIZER_HOME=" + STABILIZER_HOME);
-        args.add("-Dhazelcast.logging.type=log4j");
-        args.add("-DworkerId=" + workerId);
-        args.add("-DworkerMode=combi");
-        args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-log4j.xml");
-        args.add("-classpath");
-        args.add(getClasspath());
-        args.addAll(getJvmOptions(settings));
-        args.add(Worker.class.getName());
-        args.add(workerHzFile.getAbsolutePath());
-        return args.toArray(new String[args.size()]);
-    }
-
-    private String getClasspath() {
-        File libDir = new File(agent.getTestSuiteDir(), "lib");
-        return CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
-    }
-
-    private List<String> getJvmOptions(WorkerJvmSettings settings) {
-        String workerVmOptions = settings.vmOptions;
-        String[] clientVmOptionsArray = new String[]{};
-        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
-            clientVmOptionsArray = workerVmOptions.split("\\s+");
-        }
-        return Arrays.asList(clientVmOptionsArray);
-    }
-
-    private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) throws InterruptedException {
-        List<WorkerJvm> todo = new ArrayList<WorkerJvm>(workers);
-
-        for (int l = 0; l < workerTimeoutSec; l++) {
-            for (Iterator<WorkerJvm> it = todo.iterator(); it.hasNext(); ) {
-                WorkerJvm jvm = it.next();
-
-                String address = readAddress(jvm);
-
-                if (address != null) {
-                    jvm.memberAddress = address;
-
-                    it.remove();
-                    log.info(format("Worker: %s Started %s of %s",
-                            jvm.id, workers.size() - todo.size(), workers.size()));
-                }
-            }
-
-            if (todo.isEmpty()) {
-                return;
-            }
-
-            Utils.sleepSeconds(1);
-        }
-
-        StringBuffer sb = new StringBuffer();
-        sb.append("[");
-        sb.append(todo.get(0).id);
-        for (int l = 1; l < todo.size(); l++) {
-            sb.append(",").append(todo.get(l).id);
-        }
-        sb.append("]");
-
-        throw new RuntimeException(format("Timeout: workers %s of testsuite %s on host %s didn't start within %s seconds",
-                sb, agent.getTestSuite().id, getHostAddress(),
-                workerTimeoutSec));
-    }
-
-    private String readAddress(WorkerJvm jvm) {
-        File testSuiteHome = agent.getTestSuiteDir();
-
-        File file = new File(testSuiteHome, jvm.id + ".address");
-        if (!file.exists()) {
-            return null;
-        }
-
-        return Utils.readObject(file);
+        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvms, settings);
+        launcher.launch();
     }
 
     public void terminateWorkers() {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.agent;
+package com.hazelcast.stabilizer.agent.workerjvm;
 
 import java.io.Serializable;
 
@@ -21,18 +21,46 @@ public class WorkerJvmSettings implements Serializable {
     public String vmOptions;
     public boolean trackLogging;
     public String hzConfig;
-    public int workerCount;
+
+    public int memberWorkerCount;
+    public int clientWorkerCount;
+    public int mixedWorkerCount;
+
     public int workerStartupTimeout;
     public boolean refreshJvm;
     public String javaVendor;
     public String javaVersion;
+
+    public WorkerJvmSettings() {
+    }
+
+    public WorkerJvmSettings(WorkerJvmSettings settings) {
+        this.vmOptions = settings.vmOptions;
+        this.trackLogging = settings.trackLogging;
+        this.hzConfig = settings.hzConfig;
+        this.memberWorkerCount = settings.memberWorkerCount;
+        this.clientWorkerCount = settings.clientWorkerCount;
+        this.mixedWorkerCount = settings.mixedWorkerCount;
+        this.workerStartupTimeout = settings.workerStartupTimeout;
+        this.refreshJvm = settings.refreshJvm;
+        this.javaVendor = settings.javaVendor;
+        this.javaVersion = settings.javaVersion;
+    }
+
+    public int totalWorkerCount(){
+        return memberWorkerCount+clientWorkerCount+mixedWorkerCount;
+    }
+
+
 
     @Override
     public String toString() {
         return "WorkerSettings{" +
                 "\n  vmOptions='" + vmOptions + '\'' +
                 "\n, trackLogging=" + trackLogging +
-                "\n, workerJVmCount=" + workerCount +
+                "\n, memberWorkerCount=" + memberWorkerCount +
+                "\n, clientWorkerCount=" + clientWorkerCount +
+                "\n, mixedWorkerCount=" + mixedWorkerCount +
                 "\n, workerStartupTimeout=" + workerStartupTimeout +
                 "\n, refreshJvm=" + refreshJvm +
                 "\n, javaVendor=" + javaVendor +
