@@ -94,7 +94,7 @@ public class WorkerJvmFailureMonitor {
     }
 
     private void detectExceptions() {
-        File testsuiteHome = agent.getTestSuiteHome();
+        File testsuiteHome = agent.getTestSuiteDir();
         if (testsuiteHome == null) {
             return;
         }
@@ -131,7 +131,7 @@ public class WorkerJvmFailureMonitor {
     }
 
     private Failure detectOomeFailure(WorkerJvm jvm) {
-        File testsuiteDir = agent.getTestSuiteHome();
+        File testsuiteDir = agent.getTestSuiteDir();
         if (testsuiteDir == null) {
             return null;
         }

@@ -55,7 +55,7 @@ public class Agent {
         return testSuite;
     }
 
-    public File getTestSuiteHome() {
+    public File getTestSuiteDir() {
         TestSuite _testSuite = testSuite;
         if (_testSuite == null) {
             return null;

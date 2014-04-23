@@ -73,7 +73,6 @@ public class Worker {
     }
 
     public void start() throws IOException {
-
         log.info("Creating Worker HazelcastInstance");
         this.hz = createHazelcastInstance();
         log.info("Successfully created Worker HazelcastInstance");
@@ -85,7 +84,7 @@ public class Worker {
     }
 
     private void signalStartToAgent() {
-        InetSocketAddress address = hz.getCluster().getLocalMember().getInetSocketAddress();
+        String address = hz.getCluster().getLocalMember().getSocketAddress().getHostString();
         File file = new File(workerId + ".address");
         writeObject(address, file);
     }

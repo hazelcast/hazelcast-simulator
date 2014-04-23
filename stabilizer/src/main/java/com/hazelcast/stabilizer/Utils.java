@@ -101,12 +101,12 @@ public final class Utils {
         }
     }
 
-    public static Object readObject(File file) {
+    public static <E> E readObject(File file) {
         try {
             FileInputStream fis = new FileInputStream(file);
             try {
                 ObjectInputStream in = new ObjectInputStream(fis);
-                return in.readObject();
+                return (E)in.readObject();
             } finally {
                 Utils.closeQuietly(fis);
             }

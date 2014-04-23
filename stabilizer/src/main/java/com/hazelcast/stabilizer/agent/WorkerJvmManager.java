@@ -203,7 +203,7 @@ public class WorkerJvmManager {
     private WorkerJvm startWorkerJvm(WorkerJvmSettings settings, File workerHzFile) throws IOException {
         String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet();
 
-        File testSuiteHome = agent.getTestSuiteHome();
+        File testSuiteHome = agent.getTestSuiteDir();
         testSuiteHome.mkdirs();
 
         String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
@@ -244,7 +244,7 @@ public class WorkerJvmManager {
     }
 
     private String getClasspath() {
-        File libDir = new File(agent.getTestSuiteHome(), "lib");
+        File libDir = new File(agent.getTestSuiteDir(), "lib");
         return CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
     }
 
@@ -264,10 +264,10 @@ public class WorkerJvmManager {
             for (Iterator<WorkerJvm> it = todo.iterator(); it.hasNext(); ) {
                 WorkerJvm jvm = it.next();
 
-                InetSocketAddress address = readAddress(jvm);
+                String address = readAddress(jvm);
 
                 if (address != null) {
-                    jvm.memberAddress = address.getAddress().getHostAddress();
+                    jvm.memberAddress = address;
 
                     it.remove();
                     log.info(format("Worker: %s Started %s of %s",
@@ -295,15 +295,15 @@ public class WorkerJvmManager {
                 workerTimeoutSec));
     }
 
-    private InetSocketAddress readAddress(WorkerJvm jvm) {
-        File testSuiteHome = agent.getTestSuiteHome();
+    private String readAddress(WorkerJvm jvm) {
+        File testSuiteHome = agent.getTestSuiteDir();
 
         File file = new File(testSuiteHome, jvm.id + ".address");
         if (!file.exists()) {
             return null;
         }
 
-        return (InetSocketAddress) Utils.readObject(file);
+        return Utils.readObject(file);
     }
 
     public void terminateWorkers() {
