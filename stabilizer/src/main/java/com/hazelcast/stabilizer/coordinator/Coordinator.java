@@ -179,10 +179,6 @@ public class Coordinator {
 
         int agentCount = agentClientManager.getAgentCount();
 
-        log.info(format("Starting %s Server Worker JVM's", masterSettings.memberWorkerCount));
-        log.info(format("Starting %s Client Worker JVM's", masterSettings.clientWorkerCount));
-        log.info(format("Starting %s Mixed Worker JVM's", masterSettings.mixedWorkerCount));
-
         WorkerJvmSettings[] settingsArray = new WorkerJvmSettings[agentCount];
         for (int k = 0; k < agentCount; k++) {
             WorkerJvmSettings s = new WorkerJvmSettings(masterSettings);

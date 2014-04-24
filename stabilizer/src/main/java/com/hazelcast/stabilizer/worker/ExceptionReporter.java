@@ -38,7 +38,7 @@ public class ExceptionReporter {
             throw new RuntimeException(e);
         }
 
-        final File file = new File(getWorkerId() + "." + FAILURE_ID.incrementAndGet() + ".failure");
+        final File file = new File(getWorkerId() + "@" + FAILURE_ID.incrementAndGet() + ".failure");
         if (!tmpFile.renameTo(file)) {
             throw new RuntimeException("Failed to rename tmp file:" + tmpFile + " to " + file);
         }
