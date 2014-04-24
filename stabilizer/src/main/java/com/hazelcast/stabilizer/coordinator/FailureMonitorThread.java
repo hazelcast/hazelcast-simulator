@@ -43,7 +43,7 @@ class FailureMonitorThread extends Thread {
     }
 
     private String buildMessage(Failure failure) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("#").append(coordinator.failureList.size()).append(" ");
         sb.append(failure.message);
         if (failure.workerAddress != null) {
@@ -64,6 +64,8 @@ class FailureMonitorThread extends Thread {
                 sb.append("]");
             }
         }
+
+        sb.append("============");
 
         return sb.toString();
     }
