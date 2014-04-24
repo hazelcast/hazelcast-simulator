@@ -38,7 +38,6 @@ import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static com.hazelcast.stabilizer.coordinator.CoordinatorCli.init;
-import static java.lang.String.copyValueOf;
 import static java.lang.String.format;
 
 public class Coordinator {
@@ -119,18 +118,18 @@ public class Coordinator {
 
         StringBuffer members = new StringBuffer();
         for (String hostAddress : agentClientManager.getHostAddresses()) {
-            members.append("<member>").append(hostAddress).append(":"+port).append("</member>\n");
+            members.append("<member>").append(hostAddress).append(":" + port).append("</member>\n");
         }
 
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
     }
 
-     private void initClientHzConfig(WorkerJvmSettings settings)throws Exception {
+    private void initClientHzConfig(WorkerJvmSettings settings) throws Exception {
         int port = getPort(settings);
 
         StringBuffer members = new StringBuffer();
         for (String hostAddress : agentClientManager.getHostAddresses()) {
-            members.append("<address>").append(hostAddress).append(":"+port).append("</address>\n");
+            members.append("<address>").append(hostAddress).append(":" + port).append("</address>\n");
         }
 
         settings.clientHzConfig = settings.clientHzConfig.replace("<!--MEMBERS-->", members);
@@ -178,7 +177,7 @@ public class Coordinator {
         long startMs = System.currentTimeMillis();
 
         int agentCount = agentClientManager.getAgentCount();
-        if (masterSettings.memberWorkerCount == -1 && masterSettings.mixedWorkerCount==0) {
+        if (masterSettings.memberWorkerCount == -1 && masterSettings.mixedWorkerCount == 0) {
             masterSettings.memberWorkerCount = agentCount;
         }
 
@@ -214,13 +213,14 @@ public class Coordinator {
 
         agentClientManager.spawnWorkers(settingsArray);
 
+        //give the agents some time to start up.
+        log.info("Waiting for agents the start (20 seconds)");
+        sleepSeconds(20);
+
         long durationMs = System.currentTimeMillis() - startMs;
         log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms\n",
                 masterSettings.totalWorkerCount(), durationMs)));
 
-        //give the agents some time to start up.
-        log.info("Waiting for agents the start (20 seconds)");
-        sleepSeconds(20);
         return startMs;
     }
 
