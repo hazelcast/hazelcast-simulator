@@ -24,14 +24,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.logging.Level;
 
-public class WorkerVmLogger extends Thread {
-    private final static ILogger log = Logger.getLogger(WorkerVmLogger.class);
+public class WorkerVmInputStreamConsumer extends Thread {
+    private final static ILogger log = Logger.getLogger(WorkerVmInputStreamConsumer.class);
 
     private final InputStream inputStream;
     private final String prefix;
     private final boolean workerTrackLogging;
 
-    public WorkerVmLogger(String prefix, InputStream inputStream, boolean workerTrackLogging) {
+    public WorkerVmInputStreamConsumer(String prefix, InputStream inputStream, boolean workerTrackLogging) {
         this.inputStream = inputStream;
         this.prefix = prefix;
         this.workerTrackLogging = workerTrackLogging;

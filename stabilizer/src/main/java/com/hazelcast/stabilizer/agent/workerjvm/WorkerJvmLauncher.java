@@ -40,7 +40,7 @@ public class WorkerJvmLauncher {
     private final ConcurrentMap<String, WorkerJvm> workerJvms;
     private File hzFile;
     private File clientHzFile;
-    private final List<WorkerJvm> workers = new LinkedList<WorkerJvm>();
+    private final List<WorkerJvm> workersInProgress = new LinkedList<WorkerJvm>();
 
     public WorkerJvmLauncher(Agent agent, ConcurrentMap<String, WorkerJvm> workerJvms, WorkerJvmSettings settings) {
         this.settings = settings;
@@ -64,14 +64,15 @@ public class WorkerJvmLauncher {
             WorkerJvm worker = startWorkerJvm(mode);
             Process process = worker.process;
             String workerId = worker.id;
-            workers.add(worker);
-            new WorkerVmLogger(workerId, process.getInputStream(), settings.trackLogging).start();
+            workersInProgress.add(worker);
+            //we need to consume the inputsteam.
+            new WorkerVmInputStreamConsumer(workerId, process.getInputStream(), settings.trackLogging).start();
         }
 
         log.info(format("Finished starting %s %s worker Java Virtual Machines using settings\n %s", count, mode, settings));
 
-        waitForWorkersStartup(workers, settings.workerStartupTimeout);
-        workers.clear();
+        waitForWorkersStartup(workersInProgress, settings.workerStartupTimeout);
+        workersInProgress.clear();
     }
 
     private File createHzConfigFile() throws IOException {

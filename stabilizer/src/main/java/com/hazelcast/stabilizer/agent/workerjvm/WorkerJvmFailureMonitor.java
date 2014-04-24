@@ -29,9 +29,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
-import static com.hazelcast.stabilizer.Utils.readObject;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
-import static com.hazelcast.stabilizer.Utils.throwableToString;
 
 public class WorkerJvmFailureMonitor {
     final static ILogger log = Logger.getLogger(WorkerJvmFailureMonitor.class);
@@ -111,7 +109,7 @@ public class WorkerJvmFailureMonitor {
             if (name.endsWith(".failure")) {
                 String cause = Utils.asText(file);
                 //we rename it so that we don't detect the same failure again.
-                file.renameTo(new File(file.getAbsolutePath()+".done"));
+                file.renameTo(new File(file.getAbsolutePath() + ".done"));
 
                 String workerId = name.substring(0, name.indexOf('.'));
                 log.info("workerId: " + workerId);
