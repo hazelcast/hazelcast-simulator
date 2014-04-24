@@ -137,7 +137,7 @@ public final class Utils {
         }
     }
 
-    public static void appendText(String text, File file)  {
+    public static void appendText(String text, File file) {
         if (text == null) {
             throw new NullPointerException("text can't be null");
         }
@@ -155,7 +155,7 @@ public final class Utils {
             } finally {
                 closeQuietly(stream);
             }
-        }catch(IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -392,15 +392,11 @@ public final class Utils {
             sb.append(days).append(" days ");
         }
 
-        if (h > 0) {
-            sb.append(h).append(" hours ");
-        }
+        sb.append(format("%02d", h)).append("h ")
+                .append(format("%02d", m)).append("m ")
+                .append(format("%02d", s)).append("s");
 
-        if (m > 0) {
-            sb.append(m).append(" minutes ");
-        }
 
-        sb.append(s).append(" seconds");
         return sb.toString();
     }
 
