@@ -44,7 +44,7 @@ public class QueueTest extends AbstractTest {
         totalCounter = targetInstance.getAtomicLong(getTestId() + ":TotalCounter");
         queues = new IQueue[queueLength];
         for (int k = 0; k < queues.length; k++) {
-            queues[k] = targetInstance.getQueue(testId + ":Queue-" + k);
+            queues[k] = targetInstance.getQueue(getTestId() + ":Queue-" + k);
         }
 
         for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
@@ -97,7 +97,7 @@ public class QueueTest extends AbstractTest {
         public void run() {
             try {
                 long iteration = 0;
-                while (!stop) {
+                while (!stop()) {
                     long item = fromQueue.take();
                     toQueue.put(item + 1);
                     if (iteration % 2000 == 0) {

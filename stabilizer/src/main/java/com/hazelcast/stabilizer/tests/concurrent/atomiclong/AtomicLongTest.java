@@ -47,10 +47,10 @@ public class AtomicLongTest extends AbstractTest {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong(testId + ":TotalCounter");
+        totalCounter = targetInstance.getAtomicLong(getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            counters[k] = targetInstance.getAtomicLong(testId + ":Counter-" + k);
+            counters[k] = targetInstance.getAtomicLong(getTestId() + ":Counter-" + k);
         }
 
         for (int k = 0; k < threadCount; k++) {
@@ -94,7 +94,7 @@ public class AtomicLongTest extends AbstractTest {
         @Override
         public void run() {
             long iteration = 0;
-            while (!stop) {
+            while (!stop()) {
                 IAtomicLong counter = getRandomCounter();
                 counter.incrementAndGet();
 

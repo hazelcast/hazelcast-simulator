@@ -54,13 +54,13 @@ public class ExecutorTest extends AbstractTest {
 
         executors = new IExecutorService[executorCount];
         for (int k = 0; k < executors.length; k++) {
-            executors[k] = targetInstance.getExecutorService(testId + ":Executor-" + k);
+            executors[k] = targetInstance.getExecutorService(getTestId() + ":Executor-" + k);
         }
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
-        executedCounter = targetInstance.getAtomicLong(testId + ":ExecutedCounter");
-        expectedExecutedCounter = targetInstance.getAtomicLong(testId + ":ExpectedExecutedCounter");
+        executedCounter = targetInstance.getAtomicLong(getTestId() + ":ExecutedCounter");
+        expectedExecutedCounter = targetInstance.getAtomicLong(getTestId() + ":ExpectedExecutedCounter");
     }
 
     @Override
@@ -94,7 +94,7 @@ public class ExecutorTest extends AbstractTest {
             long iteration = 0;
 
             List<Future> futureList = new LinkedList<Future>();
-            while (!stop) {
+            while (!stop()) {
                 int index = random.nextInt(executors.length);
                 IExecutorService executorService = executors[index];
                 futureList.clear();

@@ -1,0 +1,44 @@
+package com.hazelcast.stabilizer.worker.testcommands;
+
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static com.hazelcast.stabilizer.Utils.sleepSeconds;
+import static com.hazelcast.stabilizer.Utils.writeObject;
+
+public class ExceptionReporter {
+
+    private final static AtomicLong FAILURE_ID = new AtomicLong(1);
+    private final static ILogger log = Logger.getLogger(ExceptionReporter.class);
+
+    public static void report(Throwable t) {
+        log.severe("Exception detected", t);
+        sleepSeconds(2);
+
+        //we need to write to a temp file before and then rename the file so that the worker will not see
+        //a partially written failure.
+        final File tmpFile;
+        try {
+            tmpFile = File.createTempFile("worker", "exception");
+        } catch (IOException e) {
+            log.severe("Failed to create temp file", e);
+            throw new RuntimeException(e);
+        }
+        writeObject(t, tmpFile);
+
+        final File file = new File(getWorkerId() + "." + FAILURE_ID.incrementAndGet() + ".exception");
+        if (!tmpFile.renameTo(file)) {
+            throw new RuntimeException("Failed to rename tmp file:" + tmpFile + " to " + file);
+        }
+    }
+
+    public static String getWorkerId() {
+        return System.getProperty("workerId");
+    }
+
+    private ExceptionReporter(){}
+}

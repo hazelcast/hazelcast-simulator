@@ -39,13 +39,13 @@ public class ITopicTest extends AbstractTest {
     public void localSetup() throws Exception {
         HazelcastInstance targetInstance = getTargetInstance();
 
-        totalExpectedCounter = targetInstance.getAtomicLong(testId + ":TotalExpectedCounter");
-        totalFoundCounter = targetInstance.getAtomicLong(testId + ":TotalFoundCounter");
+        totalExpectedCounter = targetInstance.getAtomicLong(getTestId() + ":TotalExpectedCounter");
+        totalFoundCounter = targetInstance.getAtomicLong(getTestId() + ":TotalFoundCounter");
         topics = new ITopic[topicCount];
         listenersCompleteLatch = new CountDownLatch(listenersPerTopic * topicCount);
 
         for (int k = 0; k < topics.length; k++) {
-            ITopic<Long> topic = targetInstance.getTopic(testId + ":Topic-" + k);
+            ITopic<Long> topic = targetInstance.getTopic(getTestId() + ":Topic-" + k);
             topics[k] = topic;
 
             for (int l = 0; l < listenersPerTopic; l++) {
@@ -119,7 +119,7 @@ public class ITopicTest extends AbstractTest {
                 }
             }
 
-            boolean stopped = (!waitForMessagesToComplete && stop) || l < 0;
+            boolean stopped = (!waitForMessagesToComplete && stop()) || l < 0;
 
             if (stopped) {
                 totalFoundCounter.addAndGet(count);
@@ -143,7 +143,7 @@ public class ITopicTest extends AbstractTest {
         public void run() {
             long iteration = 0;
             long count = 0;
-            while (!stop) {
+            while (!stop()) {
                 int index = random.nextInt(topics.length);
                 ITopic topic = topics[index];
 

@@ -43,9 +43,9 @@ public class ProducerConsumerTest extends AbstractTest {
     public void localSetup() throws Exception {
         HazelcastInstance targetInstance = getTargetInstance();
 
-        produced = targetInstance.getAtomicLong(testId + ":Produced");
-        consumed = targetInstance.getAtomicLong(testId + ":Consumed");
-        workQueue = targetInstance.getQueue(testId + ":WorkQueue");
+        produced = targetInstance.getAtomicLong(getTestId() + ":Produced");
+        consumed = targetInstance.getAtomicLong(getTestId() + ":Consumed");
+        workQueue = targetInstance.getQueue(getTestId() + ":WorkQueue");
 
         for (int k = 0; k < producerCount; k++) {
             spawn(new Producer(k));
@@ -83,7 +83,7 @@ public class ProducerConsumerTest extends AbstractTest {
         @Override
         public void run() {
             long iter = 0;
-            while (!stop) {
+            while (!stop()) {
                 try {
                     Thread.sleep(rand.nextInt(maxIntervalMillis) * consumerCount);
                     produced.incrementAndGet();
@@ -111,7 +111,7 @@ public class ProducerConsumerTest extends AbstractTest {
         @Override
         public void run() {
             long iter = 0;
-            while (!stop) {
+            while (!stop()) {
                 try {
                     workQueue.take();
                     consumed.incrementAndGet();

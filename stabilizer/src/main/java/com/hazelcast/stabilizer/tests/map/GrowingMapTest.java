@@ -29,8 +29,8 @@ public class GrowingMapTest extends AbstractTest {
     @Override
     public void localSetup() throws Exception {
         HazelcastInstance targetInstance = getTargetInstance();
-        idGenerator = targetInstance.getIdGenerator(testId + ":IdGenerator");
-        map = targetInstance.getMap(testId + ":Map");
+        idGenerator = targetInstance.getIdGenerator(getTestId() + ":IdGenerator");
+        map = targetInstance.getMap(getTestId() + ":Map");
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
@@ -60,10 +60,10 @@ public class GrowingMapTest extends AbstractTest {
 
             Random random = new Random();
 
-            while (!stop) {
+            while (!stop()) {
                 int keyIndex = -1;
                 for (int k = 0; k < growCount; k++) {
-                    if (stop) {
+                    if (stop()) {
                         break;
                     }
 
@@ -87,7 +87,7 @@ public class GrowingMapTest extends AbstractTest {
 
                 if (readValidation) {
                     for (int k = 0; k <= keyIndex; k++) {
-                        if (stop) {
+                        if (stop()) {
                             break;
                         }
 
@@ -107,7 +107,7 @@ public class GrowingMapTest extends AbstractTest {
                 }
 
                 for (int k = 0; k <= keyIndex; k++) {
-                    if (stop && !removeOnStop) {
+                    if (stop() && !removeOnStop) {
                         break;
                     }
 

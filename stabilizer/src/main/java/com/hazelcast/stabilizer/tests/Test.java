@@ -89,9 +89,7 @@ public interface Test {
 
     void globalVerify() throws Exception;
 
-    void setHazelcastInstances(HazelcastInstance serverInstance, HazelcastInstance clientInstance);
-
-    void setTestId(String id);
+    void init(TestDependencies dependencies);
 
     Performance calcPerformance();
 

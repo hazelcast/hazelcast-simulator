@@ -30,7 +30,7 @@ public class MapTimeToLiveTest extends AbstractTest {
     public int waitAfterMillis = 2000;
 
     private IMap map;
-    final private String mapName = "map:" + testId;
+    final private String mapName = "map:" + getTestId();
 
     @Override
     public void globalTearDown() throws Exception {
@@ -59,7 +59,7 @@ public class MapTimeToLiveTest extends AbstractTest {
     class Worker implements Runnable {
         @Override
         public void run() {
-            while (!stop) {
+            while (!stop()) {
                 try {
                     map.put(UUID.randomUUID(), UUID.randomUUID());
                     Thread.sleep(putIntervalMillis);

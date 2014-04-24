@@ -18,9 +18,9 @@ package com.hazelcast.stabilizer.tests;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
+import com.hazelcast.stabilizer.worker.testcommands.ExceptionReporter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,27 +30,36 @@ public abstract class AbstractTest implements Test {
 
     private final static ILogger log = Logger.getLogger(AbstractTest.class);
 
-    protected HazelcastInstance serverInstance;
-    protected HazelcastInstance clientInstance;
+    private HazelcastInstance serverInstance;
+    private HazelcastInstance clientInstance;
 
-    protected String testId;
-    protected volatile boolean stop = false;
+    private String testId;
+    private volatile boolean stop = false;
     private final CountDownLatch startLatch = new CountDownLatch(1);
     private final Set<Thread> threads = new HashSet<Thread>();
     private long startMs;
+
+    public HazelcastInstance getServerInstance() {
+        return serverInstance;
+    }
+
+    public HazelcastInstance getClientInstance() {
+        return clientInstance;
+    }
 
     public String getTestId() {
         return testId;
     }
 
-    public void setTestId(String testId) {
-        this.testId = testId;
+    public boolean stop(){
+        return stop;
     }
 
     @Override
-    public void setHazelcastInstances(HazelcastInstance serverInstance, HazelcastInstance clientInstance) {
-        this.serverInstance = serverInstance;
-        this.clientInstance = clientInstance;
+    public void init(TestDependencies dependencies) {
+        this.serverInstance = dependencies.serverInstance;
+        this.clientInstance = dependencies.clientInstance;
+        this.testId = dependencies.testId;
     }
 
     @Override
@@ -118,11 +127,7 @@ public abstract class AbstractTest implements Test {
                 startLatch.await();
                 runnable.run();
             } catch (Throwable t) {
-
-                log.severe("Error detected", t);
-                Utils.sleepSeconds(2);
-
-                TestUtils.signalFailure(t);
+                ExceptionReporter.report(t);
             }
         }
     }
@@ -142,6 +147,5 @@ public abstract class AbstractTest implements Test {
             thread.join(timeout);
         }
         threads.clear();
-
     }
 }

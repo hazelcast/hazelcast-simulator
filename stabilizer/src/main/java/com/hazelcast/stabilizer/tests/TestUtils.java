@@ -18,6 +18,7 @@ package com.hazelcast.stabilizer.tests;
 import com.hazelcast.stabilizer.TestCase;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -26,16 +27,6 @@ import static com.hazelcast.stabilizer.Utils.writeObject;
 import static java.lang.String.format;
 
 public class TestUtils {
-    public final static AtomicLong FAILURE_ID = new AtomicLong(1);
-
-    public static String getWorkerId() {
-        return System.getProperty("workerId");
-    }
-
-    public static void signalFailure(Throwable cause) {
-        final File file = new File(getWorkerId() + "." + FAILURE_ID.incrementAndGet() + ".exception");
-        writeObject(cause, file);
-    }
 
     public static void bindProperties(Test test, TestCase testCase) throws NoSuchFieldException, IllegalAccessException {
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {

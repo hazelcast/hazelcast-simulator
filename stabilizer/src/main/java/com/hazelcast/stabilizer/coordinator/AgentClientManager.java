@@ -12,9 +12,11 @@ import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,10 +42,20 @@ public class AgentClientManager {
     public AgentClientManager(Coordinator coordinator, File machineListFile) {
         this.coordinator = coordinator;
 
-        String content = Utils.asText(machineListFile);
-        for (String line : content.split("\n")) {
+        String[] split = getMachineAddresses(machineListFile);
+        for (String line : split) {
             AgentClient client = new AgentClient(line);
             agents.add(client);
+        }
+    }
+
+    private String[] getMachineAddresses(File machineListFile) {
+        String content = Utils.asText(machineListFile);
+        String[] addresses = content.split("\n");
+        if (addresses.length == 0) {
+            return new String[]{"127.0.0.1"};
+        } else {
+            return addresses;
         }
     }
 
@@ -271,7 +283,8 @@ public class AgentClientManager {
         }
 
         private Object execute(String service, Object... args) throws Exception {
-            Socket socket = new Socket(InetAddress.getByName(host), AgentRemoteService.PORT);
+
+            Socket socket = newSocket();
 
             try {
                 ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
@@ -285,6 +298,14 @@ public class AgentClientManager {
                 return in.readObject();
             } finally {
                 Utils.closeQuietly(socket);
+            }
+        }
+
+        private Socket newSocket() throws IOException {
+            try {
+                return new Socket(InetAddress.getByName(host), AgentRemoteService.PORT);
+            } catch (NoRouteToHostException e) {
+                throw new IOException("Couldn't connect to host: " + host + ":" + AgentRemoteService.PORT, e);
             }
         }
     }

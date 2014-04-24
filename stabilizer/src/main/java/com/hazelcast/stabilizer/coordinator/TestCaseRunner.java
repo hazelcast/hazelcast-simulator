@@ -54,7 +54,7 @@ public class TestCaseRunner {
             startTestCase();
             echo("Completed Test start");
 
-            echo(format("Test running for %s seconds", testSuite.duration));
+            echo(format("Test running for %s", Utils.secondsToHuman(testSuite.duration)));
             sleepSeconds(testSuite.duration);
             echo("Test finished running");
 

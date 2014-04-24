@@ -39,13 +39,13 @@ public class MapTransactionTest extends AbstractTest {
     public void localSetup() throws Exception {
         targetInstance = getTargetInstance();
 
-        mapName = "Map-" + testId;
+        mapName = "Map-" + getTestId();
         map = targetInstance.getMap(mapName);
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
 
-        resultsPerWorker = targetInstance.getMap("ResultMap" + testId);
+        resultsPerWorker = targetInstance.getMap("ResultMap" + getTestId());
     }
 
     @Override
@@ -107,7 +107,7 @@ public class MapTransactionTest extends AbstractTest {
             }
 
             long iteration = 0;
-            while (!stop) {
+            while (!stop()) {
                 final Integer key = random.nextInt(keyCount);
                 final long increment = random.nextInt(100);
 

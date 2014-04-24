@@ -28,6 +28,8 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.tests.Test;
+import com.hazelcast.stabilizer.tests.TestDependencies;
+import com.hazelcast.stabilizer.worker.testcommands.ExceptionReporter;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand;
@@ -172,13 +174,14 @@ public class Worker {
             worker.start();
 
             log.info("Successfully started Hazelcast Stabilizer Worker:" + workerId);
-        } catch (Exception e) {
-            log.severe(e);
+        } catch (Throwable e) {
+            ExceptionReporter.report(e);
             System.exit(1);
         }
     }
 
     private class SocketThread extends Thread {
+
         @Override
         public void run() {
             for (; ; ) {
@@ -199,8 +202,8 @@ public class Worker {
                     responseQueue.drainTo(responses);
 
                     sendResponse(responses);
-                } catch (Exception e) {
-                    log.severe(e);
+                } catch (Throwable e) {
+                    ExceptionReporter.report(e);
                 }
             }
         }
@@ -240,8 +243,8 @@ public class Worker {
                 try {
                     TestCommandRequest request = requestQueue.take();
                     doProcess(request.id, request.task);
-                } catch (Exception e) {
-                    log.severe(e);
+                } catch (Throwable e) {
+                    ExceptionReporter.report(e);
                 }
             }
         }
@@ -249,14 +252,14 @@ public class Worker {
         private void doProcess(long id, TestCommand testCommand) {
             Object result = null;
             try {
-                if (testCommand instanceof StopTestCommand) {
-                    process((StopTestCommand) testCommand);
-                } else if (testCommand instanceof InitTestCommand) {
+                if (testCommand instanceof InitTestCommand) {
                     process((InitTestCommand) testCommand);
-                } else if (testCommand instanceof GenericTestCommand) {
-                    result = process((GenericTestCommand) testCommand);
                 } else if (testCommand instanceof StartTestCommand) {
                     process((StartTestCommand) testCommand);
+                } else if (testCommand instanceof StopTestCommand) {
+                    process((StopTestCommand) testCommand);
+                } else if (testCommand instanceof GenericTestCommand) {
+                    result = process((GenericTestCommand) testCommand);
                 } else {
                     throw new RuntimeException("Unhandled task:" + testCommand.getClass());
                 }
@@ -322,9 +325,13 @@ public class Worker {
 
                 String clazzName = testCase.getClassname();
 
+                TestDependencies dependencies = new TestDependencies();
+                dependencies.clientInstance = clientInstance;
+                dependencies.serverInstance = serverInstance;
+                dependencies.testId = testCase.getId();
+
                 test = (Test) InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
-                test.setHazelcastInstances(serverInstance, clientInstance);
-                test.setTestId(testCase.getId());
+                test.init(dependencies);
 
                 bindProperties(test, testCase);
 

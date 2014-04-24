@@ -33,12 +33,12 @@ public class MapLockTest extends AbstractTest {
     public void localSetup() throws Exception {
         HazelcastInstance targetInstance = getTargetInstance();
 
-        map = targetInstance.getMap("Map-" + testId);
+        map = targetInstance.getMap("Map-" + getTestId());
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
 
-        resultsPerWorker = targetInstance.getMap("ResultMap" + testId);
+        resultsPerWorker = targetInstance.getMap("ResultMap" + getTestId());
     }
 
     @Override
@@ -100,7 +100,7 @@ public class MapLockTest extends AbstractTest {
             }
 
             long iteration = 0;
-            while (!stop) {
+            while (!stop()) {
                 Integer key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
 

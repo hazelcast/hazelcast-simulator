@@ -20,6 +20,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.worker.testcommands.ExceptionReporter;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -75,8 +76,12 @@ public class TestRunner {
             hazelcastInstance = Hazelcast.newHazelcastInstance();
         }
 
-        test.setHazelcastInstances(hazelcastInstance, null);
-        test.setTestId(UUID.randomUUID().toString());
+        TestDependencies dependencies = new TestDependencies();
+        dependencies.clientInstance = null;
+        dependencies.serverInstance = hazelcastInstance;
+        dependencies.testId = UUID.randomUUID().toString();
+
+        test.init(dependencies);
 
         log.info("Starting localSetup");
         test.localSetup();
