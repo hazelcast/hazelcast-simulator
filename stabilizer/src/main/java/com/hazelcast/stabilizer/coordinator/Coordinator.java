@@ -252,18 +252,27 @@ public class Coordinator {
             for (; ; ) {
                 try {
                     //todo: this delay should be configurable.
-                    Utils.sleepSeconds(1);
-
-                    List<Failure> failures = agentClientManager.getFailures();
-                    for (Failure failure : failures) {
-                        failureList.add(failure);
-                        log.severe("Remote failure detected:" + failure.message);
-                        File file = new File("failures-" + failure.testCase.getId() + ".txt");
-                        Utils.appendText(failure.toString(), file);
-                    }
+                    sleepSeconds(1);
+                    scan();
                 } catch (Throwable e) {
                     log.severe(e);
                 }
+            }
+        }
+
+        private void scan() {
+            List<Failure> failures = agentClientManager.getFailures();
+            for (Failure failure : failures) {
+                failureList.add(failure);
+                log.severe("Remote failure detected:" + failure.message);
+                TestCase testCase = failure.testCase;
+                File file;
+                if (testCase == null) {
+                    file = new File("failures.txt");
+                } else {
+                    file = new File("failures-" + testCase.getId() + ".txt");
+                }
+                Utils.appendText(failure.toString(), file);
             }
         }
     }
