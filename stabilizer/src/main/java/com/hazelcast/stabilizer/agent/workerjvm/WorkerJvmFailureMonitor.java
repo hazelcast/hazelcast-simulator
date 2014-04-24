@@ -109,15 +109,11 @@ public class WorkerJvmFailureMonitor {
             if (name.endsWith(".failure")) {
                 String cause = Utils.asText(file);
                 //we rename it so that we don't detect the same failure again.
-                file.renameTo(new File(file.getAbsolutePath() + ".done"));
+                file.delete();
 
                 String workerId = name.substring(0, name.lastIndexOf('@'));
-                log.info("workerId: " + workerId);
 
                 WorkerJvm jvm = agent.getWorkerJvmManager().getWorker(workerId);
-                log.info("found worker: "+jvm);
-                //todo: remove me
-                log.info("Available jvms:"+agent.getWorkerJvmManager().workerJvms);
 
                 Failure failure = new Failure();
                 failure.message = "Exception thrown in worker";

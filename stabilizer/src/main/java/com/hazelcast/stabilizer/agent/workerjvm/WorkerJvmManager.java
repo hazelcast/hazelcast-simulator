@@ -61,7 +61,7 @@ public class WorkerJvmManager {
     public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
     public static final int PORT = 9001;
 
-    public final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
+    private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
 
     private final ConcurrentMap<Long, TestCommandFuture> futureMap = new ConcurrentHashMap<Long, TestCommandFuture>();

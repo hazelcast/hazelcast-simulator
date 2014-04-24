@@ -134,12 +134,6 @@ public class StringMapTest extends AbstractTest {
                     map.get(key);
                 }
 
-                ExceptionReporter.report(new RuntimeException());
-
-                ExceptionReporter.report(new RuntimeException());
-
-                ExceptionReporter.report(new RuntimeException());
-
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }

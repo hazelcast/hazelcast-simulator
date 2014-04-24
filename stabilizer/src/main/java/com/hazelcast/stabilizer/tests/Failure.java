@@ -28,7 +28,7 @@ public class Failure implements Serializable {
     public String agentAddress;
     public String workerAddress;
     public String workerId;
-    public Date time;
+    public Date time = new Date();
     public TestCase testCase;
     public String cause;
 
