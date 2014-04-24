@@ -36,22 +36,35 @@ class FailureMonitorThread extends Thread {
         List<Failure> failures = coordinator.agentClientManager.getFailures();
         for (Failure failure : failures) {
             coordinator.failureList.add(failure);
-            StringBuffer sb = new StringBuffer();
-            sb.append("#").append(coordinator.failureList.size()).append(" ");
-            sb.append(failure.message);
-
-            if (failure.cause != null) {
-                String[] lines = failure.cause.split("\n");
-                if (lines.length > 0) {
-                    sb.append("[");
-                    sb.append(lines[0]);
-                    sb.append("]");
-                }
-            }
-
-            log.severe(sb.toString());
+            log.severe(buildMessage(failure));
             File file = new File("failures.txt");
             appendText(failure.toString() + "\n", file);
         }
+    }
+
+    private String buildMessage(Failure failure) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("#").append(coordinator.failureList.size()).append(" ");
+        sb.append(failure.message);
+        if (failure.workerAddress != null) {
+            sb.append(' ');
+            sb.append(failure.workerAddress);
+            sb.append(' ');
+        } else if (failure.agentAddress != null) {
+            sb.append(' ');
+            sb.append(failure.agentAddress);
+            sb.append(' ');
+        }
+
+        if (failure.cause != null) {
+            String[] lines = failure.cause.split("\n");
+            if (lines.length > 0) {
+                sb.append("[");
+                sb.append(lines[0]);
+                sb.append("]");
+            }
+        }
+
+        return sb.toString();
     }
 }
