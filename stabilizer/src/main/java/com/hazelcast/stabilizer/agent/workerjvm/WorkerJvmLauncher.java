@@ -84,7 +84,7 @@ public class WorkerJvmLauncher {
     private File createClientHzConfigFile() throws IOException {
         File clientHzConfigFile = File.createTempFile("client-hazelcast", "xml");
         clientHzConfigFile.deleteOnExit();
-        writeText(settings.hzConfig, clientHzFile);
+        writeText(settings.clientHzConfig, clientHzConfigFile);
         return clientHzConfigFile;
     }
 

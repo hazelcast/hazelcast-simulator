@@ -17,7 +17,7 @@ package com.hazelcast.stabilizer.agent;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
@@ -44,7 +44,7 @@ public class Agent {
 
     //internal state
     private volatile TestSuite testSuite;
-    private volatile TestRecipe testRecipe;
+    private volatile TestCase testCase;
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
     private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
@@ -74,12 +74,12 @@ public class Agent {
         return workerJvmManager;
     }
 
-    public TestRecipe getTestRecipe() {
-        return testRecipe;
+    public TestCase getTestCase() {
+        return testCase;
     }
 
-    public void setTestRecipe(TestRecipe testRecipe) {
-        this.testRecipe = testRecipe;
+    public void setTestCase(TestCase testCase) {
+        this.testCase = testCase;
     }
 
     public JavaInstallationsRepository getJavaInstallationRepository() {
@@ -88,7 +88,7 @@ public class Agent {
 
     public void initTestSuite(TestSuite testSuite, byte[] content) throws IOException {
         this.testSuite = testSuite;
-        this.testRecipe = null;
+        this.testCase = null;
 
         File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
         ensureExistingDirectory(testSuiteDir);

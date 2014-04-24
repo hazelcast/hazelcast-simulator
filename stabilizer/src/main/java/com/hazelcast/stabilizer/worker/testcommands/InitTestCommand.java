@@ -15,22 +15,22 @@
  */
 package com.hazelcast.stabilizer.worker.testcommands;
 
-import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.TestCase;
 
 public class InitTestCommand extends TestCommand {
 
     public static final long serialVersionUID = 0l;
 
-    public TestRecipe testRecipe;
+    public TestCase testCase;
 
-    public InitTestCommand(TestRecipe testRecipe) {
-        this.testRecipe = testRecipe;
+    public InitTestCommand(TestCase testCase) {
+        this.testCase = testCase;
     }
 
     @Override
     public String toString() {
         return "InitTestCommand{" +
-                "testRecipe=" + testRecipe +
+                "testRecipe=" + testCase +
                 '}';
     }
 }

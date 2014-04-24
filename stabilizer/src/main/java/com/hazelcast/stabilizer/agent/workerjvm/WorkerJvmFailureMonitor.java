@@ -120,7 +120,7 @@ public class WorkerJvmFailureMonitor {
                 failure.agentAddress = getHostAddress();
                 failure.workerAddress = jvm == null ? null : jvm.memberAddress;
                 failure.workerId = workerId;
-                failure.testRecipe = agent.getTestRecipe();
+                failure.testCase = agent.getTestCase();
                 failure.cause = throwableToString(cause);
                 publish(failure);
 
@@ -147,7 +147,7 @@ public class WorkerJvmFailureMonitor {
         failure.agentAddress = getHostAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
-        failure.testRecipe = agent.getTestRecipe();
+        failure.testCase = agent.getTestCase();
         jvm.process.destroy();
         return failure;
     }
@@ -162,7 +162,7 @@ public class WorkerJvmFailureMonitor {
                 failure.agentAddress = getHostAddress();
                 failure.workerAddress = jvm.memberAddress;
                 failure.workerId = jvm.id;
-                failure.testRecipe = agent.getTestRecipe();
+                failure.testCase = agent.getTestCase();
                 return failure;
             }
         } catch (IllegalThreadStateException ignore) {

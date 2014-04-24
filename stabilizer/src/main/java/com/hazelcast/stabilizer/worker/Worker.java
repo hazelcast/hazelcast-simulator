@@ -24,19 +24,19 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.tests.Test;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
@@ -255,6 +255,8 @@ public class Worker {
                     process((InitTestCommand) testCommand);
                 } else if (testCommand instanceof GenericTestCommand) {
                     result = process((GenericTestCommand) testCommand);
+                } else if (testCommand instanceof StartTestCommand) {
+                    process((StartTestCommand) testCommand);
                 } else {
                     throw new RuntimeException("Unhandled task:" + testCommand.getClass());
                 }
@@ -266,6 +268,32 @@ public class Worker {
             response.commandId = id;
             response.result = result;
             responseQueue.add(response);
+        }
+
+        private void process(StartTestCommand testCommand) throws Exception {
+            try {
+                log.info("Starting test");
+
+                if (test == null) {
+                    throw new IllegalStateException("No running test found");
+                }
+
+                boolean startTest = true;
+                if (testCommand.clientOnly && clientInstance == null) {
+                    startTest = false;
+                }
+
+                if (startTest) {
+                    test.start();
+                    log.info("Started test successfully");
+                } else {
+                    log.info("Test is not started because this worker doesn't contain a client" +
+                            " and only clients are generating load. ");
+                }
+            } catch (Exception e) {
+                log.severe("Failed to start test", e);
+                throw e;
+            }
         }
 
         public Object process(GenericTestCommand genericTestTask) throws Exception {
@@ -289,16 +317,16 @@ public class Worker {
 
         private void process(InitTestCommand initTestCommand) throws Exception {
             try {
-                TestRecipe testRecipe = initTestCommand.testRecipe;
-                log.info("Init Test:\n" + testRecipe);
+                TestCase testCase = initTestCommand.testCase;
+                log.info("Init Test:\n" + testCase);
 
-                String clazzName = testRecipe.getClassname();
+                String clazzName = testCase.getClassname();
 
                 test = (Test) InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
                 test.setHazelcastInstances(serverInstance, clientInstance);
-                test.setTestId(testRecipe.getTestId());
+                test.setTestId(testCase.getId());
 
-                bindProperties(test, testRecipe);
+                bindProperties(test, testCase);
 
                 if (serverInstance != null) {
                     serverInstance.getUserContext().put(Test.TEST_INSTANCE, test);

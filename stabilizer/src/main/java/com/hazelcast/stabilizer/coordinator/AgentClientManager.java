@@ -2,7 +2,7 @@ package com.hazelcast.stabilizer.coordinator;
 
 
 import com.hazelcast.logging.ILogger;
-import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
@@ -87,13 +87,13 @@ public class AgentClientManager {
         return result;
     }
 
-    public void prepareAgentsForTests(final TestRecipe testRecipe) {
+    public void prepareAgentsForTests(final TestCase testCase) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_PREPARE_FOR_TEST, testRecipe);
+                    agentClient.execute(AgentRemoteService.SERVICE_PREPARE_FOR_TEST, testCase);
                     return null;
                 }
             });

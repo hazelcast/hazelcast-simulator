@@ -2,7 +2,7 @@ package com.hazelcast.stabilizer.agent;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
@@ -93,7 +93,7 @@ public class AgentRemoteService {
                         String msg = (String) in.readObject();
                         echo(msg);
                     } else if (SERVICE_PREPARE_FOR_TEST.equals(service)) {
-                        TestRecipe recipe = (TestRecipe) in.readObject();
+                        TestCase recipe = (TestCase) in.readObject();
                         prepareForTest(recipe);
                     } else {
                         throw new RuntimeException("Unknown service:" + service);
@@ -163,11 +163,11 @@ public class AgentRemoteService {
             }
         }
 
-        private void prepareForTest(TestRecipe testRecipe) throws Exception {
+        private void prepareForTest(TestCase testCase) throws Exception {
             try {
-                agent.setTestRecipe(testRecipe);
+                agent.setTestCase(testCase);
             } catch (Exception e) {
-                log.severe("Failed to prepareForTest for recipe:" + testRecipe, e);
+                log.severe("Failed to prepareForTest for recipe:" + testCase, e);
                 throw e;
             }
         }

@@ -22,19 +22,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class TestRecipe implements Serializable {
-    public String testId = "" + System.currentTimeMillis();
+public class TestCase implements Serializable {
+    public String id = "" + System.currentTimeMillis();
     public HashMap<String, String> properties = new HashMap<String, String>();
 
-    public TestRecipe() {
+    public TestCase() {
     }
 
     public String getClassname() {
         return properties.get("class");
     }
 
-    public String getTestId() {
-        return testId;
+    public String getId() {
+        return id;
     }
 
     public String getProperty(String name) {
@@ -52,7 +52,7 @@ public class TestRecipe implements Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("TestRecipe{");
-        sb.append("\n      ").append("testId=").append(testId);
+        sb.append("\n      ").append("id=").append(id);
         sb.append("\n    , ").append("class=").append(getClassname());
 
         List<String> keys = new LinkedList<String>(properties.keySet());

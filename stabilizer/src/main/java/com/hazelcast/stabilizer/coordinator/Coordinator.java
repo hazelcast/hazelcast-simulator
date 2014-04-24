@@ -19,19 +19,14 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
-import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -42,12 +37,13 @@ import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static com.hazelcast.stabilizer.coordinator.CoordinatorCli.init;
+import static java.lang.String.copyValueOf;
 import static java.lang.String.format;
 
 public class Coordinator {
 
     public final static File STABILIZER_HOME = getStablizerHome();
-    private final static ILogger log = Logger.getLogger(Coordinator.class);
+    private final static ILogger log = Logger.getLogger(Coordinator.class.getName());
 
     //options.
     public boolean monitorPerformance;
@@ -59,8 +55,8 @@ public class Coordinator {
     public TestSuite testSuite;
 
     //internal state.
-    private final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
-    private AgentClientManager agentClientManager;
+    final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
+    protected AgentClientManager agentClientManager;
     public WorkerJvmSettings workerJvmSettings;
 
     private void start() throws Exception {
@@ -154,8 +150,9 @@ public class Coordinator {
         terminateWorkers();
         startWorkers(workerJvmSettings);
 
-        for (TestRecipe testRecipe : testSuite.testRecipeList) {
-            boolean success = run(testSuite, testRecipe);
+        for (TestCase testCase : testSuite.testCaseList) {
+            TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this);
+            boolean success = runner.run();
             if (!success && testSuite.failFast) {
                 log.info("Aborting working due to failure");
                 break;
@@ -170,124 +167,13 @@ public class Coordinator {
         terminateWorkers();
     }
 
-    private boolean run(TestSuite testSuite, TestRecipe testRecipe) {
-        echo(format("Running Test : %s", testRecipe.getTestId()));
-
-        int oldCount = failureList.size();
-        try {
-            echo(testRecipe.toString());
-
-            echo("Starting Test initialization");
-            agentClientManager.prepareAgentsForTests(testRecipe);
-            agentClientManager.executeOnAllWorkers(new InitTestCommand(testRecipe));
-            echo("Completed Test initialization");
-
-            echo("Starting Test local setup");
-            agentClientManager.executeOnAllWorkers(new GenericTestCommand("localSetup"));
-            echo("Completed Test local setup");
-
-            echo("Starting Test global setup");
-            agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalSetup"));
-            echo("Completed Test global setup");
-
-            echo("Starting Test start");
-            agentClientManager.executeOnAllWorkers(new GenericTestCommand("start"));
-            echo("Completed Test start");
-
-            echo(format("Test running for %s seconds", testSuite.duration));
-            sleepSeconds(testSuite.duration);
-            echo("Test finished running");
-
-            echo("Starting Test stop");
-            agentClientManager.executeOnAllWorkers(new StopTestCommand());
-            echo("Completed Test stop");
-
-            if (monitorPerformance) {
-                echo(calcPerformance().toHumanString());
-            }
-
-            if (verifyEnabled) {
-                echo("Starting Test global verify");
-                agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalVerify"));
-                echo("Completed Test global verify");
-
-                echo("Starting Test local verify");
-                agentClientManager.executeOnAllWorkers(new GenericTestCommand("localVerify"));
-                echo("Completed Test local verify");
-            } else {
-                echo("Skipping Test verification");
-            }
-
-            echo("Starting Test global tear down");
-            agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalTearDown"));
-            echo("Finished Test global tear down");
-
-            echo("Starting Test local tear down");
-            agentClientManager.executeOnAllWorkers(new GenericTestCommand("localTearDown"));
-
-            echo("Completed Test local tear down");
-
-            return failureList.size() == oldCount;
-        } catch (Exception e) {
-            log.severe("Failed", e);
-            return false;
-        }
-    }
-
-    public void sleepSeconds(int seconds) {
-        int period = 30;
-        int big = seconds / period;
-        int small = seconds % period;
-
-        for (int k = 1; k <= big; k++) {
-            if (failureList.size() > 0) {
-                echo("Failure detected, aborting execution of test");
-                return;
-            }
-
-            Utils.sleepSeconds(period);
-            final int elapsed = period * k;
-            final float percentage = (100f * elapsed) / seconds;
-            String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, seconds, percentage);
-            echo(msg);
-            if (monitorPerformance) {
-                echo(calcPerformance().toHumanString());
-            }
-        }
-
-        Utils.sleepSeconds(small);
-    }
-
-    public Performance calcPerformance() {
-        return null;
-//        ShoutToWorkersTask task = new ShoutToWorkersTask(new GenericTestTask("calcPerformance"), "calcPerformance");
-//        Map<Member, Future<List<Performance>>> result = agentExecutor.submitToAllMembers(task);
-//        Performance performance = null;
-//        for (Future<List<Performance>> future : result.values()) {
-//            try {
-//                List<Performance> results = future.get();
-//                for (Performance p : results) {
-//                    if (performance == null) {
-//                        performance = p;
-//                    } else {
-//                        performance = performance.merge(p);
-//                    }
-//                }
-//            } catch (InterruptedException e) {
-//            } catch (ExecutionException e) {
-//                log.severe(e);
-//            }
-//        }
-//        return performance == null ? new NotAvailable() : performance;
-    }
-
-    private void terminateWorkers() throws Exception {
+    void terminateWorkers() throws Exception {
         echo("Terminating workers");
         agentClientManager.terminateWorkers();
         echo("All workers have been terminated");
     }
 
-    private long startWorkers(WorkerJvmSettings masterSettings) throws Exception {
+    long startWorkers(WorkerJvmSettings masterSettings) throws Exception {
         long startMs = System.currentTimeMillis();
 
         int agentCount = agentClientManager.getAgentCount();

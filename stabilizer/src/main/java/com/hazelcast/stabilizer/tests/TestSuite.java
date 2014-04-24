@@ -15,7 +15,7 @@
  */
 package com.hazelcast.stabilizer.tests;
 
-import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.TestCase;
 
 import java.io.File;
 import java.io.Serializable;
@@ -36,7 +36,7 @@ public class TestSuite implements Serializable {
     public static TestSuite loadTestSuite(File file) throws Exception {
         Properties properties = loadProperties(file);
 
-        Map<String, TestRecipe> recipies = new HashMap<String, TestRecipe>();
+        Map<String, TestCase> recipies = new HashMap<String, TestCase>();
         for (String property : properties.stringPropertyNames()) {
             String value = (String) properties.get(property);
             int indexOfDot = property.indexOf(".");
@@ -48,9 +48,9 @@ public class TestSuite implements Serializable {
                 field = property.substring(indexOfDot + 1);
             }
 
-            TestRecipe recipe = recipies.get(recipeId);
+            TestCase recipe = recipies.get(recipeId);
             if (recipe == null) {
-                recipe = new TestRecipe();
+                recipe = new TestCase();
                 recipies.put(recipeId, recipe);
             }
 
@@ -62,7 +62,7 @@ public class TestSuite implements Serializable {
 
         TestSuite testSuite = new TestSuite();
         for (String recipeId : recipeIds) {
-            TestRecipe recipe = recipies.get(recipeId);
+            TestCase recipe = recipies.get(recipeId);
             if (recipe.getClassname() == null) {
                 if ("".equals(recipeId)) {
                     throw new RuntimeException(format("There is no class set for the in property file [%s]." +
@@ -82,16 +82,16 @@ public class TestSuite implements Serializable {
     }
 
     public final String id = "" + System.currentTimeMillis();
-    public List<TestRecipe> testRecipeList = new LinkedList<TestRecipe>();
+    public List<TestCase> testCaseList = new LinkedList<TestCase>();
     public int duration;
     public boolean failFast;
 
-    public void addTest(TestRecipe testRecipe) {
-        testRecipeList.add(testRecipe);
+    public void addTest(TestCase testCase) {
+        testCaseList.add(testCase);
     }
 
     public int size() {
-        return testRecipeList.size();
+        return testCaseList.size();
     }
 
     @Override
@@ -99,7 +99,7 @@ public class TestSuite implements Serializable {
         return "TestSuite{" +
                 "duration=" + duration +
                 ", id='" + id + '\'' +
-                ", testRecipeList=" + testRecipeList +
+                ", testRecipeList=" + testCaseList +
                 ", failFast=" + failFast +
                 '}';
     }

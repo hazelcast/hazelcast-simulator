@@ -119,6 +119,14 @@ public final class Utils {
     }
 
     public static void writeText(String text, File file) throws IOException {
+        if(text == null){
+            throw new NullPointerException("text can't be null");
+        }
+
+        if(file == null){
+            throw new NullPointerException("file can't be null");
+        }
+
         FileOutputStream stream = new FileOutputStream(file);
         try {
             Writer writer = new BufferedWriter(new OutputStreamWriter(stream));

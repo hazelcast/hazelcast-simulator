@@ -15,7 +15,7 @@
  */
 package com.hazelcast.stabilizer.tests;
 
-import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.TestCase;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -29,7 +29,7 @@ public class Failure implements Serializable {
     public String workerAddress;
     public String workerId;
     public Date time;
-    public TestRecipe testRecipe;
+    public TestCase testCase;
     public String cause;
 
     @Override
@@ -41,8 +41,8 @@ public class Failure implements Serializable {
         sb.append("   time=").append(time).append("\n");
         sb.append("   workerAddress=").append(workerAddress).append("\n");
         sb.append("   workerId=").append(workerId).append("\n");
-        if (testRecipe != null) {
-            String[] testString = testRecipe.toString().split("\n");
+        if (testCase != null) {
+            String[] testString = testCase.toString().split("\n");
             sb.append("   test=").append(testString[0]).append("\n");
             for (int k = 1; k < testString.length; k++) {
                 sb.append("    ").append(testString[k]).append("\n");

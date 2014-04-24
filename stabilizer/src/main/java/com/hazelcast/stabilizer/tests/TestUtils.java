@@ -15,7 +15,7 @@
  */
 package com.hazelcast.stabilizer.tests;
 
-import com.hazelcast.stabilizer.TestRecipe;
+import com.hazelcast.stabilizer.TestCase;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -37,8 +37,8 @@ public class TestUtils {
         writeObject(cause, file);
     }
 
-    public static void bindProperties(Test test, TestRecipe testRecipe) throws NoSuchFieldException, IllegalAccessException {
-        for (Map.Entry<String, String> entry : testRecipe.getProperties().entrySet()) {
+    public static void bindProperties(Test test, TestCase testCase) throws NoSuchFieldException, IllegalAccessException {
+        for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
             String property = entry.getKey();
             if ("class".equals(property)) {
                 continue;
