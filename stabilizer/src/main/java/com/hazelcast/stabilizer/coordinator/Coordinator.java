@@ -36,6 +36,7 @@ import static com.hazelcast.stabilizer.Utils.createUpload;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
+import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static com.hazelcast.stabilizer.coordinator.CoordinatorCli.init;
 import static java.lang.String.copyValueOf;
 import static java.lang.String.format;
@@ -216,6 +217,10 @@ public class Coordinator {
         long durationMs = System.currentTimeMillis() - startMs;
         log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms\n",
                 masterSettings.totalWorkerCount(), durationMs)));
+
+        //give the agents some time to start up.
+        log.info("Waiting for agents the start (20 seconds)");
+        sleepSeconds(20);
         return startMs;
     }
 

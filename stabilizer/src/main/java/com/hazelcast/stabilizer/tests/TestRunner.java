@@ -20,7 +20,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.worker.testcommands.ExceptionReporter;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;

@@ -29,7 +29,6 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.tests.Test;
 import com.hazelcast.stabilizer.tests.TestDependencies;
-import com.hazelcast.stabilizer.worker.testcommands.ExceptionReporter;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand;

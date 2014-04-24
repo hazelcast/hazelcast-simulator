@@ -1,7 +1,8 @@
-package com.hazelcast.stabilizer.worker.testcommands;
+package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static com.hazelcast.stabilizer.Utils.writeObject;
+import static com.hazelcast.stabilizer.Utils.writeText;
 
 public class ExceptionReporter {
 
@@ -28,9 +30,15 @@ public class ExceptionReporter {
             log.severe("Failed to create temp file", e);
             throw new RuntimeException(e);
         }
-        writeObject(t, tmpFile);
 
-        final File file = new File(getWorkerId() + "." + FAILURE_ID.incrementAndGet() + ".exception");
+        try {
+            writeText(Utils.throwableToString(t), tmpFile);
+        } catch (IOException e) {
+            log.severe("Failed to write to tmpFile:"+tmpFile,e);
+            throw new RuntimeException(e);
+        }
+
+        final File file = new File(getWorkerId() + "." + FAILURE_ID.incrementAndGet() + ".failure");
         if (!tmpFile.renameTo(file)) {
             throw new RuntimeException("Failed to rename tmp file:" + tmpFile + " to " + file);
         }

@@ -23,6 +23,7 @@ import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.AbstractTest;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.worker.ExceptionReporter;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -132,6 +133,12 @@ public class StringMapTest extends AbstractTest {
                 } else {
                     map.get(key);
                 }
+
+                ExceptionReporter.report(new RuntimeException());
+
+                ExceptionReporter.report(new RuntimeException());
+
+                ExceptionReporter.report(new RuntimeException());
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);

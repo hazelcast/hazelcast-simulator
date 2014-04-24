@@ -18,6 +18,7 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.tests.Failure;
 
@@ -107,12 +108,14 @@ public class WorkerJvmFailureMonitor {
 
         for (File file : files) {
             String name = file.getName();
-            if (name.endsWith(".exception")) {
-                Throwable cause = readObject(file);
-                file.delete();
+            if (name.endsWith(".failure")) {
+                String cause = Utils.asText(file);
+                //we rename it so that we don't detect the same failure again.
+                file.renameTo(new File(file.getAbsolutePath()+".done"));
 
                 String workerId = name.substring(0, name.indexOf('.'));
                 log.info("workerId: " + workerId);
+
                 WorkerJvm jvm = agent.getWorkerJvmManager().getWorker(workerId);
 
                 Failure failure = new Failure();
@@ -121,7 +124,7 @@ public class WorkerJvmFailureMonitor {
                 failure.workerAddress = jvm == null ? null : jvm.memberAddress;
                 failure.workerId = workerId;
                 failure.testCase = agent.getTestCase();
-                failure.cause = throwableToString(cause);
+                failure.cause = cause;
                 publish(failure);
 
                 if (jvm != null) {

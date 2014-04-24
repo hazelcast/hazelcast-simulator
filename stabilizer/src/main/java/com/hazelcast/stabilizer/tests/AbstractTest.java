@@ -20,7 +20,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
-import com.hazelcast.stabilizer.worker.testcommands.ExceptionReporter;
+import com.hazelcast.stabilizer.worker.ExceptionReporter;
 
 import java.util.HashSet;
 import java.util.Set;

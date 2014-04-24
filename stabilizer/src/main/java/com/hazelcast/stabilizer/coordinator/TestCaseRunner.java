@@ -12,6 +12,7 @@ import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 
+import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
 
 public class TestCaseRunner {
@@ -54,7 +55,7 @@ public class TestCaseRunner {
             startTestCase();
             echo("Completed Test start");
 
-            echo(format("Test running for %s", Utils.secondsToHuman(testSuite.duration)));
+            echo(format("Test running for %s", secondsToHuman(testSuite.duration)));
             sleepSeconds(testSuite.duration);
             echo("Test finished running");
 
@@ -115,7 +116,7 @@ public class TestCaseRunner {
             Utils.sleepSeconds(period);
             final int elapsed = period * k;
             final float percentage = (100f * elapsed) / seconds;
-            String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, seconds, percentage);
+            String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
             echo(msg);
             if (coordinator.monitorPerformance) {
                 echo(calcPerformance().toHumanString());
