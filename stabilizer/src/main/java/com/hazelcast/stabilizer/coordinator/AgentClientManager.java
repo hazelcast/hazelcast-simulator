@@ -35,28 +35,30 @@ public class AgentClientManager {
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentClientManager.class);
 
     private final Coordinator coordinator;
+    private final File machineListFile;
     private List<AgentClient> agents = new LinkedList<AgentClient>();
 
     private final ExecutorService agentExecutor = Executors.newFixedThreadPool(100);
 
     public AgentClientManager(Coordinator coordinator, File machineListFile) {
         this.coordinator = coordinator;
+        this.machineListFile = machineListFile;
 
-        String[] split = getMachineAddresses(machineListFile);
-        for (String line : split) {
-            AgentClient client = new AgentClient(line);
+        for (String address : getMachineAddresses()) {
+            AgentClient client = new AgentClient(address);
             agents.add(client);
         }
     }
 
-    private String[] getMachineAddresses(File machineListFile) {
+    private String[] getMachineAddresses() {
         String content = Utils.asText(machineListFile);
         String[] addresses = content.split("\n");
-        if (addresses.length == 0) {
-            return new String[]{"127.0.0.1"};
-        } else {
-            return addresses;
-        }
+        return addresses;
+//        if (addresses.length == 0) {
+//            return new String[]{"127.0.0.1"};
+//        } else {
+//            return addresses;
+//        }
     }
 
     public int getAgentCount() {
@@ -135,6 +137,7 @@ public class AgentClientManager {
         getAllFutures(futures, TimeUnit.SECONDS.toMillis(10000));
     }
 
+    //todo: probably we don't want to throw exceptions to make sure that don't abort when a agent goes down.
     private void getAllFutures(Collection<Future> futures, long timeoutMs) {
         for (Future future : futures) {
             try {
