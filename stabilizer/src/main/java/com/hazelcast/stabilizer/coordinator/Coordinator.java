@@ -102,14 +102,9 @@ public class Coordinator {
             log.info("-----------------------------------------------------------------------------");
             System.exit(0);
         } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append(failureList.size()).append(" Failures have been detected!!!\n");
-            for (Failure failure : failureList) {
-                sb.append("-----------------------------------------------------------------------------\n");
-                sb.append(failure).append('\n');
-            }
-            sb.append("-----------------------------------------------------------------------------\n");
-            log.severe(sb.toString());
+            log.info("-----------------------------------------------------------------------------");
+            log.info(failureList.size() + " failures have been detected!");
+            log.info("-----------------------------------------------------------------------------");
             System.exit(1);
         }
     }
@@ -255,13 +250,19 @@ public class Coordinator {
 
         public void run() {
             for (; ; ) {
-                //todo: this delay should be configurable.
-                Utils.sleepSeconds(1);
+                try {
+                    //todo: this delay should be configurable.
+                    Utils.sleepSeconds(1);
 
-                List<Failure> failures = agentClientManager.getFailures();
-                for (Failure failure : failures) {
-                    failureList.add(failure);
-                    log.severe("Remote failure detected:" + failure);
+                    List<Failure> failures = agentClientManager.getFailures();
+                    for (Failure failure : failures) {
+                        failureList.add(failure);
+                        log.severe("Remote failure detected:" + failure.message);
+                        File file = new File("failures-" + failure.testCase.getId() + ".txt");
+                        Utils.appendText(failure.toString(), file);
+                    }
+                } catch (Throwable e) {
+                    log.severe(e);
                 }
             }
         }

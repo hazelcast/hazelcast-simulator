@@ -137,6 +137,30 @@ public final class Utils {
         }
     }
 
+    public static void appendText(String text, File file)  {
+        if (text == null) {
+            throw new NullPointerException("text can't be null");
+        }
+
+        if (file == null) {
+            throw new NullPointerException("file can't be null");
+        }
+
+        try {
+            FileOutputStream stream = new FileOutputStream(file, true);
+            try {
+                Writer writer = new BufferedWriter(new OutputStreamWriter(stream));
+                writer.write(text);
+                writer.close();
+            } finally {
+                closeQuietly(stream);
+            }
+        }catch(IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+
     public static String asText(File file) {
         try {
             FileInputStream stream = new FileInputStream(file);
