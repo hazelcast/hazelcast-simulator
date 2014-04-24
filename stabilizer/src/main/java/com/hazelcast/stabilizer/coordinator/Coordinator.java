@@ -243,6 +243,9 @@ public class Coordinator {
     }
 
     private class FailureMonitorThread extends Thread {
+        private final ILogger log = Logger.getLogger(FailureMonitorThread.class);
+
+
         public FailureMonitorThread() {
             super("FailureMonitorThread");
             setDaemon(true);
@@ -264,7 +267,15 @@ public class Coordinator {
             List<Failure> failures = agentClientManager.getFailures();
             for (Failure failure : failures) {
                 failureList.add(failure);
-                log.severe("Remote failure detected:" + failure.message);
+
+                StringBuffer sb = new StringBuffer(failure.message);
+                if (failure.cause != null) {
+                    String[] lines = failure.cause.split("\n");
+                    sb.append(" ");
+                    sb.append(lines[0]);
+                }
+
+                log.severe(sb.toString());
                 TestCase testCase = failure.testCase;
                 File file;
                 if (testCase == null) {
@@ -272,7 +283,7 @@ public class Coordinator {
                 } else {
                     file = new File("failures-" + testCase.getId() + ".txt");
                 }
-                Utils.appendText(failure.toString()+"\n", file);
+                Utils.appendText(failure.toString() + "\n", file);
             }
         }
     }
