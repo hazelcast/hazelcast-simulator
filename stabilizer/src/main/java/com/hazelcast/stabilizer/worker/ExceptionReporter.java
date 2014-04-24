@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
-import static com.hazelcast.stabilizer.Utils.writeObject;
 import static com.hazelcast.stabilizer.Utils.writeText;
 
 public class ExceptionReporter {
@@ -34,7 +33,7 @@ public class ExceptionReporter {
         try {
             writeText(Utils.throwableToString(t), tmpFile);
         } catch (IOException e) {
-            log.severe("Failed to write to tmpFile:"+tmpFile,e);
+            log.severe("Failed to write to tmpFile:" + tmpFile, e);
             throw new RuntimeException(e);
         }
 
@@ -48,5 +47,6 @@ public class ExceptionReporter {
         return System.getProperty("workerId");
     }
 
-    private ExceptionReporter(){}
+    private ExceptionReporter() {
+    }
 }

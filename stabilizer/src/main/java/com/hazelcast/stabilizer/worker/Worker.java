@@ -95,11 +95,11 @@ public class Worker {
 
     private void signalStartToAgent() {
         String address;
-        if (serverInstance != null) {
-            InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getSocketAddress();
-            address = socketAddress.getHostString()+":"+socketAddress.getPort();
-        } else {
+        if (serverInstance == null) {
             address = "client:" + getHostAddress();
+        } else {
+            InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getSocketAddress();
+            address = socketAddress.getHostString() + ":" + socketAddress.getPort();
         }
         File file = new File(workerId + ".address");
         writeObject(address, file);
