@@ -28,7 +28,6 @@ import com.hazelcast.stabilizer.tests.TestSuite;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -62,7 +61,7 @@ public class Coordinator {
     private void start() throws Exception {
         agentClientManager = new AgentClientManager(this, machinesFile);
         agentClientManager.getFailures();
-        new FailureMonitorThread().start();
+        new FailureMonitorThread(this).start();
 
         if (cleanWorkersHome) {
             echo("Starting cleanup workers home");
@@ -242,49 +241,4 @@ public class Coordinator {
         }
     }
 
-    private class FailureMonitorThread extends Thread {
-        private final ILogger log = Logger.getLogger(FailureMonitorThread.class);
-
-
-        public FailureMonitorThread() {
-            super("FailureMonitorThread");
-            setDaemon(true);
-        }
-
-        public void run() {
-            for (; ; ) {
-                try {
-                    //todo: this delay should be configurable.
-                    sleepSeconds(1);
-                    scan();
-                } catch (Throwable e) {
-                    log.severe(e);
-                }
-            }
-        }
-
-        private void scan() {
-            List<Failure> failures = agentClientManager.getFailures();
-            for (Failure failure : failures) {
-                failureList.add(failure);
-
-                StringBuffer sb = new StringBuffer(failure.message);
-                if (failure.cause != null) {
-                    String[] lines = failure.cause.split("\n");
-                    sb.append(" ");
-                    sb.append(lines[0]);
-                }
-
-                log.severe(sb.toString());
-                TestCase testCase = failure.testCase;
-                File file;
-                if (testCase == null) {
-                    file = new File("failures.txt");
-                } else {
-                    file = new File("failures-" + testCase.getId() + ".txt");
-                }
-                Utils.appendText(failure.toString() + "\n", file);
-            }
-        }
-    }
 }
