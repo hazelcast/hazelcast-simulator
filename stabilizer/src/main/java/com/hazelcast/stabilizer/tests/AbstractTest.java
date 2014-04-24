@@ -28,7 +28,7 @@ import java.util.concurrent.CountDownLatch;
 
 public abstract class AbstractTest implements Test {
 
-    private final static ILogger log = Logger.getLogger(AbstractTest.class.getName());
+    private final static ILogger log = Logger.getLogger(AbstractTest.class);
 
     protected HazelcastInstance serverInstance;
     protected HazelcastInstance clientInstance;

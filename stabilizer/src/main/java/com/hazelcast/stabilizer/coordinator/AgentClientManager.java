@@ -6,7 +6,6 @@ import com.hazelcast.stabilizer.TestRecipe;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
-import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvm;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
@@ -31,7 +30,7 @@ import java.util.concurrent.TimeoutException;
 
 public class AgentClientManager {
 
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentClientManager.class.getName());
+    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentClientManager.class);
 
     private final Coordinator coordinator;
     private List<AgentClient> agents = new LinkedList<AgentClient>();
@@ -187,7 +186,7 @@ public class AgentClientManager {
     public void spawnWorkers(final WorkerJvmSettings[] workerJvmSettingsArray) {
         List<Future> futures = new LinkedList<Future>();
 
-        for(int k=0;k<agents.size();k++){
+        for (int k = 0; k < agents.size(); k++) {
             final int index = k;
             Future f = agentExecutor.submit(new Callable() {
                 @Override

@@ -47,7 +47,7 @@ import static java.lang.String.format;
 public class Coordinator {
 
     public final static File STABILIZER_HOME = getStablizerHome();
-    private final static ILogger log = Logger.getLogger(Coordinator.class.getName());
+    private final static ILogger log = Logger.getLogger(Coordinator.class);
 
     //options.
     public boolean monitorPerformance;

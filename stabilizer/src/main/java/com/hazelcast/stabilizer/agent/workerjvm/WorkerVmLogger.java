@@ -25,7 +25,7 @@ import java.io.InputStreamReader;
 import java.util.logging.Level;
 
 public class WorkerVmLogger extends Thread {
-    private final static ILogger log = Logger.getLogger(WorkerVmLogger.class.getName());
+    private final static ILogger log = Logger.getLogger(WorkerVmLogger.class);
 
     private final InputStream inputStream;
     private final String prefix;

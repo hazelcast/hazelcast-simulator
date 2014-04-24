@@ -57,7 +57,7 @@ import static java.util.Arrays.asList;
 
 public class Worker {
 
-    final static ILogger log = Logger.getLogger(Worker.class.getName());
+    final static ILogger log = Logger.getLogger(Worker.class);
 
     private HazelcastInstance serverInstance;
     private HazelcastInstance clientInstance;
@@ -68,10 +68,10 @@ public class Worker {
     private String workerMode;
     private String workerId;
 
-    public volatile Test test;
+    private volatile Test test;
 
-    private BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
-    private BlockingQueue<TestCommandResponse> responseQueue = new LinkedBlockingQueue<TestCommandResponse>();
+    private final BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
+    private final BlockingQueue<TestCommandResponse> responseQueue = new LinkedBlockingQueue<TestCommandResponse>();
 
     public void start() throws Exception {
         if ("server".equals(workerMode)) {
