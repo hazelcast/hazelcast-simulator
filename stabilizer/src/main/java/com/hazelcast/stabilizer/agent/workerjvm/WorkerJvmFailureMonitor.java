@@ -116,7 +116,7 @@ public class WorkerJvmFailureMonitor {
                 WorkerJvm jvm = agent.getWorkerJvmManager().getWorker(workerId);
 
                 Failure failure = new Failure();
-                failure.message = "Exception thrown in worker";
+                failure.message = "Exception thrown in worker" + (jvm == null ? null : " " + jvm.memberAddress);
                 failure.agentAddress = getHostAddress();
                 failure.workerAddress = jvm == null ? null : jvm.memberAddress;
                 failure.workerId = workerId;

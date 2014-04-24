@@ -43,9 +43,9 @@ class FailureMonitorThread extends Thread {
             if (failure.cause != null) {
                 String[] lines = failure.cause.split("\n");
                 if (lines.length > 0) {
-                    sb.append(" [ ");
+                    sb.append("[");
                     sb.append(lines[0]);
-                    sb.append(" ]");
+                    sb.append("]");
                 }
             }
 
