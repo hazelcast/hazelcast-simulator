@@ -272,7 +272,7 @@ public class Coordinator {
                 } else {
                     file = new File("failures-" + testCase.getId() + ".txt");
                 }
-                Utils.appendText(failure.toString(), file);
+                Utils.appendText(failure.toString()+"\n", file);
             }
         }
     }
