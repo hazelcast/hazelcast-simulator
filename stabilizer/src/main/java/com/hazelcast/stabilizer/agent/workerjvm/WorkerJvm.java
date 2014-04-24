@@ -30,4 +30,12 @@ public class WorkerJvm {
     public WorkerJvm(String id) {
         this.id = id;
     }
+
+    @Override
+    public String toString() {
+        return "WorkerJvm{" +
+                "memberAddress='" + memberAddress + '\'' +
+                ", id='" + id + '\'' +
+                '}';
+    }
 }

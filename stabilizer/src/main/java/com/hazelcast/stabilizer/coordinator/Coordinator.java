@@ -73,6 +73,7 @@ public class Coordinator {
         byte[] uploadBytes = createUpload(workerClassPath);
         agentClientManager.initTestSuite(testSuite, uploadBytes);
 
+        initMemberWorkerCount(workerJvmSettings);
         initHzConfig(workerJvmSettings);
         initClientHzConfig(workerJvmSettings);
 
@@ -177,9 +178,6 @@ public class Coordinator {
         long startMs = System.currentTimeMillis();
 
         int agentCount = agentClientManager.getAgentCount();
-        if (masterSettings.memberWorkerCount == -1 && masterSettings.mixedWorkerCount == 0) {
-            masterSettings.memberWorkerCount = agentCount;
-        }
 
         log.info(format("Starting %s Server Worker JVM's", masterSettings.memberWorkerCount));
         log.info(format("Starting %s Client Worker JVM's", masterSettings.clientWorkerCount));
@@ -222,6 +220,13 @@ public class Coordinator {
                 masterSettings.totalWorkerCount(), durationMs)));
 
         return startMs;
+    }
+
+    private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {
+        int agentCount = agentClientManager.getAgentCount();
+        if (masterSettings.memberWorkerCount == -1 && masterSettings.mixedWorkerCount == 0) {
+            masterSettings.memberWorkerCount = agentCount;
+        }
     }
 
     private void echo(String msg) {

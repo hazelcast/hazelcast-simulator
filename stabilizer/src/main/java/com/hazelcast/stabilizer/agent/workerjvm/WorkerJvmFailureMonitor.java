@@ -115,6 +115,9 @@ public class WorkerJvmFailureMonitor {
                 log.info("workerId: " + workerId);
 
                 WorkerJvm jvm = agent.getWorkerJvmManager().getWorker(workerId);
+                log.info("found worker: "+jvm);
+                //todo: remove me
+                log.info("Available jvms:"+agent.getWorkerJvmManager().workerJvms);
 
                 Failure failure = new Failure();
                 failure.message = "Exception thrown in worker";

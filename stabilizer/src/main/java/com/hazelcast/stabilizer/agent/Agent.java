@@ -58,12 +58,12 @@ public class Agent {
     }
 
     public File getTestSuiteDir() {
-        TestSuite _testSuite = testSuite;
-        if (_testSuite == null) {
+        TestSuite testSuite = this.testSuite;
+        if (testSuite == null) {
             return null;
         }
 
-        return new File(WorkerJvmManager.WORKERS_HOME, _testSuite.id);
+        return new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
     }
 
     public WorkerJvmFailureMonitor getWorkerJvmFailureMonitor() {

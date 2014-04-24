@@ -61,7 +61,7 @@ public class WorkerJvmManager {
     public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
     public static final int PORT = 9001;
 
-    private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
+    public final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
 
     private final ConcurrentMap<Long, TestCommandFuture> futureMap = new ConcurrentHashMap<Long, TestCommandFuture>();
@@ -75,10 +75,7 @@ public class WorkerJvmManager {
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                for (WorkerJvm jvm : workerJvms.values()) {
-                    log.info("Destroying Worker : " + jvm.id);
-                    jvm.process.destroy();
-                }
+                terminateWorkers();
             }
         });
     }
@@ -86,7 +83,7 @@ public class WorkerJvmManager {
     public void start() throws Exception {
         serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(null));
 
-        log.info("Started Agent Work JVM Service on :" + serverSocket.getInetAddress().getHostAddress()+":"+PORT);
+        log.info("Started Worker JVM Socket on: " + serverSocket.getInetAddress().getHostAddress()+":"+PORT);
 
         new AcceptorThread().start();
     }
@@ -184,7 +181,7 @@ public class WorkerJvmManager {
             jvm.process.waitFor();
         } catch (InterruptedException e) {
         }
-        workerJvms.remove(jvm);
+        workerJvms.remove(jvm.id);
     }
 
     public WorkerJvm getWorker(String workerId) {
@@ -254,7 +251,9 @@ public class WorkerJvmManager {
             for (; ; ) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    log.info("Accepted client request from: " + clientSocket.getRemoteSocketAddress());
+                    if(log.isFinestEnabled()) {
+                        log.finest("Accepted worker request from: " + clientSocket.getRemoteSocketAddress());
+                    }
                     executor.execute(new ClientSocketTask(clientSocket));
                 } catch (IOException e) {
                     log.severe(e);

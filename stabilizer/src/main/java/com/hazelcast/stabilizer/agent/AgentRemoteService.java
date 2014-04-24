@@ -184,7 +184,7 @@ public class AgentRemoteService {
                 try {
                     Socket clientSocket = serverSocket.accept();
                     if (log.isFinestEnabled()) {
-                        log.finest("Accepted client request from: " + clientSocket.getRemoteSocketAddress());
+                        log.finest("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
                     }
                     executor.execute(new ClientSocketTask(clientSocket));
                 } catch (IOException e) {
