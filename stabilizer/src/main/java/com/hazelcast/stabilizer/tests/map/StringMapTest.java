@@ -23,7 +23,6 @@ import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.AbstractTest;
 import com.hazelcast.stabilizer.tests.TestRunner;
-import com.hazelcast.stabilizer.worker.ExceptionReporter;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -50,6 +49,7 @@ public class StringMapTest extends AbstractTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
     public boolean usePut = true;
+    public String basename = "map";
 
     @Override
     public void localSetup() throws Exception {
@@ -63,7 +63,7 @@ public class StringMapTest extends AbstractTest {
 
         HazelcastInstance targetInstance = getTargetInstance();
 
-        map = targetInstance.getMap("Map-" + getTestId());
+        map = targetInstance.getMap(basename + "-" + getTestId());
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }

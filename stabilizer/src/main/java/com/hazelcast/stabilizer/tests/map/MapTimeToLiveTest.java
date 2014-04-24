@@ -23,14 +23,14 @@ import com.hazelcast.stabilizer.tests.TestRunner;
 import java.util.UUID;
 
 public class MapTimeToLiveTest extends AbstractTest {
+    private IMap map;
 
+    //properties
     public int ttlSeconds = 1;
     public int workerCount = 3;
     public int putIntervalMillis = 10;
     public int waitAfterMillis = 2000;
-
-    private IMap map;
-    final private String mapName = "map:" + getTestId();
+    public String basename = "map";
 
     @Override
     public void globalTearDown() throws Exception {
@@ -50,7 +50,8 @@ public class MapTimeToLiveTest extends AbstractTest {
     public void localSetup() throws Exception {
         HazelcastInstance targetInstance = getTargetInstance();
 
-        map = targetInstance.getMap(mapName);
+        map = targetInstance.getMap(basename + "-" + getTestId());
+
         for (int k = 0; k < workerCount; k++) {
             spawn(new Worker());
         }

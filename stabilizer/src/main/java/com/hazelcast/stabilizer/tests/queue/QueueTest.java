@@ -36,6 +36,7 @@ public class QueueTest extends AbstractTest {
     public int queueLength = 100;
     public int threadsPerQueue = 1;
     public int messagesPerQueue = 1;
+    public String basename = "queue";
 
     @Override
     public void localSetup() throws Exception {
@@ -44,7 +45,7 @@ public class QueueTest extends AbstractTest {
         totalCounter = targetInstance.getAtomicLong(getTestId() + ":TotalCounter");
         queues = new IQueue[queueLength];
         for (int k = 0; k < queues.length; k++) {
-            queues[k] = targetInstance.getQueue(getTestId() + ":Queue-" + k);
+            queues[k] = targetInstance.getQueue(basename + "-" + getTestId() + "-" + k);
         }
 
         for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {

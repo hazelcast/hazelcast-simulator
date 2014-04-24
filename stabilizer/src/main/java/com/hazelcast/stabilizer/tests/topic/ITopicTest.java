@@ -20,7 +20,13 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ITopicTest extends AbstractTest {
 
     private final static ILogger log = Logger.getLogger(ITopicTest.class);
+    private IAtomicLong totalExpectedCounter;
+    private IAtomicLong totalFoundCounter;
+    private ITopic[] topics;
+    private AtomicLong operations = new AtomicLong();
+    private CountDownLatch listenersCompleteLatch;
 
+    //properties
     public int topicCount = 1000;
     public int threadCount = 5;
     public int listenersPerTopic = 1;
@@ -28,12 +34,7 @@ public class ITopicTest extends AbstractTest {
     public int performanceUpdateFrequency = 100000;
     public int processingDelayMillis = 0;
     public boolean waitForMessagesToComplete = true;
-
-    private IAtomicLong totalExpectedCounter;
-    private IAtomicLong totalFoundCounter;
-    private ITopic[] topics;
-    private AtomicLong operations = new AtomicLong();
-    private CountDownLatch listenersCompleteLatch;
+    public String basename = "topic";
 
     @Override
     public void localSetup() throws Exception {
@@ -45,7 +46,7 @@ public class ITopicTest extends AbstractTest {
         listenersCompleteLatch = new CountDownLatch(listenersPerTopic * topicCount);
 
         for (int k = 0; k < topics.length; k++) {
-            ITopic<Long> topic = targetInstance.getTopic(getTestId() + ":Topic-" + k);
+            ITopic<Long> topic = targetInstance.getTopic(basename + "-" + getTestId() + "-" + k);
             topics[k] = topic;
 
             for (int l = 0; l < listenersPerTopic; l++) {

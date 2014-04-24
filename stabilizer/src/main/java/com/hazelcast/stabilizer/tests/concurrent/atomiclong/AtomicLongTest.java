@@ -32,14 +32,17 @@ public class AtomicLongTest extends AbstractTest {
 
     private final static ILogger log = Logger.getLogger(AtomicLongTest.class);
 
+    private IAtomicLong totalCounter;
+    private IAtomicLong[] counters;
+    private AtomicLong operations = new AtomicLong();
+
+
+    //properties
     public int countersLength = 1000;
     public int threadCount = 1;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-
-    private IAtomicLong totalCounter;
-    private IAtomicLong[] counters;
-    private AtomicLong operations = new AtomicLong();
+    public String basename = "atomiclong";
 
     @Override
     public void localSetup() throws Exception {
@@ -50,7 +53,7 @@ public class AtomicLongTest extends AbstractTest {
         totalCounter = targetInstance.getAtomicLong(getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            counters[k] = targetInstance.getAtomicLong(getTestId() + ":Counter-" + k);
+            counters[k] = targetInstance.getAtomicLong(basename + "-" + getTestId() + "r-" + k);
         }
 
         for (int k = 0; k < threadCount; k++) {

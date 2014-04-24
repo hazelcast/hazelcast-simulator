@@ -23,6 +23,7 @@ public class LockTest extends AbstractTest {
     private IAtomicLong lockCounter;
     private IAtomicLong totalMoney;
     private HazelcastInstance targetInstance;
+    public String basename = "lock";
 
     @Override
     public void localSetup() throws Exception {
@@ -45,11 +46,11 @@ public class LockTest extends AbstractTest {
     }
 
     private String getLockId(long key) {
-        return getTestId() + ":Lock" + key;
+        return basename + "-" + getTestId() + "-" + key;
     }
 
     private String getAccountId(long key) {
-        return getTestId() + ":Account" + key;
+        return basename + "-" + getTestId() + "-" + key;
     }
 
     @Override

@@ -38,14 +38,15 @@ public class ProducerConsumerTest extends AbstractTest {
     public int producerCount = 4;
     public int consumerCount = 4;
     public int maxIntervalMillis = 1000;
+    public String basename = "queue";
 
     @Override
     public void localSetup() throws Exception {
         HazelcastInstance targetInstance = getTargetInstance();
 
-        produced = targetInstance.getAtomicLong(getTestId() + ":Produced");
-        consumed = targetInstance.getAtomicLong(getTestId() + ":Consumed");
-        workQueue = targetInstance.getQueue(getTestId() + ":WorkQueue");
+        produced = targetInstance.getAtomicLong(basename + "-" + getTestId() + ":Produced");
+        consumed = targetInstance.getAtomicLong(basename + "-" + getTestId() + ":Consumed");
+        workQueue = targetInstance.getQueue(basename + "-" + getTestId() + ":WorkQueue");
 
         for (int k = 0; k < producerCount; k++) {
             spawn(new Producer(k));

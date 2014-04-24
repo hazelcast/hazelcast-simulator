@@ -25,21 +25,23 @@ public class MapTransactionTest extends AbstractTest {
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();
+    private IMap<String, Map<Integer, Long>> resultsPerWorker;
+    private HazelcastInstance targetInstance;
+    private String mapName;
+
 
     //properties
     public int threadCount = 10;
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    private IMap<String, Map<Integer, Long>> resultsPerWorker;
-    private HazelcastInstance targetInstance;
-    private String mapName;
+    public String basename = "map";
 
     @Override
     public void localSetup() throws Exception {
         targetInstance = getTargetInstance();
 
-        mapName = "Map-" + getTestId();
+        mapName = basename + "-" + getTestId();
         map = targetInstance.getMap(mapName);
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());

@@ -25,12 +25,13 @@ public class GrowingMapTest extends AbstractTest {
     public int logFrequency = 10000;
     public boolean removeOnStop = true;
     public boolean readValidation = true;
+    public String basename = "map";
 
     @Override
     public void localSetup() throws Exception {
         HazelcastInstance targetInstance = getTargetInstance();
         idGenerator = targetInstance.getIdGenerator(getTestId() + ":IdGenerator");
-        map = targetInstance.getMap(getTestId() + ":Map");
+        map = targetInstance.getMap(basename + "-" + getTestId());
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }

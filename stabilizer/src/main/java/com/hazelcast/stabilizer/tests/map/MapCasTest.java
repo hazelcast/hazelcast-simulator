@@ -37,12 +37,14 @@ public class MapCasTest extends AbstractTest {
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
+    public String basename = "map";
 
     @Override
     public void localSetup() throws Exception {
         HazelcastInstance targetInstance = getTargetInstance();
 
-        map = targetInstance.getMap("Map-" + getTestId());
+        map = targetInstance.getMap(basename + "-" + getTestId());
+
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
