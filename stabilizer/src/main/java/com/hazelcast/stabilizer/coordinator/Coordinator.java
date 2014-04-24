@@ -206,7 +206,7 @@ public class Coordinator {
         sleepSeconds(20);
 
         long durationMs = System.currentTimeMillis() - startMs;
-        log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms\n",
+        log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms",
                 masterSettings.totalWorkerCount(), durationMs)));
 
         return startMs;

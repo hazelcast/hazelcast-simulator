@@ -41,8 +41,10 @@ class FailureMonitorThread extends Thread {
             StringBuffer sb = new StringBuffer(failure.message);
             if (failure.cause != null) {
                 String[] lines = failure.cause.split("\n");
-                sb.append(" ");
-                sb.append(lines[0]);
+                if (lines.length > 0) {
+                    sb.append(" : ");
+                    sb.append(lines[0]);
+                }
             }
 
             log.severe(sb.toString());

@@ -32,12 +32,10 @@ public class TestCaseRunner {
     }
 
     public boolean run() throws Exception {
-        echo(format("Running Test : %s", testCase.getId()));
+        echo(format("Running Test : %s\n%s", testCase.getId(), testCase));
 
         int oldCount = coordinator.failureList.size();
         try {
-            echo(testCase.toString());
-
             echo("Starting Test initialization");
             agentClientManager.prepareAgentsForTests(testCase);
             agentClientManager.executeOnAllWorkers(new InitTestCommand(testCase));
