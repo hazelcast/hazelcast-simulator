@@ -212,7 +212,7 @@ public class Coordinator {
         agentClientManager.spawnWorkers(settingsArray);
 
         //give the agents some time to start up.
-        log.info("Waiting for agents the start (20 seconds)");
+        log.info("Waiting for agents to start (20 seconds)");
         sleepSeconds(20);
 
         long durationMs = System.currentTimeMillis() - startMs;

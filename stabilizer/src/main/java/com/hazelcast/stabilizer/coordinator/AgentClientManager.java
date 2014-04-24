@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
-import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
@@ -307,7 +306,7 @@ public class AgentClientManager {
         private Socket newSocket() throws IOException {
             try {
                 return new Socket(InetAddress.getByName(host), AgentRemoteService.PORT);
-            } catch (NoRouteToHostException e) {
+            } catch (IOException e) {
                 throw new IOException("Couldn't connect to host: " + host + ":" + AgentRemoteService.PORT, e);
             }
         }

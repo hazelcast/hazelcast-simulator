@@ -111,7 +111,7 @@ public class WorkerJvmFailureMonitor {
                 //we rename it so that we don't detect the same failure again.
                 file.renameTo(new File(file.getAbsolutePath() + ".done"));
 
-                String workerId = name.substring(0, name.indexOf('.'));
+                String workerId = name.substring(0, name.lastIndexOf('.'));
                 log.info("workerId: " + workerId);
 
                 WorkerJvm jvm = agent.getWorkerJvmManager().getWorker(workerId);
