@@ -119,11 +119,11 @@ public final class Utils {
     }
 
     public static void writeText(String text, File file) throws IOException {
-        if(text == null){
+        if (text == null) {
             throw new NullPointerException("text can't be null");
         }
 
-        if(file == null){
+        if (file == null) {
             throw new NullPointerException("file can't be null");
         }
 
@@ -350,7 +350,6 @@ public final class Utils {
     }
 
     public static String secondsToHuman(int seconds) {
-        StringBuffer sb = new StringBuffer();
         int time = seconds;
 
         int s = time % 60;
@@ -364,11 +363,20 @@ public final class Utils {
         time = time / 24;
         int days = time;
 
-        sb.append(days).append(" days ");
-        sb.append(h).append(" hours ");
-        sb.append(m).append(" minutes ");
-        sb.append(s).append(" seconds");
+        StringBuffer sb = new StringBuffer();
+        if (days > 0) {
+            sb.append(days).append(" days ");
+        }
 
+        if (h > 0) {
+            sb.append(h).append(" hours ");
+        }
+
+        if (m > 0) {
+            sb.append(m).append(" minutes ");
+        }
+
+        sb.append(s).append(" seconds");
         return sb.toString();
     }
 
