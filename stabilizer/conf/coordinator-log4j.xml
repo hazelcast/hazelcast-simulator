@@ -11,7 +11,7 @@
 
     <appender name="file" class="org.apache.log4j.FileAppender">
         <param name="File" value="${STABILIZER_HOME}/logs/coordinator.log"/>
-        <param name="Threshold" value="DEBUG"/>
+        <param name="Threshold" value="INFO"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
         </layout>

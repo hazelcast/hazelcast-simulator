@@ -38,7 +38,8 @@ public class WorkerJvmLauncher {
     private final WorkerJvmSettings settings;
     private final Agent agent;
     private final ConcurrentMap<String, WorkerJvm> workerJvms;
-    private File workerHzFile;
+    private File hzFile;
+    private File clientHzFile;
     private final List<WorkerJvm> workers = new LinkedList<WorkerJvm>();
 
     public WorkerJvmLauncher(Agent agent, ConcurrentMap<String, WorkerJvm> workerJvms, WorkerJvmSettings settings) {
@@ -48,7 +49,8 @@ public class WorkerJvmLauncher {
     }
 
     public void launch() throws Exception {
-        workerHzFile = createHazelcastConfigFile();
+        hzFile = createHzConfigFile();
+        clientHzFile = createClientHzConfigFile();
 
         spawn(settings.memberWorkerCount, "server");
         spawn(settings.clientWorkerCount, "client");
@@ -72,11 +74,18 @@ public class WorkerJvmLauncher {
         workers.clear();
     }
 
-    private File createHazelcastConfigFile() throws IOException {
-        File workerHzFile = File.createTempFile("worker-hazelcast", "xml");
-        workerHzFile.deleteOnExit();
-        writeText(settings.hzConfig, workerHzFile);
-        return workerHzFile;
+    private File createHzConfigFile() throws IOException {
+        File hzConfigFile = File.createTempFile("hazelcast", "xml");
+        hzConfigFile.deleteOnExit();
+        writeText(settings.hzConfig, hzConfigFile);
+        return hzConfigFile;
+    }
+
+    private File createClientHzConfigFile() throws IOException {
+        File clientHzConfigFile = File.createTempFile("client-hazelcast", "xml");
+        clientHzConfigFile.deleteOnExit();
+        writeText(settings.hzConfig, clientHzFile);
+        return clientHzConfigFile;
     }
 
     private String getJavaHome(String javaVendor, String javaVersion) {
@@ -148,7 +157,8 @@ public class WorkerJvmLauncher {
         args.add(getClasspath());
         args.addAll(getJvmOptions(settings));
         args.add(Worker.class.getName());
-        args.add(workerHzFile.getAbsolutePath());
+        args.add(hzFile.getAbsolutePath());
+        args.add(clientHzFile.getAbsolutePath());
         return args.toArray(new String[args.size()]);
     }
 

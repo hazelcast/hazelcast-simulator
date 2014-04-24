@@ -59,6 +59,7 @@ public class WorkerJvmManager {
 
     private final static ILogger log = Logger.getLogger(WorkerJvmManager.class);
     public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
+    public static final int PORT = 9001;
 
     private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
@@ -83,7 +84,10 @@ public class WorkerJvmManager {
     }
 
     public void start() throws Exception {
-        serverSocket = new ServerSocket(9001, 0, InetAddress.getByName(null));
+        serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(null));
+
+        log.info("Started Agent Work JVM Service on :" + serverSocket.getInetAddress().getHostAddress()+":"+PORT);
+
         new AcceptorThread().start();
     }
 

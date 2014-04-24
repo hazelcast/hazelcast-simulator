@@ -80,9 +80,13 @@ public class CoordinatorCli {
             "The file containing the list of agent machines")
             .withRequiredArg().ofType(String.class).defaultsTo("machines.txt");
 
-    private final OptionSpec<String> workerHzFileSpec = parser.accepts("workerHzFile",
+    private final OptionSpec<String> hzFileSpec = parser.accepts("hzFile",
             "The Hazelcast xml configuration file for the worker")
-            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultWorkerHzFile());
+            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultHzFile());
+
+    private final OptionSpec<String> clientHzFileSpec = parser.accepts("clientHzFile",
+            "The client Hazelcast xml configuration file for the worker")
+            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
 
     private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
             "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
@@ -100,13 +104,23 @@ public class CoordinatorCli {
 
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
-    private static String getDefaultWorkerHzFile() {
+    private static String getDefaultHzFile() {
         File file = new File("worker-hazelcast.xml");
         //if something exists in the current working directory, use that.
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
-            return Coordinator.STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-hazelcast.xml";
+            return Coordinator.STABILIZER_HOME + File.separator + "conf" + File.separator + "hazelcast.xml";
+        }
+    }
+
+    private static String getDefaultClientHzFile() {
+        File file = new File("worker-client-hazelcast.xml");
+        //if something exists in the current working directory, use that.
+        if (file.exists()) {
+            return file.getAbsolutePath();
+        } else {
+            return Coordinator.STABILIZER_HOME + File.separator + "conf" + File.separator + "client-hazelcast.xml";
         }
     }
 
@@ -144,7 +158,8 @@ public class CoordinatorCli {
             workerJvmSettings.clientWorkerCount = options.valueOf(optionSpec.clientWorkerCountSpec);
             workerJvmSettings.mixedWorkerCount = options.valueOf(optionSpec.mixedWorkerCountSpec);
             workerJvmSettings.workerStartupTimeout = options.valueOf(optionSpec.workerStartupTimeoutSpec);
-            workerJvmSettings.hzConfig = asText(getFile(optionSpec.workerHzFileSpec, options, "Worker Hazelcast config file"));
+            workerJvmSettings.hzConfig = asText(getFile(optionSpec.hzFileSpec, options, "Worker Hazelcast config file"));
+            workerJvmSettings.clientHzConfig = asText(getFile(optionSpec.clientHzFileSpec, options, "Worker Client Hazelcast config file"));
             workerJvmSettings.refreshJvm = options.valueOf(optionSpec.workerRefreshSpec);
             workerJvmSettings.javaVendor = options.valueOf(optionSpec.workerJavaVendorSpec);
             workerJvmSettings.javaVersion = options.valueOf(optionSpec.workerJavaVersionSpec);

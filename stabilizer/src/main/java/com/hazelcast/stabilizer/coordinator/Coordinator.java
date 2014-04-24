@@ -15,6 +15,8 @@
  */
 package com.hazelcast.stabilizer.coordinator;
 
+import com.hazelcast.config.Config;
+import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestRecipe;
@@ -27,11 +29,15 @@ import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static com.hazelcast.stabilizer.Utils.createUpload;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
@@ -68,17 +74,18 @@ public class Coordinator {
             echo("Finished cleanup workers home");
         }
 
-        byte[] bytes = Utils.createUpload(workerClassPath);
-        agentClientManager.initTestSuite(testSuite, bytes);
+        byte[] uploadBytes = createUpload(workerClassPath);
+        agentClientManager.initTestSuite(testSuite, uploadBytes);
 
-        initWorkerHzConfig(workerJvmSettings);
+        initHzConfig(workerJvmSettings);
+        initClientHzConfig(workerJvmSettings);
 
         int agentCount = agentClientManager.getAgentCount();
         log.info(format("Worker track logging: %s", workerJvmSettings.trackLogging));
         log.info(format("Total number of agents: %s", agentCount));
-        log.info(format("Total number of Hazelcast Cluster Member workers: %s", workerJvmSettings.memberWorkerCount));
-        log.info(format("Total number of Hazelcast Cluster Client workers: %s", workerJvmSettings.clientWorkerCount));
-        log.info(format("Total number of Hazelcast Cluster Client & Member Workers: %s", workerJvmSettings.mixedWorkerCount));
+        log.info(format("Total number of Hazelcast Member workers: %s", workerJvmSettings.memberWorkerCount));
+        log.info(format("Total number of Hazelcast Client workers: %s", workerJvmSettings.clientWorkerCount));
+        log.info(format("Total number of Hazelcast Mixed Client & Member Workers: %s", workerJvmSettings.mixedWorkerCount));
 
         long startMs = System.currentTimeMillis();
 
@@ -110,13 +117,31 @@ public class Coordinator {
         }
     }
 
-    private void initWorkerHzConfig(WorkerJvmSettings settings) {
+    private void initHzConfig(WorkerJvmSettings settings) throws Exception {
+        int port = getPort(settings);
+
         StringBuffer members = new StringBuffer();
         for (String hostAddress : agentClientManager.getHostAddresses()) {
-            members.append("<member>").append(hostAddress).append(":5701").append("</member>\n");
+            members.append("<member>").append(hostAddress).append(":"+port).append("</member>\n");
         }
 
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
+    }
+
+     private void initClientHzConfig(WorkerJvmSettings settings)throws Exception {
+        int port = getPort(settings);
+
+        StringBuffer members = new StringBuffer();
+        for (String hostAddress : agentClientManager.getHostAddresses()) {
+            members.append("<address>").append(hostAddress).append(":"+port).append("</address>\n");
+        }
+
+        settings.clientHzConfig = settings.clientHzConfig.replace("<!--MEMBERS-->", members);
+    }
+
+    private int getPort(WorkerJvmSettings settings) throws UnsupportedEncodingException {
+        Config config = new XmlConfigBuilder(new ByteArrayInputStream(settings.hzConfig.getBytes("UTF-8"))).build();
+        return config.getNetworkConfig().getPort();
     }
 
     private void runTestSuite(TestSuite testSuite) throws Exception {

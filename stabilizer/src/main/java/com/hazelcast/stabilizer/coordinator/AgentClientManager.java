@@ -152,13 +152,13 @@ public class AgentClientManager {
         }
     }
 
-    public void initTestSuite(final TestSuite testSuite, byte[] bytes) {
+    public void initTestSuite(final TestSuite testSuite, final byte[] bytes) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_INIT_TESTSUITE, testSuite);
+                    agentClient.execute(AgentRemoteService.SERVICE_INIT_TESTSUITE, testSuite, bytes);
                     return null;
                 }
             });
@@ -272,7 +272,7 @@ public class AgentClientManager {
         }
 
         private Object execute(String service, Object... args) throws Exception {
-            Socket socket = new Socket(InetAddress.getByName(host), 9000);
+            Socket socket = new Socket(InetAddress.getByName(host), AgentRemoteService.PORT);
 
             try {
                 ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());

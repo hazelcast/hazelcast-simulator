@@ -17,9 +17,8 @@ package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.client.config.ClientNetworkConfig;
+import com.hazelcast.client.config.XmlClientConfigBuilder;
 import com.hazelcast.config.Config;
-import com.hazelcast.config.GroupConfig;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -37,7 +36,6 @@ import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -64,7 +62,9 @@ public class Worker {
     private HazelcastInstance serverInstance;
     private HazelcastInstance clientInstance;
 
-    private String workerHzFile;
+    private String hzFile;
+    private String clientHzFile;
+
     private String workerMode;
     private String workerId;
 
@@ -73,7 +73,7 @@ public class Worker {
     private BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
     private BlockingQueue<TestCommandResponse> responseQueue = new LinkedBlockingQueue<TestCommandResponse>();
 
-    public void start() throws IOException {
+    public void start() throws Exception {
         if ("server".equals(workerMode)) {
             this.serverInstance = createServerHazelcastInstance();
         } else if ("client".equals(workerMode)) {
@@ -102,45 +102,26 @@ public class Worker {
         writeObject(address, file);
     }
 
-    private HazelcastInstance createClientHazelcastInstance() {
+    private HazelcastInstance createClientHazelcastInstance() throws Exception {
         log.info("Creating Client HazelcastInstance");
 
-        Config config = loadServerConfig();
-
-        //todo: instead of manually creating one, this should be send from the controller using a template
-        ClientConfig clientConfig = new ClientConfig();
-        GroupConfig clientGroupConfig = clientConfig.getGroupConfig();
-        clientGroupConfig.setName(config.getGroupConfig().getName());
-        clientGroupConfig.setPassword(config.getGroupConfig().getPassword());
-
-        ClientNetworkConfig clientNetworkConfig = clientConfig.getNetworkConfig();
-        for (String address : config.getNetworkConfig().getJoin().getTcpIpConfig().getMembers()) {
-            clientNetworkConfig.addAddress(address);
-        }
+        XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(clientHzFile);
+        ClientConfig clientConfig = configBuilder.build();
 
         HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
         log.info("Successfully created Client HazelcastInstance");
         return client;
     }
 
-    private HazelcastInstance createServerHazelcastInstance() {
+    private HazelcastInstance createServerHazelcastInstance() throws Exception {
         log.info("Creating Server HazelcastInstance");
 
-        Config config = loadServerConfig();
+        XmlConfigBuilder configBuilder = new XmlConfigBuilder(hzFile);
+        Config config = configBuilder.build();
+
         HazelcastInstance server = Hazelcast.newHazelcastInstance(config);
         log.info("Successfully created Server HazelcastInstance");
         return server;
-    }
-
-    private Config loadServerConfig() {
-        XmlConfigBuilder configBuilder;
-        try {
-            configBuilder = new XmlConfigBuilder(workerHzFile);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
-        return configBuilder.build();
     }
 
     private static void logInterestingSystemProperties() {
@@ -176,12 +157,17 @@ public class Worker {
             log.info("Worker hz config file:" + workerHzFile);
             log.info(asText(new File(workerHzFile)));
 
+            String clientHzFile = args[1];
+            log.info("Client hz config file:" + clientHzFile);
+            log.info(asText(new File(clientHzFile)));
+
             String workerMode = System.getProperty("workerMode");
             log.info("Worker mode:" + workerMode);
 
             Worker worker = new Worker();
             worker.workerId = workerId;
-            worker.workerHzFile = workerHzFile;
+            worker.hzFile = workerHzFile;
+            worker.clientHzFile = clientHzFile;
             worker.workerMode = workerMode;
             worker.start();
 
@@ -228,7 +214,7 @@ public class Worker {
         //we create a new socket for every request because don't want to depend on the state of a socket
         //because we are going to do nasty stuff.
         private <E> E execute(String service, Object... args) throws Exception {
-            Socket socket = new Socket(InetAddress.getByName(null), 9001);
+            Socket socket = new Socket(InetAddress.getByName(null), WorkerJvmManager.PORT);
 
             try {
                 ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());

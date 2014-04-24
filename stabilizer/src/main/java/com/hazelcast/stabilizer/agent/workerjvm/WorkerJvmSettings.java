@@ -30,6 +30,7 @@ public class WorkerJvmSettings implements Serializable {
     public boolean refreshJvm;
     public String javaVendor;
     public String javaVersion;
+    public String clientHzConfig;
 
     public WorkerJvmSettings() {
     }
@@ -38,6 +39,7 @@ public class WorkerJvmSettings implements Serializable {
         this.vmOptions = settings.vmOptions;
         this.trackLogging = settings.trackLogging;
         this.hzConfig = settings.hzConfig;
+        this.clientHzConfig = settings.clientHzConfig;
         this.memberWorkerCount = settings.memberWorkerCount;
         this.clientWorkerCount = settings.clientWorkerCount;
         this.mixedWorkerCount = settings.mixedWorkerCount;
@@ -64,6 +66,7 @@ public class WorkerJvmSettings implements Serializable {
                 "\n, javaVendor=" + javaVendor +
                 "\n, javaVersion=" + javaVersion +
                 "\n, hzConfig='" + hzConfig + '\'' +
+                "\n, clientHzConfig='" + clientHzConfig + '\'' +
                 "\n}";
     }
 }

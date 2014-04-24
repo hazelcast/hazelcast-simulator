@@ -21,6 +21,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class AgentRemoteService {
+
+    public static final int PORT = 9000;
+
     public static final String SERVICE_SPAWN_WORKERS = "spawnWorkers";
     public static final String SERVICE_INIT_TESTSUITE = "initTestSuite";
     public static final String SERVICE_CLEAN_WORKERS_HOME = "cleanWorkersHome";
@@ -42,8 +45,8 @@ public class AgentRemoteService {
     }
 
     public void start() throws IOException {
-        serverSocket = new ServerSocket(9000, 0, InetAddress.getByName(Utils.getHostAddress()));
-        log.info("Started on: " + serverSocket.getInetAddress());
+        serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(Utils.getHostAddress()));
+        log.info("Started Agent Remote Service on :" + serverSocket.getInetAddress().getHostAddress()+":"+PORT);
         new AcceptorThread().start();
     }
 
@@ -72,7 +75,8 @@ public class AgentRemoteService {
                         spawnWorkers(settings);
                     } else if (SERVICE_INIT_TESTSUITE.equals(service)) {
                         TestSuite testSuite = (TestSuite) in.readObject();
-                        initTestSuite(testSuite);
+                        byte[] bytes = (byte[])in.readObject();
+                        initTestSuite(testSuite,bytes);
                     } else if (SERVICE_CLEAN_WORKERS_HOME.equals(service)) {
                         cleanWorkersHome();
                     } else if (SERVICE_TERMINATE_WORKERS.equals(service)) {
@@ -123,9 +127,9 @@ public class AgentRemoteService {
             }
         }
 
-        private void initTestSuite(TestSuite testSuite) throws Exception {
+        private void initTestSuite(TestSuite testSuite, byte[] bytes) throws Exception {
             try {
-                agent.initTestSuite(testSuite, null);
+                agent.initTestSuite(testSuite, bytes);
             } catch (Exception e) {
                 log.severe("Failed to init testsuite: " + testSuite, e);
                 throw e;
