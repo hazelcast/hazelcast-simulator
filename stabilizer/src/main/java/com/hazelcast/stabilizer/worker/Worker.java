@@ -42,6 +42,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
@@ -95,7 +96,8 @@ public class Worker {
     private void signalStartToAgent() {
         String address;
         if (serverInstance != null) {
-            address = serverInstance.getCluster().getLocalMember().getSocketAddress().getHostString();
+            InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getSocketAddress();
+            address = socketAddress.getHostString()+":"+socketAddress.getPort();
         } else {
             address = "client:" + getHostAddress();
         }
