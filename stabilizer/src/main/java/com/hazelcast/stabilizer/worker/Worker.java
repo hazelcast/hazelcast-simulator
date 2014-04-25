@@ -153,10 +153,8 @@ public class Worker {
     public static void main(String[] args) {
         log.info("Starting Stabilizer Worker");
         try {
+            logInputArguments();
             logInterestingSystemProperties();
-
-            List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
-            log.info("jvm input arguments = " + inputArguments);
 
             String workerId = System.getProperty("workerId");
             log.info("Worker id:" + workerId);
@@ -184,6 +182,11 @@ public class Worker {
             ExceptionReporter.report(e);
             System.exit(1);
         }
+    }
+
+    private static void logInputArguments() {
+        List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
+        log.info("jvm input arguments = " + inputArguments);
     }
 
     private class SocketThread extends Thread {
