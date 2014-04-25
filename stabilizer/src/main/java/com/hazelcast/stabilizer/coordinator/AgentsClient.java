@@ -62,7 +62,7 @@ public class AgentsClient {
             while (it.hasNext()) {
                 AgentClient agent = it.next();
                 try {
-                    agent.execute(AgentRemoteService.SERVICE_GET_FAILURES);
+                    agent.execute(AgentRemoteService.SERVICE_ECHO, "livecheck");
                     it.remove();
                     log.info("Successfully connected to agent: " + agent.getHost());
                 } catch (Exception e) {
@@ -83,7 +83,7 @@ public class AgentsClient {
 
         if (unchecked.isEmpty()) {
             return;
-        }else{
+        } else {
             agents.removeAll(unchecked);
         }
 
@@ -349,6 +349,8 @@ public class AgentsClient {
             }
         }
 
+        //we create a new socket for every request because it could be that the agents is not reachable
+        //and we don't want to depend on state within the socket.
         private Socket newSocket() throws IOException {
             try {
                 return new Socket(InetAddress.getByName(host), AgentRemoteService.PORT);

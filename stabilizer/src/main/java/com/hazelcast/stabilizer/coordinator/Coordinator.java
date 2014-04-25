@@ -35,7 +35,6 @@ import static com.hazelcast.stabilizer.Utils.createUpload;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
-import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static com.hazelcast.stabilizer.coordinator.CoordinatorCli.init;
 import static java.lang.String.format;
 
@@ -58,17 +57,8 @@ public class Coordinator {
     protected AgentsClient agentsClient;
     public WorkerJvmSettings workerJvmSettings;
 
-    private void start() throws Exception {
+    private void run() throws Exception {
         agentsClient = new AgentsClient(this, agentsFile);
-
-        if (cleanWorkersHome) {
-            echo("Starting cleanup workers home");
-            agentsClient.cleanWorkersHome();
-            echo("Finished cleanup workers home");
-        }
-
-        byte[] uploadBytes = createUpload(workerClassPath);
-        agentsClient.initTestSuite(testSuite, uploadBytes);
 
         initMemberWorkerCount(workerJvmSettings);
         initHzConfig(workerJvmSettings);
@@ -84,6 +74,15 @@ public class Coordinator {
         //we need to make sure that before we launch, there are no workers running anymore.
         terminateWorkers();
         startWorkers(workerJvmSettings);
+
+        if (cleanWorkersHome) {
+            echo("Starting cleanup workers home");
+            agentsClient.cleanWorkersHome();
+            echo("Finished cleanup workers home");
+        }
+
+        byte[] uploadBytes = createUpload(workerClassPath);
+        agentsClient.initTestSuite(testSuite, uploadBytes);
 
         new FailureMonitorThread(this).start();
 
@@ -230,7 +229,7 @@ public class Coordinator {
         init(coordinator, args);
 
         try {
-            coordinator.start();
+            coordinator.run();
             System.exit(0);
         } catch (Exception e) {
             log.severe("Failed to run testsuite", e);
