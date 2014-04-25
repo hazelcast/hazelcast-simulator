@@ -59,6 +59,7 @@ public class Coordinator {
 
     private void run() throws Exception {
         agentsClient = new AgentsClient(this, agentsFile);
+        agentsClient.awaitAgentsReachable();
 
         initMemberWorkerCount(workerJvmSettings);
         initHzConfig(workerJvmSettings);
@@ -201,7 +202,6 @@ public class Coordinator {
         }
 
         agentsClient.spawnWorkers(settingsArray);
-        agentsClient.awaitAgentsReachable();
 
         long durationMs = System.currentTimeMillis() - startMs;
         log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms",
