@@ -84,7 +84,7 @@ public class ProducerConsumerTest extends AbstractTest {
         @Override
         public void run() {
             long iter = 0;
-            while (!stop()) {
+            while (!stopped()) {
                 try {
                     Thread.sleep(rand.nextInt(maxIntervalMillis) * consumerCount);
                     produced.incrementAndGet();
@@ -112,7 +112,7 @@ public class ProducerConsumerTest extends AbstractTest {
         @Override
         public void run() {
             long iter = 0;
-            while (!stop()) {
+            while (!stopped()) {
                 try {
                     workQueue.take();
                     consumed.incrementAndGet();

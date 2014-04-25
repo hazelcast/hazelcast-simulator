@@ -15,6 +15,10 @@
  */
 package com.hazelcast.stabilizer.tests;
 
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.instance.HazelcastInstanceImpl;
+import com.hazelcast.instance.HazelcastInstanceProxy;
+import com.hazelcast.instance.Node;
 import com.hazelcast.stabilizer.TestCase;
 
 import java.io.File;
@@ -23,10 +27,42 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.Utils.getFile;
 import static com.hazelcast.stabilizer.Utils.writeObject;
 import static java.lang.String.format;
 
 public class TestUtils {
+
+    public static Node getNode(HazelcastInstance hz) {
+        HazelcastInstanceImpl impl = getHazelcastInstanceImpl(hz);
+        return impl != null ? impl.node : null;
+    }
+
+    public static long secondsToMillis(int seconds){
+        return seconds*1000;
+    }
+
+    public static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
+        HazelcastInstanceImpl impl = null;
+        if (hz instanceof HazelcastInstanceProxy) {
+            return getField(hz, "original");
+        } else if (hz instanceof HazelcastInstanceImpl) {
+            impl = (HazelcastInstanceImpl) hz;
+        }
+        return impl;
+    }
+
+    public static <E> E getField(Object o, String fieldName){
+        try {
+            Field field = o.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return (E)field.get(o);
+        }catch(NoSuchFieldException e){
+            throw new RuntimeException(e);
+        }catch(IllegalAccessException e){
+            throw new RuntimeException(e);
+        }
+    }
 
     public static void bindProperties(Test test, TestCase testCase) throws NoSuchFieldException, IllegalAccessException {
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {

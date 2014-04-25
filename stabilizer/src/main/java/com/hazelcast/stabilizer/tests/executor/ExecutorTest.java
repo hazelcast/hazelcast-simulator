@@ -95,7 +95,7 @@ public class ExecutorTest extends AbstractTest {
             long iteration = 0;
 
             List<Future> futureList = new LinkedList<Future>();
-            while (!stop()) {
+            while (!stopped()) {
                 int index = random.nextInt(executors.length);
                 IExecutorService executorService = executors[index];
                 futureList.clear();

@@ -97,7 +97,7 @@ public class AtomicLongTest extends AbstractTest {
         @Override
         public void run() {
             long iteration = 0;
-            while (!stop()) {
+            while (!stopped()) {
                 IAtomicLong counter = getRandomCounter();
                 counter.incrementAndGet();
 

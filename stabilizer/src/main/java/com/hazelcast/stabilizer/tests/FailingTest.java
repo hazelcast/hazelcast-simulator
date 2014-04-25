@@ -2,7 +2,14 @@ package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.stabilizer.worker.ExceptionReporter;
 
+import java.util.LinkedList;
+import java.util.List;
+
+//A test that causes a failure. This is useful fortesting the stabilizer framework and for demonstration purposes.
 public class FailingTest extends AbstractTest {
+
+    public String failure = "Exception";
+
     @Override
     public void localSetup() throws Exception {
         spawn(new Worker());
@@ -11,7 +18,16 @@ public class FailingTest extends AbstractTest {
     private class Worker implements Runnable {
         @Override
         public void run() {
-            ExceptionReporter.report(new RuntimeException("Wanted exception"));
+            if (failure.equals("Exception")) {
+                ExceptionReporter.report(new RuntimeException("Wanted exception"));
+            } else if (failure.equals("OOME")) {
+                List list = new LinkedList();
+                for (; ; ) {
+                    list.add(new byte[100 * 1000 * 1000]);
+                }
+            } else if (failure.equals("Exit")) {
+                System.exit(1);
+            }
         }
     }
 

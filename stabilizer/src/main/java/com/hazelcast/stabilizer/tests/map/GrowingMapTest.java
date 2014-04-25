@@ -61,10 +61,10 @@ public class GrowingMapTest extends AbstractTest {
 
             Random random = new Random();
 
-            while (!stop()) {
+            while (!stopped()) {
                 int keyIndex = -1;
                 for (int k = 0; k < growCount; k++) {
-                    if (stop()) {
+                    if (stopped()) {
                         break;
                     }
 
@@ -88,7 +88,7 @@ public class GrowingMapTest extends AbstractTest {
 
                 if (readValidation) {
                     for (int k = 0; k <= keyIndex; k++) {
-                        if (stop()) {
+                        if (stopped()) {
                             break;
                         }
 
@@ -108,7 +108,7 @@ public class GrowingMapTest extends AbstractTest {
                 }
 
                 for (int k = 0; k <= keyIndex; k++) {
-                    if (stop() && !removeOnStop) {
+                    if (stopped() && !removeOnStop) {
                         break;
                     }
 

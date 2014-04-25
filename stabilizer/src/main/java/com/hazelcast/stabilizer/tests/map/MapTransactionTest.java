@@ -109,7 +109,7 @@ public class MapTransactionTest extends AbstractTest {
             }
 
             long iteration = 0;
-            while (!stop()) {
+            while (!stopped()) {
                 final Integer key = random.nextInt(keyCount);
                 final long increment = random.nextInt(100);
 

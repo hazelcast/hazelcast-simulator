@@ -60,7 +60,7 @@ public class MapTimeToLiveTest extends AbstractTest {
     class Worker implements Runnable {
         @Override
         public void run() {
-            while (!stop()) {
+            while (!stopped()) {
                 try {
                     map.put(UUID.randomUUID(), UUID.randomUUID());
                     Thread.sleep(putIntervalMillis);

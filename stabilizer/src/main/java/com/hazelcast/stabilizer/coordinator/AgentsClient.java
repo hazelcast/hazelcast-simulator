@@ -55,18 +55,18 @@ public class AgentsClient {
     public void awaitAgentsReachable() {
         List<AgentClient> unchecked = new LinkedList<AgentClient>(agents);
 
-        log.info("Waiting for Agents to start");
+        log.info("Waiting for agents to start");
 
-        for (int k = 0; k < 60; k++) {
+        for (int k = 0; k < 12; k++) {
             Iterator<AgentClient> it = unchecked.iterator();
             while (it.hasNext()) {
                 AgentClient agent = it.next();
                 try {
                     agent.execute(AgentRemoteService.SERVICE_ECHO, "livecheck");
                     it.remove();
-                    log.info("Successfully connected to agent: " + agent.getHost());
+                    log.info("Connect to agent " + agent.getHost() + " OK");
                 } catch (Exception e) {
-                    log.warning("Failed to connect to agent: " + agent.getHost());
+                    log.info("Connect to agent " + agent.getHost() + " FAILED");
                     log.finest(e);
                 }
             }
@@ -74,7 +74,8 @@ public class AgentsClient {
             if (unchecked.isEmpty()) {
                 break;
             }
-            sleepSeconds(1);
+            log.info("Sleeping 5 seconds and retrying unchecked agents");
+            sleepSeconds(5);
         }
 
         agents.removeAll(unchecked);
@@ -353,7 +354,8 @@ public class AgentsClient {
         //and we don't want to depend on state within the socket.
         private Socket newSocket() throws IOException {
             try {
-                return new Socket(InetAddress.getByName(host), AgentRemoteService.PORT);
+                InetAddress hostAddress = InetAddress.getByName(host);
+                return new Socket(hostAddress, AgentRemoteService.PORT);
             } catch (IOException e) {
                 throw new IOException("Couldn't connect to host: " + host + ":" + AgentRemoteService.PORT, e);
             }

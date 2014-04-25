@@ -6,6 +6,7 @@ import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
@@ -17,6 +18,8 @@ public class ExceptionReporter {
     private final static ILogger log = Logger.getLogger(ExceptionReporter.class);
 
     public static void report(Throwable t) {
+        System.setProperty("workerId", UUID.randomUUID().toString());
+
         log.severe("Exception detected", t);
         sleepSeconds(2);
 

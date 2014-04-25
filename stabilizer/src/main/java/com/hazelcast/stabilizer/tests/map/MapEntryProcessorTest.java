@@ -103,7 +103,7 @@ public class MapEntryProcessorTest extends AbstractTest {
             }
 
             long iteration = 0;
-            while (!stop()) {
+            while (!stopped()) {
                 Integer key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
 

@@ -120,7 +120,7 @@ public class ITopicTest extends AbstractTest {
                 }
             }
 
-            boolean stopped = (!waitForMessagesToComplete && stop()) || l < 0;
+            boolean stopped = (!waitForMessagesToComplete && stopped()) || l < 0;
 
             if (stopped) {
                 totalFoundCounter.addAndGet(count);
@@ -144,7 +144,7 @@ public class ITopicTest extends AbstractTest {
         public void run() {
             long iteration = 0;
             long count = 0;
-            while (!stop()) {
+            while (!stopped()) {
                 int index = random.nextInt(topics.length);
                 ITopic topic = topics[index];
 

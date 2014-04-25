@@ -98,7 +98,7 @@ public class QueueTest extends AbstractTest {
         public void run() {
             try {
                 long iteration = 0;
-                while (!stop()) {
+                while (!stopped()) {
                     long item = fromQueue.take();
                     toQueue.put(item + 1);
                     if (iteration % 2000 == 0) {

@@ -51,7 +51,7 @@ public abstract class AbstractTest implements Test {
         return testId;
     }
 
-    public boolean stop(){
+    public boolean stopped(){
         return stop;
     }
 

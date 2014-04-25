@@ -94,7 +94,7 @@ public class LockTest extends AbstractTest {
         @Override
         public void run() {
             long iteration = 0;
-            while (!stop()) {
+            while (!stopped()) {
                 long key1 = getRandomAccountKey();
                 long key2 = getRandomAccountKey();
                 int a = random.nextInt(amount);

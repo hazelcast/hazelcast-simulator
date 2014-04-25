@@ -120,7 +120,7 @@ public class StringMapTest extends AbstractTest {
         @Override
         public void run() {
             long iteration = 0;
-            while (!stop()) {
+            while (!stopped()) {
                 Object key = keys[random.nextInt(keys.length)];
 
                 if (shouldWrite(iteration)) {
