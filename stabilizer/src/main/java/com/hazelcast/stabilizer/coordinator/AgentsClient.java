@@ -45,15 +45,15 @@ public class AgentsClient {
     public AgentsClient(Coordinator coordinator, File machineListFile) {
         this.coordinator = coordinator;
         this.machineListFile = machineListFile;
-    }
-
-    public void start() {
-        List<AgentClient> unchecked = new LinkedList<AgentClient>();
 
         for (String address : getMachineAddresses()) {
             AgentClient client = new AgentClient(address);
-            unchecked.add(client);
+            agents.add(client);
         }
+    }
+
+    public void awaitAgentsReachable() {
+        List<AgentClient> unchecked = new LinkedList<AgentClient>(agents);
 
         log.info("Waiting for Agents to start");
 
@@ -63,7 +63,6 @@ public class AgentsClient {
                 AgentClient agent = it.next();
                 try {
                     agent.execute(AgentRemoteService.SERVICE_GET_FAILURES);
-                    agents.add(agent);
                     it.remove();
                     log.info("Successfully connected to agent: " + agent.getHost());
                 } catch (Exception e) {
@@ -84,6 +83,8 @@ public class AgentsClient {
 
         if (unchecked.isEmpty()) {
             return;
+        }else{
+            agents.removeAll(unchecked);
         }
 
         StringBuilder sb = new StringBuilder("The Coordinator has dropped the following agents because they are not reachable:\n");

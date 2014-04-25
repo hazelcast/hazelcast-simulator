@@ -60,8 +60,6 @@ public class Coordinator {
 
     private void start() throws Exception {
         agentsClient = new AgentsClient(this, agentsFile);
-        agentsClient.start();
-        new FailureMonitorThread(this).start();
 
         if (cleanWorkersHome) {
             echo("Starting cleanup workers home");
@@ -82,6 +80,13 @@ public class Coordinator {
         log.info(format("Total number of Hazelcast Member workers: %s", workerJvmSettings.memberWorkerCount));
         log.info(format("Total number of Hazelcast Client workers: %s", workerJvmSettings.clientWorkerCount));
         log.info(format("Total number of Hazelcast Mixed Client & Member Workers: %s", workerJvmSettings.mixedWorkerCount));
+
+        //we need to make sure that before we launch, there are no workers running anymore.
+        terminateWorkers();
+        startWorkers(workerJvmSettings);
+
+        agentsClient.awaitAgentsReachable();
+        new FailureMonitorThread(this).start();
 
         long startMs = System.currentTimeMillis();
 
@@ -140,10 +145,6 @@ public class Coordinator {
         echo(format("Tests in testsuite: %s", testSuite.size()));
         echo(format("Running time per test: %s ", secondsToHuman(testSuite.duration)));
         echo(format("Expected total testsuite time: %s", secondsToHuman(testSuite.size() * testSuite.duration)));
-
-        //we need to make sure that before we launch, there are no workers running anymore.
-        terminateWorkers();
-        startWorkers(workerJvmSettings);
 
         for (TestCase testCase : testSuite.testCaseList) {
             TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this);
