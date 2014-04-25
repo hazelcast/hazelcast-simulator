@@ -85,7 +85,6 @@ public class Coordinator {
         terminateWorkers();
         startWorkers(workerJvmSettings);
 
-        agentsClient.awaitAgentsReachable();
         new FailureMonitorThread(this).start();
 
         long startMs = System.currentTimeMillis();
@@ -201,10 +200,7 @@ public class Coordinator {
         }
 
         agentsClient.spawnWorkers(settingsArray);
-
-        //give the agents some time to start up.
-        log.info("Waiting for agents to start (20 seconds)");
-        sleepSeconds(20);
+        agentsClient.awaitAgentsReachable();
 
         long durationMs = System.currentTimeMillis() - startMs;
         log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms",
