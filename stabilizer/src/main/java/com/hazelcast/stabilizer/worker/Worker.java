@@ -40,6 +40,7 @@ import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
 import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -132,6 +133,7 @@ public class Worker {
         logSystemProperty("java.home");
         logSystemProperty("java.vendor");
         logSystemProperty("java.vendor.url");
+        logSystemProperty("sun.java.command");
         logSystemProperty("java.version");
         logSystemProperty("os.arch");
         logSystemProperty("os.name");
@@ -152,6 +154,9 @@ public class Worker {
         log.info("Starting Stabilizer Worker");
         try {
             logInterestingSystemProperties();
+
+            List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
+            log.info("jvm input arguments = " + inputArguments);
 
             String workerId = System.getProperty("workerId");
             log.info("Worker id:" + workerId);
