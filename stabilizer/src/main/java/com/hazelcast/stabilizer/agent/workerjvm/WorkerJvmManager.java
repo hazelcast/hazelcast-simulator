@@ -83,7 +83,7 @@ public class WorkerJvmManager {
     public void start() throws Exception {
         serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(null));
 
-        log.info("Started Worker JVM Socket on: " + serverSocket.getInetAddress().getHostAddress()+":"+PORT);
+        log.info("Started Worker JVM Socket on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
 
         new AcceptorThread().start();
     }
@@ -146,6 +146,10 @@ public class WorkerJvmManager {
     }
 
     public void spawn(WorkerJvmSettings settings) throws Exception {
+        if (workerJvms.size() > 0) {
+            terminateWorkers();
+        }
+
         WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvms, settings);
         launcher.launch();
     }
@@ -251,7 +255,7 @@ public class WorkerJvmManager {
             for (; ; ) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    if(log.isFinestEnabled()) {
+                    if (log.isFinestEnabled()) {
                         log.finest("Accepted worker request from: " + clientSocket.getRemoteSocketAddress());
                     }
                     executor.execute(new ClientSocketTask(clientSocket));

@@ -72,7 +72,8 @@ public class Coordinator {
         log.info(format("Total number of Hazelcast Client workers: %s", workerJvmSettings.clientWorkerCount));
         log.info(format("Total number of Hazelcast Mixed Client & Member Workers: %s", workerJvmSettings.mixedWorkerCount));
 
-        //we need to make sure that before we launch, there are no workers running anymore.
+        agentsClient.initTestSuite(testSuite,  createUpload(workerClassPath));
+
         startWorkers(workerJvmSettings);
 
         new FailureMonitorThread(this).start();
@@ -82,12 +83,6 @@ public class Coordinator {
             agentsClient.cleanWorkersHome();
             echo("Finished cleanup workers home");
         }
-
-        byte[] uploadBytes = createUpload(workerClassPath);
-        agentsClient.initTestSuite(testSuite, uploadBytes);
-
-
-        agentsClient.terminateWorkers();
 
         long startMs = System.currentTimeMillis();
 
