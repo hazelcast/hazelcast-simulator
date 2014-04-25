@@ -115,8 +115,7 @@ public class TestCaseRunner {
             final int elapsed = period * k;
             final float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
-            System.out.print(msg+"\r");
-            //echo(msg);
+            echo(msg);
             if (coordinator.monitorPerformance) {
                 echo(calcPerformance().toHumanString());
             }

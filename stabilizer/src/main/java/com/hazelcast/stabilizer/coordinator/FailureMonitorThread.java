@@ -65,6 +65,6 @@ class FailureMonitorThread extends Thread {
             }
         }
 
-        return sb.toString();
+         return sb.toString();
     }
 }

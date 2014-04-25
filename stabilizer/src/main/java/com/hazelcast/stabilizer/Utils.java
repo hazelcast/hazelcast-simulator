@@ -388,11 +388,9 @@ public final class Utils {
         int days = time;
 
         StringBuffer sb = new StringBuffer();
-        if (days > 0) {
-            sb.append(days).append(" days ");
-        }
 
-        sb.append(format("%02d", h)).append("h ")
+        sb.append(format("%02d", days)).append("d ")
+                .append(format("%02d", h)).append("h ")
                 .append(format("%02d", m)).append("m ")
                 .append(format("%02d", s)).append("s");
 
