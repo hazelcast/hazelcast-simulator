@@ -19,6 +19,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -29,24 +30,68 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class AgentClientManager {
+import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentClientManager.class);
+public class AgentsClient {
+
+    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentsClient.class);
 
     private final Coordinator coordinator;
     private final File machineListFile;
-    private List<AgentClient> agents = new LinkedList<AgentClient>();
+    private final List<AgentClient> agents = new LinkedList<AgentClient>();
 
     private final ExecutorService agentExecutor = Executors.newFixedThreadPool(100);
 
-    public AgentClientManager(Coordinator coordinator, File machineListFile) {
+    public AgentsClient(Coordinator coordinator, File machineListFile) {
         this.coordinator = coordinator;
         this.machineListFile = machineListFile;
+    }
+
+    public void start() {
+        List<AgentClient> unchecked = new LinkedList<AgentClient>();
 
         for (String address : getMachineAddresses()) {
             AgentClient client = new AgentClient(address);
-            agents.add(client);
+            unchecked.add(client);
         }
+
+        log.info("Waiting for Agents to start");
+
+        for (int k = 0; k < 60; k++) {
+            Iterator<AgentClient> it = unchecked.iterator();
+            while (it.hasNext()) {
+                AgentClient agent = it.next();
+                try {
+                    agent.execute(AgentRemoteService.SERVICE_GET_FAILURES);
+                    agents.add(agent);
+                    it.remove();
+                    log.info("Successfully connected to agent: " + agent.getHost());
+                } catch (Exception e) {
+                    log.warning("Failed to connect to agent: " + agent.getHost());
+                    log.finest(e);
+                }
+            }
+
+            if (unchecked.isEmpty()) {
+                break;
+            }
+            sleepSeconds(1);
+        }
+
+        if (agents.isEmpty()) {
+            Utils.exitWithError("There are no reachable agents");
+        }
+
+        if (unchecked.isEmpty()) {
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("The Coordinator has dropped the following agents because they are not reachable:\n");
+        for (AgentClient agent : unchecked) {
+            sb.append("\t").append(agent.host).append("\n");
+        }
+
+        log.warning(sb.toString());
     }
 
     private String[] getMachineAddresses() {
@@ -272,7 +317,7 @@ public class AgentClientManager {
         getAllFutures(futures);
     }
 
-    public static class AgentClient {
+    private static class AgentClient {
 
         private final String host;
 

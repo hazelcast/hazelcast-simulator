@@ -6,7 +6,7 @@ class Cluster {
     def config
     def STABILIZER_HOME
     def STABILIZER_VERSION = "0.1-SNAPSHOT"
-    def machineListFile = new File("machines.txt")
+    def agentsFile = new File("agents.txt")
     def knownHostsFile = new File(new File(System.getProperty("user.home"), ".ssh"), "known_hosts")
 
     List<String> privateIps = []
@@ -19,8 +19,8 @@ class Cluster {
         }
         config = new ConfigSlurper().parse(props)
 
-        if (!machineListFile.exists()) machineListFile.createNewFile()
-        machineListFile.text.eachLine { String line -> privateIps << line }
+        if (!agentsFile.exists()) agentsFile.createNewFile()
+        agentsFile.text.eachLine { String line -> privateIps << line }
 
         STABILIZER_HOME = new File(Cluster.class.protectionDomain.codeSource.location.path).parentFile.parent
         echo "STABILIZER_HOME $STABILIZER_HOME"
@@ -169,9 +169,9 @@ class Cluster {
             }
         }
 
-        machineListFile.write("")
+        agentsFile.write("")
         privateIps.each { String ip ->
-            machineListFile.text += "$ip\n"
+            agentsFile.text += "$ip\n"
         }
     }
 
@@ -261,9 +261,9 @@ class Cluster {
         def output = "ec2kill $ids".execute().text
         echo output
 
-        machineListFile.write("")
+        agentsFile.write("")
         privateIps.each { String ip ->
-            machineListFile.text += "$ip\n"
+            agentsFile.text += "$ip\n"
         }
 
         echo "=============================================================="

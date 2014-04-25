@@ -33,7 +33,7 @@ class FailureMonitorThread extends Thread {
     }
 
     private void scan() {
-        List<Failure> failures = coordinator.agentClientManager.getFailures();
+        List<Failure> failures = coordinator.agentsClient.getFailures();
         for (Failure failure : failures) {
             coordinator.failureList.add(failure);
             log.severe(buildMessage(failure));

@@ -50,33 +50,33 @@ public class Coordinator {
     public String workerClassPath;
     public boolean cleanWorkersHome;
     public Integer testStopTimeoutMs;
-    public File machinesFile;
+    public File agentsFile;
     public TestSuite testSuite;
 
     //internal state.
     final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
-    protected AgentClientManager agentClientManager;
+    protected AgentsClient agentsClient;
     public WorkerJvmSettings workerJvmSettings;
 
     private void start() throws Exception {
-        agentClientManager = new AgentClientManager(this, machinesFile);
-        agentClientManager.getFailures();
+        agentsClient = new AgentsClient(this, agentsFile);
+        agentsClient.start();
         new FailureMonitorThread(this).start();
 
         if (cleanWorkersHome) {
             echo("Starting cleanup workers home");
-            agentClientManager.cleanWorkersHome();
+            agentsClient.cleanWorkersHome();
             echo("Finished cleanup workers home");
         }
 
         byte[] uploadBytes = createUpload(workerClassPath);
-        agentClientManager.initTestSuite(testSuite, uploadBytes);
+        agentsClient.initTestSuite(testSuite, uploadBytes);
 
         initMemberWorkerCount(workerJvmSettings);
         initHzConfig(workerJvmSettings);
         initClientHzConfig(workerJvmSettings);
 
-        int agentCount = agentClientManager.getAgentCount();
+        int agentCount = agentsClient.getAgentCount();
         log.info(format("Worker track logging: %s", workerJvmSettings.trackLogging));
         log.info(format("Total number of agents: %s", agentCount));
         log.info(format("Total number of Hazelcast Member workers: %s", workerJvmSettings.memberWorkerCount));
@@ -112,7 +112,7 @@ public class Coordinator {
         int port = getPort(settings);
 
         StringBuffer members = new StringBuffer();
-        for (String hostAddress : agentClientManager.getHostAddresses()) {
+        for (String hostAddress : agentsClient.getHostAddresses()) {
             members.append("<member>").append(hostAddress).append(":" + port).append("</member>\n");
         }
 
@@ -123,7 +123,7 @@ public class Coordinator {
         int port = getPort(settings);
 
         StringBuffer members = new StringBuffer();
-        for (String hostAddress : agentClientManager.getHostAddresses()) {
+        for (String hostAddress : agentsClient.getHostAddresses()) {
             members.append("<address>").append(hostAddress).append(":" + port).append("</address>\n");
         }
 
@@ -164,14 +164,14 @@ public class Coordinator {
 
     void terminateWorkers() throws Exception {
         echo("Terminating workers");
-        agentClientManager.terminateWorkers();
+        agentsClient.terminateWorkers();
         echo("All workers have been terminated");
     }
 
     long startWorkers(WorkerJvmSettings masterSettings) throws Exception {
         long startMs = System.currentTimeMillis();
 
-        int agentCount = agentClientManager.getAgentCount();
+        int agentCount = agentsClient.getAgentCount();
 
         WorkerJvmSettings[] settingsArray = new WorkerJvmSettings[agentCount];
         for (int k = 0; k < agentCount; k++) {
@@ -199,7 +199,7 @@ public class Coordinator {
             index++;
         }
 
-        agentClientManager.spawnWorkers(settingsArray);
+        agentsClient.spawnWorkers(settingsArray);
 
         //give the agents some time to start up.
         log.info("Waiting for agents to start (20 seconds)");
@@ -213,14 +213,14 @@ public class Coordinator {
     }
 
     private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {
-        int agentCount = agentClientManager.getAgentCount();
+        int agentCount = agentsClient.getAgentCount();
         if (masterSettings.memberWorkerCount == -1 && masterSettings.mixedWorkerCount == 0) {
             masterSettings.memberWorkerCount = agentCount;
         }
     }
 
     private void echo(String msg) {
-        agentClientManager.echo(msg);
+        agentsClient.echo(msg);
         log.info(msg);
     }
 

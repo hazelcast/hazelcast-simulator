@@ -21,14 +21,14 @@ public class TestCaseRunner {
 
     private final TestCase testCase;
     private final Coordinator coordinator;
-    private final AgentClientManager agentClientManager;
+    private final AgentsClient agentsClient;
     private final TestSuite testSuite;
 
     public TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator) {
         this.testCase = testCase;
         this.coordinator = coordinator;
         this.testSuite = testSuite;
-        this.agentClientManager = coordinator.agentClientManager;
+        this.agentsClient = coordinator.agentsClient;
     }
 
     public boolean run() throws Exception {
@@ -37,16 +37,16 @@ public class TestCaseRunner {
         int oldCount = coordinator.failureList.size();
         try {
             echo("Starting Test initialization");
-            agentClientManager.prepareAgentsForTests(testCase);
-            agentClientManager.executeOnAllWorkers(new InitTestCommand(testCase));
+            agentsClient.prepareAgentsForTests(testCase);
+            agentsClient.executeOnAllWorkers(new InitTestCommand(testCase));
             echo("Completed Test initialization");
 
             echo("Starting Test local setup");
-            agentClientManager.executeOnAllWorkers(new GenericTestCommand("localSetup"));
+            agentsClient.executeOnAllWorkers(new GenericTestCommand("localSetup"));
             echo("Completed Test local setup");
 
             echo("Starting Test global setup");
-            agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalSetup"));
+            agentsClient.executeOnSingleWorker(new GenericTestCommand("globalSetup"));
             echo("Completed Test global setup");
 
             echo("Starting Test start");
@@ -58,7 +58,7 @@ public class TestCaseRunner {
             echo("Test finished running");
 
             echo("Starting Test stop");
-            agentClientManager.executeOnAllWorkers(new StopTestCommand());
+            agentsClient.executeOnAllWorkers(new StopTestCommand());
             echo("Completed Test stop");
 
             if (coordinator.monitorPerformance) {
@@ -67,22 +67,22 @@ public class TestCaseRunner {
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
-                agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalVerify"));
+                agentsClient.executeOnSingleWorker(new GenericTestCommand("globalVerify"));
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
-                agentClientManager.executeOnAllWorkers(new GenericTestCommand("localVerify"));
+                agentsClient.executeOnAllWorkers(new GenericTestCommand("localVerify"));
                 echo("Completed Test local verify");
             } else {
                 echo("Skipping Test verification");
             }
 
             echo("Starting Test global tear down");
-            agentClientManager.executeOnSingleWorker(new GenericTestCommand("globalTearDown"));
+            agentsClient.executeOnSingleWorker(new GenericTestCommand("globalTearDown"));
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentClientManager.executeOnAllWorkers(new GenericTestCommand("localTearDown"));
+            agentsClient.executeOnAllWorkers(new GenericTestCommand("localTearDown"));
 
             echo("Completed Test local tear down");
 
@@ -97,7 +97,7 @@ public class TestCaseRunner {
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
         StartTestCommand startTestCommand = new StartTestCommand();
         startTestCommand.clientOnly = workerJvmSettings.mixedWorkerCount > 0 || workerJvmSettings.clientWorkerCount > 0;
-        agentClientManager.executeOnAllWorkers(startTestCommand);
+        agentsClient.executeOnAllWorkers(startTestCommand);
     }
 
     public void sleepSeconds(int seconds) {
@@ -125,7 +125,7 @@ public class TestCaseRunner {
     }
 
     private void echo(String msg) {
-        agentClientManager.echo(msg);
+        agentsClient.echo(msg);
         log.info(msg);
     }
 
