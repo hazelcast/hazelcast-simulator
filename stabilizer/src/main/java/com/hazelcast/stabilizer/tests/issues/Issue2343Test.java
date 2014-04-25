@@ -116,7 +116,7 @@ public class Issue2343Test extends AbstractTest {
                     return;
                 }
 
-                sleepMillis(100);
+                sleepMillis(500);
             }
         }
     }
