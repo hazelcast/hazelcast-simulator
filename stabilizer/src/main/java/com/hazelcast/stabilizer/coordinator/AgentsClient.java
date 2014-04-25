@@ -77,14 +77,14 @@ public class AgentsClient {
             sleepSeconds(1);
         }
 
+        agents.removeAll(unchecked);
+
         if (agents.isEmpty()) {
             Utils.exitWithError("There are no reachable agents");
         }
 
-        if (unchecked.isEmpty()) {
+        if(unchecked.isEmpty()){
             return;
-        } else {
-            agents.removeAll(unchecked);
         }
 
         StringBuilder sb = new StringBuilder("The Coordinator has dropped the following agents because they are not reachable:\n");
