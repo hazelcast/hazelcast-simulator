@@ -136,7 +136,7 @@ public class ClusterController {
         ports.add(22);
         ports.add(AgentRemoteService.PORT);
         ports.add(WorkerJvmManager.PORT);
-        for (int k = 5701; 5901; k++) {
+        for (int k = 5701; k < 5901; k++) {
             ports.add(k);
         }
 
@@ -150,6 +150,8 @@ public class ClusterController {
     private void scaleUp(int delta) {
         echo "=============================================================="
         echo "Starting ${delta} ${config.CLOUD_PROVIDER} machines"
+        echo "Using the following spec: "
+        echo config.MACHINE_SPEC
         echo "=============================================================="
 
         ComputeService compute = getComputeService()
