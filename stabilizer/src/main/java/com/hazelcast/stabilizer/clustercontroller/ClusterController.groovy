@@ -23,10 +23,10 @@ import static com.hazelcast.stabilizer.Utils.*
 import static java.lang.String.format
 import static java.util.Arrays.asList
 
+//https://jclouds.apache.org/start/compute/ good read
 public class ClusterController {
     private final static ILogger log = Logger.getLogger(ClusterController.class.getName());
 
-    def AGENT_PORT = '8701'
     def config
     def STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath()
     def agentsFile = new File("agents.txt")
@@ -131,6 +131,22 @@ public class ClusterController {
         }
     }
 
+    private int[] inboundPorts() {
+        List<Integer> ports = new ArrayList<Integer>();
+        ports.add(22);
+        ports.add(AgentRemoteService.PORT);
+        ports.add(WorkerJvmManager.PORT);
+        for (int k = 5701; 5901; k++) {
+            ports.add(k);
+        }
+
+        int[] result = new int[ports.size()];
+        for (int k = 0; k < result.length; k++) {
+            result[k] = ports[k];
+        }
+        return result;
+    }
+
     private void scaleUp(int delta) {
         echo "=============================================================="
         echo "Starting ${delta} ${config.CLOUD_PROVIDER} machines"
@@ -143,10 +159,10 @@ public class ClusterController {
                 .build();
 
         template.getOptions()
-                .inboundPorts(22, AgentRemoteService.PORT, WorkerJvmManager.PORT, 5701, 5702)
+                .inboundPorts(inboundPorts())
                 .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
                 .blockUntilRunning(true)
-                .securityGroups("open")
+                .securityGroups(config.SECURITY_GROUP)
 
         Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
         echo("Created machines, waiting for startup (can take a few minutes)")
@@ -159,6 +175,7 @@ public class ClusterController {
 
         LoginCredentials login = LoginCredentials.builder()
                 .privateKey(fileAsText(config.IDENTITY_FILE))
+                .user(config.USER)
                 .noPassword()
                 .build();
 
@@ -189,12 +206,11 @@ public class ClusterController {
     }
 
     private ComputeService getComputeService() {
-        ComputeService compute = ContextBuilder.newBuilder(config.CLOUD_PROVIDER)
+        return ContextBuilder.newBuilder(config.CLOUD_PROVIDER)
                 .credentials(config.CLOUD_IDENTITY, config.CLOUD_CREDENTIAL)
                 .modules(asList(new Log4JLoggingModule(), new SshjSshClientModule()))
                 .buildView(ComputeServiceContext.class)
                 .getComputeService();
-        compute
     }
 
     def downloadArtifacts() {

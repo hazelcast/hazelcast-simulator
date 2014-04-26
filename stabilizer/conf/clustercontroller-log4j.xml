@@ -17,9 +17,15 @@
         </layout>
     </appender>
 
+    <!-- if there are ssh problems, put this on info or debug-->
     <logger name="net.schmizz.sshj">
         <level value="warn"/>
     </logger>
+
+    <!-- enable this if you want to se what is being send over the wire -->
+    <!--<logger name="jclouds.compute">-->
+        <!--<level value="debug"/>-->
+    <!--</logger>-->
 
     <root>
         <priority value="debug"/>
