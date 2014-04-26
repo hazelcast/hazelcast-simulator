@@ -1,6 +1,8 @@
 package com.hazelcast.stabilizer.clustercontroller
 
 import com.google.common.base.Predicate
+import com.hazelcast.logging.ILogger
+import com.hazelcast.logging.Logger
 import com.hazelcast.stabilizer.Utils
 import org.jclouds.ContextBuilder
 import org.jclouds.compute.ComputeService
@@ -15,14 +17,12 @@ import org.jclouds.logging.log4j.config.Log4JLoggingModule
 import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.sshj.config.SshjSshClientModule
 
-import static com.hazelcast.stabilizer.Utils.appendText
-import static com.hazelcast.stabilizer.Utils.fileAsText
-import static com.hazelcast.stabilizer.Utils.getVersion
-import static java.lang.String.format
+import static com.hazelcast.stabilizer.Utils.*
 import static java.lang.String.format
 import static java.util.Arrays.asList
 
 public class ClusterController {
+    private final static ILogger log = Logger.getLogger(ClusterController.class.getName());
 
     def AGENT_PORT = '8701'
     def config
