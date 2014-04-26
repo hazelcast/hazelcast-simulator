@@ -231,26 +231,6 @@ public final class Utils {
 
     public static String getVersion() {
         return Utils.class.getPackage().getImplementationVersion();
-//
-//       if(true){
-//           return "0.1-SNAPSHOT";
-//       }
-//
-//
-//
-//        String version = "";
-//        try {
-//            Properties p = new Properties();
-//            InputStream is = Utils.class.getResourceAsStream(
-//                    "/META-INF/maven/hazelcast-stabilizer/hazelcast-stabilizer/pom.properties");
-//            if (is != null) {
-//                p.load(is);
-//                return p.getProperty("version", "");
-//            }
-//        } catch (Exception e) {
-//            // ignore
-//        }
-//        return version;
     }
 
     public static byte[] zip(List<File> roots) throws IOException {
