@@ -98,17 +98,17 @@ public class AgentRemoteService {
                     } else {
                         throw new RuntimeException("Unknown service:" + service);
                     }
-                } catch (IOException e) {
-                    throw e;
                 } catch (Exception e) {
+                    log.severe(e);
                     result = e;
                 }
 
                 out.writeObject(result);
                 out.flush();
-                clientSocket.close();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.severe(e);
+            } finally {
+                Utils.closeQuietly(clientSocket);
             }
         }
 

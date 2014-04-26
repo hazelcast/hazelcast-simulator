@@ -30,6 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.stabilizer.Utils.closeQuietly;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
 public class AgentsClient {
@@ -343,14 +344,17 @@ public class AgentsClient {
                 oos.flush();
 
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                Object o = in.readObject();
-                if (o instanceof Exception) {
-                    Exception exception = (Exception) o;
+                Object response = in.readObject();
+
+                log.info("Call to service: "+service+" resulted in:"+response);
+
+                if (response instanceof Exception) {
+                    Exception exception = (Exception) response;
                     Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
                 }
-                return o;
+                return response;
             } finally {
-                Utils.closeQuietly(socket);
+                closeQuietly(socket);
             }
         }
 
