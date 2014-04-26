@@ -61,7 +61,7 @@ public class ClusterController {
 
         echo "Copying stabilizer files"
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
-        sshQuiet ip, "rm -fr hazelcast-stabilizer-${STABILIZER_VERSION}/lib"
+        sshQuiet ip, "rm -fr hazelcast-stabilizer-${getVersion()}/lib"
         //then we copy the stabilizer directory
         scpToRemote ip, STABILIZER_HOME, ""
 
@@ -82,7 +82,7 @@ public class ClusterController {
 
         privateIps.each { String ip ->
             echo "Starting Agent $ip"
-            ssh ip, "nohup hazelcast-stabilizer-${STABILIZER_VERSION}/bin/agent > agent.out 2> agent.err < /dev/null &"
+            ssh ip, "nohup hazelcast-stabilizer-${getVersion()}/bin/agent > agent.out 2> agent.err < /dev/null &"
         }
 
         echo "=============================================================="
@@ -218,7 +218,7 @@ public class ClusterController {
         privateIps.each { String ip ->
             echo "Downoading from $ip"
             bash """rsync -av -e "ssh ${config.SSH_OPTIONS}" \
-                ${config.USER}@$ip:hazelcast-stabilizer-${STABILIZER_VERSION}/workers/ \
+                ${config.USER}@$ip:hazelcast-stabilizer-${getVersion()}/workers/ \
                 workers"""
         }
 
