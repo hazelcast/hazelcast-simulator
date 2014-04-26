@@ -131,7 +131,7 @@ public class ClusterController {
         }
     }
 
-    private void scaleUp(int delta) {
+     private void scaleUp(int delta) {
         echo "=============================================================="
         echo "Starting ${delta} ${config.CLOUD_PROVIDER} machines"
         echo "=============================================================="
@@ -143,7 +143,7 @@ public class ClusterController {
                 .build();
 
         template.getOptions()
-                .inboundPorts(22, AgentRemoteService.PORT, WorkerJvmManager.PORT)
+                .inboundPorts(22, AgentRemoteService.PORT, WorkerJvmManager.PORT,5701,5702)
                 .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
                 .blockUntilRunning(true)
                 .securityGroups("open")
