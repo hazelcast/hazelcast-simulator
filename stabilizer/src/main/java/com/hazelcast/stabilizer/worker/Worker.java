@@ -100,7 +100,7 @@ public class Worker {
             address = "client:" + getHostAddress();
         } else {
             InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getSocketAddress();
-            address = socketAddress.getHostString() + ":" + socketAddress.getPort();
+            address = socketAddress.getAddress().getHostAddress() + ":" + socketAddress.getPort();
         }
         File file = new File(workerId + ".address");
         writeObject(address, file);

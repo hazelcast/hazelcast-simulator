@@ -354,6 +354,17 @@ public final class Utils {
         }
     }
 
+    public static void closeQuietly(Socket socket){
+        if(socket == null){
+            return;
+        }
+
+        try {
+            socket.close();
+        } catch (IOException ignore) {
+        }
+    }
+
     public static void closeQuietly(Closeable c) {
         if (c == null) return;
         try {
