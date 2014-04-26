@@ -1,7 +1,6 @@
 package com.hazelcast.stabilizer.clustercontroller
 
-import com.google.common.collect.ImmutableSet
-import com.google.inject.Module
+import com.google.common.base.Predicate
 import com.hazelcast.stabilizer.Utils
 import org.jclouds.ContextBuilder
 import org.jclouds.compute.ComputeService
@@ -16,6 +15,7 @@ import org.jclouds.logging.log4j.config.Log4JLoggingModule
 import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.sshj.config.SshjSshClientModule
 
+import static com.hazelcast.stabilizer.Utils.appendText
 import static com.hazelcast.stabilizer.Utils.fileAsText
 import static java.util.Arrays.asList
 
@@ -23,8 +23,7 @@ public class ClusterController {
 
     def AGENT_PORT = '8701'
     def config
-    def STABILIZER_HOME
-    def STABILIZER_VERSION = "0.1-SNAPSHOT"
+    def STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath()
     def agentsFile = new File("agents.txt")
 
     List<String> privateIps = []
@@ -41,9 +40,6 @@ public class ClusterController {
             agentsFile.createNewFile()
         }
         agentsFile.text.eachLine { String line -> privateIps << line }
-
-        STABILIZER_HOME = new File(ClusterController.class.protectionDomain.codeSource.location.path).parentFile.parent
-        echo "STABILIZER_HOME $STABILIZER_HOME"
     }
 
     void installAgent(String ip) {
@@ -141,22 +137,17 @@ public class ClusterController {
     private void scaleUp(int delta) {
         echo "Starting ${delta} machines"
 
-        ComputeService compute = ContextBuilder.newBuilder(config.CLOUD_PROVIDER)
-                .credentials(config.CLOUD_IDENTITY, config.CLOUD_CREDENTIAL)
-                .modules(asList(new Log4JLoggingModule(), new SshjSshClientModule()))
-                .buildView(ComputeServiceContext.class)
-                .getComputeService();
+        ComputeService compute = getComputeService()
 
         Template template = compute.templateBuilder()
                 .from(TemplateBuilderSpec.parse(config.MACHINE_SPEC))
                 .build();
 
         //println publicKeySpec
-        //converting pem to rsa
-        // https://gist.github.com/crowdmatt/5391537
+
 
         template.getOptions()
-                .inboundPorts(22,9000)
+                .inboundPorts(22, 9000)
                 .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
                 .blockUntilRunning(true)
                 .securityGroups("open")
@@ -165,8 +156,9 @@ public class ClusterController {
         println "Created machines, waiting for startup"
 
         for (NodeMetadata m : nodes) {
-            println "private ip address: ${m.privateAddresses}"
-            Utils.appendText(m.publicAddresses.iterator().next()+"\n", "agents.txt")
+            String ip = m..privateAddresses.iterator().next()
+            echo("\t" + ip + " LAUNCHED");
+            appendText(ip + "\n", agentsFile)
         }
 
         LoginCredentials login = LoginCredentials.builder()
@@ -182,13 +174,13 @@ public class ClusterController {
         for (NodeMetadata m : nodes) {
             String node = m.getId();
 
-            String ip = m.publicAddresses.iterator().next()
+            String ip = m..privateAddresses.iterator().next()
 
             ExecResponse response = compute.runScriptOnNode(node, Statements.exec("ls -al"), runScriptOptions);
-            if(response.exitStatus!=0){
-                Utils.exitWithError("Could not successfully ssh to %s",ip)
+            if (response.exitStatus != 0) {
+                Utils.exitWithError("Could not successfully ssh to %s", ip)
             }
-            System.out.println(ip +" STARTED");
+            echo("\t" + ip + " STARTED");
             privateIps.add(ip)
         }
 
@@ -196,45 +188,17 @@ public class ClusterController {
         echo "Successfully started ${delta} machines "
         echo "=============================================================="
 
-        //initPrivateIps(ids)
-
         installAgents()
         startAgents()
     }
 
-    void awaitStartup(List<String> ids) {
-        List<String> remainingIds = ids.clone()
-
-        for (int k = 1; k < 600; k++) {
-            def lines = "ec2-describe-instance-status".execute().text.split("\n")
-            for (int l = 0; l < (lines.length / 3); l++) {
-                def instanceLine = lines[l * 3].split()
-                def systemStatusLine = lines[l * 3 + 1].split()
-                def instanceStatusLine = lines[l * 3 + 2].split()
-
-                def id = instanceLine[1]
-                if (remainingIds.contains(id)) {
-                    def status = instanceStatusLine[2]
-                    def started = status == "passed"
-                    if (started) {
-                        remainingIds.remove(id)
-                    } else {
-                        //enable this line if you want to see the status.
-                        //println "    $id $status"
-                    }
-                }
-
-                if (remainingIds.size == 0) return
-            }
-
-            echo "Status scan $k started ${ids.size() - remainingIds.size()}/${ids.size()}"
-        }
-
-        echo "Timeout waiting for all instances to start, failed instances:"
-        remainingIds.each { String id ->
-            echo "  $id"
-        }
-        System.exit(1)
+    private ComputeService getComputeService() {
+        ComputeService compute = ContextBuilder.newBuilder(config.CLOUD_PROVIDER)
+                .credentials(config.CLOUD_IDENTITY, config.CLOUD_CREDENTIAL)
+                .modules(asList(new Log4JLoggingModule(), new SshjSshClientModule()))
+                .buildView(ComputeServiceContext.class)
+                .getComputeService();
+        compute
     }
 
     def downloadArtifacts() {
@@ -265,28 +229,20 @@ public class ClusterController {
         echo "Terminating $count ec2 machines"
         echo "=============================================================="
 
-        def x = "ec2-describe-instances".execute().text
-        def ids = ""
-        int removedCount = 0
-        x.eachLine { String line, lineCount ->
-            if (removedCount == count) {
-                return;
-            }
-
-            def columns = line.split()
-            if ("INSTANCE" == columns[0]) {
-                def id = columns[1]
-                def ip = columns[14]
-                if (privateIps.contains(ip)) {
-                    ids += "$id "
-                    removedCount++
-                    privateIps.remove(ip)
+        ComputeService computeService = getComputeService();
+        computeService.destroyNodesMatching(
+                new Predicate<NodeMetadata>() {
+                    @Override
+                    boolean apply(NodeMetadata input) {
+                        for(String ip : input.privateAddresses){
+                            if(privateIps.contains(ip)){
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
                 }
-            }
-        }
-
-        def output = "ec2kill $ids".execute().text
-        echo output
+        )
 
         agentsFile.write("")
         privateIps.each { String ip ->
@@ -334,8 +290,6 @@ public class ClusterController {
         println s
     }
 
-    //todo: look for pallet https://groups.google.com/forum/#!topic/pallet-clj/sX-8ilsSqRQ
-    //http://www.javacodegeeks.com/2013/10/a-command-line-interface-for-jclouds.html
     public static void main(String[] args) {
         def cli = new CliBuilder(
                 usage: 'cluster [options]',
@@ -348,7 +302,7 @@ public class ClusterController {
             s(longOpt: 'scale', args: 1, 'Scales the cluster')
             t(longOpt: 'terminate', 'Terminate all members in the cluster')
             k(longOpt: 'kill', 'Kills all agents')
-       }
+        }
 
         OptionAccessor opt = cli.parse(args)
 
