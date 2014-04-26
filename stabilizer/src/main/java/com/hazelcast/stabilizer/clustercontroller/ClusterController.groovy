@@ -136,7 +136,8 @@ public class ClusterController {
     }
 
     private void scaleUp(int delta) {
-        echoImportant("Starting ${delta} ${config.CLOUD_PROVIDER} machines using: "+config.MACHINE_SPEC);
+        echoImportant("Starting ${delta} ${config.CLOUD_PROVIDER} machines");
+        echo(config.MACHINE_SPEC);
 
         ComputeService compute = getComputeService()
 
