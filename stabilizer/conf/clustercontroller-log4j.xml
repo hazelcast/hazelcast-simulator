@@ -17,9 +17,15 @@
         </layout>
     </appender>
 
+    <logger name="net.schmizz.sshj">
+        <level value="warn"/>
+    </logger>
+
     <root>
         <priority value="debug"/>
         <appender-ref ref="console"/>
         <appender-ref ref="file"/>
     </root>
+
+
 </log4j:configuration>
