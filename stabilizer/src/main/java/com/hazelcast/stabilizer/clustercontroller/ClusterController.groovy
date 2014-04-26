@@ -131,7 +131,7 @@ public class ClusterController {
         }
     }
 
-     private void scaleUp(int delta) {
+    private void scaleUp(int delta) {
         echo "=============================================================="
         echo "Starting ${delta} ${config.CLOUD_PROVIDER} machines"
         echo "=============================================================="
@@ -143,13 +143,13 @@ public class ClusterController {
                 .build();
 
         template.getOptions()
-                .inboundPorts(22, AgentRemoteService.PORT, WorkerJvmManager.PORT,5701,5702)
+                .inboundPorts(22, AgentRemoteService.PORT, WorkerJvmManager.PORT, 5701, 5702)
                 .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
                 .blockUntilRunning(true)
                 .securityGroups("open")
 
         Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
-        println "Created machines, waiting for startup"
+        echo("Created machines, waiting for startup (can take a few minutes)")
 
         for (NodeMetadata m : nodes) {
             String ip = m.privateAddresses.iterator().next()
@@ -234,7 +234,7 @@ public class ClusterController {
                     boolean apply(NodeMetadata nodeMetadata) {
                         for (String ip : nodeMetadata.privateAddresses) {
                             if (terminateList.remove(ip)) {
-                                echo(format("\t%s Terminated", ip))
+                                echo(format("\t%s Terminating", ip))
                                 privateIps.remove(ip)
                                 return true;
                             }
@@ -244,7 +244,7 @@ public class ClusterController {
                 }
         )
 
-        log.info("Updating "+agentsFile.getAbsolutePath())
+        log.info("Updating " + agentsFile.getAbsolutePath())
         agentsFile.write("")
         privateIps.each { String ip ->
             agentsFile.text += "$ip\n"
