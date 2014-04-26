@@ -98,7 +98,8 @@ public final class Utils {
         }
 
         if (!tmpFile.renameTo(file)) {
-            throw new RuntimeException(format("Could not rename [%s] to [%s]", tmpFile.getAbsolutePath(), file.getAbsolutePath()));
+            throw new RuntimeException(format("Could not rename [%s] to [%s]",
+                    tmpFile.getAbsolutePath(), file.getAbsolutePath()));
         }
     }
 
@@ -137,6 +138,10 @@ public final class Utils {
         }
     }
 
+    public static void appendText(String text, String file) {
+         appendText(text, new File(file));
+    }
+
     public static void appendText(String text, File file) {
         if (text == null) {
             throw new NullPointerException("text can't be null");
@@ -161,7 +166,11 @@ public final class Utils {
     }
 
 
-    public static String asText(File file) {
+    public static String fileAsText(String filePath){
+        return fileAsText(new File(filePath));
+    }
+
+    public static String fileAsText(File file) {
         try {
             FileInputStream stream = new FileInputStream(file);
             try {
@@ -181,7 +190,6 @@ public final class Utils {
         }
     }
 
-
     public static void delete(File f) throws IOException {
         if (!f.exists()) return;
 
@@ -190,8 +198,9 @@ public final class Utils {
                 delete(c);
         }
 
-        if (!f.delete())
+        if (!f.delete()) {
             throw new FileNotFoundException("Failed to delete file: " + f);
+        }
     }
 
     public static void ensureExistingDirectory(File dir) {

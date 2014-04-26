@@ -11,6 +11,7 @@ target/
 *.failure
 *.exception
 *.oome
+agents.txt
 vtune/
 stabilizer/workers/*
 stabilizer/logs/*

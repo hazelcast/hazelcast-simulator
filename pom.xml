@@ -24,6 +24,8 @@
         <hazelcast.version>3.2.1-SNAPSHOT</hazelcast.version>
         <jopt.version>4.4</jopt.version>
         <log4j.version>1.2.17</log4j.version>
+        <jclouds.version>1.7.2</jclouds.version>
+        <groovy.version>2.2.2</groovy.version>
     </properties>
 
     <modules>

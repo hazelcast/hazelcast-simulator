@@ -6,9 +6,10 @@ fi
 
 echo  STABILIZER_HOME = ${STABILIZER_HOME}
 
-export JAVA_OPTS="-Xms64m -Xmx1g -XX:MaxPermSize=256m -server"
+export JAVA_OPTS="-Xms64m -Xmx1g -XX:MaxPermSize=256m -server ${JAVA_EXTRA_OPTS}"
+echo JAVA_OPTS = ${JAVA_OPTS}
 java -cp "${STABILIZER_HOME}/lib/*" ${JAVA_OPTS} \
-    -DSTABILIZER_HOME=${STABILIZER_HOME} \
+    -DSTABILIZER_HOME=${STABILIZER_HOME}  \
     -Dhazelcast.logging.type=log4j \
-    -Dlog4j.configuration=file:${STABILIZER_HOME}/conf/coordinator-log4j.xml \
-    com.hazelcast.stabilizer.coordinator.Coordinator "$@"
+    -Dlog4j.configuration=file:${STABILIZER_HOME}/conf/clustercontroller-log4j.xml \
+   com.hazelcast.stabilizer.clustercontroller.ClusterController "$@"

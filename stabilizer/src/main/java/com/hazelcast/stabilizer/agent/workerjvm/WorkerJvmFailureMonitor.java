@@ -107,7 +107,7 @@ public class WorkerJvmFailureMonitor {
         for (File file : files) {
             String name = file.getName();
             if (name.endsWith(".failure")) {
-                String cause = Utils.asText(file);
+                String cause = Utils.fileAsText(file);
                 //we rename it so that we don't detect the same failure again.
                 file.delete();
 
