@@ -244,6 +244,7 @@ public class ClusterController {
                 }
         )
 
+        log.info("Updating "+agentsFile.getAbsolutePath())
         agentsFile.write("")
         privateIps.each { String ip ->
             agentsFile.text += "$ip\n"
