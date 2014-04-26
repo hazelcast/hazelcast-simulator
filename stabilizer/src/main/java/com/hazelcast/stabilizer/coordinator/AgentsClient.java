@@ -346,8 +346,6 @@ public class AgentsClient {
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                 Object response = in.readObject();
 
-                log.info("Call to service: "+service+" resulted in:"+response);
-
                 if (response instanceof Exception) {
                     Exception exception = (Exception) response;
                     Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());

@@ -120,10 +120,6 @@ public class AgentRemoteService {
 
         private void spawnWorkers(WorkerJvmSettings settings) throws Exception {
             try {
-                if (true) {
-                    throw new IllegalStateException("foobar");
-                }
-
                 agent.getWorkerJvmManager().spawn(settings);
             } catch (Exception e) {
                 log.severe("Failed to spawn workers from settings:" + settings, e);
