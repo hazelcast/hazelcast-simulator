@@ -51,7 +51,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.Utils.asText;
+import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.writeObject;
 import static com.hazelcast.stabilizer.tests.TestUtils.bindProperties;
@@ -161,11 +161,11 @@ public class Worker {
 
             String workerHzFile = args[0];
             log.info("Worker hz config file:" + workerHzFile);
-            log.info(asText(new File(workerHzFile)));
+            log.info(fileAsText(new File(workerHzFile)));
 
             String clientHzFile = args[1];
             log.info("Client hz config file:" + clientHzFile);
-            log.info(asText(new File(clientHzFile)));
+            log.info(fileAsText(new File(clientHzFile)));
 
             String workerMode = System.getProperty("workerMode");
             log.info("Worker mode:" + workerMode);

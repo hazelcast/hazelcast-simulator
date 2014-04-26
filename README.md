@@ -41,7 +41,7 @@ and send back to the coordinator.
 and you send a command like "run this testsuite with 10 worker JVM's for 2 hours".
 
 * TestCluster: responsible for spawning/terminating EC2 instances and to install Agents on remote machines. It can be used
-in combination with EC2, but it can also be used in a static setup like a local machine or the Hazelcast testcluster we
+in combination with EC2, but it can also be used in a static setup like a local machine or the Hazelcast com.hazelcast.stabilizer.testcluster we
 have in the office.
 
 #### Controlling Deployment

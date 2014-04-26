@@ -97,7 +97,7 @@ public class AgentsClient {
     }
 
     private String[] getMachineAddresses() {
-        String content = Utils.asText(machineListFile);
+        String content = Utils.fileAsText(machineListFile);
         String[] addresses = content.split("\n");
         return addresses;
 //        if (addresses.length == 0) {

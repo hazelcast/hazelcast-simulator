@@ -1,30 +1,50 @@
-#!/usr/bin/env groovy
+package com.hazelcast.stabilizer.clustercontroller
 
-class Cluster {
+import com.google.common.collect.ImmutableSet
+import com.google.inject.Module
+import com.hazelcast.stabilizer.Utils
+import org.jclouds.ContextBuilder
+import org.jclouds.compute.ComputeService
+import org.jclouds.compute.ComputeServiceContext
+import org.jclouds.compute.domain.ExecResponse
+import org.jclouds.compute.domain.NodeMetadata
+import org.jclouds.compute.domain.Template
+import org.jclouds.compute.domain.TemplateBuilderSpec
+import org.jclouds.compute.options.RunScriptOptions
+import org.jclouds.domain.LoginCredentials
+import org.jclouds.logging.log4j.config.Log4JLoggingModule
+import org.jclouds.scriptbuilder.domain.Statements
+import org.jclouds.sshj.config.SshjSshClientModule
+
+import static com.hazelcast.stabilizer.Utils.fileAsText
+import static java.util.Arrays.asList
+
+public class ClusterController {
 
     def AGENT_PORT = '8701'
     def config
     def STABILIZER_HOME
     def STABILIZER_VERSION = "0.1-SNAPSHOT"
     def agentsFile = new File("agents.txt")
-    def knownHostsFile = new File(new File(System.getProperty("user.home"), ".ssh"), "known_hosts")
 
     List<String> privateIps = []
 
-    Cluster() {
+    ClusterController() {
         def props = new Properties()
 
-        new File("start.properties").withInputStream {
+        new File("stabilizer.properties").withInputStream {
             stream -> props.load(stream)
         }
         config = new ConfigSlurper().parse(props)
 
-        if (!agentsFile.exists()) agentsFile.createNewFile()
+        if (!agentsFile.exists()) {
+            agentsFile.createNewFile()
+        }
         agentsFile.text.eachLine { String line -> privateIps << line }
 
-        STABILIZER_HOME = new File(Cluster.class.protectionDomain.codeSource.location.path).parentFile.parent
+        STABILIZER_HOME = new File(ClusterController.class.protectionDomain.codeSource.location.path).parentFile.parent
         echo "STABILIZER_HOME $STABILIZER_HOME"
-   }
+    }
 
     void installAgent(String ip) {
         echo "=============================================================="
@@ -100,7 +120,7 @@ class Cluster {
             default:
                 try {
                     return Integer.parseInt(sizeType)
-                }catch(NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     println "Unknown size: $sizeType"
                     System.exit 1
                 }
@@ -119,60 +139,67 @@ class Cluster {
     }
 
     private void scaleUp(int delta) {
-        echo "Starting ${delta} ${config.INSTANCE_TYPE} machines"
-        echo "On EC2 this will take +/- 100 'scans'."
+        echo "Starting ${delta} machines"
 
-        def output = """ec2-run-instances \
-            --availability-zone ${config.AVAILABILITY_ZONE} \
-            --instance-type ${config.INSTANCE_TYPE} \
-            --instance-count $delta \
-            --group ${config.SECURITY_GROUP} \
-            --key ${config.KEY_PAIR} \
-            ${config.AMI}""".execute().text
+        ComputeService compute = ContextBuilder.newBuilder(config.CLOUD_PROVIDER)
+                .credentials(config.CLOUD_IDENTITY, config.CLOUD_CREDENTIAL)
+                .modules(asList(new Log4JLoggingModule(), new SshjSshClientModule()))
+                .buildView(ComputeServiceContext.class)
+                .getComputeService();
 
-        echo "=============================================================="
-        echo output
-        echo "=============================================================="
+        Template template = compute.templateBuilder()
+                .from(TemplateBuilderSpec.parse(config.MACHINE_SPEC))
+                .build();
 
-        def ids = []
-        output.eachLine { String line, count ->
-            if (line.startsWith("INSTANCE")) {
-                def id = line.split()[1]
-                ids << id
-            }
+        //println publicKeySpec
+        //converting pem to rsa
+        // https://gist.github.com/crowdmatt/5391537
+
+        template.getOptions()
+                .inboundPorts(22,9000)
+                .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
+                .blockUntilRunning(true)
+                .securityGroups("open")
+
+        Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
+        println "Created machines, waiting for startup"
+
+        for (NodeMetadata m : nodes) {
+            println "private ip address: ${m.privateAddresses}"
+            Utils.appendText(m.publicAddresses.iterator().next()+"\n", "agents.txt")
         }
 
-        awaitStartup(ids)
+        LoginCredentials login = LoginCredentials.builder()
+                .privateKey(fileAsText(config.IDENTITY_FILE))
+                .noPassword()
+                .build();
+
+        RunScriptOptions runScriptOptions = RunScriptOptions.Builder
+                .overrideLoginCredentials(login)
+                .wrapInInitScript(false)
+
+        //waiting for nodes to start
+        for (NodeMetadata m : nodes) {
+            String node = m.getId();
+
+            String ip = m.publicAddresses.iterator().next()
+
+            ExecResponse response = compute.runScriptOnNode(node, Statements.exec("ls -al"), runScriptOptions);
+            if(response.exitStatus!=0){
+                Utils.exitWithError("Could not successfully ssh to %s",ip)
+            }
+            System.out.println(ip +" STARTED");
+            privateIps.add(ip)
+        }
 
         echo "=============================================================="
-        echo "Successfully started ${delta} ${config.INSTANCE_TYPE} machines "
+        echo "Successfully started ${delta} machines "
         echo "=============================================================="
 
-        initPrivateIps(ids)
-
-        echo "Agents started"
-        privateIps.each { String ip -> println "--  $ip" }
+        //initPrivateIps(ids)
 
         installAgents()
         startAgents()
-    }
-
-    void initPrivateIps(List<String> ids) {
-        def x = "ec2-describe-instances".execute().text
-        x.eachLine { String line, count ->
-            def columns = line.split()
-            if ("INSTANCE" == columns[0]) {
-                def id = columns[1]
-                if (ids.contains(id)) {
-                    privateIps << columns[14]
-                }
-            }
-        }
-
-        agentsFile.write("")
-        privateIps.each { String ip ->
-            agentsFile.text += "$ip\n"
-        }
     }
 
     void awaitStartup(List<String> ids) {
@@ -200,11 +227,11 @@ class Cluster {
                 if (remainingIds.size == 0) return
             }
 
-            echo "Status scan $k started ${ids.size()-remainingIds.size()}/${ids.size()}"
+            echo "Status scan $k started ${ids.size() - remainingIds.size()}/${ids.size()}"
         }
 
         echo "Timeout waiting for all instances to start, failed instances:"
-        remainingIds.each {String id ->
+        remainingIds.each { String id ->
             echo "  $id"
         }
         System.exit(1)
@@ -230,8 +257,8 @@ class Cluster {
     }
 
     void terminate(count = Integer.MAX_VALUE) {
-        if(count>privateIps.size()){
-            count=privateIps.size()
+        if (count > privateIps.size()) {
+            count = privateIps.size()
         }
 
         echo "=============================================================="
@@ -306,66 +333,68 @@ class Cluster {
     void echo(Object s) {
         println s
     }
+
+    //todo: look for pallet https://groups.google.com/forum/#!topic/pallet-clj/sX-8ilsSqRQ
+    //http://www.javacodegeeks.com/2013/10/a-command-line-interface-for-jclouds.html
+    public static void main(String[] args) {
+        def cli = new CliBuilder(
+                usage: 'cluster [options]',
+                header: '\nAvailable options (use -h for help):\n',
+                stopAtNonOption: false)
+        cli.with {
+            h(longOpt: 'help', 'print this message')
+            r(longOpt: 'restart', 'Restarts all agents')
+            d(longOpt: 'download', 'Downloads the logs')
+            s(longOpt: 'scale', args: 1, 'Scales the cluster')
+            t(longOpt: 'terminate', 'Terminate all members in the cluster')
+            k(longOpt: 'kill', 'Kills all agents')
+       }
+
+        OptionAccessor opt = cli.parse(args)
+
+        if (!opt) {
+            println "Failure parsing options"
+            System.exit 1
+            return
+        }
+
+        if (opt.h) {
+            cli.usage()
+            System.exit 0
+        }
+
+        if (opt.r) {
+            def cluster = new ClusterController()
+            cluster.installAgents()
+            cluster.startAgents()
+            System.exit 0
+        }
+
+        if (opt.k) {
+            def cluster = new ClusterController()
+            cluster.killAgents()
+            System.exit 0
+        }
+
+
+        if (opt.d) {
+            def cluster = new ClusterController()
+            cluster.downloadArtifacts()
+            System.exit 0
+        }
+
+        if (opt.t) {
+            def cluster = new ClusterController()
+            cluster.terminate()
+            System.exit 0
+        }
+
+        if (opt.s) {
+            def cluster = new ClusterController()
+
+            String sizeType = opt.s
+            cluster.scale(sizeType)
+            System.exit 0
+        }
+    }
 }
-
-def cli = new CliBuilder(
-        usage: 'cluster [options]',
-        header: '\nAvailable options (use -h for help):\n',
-        stopAtNonOption: false)
-cli.with {
-    h(longOpt: 'help', 'print this message')
-    r(longOpt: 'restart', 'Restarts all agents')
-    d(longOpt: 'download', 'Downloads the logs')
-    s(longOpt: 'scale', args: 1, 'Scales the cluster')
-    t(longOpt: 'terminate', 'Terminate all members in the cluster')
-    k(longOpt: 'kill', 'Kills all agents')
-}
-
-OptionAccessor opt = cli.parse(args)
-
-if (!opt) {
-    println "Failure parsing options"
-    System.exit 1
-    return
-}
-
-if (opt.h) {
-    cli.usage()
-    System.exit 0
-}
-
-if (opt.r) {
-    def cluster = new Cluster()
-    cluster.installAgents()
-    cluster.startAgents()
-    System.exit 0
-}
-
-if (opt.k) {
-    def cluster = new Cluster()
-    cluster.killAgents()
-    System.exit 0
-}
-
-
-if (opt.d) {
-    def cluster = new Cluster()
-    cluster.downloadArtifacts()
-    System.exit 0
-}
-
-if (opt.t) {
-    def cluster = new Cluster()
-    cluster.terminate()
-    System.exit 0
-}
-
-if (opt.s) {
-    def cluster = new Cluster()
-
-    String sizeType = opt.s
-    cluster.scale(sizeType)
-    System.exit 0
-}
-
-

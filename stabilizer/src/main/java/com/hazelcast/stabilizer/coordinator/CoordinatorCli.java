@@ -12,7 +12,7 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.Utils.asText;
+import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.getFile;
 import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
@@ -158,8 +158,8 @@ public class CoordinatorCli {
             workerJvmSettings.clientWorkerCount = options.valueOf(optionSpec.clientWorkerCountSpec);
             workerJvmSettings.mixedWorkerCount = options.valueOf(optionSpec.mixedWorkerCountSpec);
             workerJvmSettings.workerStartupTimeout = options.valueOf(optionSpec.workerStartupTimeoutSpec);
-            workerJvmSettings.hzConfig = asText(getFile(optionSpec.hzFileSpec, options, "Worker Hazelcast config file"));
-            workerJvmSettings.clientHzConfig = asText(getFile(optionSpec.clientHzFileSpec, options, "Worker Client Hazelcast config file"));
+            workerJvmSettings.hzConfig = fileAsText(getFile(optionSpec.hzFileSpec, options, "Worker Hazelcast config file"));
+            workerJvmSettings.clientHzConfig = fileAsText(getFile(optionSpec.clientHzFileSpec, options, "Worker Client Hazelcast config file"));
             workerJvmSettings.refreshJvm = options.valueOf(optionSpec.workerRefreshSpec);
             workerJvmSettings.javaVendor = options.valueOf(optionSpec.workerJavaVendorSpec);
             workerJvmSettings.javaVersion = options.valueOf(optionSpec.workerJavaVersionSpec);
