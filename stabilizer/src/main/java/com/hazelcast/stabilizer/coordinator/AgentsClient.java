@@ -351,6 +351,7 @@ public class AgentsClient {
                 if (response instanceof Exception) {
                     Exception exception = (Exception) response;
                     Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
+                    throw exception;
                 }
                 return response;
             } finally {
