@@ -229,13 +229,18 @@ public class ClusterController {
         echo "Terminating $count ec2 machines"
         echo "=============================================================="
 
+        final List<String> terminateList = privateIps.subList(0, count)
+
+
         ComputeService computeService = getComputeService();
         computeService.destroyNodesMatching(
                 new Predicate<NodeMetadata>() {
                     @Override
-                    boolean apply(NodeMetadata input) {
-                        for(String ip : input.privateAddresses){
-                            if(privateIps.contains(ip)){
+                    boolean apply(NodeMetadata nodeMetadata) {
+                        for (String ip : nodeMetadata.privateAddresses) {
+                            if (terminateList.remove(ip)) {
+                                echo(format("\t%s Terminated", ip))
+                                privateIps.remove(ip)
                                 return true;
                             }
                         }
