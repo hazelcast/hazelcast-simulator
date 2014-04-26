@@ -84,7 +84,7 @@ public class AgentsClient {
             Utils.exitWithError("There are no reachable agents");
         }
 
-        if(unchecked.isEmpty()){
+        if (unchecked.isEmpty()) {
             return;
         }
 
@@ -332,7 +332,6 @@ public class AgentsClient {
         }
 
         private Object execute(String service, Object... args) throws Exception {
-
             Socket socket = newSocket();
 
             try {
@@ -344,7 +343,12 @@ public class AgentsClient {
                 oos.flush();
 
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                return in.readObject();
+                Object o = in.readObject();
+                if (o instanceof Exception) {
+                    Exception exception = (Exception) o;
+                    Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
+                }
+                return o;
             } finally {
                 Utils.closeQuietly(socket);
             }

@@ -46,7 +46,7 @@ public class AgentRemoteService {
 
     public void start() throws IOException {
         serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(Utils.getHostAddress()));
-        log.info("Started Agent Remote Service on :" + serverSocket.getInetAddress().getHostAddress()+":"+PORT);
+        log.info("Started Agent Remote Service on :" + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
         new AcceptorThread().start();
     }
 
@@ -75,8 +75,8 @@ public class AgentRemoteService {
                         spawnWorkers(settings);
                     } else if (SERVICE_INIT_TESTSUITE.equals(service)) {
                         TestSuite testSuite = (TestSuite) in.readObject();
-                        byte[] bytes = (byte[])in.readObject();
-                        initTestSuite(testSuite,bytes);
+                        byte[] bytes = (byte[]) in.readObject();
+                        initTestSuite(testSuite, bytes);
                     } else if (SERVICE_CLEAN_WORKERS_HOME.equals(service)) {
                         cleanWorkersHome();
                     } else if (SERVICE_TERMINATE_WORKERS.equals(service)) {
@@ -120,6 +120,10 @@ public class AgentRemoteService {
 
         private void spawnWorkers(WorkerJvmSettings settings) throws Exception {
             try {
+                if (true) {
+                    throw new IllegalStateException("foobar");
+                }
+
                 agent.getWorkerJvmManager().spawn(settings);
             } catch (Exception e) {
                 log.severe("Failed to spawn workers from settings:" + settings, e);

@@ -62,6 +62,18 @@ public final class Utils {
 
     public final static String FILE_SEPERATOR = System.getProperty("file.separator");
 
+    private final static String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
+    private final static String EXCEPTION_MESSAGE_SEPARATOR = "------ %MSG% ------";
+
+    public static void fixRemoteStackTrace(Throwable remoteCause, StackTraceElement[] localSideStackTrace) {
+        StackTraceElement[] remoteStackTrace = remoteCause.getStackTrace();
+        StackTraceElement[] newStackTrace = new StackTraceElement[localSideStackTrace.length + remoteStackTrace.length];
+        System.arraycopy(remoteStackTrace, 0, newStackTrace, 0, remoteStackTrace.length);
+        newStackTrace[remoteStackTrace.length] = new StackTraceElement(EXCEPTION_SEPARATOR, "", null, -1);
+        System.arraycopy(localSideStackTrace, 1, newStackTrace, remoteStackTrace.length + 1, localSideStackTrace.length - 1);
+        remoteCause.setStackTrace(newStackTrace);
+    }
+
     public static String getHostAddress() {
         if (hostAddress != null) {
             return hostAddress;
