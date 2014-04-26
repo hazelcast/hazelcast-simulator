@@ -218,6 +218,10 @@ public final class Utils {
     }
 
     public static String getVersion() {
+       if(true){
+           return "0.1-SNAPSHOT";
+       }
+
         String version = "";
         try {
             Properties p = new Properties();

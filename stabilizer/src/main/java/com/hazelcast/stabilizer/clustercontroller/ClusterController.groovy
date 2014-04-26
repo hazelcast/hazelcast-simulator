@@ -4,6 +4,8 @@ import com.google.common.base.Predicate
 import com.hazelcast.logging.ILogger
 import com.hazelcast.logging.Logger
 import com.hazelcast.stabilizer.Utils
+import com.hazelcast.stabilizer.agent.AgentRemoteService
+import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager
 import org.jclouds.ContextBuilder
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.ComputeServiceContext
@@ -36,7 +38,7 @@ public class ClusterController {
         log.info(format("Version: %s", getVersion()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
-        def props = new Properties()
+        Properties props = new Properties()
 
         new File("stabilizer.properties").withInputStream {
             stream -> props.load(stream)
@@ -110,23 +112,11 @@ public class ClusterController {
     }
 
     int calcSize(String sizeType) {
-        switch (sizeType) {
-            case "micro": return 1
-            case "tiny": return 2
-            case "small": return 4
-            case "medium": return 6
-            case "large": return 10
-            case "xlarge": return 20
-            case "2xlarge": return 40
-            case "3xlarge": return 100
-            case "4xlarge": return 190
-            default:
-                try {
-                    return Integer.parseInt(sizeType)
-                } catch (NumberFormatException e) {
-                    println "Unknown size: $sizeType"
-                    System.exit 1
-                }
+        try {
+            return Integer.parseInt(sizeType)
+        } catch (NumberFormatException e) {
+            println "Unknown size: $sizeType"
+            System.exit 1
         }
     }
 
@@ -142,7 +132,9 @@ public class ClusterController {
     }
 
     private void scaleUp(int delta) {
-        echo "Starting ${delta} machines"
+        echo "=============================================================="
+        echo "Starting ${delta} ${config.CLOUD_PROVIDER} machines"
+        echo "=============================================================="
 
         ComputeService compute = getComputeService()
 
@@ -150,11 +142,8 @@ public class ClusterController {
                 .from(TemplateBuilderSpec.parse(config.MACHINE_SPEC))
                 .build();
 
-        //println publicKeySpec
-
-
         template.getOptions()
-                .inboundPorts(22, 9000)
+                .inboundPorts(22, AgentRemoteService.PORT, WorkerJvmManager.PORT)
                 .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
                 .blockUntilRunning(true)
                 .securityGroups("open")
@@ -185,14 +174,14 @@ public class ClusterController {
 
             ExecResponse response = compute.runScriptOnNode(node, Statements.exec("ls -al"), runScriptOptions);
             if (response.exitStatus != 0) {
-                Utils.exitWithError("Could not successfully ssh to %s", ip)
+                exitWithError(format("Could not successfully ssh to %s", ip))
             }
             echo("\t" + ip + " STARTED");
             privateIps.add(ip)
         }
 
         echo "=============================================================="
-        echo "Successfully started ${delta} machines "
+        echo "Successfully started ${delta} ${config.CLOUD_PROVIDER} machines "
         echo "=============================================================="
 
         installAgents()
@@ -232,12 +221,11 @@ public class ClusterController {
             count = privateIps.size()
         }
 
-        echo "=============================================================="
-        echo "Terminating $count ec2 machines"
-        echo "=============================================================="
+        log.info("==============================================================");
+        log.info(format("Terminating %s %s machines", count, config.CLOUD_PROVIDER));
+        log.info("==============================================================");
 
-        final List<String> terminateList = privateIps.subList(0, count)
-
+        final List<String> terminateList = privateIps.subList(0, count);
 
         ComputeService computeService = getComputeService();
         computeService.destroyNodesMatching(
@@ -261,9 +249,9 @@ public class ClusterController {
             agentsFile.text += "$ip\n"
         }
 
-        echo "=============================================================="
-        echo "Finished terminating $count ec2 machines"
-        echo "=============================================================="
+        log.info("==============================================================");
+        log.info("Finished terminating $count ${config.CLOUD_PROVIDER} machines");
+        log.info("==============================================================");
     }
 
     void bash(String command) {
@@ -277,7 +265,7 @@ public class ClusterController {
         // wait for the shell to finish and get the return code
         int shellExitStatus = shell.waitFor();
         if (shellExitStatus != 0) {
-            echo "Failed to execute [$command]"
+            echo("Failed to execute [$command]");
             println "out> $sout err> $serr"
             System.exit 1
         }
@@ -299,7 +287,7 @@ public class ClusterController {
     }
 
     void echo(Object s) {
-        println s
+        log.info(s)
     }
 
     public static void main(String[] args) {
