@@ -17,6 +17,9 @@ import org.jclouds.sshj.config.SshjSshClientModule
 
 import static com.hazelcast.stabilizer.Utils.appendText
 import static com.hazelcast.stabilizer.Utils.fileAsText
+import static com.hazelcast.stabilizer.Utils.getVersion
+import static java.lang.String.format
+import static java.lang.String.format
 import static java.util.Arrays.asList
 
 public class ClusterController {
@@ -29,7 +32,9 @@ public class ClusterController {
     List<String> privateIps = []
 
     ClusterController() {
-        echo("ClusterController")
+        log.info("Hazelcast Stabilizer ClusterController");
+        log.info(format("Version: %s", getVersion()));
+        log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         def props = new Properties()
 
@@ -176,7 +181,7 @@ public class ClusterController {
         for (NodeMetadata m : nodes) {
             String node = m.getId();
 
-            String ip = m..privateAddresses.iterator().next()
+            String ip = m.privateAddresses.iterator().next()
 
             ExecResponse response = compute.runScriptOnNode(node, Statements.exec("ls -al"), runScriptOptions);
             if (response.exitStatus != 0) {
