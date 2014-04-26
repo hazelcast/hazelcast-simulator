@@ -52,9 +52,7 @@ public class ClusterController {
     }
 
     void installAgent(String ip) {
-        echo "=============================================================="
-        echo "Installing Agent on ${ip}"
-        echo "=============================================================="
+        echoImportant "Installing Agent on ${ip}"
 
         echo "Installing missing Java"
         //install java under Ubuntu.
@@ -67,44 +65,34 @@ public class ClusterController {
         //then we copy the stabilizer directory
         scpToRemote ip, STABILIZER_HOME, ""
 
-        echo "=============================================================="
-        echo "Successfully installed Agent on ${ip}"
-        echo "=============================================================="
+        echoImportant("Successfully installed Agent on ${ip}");
     }
 
     void startAgents() {
-        echo "=============================================================="
-        echo "Starting ${privateIps.size()} Agents"
-        echo "=============================================================="
+        echoImportant("Starting ${privateIps.size()} Agents");
 
-        privateIps.each { String ip ->
+        for (String ip : privateIps) {
             echo "Killing Agent $ip"
             ssh ip, "killall -9 java || true"
         }
 
-        privateIps.each { String ip ->
+        for (String ip : privateIps) {
             echo "Starting Agent $ip"
             ssh ip, "nohup hazelcast-stabilizer-${getVersion()}/bin/agent > agent.out 2> agent.err < /dev/null &"
         }
 
-        echo "=============================================================="
-        echo "Successfully started ${privateIps.size()} Agents"
-        echo "=============================================================="
+        echoImportant("Successfully started ${privateIps.size()} Agents");
     }
 
     void killAgents() {
-        echo "=============================================================="
-        echo "Killing ${privateIps.size()} Agents"
-        echo "=============================================================="
+        echoImportant("Killing ${privateIps.size()} Agents");
 
-        privateIps.each { String ip ->
+        for (String ip : privateIps) {
             echo "Killing Agent $ip"
             ssh ip, "killall -9 java || true"
         }
 
-        echo "=============================================================="
-        echo "Successfully killed ${privateIps.size()} Agents"
-        echo "=============================================================="
+        echoImportant("Successfully killed ${privateIps.size()} Agents");
     }
 
     void installAgents() {
@@ -121,13 +109,13 @@ public class ClusterController {
     }
 
     void scale(String sizeType) {
-        int delta = calcSize(sizeType) - privateIps.size()
+        int delta = calcSize(sizeType) - privateIps.size();
         if (delta == 0) {
-            echo "Ignoring spawn machines, desired number of machines already exists"
+            echo("Ignoring spawn machines, desired number of machines already exists");
         } else if (delta < 0) {
-            terminate(-delta)
+            terminate(-delta);
         } else {
-            scaleUp(delta)
+            scaleUp(delta);
         }
     }
 
@@ -148,11 +136,10 @@ public class ClusterController {
     }
 
     private void scaleUp(int delta) {
-        echo "=============================================================="
-        echo "Starting ${delta} ${config.CLOUD_PROVIDER} machines"
-        echo "Using the following spec: "
-        echo config.MACHINE_SPEC
-        echo "=============================================================="
+        echoImportant("Starting ${delta} ${config.CLOUD_PROVIDER} machines\n"
+                + "Using the following spec: "
+                + config.MACHINE_SPEC
+        );
 
         ComputeService compute = getComputeService()
 
@@ -199,9 +186,7 @@ public class ClusterController {
             privateIps.add(ip)
         }
 
-        echo "=============================================================="
-        echo "Successfully started ${delta} ${config.CLOUD_PROVIDER} machines "
-        echo "=============================================================="
+        echoImportant("Successfully started ${delta} ${config.CLOUD_PROVIDER} machines ");
 
         installAgents()
         startAgents()
@@ -216,32 +201,27 @@ public class ClusterController {
     }
 
     def downloadArtifacts() {
-        echo "=============================================================="
-        echo "Download artifacts of ${privateIps.size()} machines"
-        echo "=============================================================="
+        echoImportant("Download artifacts of ${privateIps.size()} machines");
 
-        bash "mkdir -p workers"
+        bash("mkdir -p workers");
 
-        privateIps.each { String ip ->
-            echo "Downoading from $ip"
-            bash """rsync -av -e "ssh ${config.SSH_OPTIONS}" \
+        for (String ip : privateIps) {
+            echo("Downoading from $ip");
+
+            bash("""rsync -av -e "ssh ${config.SSH_OPTIONS}" \
                 ${config.USER}@$ip:hazelcast-stabilizer-${getVersion()}/workers/ \
-                workers"""
+                workers""");
         }
 
-        echo "=============================================================="
-        echo "Finished Downloading Artifacts of ${privateIps.size()} machines"
-        echo "=============================================================="
+        echoImportant("Finished Downloading Artifacts of ${privateIps.size()} machines");
     }
 
     void terminate(count = Integer.MAX_VALUE) {
         if (count > privateIps.size()) {
-            count = privateIps.size()
+            count = privateIps.size();
         }
 
-        log.info("==============================================================");
-        log.info(format("Terminating %s %s machines", count, config.CLOUD_PROVIDER));
-        log.info("==============================================================");
+        echoImportant(format("Terminating %s %s machines", count, config.CLOUD_PROVIDER));
 
         final List<String> terminateList = privateIps.subList(0, count);
 
@@ -262,15 +242,13 @@ public class ClusterController {
                 }
         )
 
-        log.info("Updating " + agentsFile.getAbsolutePath())
+        log.info("Updating " + agentsFile.getAbsolutePath());
         agentsFile.write("")
-        privateIps.each { String ip ->
+        for (String ip : privateIps) {
             agentsFile.text += "$ip\n"
         }
 
-        log.info("==============================================================");
-        log.info("Finished terminating $count ${config.CLOUD_PROVIDER} machines");
-        log.info("==============================================================");
+        echoImportant("Finished terminating $count ${config.CLOUD_PROVIDER} machines");
     }
 
     void bash(String command) {
@@ -291,22 +269,28 @@ public class ClusterController {
     }
 
     void scpToRemote(String ip, String src, String target) {
-        String command = "scp -r ${config.SSH_OPTIONS} $src ${config.USER}@$ip:$target"
-        bash(command)
+        String command = "scp -r ${config.SSH_OPTIONS} $src ${config.USER}@$ip:$target";
+        bash(command);
     }
 
     void ssh(String ip, String command) {
-        String sshCommand = "ssh ${config.SSH_OPTIONS} -q ${config.USER}@$ip \"$command\""
-        bash sshCommand
+        String sshCommand = "ssh ${config.SSH_OPTIONS} -q ${config.USER}@$ip \"$command\"";
+        bash(sshCommand);
     }
 
     void sshQuiet(String ip, String command) {
-        String sshCommand = "ssh ${config.SSH_OPTIONS} -q ${config.USER}@$ip \"$command\" || true"
-        bash sshCommand
+        String sshCommand = "ssh ${config.SSH_OPTIONS} -q ${config.USER}@$ip \"$command\" || true";
+        bash(sshCommand);
     }
 
     void echo(Object s) {
-        log.info(s)
+        log.info(s == null ? "null" : s.toString());
+    }
+
+    void echoImportant(Object s) {
+        echo("==============================================================");
+        echo(s);
+        echo("==============================================================");
     }
 
     public static void main(String[] args) {
