@@ -39,9 +39,29 @@
         </dependency>
 
         <!-- jclouds -->
+         <dependency>
+            <groupId>org.apache.jclouds</groupId>
+            <artifactId>jclouds-allcompute</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.jclouds</groupId>
-            <artifactId>jclouds-all</artifactId>
+            <artifactId>jclouds-compute</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jclouds</groupId>
+            <artifactId>jclouds-core</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jclouds</groupId>
+            <artifactId>jclouds-compute</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jclouds.driver</groupId>
+            <artifactId>jclouds-log4j</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
