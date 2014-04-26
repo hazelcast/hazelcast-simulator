@@ -29,6 +29,8 @@ public class ClusterController {
     List<String> privateIps = []
 
     ClusterController() {
+        echo("ClusterController")
+
         def props = new Properties()
 
         new File("stabilizer.properties").withInputStream {
@@ -156,7 +158,7 @@ public class ClusterController {
         println "Created machines, waiting for startup"
 
         for (NodeMetadata m : nodes) {
-            String ip = m..privateAddresses.iterator().next()
+            String ip = m.privateAddresses.iterator().next()
             echo("\t" + ip + " LAUNCHED");
             appendText(ip + "\n", agentsFile)
         }
