@@ -184,7 +184,7 @@ public class ClusterController {
             for (NodeMetadata m : nodes) {
                 String ip = m.privateAddresses.iterator().next()
                 installChef(m, compute);
-                //installJava(m, compute);
+                installJava(m, compute);
                 echo("\t" + ip + " JAVA INSTALLED");
             }
         }
@@ -235,43 +235,11 @@ public class ClusterController {
                 .directory("/var/chef/cookbooks/chef-server")
                 .build();
 
-        Statement cloneJavaCookbook = CloneGitRepo.builder()
-                .repository("https://github.com/socrata-cookbooks/java.git")
-                .directory("/var/chef/cookbooks/java")
-                .build();
-
-        File file = new File(CONF_DIR, "java_chef.json");
-        String javaAttributes = Utils.fileAsText(file);
-
-        String JDK_FLAVOR = config.JDK_FLAVOR;
-        String JDK_VERSION = config.JDK_VERSION;
-        String IBM_JDK_6_URL = config.IBM_JDK_6_URL;
-        String IBM_JDK_7_URL = config.IBM_JDK_7_URL;
-        String IBM_JDK_URL = "6".equals(JDK_VERSION) ? IBM_JDK_6_URL : IBM_JDK_7_URL;
-
-        javaAttributes = javaAttributes
-                .replace('$JDK_FLAVOR', JDK_FLAVOR)
-                .replace('$JDK_VERSION', JDK_VERSION)
-                .replace('$IBM_JDK_URL', IBM_JDK_URL);
-
-        System.out.println(javaAttributes);
-
-        Statement installJava = ChefSolo.builder()
-                .cookbookPath("/var/chef/cookbooks")
-                .runlist(RunList.builder().recipes(asList("java::default")).build())
-                .jsonAttributes(javaAttributes)
-                .build();
-
         Statement statement = new StatementList(
-                AdminAccess.standard(),
+        //        AdminAccess.standard(),
                 new ExitInsteadOfReturn(new InstallGit()),
                 cloneCookbooks,
-                new InstallChefUsingOmnibus(),
-                Statements.exec("echo Starting Javabook git-clone"),
-                cloneJavaCookbook,
-                Statements.exec("echo Finished Javabook git-clone"),
-                installJava,
-                Statements.exec("java -version")
+                new InstallChefUsingOmnibus()//,
         );
 
 //        LoginCredentials login = LoginCredentials.builder()
@@ -288,13 +256,9 @@ public class ClusterController {
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
 
         echo("------------------------------------------------------------------------------");
-        echo("Exit code chef java: " + response.getExitStatus());
+        echo("Exit code install chef: " + response.getExitStatus());
         echo("------------------------------------------------------------------------------");
-
-        log.info(response.output);
-        log.info(response.error);
-
-
+//
         if (response.exitStatus != 0) {
             log.severe("Failed to install chef on machine: " + node.privateAddresses.iterator().next());
             log.severe(response.output);
@@ -336,10 +300,8 @@ public class ClusterController {
                 .build();
 
         Statement statement = new StatementList(
-        //        AdminAccess.standard(),
-                Statements.exec("echo Starting Javabook git-clone"),
+                AdminAccess.standard(),
                 cloneJavaCookbook,
-                Statements.exec("echo Finished Javabook git-clone"),
                 installJava,
                 Statements.exec("java -version"));
 
