@@ -16,7 +16,16 @@ import org.jclouds.compute.domain.TemplateBuilderSpec
 import org.jclouds.compute.options.RunScriptOptions
 import org.jclouds.domain.LoginCredentials
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
+import org.jclouds.scriptbuilder.ExitInsteadOfReturn
+import org.jclouds.scriptbuilder.domain.Statement
+import org.jclouds.scriptbuilder.domain.StatementList
 import org.jclouds.scriptbuilder.domain.Statements
+import org.jclouds.scriptbuilder.domain.chef.RunList
+import org.jclouds.scriptbuilder.statements.chef.ChefSolo
+import org.jclouds.scriptbuilder.statements.chef.InstallChefUsingOmnibus
+import org.jclouds.scriptbuilder.statements.git.CloneGitRepo
+import org.jclouds.scriptbuilder.statements.git.InstallGit
+import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
 
 import static com.hazelcast.stabilizer.Utils.*
@@ -54,19 +63,16 @@ public class ClusterController {
     void installAgent(String ip) {
         echoImportant "Installing Agent on ${ip}"
 
-        echo "Installing missing Java"
-        //install java under Ubuntu.
-        sshQuiet ip, "sudo apt-get update || true"
-        sshQuiet ip, "sudo apt-get install -y openjdk-7-jdk || true"
-
         echo "Copying stabilizer files"
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
         sshQuiet ip, "rm -fr hazelcast-stabilizer-${getVersion()}/lib"
         //then we copy the stabilizer directory
         scpToRemote ip, STABILIZER_HOME, ""
 
+
         echoImportant("Successfully installed Agent on ${ip}");
     }
+
 
     void startAgents() {
         echoImportant("Starting ${privateIps.size()} Agents");
@@ -141,15 +147,21 @@ public class ClusterController {
 
         ComputeService compute = getComputeService()
 
+        echo("Created compute")
+
         Template template = compute.templateBuilder()
                 .from(TemplateBuilderSpec.parse(config.MACHINE_SPEC))
                 .build();
+
+        echo("Created template")
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
                 .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
                 .blockUntilRunning(true)
                 .securityGroups(config.SECURITY_GROUP)
+
+        echo("Creating nodes")
 
         Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
         echo("Created machines, waiting for startup (can take a few minutes)")
@@ -158,6 +170,15 @@ public class ClusterController {
             String ip = m.privateAddresses.iterator().next()
             echo("\t" + ip + " LAUNCHED");
             appendText(ip + "\n", agentsFile)
+        }
+
+        if (!"provisioned".equals(config.JDK_FLAVOR)) {
+            for (NodeMetadata m : nodes) {
+                String ip = m.privateAddresses.iterator().next()
+                echo("\t" + ip + " LAUNCHED");
+                installChef(m, compute);
+                installJava(m, compute);
+            }
         }
 
         LoginCredentials login = LoginCredentials.builder()
@@ -196,6 +217,102 @@ public class ClusterController {
                 .modules(asList(new Log4JLoggingModule(), new SshjSshClientModule()))
                 .buildView(ComputeServiceContext.class)
                 .getComputeService();
+    }
+
+    private void installChef(NodeMetadata node, ComputeService compute) {
+        System.out.println("Bootstrapping...");
+
+        Statement cloneCookbooks = CloneGitRepo.builder()
+                .repository("https://github.com/opscode-cookbooks/chef-server.git")
+                .directory("/var/chef/cookbooks/chef-server")
+                .build();
+
+        Statement statement = new StatementList(
+                AdminAccess.standard(),
+                new ExitInsteadOfReturn(new InstallGit()),
+                cloneCookbooks,
+                new InstallChefUsingOmnibus()//,
+        );
+
+        LoginCredentials login = LoginCredentials.builder()
+                .privateKey(fileAsText(config.IDENTITY_FILE))
+                .user(config.USER)
+                .noPassword()
+                .build();
+
+        RunScriptOptions runScriptOptions = RunScriptOptions.Builder
+                .overrideLoginCredentials(login)
+                .wrapInInitScript(false)
+
+
+        ExecResponse checkResponse = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
+
+        System.out.println("------------------------------------------------------------------------------");
+        System.out.println("Exit code install chef: " + checkResponse.getExitStatus());
+        System.out.println("------------------------------------------------------------------------------");
+
+        if (checkResponse.getExitStatus() != 0) {
+            System.out.println(checkResponse.getError());
+            System.out.print(checkResponse.getOutput());
+        }
+    }
+
+    //https://gist.github.com/nacx/7317938
+    //https://github.com/socrata-cookbooks/java/blob/master/metadata.rb
+    private void installJava(NodeMetadata node, ComputeService compute) {
+        System.out.println("Installing Java...");
+
+        Statement cloneJavaCookbook = CloneGitRepo.builder()
+                .repository("https://github.com/socrata-cookbooks/java.git")
+                .directory("/var/chef/cookbooks/java")
+                .build();
+
+        File file = new File(Utils.getStablizerHome() + Utils.FILE_SEPERATOR + "conf" + Utils.FILE_SEPERATOR + "java_chef.json");
+        String javaAttributes = Utils.fileAsText(file);
+
+        String JDK_FLAVOR = config.JDK_FLAVOR;
+        String JDK_VERSION = config.JDK_VERSION;
+        String IBM_JDK_6_URL = config.IBM_JDK_6_URL;
+        String IBM_JDK_7_URL = config.IBM_JDK_7_URL;
+        String IBM_JDK_URL = "6".equals(JDK_VERSION) ? IBM_JDK_6_URL : IBM_JDK_7_URL;
+
+        javaAttributes = javaAttributes
+                .replace("$JDK_FLAVOR", JDK_FLAVOR)
+                .replace("$JDK_VERSION", JDK_VERSION)
+                .replace("$IBM_JDK_URL", IBM_JDK_URL);
+
+        System.out.println(javaAttributes);
+
+        Statement installJava = ChefSolo.builder()
+                .cookbookPath("/var/chef/cookbooks")
+                .runlist(RunList.builder().recipes(asList("java::default")).build())
+                .jsonAttributes(javaAttributes)
+                .build();
+
+        Statement statement = new StatementList(
+                AdminAccess.standard(),
+                cloneJavaCookbook,
+                installJava,
+                Statements.exec("java -version"));
+
+        LoginCredentials login = LoginCredentials.builder()
+                .privateKey(fileAsText(config.IDENTITY_FILE))
+                .user(config.USER)
+                .noPassword()
+                .build();
+
+        RunScriptOptions runScriptOptions = RunScriptOptions.Builder
+                .overrideLoginCredentials(login)
+                .wrapInInitScript(false)
+
+        ExecResponse javaResponse = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
+
+        System.out.println("------------------------------------------------------------------------------");
+        System.out.println("Exit code install java: " + javaResponse.getExitStatus());
+        System.out.println("------------------------------------------------------------------------------");
+        //if (javaResponse.getExitStatus() != 0) {
+        System.out.println(javaResponse.getError());
+        System.out.print(javaResponse.getOutput());
     }
 
     def downloadArtifacts() {
