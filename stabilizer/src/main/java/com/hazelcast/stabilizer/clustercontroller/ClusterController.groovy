@@ -13,8 +13,6 @@ import org.jclouds.compute.domain.ExecResponse
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
-import org.jclouds.compute.options.RunScriptOptions
-import org.jclouds.domain.LoginCredentials
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
 import org.jclouds.scriptbuilder.ExitInsteadOfReturn
 import org.jclouds.scriptbuilder.domain.Statement
@@ -28,7 +26,8 @@ import org.jclouds.scriptbuilder.statements.git.InstallGit
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
 
-import static com.hazelcast.stabilizer.Utils.*
+import static com.hazelcast.stabilizer.Utils.appendText
+import static com.hazelcast.stabilizer.Utils.getVersion
 import static java.lang.String.format
 import static java.util.Arrays.asList
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideAuthenticateSudo
@@ -164,7 +163,7 @@ public class ClusterController {
                 .inboundPorts(inboundPorts())
 //                .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
 //                .blockUntilRunning(true)
-               .securityGroups(config.SECURITY_GROUP)
+                .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
 
@@ -175,6 +174,17 @@ public class ClusterController {
             String ip = m.privateAddresses.iterator().next()
             echo("\t" + ip + " LAUNCHED");
             appendText(ip + "\n", agentsFile)
+            privateIps.add(ip)
+        }
+
+        for (NodeMetadata m : nodes) {
+            ExecResponse checkResponse = compute.runScriptOnNode(m.getId(), AdminAccess.standard(), overrideAuthenticateSudo(true));
+            System.out.println("exit code initialize:" + checkResponse.getExitStatus());
+            System.out.println(checkResponse.getError());
+            System.out.println(checkResponse.getOutput());
+
+            String ip = m.privateAddresses.iterator().next()
+            echo("\t" + ip + " STARTED");
         }
 
         if ("provisioned".equals(config.JDK_FLAVOR)) {
@@ -187,30 +197,6 @@ public class ClusterController {
                 installJava(m, compute);
                 echo("\t" + ip + " JAVA INSTALLED");
             }
-        }
-
-        LoginCredentials login = LoginCredentials.builder()
-                .privateKey(fileAsText(config.IDENTITY_FILE))
-                .user(config.USER)
-                .noPassword()
-                .build();
-
-        RunScriptOptions runScriptOptions = RunScriptOptions.Builder
-                .overrideLoginCredentials(login)
-                .wrapInInitScript(false)
-
-        //waiting for nodes to start
-        for (NodeMetadata m : nodes) {
-            String node = m.getId();
-
-            String ip = m.privateAddresses.iterator().next()
-
-            ExecResponse response = compute.runScriptOnNode(node, Statements.exec("ls -al"), runScriptOptions);
-            if (response.exitStatus != 0) {
-                exitWithError(format("Could not successfully ssh to %s", ip))
-            }
-            echo("\t" + ip + " STARTED");
-            privateIps.add(ip)
         }
 
         echoImportant("Successfully started ${delta} ${config.CLOUD_PROVIDER} machines ");
@@ -236,22 +222,10 @@ public class ClusterController {
                 .build();
 
         Statement statement = new StatementList(
-        //        AdminAccess.standard(),
                 new ExitInsteadOfReturn(new InstallGit()),
                 cloneCookbooks,
                 new InstallChefUsingOmnibus()//,
         );
-
-//        LoginCredentials login = LoginCredentials.builder()
-//                .privateKey(fileAsText(config.IDENTITY_FILE))
-//                .user(config.USER)
-//                .noPassword()
-//                .build();
-//
-//        RunScriptOptions runScriptOptions = RunScriptOptions.Builder
-//                .overrideLoginCredentials(login)
-//                .overrideAuthenticateSudo(true)
-//                .wrapInInitScript(false);
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
 
@@ -300,18 +274,9 @@ public class ClusterController {
                 .build();
 
         Statement statement = new StatementList(
-                AdminAccess.standard(),
                 cloneJavaCookbook,
                 installJava,
                 Statements.exec("java -version"));
-
-//        LoginCredentials login = LoginCredentials.builder()
-//                .privateKey(fileAsText(config.IDENTITY_FILE))
-//                .user(config.USER)
-//                .noPassword()
-//                .build();
-//
-//        RunScriptOptions runScriptOptions = overrideAuthenticateSudo(true);
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
 
