@@ -31,6 +31,7 @@ import org.jclouds.sshj.config.SshjSshClientModule
 import static com.hazelcast.stabilizer.Utils.*
 import static java.lang.String.format
 import static java.util.Arrays.asList
+import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideAuthenticateSudo
 
 //https://jclouds.apache.org/start/compute/ good read
 public class ClusterController {
@@ -238,18 +239,18 @@ public class ClusterController {
                 new InstallChefUsingOmnibus()//,
         );
 
-        LoginCredentials login = LoginCredentials.builder()
-                .privateKey(fileAsText(config.IDENTITY_FILE))
-                .user(config.USER)
-                .noPassword()
-                .build();
+//        LoginCredentials login = LoginCredentials.builder()
+//                .privateKey(fileAsText(config.IDENTITY_FILE))
+//                .user(config.USER)
+//                .noPassword()
+//                .build();
+//
+//        RunScriptOptions runScriptOptions = RunScriptOptions.Builder
+//                .overrideLoginCredentials(login)
+//                .overrideAuthenticateSudo(true)
+//                .wrapInInitScript(false);
 
-        RunScriptOptions runScriptOptions = RunScriptOptions.Builder
-                .overrideLoginCredentials(login)
-                .overrideAuthenticateSudo(true)
-                .wrapInInitScript(false);
-
-        ExecResponse response = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
+        ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
 
 //        echo("------------------------------------------------------------------------------");
 //        echo("Exit code install java: " + response.getExitStatus());
@@ -301,15 +302,15 @@ public class ClusterController {
                 installJava,
                 Statements.exec("java -version"));
 
-        LoginCredentials login = LoginCredentials.builder()
-                .privateKey(fileAsText(config.IDENTITY_FILE))
-                .user(config.USER)
-                .noPassword()
-                .build();
+//        LoginCredentials login = LoginCredentials.builder()
+//                .privateKey(fileAsText(config.IDENTITY_FILE))
+//                .user(config.USER)
+//                .noPassword()
+//                .build();
+//
+//        RunScriptOptions runScriptOptions = overrideAuthenticateSudo(true);
 
-        RunScriptOptions runScriptOptions = overrideAuthenticateSudo(true);
-
-        ExecResponse response = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
+        ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
 
         echo("------------------------------------------------------------------------------");
         echo("Exit code install java: " + response.getExitStatus());
