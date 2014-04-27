@@ -31,7 +31,6 @@ import org.jclouds.sshj.config.SshjSshClientModule
 import static com.hazelcast.stabilizer.Utils.*
 import static java.lang.String.format
 import static java.util.Arrays.asList
-import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideAuthenticateSudo
 
 //https://jclouds.apache.org/start/compute/ good read
 public class ClusterController {
@@ -245,7 +244,10 @@ public class ClusterController {
                 .noPassword()
                 .build();
 
-        RunScriptOptions runScriptOptions = overrideAuthenticateSudo(true);
+        RunScriptOptions runScriptOptions = RunScriptOptions.Builder
+                .overrideLoginCredentials(login)
+                .overrideAuthenticateSudo(true)
+                .wrapInInitScript(false);
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
 
