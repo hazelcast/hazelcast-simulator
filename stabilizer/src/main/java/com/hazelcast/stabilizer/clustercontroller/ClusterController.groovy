@@ -300,7 +300,7 @@ public class ClusterController {
                 .build();
 
         Statement statement = new StatementList(
-                AdminAccess.standard(),
+        //        AdminAccess.standard(),
                 Statements.exec("echo Starting Javabook git-clone"),
                 cloneJavaCookbook,
                 Statements.exec("echo Finished Javabook git-clone"),
