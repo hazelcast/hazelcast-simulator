@@ -173,7 +173,10 @@ public class ClusterController {
             appendText(ip + "\n", agentsFile)
         }
 
-        if (!"provisioned".equals(config.JDK_FLAVOR)) {
+        if ("provisioned".equals(config.JDK_FLAVOR)) {
+            log.info("Skipping Java installation");
+        } else {
+            log.info("Installing Java: ${config.JDK_FLAVOR} ${config.JDK_VERSION}")
             for (NodeMetadata m : nodes) {
                 String ip = m.privateAddresses.iterator().next()
                 echo("\t" + ip + " LAUNCHED");
@@ -280,9 +283,9 @@ public class ClusterController {
         String IBM_JDK_URL = "6".equals(JDK_VERSION) ? IBM_JDK_6_URL : IBM_JDK_7_URL;
 
         javaAttributes = javaAttributes
-                .replace("$JDK_FLAVOR", JDK_FLAVOR)
-                .replace("$JDK_VERSION", JDK_VERSION)
-                .replace("$IBM_JDK_URL", IBM_JDK_URL);
+                .replace('$JDK_FLAVOR', JDK_FLAVOR)
+                .replace('$JDK_VERSION', JDK_VERSION)
+                .replace('$IBM_JDK_URL', IBM_JDK_URL);
 
         System.out.println(javaAttributes);
 
@@ -310,10 +313,13 @@ public class ClusterController {
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
 
-//        echo("------------------------------------------------------------------------------");
-//        echo("Exit code install java: " + response.getExitStatus());
-//        echo("------------------------------------------------------------------------------");
+        echo("------------------------------------------------------------------------------");
+        echo("Exit code install java: " + response.getExitStatus());
+        echo("------------------------------------------------------------------------------");
+
         log.info(response.output);
+        log.info(response.error);
+
         if (response.exitStatus != 0) {
             log.severe("Failed to install Java on machine: " + node.privateAddresses.iterator().next());
             log.severe(response.output);
