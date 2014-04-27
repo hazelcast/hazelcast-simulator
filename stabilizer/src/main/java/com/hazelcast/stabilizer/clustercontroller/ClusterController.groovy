@@ -256,7 +256,7 @@ public class ClusterController {
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
 
         echo("------------------------------------------------------------------------------");
-        echo("Exit code install java: " + response.getExitStatus());
+        echo("Exit code chef java: " + response.getExitStatus());
         echo("------------------------------------------------------------------------------");
 //
         if (response.exitStatus != 0) {
@@ -301,7 +301,9 @@ public class ClusterController {
 
         Statement statement = new StatementList(
                 AdminAccess.standard(),
+                Statements.exec("echo Starting Javabook git-clone"),
                 cloneJavaCookbook,
+                Statements.exec("echo Finished Javabook git-clone"),
                 installJava,
                 Statements.exec("java -version"));
 
