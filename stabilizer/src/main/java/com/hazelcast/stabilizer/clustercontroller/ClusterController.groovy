@@ -178,7 +178,7 @@ public class ClusterController {
         }
 
         for (NodeMetadata m : nodes) {
-            ExecResponse checkResponse = compute.runScriptOnNode(m.getId(), AdminAccess.standard(), overrideAuthenticateSudo(true));
+            ExecResponse checkResponse = compute.runScriptOnNode(m.getId(), AdminAccess.standard());
             System.out.println("exit code initialize:" + checkResponse.getExitStatus());
             System.out.println(checkResponse.getError());
             System.out.println(checkResponse.getOutput());
