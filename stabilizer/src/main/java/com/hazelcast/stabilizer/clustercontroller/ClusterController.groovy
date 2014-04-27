@@ -38,6 +38,7 @@ public class ClusterController {
 
     def config
     def STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath()
+    def CONF_DIR = new File(STABILIZER_HOME, "conf");
     def agentsFile = new File("agents.txt")
 
     List<String> privateIps = []
@@ -220,7 +221,7 @@ public class ClusterController {
     }
 
     private void installChef(NodeMetadata node, ComputeService compute) {
-        System.out.println("Bootstrapping...");
+        echo("Bootstrapping...");
 
         Statement cloneCookbooks = CloneGitRepo.builder()
                 .repository("https://github.com/opscode-cookbooks/chef-server.git")
@@ -245,29 +246,31 @@ public class ClusterController {
                 .wrapInInitScript(false)
 
 
-        ExecResponse checkResponse = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
+        ExecResponse response = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
 
-        System.out.println("------------------------------------------------------------------------------");
-        System.out.println("Exit code install chef: " + checkResponse.getExitStatus());
-        System.out.println("------------------------------------------------------------------------------");
-
-        if (checkResponse.getExitStatus() != 0) {
-            System.out.println(checkResponse.getError());
-            System.out.print(checkResponse.getOutput());
+//        echo("------------------------------------------------------------------------------");
+//        echo("Exit code install java: " + response.getExitStatus());
+//        echo("------------------------------------------------------------------------------");
+//
+        if (response.exitStatus != 0) {
+            log.severe("Failed to install chef on machine: " + node.privateAddresses.iterator().next());
+            log.severe(response.output);
+            log.severe(response.error);
+            System.exit(1)
         }
     }
 
     //https://gist.github.com/nacx/7317938
     //https://github.com/socrata-cookbooks/java/blob/master/metadata.rb
     private void installJava(NodeMetadata node, ComputeService compute) {
-        System.out.println("Installing Java...");
+        echo("Installing Java...");
 
         Statement cloneJavaCookbook = CloneGitRepo.builder()
                 .repository("https://github.com/socrata-cookbooks/java.git")
                 .directory("/var/chef/cookbooks/java")
                 .build();
 
-        File file = new File(Utils.getStablizerHome() + Utils.FILE_SEPERATOR + "conf" + Utils.FILE_SEPERATOR + "java_chef.json");
+        File file = new File(CONF_DIR, "java_chef.json");
         String javaAttributes = Utils.fileAsText(file);
 
         String JDK_FLAVOR = config.JDK_FLAVOR;
@@ -305,14 +308,19 @@ public class ClusterController {
                 .overrideLoginCredentials(login)
                 .wrapInInitScript(false)
 
-        ExecResponse javaResponse = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
+        ExecResponse response = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
 
-        System.out.println("------------------------------------------------------------------------------");
-        System.out.println("Exit code install java: " + javaResponse.getExitStatus());
-        System.out.println("------------------------------------------------------------------------------");
-        //if (javaResponse.getExitStatus() != 0) {
-        System.out.println(javaResponse.getError());
-        System.out.print(javaResponse.getOutput());
+//        echo("------------------------------------------------------------------------------");
+//        echo("Exit code install java: " + response.getExitStatus());
+//        echo("------------------------------------------------------------------------------");
+        log.info(response.output);
+        if (response.exitStatus != 0) {
+            log.severe("Failed to install Java on machine: " + node.privateAddresses.iterator().next());
+            log.severe(response.output);
+            log.severe(response.error);
+            System.exit(1)
+        }
+
     }
 
     def downloadArtifacts() {
