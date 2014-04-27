@@ -164,7 +164,7 @@ public class ClusterController {
                 .inboundPorts(inboundPorts())
 //                .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
 //                .blockUntilRunning(true)
-//                .securityGroups(config.SECURITY_GROUP)
+               .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
 
@@ -255,9 +255,9 @@ public class ClusterController {
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
 
-//        echo("------------------------------------------------------------------------------");
-//        echo("Exit code install java: " + response.getExitStatus());
-//        echo("------------------------------------------------------------------------------");
+        echo("------------------------------------------------------------------------------");
+        echo("Exit code install java: " + response.getExitStatus());
+        echo("------------------------------------------------------------------------------");
 //
         if (response.exitStatus != 0) {
             log.severe("Failed to install chef on machine: " + node.privateAddresses.iterator().next());
