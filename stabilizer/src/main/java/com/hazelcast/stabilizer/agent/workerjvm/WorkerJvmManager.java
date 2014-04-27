@@ -103,11 +103,12 @@ public class WorkerJvmManager {
         if (workers.isEmpty()) {
             throw new RuntimeException("No worker JVM's found");
         }
-        List list = executeOnWorkers(testCommand, workers);
-        if(list.isEmpty()){
-            throw new RuntimeException("There is no worker available");
+        List results = executeOnWorkers(testCommand, workers);
+        if(results.isEmpty()){
+            log.info("No results found");
+            return null;
         }
-        return list.get(0);
+        return results.get(0);
     }
 
     public List executeOnAllWorkers(TestCommand testCommand) throws Exception {
@@ -123,6 +124,7 @@ public class WorkerJvmManager {
             request.id = requestIdGenerator.incrementAndGet();
             request.task = testCommand;
             futureMap.put(request.id, future);
+            futures.put(workerJvm,future);
             workerJvm.commandQueue.add(request);
         }
 
