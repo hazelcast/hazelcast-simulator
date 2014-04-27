@@ -130,6 +130,9 @@ public class ClusterController {
     private int[] inboundPorts() {
         List<Integer> ports = new ArrayList<Integer>();
         ports.add(22);
+        //todo:the following 2 ports should not be needed
+        ports.add(443);
+        ports.add(80);
         ports.add(AgentRemoteService.PORT);
         ports.add(WorkerJvmManager.PORT);
         for (int k = 5701; k < 5901; k++) {
