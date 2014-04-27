@@ -11,6 +11,7 @@ target/
 *.failure
 *.exception
 *.oome
+Foo.java
 agents.txt
 vtune/
 stabilizer/workers/*
