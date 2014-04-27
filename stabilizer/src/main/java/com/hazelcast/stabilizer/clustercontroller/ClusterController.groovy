@@ -162,9 +162,9 @@ public class ClusterController {
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
-                .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
-                .blockUntilRunning(true)
-                .securityGroups(config.SECURITY_GROUP)
+//                .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
+//                .blockUntilRunning(true)
+//                .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
 
