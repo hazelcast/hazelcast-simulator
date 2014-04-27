@@ -64,11 +64,11 @@
             <artifactId>jclouds-sshj</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.jclouds.chef</groupId>
-            <artifactId>jclouds-scriptbuilder</artifactId>
-           <version>${jclouds.version}</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.apache.jclouds.chef</groupId>-->
+            <!--<artifactId>jclouds-scriptbuilder</artifactId>-->
+           <!--<version>${jclouds.version}</version>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>com.google.inject</groupId>
