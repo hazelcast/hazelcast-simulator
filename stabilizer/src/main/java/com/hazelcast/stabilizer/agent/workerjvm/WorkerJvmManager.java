@@ -104,6 +104,9 @@ public class WorkerJvmManager {
             throw new RuntimeException("No worker JVM's found");
         }
         List list = executeOnWorkers(testCommand, workers);
+        if(list.isEmpty()){
+            throw new RuntimeException("There is no worker available");
+        }
         return list.get(0);
     }
 

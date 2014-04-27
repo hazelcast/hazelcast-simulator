@@ -52,13 +52,14 @@ public class WorkerJvmLauncher {
         hzFile = createHzConfigFile();
         clientHzFile = createClientHzConfigFile();
 
+       log.info("Spawning Worker JVM using settings: "+settings);
         spawn(settings.memberWorkerCount, "server");
         spawn(settings.clientWorkerCount, "client");
         spawn(settings.mixedWorkerCount, "mixed");
     }
 
     private void spawn(int count, String mode) throws Exception {
-        log.info(format("Starting %s %s worker Java Virtual Machines using settings\n %s", count, mode, settings));
+        log.info(format("Starting %s %s worker Java Virtual Machines", count, mode));
 
         for (int k = 0; k < count; k++) {
             WorkerJvm worker = startWorkerJvm(mode);
@@ -69,7 +70,7 @@ public class WorkerJvmLauncher {
             new WorkerVmInputStreamConsumer(workerId, process.getInputStream(), settings.trackLogging).start();
         }
 
-        log.info(format("Finished starting %s %s worker Java Virtual Machines using settings\n %s", count, mode, settings));
+        log.info(format("Finished starting %s %s worker Java Virtual Machines", count, mode));
 
         waitForWorkersStartup(workersInProgress, settings.workerStartupTimeout);
         workersInProgress.clear();
