@@ -31,6 +31,7 @@ import org.jclouds.sshj.config.SshjSshClientModule
 import static com.hazelcast.stabilizer.Utils.*
 import static java.lang.String.format
 import static java.util.Arrays.asList
+import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideAuthenticateSudo
 
 //https://jclouds.apache.org/start/compute/ good read
 public class ClusterController {
@@ -179,9 +180,9 @@ public class ClusterController {
             log.info("Installing Java: ${config.JDK_FLAVOR} ${config.JDK_VERSION}")
             for (NodeMetadata m : nodes) {
                 String ip = m.privateAddresses.iterator().next()
-                echo("\t" + ip + " LAUNCHED");
                 installChef(m, compute);
                 installJava(m, compute);
+                echo("\t" + ip + " JAVA INSTALLED");
             }
         }
 
@@ -244,10 +245,7 @@ public class ClusterController {
                 .noPassword()
                 .build();
 
-        RunScriptOptions runScriptOptions = RunScriptOptions.Builder
-                .overrideLoginCredentials(login)
-                .wrapInInitScript(false)
-
+        RunScriptOptions runScriptOptions = overrideAuthenticateSudo(true);
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
 
@@ -307,9 +305,7 @@ public class ClusterController {
                 .noPassword()
                 .build();
 
-        RunScriptOptions runScriptOptions = RunScriptOptions.Builder
-                .overrideLoginCredentials(login)
-                .wrapInInitScript(false)
+        RunScriptOptions runScriptOptions = overrideAuthenticateSudo(true);
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, runScriptOptions);
 
