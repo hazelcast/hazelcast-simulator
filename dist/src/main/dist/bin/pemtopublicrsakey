@@ -1,0 +1,14 @@
+PEM_FILE=$1
+PUBLIC_RSA_KEY=$2
+
+echo Using pemfile: $PEM_FILE
+echo RSA Public Key: $PUBLIC_RSA_KEY
+
+#if you want to convert your pem to rsa public key, check the following link
+#https://gist.github.com/crowdmatt/5391537
+
+openssl rsa -in $1 -pubout > $2.tmp
+ssh-keygen -f $2.tmp -i -m PKCS8 >> $2
+rm $2.tmp
+
+
