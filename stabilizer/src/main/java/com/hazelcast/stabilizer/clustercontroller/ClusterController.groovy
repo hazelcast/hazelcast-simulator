@@ -26,6 +26,11 @@ import org.jclouds.scriptbuilder.statements.git.InstallGit
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
 
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+
 import static com.hazelcast.stabilizer.Utils.appendText
 import static com.hazelcast.stabilizer.Utils.getVersion
 import static java.lang.String.format
@@ -37,11 +42,13 @@ public class ClusterController {
     private final static ILogger log = Logger.getLogger(ClusterController.class.getName());
 
     def config
-    def STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath()
-    def CONF_DIR = new File(STABILIZER_HOME, "conf");
-    def agentsFile = new File("agents.txt")
+    final File STABILIZER_HOME = Utils.getStablizerHome()
+    final File CONF_DIR = new File(STABILIZER_HOME, "conf");
+    final File agentsFile = new File("agents.txt")
+    //big number of threads, but they are used to offload ssh tasks. So there is no load on this machine..
+    final ExecutorService executor = Executors.newFixedThreadPool(200);
 
-    List<String> privateIps = []
+    final List<String> privateIps = Collections.synchronizedList(new LinkedList<String>());
 
     ClusterController() {
         log.info("Hazelcast Stabilizer ClusterController");
@@ -62,16 +69,15 @@ public class ClusterController {
     }
 
     void installAgent(String ip) {
-        echoImportant "Installing Agent on ${ip}"
+//        echoImportant "Installing Agent on ${ip}"
 
-        echo "Copying stabilizer files"
+//        echo "Copying stabilizer files"
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
         sshQuiet ip, "rm -fr hazelcast-stabilizer-${getVersion()}/lib"
         //then we copy the stabilizer directory
         scpToRemote ip, STABILIZER_HOME, ""
 
-
-        echoImportant("Successfully installed Agent on ${ip}");
+//        echoImportant("Successfully installed Agent on ${ip}");
     }
 
 
@@ -89,6 +95,22 @@ public class ClusterController {
         }
 
         echoImportant("Successfully started ${privateIps.size()} Agents");
+    }
+
+    void startAgent(String ip) {
+//        echoImportant("Starting ${privateIps.size()} Agents");
+
+//        for (String ip : privateIps) {
+//            echo "Killing Agent $ip"
+        ssh ip, "killall -9 java || true"
+//        }
+
+        //       for (String ip : privateIps) {
+        //           echo "Starting Agent $ip"
+        ssh ip, "nohup hazelcast-stabilizer-${getVersion()}/bin/agent > agent.out 2> agent.err < /dev/null &"
+        //       }
+
+        //       echoImportant("Successfully started ${privateIps.size()} Agents");
     }
 
     void killAgents() {
@@ -146,7 +168,7 @@ public class ClusterController {
     }
 
     private void scaleUp(int delta) {
-        echoImportant("Starting ${delta} ${config.CLOUD_PROVIDER} machines");
+        echoImportant("Provisioning ${delta} ${config.CLOUD_PROVIDER} machines");
         echo(config.MACHINE_SPEC);
 
         ComputeService compute = getComputeService()
@@ -170,39 +192,98 @@ public class ClusterController {
         Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
         echo("Created machines, waiting for startup (can take a few minutes)")
 
-        for (NodeMetadata m : nodes) {
-            String ip = m.privateAddresses.iterator().next()
+        for(NodeMetadata node: nodes){
+            String ip = node.privateAddresses.iterator().next()
             echo("\t" + ip + " LAUNCHED");
             appendText(ip + "\n", agentsFile)
             privateIps.add(ip)
         }
 
-        for (NodeMetadata m : nodes) {
-            ExecResponse checkResponse = compute.runScriptOnNode(m.getId(), AdminAccess.standard());
-            System.out.println("exit code initialize:" + checkResponse.getExitStatus());
-            System.out.println(checkResponse.getError());
-            System.out.println(checkResponse.getOutput());
-
-            String ip = m.privateAddresses.iterator().next()
-            echo("\t" + ip + " STARTED");
+        Set<Future> futures = new LinkedList<Future>();
+        for (NodeMetadata node : nodes) {
+            Future f = executor.submit(new InstallNodeTask(node, compute));
+            futures.add(f);
         }
 
-        if ("provisioned".equals(config.JDK_FLAVOR)) {
-            log.info("Skipping Java installation");
-        } else {
-            log.info("Installing Java: ${config.JDK_FLAVOR} ${config.JDK_VERSION}")
-            for (NodeMetadata m : nodes) {
-                String ip = m.privateAddresses.iterator().next()
-                installChef(m, compute);
-                installJava(m, compute);
-                echo("\t" + ip + " JAVA INSTALLED");
+        for (Future f : futures) {
+            try {
+                f.get();
+            } catch (ExecutionException e) {
+                log.severe("Failed provision")
             }
         }
 
-        echoImportant("Successfully started ${delta} ${config.CLOUD_PROVIDER} machines ");
+//        for (NodeMetadata m : nodes) {
+//            String ip = m.privateAddresses.iterator().next()
+//            echo("\t" + ip + " LAUNCHED");
+//            appendText(ip + "\n", agentsFile)
+//            privateIps.add(ip)
+//        }
+//
+//        for (NodeMetadata m : nodes) {
+//            ExecResponse checkResponse = compute.runScriptOnNode(m.getId(), AdminAccess.standard());
+//            System.out.println("exit code initialize:" + checkResponse.getExitStatus());
+//            System.out.println(checkResponse.getError());
+//            System.out.println(checkResponse.getOutput());
+//
+//            String ip = m.privateAddresses.iterator().next()
+//            echo("\t" + ip + " STARTED");
+//        }
+//
+//        if ("provisioned".equals(config.JDK_FLAVOR)) {
+//            log.info("Skipping Java installation");
+//        } else {
+//            log.info("Installing Java: ${config.JDK_FLAVOR} ${config.JDK_VERSION}")
+//            for (NodeMetadata m : nodes) {
+//                String ip = m.privateAddresses.iterator().next()
+//                installChef(m, compute);
+//                installJava(m, compute);
+//                echo("\t" + ip + " JAVA INSTALLED");
+//            }
+//        }
 
-        installAgents()
-        startAgents()
+//        installAgents()
+//        startAgents()
+
+        echoImportant("Successfully provisioned ${delta} ${config.CLOUD_PROVIDER} machines ");
+
+    }
+
+    private class InstallNodeTask implements Runnable {
+        private final NodeMetadata node;
+        private final ComputeService compute;
+
+        InstallNodeTask(NodeMetadata node, ComputeService compute) {
+            this.node = node
+            this.compute = compute
+        }
+
+        public void run() {
+
+            initAccount(ip)
+
+            //install java if needed
+            log.info("Installing Java: ${config.JDK_FLAVOR} ${config.JDK_VERSION}")
+            if (!"provisioned".equals(config.JDK_FLAVOR)) {
+                installChef(node, compute);
+                installJava(node, compute);
+                echo("\t" + ip + " JAVA INSTALLED");
+            }
+
+            installAgent(ip)
+            echo("\t" + ip + " STABILIZER AGENT INSTALLED");
+
+            startAgent(ip)
+            echo("\t" + ip + " STABILIZER AGENT STARTED");
+        }
+
+        private void initAccount(String ip) {
+            ExecResponse checkResponse = compute.runScriptOnNode(node.getId(), AdminAccess.standard());
+            System.out.println("exit code initialize:" + checkResponse.getExitStatus());
+            System.out.println(checkResponse.getError());
+            System.out.println(checkResponse.getOutput());
+            echo("\t" + ip + " STARTED");
+        }
     }
 
     private ComputeService getComputeService() {
