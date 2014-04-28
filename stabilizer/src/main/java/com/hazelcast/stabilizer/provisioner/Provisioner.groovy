@@ -13,16 +13,11 @@ import org.jclouds.compute.domain.ExecResponse
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
-import org.jclouds.compute.options.RunScriptOptions
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
 
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 
 import static com.hazelcast.stabilizer.Utils.appendText
 import static com.hazelcast.stabilizer.Utils.getVersion
@@ -246,8 +241,8 @@ public class Provisioner {
         }
 
         private void initAccount() {
-          def future = compute.submitScriptOnNode(node.getId(), AdminAccess.standard(), wrapInInitScript(true))
-            ExecResponse response = future.get(20,TimeUnit.MINUTES);
+            def future = compute.submitScriptOnNode(node.getId(), AdminAccess.standard(), wrapInInitScript(true))
+            ExecResponse response = future.get(20, TimeUnit.MINUTES);
             if (response.exitStatus != 0) {
                 log.severe("Failed to initialize ssh: " + response.exitStatus)
                 log.severe(response.getError());
@@ -272,7 +267,7 @@ public class Provisioner {
         ExecResponse response = compute.submitScriptOnNode(
                 node.getId(),
                 script,
-                overrideAuthenticateSudo(true)).get(30, TimeUnit.MINUTES);
+                overrideAuthenticateSudo(true).wrapInInitScript(true)).get(30, TimeUnit.MINUTES);
 
         if (response.exitStatus != 0) {
             echo("------------------------------------------------------------------------------");
