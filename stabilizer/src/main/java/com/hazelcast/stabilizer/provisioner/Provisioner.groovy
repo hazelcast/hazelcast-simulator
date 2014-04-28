@@ -13,6 +13,7 @@ import org.jclouds.compute.domain.ExecResponse
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
+import org.jclouds.compute.options.RunScriptOptions
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
@@ -268,7 +269,7 @@ public class Provisioner {
         ExecResponse response = compute.runScriptOnNode(
                 node.getId(),
                 script,
-                overrideAuthenticateSudo(true))
+                RunScriptOptions.Builder.overrideLoginUser("hazelcast"))
 
         if (response.exitStatus != 0) {
             echo("------------------------------------------------------------------------------");
