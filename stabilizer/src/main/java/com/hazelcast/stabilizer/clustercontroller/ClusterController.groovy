@@ -299,7 +299,7 @@ public class ClusterController {
         String flavor = config.JDK_FLAVOR;
         String version = config.JDK_VERSION;
 
-        String script = "jdk-"+flavor+"-"+version;
+        String script = "jdk-"+flavor+"-"+version+".sh";
         return Utils.fileAsText(new File(CONF_DIR, script));
     }
 
