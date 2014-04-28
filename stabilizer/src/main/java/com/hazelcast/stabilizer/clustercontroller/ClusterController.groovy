@@ -9,10 +9,12 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager
 import org.jclouds.ContextBuilder
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.ComputeServiceContext
+import org.jclouds.compute.callables.RunScriptOnNode
 import org.jclouds.compute.domain.ExecResponse
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
+import org.jclouds.compute.options.RunScriptOptions
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
@@ -275,7 +277,10 @@ public class ClusterController {
 //                statement,
 //                overrideAuthenticateSudo(true));
 
-        ExecResponse response = compute.submitScriptOnNode(node.getId(), script, overrideAuthenticateSudo()).get();
+        RunScriptOptions runScriptOptions = overrideAuthenticateSudo(true)
+
+        def future = compute.submitScriptOnNode(node.getId(), script, runScriptOptions)
+        ExecResponse response = future.get();
 
         echo("------------------------------------------------------------------------------");
         echo("Exit code install java: " + response.getExitStatus());
