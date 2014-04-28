@@ -21,6 +21,7 @@ import java.util.concurrent.*
 
 import static com.hazelcast.stabilizer.Utils.appendText
 import static com.hazelcast.stabilizer.Utils.getVersion
+import static com.hazelcast.stabilizer.Utils.secondsToHuman
 import static java.lang.String.format
 import static java.util.Arrays.asList
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideAuthenticateSudo
@@ -161,6 +162,8 @@ public class Provisioner {
         echoImportant("Provisioning ${delta} ${config.CLOUD_PROVIDER} machines");
         echo(config.MACHINE_SPEC);
 
+        long startTimeMs = System.currentTimeMillis();
+
         if ("outofthebox".equals(config.JDK_FLAVOR)) {
             log.info("Machines will use Java: Out of the Box.");
         } else {
@@ -210,6 +213,8 @@ public class Provisioner {
             }
         }
 
+        long durationMs = System.currentTimeMillis()-startTimeMs;
+        echo("Duration: "+secondsToHuman(durationMs/1000))
         echoImportant("Successfully provisioned ${delta} ${config.CLOUD_PROVIDER} machines ");
     }
 

@@ -6,6 +6,9 @@ function prepend {
     echo $1|cat - $2 > /tmp/out && mv /tmp/out $2
 }
 
+sudo apt-get install -y unzip || true
+
+
 cd ~
 wget -q http://ec2-54-87-52-100.compute-1.amazonaws.com/openjdk-1.6.0-unofficial-b30-linux-amd64-image.zip
 unzip -q openjdk-1.6.0-unofficial-b30-linux-amd64-image.zip
