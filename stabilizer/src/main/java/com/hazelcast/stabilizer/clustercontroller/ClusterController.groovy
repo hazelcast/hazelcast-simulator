@@ -215,7 +215,8 @@ public class ClusterController {
             try {
                 f.get();
             } catch (ExecutionException e) {
-                log.severe("Failed provision")
+                log.severe("Failed provision",e)
+                System.exit(1)
             }
         }
 
@@ -344,7 +345,7 @@ public class ClusterController {
                 .replace('$JDK_VERSION', JDK_VERSION)
                 .replace('$IBM_JDK_URL', IBM_JDK_URL);
 
-        System.out.println(javaAttributes);
+//        System.out.println(javaAttributes);
 
         Statement installJava = ChefSolo.builder()
                 .cookbookPath("/var/chef/cookbooks")
@@ -357,7 +358,10 @@ public class ClusterController {
                 installJava,
                 Statements.exec("java -version"));
 
-        ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
+        ExecResponse response = compute.runScriptOnNode(
+                node.getId(),
+                statement,
+                overrideAuthenticateSudo(true));
 
         echo("------------------------------------------------------------------------------");
         echo("Exit code install java: " + response.getExitStatus());
