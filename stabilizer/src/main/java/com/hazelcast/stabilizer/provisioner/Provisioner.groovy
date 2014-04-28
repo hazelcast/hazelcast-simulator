@@ -13,6 +13,7 @@ import org.jclouds.compute.domain.ExecResponse
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
+import org.jclouds.compute.options.RunScriptOptions
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
@@ -28,6 +29,7 @@ import static com.hazelcast.stabilizer.Utils.getVersion
 import static java.lang.String.format
 import static java.util.Arrays.asList
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideAuthenticateSudo
+import static org.jclouds.compute.options.RunScriptOptions.Builder.wrapInInitScript
 
 //https://jclouds.apache.org/start/compute/ good read
 public class Provisioner {
@@ -181,6 +183,8 @@ public class Provisioner {
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
+                .runScript(AdminAccess.standard())
+                .wrapInInitScript(true)
                 .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
@@ -226,7 +230,7 @@ public class Provisioner {
         }
 
         public void run() {
-            initAccount()
+            //initAccount()
 
             //install java if needed
             if (!"outofthebox".equals(config.JDK_FLAVOR)) {
@@ -242,7 +246,8 @@ public class Provisioner {
         }
 
         private void initAccount() {
-            ExecResponse response = compute.runScriptOnNode(node.getId(), AdminAccess.standard());
+          def future = compute.submitScriptOnNode(node.getId(), AdminAccess.standard(), wrapInInitScript(true))
+            ExecResponse response = future.get(20,TimeUnit.MINUTES);
             if (response.exitStatus != 0) {
                 log.severe("Failed to initialize ssh: " + response.exitStatus)
                 log.severe(response.getError());
