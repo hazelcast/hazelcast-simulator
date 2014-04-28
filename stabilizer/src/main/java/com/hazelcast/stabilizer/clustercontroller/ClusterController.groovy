@@ -46,7 +46,7 @@ public class ClusterController {
     final File CONF_DIR = new File(STABILIZER_HOME, "conf");
     final File agentsFile = new File("agents.txt")
     //big number of threads, but they are used to offload ssh tasks. So there is no load on this machine..
-    final ExecutorService executor = Executors.newFixedThreadPool(200);
+    final ExecutorService executor = Executors.newFixedThreadPool(10);
 
     final List<String> privateIps = Collections.synchronizedList(new LinkedList<String>());
 
@@ -171,8 +171,8 @@ public class ClusterController {
         echoImportant("Provisioning ${delta} ${config.CLOUD_PROVIDER} machines");
         echo(config.MACHINE_SPEC);
 
-        if ("provisioned".equals(config.JDK_FLAVOR)) {
-            log.info("No Java will be installed.");
+        if ("outofthebox".equals(config.JDK_FLAVOR)) {
+            log.info("Out of the box java will be used.");
         } else {
             log.info("Machines will use Java: ${config.JDK_FLAVOR} ${config.JDK_VERSION}")
         }
@@ -260,7 +260,7 @@ public class ClusterController {
             initAccount()
 
             //install java if needed
-            if (!"provisioned".equals(config.JDK_FLAVOR)) {
+            if (!"outofthebox".equals(config.JDK_FLAVOR)) {
                 installChef(node, compute);
                 installJava(node, compute);
                 echo("\t" + ip + " JAVA INSTALLED");
