@@ -42,7 +42,7 @@ public class ClusterController {
     private final static ILogger log = Logger.getLogger(ClusterController.class.getName());
 
     def config
-    final File STABILIZER_HOME = Utils.getStablizerHome()
+    final String STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath()
     final File CONF_DIR = new File(STABILIZER_HOME, "conf");
     final File agentsFile = new File("agents.txt")
     //big number of threads, but they are used to offload ssh tasks. So there is no load on this machine..
