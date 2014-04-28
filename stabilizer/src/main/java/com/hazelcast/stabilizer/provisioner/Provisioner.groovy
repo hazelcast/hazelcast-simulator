@@ -182,7 +182,6 @@ public class Provisioner {
                 .inboundPorts(inboundPorts())
                 .overrideLoginUser("hazelcast")
                 .authorizePublicKey(Utils.fileAsText("/home/ec2-user/.ssh/id_rsa.pub"))
-                .runScript(AdminAccess.standard())
                 .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
