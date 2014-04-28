@@ -180,8 +180,7 @@ public class Provisioner {
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
-              .overrideLoginUser("hazelcast")
-               .securityGroups(config.SECURITY_GROUP)
+                .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
 
