@@ -234,7 +234,6 @@ public class Provisioner {
                 ssh(ip, "chmod +x install-java.sh")
                 scpToRemote(ip, getJavaInstallScript().getAbsolutePath(), "install-java.sh")
                 ssh(ip, "sudo sh install-java.sh")
-                installJava(node, compute);
                 echo("\t" + ip + " JAVA INSTALLED");
             }
 
