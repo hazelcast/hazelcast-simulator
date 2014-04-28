@@ -283,8 +283,9 @@ public class ClusterController {
                 new ExitInsteadOfReturn(new InstallGit()),
                 cloneCookbooks,
                 new InstallChefUsingOmnibus(),
-
-                Statements.appendFile("/var/chef/solo.rb",asList("ssl_verify_mode :verify_peer"))
+                Statements.exec("\"ssl_verify_mode :verify_peer\" >>/var/chef/solo.rb"),
+                Statements.exec("\"ssl_verify_mode :verify_peer\" >>/var/chef/bla.txt")
+        //        Statements.appendFile("/var/chef/solo.rb",asList("ssl_verify_mode :verify_peer"))
         );
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
@@ -304,7 +305,7 @@ public class ClusterController {
     //https://gist.github.com/nacx/7317938
     //https://github.com/socrata-cookbooks/java/blob/master/metadata.rb
     private void installJava(NodeMetadata node, ComputeService compute) {
-        echo("Installing Java...");
+//        echo("Installing Java...");
 
         Statement cloneJavaCookbook = CloneGitRepo.builder()
                 .repository("https://github.com/socrata-cookbooks/java.git")
