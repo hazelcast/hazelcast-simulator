@@ -180,6 +180,7 @@ public class Provisioner {
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
+                .overrideLoginUser("hazelcast").runScript(AdminAccess.standard())
                 .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
@@ -225,7 +226,7 @@ public class Provisioner {
         }
 
         public void run() {
-            initAccount()
+            //initAccount()
 
             //install java if needed
             if (!"outofthebox".equals(config.JDK_FLAVOR)) {
