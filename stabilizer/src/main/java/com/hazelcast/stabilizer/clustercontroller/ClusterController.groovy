@@ -256,9 +256,7 @@ public class ClusterController {
         }
 
         public void run() {
-            String ip = node.getId();
-
-            initAccount(ip)
+            initAccount()
 
             //install java if needed
             if (!"provisioned".equals(config.JDK_FLAVOR)) {
@@ -274,7 +272,7 @@ public class ClusterController {
             echo("\t" + ip + " STABILIZER AGENT STARTED");
         }
 
-        private void initAccount(String ip) {
+        private void initAccount() {
             ExecResponse response = compute.runScriptOnNode(node.getId(), AdminAccess.standard());
             if (response.exitStatus != 0) {
                 log.severe("Failed to initialize ssh: "+response.exitStatus)
