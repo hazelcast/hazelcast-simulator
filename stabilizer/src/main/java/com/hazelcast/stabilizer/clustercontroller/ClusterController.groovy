@@ -280,14 +280,23 @@ public class ClusterController {
                 .directory("/var/chef/cookbooks/chef-server")
                 .build();
 
+        Statement chefSolo = ChefSolo.builder() //
+                .cookbookPath("/var/chef/cookbooks") //
+                .runlist(RunList.builder().recipe("chef-server").build()) //
+                .jsonAttributes(attributes) //
+                .build();
+
+
         Statement statement = new StatementList(
                 new ExitInsteadOfReturn(new InstallGit()),
                 cloneCookbooks,
-                new InstallChefUsingOmnibus()//,
+                new InstallChefUsingOmnibus(),
+                chefSolo
        //         Statements.exec("echo \"ssl_verify_mode :verify_peer\" >>/var/chef/solo.rb"),
        //         Statements.exec("echo \"ssl_verify_mode :verify_peer\" >>/var/chef/bla.txt")
         //        Statements.appendFile("/var/chef/solo.rb",asList("ssl_verify_mode :verify_peer"))
         );
+
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
 
