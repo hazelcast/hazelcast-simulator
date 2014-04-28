@@ -18,6 +18,7 @@ import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
 import org.jclouds.scriptbuilder.ExitInsteadOfReturn
+import org.jclouds.scriptbuilder.InitScript
 import org.jclouds.scriptbuilder.domain.Statement
 import org.jclouds.scriptbuilder.domain.StatementList
 import org.jclouds.scriptbuilder.domain.Statements
@@ -242,7 +243,6 @@ public class ClusterController {
 
             //install java if needed
             if (!"outofthebox".equals(config.JDK_FLAVOR)) {
-                installChef(node, compute);
                 installJava(node, compute);
                 echo("\t" + ip + " JAVA INSTALLED");
             }
@@ -274,94 +274,15 @@ public class ClusterController {
                 .getComputeService();
     }
 
-    private void installChef(NodeMetadata node, ComputeService compute) {
-//        echo("Bootstrapping...");
 
-        Statement cloneCookbooks = CloneGitRepo.builder()
-                .repository("https://github.com/opscode-cookbooks/chef-server.git")
-                .directory("/var/chef/cookbooks/chef-server")
-                .build();
-
-        String chefVersion = "11.8.0-1"; // Chef Server version to install
-
-
-        String nodeFqDn = node.getPublicAddresses().iterator().next();
-
-        String attributes =
-                String.format("{\"chef-server\":{\"chef-version\":\"%s\",\"api_fqdn\":\"%s\"}}",
-                        chefVersion, nodeFqDn);
-
-
-        Statement chefSolo = ChefSolo.builder() //
-                .cookbookPath("/var/chef/cookbooks") //
-                .runlist(RunList.builder().recipe("chef-server").build()) //
-                .jsonAttributes(attributes) //
-                .build();
-
-
-        Statement statement = new StatementList(
-                new ExitInsteadOfReturn(new InstallGit()),
-                cloneCookbooks,
-                new InstallChefUsingOmnibus(),
-                chefSolo
-       //         Statements.exec("echo \"ssl_verify_mode :verify_peer\" >>/var/chef/solo.rb"),
-       //         Statements.exec("echo \"ssl_verify_mode :verify_peer\" >>/var/chef/bla.txt")
-        //        Statements.appendFile("/var/chef/solo.rb",asList("ssl_verify_mode :verify_peer"))
-        );
-
-
-        ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
-
-//        echo("------------------------------------------------------------------------------");
-//        echo("Exit code install chef: " + response.getExitStatus());
-//        echo("------------------------------------------------------------------------------");
-////
-        if (response.exitStatus != 0) {
-            log.severe("Failed to install chef on machine: " + node.privateAddresses.iterator().next());
-            log.severe(response.output);
-            log.severe(response.error);
-            System.exit(1)
-        }
-    }
 
     //https://gist.github.com/nacx/7317938
     //https://github.com/socrata-cookbooks/java/blob/master/metadata.rb
     private void installJava(NodeMetadata node, ComputeService compute) {
-//        echo("Installing Java...");
-
-        Statement cloneJavaCookbook = CloneGitRepo.builder()
-                .repository("https://github.com/socrata-cookbooks/java.git")
-                .directory("/var/chef/cookbooks/java")
-                .build();
-
-        File file = new File(CONF_DIR, "java_chef.json");
-        String javaAttributes = Utils.fileAsText(file);
-
-        String JDK_FLAVOR = config.JDK_FLAVOR;
-        String JDK_VERSION = config.JDK_VERSION;
-        String IBM_JDK_6_URL = config.IBM_JDK_6_URL;
-        String IBM_JDK_7_URL = config.IBM_JDK_7_URL;
-        String IBM_JDK_URL = "6".equals(JDK_VERSION) ? IBM_JDK_6_URL : IBM_JDK_7_URL;
-
-        javaAttributes = javaAttributes
-                .replace('$JDK_FLAVOR', JDK_FLAVOR)
-                .replace('$JDK_VERSION', JDK_VERSION)
-                .replace('$IBM_JDK_URL', IBM_JDK_URL);
-
-//        System.out.println(javaAttributes);
-
-        Statement installJava = ChefSolo.builder()
-                .cookbookPath("/var/chef/cookbooks")
-                .runlist(RunList.builder().recipes(asList("java::default")).build())
-                .jsonAttributes(javaAttributes)
-                .build();
+        String script = Utils.fileAsText(new File(CONF_DIR,"jdk-oracle-8.sh"));
 
         Statement statement = new StatementList(
-                Statements.exec("export GIT_SSL_NO_VERIFY=1"),
-                new ExitInsteadOfReturn(cloneJavaCookbook),
-                Statements.exec("echo cloned repo"),
-                new ExitInsteadOfReturn(installJava),
-                Statements.exec("echo installed java"),
+                Statements.exec(script),
                 new ExitInsteadOfReturn(Statements.exec("java -version")));
 
         ExecResponse response = compute.runScriptOnNode(
