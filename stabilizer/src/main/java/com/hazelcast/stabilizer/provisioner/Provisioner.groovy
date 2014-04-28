@@ -14,8 +14,6 @@ import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
-import org.jclouds.scriptbuilder.domain.Statement
-import org.jclouds.scriptbuilder.domain.StatementList
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
 
@@ -182,7 +180,7 @@ public class Provisioner {
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
-               .securityGroups(config.SECURITY_GROUP)
+                .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
 
@@ -243,16 +241,7 @@ public class Provisioner {
         }
 
         private void initAccount() {
-            Statement statement = AdminAccess.builder()
-                    .grantSudoToAdminUser(true)
-                    .adminUsername("hazelcast")
-                    .adminPrivateKey("/home/ec2-user/.ssh/id_rsa")
-                    .adminPublicKey("/home/ec2-user/.ssh/id_rsa.pub")
-                    .build();
-
-            StatementList statementList = new StatementList(statement,AdminAccess.standard());
-
-            ExecResponse response = compute.runScriptOnNode(node.getId(),statementList);
+            ExecResponse response = compute.runScriptOnNode(node.getId(), AdminAccess.standard());
             if (response.exitStatus != 0) {
                 log.severe("Failed to initialize ssh: " + response.exitStatus)
                 log.severe(response.getError());
@@ -282,8 +271,8 @@ public class Provisioner {
         if (response.exitStatus != 0) {
             echo("------------------------------------------------------------------------------");
             echo("Exit code install java: " + response.getExitStatus());
-            echo("Failing machine private ip: "+node.getPrivateAddresses().iterator().next())
-            echo("Failing machine public ip: "+node.getPublicAddresses().iterator().next())
+            echo("Failing machine private ip: " + node.getPrivateAddresses().iterator().next())
+            echo("Failing machine public ip: " + node.getPublicAddresses().iterator().next())
             echo("------------------------------------------------------------------------------");
 
             log.info(response.output);
@@ -297,7 +286,7 @@ public class Provisioner {
         String flavor = config.JDK_FLAVOR;
         String version = config.JDK_VERSION;
 
-        String script = "jdk-"+flavor+"-"+version+".sh";
+        String script = "jdk-" + flavor + "-" + version + ".sh";
         return Utils.fileAsText(new File(CONF_DIR, script));
     }
 
