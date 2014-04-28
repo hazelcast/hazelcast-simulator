@@ -183,6 +183,7 @@ public class Provisioner {
                 .inboundPorts(inboundPorts())
                 .overrideLoginUser("hazelcast")
                 .authorizePublicKey(Utils.fileAsText("/home/ec2-user/.ssh/id_rsa.pub"))
+                .overrideLoginPrivateKey(Utils.fileAsText("/home/ec2-user/.ssh/id_rsa"))
                 .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
@@ -269,7 +270,9 @@ public class Provisioner {
         ExecResponse response = compute.runScriptOnNode(
                 node.getId(),
                 script,
-                RunScriptOptions.Builder.overrideLoginUser("hazelcast"))
+                RunScriptOptions.Builder
+                        .overrideLoginUser("hazelcast")
+                        .overrideLoginPrivateKey(Utils.fileAsText("/home/ec2-user/.ssh/id_rsa")))
 
         if (response.exitStatus != 0) {
             echo("------------------------------------------------------------------------------");
