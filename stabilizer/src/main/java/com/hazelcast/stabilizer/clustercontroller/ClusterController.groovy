@@ -8,6 +8,8 @@ import com.hazelcast.stabilizer.agent.AgentRemoteService
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager
 import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand
 import org.jclouds.ContextBuilder
+import org.jclouds.aws.ec2.AWSEC2Api
+import org.jclouds.aws.ec2.domain.AWSRunningInstance
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.ComputeServiceContext
 import org.jclouds.compute.domain.ExecResponse
@@ -279,6 +281,16 @@ public class ClusterController {
                 .repository("https://github.com/opscode-cookbooks/chef-server.git")
                 .directory("/var/chef/cookbooks/chef-server")
                 .build();
+
+        String chefVersion = "11.8.0-1"; // Chef Server version to install
+
+
+        String nodeFqDn = node.getPublicAddresses().iterator().next();
+
+        String attributes =
+                String.format("{\"chef-server\":{\"chef-version\":\"%s\",\"api_fqdn\":\"%s\"}}",
+                        chefVersion, nodeFqDn);
+
 
         Statement chefSolo = ChefSolo.builder() //
                 .cookbookPath("/var/chef/cookbooks") //
