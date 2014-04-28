@@ -337,10 +337,11 @@ public class ClusterController {
 
         Statement statement = new StatementList(
                 Statements.exec("export GIT_SSL_NO_VERIFY=1"),
-                Statements.exec("git clone https://github.com/socrata-cookbooks/java.git /var/chef/cookbooks/java"),
-            //    cloneJavaCookbook,
-                installJava,
-                Statements.exec("java -version"));
+                new ExitInsteadOfReturn(cloneJavaCookbook),
+                Statements.exec("echo cloned repo"),
+                new ExitInsteadOfReturn(installJava),
+                Statements.exec("echo installed java"),
+                new ExitInsteadOfReturn(Statements.exec("java -version")));
 
         ExecResponse response = compute.runScriptOnNode(
                 node.getId(),
