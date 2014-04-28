@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 import static com.hazelcast.stabilizer.Utils.appendText
 import static com.hazelcast.stabilizer.Utils.getVersion
@@ -263,10 +264,10 @@ public class Provisioner {
     private void installJava(NodeMetadata node, ComputeService compute) {
         String script = loadJavaInstallScript()
 
-        ExecResponse response = compute.runScriptOnNode(
+        ExecResponse response = compute.submitScriptOnNode(
                 node.getId(),
                 script,
-                overrideAuthenticateSudo(true))
+                overrideAuthenticateSudo(true)).get(30, TimeUnit.MINUTES);
 
         if (response.exitStatus != 0) {
             echo("------------------------------------------------------------------------------");
