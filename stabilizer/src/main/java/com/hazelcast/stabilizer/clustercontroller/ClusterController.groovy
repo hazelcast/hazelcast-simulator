@@ -283,7 +283,8 @@ public class ClusterController {
                 new ExitInsteadOfReturn(new InstallGit()),
                 cloneCookbooks,
                 new InstallChefUsingOmnibus(),
-                Statements.appendFile("/var/chef/solo.rb","ssl_verify_mode :verify_peer","\n")
+
+                Statements.appendFile("/var/chef/solo.rb",asList("ssl_verify_mode :verify_peer"))
         );
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
