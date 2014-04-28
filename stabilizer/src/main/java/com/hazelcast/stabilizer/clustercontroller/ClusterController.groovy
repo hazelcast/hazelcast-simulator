@@ -16,6 +16,7 @@ import org.jclouds.compute.domain.ExecResponse
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
+import org.jclouds.compute.options.RunScriptOptions
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
 import org.jclouds.scriptbuilder.ExitInsteadOfReturn
 import org.jclouds.scriptbuilder.InitScript
@@ -279,16 +280,18 @@ public class ClusterController {
     //https://gist.github.com/nacx/7317938
     //https://github.com/socrata-cookbooks/java/blob/master/metadata.rb
     private void installJava(NodeMetadata node, ComputeService compute) {
-        String script = Utils.fileAsText(new File(CONF_DIR,"jdk-oracle-8.sh"));
+        String script = Utils.fileAsText(new File(CONF_DIR,"jdk-oracle-8.sh")).spl;
 
-        Statement statement = new StatementList(
-                Statements.exec(script),
-                new ExitInsteadOfReturn(Statements.exec("java -version")));
+//        Statement statement = new StatementList(
+//                Statements.exec(script),
+//                new ExitInsteadOfReturn(Statements.exec("java -version")));
 
-        ExecResponse response = compute.runScriptOnNode(
-                node.getId(),
-                statement,
-                overrideAuthenticateSudo(true));
+//        ExecResponse response = compute.runScriptOnNode(
+//                node.getId(),
+//                statement,
+//                overrideAuthenticateSudo(true));
+
+        ExecResponse response =compute.submitScriptOnNode(node.getId(),script,RunScriptOptions.NONE).get();
 
         echo("------------------------------------------------------------------------------");
         echo("Exit code install java: " + response.getExitStatus());
