@@ -180,11 +180,13 @@ public class Provisioner {
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
+              .overrideLoginUser("hazelcast")
                .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
 
         Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
+
         echo("Created machines, waiting for startup (can take a few minutes)")
 
         for (NodeMetadata node : nodes) {
