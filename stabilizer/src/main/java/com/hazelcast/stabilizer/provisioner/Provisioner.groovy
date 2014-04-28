@@ -13,8 +13,9 @@ import org.jclouds.compute.domain.ExecResponse
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
-import org.jclouds.compute.options.RunScriptOptions
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
+import org.jclouds.scriptbuilder.domain.Statement
+import org.jclouds.scriptbuilder.domain.StatementList
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
 
@@ -181,10 +182,7 @@ public class Provisioner {
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
-                .overrideLoginUser("hazelcast")
-                .authorizePublicKey(Utils.fileAsText("/home/ec2-user/.ssh/id_rsa.pub"))
-                .overrideLoginPrivateKey(Utils.fileAsText("/home/ec2-user/.ssh/id_rsa"))
-                .securityGroups(config.SECURITY_GROUP)
+               .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
 
@@ -229,7 +227,7 @@ public class Provisioner {
         }
 
         public void run() {
-            //initAccount()
+            initAccount()
 
             //install java if needed
             if (!"outofthebox".equals(config.JDK_FLAVOR)) {
@@ -245,7 +243,18 @@ public class Provisioner {
         }
 
         private void initAccount() {
-            ExecResponse response = compute.runScriptOnNode(node.getId(), AdminAccess.standard());
+            Statement statement = AdminAccess.builder().adminUsername("hazelcast")
+                    .grantSudoToAdminUser(true)
+                    .adminHome("/home/hazelcast")
+                    .adminPrivateKey("/home/ec2-user/.ssh/id_rsa")
+                    .adminPublicKey("/home/ec2-user/.ssh/id_rsa.pub")
+                    .build();
+
+            StatementList statementList = new StatementList();
+            statementList.add(statementList);
+            statementList.add(AdminAccess.standard());
+
+            ExecResponse response = compute.runScriptOnNode(node.getId(),statement);
             if (response.exitStatus != 0) {
                 log.severe("Failed to initialize ssh: " + response.exitStatus)
                 log.severe(response.getError());
@@ -270,9 +279,7 @@ public class Provisioner {
         ExecResponse response = compute.runScriptOnNode(
                 node.getId(),
                 script,
-                RunScriptOptions.Builder
-                        .overrideLoginUser("hazelcast")
-                        .overrideLoginPrivateKey(Utils.fileAsText("/home/ec2-user/.ssh/id_rsa")))
+                overrideAuthenticateSudo(true))
 
         if (response.exitStatus != 0) {
             echo("------------------------------------------------------------------------------");
