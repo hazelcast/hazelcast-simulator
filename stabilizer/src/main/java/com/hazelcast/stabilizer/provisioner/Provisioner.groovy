@@ -14,6 +14,9 @@ import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
+import org.jclouds.scriptbuilder.domain.Statement
+import org.jclouds.scriptbuilder.domain.StatementList
+import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
 
@@ -27,6 +30,8 @@ import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideAuthe
 import static org.jclouds.compute.options.RunScriptOptions.Builder.wrapInInitScript
 
 //https://jclouds.apache.org/start/compute/ good read
+//https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
+//https://github.com/jclouds/jclouds-examples/blob/master/minecraft-compute/src/main/java/org/jclouds/examples/minecraft/NodeManager.java
 public class Provisioner {
     private final static ILogger log = Logger.getLogger(Provisioner.class.getName());
 
@@ -176,9 +181,20 @@ public class Provisioner {
 
         echo("Created template")
 
+        Statement init;
+        if ("outofthebox".equals(config.JDK_FLAVOR)) {
+            init = AdminAccess.standard();
+        } else {
+            String scriptContent = loadJavaInstallScript();
+            init = new StatementList(
+                    AdminAccess.standard(),
+                    Statements.createOrOverwriteFile("install-java.sh", asList(scriptContent)),
+                    Statements.exec("sh install-java.sh"))
+        }
+
         template.getOptions()
                 .inboundPorts(inboundPorts())
-                .runScript(AdminAccess.standard())
+                .runScript(init)
                 .wrapInInitScript(true)
                 .securityGroups(config.SECURITY_GROUP)
 
@@ -228,10 +244,10 @@ public class Provisioner {
             //initAccount()
 
             //install java if needed
-            if (!"outofthebox".equals(config.JDK_FLAVOR)) {
-                installJava(node, compute);
-                echo("\t" + ip + " JAVA INSTALLED");
-            }
+//            if (!"outofthebox".equals(config.JDK_FLAVOR)) {
+//                installJava(node, compute);
+//                echo("\t" + ip + " JAVA INSTALLED");
+//            }
 
             installAgent(ip)
             echo("\t" + ip + " STABILIZER AGENT INSTALLED");
