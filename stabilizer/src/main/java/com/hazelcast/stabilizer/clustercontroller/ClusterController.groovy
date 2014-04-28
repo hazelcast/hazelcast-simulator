@@ -283,8 +283,8 @@ public class ClusterController {
                 new ExitInsteadOfReturn(new InstallGit()),
                 cloneCookbooks,
                 new InstallChefUsingOmnibus(),
-                Statements.exec("\"ssl_verify_mode :verify_peer\" >>/var/chef/solo.rb"),
-                Statements.exec("\"ssl_verify_mode :verify_peer\" >>/var/chef/bla.txt")
+                Statements.exec("echo \"ssl_verify_mode :verify_peer\" >>/var/chef/solo.rb"),
+                Statements.exec("echo \"ssl_verify_mode :verify_peer\" >>/var/chef/bla.txt")
         //        Statements.appendFile("/var/chef/solo.rb",asList("ssl_verify_mode :verify_peer"))
         );
 
