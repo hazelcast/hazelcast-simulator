@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.clustercontroller
+package com.hazelcast.stabilizer.provisioner
 
 import com.google.common.base.Predicate
 import com.hazelcast.logging.ILogger
@@ -29,8 +29,8 @@ import static java.util.Arrays.asList
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideAuthenticateSudo
 
 //https://jclouds.apache.org/start/compute/ good read
-public class ClusterController {
-    private final static ILogger log = Logger.getLogger(ClusterController.class.getName());
+public class Provisioner {
+    private final static ILogger log = Logger.getLogger(Provisioner.class.getName());
 
     def config
     final String STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath()
@@ -41,8 +41,8 @@ public class ClusterController {
 
     final List<String> privateIps = Collections.synchronizedList(new LinkedList<String>());
 
-    ClusterController() {
-        log.info("Hazelcast Stabilizer ClusterController");
+    Provisioner() {
+        log.info("Hazelcast Stabilizer Provisioner");
         log.info(format("Version: %s", getVersion()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
@@ -180,9 +180,7 @@ public class ClusterController {
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
-//                .authorizePublicKey(fileAsText(config.PUBLIC_KEY))
-//                .blockUntilRunning(true)
-                .securityGroups(config.SECURITY_GROUP)
+               .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
 
@@ -261,8 +259,6 @@ public class ClusterController {
                 .getComputeService();
     }
 
-    //https://gist.github.com/nacx/7317938
-    //https://github.com/socrata-cookbooks/java/blob/master/metadata.rb
     private void installJava(NodeMetadata node, ComputeService compute) {
         String script = loadJavaInstallScript()
 
@@ -271,10 +267,11 @@ public class ClusterController {
                 script,
                 overrideAuthenticateSudo(true))
 
-
         if (response.exitStatus != 0) {
             echo("------------------------------------------------------------------------------");
             echo("Exit code install java: " + response.getExitStatus());
+            echo("Failing machine private ip: "+node.getPrivateAddresses().iterator().next())
+            echo("Failing machine public ip: "+node.getPublicAddresses().iterator().next())
             echo("------------------------------------------------------------------------------");
 
             log.info(response.output);
@@ -413,33 +410,33 @@ public class ClusterController {
         }
 
         if (opt.r) {
-            def cluster = new ClusterController()
+            def cluster = new Provisioner()
             cluster.installAgents()
             cluster.startAgents()
             System.exit 0
         }
 
         if (opt.k) {
-            def cluster = new ClusterController()
+            def cluster = new Provisioner()
             cluster.killAgents()
             System.exit 0
         }
 
 
         if (opt.d) {
-            def cluster = new ClusterController()
+            def cluster = new Provisioner()
             cluster.downloadArtifacts()
             System.exit 0
         }
 
         if (opt.t) {
-            def cluster = new ClusterController()
+            def cluster = new Provisioner()
             cluster.terminate()
             System.exit 0
         }
 
         if (opt.s) {
-            def cluster = new ClusterController()
+            def cluster = new Provisioner()
 
             String sizeType = opt.s
             cluster.scale(sizeType)
