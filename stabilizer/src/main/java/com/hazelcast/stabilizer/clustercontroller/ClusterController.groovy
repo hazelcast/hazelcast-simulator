@@ -264,8 +264,6 @@ public class ClusterController {
     //https://gist.github.com/nacx/7317938
     //https://github.com/socrata-cookbooks/java/blob/master/metadata.rb
     private void installJava(NodeMetadata node, ComputeService compute) {
-
-
         String script = loadJavaInstallScript()
 
 //        Statement statement = new StatementList(
