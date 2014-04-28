@@ -171,6 +171,12 @@ public class ClusterController {
         echoImportant("Provisioning ${delta} ${config.CLOUD_PROVIDER} machines");
         echo(config.MACHINE_SPEC);
 
+        if ("provisioned".equals(config.JDK_FLAVOR)) {
+            log.info("No Java will be installed.");
+        } else {
+            log.info("Machines will use Java: ${config.JDK_FLAVOR} ${config.JDK_VERSION}")
+        }
+
         ComputeService compute = getComputeService()
 
         echo("Created compute")
@@ -192,7 +198,7 @@ public class ClusterController {
         Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
         echo("Created machines, waiting for startup (can take a few minutes)")
 
-        for(NodeMetadata node: nodes){
+        for (NodeMetadata node : nodes) {
             String ip = node.privateAddresses.iterator().next()
             echo("\t" + ip + " LAUNCHED");
             appendText(ip + "\n", agentsFile)
@@ -230,17 +236,6 @@ public class ClusterController {
 //            echo("\t" + ip + " STARTED");
 //        }
 //
-//        if ("provisioned".equals(config.JDK_FLAVOR)) {
-//            log.info("Skipping Java installation");
-//        } else {
-//            log.info("Installing Java: ${config.JDK_FLAVOR} ${config.JDK_VERSION}")
-//            for (NodeMetadata m : nodes) {
-//                String ip = m.privateAddresses.iterator().next()
-//                installChef(m, compute);
-//                installJava(m, compute);
-//                echo("\t" + ip + " JAVA INSTALLED");
-//            }
-//        }
 
 //        installAgents()
 //        startAgents()
@@ -266,7 +261,6 @@ public class ClusterController {
             initAccount(ip)
 
             //install java if needed
-            log.info("Installing Java: ${config.JDK_FLAVOR} ${config.JDK_VERSION}")
             if (!"provisioned".equals(config.JDK_FLAVOR)) {
                 installChef(node, compute);
                 installJava(node, compute);
@@ -281,11 +275,14 @@ public class ClusterController {
         }
 
         private void initAccount(String ip) {
-            ExecResponse checkResponse = compute.runScriptOnNode(node.getId(), AdminAccess.standard());
-            System.out.println("exit code initialize:" + checkResponse.getExitStatus());
-            System.out.println(checkResponse.getError());
-            System.out.println(checkResponse.getOutput());
-            echo("\t" + ip + " STARTED");
+            ExecResponse response = compute.runScriptOnNode(node.getId(), AdminAccess.standard());
+            if (response.exitStatus != 0) {
+                log.severe("Failed to initialize ssh: "+response.exitStatus)
+                log.severe(response.getError());
+                log.severe(response.getOutput());
+                System.exit(1)
+            }
+            echo("\t" + ip + " SSH STARTED");
         }
     }
 
@@ -298,7 +295,7 @@ public class ClusterController {
     }
 
     private void installChef(NodeMetadata node, ComputeService compute) {
-        echo("Bootstrapping...");
+//        echo("Bootstrapping...");
 
         Statement cloneCookbooks = CloneGitRepo.builder()
                 .repository("https://github.com/opscode-cookbooks/chef-server.git")
@@ -313,10 +310,10 @@ public class ClusterController {
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
 
-        echo("------------------------------------------------------------------------------");
-        echo("Exit code install chef: " + response.getExitStatus());
-        echo("------------------------------------------------------------------------------");
-//
+//        echo("------------------------------------------------------------------------------");
+//        echo("Exit code install chef: " + response.getExitStatus());
+//        echo("------------------------------------------------------------------------------");
+////
         if (response.exitStatus != 0) {
             log.severe("Failed to install chef on machine: " + node.privateAddresses.iterator().next());
             log.severe(response.output);
@@ -377,7 +374,6 @@ public class ClusterController {
             log.severe(response.error);
             System.exit(1)
         }
-
     }
 
     def downloadArtifacts() {
@@ -401,7 +397,7 @@ public class ClusterController {
             count = privateIps.size();
         }
 
-        echoImportant(format("Terminating %s %s machines", count, config.CLOUD_PROVIDER));
+        echoImportant(format("Terminating %s %s machines (can take some time)", count, config.CLOUD_PROVIDER));
 
         final List<String> terminateList = privateIps.subList(0, count);
 
