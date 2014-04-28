@@ -6,28 +6,14 @@ import com.hazelcast.logging.Logger
 import com.hazelcast.stabilizer.Utils
 import com.hazelcast.stabilizer.agent.AgentRemoteService
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager
-import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand
 import org.jclouds.ContextBuilder
-import org.jclouds.aws.ec2.AWSEC2Api
-import org.jclouds.aws.ec2.domain.AWSRunningInstance
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.ComputeServiceContext
 import org.jclouds.compute.domain.ExecResponse
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
-import org.jclouds.compute.options.RunScriptOptions
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
-import org.jclouds.scriptbuilder.ExitInsteadOfReturn
-import org.jclouds.scriptbuilder.InitScript
-import org.jclouds.scriptbuilder.domain.Statement
-import org.jclouds.scriptbuilder.domain.StatementList
-import org.jclouds.scriptbuilder.domain.Statements
-import org.jclouds.scriptbuilder.domain.chef.RunList
-import org.jclouds.scriptbuilder.statements.chef.ChefSolo
-import org.jclouds.scriptbuilder.statements.chef.InstallChefUsingOmnibus
-import org.jclouds.scriptbuilder.statements.git.CloneGitRepo
-import org.jclouds.scriptbuilder.statements.git.InstallGit
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
 
@@ -220,7 +206,7 @@ public class ClusterController {
             try {
                 f.get();
             } catch (ExecutionException e) {
-                log.severe("Failed provision",e)
+                log.severe("Failed provision", e)
                 System.exit(1)
             }
         }
@@ -258,7 +244,7 @@ public class ClusterController {
         private void initAccount() {
             ExecResponse response = compute.runScriptOnNode(node.getId(), AdminAccess.standard());
             if (response.exitStatus != 0) {
-                log.severe("Failed to initialize ssh: "+response.exitStatus)
+                log.severe("Failed to initialize ssh: " + response.exitStatus)
                 log.severe(response.getError());
                 log.severe(response.getOutput());
                 System.exit(1)
@@ -275,12 +261,10 @@ public class ClusterController {
                 .getComputeService();
     }
 
-
-
     //https://gist.github.com/nacx/7317938
     //https://github.com/socrata-cookbooks/java/blob/master/metadata.rb
     private void installJava(NodeMetadata node, ComputeService compute) {
-        String script = Utils.fileAsText(new File(CONF_DIR,"jdk-oracle-8.sh"));
+        String script = Utils.fileAsText(new File(CONF_DIR, "jdk-oracle-8.sh"));
 
 //        Statement statement = new StatementList(
 //                Statements.exec(script),
@@ -291,7 +275,7 @@ public class ClusterController {
 //                statement,
 //                overrideAuthenticateSudo(true));
 
-        ExecResponse response =compute.submitScriptOnNode(node.getId(),script,RunScriptOptions.NONE).get();
+        ExecResponse response = compute.submitScriptOnNode(node.getId(), script, overrideAuthenticateSudo()).get();
 
         echo("------------------------------------------------------------------------------");
         echo("Exit code install java: " + response.getExitStatus());
