@@ -280,7 +280,7 @@ public class ClusterController {
     //https://gist.github.com/nacx/7317938
     //https://github.com/socrata-cookbooks/java/blob/master/metadata.rb
     private void installJava(NodeMetadata node, ComputeService compute) {
-        String script = Utils.fileAsText(new File(CONF_DIR,"jdk-oracle-8.sh")).spl;
+        String script = Utils.fileAsText(new File(CONF_DIR,"jdk-oracle-8.sh"));
 
 //        Statement statement = new StatementList(
 //                Statements.exec(script),
