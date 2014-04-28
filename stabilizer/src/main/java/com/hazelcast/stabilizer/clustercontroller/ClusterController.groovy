@@ -172,7 +172,7 @@ public class ClusterController {
         echo(config.MACHINE_SPEC);
 
         if ("outofthebox".equals(config.JDK_FLAVOR)) {
-            log.info("Out of the box java will be used.");
+            log.info("Machines will use Java: Out of the Box.");
         } else {
             log.info("Machines will use Java: ${config.JDK_FLAVOR} ${config.JDK_VERSION}")
         }
@@ -220,29 +220,7 @@ public class ClusterController {
             }
         }
 
-//        for (NodeMetadata m : nodes) {
-//            String ip = m.privateAddresses.iterator().next()
-//            echo("\t" + ip + " LAUNCHED");
-//            appendText(ip + "\n", agentsFile)
-//            privateIps.add(ip)
-//        }
-//
-//        for (NodeMetadata m : nodes) {
-//            ExecResponse checkResponse = compute.runScriptOnNode(m.getId(), AdminAccess.standard());
-//            System.out.println("exit code initialize:" + checkResponse.getExitStatus());
-//            System.out.println(checkResponse.getError());
-//            System.out.println(checkResponse.getOutput());
-//
-//            String ip = m.privateAddresses.iterator().next()
-//            echo("\t" + ip + " STARTED");
-//        }
-//
-
-//        installAgents()
-//        startAgents()
-
         echoImportant("Successfully provisioned ${delta} ${config.CLOUD_PROVIDER} machines ");
-
     }
 
     private class InstallNodeTask implements Runnable {
@@ -304,7 +282,8 @@ public class ClusterController {
         Statement statement = new StatementList(
                 new ExitInsteadOfReturn(new InstallGit()),
                 cloneCookbooks,
-                new InstallChefUsingOmnibus()//,
+                new InstallChefUsingOmnibus(),
+                Statements.appendFile("/var/chef/solo.rb","ssl_verify_mode :verify_peer","\n")
         );
 
         ExecResponse response = compute.runScriptOnNode(node.getId(), statement, overrideAuthenticateSudo(true));
