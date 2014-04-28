@@ -252,13 +252,16 @@ public class ClusterController {
     private class InstallNodeTask implements Runnable {
         private final NodeMetadata node;
         private final ComputeService compute;
+        private final String ip;
 
         InstallNodeTask(NodeMetadata node, ComputeService compute) {
             this.node = node
             this.compute = compute
+            this.ip = node.getPrivateAddresses().iterator().next();
         }
 
         public void run() {
+            String ip = node.getId();
 
             initAccount(ip)
 
