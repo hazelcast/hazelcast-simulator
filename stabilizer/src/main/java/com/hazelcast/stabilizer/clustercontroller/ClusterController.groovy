@@ -6,6 +6,7 @@ import com.hazelcast.logging.Logger
 import com.hazelcast.stabilizer.Utils
 import com.hazelcast.stabilizer.agent.AgentRemoteService
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager
+import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand
 import org.jclouds.ContextBuilder
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.ComputeServiceContext
@@ -335,6 +336,7 @@ public class ClusterController {
                 .build();
 
         Statement statement = new StatementList(
+                Statements.exec("export GIT_SSL_NO_VERIFY=1"),
                 cloneJavaCookbook,
                 installJava,
                 Statements.exec("java -version"));
