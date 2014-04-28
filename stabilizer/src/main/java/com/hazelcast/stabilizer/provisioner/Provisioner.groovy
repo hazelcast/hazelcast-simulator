@@ -14,9 +14,6 @@ import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
-import org.jclouds.scriptbuilder.domain.Statement
-import org.jclouds.scriptbuilder.domain.StatementList
-import org.jclouds.scriptbuilder.domain.Statements
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
 
@@ -27,7 +24,6 @@ import static com.hazelcast.stabilizer.Utils.getVersion
 import static java.lang.String.format
 import static java.util.Arrays.asList
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideAuthenticateSudo
-import static org.jclouds.compute.options.RunScriptOptions.Builder.wrapInInitScript
 
 //https://jclouds.apache.org/start/compute/ good read
 //https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
@@ -181,20 +177,9 @@ public class Provisioner {
 
         echo("Created template")
 
-        Statement init;
-        if ("outofthebox".equals(config.JDK_FLAVOR)) {
-            init = AdminAccess.standard();
-        } else {
-            String scriptContent = loadJavaInstallScript();
-            init = new StatementList(
-                    AdminAccess.standard(),
-                    Statements.createOrOverwriteFile("install-java.sh", asList(scriptContent)),
-                    Statements.exec("sh install-java.sh"))
-        }
-
         template.getOptions()
                 .inboundPorts(inboundPorts())
-                .runScript(init)
+                .runScript(AdminAccess.standard())
                 .wrapInInitScript(true)
                 .securityGroups(config.SECURITY_GROUP)
 
@@ -244,10 +229,14 @@ public class Provisioner {
             //initAccount()
 
             //install java if needed
-//            if (!"outofthebox".equals(config.JDK_FLAVOR)) {
-//                installJava(node, compute);
-//                echo("\t" + ip + " JAVA INSTALLED");
-//            }
+            if (!"outofthebox".equals(config.JDK_FLAVOR)) {
+                ssh(ip, "touch install-java.sh")
+                ssh(ip, "chmod +x install-java.sh")
+                scpToRemote(ip, getJavaInstallScript().getAbsolutePath(), "install-java.sh")
+                ssh(ip, "sudo sh install-java.sh")
+                installJava(node, compute);
+                echo("\t" + ip + " JAVA INSTALLED");
+            }
 
             installAgent(ip)
             echo("\t" + ip + " STABILIZER AGENT INSTALLED");
@@ -256,17 +245,6 @@ public class Provisioner {
             echo("\t" + ip + " STABILIZER AGENT STARTED");
         }
 
-        private void initAccount() {
-            def future = compute.submitScriptOnNode(node.getId(), AdminAccess.standard(), wrapInInitScript(true))
-            ExecResponse response = future.get(20, TimeUnit.MINUTES);
-            if (response.exitStatus != 0) {
-                log.severe("Failed to initialize ssh: " + response.exitStatus)
-                log.severe(response.getError());
-                log.severe(response.getOutput());
-                System.exit(1)
-            }
-            echo("\t" + ip + " SSH STARTED");
-        }
     }
 
     private ComputeService getComputeService() {
@@ -277,34 +255,34 @@ public class Provisioner {
                 .getComputeService();
     }
 
-    private void installJava(NodeMetadata node, ComputeService compute) {
-        String script = loadJavaInstallScript()
+//    private void installJava(NodeMetadata node, ComputeService compute) {
+//        String script = loadJavaInstallScript()
+//
+//        ExecResponse response = compute.submitScriptOnNode(
+//                node.getId(),
+//                script,
+//                overrideAuthenticateSudo(true).wrapInInitScript(true)).get(30, TimeUnit.MINUTES);
+//
+//        if (response.exitStatus != 0) {
+//            echo("------------------------------------------------------------------------------");
+//            echo("Exit code install java: " + response.getExitStatus());
+//            echo("Failing machine private ip: " + node.getPrivateAddresses().iterator().next())
+//            echo("Failing machine public ip: " + node.getPublicAddresses().iterator().next())
+//            echo("------------------------------------------------------------------------------");
+//
+//            log.info(response.output);
+//            log.info(response.error);
+//
+//            System.exit(1)
+//        }
+//    }
 
-        ExecResponse response = compute.submitScriptOnNode(
-                node.getId(),
-                script,
-                overrideAuthenticateSudo(true).wrapInInitScript(true)).get(30, TimeUnit.MINUTES);
-
-        if (response.exitStatus != 0) {
-            echo("------------------------------------------------------------------------------");
-            echo("Exit code install java: " + response.getExitStatus());
-            echo("Failing machine private ip: " + node.getPrivateAddresses().iterator().next())
-            echo("Failing machine public ip: " + node.getPublicAddresses().iterator().next())
-            echo("------------------------------------------------------------------------------");
-
-            log.info(response.output);
-            log.info(response.error);
-
-            System.exit(1)
-        }
-    }
-
-    private String loadJavaInstallScript() {
+    private File getJavaInstallScript() {
         String flavor = config.JDK_FLAVOR;
         String version = config.JDK_VERSION;
 
         String script = "jdk-" + flavor + "-" + version + ".sh";
-        return Utils.fileAsText(new File(CONF_DIR, script));
+        return new File(CONF_DIR, script);
     }
 
     def downloadArtifacts() {
