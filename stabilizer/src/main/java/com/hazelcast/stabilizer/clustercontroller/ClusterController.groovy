@@ -284,7 +284,7 @@ public class ClusterController {
                 cloneCookbooks,
                 new InstallChefUsingOmnibus()//,
        //         Statements.exec("echo \"ssl_verify_mode :verify_peer\" >>/var/chef/solo.rb"),
-        //        Statements.exec("echo \"ssl_verify_mode :verify_peer\" >>/var/chef/bla.txt")
+       //         Statements.exec("echo \"ssl_verify_mode :verify_peer\" >>/var/chef/bla.txt")
         //        Statements.appendFile("/var/chef/solo.rb",asList("ssl_verify_mode :verify_peer"))
         );
 
@@ -308,8 +308,7 @@ public class ClusterController {
 //        echo("Installing Java...");
 
         Statement cloneJavaCookbook = CloneGitRepo.builder()
-               .repository("git@github.com:socrata-cookbooks/java.git")
-       //         .repository("https://github.com/socrata-cookbooks/java.git")
+                .repository("https://github.com/socrata-cookbooks/java.git")
                 .directory("/var/chef/cookbooks/java")
                 .build();
 
