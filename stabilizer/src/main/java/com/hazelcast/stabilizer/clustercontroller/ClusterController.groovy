@@ -266,31 +266,20 @@ public class ClusterController {
     private void installJava(NodeMetadata node, ComputeService compute) {
         String script = loadJavaInstallScript()
 
-//        Statement statement = new StatementList(
-//                Statements.exec(script),
-//                new ExitInsteadOfReturn(Statements.exec("java -version")));
-
-//        ExecResponse response = compute.runScriptOnNode(
-//                node.getId(),
-//                statement,
-//                overrideAuthenticateSudo(true));
-
         ExecResponse response = compute.runScriptOnNode(
                 node.getId(),
                 script,
                 overrideAuthenticateSudo(true))
 
-        echo("------------------------------------------------------------------------------");
-        echo("Exit code install java: " + response.getExitStatus());
-        echo("------------------------------------------------------------------------------");
-
-        log.info(response.output);
-        log.info(response.error);
 
         if (response.exitStatus != 0) {
-            log.severe("Failed to install Java on machine: " + node.privateAddresses.iterator().next());
-            log.severe(response.output);
-            log.severe(response.error);
+            echo("------------------------------------------------------------------------------");
+            echo("Exit code install java: " + response.getExitStatus());
+            echo("------------------------------------------------------------------------------");
+
+            log.info(response.output);
+            log.info(response.error);
+
             System.exit(1)
         }
     }

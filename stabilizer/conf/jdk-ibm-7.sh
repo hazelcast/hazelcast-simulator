@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cd ~
-wget http://ec2-54-87-52-100.compute-1.amazonaws.com/ibm-java-x86_64-sdk-7.1-0.0.bin
+wget -q http://ec2-54-87-52-100.compute-1.amazonaws.com/ibm-java-x86_64-sdk-7.1-0.0.bin
 chmod +x ibm-java-x86_64-sdk-7.1-0.0.bin
 ./ibm-java-x86_64-sdk-7.1-0.0.bin -i silent
 
