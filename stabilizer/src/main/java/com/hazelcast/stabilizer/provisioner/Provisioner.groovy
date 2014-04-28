@@ -180,7 +180,6 @@ public class Provisioner {
         template.getOptions()
                 .inboundPorts(inboundPorts())
                 .runScript(AdminAccess.standard())
-                .wrapInInitScript(true)
                 .securityGroups(config.SECURITY_GROUP)
 
         echo("Creating nodes")
@@ -226,14 +225,12 @@ public class Provisioner {
         }
 
         public void run() {
-            //initAccount()
-
-            //install java if needed
+             //install java if needed
             if (!"outofthebox".equals(config.JDK_FLAVOR)) {
                 ssh(ip, "touch install-java.sh")
                 ssh(ip, "chmod +x install-java.sh")
                 scpToRemote(ip, getJavaInstallScript().getAbsolutePath(), "install-java.sh")
-                ssh(ip, "sudo sh install-java.sh")
+                ssh(ip, "sudo bash install-java.sh")
                 echo("\t" + ip + " JAVA INSTALLED");
             }
 
