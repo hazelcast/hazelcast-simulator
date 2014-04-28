@@ -243,18 +243,16 @@ public class Provisioner {
         }
 
         private void initAccount() {
-            Statement statement = AdminAccess.builder().adminUsername("hazelcast")
+            Statement statement = AdminAccess.builder()
                     .grantSudoToAdminUser(true)
-                    .adminHome("/home/hazelcast")
+                    .adminUsername("hazelcast")
                     .adminPrivateKey("/home/ec2-user/.ssh/id_rsa")
                     .adminPublicKey("/home/ec2-user/.ssh/id_rsa.pub")
                     .build();
 
-            StatementList statementList = new StatementList();
-            statementList.add(statementList);
-            statementList.add(AdminAccess.standard());
+            StatementList statementList = new StatementList(statement,AdminAccess.standard());
 
-            ExecResponse response = compute.runScriptOnNode(node.getId(),statement);
+            ExecResponse response = compute.runScriptOnNode(node.getId(),statementList);
             if (response.exitStatus != 0) {
                 log.severe("Failed to initialize ssh: " + response.exitStatus)
                 log.severe(response.getError());
