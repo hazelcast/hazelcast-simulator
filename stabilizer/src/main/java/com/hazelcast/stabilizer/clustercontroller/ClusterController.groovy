@@ -9,12 +9,10 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager
 import org.jclouds.ContextBuilder
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.ComputeServiceContext
-import org.jclouds.compute.callables.RunScriptOnNode
 import org.jclouds.compute.domain.ExecResponse
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
-import org.jclouds.compute.options.RunScriptOptions
 import org.jclouds.logging.log4j.config.Log4JLoggingModule
 import org.jclouds.scriptbuilder.statements.login.AdminAccess
 import org.jclouds.sshj.config.SshjSshClientModule
@@ -266,7 +264,9 @@ public class ClusterController {
     //https://gist.github.com/nacx/7317938
     //https://github.com/socrata-cookbooks/java/blob/master/metadata.rb
     private void installJava(NodeMetadata node, ComputeService compute) {
-        String script = Utils.fileAsText(new File(CONF_DIR, "jdk-oracle-8.sh"));
+
+
+        String script = loadJavaInstallScript()
 
 //        Statement statement = new StatementList(
 //                Statements.exec(script),
@@ -277,10 +277,10 @@ public class ClusterController {
 //                statement,
 //                overrideAuthenticateSudo(true));
 
-        RunScriptOptions runScriptOptions = overrideAuthenticateSudo(true)
-
-        def future = compute.submitScriptOnNode(node.getId(), script, runScriptOptions)
-        ExecResponse response = future.get();
+        ExecResponse response = compute.runScriptOnNode(
+                node.getId(),
+                script,
+                overrideAuthenticateSudo(true))
 
         echo("------------------------------------------------------------------------------");
         echo("Exit code install java: " + response.getExitStatus());
@@ -295,6 +295,14 @@ public class ClusterController {
             log.severe(response.error);
             System.exit(1)
         }
+    }
+
+    private String loadJavaInstallScript() {
+        String flavor = config.JDK_FLAVOR;
+        String version = config.JDK_VERSION;
+
+        String script = "jdk-"+flavor+"-"+version;
+        return Utils.fileAsText(new File(CONF_DIR, script));
     }
 
     def downloadArtifacts() {
