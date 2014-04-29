@@ -18,12 +18,11 @@ import org.jclouds.sshj.config.SshjSshClientModule
 
 import java.util.concurrent.*
 
-import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
-import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
-
 import static com.hazelcast.stabilizer.Utils.*
 import static java.lang.String.format
 import static java.util.Arrays.asList
+import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD
+import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD
 
 //https://jclouds.apache.org/start/compute/ good read
 //https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
@@ -39,6 +38,7 @@ public class Provisioner {
     final ExecutorService executor = Executors.newFixedThreadPool(10);
 
     final List<String> privateIps = Collections.synchronizedList(new LinkedList<String>());
+    final String POLL_PERIOD_MS;
 
     Provisioner() {
         log.info("Hazelcast Stabilizer Provisioner");
@@ -51,6 +51,7 @@ public class Provisioner {
             stream -> props.load(stream)
         }
         config = new ConfigSlurper().parse(props)
+        POLL_PERIOD_MS = String.valueOf(TimeUnit.SECONDS.toMillis(Integer.parseInt(config.CLOUD_POLL_PERIOD_SECONDS)));
 
         if (!agentsFile.exists()) {
             agentsFile.createNewFile()
@@ -247,12 +248,10 @@ public class Provisioner {
 
     }
 
-    public static final String POLL_PERIOD_TWENTY_SECONDS = String.valueOf(TimeUnit.SECONDS.toMillis(20));
-
     private ComputeService getComputeService() {
         Properties overrides = new Properties();
-        overrides.setProperty(POLL_INITIAL_PERIOD, POLL_PERIOD_TWENTY_SECONDS);
-        overrides.setProperty(POLL_MAX_PERIOD, POLL_PERIOD_TWENTY_SECONDS);
+        overrides.setProperty(POLL_INITIAL_PERIOD, POLL_PERIOD_MS);
+        overrides.setProperty(POLL_MAX_PERIOD, POLL_PERIOD_MS);
 
         return ContextBuilder.newBuilder(config.CLOUD_PROVIDER)
                 .overrides(overrides)
@@ -320,7 +319,7 @@ public class Provisioner {
             agentsFile.text += "$ip\n"
         }
 
-        long durationSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()-startMs);
+        long durationSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startMs);
         echo("Duration: " + secondsToHuman(durationSeconds))
         echoImportant("Finished terminating $count ${config.CLOUD_PROVIDER} machines, ${privateIps.size()} machines remaning.");
     }
