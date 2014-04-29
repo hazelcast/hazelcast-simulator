@@ -185,21 +185,23 @@ public class Provisioner {
 
         echo("Creating nodes")
 
-        Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
-
-        echo("Created machines, waiting for startup (can take a few minutes)")
-
-        for (NodeMetadata node : nodes) {
-            String ip = node.privateAddresses.iterator().next()
-            echo("\t" + ip + " LAUNCHED");
-            appendText(ip + "\n", agentsFile)
-            privateIps.add(ip)
-        }
-
         Set<Future> futures = new LinkedList<Future>();
-        for (NodeMetadata node : nodes) {
-            Future f = executor.submit(new InstallNodeTask(node, compute));
-            futures.add(f);
+        echo("Created machines, waiting for startup (can take a few minutes)")
+        for(int batch: calcBatches(delta)) {
+
+            Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
+
+            for (NodeMetadata node : nodes) {
+                String ip = node.privateAddresses.iterator().next()
+                echo("\t" + ip + " LAUNCHED");
+                appendText(ip + "\n", agentsFile)
+                privateIps.add(ip)
+            }
+
+            for (NodeMetadata node : nodes) {
+                Future f = executor.submit(new InstallNodeTask(node, compute));
+                futures.add(f);
+            }
         }
 
         for (Future f : futures) {
@@ -244,6 +246,22 @@ public class Provisioner {
             echo("\t" + ip + " STABILIZER AGENT STARTED");
         }
 
+    }
+
+    private int[] calcBatches(int size) {
+        List<Integer> batches = new LinkedList<>(Integer);
+        int batchSize = 20;
+        while (size > 0) {
+            int x = size >= batchSize ? batchSize : size;
+            batches.add(x);
+            size -= x;
+        }
+
+        int[] result = new int[batches.size()];
+        for(int k=0;k<result.length;k++){
+            result[k]=batches.get(k);
+        }
+        return result;
     }
 
     private ComputeService getComputeService() {
