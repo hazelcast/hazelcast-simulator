@@ -275,7 +275,7 @@ public class Provisioner {
         overrides.setProperty(POLL_INITIAL_PERIOD, config.CLOUD_POLL_INITIAL_PERIOD);
         overrides.setProperty(POLL_MAX_PERIOD, config.CLOUD_POLL_MAX_PERIOD);
 
-        String credentials = (String)config.CLOUD_CREDENTIALS;
+        String credentials = (String)config.CLOUD_CREDENTIAL;
         println credentials.class
         File file = new File(credentials);
         if(file.exists()){
