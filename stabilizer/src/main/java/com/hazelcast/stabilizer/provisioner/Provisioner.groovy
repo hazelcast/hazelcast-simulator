@@ -30,7 +30,7 @@ import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIO
 public class Provisioner {
     private final static ILogger log = Logger.getLogger(Provisioner.class.getName());
 
-    def config
+    ConfigObject config
     final String STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath()
     final File CONF_DIR = new File(STABILIZER_HOME, "conf");
     final File agentsFile = new File("agents.txt")
@@ -275,7 +275,7 @@ public class Provisioner {
         overrides.setProperty(POLL_INITIAL_PERIOD, config.CLOUD_POLL_INITIAL_PERIOD);
         overrides.setProperty(POLL_MAX_PERIOD, config.CLOUD_POLL_MAX_PERIOD);
 
-        String credentials = config.CLOUD_CREDENTIALS;
+        String credentials = (String)config.get(CLOUD_CREDENTIALS);
         File file = new File(credentials);
         if(file.exists()){
             credentials = Utils.fileAsText(file);
