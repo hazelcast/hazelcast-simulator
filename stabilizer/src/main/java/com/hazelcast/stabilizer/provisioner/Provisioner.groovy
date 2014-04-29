@@ -293,6 +293,8 @@ public class Provisioner {
 
         echoImportant(format("Terminating %s %s machines (can take some time)", count, config.CLOUD_PROVIDER));
 
+        long startMs = System.currentTimeMillis();
+
         final List<String> terminateList = privateIps.subList(0, count);
 
         ComputeService computeService = getComputeService();
@@ -318,6 +320,8 @@ public class Provisioner {
             agentsFile.text += "$ip\n"
         }
 
+        long durationSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()-startMs);
+        echo("Duration: " + secondsToHuman(durationSeconds))
         echoImportant("Finished terminating $count ${config.CLOUD_PROVIDER} machines, ${privateIps.size()} machines remaning.");
     }
 
