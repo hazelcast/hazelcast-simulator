@@ -18,6 +18,9 @@ import org.jclouds.sshj.config.SshjSshClientModule
 
 import java.util.concurrent.*
 
+import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
+import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
+
 import static com.hazelcast.stabilizer.Utils.*
 import static java.lang.String.format
 import static java.util.Arrays.asList
@@ -115,7 +118,7 @@ public class Provisioner {
         privateIps.each { String ip -> installAgent(ip) }
     }
 
-    int calcSize(String sizeType) {
+    int calcClusterSize(String sizeType) {
         try {
             return Integer.parseInt(sizeType)
         } catch (NumberFormatException e) {
@@ -125,7 +128,7 @@ public class Provisioner {
     }
 
     void scale(String sizeType) {
-        int delta = calcSize(sizeType) - privateIps.size();
+        int delta = calcClusterSize(sizeType) - privateIps.size();
         if (delta == 0) {
             echo("Ignoring spawn machines, desired number of machines already exists");
         } else if (delta < 0) {
@@ -244,35 +247,20 @@ public class Provisioner {
 
     }
 
+    public static final String POLL_PERIOD_TWENTY_SECONDS = String.valueOf(TimeUnit.SECONDS.toMillis(20));
+
     private ComputeService getComputeService() {
+        Properties overrides = new Properties();
+        overrides.setProperty(POLL_INITIAL_PERIOD, POLL_PERIOD_TWENTY_SECONDS);
+        overrides.setProperty(POLL_MAX_PERIOD, POLL_PERIOD_TWENTY_SECONDS);
+
         return ContextBuilder.newBuilder(config.CLOUD_PROVIDER)
+                .overrides(overrides)
                 .credentials(config.CLOUD_IDENTITY, config.CLOUD_CREDENTIAL)
                 .modules(asList(new Log4JLoggingModule(), new SshjSshClientModule()))
                 .buildView(ComputeServiceContext.class)
                 .getComputeService();
     }
-
-//    private void installJava(NodeMetadata node, ComputeService compute) {
-//        String script = loadJavaInstallScript()
-//
-//        ExecResponse response = compute.submitScriptOnNode(
-//                node.getId(),
-//                script,
-//                overrideAuthenticateSudo(true).wrapInInitScript(true)).get(30, TimeUnit.MINUTES);
-//
-//        if (response.exitStatus != 0) {
-//            echo("------------------------------------------------------------------------------");
-//            echo("Exit code install java: " + response.getExitStatus());
-//            echo("Failing machine private ip: " + node.getPrivateAddresses().iterator().next())
-//            echo("Failing machine public ip: " + node.getPublicAddresses().iterator().next())
-//            echo("------------------------------------------------------------------------------");
-//
-//            log.info(response.output);
-//            log.info(response.error);
-//
-//            System.exit(1)
-//        }
-//    }
 
     private File getJavaInstallScript() {
         String flavor = config.JDK_FLAVOR;
@@ -378,15 +366,15 @@ public class Provisioner {
     public static void main(String[] args) {
         try {
             def cli = new CliBuilder(
-                    usage: 'cluster [options]',
+                    usage: 'provisioner [options]',
                     header: '\nAvailable options (use -h for help):\n',
                     stopAtNonOption: false)
             cli.with {
                 h(longOpt: 'help', 'print this message')
                 r(longOpt: 'restart', 'Restarts all agents')
                 d(longOpt: 'download', 'Downloads the logs')
-                s(longOpt: 'scale', args: 1, 'Scales the cluster')
-                t(longOpt: 'terminate', 'Terminate all members in the cluster')
+                s(longOpt: 'scale', args: 1, 'Scales the provisioner')
+                t(longOpt: 'terminate', 'Terminate all members in the provisioner')
                 k(longOpt: 'kill', 'Kills all agents')
             }
 
@@ -404,36 +392,36 @@ public class Provisioner {
             }
 
             if (opt.r) {
-                def cluster = new Provisioner()
-                cluster.installAgents()
-                cluster.startAgents()
+                def provisioner = new Provisioner()
+                provisioner.installAgents()
+                provisioner.startAgents()
                 System.exit 0
             }
 
             if (opt.k) {
-                def cluster = new Provisioner()
-                cluster.killAgents()
+                def provisioner = new Provisioner()
+                provisioner.killAgents()
                 System.exit 0
             }
 
 
             if (opt.d) {
-                def cluster = new Provisioner()
-                cluster.downloadArtifacts()
+                def provisioner = new Provisioner()
+                provisioner.downloadArtifacts()
                 System.exit 0
             }
 
             if (opt.t) {
-                def cluster = new Provisioner()
-                cluster.terminate()
+                def provisioner = new Provisioner()
+                provisioner.terminate()
                 System.exit 0
             }
 
             if (opt.s) {
-                def cluster = new Provisioner()
+                def provisioner = new Provisioner()
 
                 String sizeType = opt.s
-                cluster.scale(sizeType)
+                provisioner.scale(sizeType)
                 System.exit 0
             }
         } catch (Throwable e) {
