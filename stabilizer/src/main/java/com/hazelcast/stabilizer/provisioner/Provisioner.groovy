@@ -205,6 +205,8 @@ public class Provisioner {
                 Future f = executor.submit(new InstallNodeTask(node, compute));
                 futures.add(f);
             }
+
+            sleepSeconds(2)
         }
 
         for (Future f : futures) {
@@ -334,6 +336,8 @@ public class Provisioner {
                         }
                     }
             )
+
+            sleepSeconds(2)
         }
 
         log.info("Updating " + agentsFile.getAbsolutePath());
