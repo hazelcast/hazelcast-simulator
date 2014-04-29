@@ -7,7 +7,8 @@ function prepend {
 }
 
 sudo apt-get install -y unzip || true
-
+sudo apt-get install -y tar || true
+sudo apt-get install -y wget || true
 
 cd ~
 wget -q http://ec2-54-87-52-100.compute-1.amazonaws.com/openjdk-1.6.0-unofficial-b30-linux-amd64-image.zip

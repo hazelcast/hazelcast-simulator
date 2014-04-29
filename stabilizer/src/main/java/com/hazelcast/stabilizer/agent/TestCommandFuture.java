@@ -1,5 +1,7 @@
 package com.hazelcast.stabilizer.agent;
 
+import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -12,8 +14,13 @@ public class TestCommandFuture<E> implements Future<E> {
             return "NO_RESULT";
         }
     };
+    private final TestCommand command;
 
     private volatile Object result = NO_RESULT;
+
+    public TestCommandFuture(TestCommand command){
+        this.command = command;
+    }
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
@@ -65,7 +72,7 @@ public class TestCommandFuture<E> implements Future<E> {
                 }
 
                 if (remainingTimeoutMs <= 0) {
-                    throw new TimeoutException();
+                    throw new TimeoutException("Timeout while executing : "+command);
                 }
 
                 long startMs = System.currentTimeMillis();

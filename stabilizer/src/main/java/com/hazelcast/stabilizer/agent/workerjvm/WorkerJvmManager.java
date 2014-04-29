@@ -104,7 +104,7 @@ public class WorkerJvmManager {
             throw new RuntimeException("No worker JVM's found");
         }
         List results = executeOnWorkers(testCommand, workers);
-        if(results.isEmpty()){
+        if (results.isEmpty()) {
             log.info("No results found");
             return null;
         }
@@ -119,12 +119,12 @@ public class WorkerJvmManager {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
         for (WorkerJvm workerJvm : workers) {
-            TestCommandFuture future = new TestCommandFuture();
+            TestCommandFuture future = new TestCommandFuture(testCommand);
             TestCommandRequest request = new TestCommandRequest();
             request.id = requestIdGenerator.incrementAndGet();
             request.task = testCommand;
             futureMap.put(request.id, future);
-            futures.put(workerJvm,future);
+            futures.put(workerJvm, future);
             workerJvm.commandQueue.add(request);
         }
 
@@ -226,7 +226,7 @@ public class WorkerJvmManager {
                         result = commands;
                     } else if (COMMAND_PUSH_RESPONSE.equals(service)) {
                         TestCommandResponse response = (TestCommandResponse) in.readObject();
-                        log.info("Received response: " + response.commandId);
+                        //log.info("Received response: " + response.commandId);
                         TestCommandFuture f = futureMap.remove(response.commandId);
                         if (f != null) {
                             f.set(response.result);
@@ -239,6 +239,7 @@ public class WorkerJvmManager {
                 } catch (IOException e) {
                     throw e;
                 } catch (Exception e) {
+                    log.severe("Failed to process serviceId:" + service, e);
                     result = e;
                 }
 

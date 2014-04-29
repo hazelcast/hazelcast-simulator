@@ -224,7 +224,7 @@ public class Worker {
         }
 
         //we create a new socket for every request because don't want to depend on the state of a socket
-        //because we are going to do nasty stuff.
+        //since we are going to do nasty stuff.
         private <E> E execute(String service, Object... args) throws Exception {
             Socket socket = new Socket(InetAddress.getByName(null), WorkerJvmManager.PORT);
 
