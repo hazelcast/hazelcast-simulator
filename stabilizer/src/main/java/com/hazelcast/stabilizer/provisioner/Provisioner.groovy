@@ -318,7 +318,7 @@ public class Provisioner {
             agentsFile.text += "$ip\n"
         }
 
-        echoImportant("Finished terminating $count ${config.CLOUD_PROVIDER} machines");
+        echoImportant("Finished terminating $count ${config.CLOUD_PROVIDER} machines, ${privateIps.size()} machines remaning.");
     }
 
     void bash(String command) {
