@@ -34,7 +34,7 @@ public class CoordinatorCli {
 
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
             "Number of Cluster member Worker JVM's. If no value is specified and no mixed members are specified, " +
-                    "then the number of cluster members will be equal to the number of machines in the machines file"
+                    "then the number of cluster members will be equal to the number of machines in the agents file"
     )
             .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
 
@@ -144,7 +144,7 @@ public class CoordinatorCli {
             coordinator.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
             coordinator.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
             coordinator.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
-            coordinator.agentsFile = getFile(optionSpec.agentsFileSpec, options, "Machines file");
+            coordinator.agentsFile = getFile(optionSpec.agentsFileSpec, options, "Agents file");
 
             TestSuite testSuite = loadTestSuite(getTestSuiteFile(options));
             coordinator.testSuite = testSuite;
