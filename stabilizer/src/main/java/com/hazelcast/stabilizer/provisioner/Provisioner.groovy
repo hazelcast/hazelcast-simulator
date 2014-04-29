@@ -281,6 +281,8 @@ public class Provisioner {
             credentials = Utils.fileAsText(file);
         }
 
+        echo("Credentials: "+credentials)
+
         return ContextBuilder.newBuilder(config.CLOUD_PROVIDER)
                 .overrides(overrides)
                 .credentials(config.CLOUD_IDENTITY, credentials)
