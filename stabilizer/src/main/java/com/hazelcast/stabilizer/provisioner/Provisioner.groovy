@@ -214,7 +214,7 @@ public class Provisioner {
         }
 
         long durationMs = System.currentTimeMillis()-startTimeMs;
-        echo("Duration: "+secondsToHuman(durationMs/1000))
+        echo("Duration: "+secondsToHuman(TimeUnit.MILLISECONDS.toSeconds(durationMs)))
         echoImportant("Successfully provisioned ${delta} ${config.CLOUD_PROVIDER} machines ");
     }
 

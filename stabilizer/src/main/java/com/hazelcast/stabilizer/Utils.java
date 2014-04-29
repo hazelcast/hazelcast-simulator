@@ -393,19 +393,19 @@ public final class Utils {
     private Utils() {
     }
 
-    public static String secondsToHuman(int seconds) {
-        int time = seconds;
+    public static String secondsToHuman(long seconds) {
+        long time = seconds;
 
-        int s = time % 60;
-
-        time = time / 60;
-        int m = time % 60;
+        long s = time % 60;
 
         time = time / 60;
-        int h = time % 24;
+        long m = time % 60;
+
+        time = time / 60;
+        long h = time % 24;
 
         time = time / 24;
-        int days = time;
+        long days = time;
 
         StringBuffer sb = new StringBuffer();
 
