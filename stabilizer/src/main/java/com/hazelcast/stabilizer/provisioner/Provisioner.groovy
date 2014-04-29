@@ -253,7 +253,7 @@ public class Provisioner {
 
     private int[] calcBatches(int size) {
         List<Integer> batches = new LinkedList<>(Integer);
-        int batchSize = 20;
+        int batchSize = Integer.parseInt(config.CLOUD_BATCH_SIZE);
         while (size > 0) {
             int x = size >= batchSize ? batchSize : size;
             batches.add(x);
