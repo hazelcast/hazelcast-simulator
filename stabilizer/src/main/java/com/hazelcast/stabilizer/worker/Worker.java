@@ -237,7 +237,13 @@ public class Worker {
                 oos.flush();
 
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                return (E) in.readObject();
+                Object response = in.readObject();
+                if (response instanceof Exception) {
+                    Exception exception = (Exception) response;
+                    Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
+                    throw exception;
+                }
+                return (E)response;
             } finally {
                 Utils.closeQuietly(socket);
             }
