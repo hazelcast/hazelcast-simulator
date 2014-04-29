@@ -192,7 +192,7 @@ public class Provisioner {
 
         for (int batch : calcBatches(delta)) {
 
-            Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
+            Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", batch, template)
 
             for (NodeMetadata node : nodes) {
                 String ip = node.privateAddresses.iterator().next()
