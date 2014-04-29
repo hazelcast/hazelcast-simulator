@@ -275,9 +275,15 @@ public class Provisioner {
         overrides.setProperty(POLL_INITIAL_PERIOD, config.CLOUD_POLL_INITIAL_PERIOD);
         overrides.setProperty(POLL_MAX_PERIOD, config.CLOUD_POLL_MAX_PERIOD);
 
+        String credentials = config.CLOUD_CREDENTIALS;
+        File file = new File(credentials);
+        if(file.exists()){
+            credentials = Utils.fileAsText(file);
+        }
+
         return ContextBuilder.newBuilder(config.CLOUD_PROVIDER)
                 .overrides(overrides)
-                .credentials(config.CLOUD_IDENTITY, config.CLOUD_CREDENTIAL)
+                .credentials(config.CLOUD_IDENTITY, credentials)
                 .modules(asList(new Log4JLoggingModule(), new SshjSshClientModule()))
                 .buildView(ComputeServiceContext.class)
                 .getComputeService();
