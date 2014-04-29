@@ -9,7 +9,6 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager
 import org.jclouds.ContextBuilder
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.ComputeServiceContext
-import org.jclouds.compute.domain.ExecResponse
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.Template
 import org.jclouds.compute.domain.TemplateBuilderSpec
@@ -19,12 +18,9 @@ import org.jclouds.sshj.config.SshjSshClientModule
 
 import java.util.concurrent.*
 
-import static com.hazelcast.stabilizer.Utils.appendText
-import static com.hazelcast.stabilizer.Utils.getVersion
-import static com.hazelcast.stabilizer.Utils.secondsToHuman
+import static com.hazelcast.stabilizer.Utils.*
 import static java.lang.String.format
 import static java.util.Arrays.asList
-import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideAuthenticateSudo
 
 //https://jclouds.apache.org/start/compute/ good read
 //https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
@@ -213,8 +209,8 @@ public class Provisioner {
             }
         }
 
-        long durationMs = System.currentTimeMillis()-startTimeMs;
-        echo("Duration: "+secondsToHuman(TimeUnit.MILLISECONDS.toSeconds(durationMs)))
+        long durationMs = System.currentTimeMillis() - startTimeMs;
+        echo("Duration: " + secondsToHuman(TimeUnit.MILLISECONDS.toSeconds(durationMs)))
         echoImportant("Successfully provisioned ${delta} ${config.CLOUD_PROVIDER} machines ");
     }
 
@@ -230,7 +226,7 @@ public class Provisioner {
         }
 
         public void run() {
-             //install java if needed
+            //install java if needed
             if (!"outofthebox".equals(config.JDK_FLAVOR)) {
                 ssh(ip, "touch install-java.sh")
                 ssh(ip, "chmod +x install-java.sh")
@@ -380,64 +376,69 @@ public class Provisioner {
     }
 
     public static void main(String[] args) {
-        def cli = new CliBuilder(
-                usage: 'cluster [options]',
-                header: '\nAvailable options (use -h for help):\n',
-                stopAtNonOption: false)
-        cli.with {
-            h(longOpt: 'help', 'print this message')
-            r(longOpt: 'restart', 'Restarts all agents')
-            d(longOpt: 'download', 'Downloads the logs')
-            s(longOpt: 'scale', args: 1, 'Scales the cluster')
-            t(longOpt: 'terminate', 'Terminate all members in the cluster')
-            k(longOpt: 'kill', 'Kills all agents')
-        }
+        try {
+            def cli = new CliBuilder(
+                    usage: 'cluster [options]',
+                    header: '\nAvailable options (use -h for help):\n',
+                    stopAtNonOption: false)
+            cli.with {
+                h(longOpt: 'help', 'print this message')
+                r(longOpt: 'restart', 'Restarts all agents')
+                d(longOpt: 'download', 'Downloads the logs')
+                s(longOpt: 'scale', args: 1, 'Scales the cluster')
+                t(longOpt: 'terminate', 'Terminate all members in the cluster')
+                k(longOpt: 'kill', 'Kills all agents')
+            }
 
-        OptionAccessor opt = cli.parse(args)
+            OptionAccessor opt = cli.parse(args)
 
-        if (!opt) {
-            println "Failure parsing options"
-            System.exit 1
-            return
-        }
+            if (!opt) {
+                println "Failure parsing options"
+                System.exit 1
+                return
+            }
 
-        if (opt.h) {
-            cli.usage()
-            System.exit 0
-        }
+            if (opt.h) {
+                cli.usage()
+                System.exit 0
+            }
 
-        if (opt.r) {
-            def cluster = new Provisioner()
-            cluster.installAgents()
-            cluster.startAgents()
-            System.exit 0
-        }
+            if (opt.r) {
+                def cluster = new Provisioner()
+                cluster.installAgents()
+                cluster.startAgents()
+                System.exit 0
+            }
 
-        if (opt.k) {
-            def cluster = new Provisioner()
-            cluster.killAgents()
-            System.exit 0
-        }
+            if (opt.k) {
+                def cluster = new Provisioner()
+                cluster.killAgents()
+                System.exit 0
+            }
 
 
-        if (opt.d) {
-            def cluster = new Provisioner()
-            cluster.downloadArtifacts()
-            System.exit 0
-        }
+            if (opt.d) {
+                def cluster = new Provisioner()
+                cluster.downloadArtifacts()
+                System.exit 0
+            }
 
-        if (opt.t) {
-            def cluster = new Provisioner()
-            cluster.terminate()
-            System.exit 0
-        }
+            if (opt.t) {
+                def cluster = new Provisioner()
+                cluster.terminate()
+                System.exit 0
+            }
 
-        if (opt.s) {
-            def cluster = new Provisioner()
+            if (opt.s) {
+                def cluster = new Provisioner()
 
-            String sizeType = opt.s
-            cluster.scale(sizeType)
-            System.exit 0
+                String sizeType = opt.s
+                cluster.scale(sizeType)
+                System.exit 0
+            }
+        } catch (Throwable e) {
+            log.severe(e);
+            System.exit(1);
         }
     }
 }
