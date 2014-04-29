@@ -38,7 +38,6 @@ public class Provisioner {
     final ExecutorService executor = Executors.newFixedThreadPool(10);
 
     final List<String> privateIps = Collections.synchronizedList(new LinkedList<String>());
-    final String POLL_PERIOD_MS;
 
     Provisioner() {
         log.info("Hazelcast Stabilizer Provisioner");
@@ -51,7 +50,6 @@ public class Provisioner {
             stream -> props.load(stream)
         }
         config = new ConfigSlurper().parse(props)
-        POLL_PERIOD_MS = String.valueOf(TimeUnit.SECONDS.toMillis(Integer.parseInt(config.CLOUD_POLL_PERIOD_SECONDS)));
 
         if (!agentsFile.exists()) {
             agentsFile.createNewFile()
@@ -249,9 +247,10 @@ public class Provisioner {
     }
 
     private ComputeService getComputeService() {
+        //http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
         Properties overrides = new Properties();
-        overrides.setProperty(POLL_INITIAL_PERIOD, POLL_PERIOD_MS);
-        overrides.setProperty(POLL_MAX_PERIOD, POLL_PERIOD_MS);
+        overrides.setProperty(POLL_INITIAL_PERIOD, config.CLOUD_POLL_INITIAL_PERIOD);
+        overrides.setProperty(POLL_MAX_PERIOD, config.CLOUD_POLL_MAX_PERIOD);
 
         return ContextBuilder.newBuilder(config.CLOUD_PROVIDER)
                 .overrides(overrides)
