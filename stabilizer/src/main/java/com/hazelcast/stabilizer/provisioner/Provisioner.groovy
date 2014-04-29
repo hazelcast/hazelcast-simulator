@@ -206,7 +206,7 @@ public class Provisioner {
                 futures.add(f);
             }
 
-            sleepSeconds(2)
+            sleepSeconds(10)
         }
 
         for (Future f : futures) {
@@ -337,7 +337,7 @@ public class Provisioner {
                     }
             )
 
-            sleepSeconds(2)
+            sleepSeconds(10)
         }
 
         log.info("Updating " + agentsFile.getAbsolutePath());
