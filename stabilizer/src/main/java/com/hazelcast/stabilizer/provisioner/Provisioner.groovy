@@ -187,10 +187,10 @@ public class Provisioner {
 
         Set<Future> futures = new LinkedList<Future>();
         echo("Created machines, waiting for startup (can take a few minutes)")
-        echo("Batches: "+calcBatches(delta))
+        echo("Batches: " + calcBatches(delta))
 
 
-        for(int batch: calcBatches(delta)) {
+        for (int batch : calcBatches(delta)) {
 
             Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
 
@@ -261,8 +261,8 @@ public class Provisioner {
         }
 
         int[] result = new int[batches.size()];
-        for(int k=0;k<result.length;k++){
-            result[k]=batches.get(k);
+        for (int k = 0; k < result.length; k++) {
+            result[k] = batches.get(k);
         }
         return result;
     }
@@ -314,24 +314,27 @@ public class Provisioner {
 
         long startMs = System.currentTimeMillis();
 
-        final List<String> terminateList = privateIps.subList(0, count);
+        for (int batch:calcBatches(count)) {
 
-        ComputeService computeService = getComputeService();
-        computeService.destroyNodesMatching(
-                new Predicate<NodeMetadata>() {
-                    @Override
-                    boolean apply(NodeMetadata nodeMetadata) {
-                        for (String ip : nodeMetadata.privateAddresses) {
-                            if (terminateList.remove(ip)) {
-                                echo(format("\t%s Terminating", ip))
-                                privateIps.remove(ip)
-                                return true;
+            final List<String> terminateList = privateIps.subList(0, batch);
+
+            ComputeService computeService = getComputeService();
+            computeService.destroyNodesMatching(
+                    new Predicate<NodeMetadata>() {
+                        @Override
+                        boolean apply(NodeMetadata nodeMetadata) {
+                            for (String ip : nodeMetadata.privateAddresses) {
+                                if (terminateList.remove(ip)) {
+                                    echo(format("\t%s Terminating", ip))
+                                    privateIps.remove(ip)
+                                    return true;
+                                }
                             }
+                            return false;
                         }
-                        return false;
                     }
-                }
-        )
+            )
+        }
 
         log.info("Updating " + agentsFile.getAbsolutePath());
         agentsFile.write("")
