@@ -187,6 +187,9 @@ public class Provisioner {
 
         Set<Future> futures = new LinkedList<Future>();
         echo("Created machines, waiting for startup (can take a few minutes)")
+        echo("Batches: "+calcBatches(delta))
+
+
         for(int batch: calcBatches(delta)) {
 
             Set<NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", delta, template)
