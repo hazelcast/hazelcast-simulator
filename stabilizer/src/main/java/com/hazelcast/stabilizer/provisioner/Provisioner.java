@@ -353,6 +353,7 @@ public class Provisioner {
             count = privateIps.size();
         }
 
+        System.out.println("current number of machines is: "+privateIps.size());
         echoImportant(format("Terminating %s %s machines (can take some time)", count, stabilizerProperties.get("CLOUD_PROVIDER")));
 
         long startMs = System.currentTimeMillis();
@@ -387,7 +388,7 @@ public class Provisioner {
 
         long durationSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startMs);
         echo("Duration: " + secondsToHuman(durationSeconds));
-        echoImportant("Finished terminating %s %s machines, %s machines remaning.",
+        echoImportant("Finished terminating %s %s machines, %s machines remaining.",
                 count, CLOUD_PROVIDER, privateIps.size());
     }
 
