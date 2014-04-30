@@ -244,7 +244,7 @@ public class Worker {
                     Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
                     throw exception;
                 }
-                return (E)response;
+                return (E) response;
             } finally {
                 Utils.closeQuietly(socket);
             }
@@ -265,22 +265,18 @@ public class Worker {
             }
         }
 
-        private void doProcess(long id, TestCommand testCommand) {
+        private void doProcess(long id, TestCommand testCommand) throws Throwable {
             Object result = null;
-            try {
-                if (testCommand instanceof InitTestCommand) {
-                    process((InitTestCommand) testCommand);
-                } else if (testCommand instanceof StartTestCommand) {
-                    process((StartTestCommand) testCommand);
-                } else if (testCommand instanceof StopTestCommand) {
-                    process((StopTestCommand) testCommand);
-                } else if (testCommand instanceof GenericTestCommand) {
-                    result = process((GenericTestCommand) testCommand);
-                } else {
-                    throw new RuntimeException("Unhandled task:" + testCommand.getClass());
-                }
-            } catch (Throwable e) {
-                result = e;
+            if (testCommand instanceof InitTestCommand) {
+                process((InitTestCommand) testCommand);
+            } else if (testCommand instanceof StartTestCommand) {
+                process((StartTestCommand) testCommand);
+            } else if (testCommand instanceof StopTestCommand) {
+                process((StopTestCommand) testCommand);
+            } else if (testCommand instanceof GenericTestCommand) {
+                result = process((GenericTestCommand) testCommand);
+            } else {
+                throw new RuntimeException("Unhandled task:" + testCommand.getClass());
             }
 
             TestCommandResponse response = new TestCommandResponse();
@@ -328,7 +324,7 @@ public class Worker {
                 Object o = method.invoke(test);
                 log.info("Finished calling test." + methodName + "()");
                 return o;
-            }catch(InvocationTargetException e){
+            } catch (InvocationTargetException e) {
                 log.severe(format("Failed to execute test.%s()", methodName), e);
                 throw e.getTargetException();
             } catch (Exception e) {
