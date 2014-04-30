@@ -312,15 +312,8 @@ public class AgentsClient {
 
         try {
             getAllFutures(Arrays.asList(f));
-        } catch (RuntimeException e) {
-            //nasty hack
-            if ("No worker JVM's found".equals(e.getMessage())) {
-                //ignore
-            } else {
-                throw e;
-            }
-
-            //todo: we need to deal with this better.
+        } catch (Throwable e) {
+           //ignore
         }
     }
 
