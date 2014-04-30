@@ -146,7 +146,7 @@ public class Coordinator {
             TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this);
             boolean success = runner.run();
             if (!success && testSuite.failFast) {
-                log.info("Aborting working due to failure");
+                log.info("Aborting testsuite due to failure");
                 break;
             }
 

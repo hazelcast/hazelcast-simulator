@@ -41,6 +41,7 @@ import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -314,7 +315,7 @@ public class Worker {
             }
         }
 
-        public Object process(GenericTestCommand genericTestTask) throws Exception {
+        public Object process(GenericTestCommand genericTestTask) throws Throwable {
             String methodName = genericTestTask.methodName;
             try {
                 log.info("Calling test." + methodName + "()");
@@ -327,6 +328,9 @@ public class Worker {
                 Object o = method.invoke(test);
                 log.info("Finished calling test." + methodName + "()");
                 return o;
+            }catch(InvocationTargetException e){
+                log.severe(format("Failed to execute test.%s()", methodName), e);
+                throw e.getTargetException();
             } catch (Exception e) {
                 log.severe(format("Failed to execute test.%s()", methodName), e);
                 throw e;
