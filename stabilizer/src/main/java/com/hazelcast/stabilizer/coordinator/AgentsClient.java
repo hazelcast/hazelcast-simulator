@@ -210,9 +210,9 @@ public class AgentsClient {
 //                    console.statusTopic.publish(failure);
                 }
 
-                if(cause instanceof NoWorkerAvailableException){
+                if (cause instanceof NoWorkerAvailableException) {
                     Utils.fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
-                    throw (NoWorkerAvailableException)cause;
+                    throw (NoWorkerAvailableException) cause;
                 }
 
                 throw new RuntimeException(e);
@@ -312,8 +312,15 @@ public class AgentsClient {
 
         try {
             getAllFutures(Arrays.asList(f));
-        } catch (NoWorkerAvailableException e) {
-           //todo: we need to deal with this better.
+        } catch (RuntimeException e) {
+            //nasty hack
+            if ("No worker JVM's found".equals(e.getMessage())) {
+                //ignore
+            } else {
+                throw e;
+            }
+
+            //todo: we need to deal with this better.
         }
     }
 
