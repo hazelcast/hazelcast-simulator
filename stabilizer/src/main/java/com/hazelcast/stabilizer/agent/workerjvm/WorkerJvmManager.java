@@ -17,6 +17,7 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.NoWorkerAvailableException;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
@@ -101,7 +102,7 @@ public class WorkerJvmManager {
     public Object executeOnSingleWorker(TestCommand testCommand) throws Exception {
         Collection<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms.values());
         if (workers.isEmpty()) {
-            throw new RuntimeException("No worker JVM's found");
+            throw new NoWorkerAvailableException("No worker JVM's found");
         }
         List results = executeOnWorkers(testCommand, workers);
         if (results.isEmpty()) {

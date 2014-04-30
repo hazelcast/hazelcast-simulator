@@ -2,6 +2,7 @@ package com.hazelcast.stabilizer.coordinator;
 
 
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.stabilizer.NoWorkerAvailableException;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.AgentRemoteService;
@@ -301,7 +302,11 @@ public class AgentsClient {
             }
         });
 
-        getAllFutures(Arrays.asList(f));
+        try {
+            getAllFutures(Arrays.asList(f));
+        } catch (NoWorkerAvailableException e) {
+           //todo: we need to deal with this better.
+        }
     }
 
     public void echo(final String msg) {
