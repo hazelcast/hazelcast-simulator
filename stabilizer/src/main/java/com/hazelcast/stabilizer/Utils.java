@@ -187,7 +187,7 @@ public final class Utils {
     }
 
     public static String[] fileAsLines(File file){
-        return fileAsText(file).split("\\r?\\n");
+        return fileAsText(file).split("\n");
     }
 
     public static String fileAsText(File file) {
