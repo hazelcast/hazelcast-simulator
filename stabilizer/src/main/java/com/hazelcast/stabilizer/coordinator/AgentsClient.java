@@ -200,13 +200,21 @@ public class AgentsClient {
 //                console.statusTopic.publish(failure);
                 throw new RuntimeException(e);
             } catch (ExecutionException e) {
-                if (!(e.getCause() instanceof FailureAlreadyThrownRuntimeException)) {
+                Throwable cause = e.getCause();
+
+                if (!(cause instanceof FailureAlreadyThrownRuntimeException)) {
 //                    Failure failure = new Failure();
 //                    failure.agentAddress = getHostAddress();
 //                    failure.testRecipe = console.getTestRecipe();
 //                    failure.cause = e;
 //                    console.statusTopic.publish(failure);
                 }
+
+                if(cause instanceof NoWorkerAvailableException){
+                    Utils.fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
+                    throw (NoWorkerAvailableException)cause;
+                }
+
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
