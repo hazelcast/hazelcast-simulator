@@ -76,9 +76,6 @@ public class Provisioner {
                 privateIps.add(line);
             }
         }
-
-        System.out.println("privateIps:" + privateIps.size());
-        System.out.println(privateIps);
     }
 
     private static Properties loadStabilizerProperties() {
@@ -239,7 +236,7 @@ public class Provisioner {
                 futures.add(f);
             }
 
-            sleepSeconds(30);
+            //sleepSeconds(30);
         }
 
         for (Future f : futures) {
@@ -337,9 +334,9 @@ public class Provisioner {
         bash("mkdir -p workers");
 
         for (String ip : privateIps) {
-            echo("Downoading from ", ip);
+            echo("Downloading from %s", ip);
 
-            String cmd = format("rsync -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers workers",
+            String cmd = format("rsync -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
                     getProperty("SSH_OPTIONS"), getProperty("USER"), ip, getVersion());
 
             bash(cmd);
@@ -357,7 +354,7 @@ public class Provisioner {
             count = privateIps.size();
         }
 
-        System.out.println("current number of machines is: " + privateIps.size());
+        //System.out.println("current number of machines is: " + privateIps.size());
         echoImportant(format("Terminating %s %s machines (can take some time)", count, stabilizerProperties.get("CLOUD_PROVIDER")));
 
         long startMs = System.currentTimeMillis();
@@ -383,7 +380,7 @@ public class Provisioner {
                     }
             );
 
-            sleepSeconds(30);
+            //sleepSeconds(30);
         }
 
         log.info("Updating " + agentsFile.getAbsolutePath());
