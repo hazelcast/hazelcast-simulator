@@ -93,6 +93,8 @@ public class Agent {
         File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
         ensureExistingDirectory(testSuiteDir);
 
+        System.out.println("InitTestSuite:"+testSuite.id);
+
         File libDir = new File(testSuiteDir, "lib");
         ensureExistingDirectory(libDir);
 
