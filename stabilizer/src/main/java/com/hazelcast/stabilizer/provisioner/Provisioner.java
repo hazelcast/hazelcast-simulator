@@ -75,7 +75,7 @@ public class Provisioner {
             privateIps.add(line);
         }
 
-        System.out.println("privateIps:"+privateIps.size());
+        System.out.println("privateIps:" + privateIps.size());
         System.out.println(privateIps);
     }
 
@@ -355,7 +355,7 @@ public class Provisioner {
             count = privateIps.size();
         }
 
-        System.out.println("current number of machines is: "+privateIps.size());
+        System.out.println("current number of machines is: " + privateIps.size());
         echoImportant(format("Terminating %s %s machines (can take some time)", count, stabilizerProperties.get("CLOUD_PROVIDER")));
 
         long startMs = System.currentTimeMillis();
@@ -406,7 +406,6 @@ public class Provisioner {
         StringBuffer sout = new StringBuffer();
 
         try {
-
             // create a process for the shell
             ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
             pb = pb.redirectErrorStream(true);
@@ -419,7 +418,7 @@ public class Provisioner {
             // wait for the shell to finish and get the return code
             int shellExitStatus = shell.waitFor();
             if (shellExitStatus != 0) {
-                echo("Failed to execute [$command]");
+                echo("Failed to execute [%s]", command);
                 System.out.println("out> " + sout);
                 System.exit(1);
             }
