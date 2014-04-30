@@ -71,7 +71,7 @@ public class Provisioner {
             agentsFile.createNewFile();
         }
 
-        for(String line: fileAsLines(agentsFile)){
+        for (String line : fileAsLines(agentsFile)) {
             privateIps.add(line);
         }
     }
@@ -336,7 +336,7 @@ public class Provisioner {
             echo("Downoading from ", ip);
 
             String cmd = format("rsync -av -e \"ssh %s\" %s@$%s:hazelcast-stabilizer-%s/workers workers",
-                    getProperty("SSH_OPTIONS"),getProperty("USER"),ip,getVersion());
+                    getProperty("SSH_OPTIONS"), getProperty("USER"), ip, getVersion());
 
             bash(cmd);
         }
@@ -387,8 +387,8 @@ public class Provisioner {
 
         long durationSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startMs);
         echo("Duration: " + secondsToHuman(durationSeconds));
-        echoImportant("Finished terminating $count %s machines, %s machines remaning.",
-                CLOUD_PROVIDER, privateIps.size());
+        echoImportant("Finished terminating %s %s machines, %s machines remaning.",
+                count, CLOUD_PROVIDER, privateIps.size());
     }
 
     private void writeAgentsFile() {
@@ -409,7 +409,7 @@ public class Provisioner {
             pb = pb.redirectErrorStream(true);
 
             Process shell = pb.start();
-            new StreamGobbler(shell.getInputStream(),sout).start();
+            new StreamGobbler(shell.getInputStream(), sout).start();
 
             // /shell.consumeProcessOutput(sout, serr);
 
