@@ -22,6 +22,7 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestFailureException;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -83,7 +84,7 @@ public class ExecutorTest extends AbstractTest {
         long actualCount = executedCounter.get();
         long expectedCount = expectedExecutedCounter.get();
         if (actualCount != expectedCount) {
-            throw new RuntimeException("ActualCount:" + actualCount + " doesn't match ExpectedCount:" + expectedCount);
+            throw new TestFailureException("ActualCount:" + actualCount + " doesn't match ExpectedCount:" + expectedCount);
         }
     }
 

@@ -21,6 +21,7 @@ import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.io.Serializable;
@@ -61,7 +62,7 @@ public class ProducerConsumerTest extends AbstractTest {
         long total = workQueue.size() + consumed.get();
         long produced = this.produced.get();
         if (produced != total) {
-            throw new RuntimeException("Produced count: " + produced + " but total: " + total);
+            throw new TestFailureException("Produced count: " + produced + " but total: " + total);
         }
     }
 

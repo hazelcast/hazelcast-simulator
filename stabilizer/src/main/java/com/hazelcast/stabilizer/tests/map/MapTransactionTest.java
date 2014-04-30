@@ -8,6 +8,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionalTask;
@@ -85,7 +86,7 @@ public class MapTransactionTest extends AbstractTest {
         }
 
         if (failures > 0) {
-            throw new IllegalStateException("Failures found:" + failures);
+            throw new TestFailureException("Failures found:" + failures);
         }
     }
 

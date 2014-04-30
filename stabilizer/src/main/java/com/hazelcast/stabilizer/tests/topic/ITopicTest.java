@@ -10,6 +10,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.Random;
@@ -65,7 +66,7 @@ public class ITopicTest extends AbstractTest {
         long foundCount = totalFoundCounter.get();
 
         if (expectedCount != foundCount) {
-            throw new RuntimeException("Expected count: " + expectedCount + " but found count was: " + foundCount);
+            throw new TestFailureException("Expected count: " + expectedCount + " but found count was: " + foundCount);
         }
     }
 

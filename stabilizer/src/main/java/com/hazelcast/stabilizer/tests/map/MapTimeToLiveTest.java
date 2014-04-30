@@ -18,6 +18,7 @@ package com.hazelcast.stabilizer.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.UUID;
@@ -42,7 +43,7 @@ public class MapTimeToLiveTest extends AbstractTest {
         Thread.sleep(ttlSeconds * 1000 + waitAfterMillis);
         int size = map.size();
         if (size > 0) {
-            throw new RuntimeException("There are entries not evicted. Map size:" + size);
+            throw new TestFailureException("There are entries not evicted. Map size:" + size);
         }
     }
 

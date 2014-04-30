@@ -6,6 +6,7 @@ import com.hazelcast.core.IdGenerator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.Random;
@@ -45,7 +46,7 @@ public class GrowingMapTest extends AbstractTest {
     @Override
     public void globalVerify() throws Exception {
         if (removeOnStop && !map.isEmpty()) {
-            throw new RuntimeException("Map should be empty, but has size:" + map.size());
+            throw new TestFailureException("Map should be empty, but has size:" + map.size());
         }
     }
 

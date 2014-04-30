@@ -21,6 +21,7 @@ import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.Queue;
@@ -72,7 +73,7 @@ public class QueueTest extends AbstractTest {
         }
 
         if (expectedCount != count) {
-            throw new RuntimeException("Expected count: " + expectedCount + " but found count was: " + count);
+            throw new TestFailureException("Expected count: " + expectedCount + " but found count was: " + count);
         }
     }
 

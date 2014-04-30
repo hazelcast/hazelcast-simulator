@@ -6,6 +6,7 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 
 import java.util.Random;
@@ -59,20 +60,19 @@ public class LockTest extends AbstractTest {
         for (long k = 0; k < lockCounter.get(); k++) {
             ILock lock = targetInstance.getLock(getLockId(k));
             if (lock.isLocked()) {
-                throw new RuntimeException("Lock should be unlocked");
+                throw new TestFailureException("Lock should be unlocked");
             }
 
             IAtomicLong account = targetInstance.getAtomicLong(getAccountId(k));
             if (account.get() < 0) {
-                throw new RuntimeException("Amount can't be smaller than zero on account");
+                throw new TestFailureException("Amount can't be smaller than zero on account");
             }
-            System.out.println("acount:" + account.get());
 
             foundTotal += account.get();
         }
 
         if (foundTotal != totalMoney.get()) {
-            throw new RuntimeException("Money was lost/created: Found money was: "
+            throw new TestFailureException("Money was lost/created: Found money was: "
                     + foundTotal + " expected:" + totalMoney.get());
         }
     }
