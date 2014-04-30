@@ -433,7 +433,7 @@ public class Provisioner {
 
     void scpToRemote(String ip, String src, String target) {
         String command = format("scp -r %s %s %s@%s:%s",
-                getProperty("SSH_OPTIONS"), getProperty("USER"), src, ip, target);
+                getProperty("SSH_OPTIONS"), src, getProperty("USER"), ip, target);
         bash(command);
     }
 

@@ -3,15 +3,16 @@ package com.hazelcast.stabilizer.provisioner;
 import java.io.IOException;
 import java.io.InputStream;
 
-class StreamGobbler extends Thread {
-    InputStream is;
-    StringBuffer sb;
+public class StreamGobbler extends Thread {
+    private InputStream is;
+    private StringBuffer sb;
 
-    StreamGobbler(InputStream is, StringBuffer sb) {
+    public StreamGobbler(InputStream is, StringBuffer sb) {
         this.is = is;
         this.sb = sb;
     }
 
+    @Override
     public void run() {
         try {
             int c;
