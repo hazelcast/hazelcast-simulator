@@ -33,12 +33,7 @@ public class ExceptionReporter {
             throw new RuntimeException(e);
         }
 
-        try {
-            writeText(Utils.throwableToString(t), tmpFile);
-        } catch (IOException e) {
-            log.severe("Failed to write to tmpFile:" + tmpFile, e);
-            throw new RuntimeException(e);
-        }
+        writeText(Utils.throwableToString(t), tmpFile);
 
         final File file = new File(getWorkerId() + "@" + FAILURE_ID.incrementAndGet() + ".failure");
         if (!tmpFile.renameTo(file)) {

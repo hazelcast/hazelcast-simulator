@@ -131,7 +131,7 @@ public final class Utils {
         }
     }
 
-    public static void writeText(String text, File file) throws IOException {
+    public static void writeText(String text, File file) {
         if (text == null) {
             throw new NullPointerException("text can't be null");
         }
@@ -140,18 +140,22 @@ public final class Utils {
             throw new NullPointerException("file can't be null");
         }
 
-        FileOutputStream stream = new FileOutputStream(file);
         try {
-            Writer writer = new BufferedWriter(new OutputStreamWriter(stream));
-            writer.write(text);
-            writer.close();
-        } finally {
-            closeQuietly(stream);
+            FileOutputStream stream = new FileOutputStream(file);
+            try {
+                Writer writer = new BufferedWriter(new OutputStreamWriter(stream));
+                writer.write(text);
+                writer.close();
+            } finally {
+                closeQuietly(stream);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException();
         }
     }
 
     public static void appendText(String text, String file) {
-         appendText(text, new File(file));
+        appendText(text, new File(file));
     }
 
     public static void appendText(String text, File file) {
@@ -178,8 +182,12 @@ public final class Utils {
     }
 
 
-    public static String fileAsText(String filePath){
+    public static String fileAsText(String filePath) {
         return fileAsText(new File(filePath));
+    }
+
+    public static String[] fileAsLines(File file){
+        return fileAsText(file).split("\\r?\\n");
     }
 
     public static String fileAsText(File file) {
@@ -350,8 +358,8 @@ public final class Utils {
         }
     }
 
-    public static void closeQuietly(Socket socket){
-        if(socket == null){
+    public static void closeQuietly(Socket socket) {
+        if (socket == null) {
             return;
         }
 
