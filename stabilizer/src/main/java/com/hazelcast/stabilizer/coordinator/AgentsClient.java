@@ -39,14 +39,14 @@ public class AgentsClient {
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentsClient.class);
 
     private final Coordinator coordinator;
-    private final File machineListFile;
+    private final File agentFile;
     private final List<AgentClient> agents = new LinkedList<AgentClient>();
 
     private final ExecutorService agentExecutor = Executors.newFixedThreadPool(100);
 
-    public AgentsClient(Coordinator coordinator, File machineListFile) {
+    public AgentsClient(Coordinator coordinator, File agentFile) {
         this.coordinator = coordinator;
-        this.machineListFile = machineListFile;
+        this.agentFile = agentFile;
 
         for (String address : getMachineAddresses()) {
             AgentClient client = new AgentClient(address);
@@ -99,14 +99,9 @@ public class AgentsClient {
     }
 
     private String[] getMachineAddresses() {
-        String content = Utils.fileAsText(machineListFile);
+        String content = Utils.fileAsText(agentFile);
         String[] addresses = content.split("\n");
         return addresses;
-//        if (addresses.length == 0) {
-//            return new String[]{"127.0.0.1"};
-//        } else {
-//            return addresses;
-//        }
     }
 
     public int getAgentCount() {
@@ -114,7 +109,7 @@ public class AgentsClient {
     }
 
     public List<String> getHostAddresses() {
-        List<String> result = new LinkedList();
+        List<String> result = new LinkedList<String>();
         for (AgentClient client : agents) {
             result.add(client.getHost());
         }

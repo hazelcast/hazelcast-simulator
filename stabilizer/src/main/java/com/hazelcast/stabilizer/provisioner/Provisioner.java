@@ -72,7 +72,9 @@ public class Provisioner {
         }
 
         for (String line : fileAsLines(agentsFile)) {
-            privateIps.add(line);
+            if (line.length() > 0) {
+                privateIps.add(line);
+            }
         }
 
         System.out.println("privateIps:" + privateIps.size());
