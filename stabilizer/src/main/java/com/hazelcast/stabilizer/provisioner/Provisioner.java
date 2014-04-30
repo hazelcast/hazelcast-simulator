@@ -74,6 +74,9 @@ public class Provisioner {
         for (String line : fileAsLines(agentsFile)) {
             privateIps.add(line);
         }
+
+        System.out.println("privateIps:"+privateIps.size());
+        System.out.println(privateIps);
     }
 
     private static Properties loadStabilizerProperties() {
@@ -217,7 +220,6 @@ public class Provisioner {
 
         Set<Future> futures = new HashSet<Future>();
         echo("Created machines, waiting for startup (can take a few minutes)");
-        echo("Batches: " + calcBatches(delta));
 
         for (int batch : calcBatches(delta)) {
 
