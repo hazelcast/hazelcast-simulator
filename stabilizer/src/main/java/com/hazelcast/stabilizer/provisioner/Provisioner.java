@@ -339,7 +339,7 @@ public class Provisioner {
         for (String ip : privateIps) {
             echo("Downoading from ", ip);
 
-            String cmd = format("rsync -av -e \"ssh %s\" %s@$%s:hazelcast-stabilizer-%s/workers workers",
+            String cmd = format("rsync -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers workers",
                     getProperty("SSH_OPTIONS"), getProperty("USER"), ip, getVersion());
 
             bash(cmd);
@@ -438,7 +438,7 @@ public class Provisioner {
     }
 
     void ssh(String ip, String command) {
-        String sshCommand = format("ssh %s -q %s@$%s \"%s\"",
+        String sshCommand = format("ssh %s -q %s@%s \"%s\"",
                 getProperty("SSH_OPTIONS"), getProperty("USER"), ip, command);
         bash(sshCommand);
     }
