@@ -25,6 +25,7 @@ import com.hazelcast.stabilizer.worker.ExceptionReporter;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeoutException;
 
 public abstract class AbstractTest implements Test {
 
@@ -139,31 +140,36 @@ public abstract class AbstractTest implements Test {
     }
 
     @Override
-    public void stop(long timeout) throws InterruptedException {
+    public void stop(long timeout) throws InterruptedException, TimeoutException {
         long startTime = System.currentTimeMillis();
         long usedMs = 0;
         stop = true;
 
-        for (Thread thread : threads) {
-            if (timeout != 0) {
-                usedMs = System.currentTimeMillis() - startTime;
-                if (usedMs >= timeout) {
-                    StringBuilder msg = new StringBuilder("Timeout while waiting for testing threads to stop.");
-                    Thread.State threadState = thread.getState();
-                    if (threadState != Thread.State.TERMINATED) {
-                        msg.append(" Thread '")
-                                .append(thread.getName())
-                                .append("' is still in a state '")
-                                .append(threadState)
-                                .append("'.");
+        try {
+            for (Thread thread : threads) {
+                if (timeout != 0) {
+                    usedMs = System.currentTimeMillis() - startTime;
+                    if (usedMs >= timeout) {
+                        onTimeout(thread);
                     }
-                    log.warning(msg.toString());
-                    break; //todo: throw TimeoutException instead?
                 }
+                thread.join(timeout - usedMs);
             }
-            thread.join(timeout - usedMs);
-
+        } finally {
+            threads.clear();
         }
-        threads.clear();
+    }
+
+    private void onTimeout(Thread currentThread) throws TimeoutException {
+        StringBuilder msg = new StringBuilder("Timeout while waiting for testing threads to stop.");
+        Thread.State threadState = currentThread.getState();
+        if (threadState != Thread.State.TERMINATED) {
+            msg.append(" Thread '")
+                    .append(currentThread.getName())
+                    .append("' is still in a state '")
+                    .append(threadState)
+                    .append("'.");
+        }
+        throw new TimeoutException(msg.toString());
     }
 }
