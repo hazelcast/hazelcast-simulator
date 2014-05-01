@@ -140,11 +140,29 @@ public abstract class AbstractTest implements Test {
 
     @Override
     public void stop(long timeout) throws InterruptedException {
+        long startTime = System.currentTimeMillis();
+        long usedMs = 0;
         stop = true;
 
         for (Thread thread : threads) {
-            //todo: we should calculate remaining timeout..
-            thread.join(timeout);
+            if (timeout != 0) {
+                usedMs = System.currentTimeMillis() - startTime;
+                if (usedMs >= timeout) {
+                    StringBuilder msg = new StringBuilder("Timeout while waiting for testing threads to stop.");
+                    Thread.State threadState = thread.getState();
+                    if (threadState != Thread.State.TERMINATED) {
+                        msg.append(" Thread '")
+                                .append(thread.getName())
+                                .append("' is still in a state '")
+                                .append(threadState)
+                                .append("'.");
+                    }
+                    log.warning(msg.toString());
+                    break; //todo: throw TimeoutException instead?
+                }
+            }
+            thread.join(timeout - usedMs);
+
         }
         threads.clear();
     }
