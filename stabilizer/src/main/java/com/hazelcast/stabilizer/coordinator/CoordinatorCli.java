@@ -9,11 +9,14 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
+import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getFile;
 import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
 import static java.lang.String.format;
@@ -124,6 +127,22 @@ public class CoordinatorCli {
         }
     }
 
+    public static Properties loadStabilizerProperties(String file) {
+        Properties properties = new Properties();
+
+        try {
+            FileInputStream inputStream = new FileInputStream(file);
+            try {
+                properties.load(inputStream);
+            } catch (IOException e) {
+                Utils.closeQuietly(inputStream);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return properties;
+    }
+
     public static void init(Coordinator coordinator, String[] args) throws Exception {
         CoordinatorCli optionSpec = new CoordinatorCli();
 
@@ -141,6 +160,7 @@ public class CoordinatorCli {
                 coordinator.workerClassPath = options.valueOf(optionSpec.workerClassPathSpec);
             }
 
+            coordinator.properties = loadStabilizerProperties("stabilizer.properties");
             coordinator.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
             coordinator.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
             coordinator.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
@@ -163,6 +183,11 @@ public class CoordinatorCli {
             workerJvmSettings.refreshJvm = options.valueOf(optionSpec.workerRefreshSpec);
             workerJvmSettings.javaVendor = options.valueOf(optionSpec.workerJavaVendorSpec);
             workerJvmSettings.javaVersion = options.valueOf(optionSpec.workerJavaVersionSpec);
+            String profiler = coordinator.properties.getProperty("PROFILER", "none");
+            if (profiler.equals("yourkit")) {
+                workerJvmSettings.yourkitConfig = coordinator.properties.getProperty("YOURKIT_SETTINGS");
+            }
+
             coordinator.workerJvmSettings = workerJvmSettings;
         } catch (OptionException e) {
             Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");

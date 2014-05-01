@@ -28,6 +28,7 @@ import com.hazelcast.stabilizer.tests.TestSuite;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -56,6 +57,7 @@ public class Coordinator {
     final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
     protected AgentsClient agentsClient;
     public WorkerJvmSettings workerJvmSettings;
+    public Properties properties;
 
     private void run() throws Exception {
         agentsClient = new AgentsClient(this, agentsFile);

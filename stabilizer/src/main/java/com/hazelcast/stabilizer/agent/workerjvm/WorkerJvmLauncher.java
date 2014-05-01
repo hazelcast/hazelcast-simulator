@@ -41,6 +41,7 @@ public class WorkerJvmLauncher {
     private File hzFile;
     private File clientHzFile;
     private final List<WorkerJvm> workersInProgress = new LinkedList<WorkerJvm>();
+    private File workerHome;
 
     public WorkerJvmLauncher(Agent agent, ConcurrentMap<String, WorkerJvm> workerJvms, WorkerJvmSettings settings) {
         this.settings = settings;
@@ -52,7 +53,14 @@ public class WorkerJvmLauncher {
         hzFile = createHzConfigFile();
         clientHzFile = createClientHzConfigFile();
 
-       log.info("Spawning Worker JVM using settings: "+settings);
+        workerHome = agent.getTestSuiteDir();
+        if (!workerHome.exists()) {
+            if (!workerHome.mkdirs()) {
+                throw new IllegalStateException("Couldn't create workerHome: " + workerHome.getAbsolutePath());
+            }
+        }
+
+        log.info("Spawning Worker JVM using settings: " + settings);
         spawn(settings.memberWorkerCount, "server");
         spawn(settings.clientWorkerCount, "client");
         spawn(settings.mixedWorkerCount, "mixed");
@@ -108,9 +116,6 @@ public class WorkerJvmLauncher {
     private WorkerJvm startWorkerJvm(String mode) throws IOException {
         String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet();
 
-        File testSuiteHome = agent.getTestSuiteDir();
-        testSuiteHome.mkdirs();
-
         String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
 
         WorkerJvm workerJvm = new WorkerJvm(workerId);
@@ -118,7 +123,7 @@ public class WorkerJvmLauncher {
         String[] args = buildArgs(workerId, mode);
 
         ProcessBuilder processBuilder = new ProcessBuilder(args)
-                .directory(testSuiteHome)
+                .directory(workerHome)
                 .redirectErrorStream(true);
 
         Map<String, String> environment = processBuilder.environment();
@@ -149,6 +154,12 @@ public class WorkerJvmLauncher {
     private String[] buildArgs(String workerId, String mode) {
         List<String> args = new LinkedList<String>();
         args.add("java");
+        if (settings.yourkitConfig != null) {
+            String agentSetting = settings.yourkitConfig
+                    .replace("${STABILIZER_HOME}", STABILIZER_HOME.getAbsolutePath())
+                    .replace("${WORKER_HOME}", workerHome.getAbsolutePath());
+            args.add(agentSetting);
+        }
         args.add(format("-XX:OnOutOfMemoryError=\"\"touch %s.oome\"\"", workerId));
         args.add("-DSTABILIZER_HOME=" + STABILIZER_HOME);
         args.add("-Dhazelcast.logging.type=log4j");
