@@ -215,7 +215,7 @@ public class WorkerJvmManager {
                 String service = (String) in.readObject();
                 String workerId = (String) in.readObject();
                 WorkerJvm workerJvm = workerJvms.get(workerId);
-                if (workerId == null) {
+                if (workerJvm == null) {
                     log.warning("No worker JVM found for id: " + workerId);
                 }
 
