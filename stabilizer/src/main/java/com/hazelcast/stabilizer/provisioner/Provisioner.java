@@ -265,6 +265,7 @@ public class Provisioner {
             this.ip = node.getPrivateAddresses().iterator().next();
         }
 
+        @Override
         public void run() {
             //install java if needed
             if (!"outofthebox".equals(getProperty("JDK_FLAVOR"))) {
@@ -281,7 +282,6 @@ public class Provisioner {
             startAgent(ip);
             echo("\t" + ip + " STABILIZER AGENT STARTED");
         }
-
     }
 
     private int[] calcBatches(int size) {

@@ -65,11 +65,11 @@ public class WorkerJvmSettings implements Serializable {
                 "\n, mixedWorkerCount=" + mixedWorkerCount +
                 "\n, workerStartupTimeout=" + workerStartupTimeout +
                 "\n, refreshJvm=" + refreshJvm +
+                "\n, yourkitConfig='" + yourkitConfig + '\'' +
                 "\n, javaVendor=" + javaVendor +
                 "\n, javaVersion=" + javaVersion +
                 "\n, hzConfig='" + hzConfig + '\'' +
                 "\n, clientHzConfig='" + clientHzConfig + '\'' +
-                "\n, yourkitConfig='" + yourkitConfig + '\'' +
                 "\n}";
     }
 }
