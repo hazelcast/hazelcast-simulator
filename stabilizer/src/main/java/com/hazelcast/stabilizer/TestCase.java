@@ -51,7 +51,7 @@ public class TestCase implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("TestRecipe{");
+        StringBuilder sb = new StringBuilder("TestCase{");
         sb.append("\n      ").append("id=").append(id);
         sb.append("\n    , ").append("class=").append(getClassname());
 
