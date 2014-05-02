@@ -72,7 +72,7 @@ public class WorkerJvmFailureMonitor {
             detectInactivity(jvm, failures);
 
             if (!failures.isEmpty()) {
-                workerJvmManager.terminateWorker(jvm);
+                workerJvmManager.destroyWorker(jvm);
 
                 for (Failure failure : failures) {
                     publish(failure);

@@ -36,8 +36,9 @@ public class WorkerJvm {
     @Override
     public String toString() {
         return "WorkerJvm{" +
-                "memberAddress='" + memberAddress + '\'' +
-                ", id='" + id + '\'' +
+                "id='" + id + '\'' +
+                ", memberAddress='" + memberAddress + '\'' +
+                ", workerHome=" + workerHome +
                 '}';
     }
 }

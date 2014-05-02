@@ -186,7 +186,7 @@ public class WorkerJvmManager {
         log.info("Finished terminating workers");
     }
 
-    public void terminateWorker(final WorkerJvm jvm) {
+    public void destroyWorker(final WorkerJvm jvm) {
         workerJvms.remove(jvm.id);
 
         Thread t = new Thread() {
@@ -195,6 +195,7 @@ public class WorkerJvmManager {
                     jvm.process.destroy();
                     jvm.process.waitFor();
                 } catch (Throwable e) {
+                    log.severe("Failed to destroy worker process: " + jvm);
                 }
             }
         };
