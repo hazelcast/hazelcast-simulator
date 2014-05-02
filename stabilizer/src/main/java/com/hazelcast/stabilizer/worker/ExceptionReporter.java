@@ -6,7 +6,6 @@ import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
@@ -18,8 +17,6 @@ public class ExceptionReporter {
     private final static ILogger log = Logger.getLogger(ExceptionReporter.class);
 
     public static void report(Throwable t) {
-        System.setProperty("workerId", UUID.randomUUID().toString());
-
         log.severe("Exception detected", t);
         sleepSeconds(2);
 
@@ -35,14 +32,10 @@ public class ExceptionReporter {
 
         writeText(Utils.throwableToString(t), tmpFile);
 
-        final File file = new File(getWorkerId() + "@" + FAILURE_ID.incrementAndGet() + ".failure");
+        final File file = new File(FAILURE_ID.incrementAndGet() + ".exception");
         if (!tmpFile.renameTo(file)) {
             throw new RuntimeException("Failed to rename tmp file:" + tmpFile + " to " + file);
         }
-    }
-
-    public static String getWorkerId() {
-        return System.getProperty("workerId");
     }
 
     private ExceptionReporter() {

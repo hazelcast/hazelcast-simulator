@@ -17,6 +17,7 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
 
+import java.io.File;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -24,6 +25,7 @@ public class WorkerJvm {
     public final String id;
     public volatile String memberAddress;
     public Process process;
+    public File workerHome;
 
     public final BlockingQueue<TestCommandRequest> commandQueue = new LinkedBlockingQueue<TestCommandRequest>();
 
