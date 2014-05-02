@@ -333,7 +333,7 @@ public class Provisioner {
         for (String ip : privateIps) {
             echo("Downloading from %s", ip);
 
-            String cmd = format("rsync -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
+            String cmd = format("rsync --remove-source-files  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
                     getProperty("SSH_OPTIONS"), getProperty("USER"), ip, getVersion());
 
             bash(cmd);
