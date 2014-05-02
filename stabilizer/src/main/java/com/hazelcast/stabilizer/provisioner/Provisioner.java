@@ -338,7 +338,7 @@ public class Provisioner {
 
             bash(syncCommand);
 
-            ssh(ip, format("rm -fr hazelcast-stabilizer-%s/workers",getVersion()));
+            ssh(ip, format("rm -fr hazelcast-stabilizer-%s/workers/*",getVersion()));
         }
 
         echoImportant("Finished Downloading Artifacts of %s machines", privateIps.size());
