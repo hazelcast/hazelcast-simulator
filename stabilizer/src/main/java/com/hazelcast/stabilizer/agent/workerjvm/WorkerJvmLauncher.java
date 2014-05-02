@@ -41,7 +41,7 @@ public class WorkerJvmLauncher {
     private File hzFile;
     private File clientHzFile;
     private final List<WorkerJvm> workersInProgress = new LinkedList<WorkerJvm>();
-    private File workerHome;
+    private File testSuiteDir;
 
     public WorkerJvmLauncher(Agent agent, ConcurrentMap<String, WorkerJvm> workerJvms, WorkerJvmSettings settings) {
         this.settings = settings;
@@ -53,10 +53,10 @@ public class WorkerJvmLauncher {
         hzFile = createHzConfigFile();
         clientHzFile = createClientHzConfigFile();
 
-        workerHome = agent.getTestSuiteDir();
-        if (!workerHome.exists()) {
-            if (!workerHome.mkdirs()) {
-                throw new IllegalStateException("Couldn't create workerHome: " + workerHome.getAbsolutePath());
+        testSuiteDir = agent.getTestSuiteDir();
+        if (!testSuiteDir.exists()) {
+            if (!testSuiteDir.mkdirs()) {
+                throw new IllegalStateException("Couldn't create testSuiteDir: " + testSuiteDir.getAbsolutePath());
             }
         }
 
@@ -115,12 +115,19 @@ public class WorkerJvmLauncher {
 
     private WorkerJvm startWorkerJvm(String mode) throws IOException {
         String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet();
+        File workerHome = new File(testSuiteDir, workerId);
+        if (!workerHome.exists()) {
+            if (!workerHome.mkdir()) {
+                throw new IllegalStateException("Could not create workerhome: " + workerHome.getAbsolutePath());
+            }
+        }
 
         String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
 
         WorkerJvm workerJvm = new WorkerJvm(workerId);
+        workerJvm.workerHome = workerHome;
 
-        String[] args = buildArgs(workerId, mode);
+        String[] args = buildArgs(workerJvm, mode);
 
         ProcessBuilder processBuilder = new ProcessBuilder(args)
                 .directory(workerHome)
@@ -151,19 +158,19 @@ public class WorkerJvmLauncher {
         return Arrays.asList(clientVmOptionsArray);
     }
 
-    private String[] buildArgs(String workerId, String mode) {
+    private String[] buildArgs(WorkerJvm workerJvm, String mode) {
         List<String> args = new LinkedList<String>();
         args.add("java");
         if (settings.yourkitConfig != null) {
             String agentSetting = settings.yourkitConfig
                     .replace("${STABILIZER_HOME}", STABILIZER_HOME.getAbsolutePath())
-                    .replace("${WORKER_HOME}", workerHome.getAbsolutePath());
+                    .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());
             args.add(agentSetting);
         }
-        args.add(format("-XX:OnOutOfMemoryError=\"\"touch %s.oome\"\"", workerId));
+        args.add(format("-XX:OnOutOfMemoryError=\"\"touch %s.oome\"\"", workerJvm.id));
         args.add("-DSTABILIZER_HOME=" + STABILIZER_HOME);
         args.add("-Dhazelcast.logging.type=log4j");
-        args.add("-DworkerId=" + workerId);
+        args.add("-DworkerId=" + workerJvm.id);
         args.add("-DworkerMode=" + mode);
         args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-log4j.xml");
         args.add("-classpath");
@@ -214,9 +221,7 @@ public class WorkerJvmLauncher {
     }
 
     private String readAddress(WorkerJvm jvm) {
-        File testSuiteHome = agent.getTestSuiteDir();
-
-        File file = new File(testSuiteHome, jvm.id + ".address");
+        File file = new File(jvm.workerHome, jvm.id + ".address");
         if (!file.exists()) {
             return null;
         }

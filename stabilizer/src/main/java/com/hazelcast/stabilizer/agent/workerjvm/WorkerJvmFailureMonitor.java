@@ -55,15 +55,6 @@ public class WorkerJvmFailureMonitor {
         detectThread.start();
     }
 
-    public void stop() {
-        detectThread.interrupt();
-        try {
-            detectThread.join();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private void detect() {
         WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
 
@@ -71,9 +62,11 @@ public class WorkerJvmFailureMonitor {
 
             List<Failure> failures = new LinkedList<Failure>();
 
-            addIfNotNull(failures, detectOomeFailure(jvm));
+            detectOomeFailure(jvm, failures);
 
-            addIfNotNull(failures, detectUnexpectedExit(jvm));
+            detectUnexpectedExit(jvm, failures);
+
+            detectExceptions(jvm, failures);
 
             if (!failures.isEmpty()) {
                 workerJvmManager.terminateWorker(jvm);
@@ -83,63 +76,48 @@ public class WorkerJvmFailureMonitor {
                 }
             }
         }
-
-        detectExceptions();
     }
 
-    private void addIfNotNull(List<Failure> failures, Failure failure) {
-        if (failure != null) {
-            failures.add(failure);
-        }
-    }
 
-    private void detectExceptions() {
-        File testsuiteHome = agent.getTestSuiteDir();
-        if (testsuiteHome == null) {
+    private void detectExceptions(WorkerJvm workerJvm, List<Failure> failures) {
+        File workerHome = workerJvm.workerHome;
+        if (workerHome == null) {
             return;
         }
 
-        File[] files = testsuiteHome.listFiles();
+        File[] files = workerHome.listFiles();
         if (files == null) {
             return;
         }
 
         for (File file : files) {
             String name = file.getName();
-            if (name.endsWith(".failure")) {
+            if (name.endsWith(".exception")) {
                 String cause = Utils.fileAsText(file);
                 //we rename it so that we don't detect the same failure again.
                 file.delete();
-
-                String workerId = name.substring(0, name.lastIndexOf('@'));
-
-                WorkerJvm jvm = agent.getWorkerJvmManager().getWorker(workerId);
-
                 Failure failure = new Failure();
                 failure.message = "Exception thrown in worker";
                 failure.agentAddress = getHostAddress();
-                failure.workerAddress = jvm == null ? null : jvm.memberAddress;
-                failure.workerId = workerId;
+                failure.workerAddress = workerJvm.memberAddress;
+                failure.workerId = workerJvm.id;
                 failure.testCase = agent.getTestCase();
                 failure.cause = cause;
-                publish(failure);
-
-                if (jvm != null) {
-                    agent.getWorkerJvmManager().terminateWorker(jvm);
-                }
+                failures.add(failure);
+                agent.getWorkerJvmManager().terminateWorker(workerJvm);
             }
         }
     }
 
-    private Failure detectOomeFailure(WorkerJvm jvm) {
+    private void detectOomeFailure(WorkerJvm jvm, List<Failure> failures) {
         File testsuiteDir = agent.getTestSuiteDir();
         if (testsuiteDir == null) {
-            return null;
+            return;
         }
 
         File file = new File(testsuiteDir, jvm.id + ".oome");
         if (!file.exists()) {
-            return null;
+            return;
         }
 
         Failure failure = new Failure();
@@ -149,10 +127,10 @@ public class WorkerJvmFailureMonitor {
         failure.workerId = jvm.id;
         failure.testCase = agent.getTestCase();
         jvm.process.destroy();
-        return failure;
+        failures.add(failure);
     }
 
-    private Failure detectUnexpectedExit(WorkerJvm jvm) {
+    private void detectUnexpectedExit(WorkerJvm jvm, List<Failure> failures) {
         Process process = jvm.process;
         try {
             int exitCode = process.exitValue();
@@ -163,11 +141,10 @@ public class WorkerJvmFailureMonitor {
                 failure.workerAddress = jvm.memberAddress;
                 failure.workerId = jvm.id;
                 failure.testCase = agent.getTestCase();
-                return failure;
+                failures.add(failure);
             }
         } catch (IllegalThreadStateException ignore) {
         }
-        return null;
     }
 
     private class DetectThread extends Thread {
