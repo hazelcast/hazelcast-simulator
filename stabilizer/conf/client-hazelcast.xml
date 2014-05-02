@@ -12,7 +12,6 @@
     <network>
         <cluster-members>
             <!--MEMBERS-->
-            <address></address>
         </cluster-members>
      </network>
 

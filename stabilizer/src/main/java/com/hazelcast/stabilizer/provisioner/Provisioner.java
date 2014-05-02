@@ -493,6 +493,7 @@ public class Provisioner {
                     int size = options.valueOf(cli.scaleSpec);
                     provisioner.scale(size);
                 }
+                System.exit(0);
             }
         } catch (OptionException e) {
             Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");
