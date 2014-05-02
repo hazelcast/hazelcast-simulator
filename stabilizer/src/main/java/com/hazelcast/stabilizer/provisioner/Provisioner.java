@@ -108,7 +108,7 @@ public class Provisioner {
     }
 
 
-    void startAgents() {
+    public void startAgents() {
         echoImportant("Starting %s Agents", privateIps.size());
 
         for (String ip : privateIps) {
@@ -151,13 +151,13 @@ public class Provisioner {
         echoImportant("Successfully killed %s Agents", privateIps.size());
     }
 
-    void installAgents() {
+    public void installAgents() {
         for (String ip : privateIps) {
             installAgent(ip);
         }
     }
 
-    void scale(int size) throws Exception {
+    public void scale(int size) throws Exception {
         int delta = size - privateIps.size();
         if (delta == 0) {
             echo("Ignoring spawn machines, desired number of machines already exists");
@@ -326,8 +326,8 @@ public class Provisioner {
         return new File(CONF_DIR, script);
     }
 
-    void download() {
-        echoImportant("Download artifacts of %s machines, delete=", privateIps.size());
+    public void download() {
+        echoImportant("Download artifacts of %s machines", privateIps.size());
 
         bash("mkdir -p workers");
 
@@ -343,23 +343,22 @@ public class Provisioner {
         echoImportant("Finished Downloading Artifacts of %s machines", privateIps.size());
     }
 
-    void clean() {
-        echoImportant("Cleaning worker homes of %s machines, delete=", privateIps.size());
+    public void clean() {
+        echoImportant("Cleaning worker homes of %s machines", privateIps.size());
 
         for (String ip : privateIps) {
             echo("Cleaning %s", ip);
-            ssh(ip, format("rm -fr hazelcast-stabilizer-%s/workers/*", getVersion()));
+            ssh(ip, format("rm -abc -fr hazelcast-stabilizer-%s/workers/*", getVersion()));
         }
 
         echoImportant("Finished cleaning worker homes of %s machines", privateIps.size());
-
     }
 
-    void terminate() {
+    public void terminate() {
         terminate(Integer.MAX_VALUE);
     }
 
-    void terminate(int count) {
+    public void terminate(int count) {
         if (count > privateIps.size()) {
             count = privateIps.size();
         }
@@ -389,8 +388,6 @@ public class Provisioner {
                         }
                     }
             );
-
-            //sleepSeconds(30);
         }
 
         log.info("Updating " + agentsFile.getAbsolutePath());
@@ -411,7 +408,7 @@ public class Provisioner {
         Utils.writeText(text, agentsFile);
     }
 
-    void bash(String command) {
+    private void bash(String command) {
         StringBuffer sout = new StringBuffer();
 
         try {
@@ -422,13 +419,11 @@ public class Provisioner {
             Process shell = pb.start();
             new StreamGobbler(shell.getInputStream(), sout).start();
 
-            // /shell.consumeProcessOutput(sout, serr);
-
             // wait for the shell to finish and get the return code
             int shellExitStatus = shell.waitFor();
             if (shellExitStatus != 0) {
                 echo("Failed to execute [%s]", command);
-                System.out.println("out> " + sout);
+                log.severe(sout.toString());
                 System.exit(1);
             }
         } catch (IOException e) {
@@ -438,33 +433,33 @@ public class Provisioner {
         }
     }
 
-    void scpToRemote(String ip, String src, String target) {
+    private void scpToRemote(String ip, String src, String target) {
         String command = format("scp -r %s %s %s@%s:%s",
                 getProperty("SSH_OPTIONS"), src, getProperty("USER"), ip, target);
         bash(command);
     }
 
-    void ssh(String ip, String command) {
+    private void ssh(String ip, String command) {
         String sshCommand = format("ssh %s -q %s@%s \"%s\"",
                 getProperty("SSH_OPTIONS"), getProperty("USER"), ip, command);
         bash(sshCommand);
     }
 
-    void sshQuiet(String ip, String command) {
+    private void sshQuiet(String ip, String command) {
         String sshCommand = format("ssh %s -q %s@%s \"%s\" || true",
                 getProperty("SSH_OPTIONS"), getProperty("USER"), ip, command);
         bash(sshCommand);
     }
 
-    String getProperty(String name) {
+    private String getProperty(String name) {
         return (String) stabilizerProperties.get(name);
     }
 
-    void echo(String s, Object... args) {
+    private void echo(String s, Object... args) {
         log.info(s == null ? "null" : String.format(s, args));
     }
 
-    void echoImportant(String s, Object... args) {
+    private void echoImportant(String s, Object... args) {
         echo("==============================================================");
         echo(s, args);
         echo("==============================================================");

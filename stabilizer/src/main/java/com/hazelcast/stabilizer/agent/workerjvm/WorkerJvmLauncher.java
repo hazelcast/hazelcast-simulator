@@ -26,7 +26,6 @@ import static java.lang.String.format;
 
 public class WorkerJvmLauncher {
 
-
     private final static ILogger log = Logger.getLogger(WorkerJvmLauncher.class);
 
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
