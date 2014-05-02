@@ -348,7 +348,7 @@ public class Provisioner {
 
         for (String ip : privateIps) {
             echo("Cleaning %s", ip);
-            ssh(ip, format("rm -abc -fr hazelcast-stabilizer-%s/workers/*", getVersion()));
+            ssh(ip, format("rm -fr hazelcast-stabilizer-%s/workers/*", getVersion()));
         }
 
         echoImportant("Finished cleaning worker homes of %s machines", privateIps.size());

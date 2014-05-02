@@ -203,9 +203,11 @@ public class WorkerJvmManager {
         t.start();
         try {
             t.join(WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS);
-        } catch (InterruptedException e) {
-            log.severe("Worker jvm: " + jvm.id + " failed to terminate within "
-                    + WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS + " ms");
+            if (t.isAlive()) {
+                throw new RuntimeException("Failed to destroy worker: " + jvm);
+            }
+        } catch (Exception e) {
+            log.severe(e);
         }
     }
 
