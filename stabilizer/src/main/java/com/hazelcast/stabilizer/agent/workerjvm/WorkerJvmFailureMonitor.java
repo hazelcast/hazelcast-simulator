@@ -18,16 +18,17 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.tests.Failure;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
@@ -36,7 +37,7 @@ public class WorkerJvmFailureMonitor {
 
     private final Agent agent;
     private final BlockingQueue<Failure> failureQueue = new LinkedBlockingQueue<Failure>();
-    private final DetectThread detectThread = new DetectThread();
+    private final FailureMonitorThread failureMonitorThread = new FailureMonitorThread();
 
     public WorkerJvmFailureMonitor(Agent agent) {
         this.agent = agent;
@@ -52,7 +53,7 @@ public class WorkerJvmFailureMonitor {
     }
 
     public void start() {
-        detectThread.start();
+        failureMonitorThread.start();
     }
 
     private void detect() {
@@ -68,6 +69,8 @@ public class WorkerJvmFailureMonitor {
 
             detectExceptions(jvm, failures);
 
+            detectInactivity(jvm, failures);
+
             if (!failures.isEmpty()) {
                 workerJvmManager.terminateWorker(jvm);
 
@@ -78,40 +81,47 @@ public class WorkerJvmFailureMonitor {
         }
     }
 
+    private void detectInactivity(WorkerJvm jvm, List<Failure> failures) {
+        //todo
+    }
 
     private void detectExceptions(WorkerJvm workerJvm, List<Failure> failures) {
         File workerHome = workerJvm.workerHome;
-        if (workerHome == null) {
+        if (!workerHome.exists()) {
             return;
         }
 
-        File[] files = workerHome.listFiles();
-        if (files == null) {
-            return;
-        }
-
-        for (File file : files) {
-            String name = file.getName();
-            if (name.endsWith(".exception")) {
-                String cause = Utils.fileAsText(file);
-                //we rename it so that we don't detect the same failure again.
-                file.delete();
-                Failure failure = new Failure();
-                failure.message = "Exception thrown in worker";
-                failure.agentAddress = getHostAddress();
-                failure.workerAddress = workerJvm.memberAddress;
-                failure.workerId = workerJvm.id;
-                failure.testCase = agent.getTestCase();
-                failure.cause = cause;
-                failures.add(failure);
-                agent.getWorkerJvmManager().terminateWorker(workerJvm);
+        File[] exceptionFiles = workerHome.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".exception");
             }
+        });
+
+        if (exceptionFiles == null) {
+            return;
+        }
+
+        for (File exceptionFile : exceptionFiles) {
+            String cause = fileAsText(exceptionFile);
+            //we rename it so that we don't detect the same exception again.
+            exceptionFile.delete();
+
+            Failure failure = new Failure();
+            failure.message = "Exception thrown in worker";
+            failure.agentAddress = getHostAddress();
+            failure.workerAddress = workerJvm.memberAddress;
+            failure.workerId = workerJvm.id;
+            failure.testCase = agent.getTestCase();
+            failure.cause = cause;
+            failures.add(failure);
         }
     }
 
     private void detectOomeFailure(WorkerJvm jvm, List<Failure> failures) {
-        File file = new File(jvm.workerHome, "worker.oome");
-        if (!file.exists()) {
+        File oomeFile = new File(jvm.workerHome, "worker.oome");
+
+        if (!oomeFile.exists()) {
             return;
         }
 
@@ -121,7 +131,6 @@ public class WorkerJvmFailureMonitor {
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
         failure.testCase = agent.getTestCase();
-        jvm.process.destroy();
         failures.add(failure);
     }
 
@@ -129,21 +138,24 @@ public class WorkerJvmFailureMonitor {
         Process process = jvm.process;
         try {
             int exitCode = process.exitValue();
-            if (exitCode != 0) {
-                Failure failure = new Failure();
-                failure.message = "Exit code not 0, but was " + exitCode;
-                failure.agentAddress = getHostAddress();
-                failure.workerAddress = jvm.memberAddress;
-                failure.workerId = jvm.id;
-                failure.testCase = agent.getTestCase();
-                failures.add(failure);
+
+            if (exitCode == 0) {
+                return;
             }
+
+            Failure failure = new Failure();
+            failure.message = "Exit code not 0, but was " + exitCode;
+            failure.agentAddress = getHostAddress();
+            failure.workerAddress = jvm.memberAddress;
+            failure.workerId = jvm.id;
+            failure.testCase = agent.getTestCase();
+            failures.add(failure);
         } catch (IllegalThreadStateException ignore) {
         }
     }
 
-    private class DetectThread extends Thread {
-        public DetectThread() {
+    private class FailureMonitorThread extends Thread {
+        public FailureMonitorThread() {
             super("FailureMonitorThread");
         }
 

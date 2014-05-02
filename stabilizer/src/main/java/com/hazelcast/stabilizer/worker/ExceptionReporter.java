@@ -16,8 +16,8 @@ public class ExceptionReporter {
     private final static AtomicLong FAILURE_ID = new AtomicLong(1);
     private final static ILogger log = Logger.getLogger(ExceptionReporter.class);
 
-    public static void report(Throwable t) {
-        log.severe("Exception detected", t);
+    public static void report(Throwable cause) {
+        log.severe("Exception detected", cause);
         sleepSeconds(2);
 
         //we need to write to a temp file before and then rename the file so that the worker will not see
@@ -30,7 +30,7 @@ public class ExceptionReporter {
             throw new RuntimeException(e);
         }
 
-        writeText(Utils.throwableToString(t), tmpFile);
+        writeText(Utils.throwableToString(cause), tmpFile);
 
         final File file = new File(FAILURE_ID.incrementAndGet() + ".exception");
         if (!tmpFile.renameTo(file)) {

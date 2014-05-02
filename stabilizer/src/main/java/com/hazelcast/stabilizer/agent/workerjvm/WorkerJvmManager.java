@@ -61,6 +61,7 @@ public class WorkerJvmManager {
     private final static ILogger log = Logger.getLogger(WorkerJvmManager.class);
     public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
     public static final int PORT = 9001;
+    public static final int WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS = 10000;
 
     private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
@@ -185,17 +186,26 @@ public class WorkerJvmManager {
         log.info("Finished terminating workers");
     }
 
-    public void terminateWorker(WorkerJvm jvm) {
-        jvm.process.destroy();
-        try {
-            jvm.process.waitFor();
-        } catch (InterruptedException e) {
-        }
+    public void terminateWorker(final WorkerJvm jvm) {
         workerJvms.remove(jvm.id);
-    }
 
-    public WorkerJvm getWorker(String workerId) {
-        return workerJvms.get(workerId);
+        Thread t = new Thread() {
+            public void run() {
+                try {
+                    jvm.process.destroy();
+                    jvm.process.waitFor();
+                } catch (Throwable e) {
+                }
+            }
+        };
+
+        t.start();
+        try {
+            t.join(WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS);
+        } catch (InterruptedException e) {
+            log.severe("Worker jvm: " + jvm.id + " failed to terminate within "
+                    + WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS + " ms");
+        }
     }
 
     private class ClientSocketTask implements Runnable {
@@ -215,13 +225,13 @@ public class WorkerJvmManager {
                 String service = (String) in.readObject();
                 String workerId = (String) in.readObject();
                 WorkerJvm workerJvm = workerJvms.get(workerId);
-                if (workerJvm == null) {
-                    log.warning("No worker JVM found for id: " + workerId);
-                }
 
                 Object result = null;
                 try {
-                    if (SERVICE_POLL_WORK.equals(service)) {
+                    if (workerJvm == null) {
+                        log.warning("No worker JVM found for id: " + workerId);
+                        result = new RuntimeException("Worker doesn't exist anymore at agent");
+                    } else if (SERVICE_POLL_WORK.equals(service)) {
                         List<TestCommandRequest> commands = new LinkedList<TestCommandRequest>();
                         workerJvm.commandQueue.drainTo(commands);
                         result = commands;
