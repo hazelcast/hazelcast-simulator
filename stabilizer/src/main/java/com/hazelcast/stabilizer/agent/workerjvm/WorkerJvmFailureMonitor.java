@@ -110,12 +110,7 @@ public class WorkerJvmFailureMonitor {
     }
 
     private void detectOomeFailure(WorkerJvm jvm, List<Failure> failures) {
-        File testsuiteDir = agent.getTestSuiteDir();
-        if (testsuiteDir == null) {
-            return;
-        }
-
-        File file = new File(testsuiteDir, "worker.oome");
+        File file = new File(jvm.workerHome, "worker.oome");
         if (!file.exists()) {
             return;
         }
