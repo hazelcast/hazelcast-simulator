@@ -38,7 +38,6 @@ import static com.hazelcast.stabilizer.Utils.appendText;
 import static com.hazelcast.stabilizer.Utils.fileAsLines;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
-import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
@@ -235,8 +234,6 @@ public class Provisioner {
                 Future f = executor.submit(new InstallNodeTask(node, compute));
                 futures.add(f);
             }
-
-            //sleepSeconds(30);
         }
 
         for (Future f : futures) {
@@ -286,7 +283,7 @@ public class Provisioner {
 
     private int[] calcBatches(int size) {
         List<Integer> batches = new LinkedList<Integer>();
-        int batchSize = Integer.parseInt((String) stabilizerProperties.get("CLOUD_BATCH_SIZE"));
+        int batchSize = Integer.parseInt(getProperty("CLOUD_BATCH_SIZE"));
         while (size > 0) {
             int x = size >= batchSize ? batchSize : size;
             batches.add(x);
@@ -303,26 +300,26 @@ public class Provisioner {
     private ComputeService getComputeService() {
         //http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
         Properties overrides = new Properties();
-        overrides.setProperty(POLL_INITIAL_PERIOD, (String) stabilizerProperties.get("CLOUD_POLL_INITIAL_PERIOD"));
-        overrides.setProperty(POLL_MAX_PERIOD, (String) stabilizerProperties.get("CLOUD_POLL_MAX_PERIOD"));
+        overrides.setProperty(POLL_INITIAL_PERIOD, getProperty("CLOUD_POLL_INITIAL_PERIOD"));
+        overrides.setProperty(POLL_MAX_PERIOD, getProperty("CLOUD_POLL_MAX_PERIOD"));
 
-        String credentials = (String) stabilizerProperties.get("CLOUD_CREDENTIAL");
+        String credentials = getProperty("CLOUD_CREDENTIAL");
         File file = new File(credentials);
         if (file.exists()) {
             credentials = Utils.fileAsText(file);
         }
 
-        return ContextBuilder.newBuilder((String) stabilizerProperties.get("CLOUD_PROVIDER"))
+        return ContextBuilder.newBuilder(getProperty("CLOUD_PROVIDER"))
                 .overrides(overrides)
-                .credentials((String) stabilizerProperties.get("CLOUD_IDENTITY"), credentials)
+                .credentials(getProperty("CLOUD_IDENTITY"), credentials)
                 .modules(asList(new Log4JLoggingModule(), new SshjSshClientModule()))
                 .buildView(ComputeServiceContext.class)
                 .getComputeService();
     }
 
     private File getJavaInstallScript() {
-        String flavor = (String) stabilizerProperties.get("JDK_FLAVOR");
-        String version = (String) stabilizerProperties.get("JDK_VERSION");
+        String flavor = getProperty("JDK_FLAVOR");
+        String version = getProperty("JDK_VERSION");
 
         String script = "jdk-" + flavor + "-" + version + ".sh";
         return new File(CONF_DIR, script);
@@ -355,7 +352,7 @@ public class Provisioner {
         }
 
         //System.out.println("current number of machines is: " + privateIps.size());
-        echoImportant(format("Terminating %s %s machines (can take some time)", count, stabilizerProperties.get("CLOUD_PROVIDER")));
+        echoImportant(format("Terminating %s %s machines (can take some time)", count, getProperty("CLOUD_PROVIDER")));
 
         long startMs = System.currentTimeMillis();
 

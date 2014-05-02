@@ -167,7 +167,7 @@ public class WorkerJvmLauncher {
                     .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());
             args.add(agentSetting);
         }
-        args.add(format("-XX:OnOutOfMemoryError=\"\"touch %s.oome\"\"", workerJvm.id));
+        args.add("-XX:OnOutOfMemoryError=\"\"touch worker.oome\"\"");
         args.add("-DSTABILIZER_HOME=" + STABILIZER_HOME);
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-DworkerId=" + workerJvm.id);
@@ -221,7 +221,7 @@ public class WorkerJvmLauncher {
     }
 
     private String readAddress(WorkerJvm jvm) {
-        File file = new File(jvm.workerHome, jvm.id + ".address");
+        File file = new File(jvm.workerHome,"worker.address");
         if (!file.exists()) {
             return null;
         }

@@ -115,7 +115,7 @@ public class WorkerJvmFailureMonitor {
             return;
         }
 
-        File file = new File(testsuiteDir, jvm.id + ".oome");
+        File file = new File(testsuiteDir, "worker.oome");
         if (!file.exists()) {
             return;
         }

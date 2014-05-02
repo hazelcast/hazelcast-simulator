@@ -103,7 +103,7 @@ public class Worker {
             InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getSocketAddress();
             address = socketAddress.getAddress().getHostAddress() + ":" + socketAddress.getPort();
         }
-        File file = new File(workerId + ".address");
+        File file = new File("worker.address");
         writeObject(address, file);
     }
 

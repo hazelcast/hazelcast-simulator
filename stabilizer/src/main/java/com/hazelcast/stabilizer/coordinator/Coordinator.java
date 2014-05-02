@@ -105,7 +105,7 @@ public class Coordinator {
             System.exit(0);
         } else {
             log.info("-----------------------------------------------------------------------------");
-            log.info(failureList.size() + " failures have been detected!");
+            log.info(failureList.size() + " failures have been detected!!!!");
             log.info("-----------------------------------------------------------------------------");
             System.exit(1);
         }
