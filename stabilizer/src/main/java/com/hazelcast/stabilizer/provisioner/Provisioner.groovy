@@ -294,7 +294,7 @@
 //        return new File(CONF_DIR, script);
 //    }
 //
-//    def downloadArtifacts() {
+//    def download() {
 //        echoImportant("Download artifacts of ${privateIps.size()} machines");
 //
 //        bash("mkdir -p workers");
@@ -428,7 +428,7 @@
 //
 //            if (options.has(cli.downloadSpec)) {
 //                def provisioner = new Provisioner()
-//                provisioner.downloadArtifacts()
+//                provisioner.download()
 //                System.exit 0
 //            }
 //

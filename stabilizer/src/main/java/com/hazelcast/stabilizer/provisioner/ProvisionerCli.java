@@ -11,7 +11,11 @@ public class ProvisionerCli {
             "Restarts all agents");
 
     public final OptionSpec downloadSpec = parser.accepts("download",
-            "Download all the logs");
+            "Download all the files from the workers directory. " +
+                    "To delete all worker directories, add the --clean option");
+
+    public final OptionSpec cleanSpec = parser.accepts("clean",
+            "Cleans the workers directories. ");
 
     public final OptionSpec<Integer> scaleSpec = parser.accepts("scale",
             "Number of machines to scale to")

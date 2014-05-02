@@ -8,6 +8,7 @@ import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import joptsimple.OptionException;
 import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
@@ -325,8 +326,8 @@ public class Provisioner {
         return new File(CONF_DIR, script);
     }
 
-    void downloadArtifacts() {
-        echoImportant("Download (and remove) artifacts of %s machines", privateIps.size());
+    void download() {
+        echoImportant("Download artifacts of %s machines, delete=", privateIps.size());
 
         bash("mkdir -p workers");
 
@@ -337,11 +338,21 @@ public class Provisioner {
                     getProperty("SSH_OPTIONS"), getProperty("USER"), ip, getVersion());
 
             bash(syncCommand);
-
-            ssh(ip, format("rm -fr hazelcast-stabilizer-%s/workers/*",getVersion()));
         }
 
         echoImportant("Finished Downloading Artifacts of %s machines", privateIps.size());
+    }
+
+    void clean() {
+        echoImportant("Cleaning worker homes of %s machines, delete=", privateIps.size());
+
+        for (String ip : privateIps) {
+            echo("Cleaning %s", ip);
+            ssh(ip, format("rm -fr hazelcast-stabilizer-%s/workers/*", getVersion()));
+        }
+
+        echoImportant("Finished cleaning worker homes of %s machines", privateIps.size());
+
     }
 
     void terminate() {
@@ -460,8 +471,6 @@ public class Provisioner {
     }
 
     public static void main(String[] args) {
-
-
         try {
             ProvisionerCli cli = new ProvisionerCli();
 
@@ -472,47 +481,29 @@ public class Provisioner {
                 System.exit(0);
             }
 
-
-            if (options.has(cli.restartSpec)) {
-                Provisioner provisioner = new Provisioner();
-                provisioner.installAgents();
-                provisioner.startAgents();
-                System.exit(0);
-            }
-
-            if (options.has(cli.killSpec)) {
-                Provisioner provisioner = new Provisioner();
-                provisioner.killAgents();
-                System.exit(0);
-            }
-
-
-            if (options.has(cli.downloadSpec)) {
-                Provisioner provisioner = new Provisioner();
-                provisioner.downloadArtifacts();
-                System.exit(0);
-            }
-
-            if (options.has(cli.terminateSpec)) {
-                Provisioner provisioner = new Provisioner();
-                provisioner.terminate();
-                System.exit(0);
-            }
-
-            if (options.has(cli.scaleSpec)) {
-                Provisioner provisioner = new Provisioner();
-                int size = options.valueOf(cli.scaleSpec);
-
-                provisioner.scale(size);
-                System.exit(0);
+            Provisioner provisioner = new Provisioner();
+            for (OptionSpec spec : options.specs()) {
+                if (spec.equals(cli.restartSpec)) {
+                    provisioner.installAgents();
+                    provisioner.startAgents();
+                } else if (spec.equals(cli.killSpec)) {
+                    provisioner.killAgents();
+                } else if (spec.equals(cli.downloadSpec)) {
+                    provisioner.download();
+                } else if (spec.equals(cli.cleanSpec)) {
+                    provisioner.clean();
+                } else if (spec.equals(cli.terminateSpec)) {
+                    provisioner.terminate();
+                } else if (spec.equals(cli.scaleSpec)) {
+                    int size = options.valueOf(cli.scaleSpec);
+                    provisioner.scale(size);
+                }
             }
         } catch (OptionException e) {
             Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");
-
         } catch (Throwable e) {
             log.severe(e);
             System.exit(1);
         }
     }
-
 }
