@@ -326,17 +326,19 @@ public class Provisioner {
     }
 
     void downloadArtifacts() {
-        echoImportant("Download artifacts of %s machines", privateIps.size());
+        echoImportant("Download (and remove) artifacts of %s machines", privateIps.size());
 
         bash("mkdir -p workers");
 
         for (String ip : privateIps) {
             echo("Downloading from %s", ip);
 
-            String cmd = format("rsync --remove-source-files  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
+            String syncCommand = format("rsync  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
                     getProperty("SSH_OPTIONS"), getProperty("USER"), ip, getVersion());
 
-            bash(cmd);
+            bash(syncCommand);
+
+            ssh(ip, format("rm -fr hazelcast-stabilizer-%s/workers",getVersion()));
         }
 
         echoImportant("Finished Downloading Artifacts of %s machines", privateIps.size());
