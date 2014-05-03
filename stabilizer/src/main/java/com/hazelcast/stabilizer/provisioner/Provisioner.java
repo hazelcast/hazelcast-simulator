@@ -424,12 +424,12 @@ public class Provisioner {
             // wait for the shell to finish and get the return code
             int shellExitStatus = shell.waitFor();
 
-            log.finest("Bash output: \n" + sout);
-
             if (shellExitStatus != 0) {
                 echo("Failed to execute [%s]", command);
                 log.severe(sout.toString());
                 System.exit(1);
+            }else{
+                log.finest("Bash output: \n" + sout);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
