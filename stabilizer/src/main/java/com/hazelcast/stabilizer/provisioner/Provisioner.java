@@ -56,6 +56,7 @@ public class Provisioner {
 
     private final String STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath();
     private final File CONF_DIR = new File(STABILIZER_HOME, "conf");
+    private final File JDK_INSTALL_DIR = new File(STABILIZER_HOME, "jdk-install");
     private final File agentsFile = new File("agents.txt");
     //big number of threads, but they are used to offload ssh tasks. So there is no load on this machine..
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
@@ -322,8 +323,8 @@ public class Provisioner {
         String flavor = getProperty("JDK_FLAVOR");
         String version = getProperty("JDK_VERSION");
 
-        String script = "jdk-" + flavor + "-" + version + ".sh";
-        return new File(CONF_DIR, script);
+        String script = "jdk-" + flavor + "-" + version + "-64.sh";
+        return new File(JDK_INSTALL_DIR, script);
     }
 
     public void download() {
