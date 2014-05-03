@@ -1,26 +1,34 @@
 package com.hazelcast.stabilizer.provisioner;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
-public class StreamGobbler extends Thread {
-    private InputStream is;
-    private StringBuffer sb;
+class StreamGobbler extends Thread {
 
-    public StreamGobbler(InputStream is, StringBuffer sb) {
-        this.is = is;
-        this.sb = sb;
+    private final InputStream in;
+
+    private StringBuffer response;
+
+    StreamGobbler(InputStream in, StringBuffer response) {
+        this.in = in;
+        this.response = response;
     }
 
-    @Override
+    /**
+     * @see java.lang.Thread#run()
+     */
     public void run() {
         try {
-            int c;
-            while ((c = is.read()) != -1) {
-                sb.append((char) c);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line + "\n");
             }
-        } catch (IOException x) {
-            // handle error
+        } catch (IOException ioException) {
+            //LOGGER.warn("System command stream gobbler error", ioException);
         }
     }
+
 }

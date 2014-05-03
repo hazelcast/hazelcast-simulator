@@ -270,7 +270,7 @@ public class Provisioner {
                 ssh(ip, "touch install-java.sh");
                 ssh(ip, "chmod +x install-java.sh");
                 scpToRemote(ip, getJavaInstallScript().getAbsolutePath(), "install-java.sh");
-                ssh(ip, "sudo bash install-java.sh");
+                ssh(ip, "bash install-java.sh");
                 echo("\t" + ip + " JAVA INSTALLED");
             }
 
@@ -411,6 +411,8 @@ public class Provisioner {
     private void bash(String command) {
         StringBuffer sout = new StringBuffer();
 
+        log.finest("Executing bash command: " + command);
+
         try {
             // create a process for the shell
             ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
@@ -421,6 +423,9 @@ public class Provisioner {
 
             // wait for the shell to finish and get the return code
             int shellExitStatus = shell.waitFor();
+
+            log.finest("Bash output: \n" + sout);
+
             if (shellExitStatus != 0) {
                 echo("Failed to execute [%s]", command);
                 log.severe(sout.toString());
@@ -495,6 +500,7 @@ public class Provisioner {
                 }
                 System.exit(0);
             }
+            System.exit(0);
         } catch (OptionException e) {
             Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");
         } catch (Throwable e) {
