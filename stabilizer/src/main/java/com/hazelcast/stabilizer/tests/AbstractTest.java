@@ -38,6 +38,17 @@ public abstract class AbstractTest implements Test {
     private final CountDownLatch startLatch = new CountDownLatch(1);
     private final Set<Thread> threads = new HashSet<Thread>();
     private long startMs;
+    private boolean passive;
+
+    /**
+     * Checks if the test is an active test (so actually generates load), or is passive (so a dumb cluster member that
+     * is only receiving load).
+     *
+     * @return
+     */
+    public boolean isPassive() {
+        return passive;
+    }
 
     public HazelcastInstance getServerInstance() {
         return serverInstance;
@@ -47,11 +58,19 @@ public abstract class AbstractTest implements Test {
         return clientInstance;
     }
 
+    public HazelcastInstance getTargetInstance() {
+        if (clientInstance != null) {
+            return clientInstance;
+        } else {
+            return serverInstance;
+        }
+    }
+
     public String getTestId() {
         return testId;
     }
 
-    public boolean stopped(){
+    public boolean stopped() {
         return stop;
     }
 
@@ -68,14 +87,6 @@ public abstract class AbstractTest implements Test {
 
     @Override
     public void localSetup() throws Exception {
-    }
-
-    public HazelcastInstance getTargetInstance() {
-        if (clientInstance != null) {
-            return clientInstance;
-        } else {
-            return serverInstance;
-        }
     }
 
     @Override
@@ -132,9 +143,22 @@ public abstract class AbstractTest implements Test {
         }
     }
 
+    /**
+     * Create the threads that are actually going to do the load.
+     *
+     * This method is only called when the Test is active, not when passive.
+     */
+    public void createTestThreads() {
+    }
+
     @Override
-    public void start() {
+    public void start(boolean passive) {
+        this.passive = passive;
         startMs = getCurrentTimeMs();
+        if (!passive) {
+            return;
+        }
+        createTestThreads();
         startLatch.countDown();
     }
 

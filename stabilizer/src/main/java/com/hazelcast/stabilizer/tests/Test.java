@@ -74,7 +74,7 @@ public interface Test {
      */
     void globalTearDown() throws Exception;
 
-    void start() throws Exception;
+    void start(boolean active) throws Exception;
 
     /**
      * Stops this Test.

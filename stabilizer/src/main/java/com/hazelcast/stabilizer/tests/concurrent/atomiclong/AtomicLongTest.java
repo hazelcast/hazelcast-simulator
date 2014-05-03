@@ -37,7 +37,6 @@ public class AtomicLongTest extends AbstractTest {
     private IAtomicLong[] counters;
     private AtomicLong operations = new AtomicLong();
 
-
     //properties
     public int countersLength = 1000;
     public int threadCount = 1;
@@ -56,7 +55,10 @@ public class AtomicLongTest extends AbstractTest {
         for (int k = 0; k < counters.length; k++) {
             counters[k] = targetInstance.getAtomicLong(basename + "-" + getTestId() + "r-" + k);
         }
+    }
 
+    @Override
+    public void createTestThreads() {
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }

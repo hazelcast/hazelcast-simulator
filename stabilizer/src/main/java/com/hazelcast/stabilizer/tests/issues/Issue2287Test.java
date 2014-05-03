@@ -27,12 +27,16 @@ public class Issue2287Test extends AbstractTest {
     @Override
     public void localSetup() throws Exception {
         targetInstance = getTargetInstance();
+        lock1 = targetInstance.getLock("lock1");
+        lock2 = targetInstance.getLock("lock2");
+    }
+
+    @Override
+    public void createTestThreads() {
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
 
-        lock1 = targetInstance.getLock("lock1");
-        lock2 = targetInstance.getLock("lock2");
     }
 
     private class Worker implements Runnable {
@@ -57,7 +61,7 @@ public class Issue2287Test extends AbstractTest {
                 sleepSeconds(1);
                 try {
                     lock2.lock();
-                    log.info(Thread.currentThread().getName()+" " + System.currentTimeMillis());
+                    log.info(Thread.currentThread().getName() + " " + System.currentTimeMillis());
                     sleepSeconds(1);
                 } finally {
                     lock2.unlock();

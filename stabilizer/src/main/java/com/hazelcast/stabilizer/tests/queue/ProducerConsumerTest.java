@@ -48,7 +48,10 @@ public class ProducerConsumerTest extends AbstractTest {
         produced = targetInstance.getAtomicLong(basename + "-" + getTestId() + ":Produced");
         consumed = targetInstance.getAtomicLong(basename + "-" + getTestId() + ":Consumed");
         workQueue = targetInstance.getQueue(basename + "-" + getTestId() + ":WorkQueue");
+    }
 
+    @Override
+    public void createTestThreads() {
         for (int k = 0; k < producerCount; k++) {
             spawn(new Producer(k));
         }

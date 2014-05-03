@@ -36,12 +36,15 @@ public class MapRaceTest extends AbstractTest {
         HazelcastInstance targetInstance = getTargetInstance();
 
         map = targetInstance.getMap(basename + "-" + getTestId());
+        resultsPerWorker = targetInstance.getMap("ResultMap" + getTestId());
+    }
 
+
+    @Override
+    public void createTestThreads() {
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
-
-        resultsPerWorker = targetInstance.getMap("ResultMap" + getTestId());
     }
 
     @Override

@@ -49,7 +49,6 @@ public class ExecutorTest extends AbstractTest {
     public int submitCount = 5;
     public String basename = "executor";
 
-
     @Override
     public void localSetup() throws Exception {
         HazelcastInstance targetInstance = getTargetInstance();
@@ -58,11 +57,16 @@ public class ExecutorTest extends AbstractTest {
         for (int k = 0; k < executors.length; k++) {
             executors[k] = targetInstance.getExecutorService(basename + "-" + getTestId() + "-" + k);
         }
+
+        executedCounter = targetInstance.getAtomicLong(getTestId() + ":ExecutedCounter");
+        expectedExecutedCounter = targetInstance.getAtomicLong(getTestId() + ":ExpectedExecutedCounter");
+    }
+
+    @Override
+    public void createTestThreads() {
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
-        executedCounter = targetInstance.getAtomicLong(getTestId() + ":ExecutedCounter");
-        expectedExecutedCounter = targetInstance.getAtomicLong(getTestId() + ":ExpectedExecutedCounter");
     }
 
     @Override

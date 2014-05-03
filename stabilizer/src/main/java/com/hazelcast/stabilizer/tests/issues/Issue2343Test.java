@@ -46,9 +46,6 @@ public class Issue2343Test extends AbstractTest {
         targetInstance = getTargetInstance();
         node = getNode(targetInstance);
         map = targetInstance.getMap("map");
-        for (int k = 0; k < threadCount; k++) {
-            spawn(new Worker());
-        }
 
         MapService mapService = node.nodeEngine.getService(MapService.SERVICE_NAME);
         MapContainer container = mapService.getMapContainer(map.getName());
@@ -57,6 +54,13 @@ public class Issue2343Test extends AbstractTest {
         idleScheduledEntries = getField(idleEvictionScheduler, "scheduledEntries");
 
         new MonitorThread().start();
+    }
+
+    @Override
+    public void createTestThreads() {
+        for (int k = 0; k < threadCount; k++) {
+            spawn(new Worker());
+        }
     }
 
     private class MonitorThread extends Thread {

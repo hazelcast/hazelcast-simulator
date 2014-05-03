@@ -64,10 +64,6 @@ public class StringMapTest extends AbstractTest {
         HazelcastInstance targetInstance = getTargetInstance();
 
         map = targetInstance.getMap(basename + "-" + getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawn(new Worker());
-        }
-
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
             keys[k] = makeString(keyLength);
@@ -87,6 +83,13 @@ public class StringMapTest extends AbstractTest {
                 String value = values[random.nextInt(valueCount)];
                 map.put(key, value);
             }
+        }
+    }
+
+    @Override
+    public void createTestThreads() {
+        for (int k = 0; k < threadCount; k++) {
+            spawn(new Worker());
         }
     }
 

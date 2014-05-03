@@ -49,18 +49,22 @@ public class QueueTest extends AbstractTest {
             queues[k] = targetInstance.getQueue(basename + "-" + getTestId() + "-" + k);
         }
 
-        for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
-            for (int l = 0; l < threadsPerQueue; l++) {
-                spawn(new Worker(queueIndex));
-            }
-        }
-
         for (IQueue<Long> queue : queues) {
             for (int k = 0; k < messagesPerQueue; k++) {
                 queue.add(0L);
             }
         }
     }
+
+    @Override
+    public void createTestThreads() {
+        for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
+            for (int l = 0; l < threadsPerQueue; l++) {
+                spawn(new Worker(queueIndex));
+            }
+        }
+    }
+
 
     @Override
     public void globalVerify() {

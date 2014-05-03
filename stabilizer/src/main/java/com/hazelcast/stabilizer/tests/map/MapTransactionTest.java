@@ -41,14 +41,16 @@ public class MapTransactionTest extends AbstractTest {
     @Override
     public void localSetup() throws Exception {
         targetInstance = getTargetInstance();
-
         mapName = basename + "-" + getTestId();
         map = targetInstance.getMap(mapName);
+        resultsPerWorker = targetInstance.getMap("ResultMap" + getTestId());
+    }
+
+    @Override
+    public void createTestThreads() {
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
-
-        resultsPerWorker = targetInstance.getMap("ResultMap" + getTestId());
     }
 
     @Override

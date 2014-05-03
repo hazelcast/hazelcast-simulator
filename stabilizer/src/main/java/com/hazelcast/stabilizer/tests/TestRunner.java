@@ -91,7 +91,7 @@ public class TestRunner {
         log.info("Finished globalSetup");
 
         log.info("Starting start");
-        test.start();
+        test.start(false);
         log.info("Finished start");
 
         sleepSeconds(test, durationSec);

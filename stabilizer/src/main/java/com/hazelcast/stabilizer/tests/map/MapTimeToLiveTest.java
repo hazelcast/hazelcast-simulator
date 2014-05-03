@@ -28,7 +28,7 @@ public class MapTimeToLiveTest extends AbstractTest {
 
     //properties
     public int ttlSeconds = 1;
-    public int workerCount = 3;
+    public int threadCount = 3;
     public int putIntervalMillis = 10;
     public int waitAfterMillis = 2000;
     public String basename = "map";
@@ -47,13 +47,17 @@ public class MapTimeToLiveTest extends AbstractTest {
         }
     }
 
+
     @Override
     public void localSetup() throws Exception {
         HazelcastInstance targetInstance = getTargetInstance();
-
         map = targetInstance.getMap(basename + "-" + getTestId());
+    }
 
-        for (int k = 0; k < workerCount; k++) {
+
+    @Override
+    public void createTestThreads() {
+        for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
     }

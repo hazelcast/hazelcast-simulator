@@ -33,6 +33,10 @@ public class GrowingMapTest extends AbstractTest {
         HazelcastInstance targetInstance = getTargetInstance();
         idGenerator = targetInstance.getIdGenerator(getTestId() + ":IdGenerator");
         map = targetInstance.getMap(basename + "-" + getTestId());
+    }
+
+    @Override
+    public void createTestThreads() {
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }

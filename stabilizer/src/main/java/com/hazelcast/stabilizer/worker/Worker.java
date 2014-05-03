@@ -244,7 +244,7 @@ public class Worker {
                     Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
                     throw exception;
                 }
-                return (E)response;
+                return (E) response;
             } finally {
                 Utils.closeQuietly(socket);
             }
@@ -297,18 +297,12 @@ public class Worker {
                     throw new IllegalStateException("No running test found");
                 }
 
-                boolean startTest = true;
+                boolean passive = false;
                 if (testCommand.clientOnly && clientInstance == null) {
-                    startTest = false;
+                    passive = false;
                 }
 
-                if (startTest) {
-                    test.start();
-                    log.info("Started test successfully");
-                } else {
-                    log.info("Test is not started because this worker doesn't contain a client" +
-                            " and only clients are generating load. ");
-                }
+                test.start(passive);
             } catch (Exception e) {
                 log.severe("Failed to start test", e);
                 throw e;
@@ -328,7 +322,7 @@ public class Worker {
                 Object o = method.invoke(test);
                 log.info("Finished calling test." + methodName + "()");
                 return o;
-            }catch(InvocationTargetException e){
+            } catch (InvocationTargetException e) {
                 log.severe(format("Failed to execute test.%s()", methodName), e);
                 throw e.getTargetException();
             } catch (Exception e) {

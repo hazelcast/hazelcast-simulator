@@ -40,7 +40,10 @@ public class LockTest extends AbstractTest {
             account.set(initialAmount);
             totalMoney.addAndGet(initialAmount);
         }
+    }
 
+    @Override
+    public void createTestThreads() {
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }

@@ -54,7 +54,10 @@ public class ITopicTest extends AbstractTest {
                 new TopicListener(topic);
             }
         }
+    }
 
+    @Override
+    public void createTestThreads() {
         for (int k = 0; k < threadCount; k++) {
             spawn(new Worker());
         }
