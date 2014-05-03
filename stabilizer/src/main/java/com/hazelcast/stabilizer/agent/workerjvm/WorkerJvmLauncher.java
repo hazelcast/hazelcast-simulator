@@ -113,7 +113,7 @@ public class WorkerJvmLauncher {
     }
 
     private WorkerJvm startWorkerJvm(String mode) throws IOException {
-        String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet();
+        String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet() + "-" + mode;
         File workerHome = new File(testSuiteDir, workerId);
         if (!workerHome.exists()) {
             if (!workerHome.mkdir()) {
@@ -220,7 +220,7 @@ public class WorkerJvmLauncher {
     }
 
     private String readAddress(WorkerJvm jvm) {
-        File file = new File(jvm.workerHome,"worker.address");
+        File file = new File(jvm.workerHome, "worker.address");
         if (!file.exists()) {
             return null;
         }
