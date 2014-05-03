@@ -11,27 +11,29 @@
 
     <appender name="file" class="org.apache.log4j.FileAppender">
         <param name="File" value="${STABILIZER_HOME}/logs/provisioner.log"/>
-        <param name="Threshold" value="INFO"/>
+        <param name="Threshold" value="DEBUG"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
         </layout>
     </appender>
 
     <!-- if there are ssh problems, put this on info or debug-->
-    <logger name="net.schmizz.sshj">
+    <logger name="net.schmizz">
         <level value="warn"/>
     </logger>
 
     <!-- enable this if you want to se what is being send over the wire -->
-    <!--<logger name="jclouds.compute">-->
-        <!--<level value="debug"/>-->
-    <!--</logger>-->
+    <logger name="jclouds">
+        <level value="warn"/>
+    </logger>
+    <logger name="org.jclouds">
+        <level value="warn"/>
+    </logger>
 
     <root>
         <priority value="debug"/>
         <appender-ref ref="console"/>
         <appender-ref ref="file"/>
     </root>
-
 
 </log4j:configuration>
