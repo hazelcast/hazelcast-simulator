@@ -156,7 +156,10 @@ public abstract class AbstractTest implements Test {
         this.passive = passive;
         startMs = getCurrentTimeMs();
         if (passive) {
+            log.finest("Starting threads is skipped because test instance is passive");
             return;
+        }else{
+            log.finest("Starting threads");
         }
         createTestThreads();
         startLatch.countDown();
