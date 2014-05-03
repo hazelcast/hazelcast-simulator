@@ -33,7 +33,8 @@ import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
 public class WorkerJvmFailureMonitor {
-    final static ILogger log = Logger.getLogger(WorkerJvmFailureMonitor.class);
+    private final static ILogger log = Logger.getLogger(WorkerJvmFailureMonitor.class);
+    private  final static int LAST_SEEN_TIMEOUT_MS = 60 * 1000;
 
     private final Agent agent;
     private final BlockingQueue<Failure> failureQueue = new LinkedBlockingQueue<Failure>();
@@ -82,7 +83,17 @@ public class WorkerJvmFailureMonitor {
     }
 
     private void detectInactivity(WorkerJvm jvm, List<Failure> failures) {
-        //todo
+        long currentMs = System.currentTimeMillis();
+
+        if (currentMs - LAST_SEEN_TIMEOUT_MS > jvm.lastSeen) {
+            Failure failure = new Failure();
+            failure.message = "Worker has not contacted agent";
+            failure.agentAddress = getHostAddress();
+            failure.workerAddress = jvm.memberAddress;
+            failure.workerId = jvm.id;
+            failure.testCase = agent.getTestCase();
+            failures.add(failure);
+        }
     }
 
     private void detectExceptions(WorkerJvm workerJvm, List<Failure> failures) {

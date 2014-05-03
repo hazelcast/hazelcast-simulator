@@ -235,21 +235,24 @@ public class WorkerJvmManager {
                     if (workerJvm == null) {
                         log.warning("No worker JVM found for id: " + workerId);
                         result = new TerminateWorkerException();
-                    } else if (SERVICE_POLL_WORK.equals(service)) {
-                        List<TestCommandRequest> commands = new LinkedList<TestCommandRequest>();
-                        workerJvm.commandQueue.drainTo(commands);
-                        result = commands;
-                    } else if (COMMAND_PUSH_RESPONSE.equals(service)) {
-                        TestCommandResponse response = (TestCommandResponse) in.readObject();
-                        //log.info("Received response: " + response.commandId);
-                        TestCommandFuture f = futureMap.remove(response.commandId);
-                        if (f != null) {
-                            f.set(response.result);
-                        } else {
-                            log.severe("No future found for commandId: " + response.commandId);
-                        }
                     } else {
-                        throw new RuntimeException("Unknown service:" + service);
+                        workerJvm.lastSeen = System.currentTimeMillis();
+                        if (SERVICE_POLL_WORK.equals(service)) {
+                            List<TestCommandRequest> commands = new LinkedList<TestCommandRequest>();
+                            workerJvm.commandQueue.drainTo(commands);
+                            result = commands;
+                        } else if (COMMAND_PUSH_RESPONSE.equals(service)) {
+                            TestCommandResponse response = (TestCommandResponse) in.readObject();
+                            //log.info("Received response: " + response.commandId);
+                            TestCommandFuture f = futureMap.remove(response.commandId);
+                            if (f != null) {
+                                f.set(response.result);
+                            } else {
+                                log.severe("No future found for commandId: " + response.commandId);
+                            }
+                        } else {
+                            throw new RuntimeException("Unknown service:" + service);
+                        }
                     }
                 } catch (IOException e) {
                     throw e;

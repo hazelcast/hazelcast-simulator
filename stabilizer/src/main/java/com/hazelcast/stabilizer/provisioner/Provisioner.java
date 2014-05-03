@@ -364,13 +364,11 @@ public class Provisioner {
             count = privateIps.size();
         }
 
-        //System.out.println("current number of machines is: " + privateIps.size());
         echoImportant(format("Terminating %s %s machines (can take some time)", count, getProperty("CLOUD_PROVIDER")));
 
         long startMs = System.currentTimeMillis();
 
         for (int batch : calcBatches(count)) {
-
             final List<String> terminateList = privateIps.subList(0, batch);
 
             ComputeService computeService = getComputeService();
