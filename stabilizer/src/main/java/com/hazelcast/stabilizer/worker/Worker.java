@@ -206,6 +206,7 @@ public class Worker {
                         continue;
                     }
 
+
                     sendResponse(asList(response));
 
                     List<TestCommandResponse> responses = new LinkedList<TestCommandResponse>();
@@ -239,6 +240,11 @@ public class Worker {
 
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                 Object response = in.readObject();
+
+                if(response instanceof TerminateWorkerException){
+                    System.exit(0);
+                }
+
                 if (response instanceof Exception) {
                     Exception exception = (Exception) response;
                     Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());

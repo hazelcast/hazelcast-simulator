@@ -226,6 +226,8 @@ public class WorkerJvmLauncher {
             return null;
         }
 
-        return Utils.readObject(file);
+        String address = Utils.readObject(file);
+        file.delete();
+        return address;
     }
 }

@@ -23,6 +23,7 @@ import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.TestCommandFuture;
 import com.hazelcast.stabilizer.tests.Failure;
+import com.hazelcast.stabilizer.worker.TerminateWorkerException;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
@@ -233,7 +234,7 @@ public class WorkerJvmManager {
                 try {
                     if (workerJvm == null) {
                         log.warning("No worker JVM found for id: " + workerId);
-                        result = new RuntimeException("Worker doesn't exist anymore at agent");
+                        result = new TerminateWorkerException();
                     } else if (SERVICE_POLL_WORK.equals(service)) {
                         List<TestCommandRequest> commands = new LinkedList<TestCommandRequest>();
                         workerJvm.commandQueue.drainTo(commands);
