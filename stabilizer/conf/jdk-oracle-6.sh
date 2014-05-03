@@ -7,7 +7,7 @@ function prepend {
 }
 
 cd ~
-wget -q http://ec2-54-87-52-100.compute-1.amazonaws.com/jdk-6u45-linux-x64.bin
+wget http://ec2-54-87-52-100.compute-1.amazonaws.com/jdk-6u45-linux-x64.bin
 chmod +x jdk-6u45-linux-x64.bin
 ./jdk-6u45-linux-x64.bin
 
