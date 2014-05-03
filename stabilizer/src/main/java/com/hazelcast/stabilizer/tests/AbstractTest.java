@@ -155,7 +155,7 @@ public abstract class AbstractTest implements Test {
     public void start(boolean passive) {
         this.passive = passive;
         startMs = getCurrentTimeMs();
-        if (!passive) {
+        if (passive) {
             return;
         }
         createTestThreads();
