@@ -299,7 +299,7 @@ public class Worker {
 
                 boolean passive = false;
                 if (testCommand.clientOnly && clientInstance == null) {
-                    passive = false;
+                    passive = true;
                 }
 
                 test.start(passive);
