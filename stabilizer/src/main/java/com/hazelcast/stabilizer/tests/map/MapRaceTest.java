@@ -39,7 +39,6 @@ public class MapRaceTest extends AbstractTest {
         resultsPerWorker = targetInstance.getMap("ResultMap" + getTestId());
     }
 
-
     @Override
     public void createTestThreads() {
         for (int k = 0; k < threadCount; k++) {

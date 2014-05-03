@@ -11,7 +11,7 @@ public class FailingTest extends AbstractTest {
     public String failure = "Exception";
 
     @Override
-    public void localSetup() throws Exception {
+    public void createTestThreads() {
         spawn(new Worker());
     }
 
