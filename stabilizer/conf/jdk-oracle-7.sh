@@ -7,7 +7,7 @@ function prepend {
 }
 
 cd ~
-wget http://ec2-54-87-52-100.compute-1.amazonaws.com/jdk-7u51-linux-x64.tar.gz
+wget --no-verbose http://ec2-54-87-52-100.compute-1.amazonaws.com/jdk-7u51-linux-x64.tar.gz
 tar xfz jdk-7u51-linux-x64.tar.gz
 
 prepend 'export PATH=$JAVA_HOME/bin:$PATH'  ~/.bashrc
