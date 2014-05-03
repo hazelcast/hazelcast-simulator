@@ -31,6 +31,7 @@ public class WorkerJvmSettings implements Serializable {
     public String javaVendor;
     public String javaVersion;
     public String clientHzConfig;
+    public String profiler = "none";
     public String yourkitConfig;
 
     public WorkerJvmSettings() {
@@ -49,6 +50,7 @@ public class WorkerJvmSettings implements Serializable {
         this.javaVendor = settings.javaVendor;
         this.javaVersion = settings.javaVersion;
         this.yourkitConfig = settings.yourkitConfig;
+        this.profiler = settings.profiler;
     }
 
     public int totalWorkerCount() {
@@ -65,6 +67,7 @@ public class WorkerJvmSettings implements Serializable {
                 "\n, mixedWorkerCount=" + mixedWorkerCount +
                 "\n, workerStartupTimeout=" + workerStartupTimeout +
                 "\n, refreshJvm=" + refreshJvm +
+                "\n, profiler='" + profiler + '\'' +
                 "\n, yourkitConfig='" + yourkitConfig + '\'' +
                 "\n, javaVendor=" + javaVendor +
                 "\n, javaVersion=" + javaVersion +

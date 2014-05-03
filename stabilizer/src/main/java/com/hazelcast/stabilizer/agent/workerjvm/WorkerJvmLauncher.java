@@ -160,7 +160,8 @@ public class WorkerJvmLauncher {
     private String[] buildArgs(WorkerJvm workerJvm, String mode) {
         List<String> args = new LinkedList<String>();
         args.add("java");
-        if (settings.yourkitConfig != null) {
+
+        if ("yourkit".equals(settings.profiler)) {
             String agentSetting = settings.yourkitConfig
                     .replace("${STABILIZER_HOME}", STABILIZER_HOME.getAbsolutePath())
                     .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());

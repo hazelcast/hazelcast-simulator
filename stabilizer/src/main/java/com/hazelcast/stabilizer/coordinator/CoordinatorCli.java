@@ -160,7 +160,8 @@ public class CoordinatorCli {
                 coordinator.workerClassPath = options.valueOf(optionSpec.workerClassPathSpec);
             }
 
-            coordinator.properties = loadStabilizerProperties("stabilizer.properties");
+            Properties properties = loadStabilizerProperties("stabilizer.properties");
+            coordinator.properties = properties;
             coordinator.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
             coordinator.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
             coordinator.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
@@ -183,10 +184,8 @@ public class CoordinatorCli {
             workerJvmSettings.refreshJvm = options.valueOf(optionSpec.workerRefreshSpec);
             workerJvmSettings.javaVendor = options.valueOf(optionSpec.workerJavaVendorSpec);
             workerJvmSettings.javaVersion = options.valueOf(optionSpec.workerJavaVersionSpec);
-            String profiler = coordinator.properties.getProperty("PROFILER", "none");
-            if (profiler.equals("yourkit")) {
-                workerJvmSettings.yourkitConfig = coordinator.properties.getProperty("YOURKIT_SETTINGS");
-            }
+            workerJvmSettings.profiler = properties.getProperty("PROFILER", "none");
+            workerJvmSettings.yourkitConfig = properties.getProperty("YOURKIT_SETTINGS");
 
             coordinator.workerJvmSettings = workerJvmSettings;
         } catch (OptionException e) {
