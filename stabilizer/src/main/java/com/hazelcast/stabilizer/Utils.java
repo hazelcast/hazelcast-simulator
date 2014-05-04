@@ -74,6 +74,13 @@ public final class Utils {
         remoteCause.setStackTrace(newStackTrace);
     }
 
+    public static File toFile(File file, String... items) {
+        for (int k = 0; k < items.length; k++) {
+            file = new File(file, items[k]);
+        }
+        return file;
+    }
+
     public static String getHostAddress() {
         if (hostAddress != null) {
             return hostAddress;
@@ -186,7 +193,7 @@ public final class Utils {
         return fileAsText(new File(filePath));
     }
 
-    public static String[] fileAsLines(File file){
+    public static String[] fileAsLines(File file) {
         return fileAsText(file).split("\n");
     }
 

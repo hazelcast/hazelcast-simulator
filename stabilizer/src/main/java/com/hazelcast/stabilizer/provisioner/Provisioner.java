@@ -278,15 +278,24 @@ public class Provisioner {
     }
 
     private void mavenRetrieve(String artifact, String version) {
-        String baseUrl;
-        if (version.endsWith("-SNAPSHOT")) {
-            baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
+        File userhome = new File("user.home");
+        File repositoryDir = Utils.toFile(userhome, ".m2", "repository");
+        File artifactFile = Utils.toFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
+        if (artifactFile.exists()) {
+            log.info("Using artifact from local maven repo");
+            bash(format("cp %s %s",artifactFile.getAbsolutePath(),hazelcastJarsDir.getAbsolutePath()));
         } else {
-            baseUrl = "http://repo1.maven.org/maven2";
-        }
+            log.info("Downloading artifact from repository");
+            String baseUrl;
+            if (version.endsWith("-SNAPSHOT")) {
+                baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
+            } else {
+                baseUrl = "http://repo1.maven.org/maven2";
+            }
 
-        String url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
-        bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
+            String url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
+            bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
+        }
     }
 
     private class InstallNodeTask implements Runnable {
