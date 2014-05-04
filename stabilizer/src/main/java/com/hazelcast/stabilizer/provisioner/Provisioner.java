@@ -107,7 +107,7 @@ public class Provisioner {
         String versionSpec = getProperty("HAZELCAST_VERSION_SPEC", "outofthebox");
         if (!versionSpec.equals("outofthebox")) {
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
-            ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar",VERSION));
+            ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar", VERSION));
             //copy the actual hazelcast jars that are going to be used by the worker.
             scpToRemote(ip, hazelcastJarsDir.getAbsolutePath(), format("hazelcast-stabilizer-%s/lib", VERSION));
         }
@@ -269,10 +269,17 @@ public class Provisioner {
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);
             log.info("Using Hazelcast version-spec: maven=" + version);
+            mavenRetrieve("hazelcast", version);
+            mavenRetrieve("hazelcast-client", version);
         } else {
             log.severe("Unrecognized version spec:" + versionSpec);
             System.exit(1);
         }
+    }
+
+    private void mavenRetrieve(String artifact, String version) {
+        String url = format("http://repo1.maven.org/maven2/com/hazelcast/hazelcast/%s/%s-%s.jar", version, artifact, version);
+        bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
     }
 
     private class InstallNodeTask implements Runnable {
