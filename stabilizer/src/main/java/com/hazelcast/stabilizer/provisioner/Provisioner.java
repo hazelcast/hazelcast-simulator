@@ -278,7 +278,7 @@ public class Provisioner {
     }
 
     private void mavenRetrieve(String artifact, String version) {
-        String url = format("http://repo1.maven.org/maven2/com/hazelcast/hazelcast/%s/%s-%s.jar", version, artifact, version);
+        String url = format("http://repo1.maven.org/maven2/com/hazelcast/%s/%s/%s-%s.jar", artifact, version, artifact, version);
         bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
     }
 
