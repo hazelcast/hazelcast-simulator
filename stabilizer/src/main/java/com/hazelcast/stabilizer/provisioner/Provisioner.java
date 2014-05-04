@@ -107,7 +107,7 @@ public class Provisioner {
         String versionSpec = getProperty("HAZELCAST_VERSION_SPEC", "outofthebox");
         if (!versionSpec.equals("outofthebox")) {
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
-            ssh(ip, "rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar");
+            ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar",VERSION));
             //copy the actual hazelcast jars that are going to be used by the worker.
             scpToRemote(ip, hazelcastJarsDir.getAbsolutePath(), format("hazelcast-stabilizer-%s/lib", VERSION));
         }
@@ -146,6 +146,7 @@ public class Provisioner {
     }
 
     public void restart() {
+        prepareHazelcastJars();
         for (String ip : privateIps) {
             installAgent(ip);
         }
