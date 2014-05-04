@@ -305,12 +305,13 @@ public class Provisioner {
             String url;
             if (version.endsWith("-SNAPSHOT")) {
                 String baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
+                log.info("Loading: "+baseUrl);
                 String mavenMetadataUrl =  format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
                 String mavenMetadata = null;
                 try {
                     mavenMetadata = Utils.getText(mavenMetadataUrl);
                 }catch(FileNotFoundException e){
-                    log.severe("Could not find:"+mavenMetadataUrl);
+                    log.severe("Failed to load "+artifact+"-"+version+", because :"+mavenMetadataUrl+" was not found");
                     System.exit(1);
                 }catch(IOException e){
                     log.severe("Could not load:"+mavenMetadataUrl);
