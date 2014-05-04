@@ -21,14 +21,6 @@
                 <exclude>bin/*</exclude>
             </excludes>
         </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../stabilizer/conf</directory>
-            <outputDirectory>/conf</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../stabilizer/tests</directory>
-            <outputDirectory>/tests</outputDirectory>
-        </fileSet>
     </fileSets>
     <dependencySets>
         <dependencySet>

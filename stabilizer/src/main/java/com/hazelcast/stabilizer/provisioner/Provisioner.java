@@ -97,17 +97,14 @@ public class Provisioner {
     }
 
     void installAgent(String ip) {
-//        echoImportant "Installing Agent on ${ip}"
-
-//        echo "Copying stabilizer files"
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
         sshQuiet(ip, format("rm -fr hazelcast-stabilizer-%s/lib", VERSION));
+
         //then we copy the stabilizer directory
         scpToRemote(ip, STABILIZER_HOME, "");
 
-//        echoImportant("Successfully installed Agent on ${ip}");
+        //here we should upload whatever else needs to be uploaded.
     }
-
 
     public void startAgents() {
         echoImportant("Starting %s Agents", privateIps.size());
@@ -126,19 +123,8 @@ public class Provisioner {
     }
 
     void startAgent(String ip) {
-//        echoImportant("Starting ${privateIps.size()} Agents");
-
-//        for (String ip : privateIps) {
-//            echo "Killing Agent $ip"
         ssh(ip, "killall -9 java || true");
-//        }
-
-        //       for (String ip : privateIps) {
-        //           echo "Starting Agent $ip"
         ssh(ip, format("nohup hazelcast-stabilizer-%s/bin/agent > agent.out 2> agent.err < /dev/null &", getVersion()));
-        //       }
-
-        //       echoImportant("Successfully started ${privateIps.size()} Agents");
     }
 
     void killAgents() {
@@ -427,7 +413,7 @@ public class Provisioner {
                 echo("Failed to execute [%s]", command);
                 log.severe(sout.toString());
                 System.exit(1);
-            }else{
+            } else {
                 log.finest("Bash output: \n" + sout);
             }
         } catch (IOException e) {
