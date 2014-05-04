@@ -104,10 +104,13 @@ public class Provisioner {
         //then we copy the stabilizer directory
         scpToRemote(ip, STABILIZER_HOME, "");
 
-        //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
-        ssh(ip, "rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar");
-        //copy the actual hazelcast jars that are going to be used by the worker.
-        scpToRemote(ip, hazelcastJarsDir.getAbsolutePath(), format("hazelcast-stabilizer-%s/lib", VERSION));
+        String versionSpec = getProperty("HAZELCAST_VERSION_SPEC", "outofthebox");
+        if (!versionSpec.equals("outofthebox")) {
+            //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
+            ssh(ip, "rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar");
+            //copy the actual hazelcast jars that are going to be used by the worker.
+            scpToRemote(ip, hazelcastJarsDir.getAbsolutePath(), format("hazelcast-stabilizer-%s/lib", VERSION));
+        }
     }
 
     public void startAgents() {
@@ -254,19 +257,17 @@ public class Provisioner {
 
         String versionSpec = getProperty("HAZELCAST_VERSION_SPEC", "outofthebox");
         if (versionSpec.equals("outofthebox")) {
-            log.info("Using Hazelcast version: Out of the box");
-            bash(format("cp %s/lib/hazelcast-*.jar %s", STABILIZER_HOME, hazelcastJarsDir.getAbsolutePath()));
+            log.info("Using Hazelcast version-spec: Out of the box");
         } else if (versionSpec.startsWith("path=")) {
             String path = versionSpec.substring(5);
-            log.info("Using Hazelcast version: path=" + path);
+            log.info("Using Hazelcast version-spec: path=" + path);
             bash(format("cp %s/* %s", path, hazelcastJarsDir.getAbsolutePath()));
         } else if (versionSpec.equals("none")) {
-            log.info("Using Hazelcast version: none");
+            log.info("Using Hazelcast version-spec: none");
             //we don't need to do anything
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);
-            log.info("Using Hazelcast version: maven="+version);
-
+            log.info("Using Hazelcast version-spec: maven=" + version);
         } else {
             log.severe("Unrecognized version spec:" + versionSpec);
             System.exit(1);
