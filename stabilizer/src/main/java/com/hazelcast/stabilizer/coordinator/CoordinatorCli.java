@@ -35,6 +35,17 @@ public class CoordinatorCli {
     private final OptionSpec workerTrackLoggingSpec = parser.accepts("workerTrackLogging",
             "If the agent is tracking worker logging");
 
+    private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
+            "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
+                    "If nothing is specified, the agent is free to pick a vendor."
+    )
+            .withRequiredArg().ofType(String.class).defaultsTo("");
+    private final OptionSpec<String> workerJavaVersionSpec = parser.accepts("workerJavaVersion",
+            "The Java version (e.g. 1.6) of the JVM used by the worker). " +
+                    "If nothing is specified, the agent is free to pick a version."
+    )
+            .withRequiredArg().ofType(String.class).defaultsTo("");
+
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
             "Number of Cluster member Worker JVM's. If no value is specified and no mixed members are specified, " +
                     "then the number of cluster members will be equal to the number of machines in the agents file"
@@ -91,24 +102,14 @@ public class CoordinatorCli {
             "The client Hazelcast xml configuration file for the worker")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
 
-    private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
-            "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
-                    "If nothing is specified, the agent is free to pick a vendor."
-    )
-            .withRequiredArg().ofType(String.class).defaultsTo("");
-    private final OptionSpec<String> workerJavaVersionSpec = parser.accepts("workerJavaVersion",
-            "The Java version (e.g. 1.6) of the JVM used by the worker). " +
-                    "If nothing is specified, the agent is free to pick a version."
-    )
-            .withRequiredArg().ofType(String.class).defaultsTo("");
-    private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs",
+      private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs",
             "Maximum amount of time waiting for the Test to stop")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
 
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     private static String getDefaultHzFile() {
-        File file = new File("worker-hazelcast.xml");
+        File file = new File("hazelcast.xml");
         //if something exists in the current working directory, use that.
         if (file.exists()) {
             return file.getAbsolutePath();
@@ -118,7 +119,7 @@ public class CoordinatorCli {
     }
 
     private static String getDefaultClientHzFile() {
-        File file = new File("worker-client-hazelcast.xml");
+        File file = new File("client-hazelcast.xml");
         //if something exists in the current working directory, use that.
         if (file.exists()) {
             return file.getAbsolutePath();

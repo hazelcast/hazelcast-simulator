@@ -21,7 +21,7 @@
     <properties>
         <java.version>1.6</java.version>
         <junit.version>4.10</junit.version>
-        <hazelcast.version>3.2.2-SNAPSHOT</hazelcast.version>
+        <hazelcast.version>3.2.1</hazelcast.version>
         <jopt.version>4.4</jopt.version>
         <log4j.version>1.2.17</log4j.version>
         <jclouds.version>1.7.2</jclouds.version>
