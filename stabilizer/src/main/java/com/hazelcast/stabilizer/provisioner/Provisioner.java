@@ -109,7 +109,7 @@ public class Provisioner {
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
             ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar", VERSION));
             //copy the actual hazelcast jars that are going to be used by the worker.
-            scpToRemote(ip, hazelcastJarsDir.getAbsolutePath()+"/*.jar", format("hazelcast-stabilizer-%s/lib", VERSION));
+            scpToRemote(ip, hazelcastJarsDir.getAbsolutePath() + "/*.jar", format("hazelcast-stabilizer-%s/lib", VERSION));
         }
     }
 
@@ -278,7 +278,14 @@ public class Provisioner {
     }
 
     private void mavenRetrieve(String artifact, String version) {
-        String url = format("http://repo1.maven.org/maven2/com/hazelcast/%s/%s/%s-%s.jar", artifact, version, artifact, version);
+        String baseUrl;
+        if (version.endsWith("-SNAPSHOT")) {
+            baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
+        } else {
+            baseUrl = "http://repo1.maven.org/maven2";
+        }
+
+        String url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
         bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
     }
 
