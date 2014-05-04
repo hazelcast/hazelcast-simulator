@@ -479,7 +479,6 @@ public class Provisioner {
                     int size = options.valueOf(cli.scaleSpec);
                     provisioner.scale(size);
                 }
-                System.exit(0);
             }
             System.exit(0);
         } catch (OptionException e) {
