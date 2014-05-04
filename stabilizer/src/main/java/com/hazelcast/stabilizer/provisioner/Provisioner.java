@@ -297,7 +297,6 @@ public class Provisioner {
         File artifactFile = Utils.toFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
         if (artifactFile.exists()) {
             log.finest("Using artifact: " + artifactFile + " from local maven repository");
-
             bash(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
         } else {
             log.finest("Artifact: " + artifactFile + " is not found in local maven repository, trying online one");
@@ -306,7 +305,7 @@ public class Provisioner {
             if (version.endsWith("-SNAPSHOT")) {
                 String baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
                 String mavenMetadataUrl = format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
-                log.info("Loading: " + mavenMetadataUrl);
+                log.finest("Loading: " + mavenMetadataUrl);
                 String mavenMetadata = null;
                 try {
                     mavenMetadata = Utils.getText(mavenMetadataUrl);
@@ -318,11 +317,11 @@ public class Provisioner {
                     System.exit(1);
                 }
 
-                log.info(mavenMetadata);
+                log.finest(mavenMetadata);
                 String timestamp = getTagValue(mavenMetadata, "timestamp");
                 String buildnumber = getTagValue(mavenMetadata, "buildNumber");
-
-                url = format("%s/com/hazelcast/%s/%s/%s-%s-%s-%s.jar", baseUrl, artifact, version, artifact, version, timestamp, buildnumber);
+                String shortVersion = version.replace("-SNAPSHOT", "");
+                url = format("%s/com/hazelcast/%s/%s/%s-%s-%s-%s.jar", baseUrl, artifact, version, artifact, shortVersion, timestamp, buildnumber);
             } else {
                 String baseUrl = "http://repo1.maven.org/maven2";
                 url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
