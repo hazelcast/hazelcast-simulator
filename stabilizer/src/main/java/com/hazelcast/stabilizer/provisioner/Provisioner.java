@@ -294,7 +294,8 @@ public class Provisioner {
     private void mavenRetrieve(String artifact, String version) {
         File userhome = new File(System.getProperty("user.home"));
         File repositoryDir = Utils.toFile(userhome, ".m2", "repository");
-        File artifactFile = Utils.toFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
+        File artifactFile = Utils.toFile(repositoryDir, "com", "hazelcast",
+                artifact, version, format("%s-%s.jar", artifact, version));
         if (artifactFile.exists()) {
             log.finest("Using artifact: " + artifactFile + " from local maven repository");
             bash(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
@@ -310,7 +311,8 @@ public class Provisioner {
                 try {
                     mavenMetadata = Utils.getText(mavenMetadataUrl);
                 } catch (FileNotFoundException e) {
-                    log.severe("Failed to load " + artifact + "-" + version + ", because :" + mavenMetadataUrl + " was not found");
+                    log.severe("Failed to load " + artifact + "-" + version + ", because :"
+                            + mavenMetadataUrl + " was not found");
                     System.exit(1);
                 } catch (IOException e) {
                     log.severe("Could not load:" + mavenMetadataUrl);
@@ -321,7 +323,8 @@ public class Provisioner {
                 String timestamp = getTagValue(mavenMetadata, "timestamp");
                 String buildnumber = getTagValue(mavenMetadata, "buildNumber");
                 String shortVersion = version.replace("-SNAPSHOT", "");
-                url = format("%s/com/hazelcast/%s/%s/%s-%s-%s-%s.jar", baseUrl, artifact, version, artifact, shortVersion, timestamp, buildnumber);
+                url = format("%s/com/hazelcast/%s/%s/%s-%s-%s-%s.jar",
+                        baseUrl, artifact, version, artifact, shortVersion, timestamp, buildnumber);
             } else {
                 String baseUrl = "http://repo1.maven.org/maven2";
                 url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
