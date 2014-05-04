@@ -305,31 +305,24 @@ public class Provisioner {
             String url;
             if (version.endsWith("-SNAPSHOT")) {
                 String baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
-                 String mavenMetadataUrl =  format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
-                log.info("Loading: "+mavenMetadataUrl);
+                String mavenMetadataUrl = format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
+                log.info("Loading: " + mavenMetadataUrl);
                 String mavenMetadata = null;
                 try {
                     mavenMetadata = Utils.getText(mavenMetadataUrl);
-                }catch(FileNotFoundException e){
-                    log.severe("Failed to load "+artifact+"-"+version+", because :"+mavenMetadataUrl+" was not found");
+                } catch (FileNotFoundException e) {
+                    log.severe("Failed to load " + artifact + "-" + version + ", because :" + mavenMetadataUrl + " was not found");
                     System.exit(1);
-                }catch(IOException e){
-                    log.severe("Could not load:"+mavenMetadataUrl);
+                } catch (IOException e) {
+                    log.severe("Could not load:" + mavenMetadataUrl);
                     System.exit(1);
                 }
 
                 log.info(mavenMetadata);
-                int begin = mavenMetadata.indexOf("<extension>jar</extension>");
-                final Pattern pattern = Pattern.compile("<version>(.+?)</version>");
-                final Matcher matcher = pattern.matcher(mavenMetadata.substring(begin));
+                String timestamp = getTagValue(mavenMetadata, "timestamp");
+                String buildnumber = getTagValue(mavenMetadata, "buildNumber");
 
-                if(!matcher.find()){
-                    throw new RuntimeException("Could not find version in:"+mavenMetadata);
-                }
-
-                String versionValue = matcher.group(1); // Prints String I want to extract
-                log.info("versionValue:"+versionValue);
-                url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
+                url = format("%s/com/hazelcast/%s/%s/%s-%s-%s-%s.jar", baseUrl, artifact, version, artifact, version, timestamp, buildnumber);
             } else {
                 String baseUrl = "http://repo1.maven.org/maven2";
                 url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
@@ -337,6 +330,17 @@ public class Provisioner {
 
             bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
         }
+    }
+
+    private String getTagValue(String mavenMetadata, String tag) {
+        final Pattern pattern = Pattern.compile("<" + tag + ">(.+?)</" + tag + ">");
+        final Matcher matcher = pattern.matcher(mavenMetadata);
+
+        if (!matcher.find()) {
+            throw new RuntimeException("Could not find " + tag + " in:" + mavenMetadata);
+        }
+
+        return matcher.group(1);
     }
 
     private class InstallNodeTask implements Runnable {
