@@ -138,7 +138,7 @@ public class Provisioner {
         echoImportant("Successfully killed %s Agents", privateIps.size());
     }
 
-    public void installAgents() {
+    public void restart() {
         for (String ip : privateIps) {
             installAgent(ip);
         }
@@ -465,7 +465,7 @@ public class Provisioner {
             Provisioner provisioner = new Provisioner();
             for (OptionSpec spec : options.specs()) {
                 if (spec.equals(cli.restartSpec)) {
-                    provisioner.installAgents();
+                    provisioner.restart();
                     provisioner.startAgents();
                 } else if (spec.equals(cli.killSpec)) {
                     provisioner.killAgents();
