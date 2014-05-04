@@ -281,6 +281,7 @@ public class Provisioner {
         File userhome = new File("user.home");
         File repositoryDir = Utils.toFile(userhome, ".m2", "repository");
         File artifactFile = Utils.toFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
+        log.info("artifactFile: "+artifactFile);
         if (artifactFile.exists()) {
             log.info("Using artifact from local maven repo");
             bash(format("cp %s %s",artifactFile.getAbsolutePath(),hazelcastJarsDir.getAbsolutePath()));
