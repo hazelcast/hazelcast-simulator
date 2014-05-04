@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -103,7 +104,10 @@ public class Provisioner {
         //then we copy the stabilizer directory
         scpToRemote(ip, STABILIZER_HOME, "");
 
-        //here we should upload whatever else needs to be uploaded.
+        //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
+        ssh(ip, "rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar");
+        //copy the actual hazelcast jars that are going to be used by the worker.
+        scpToRemote(ip, hazelcastJarsDir.getAbsolutePath(), format("hazelcast-stabilizer-%s/lib", VERSION));
     }
 
     public void startAgents() {
@@ -187,6 +191,8 @@ public class Provisioner {
             log.info(format("Machines will use Java: %s %s", jdkFlavor, getProperty("JDK_VERSION")));
         }
 
+        prepareHazelcastJars();
+
         ComputeService compute = getComputeService();
 
         echo("Created compute");
@@ -237,6 +243,33 @@ public class Provisioner {
         echo("Duration: " + secondsToHuman(TimeUnit.MILLISECONDS.toSeconds(durationMs)));
         echoImportant(format("Successfully provisioned %s %s machines",
                 delta, getProperty("CLOUD_PROVIDER")));
+    }
+
+    private File hazelcastJarsDir;
+
+    private void prepareHazelcastJars() {
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        hazelcastJarsDir = new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString());
+
+        String versionSpec = getProperty("HAZELCAST_VERSION_SPEC", "outofthebox");
+        if (versionSpec.equals("outofthebox")) {
+            log.info("Using Hazelcast version: Out of the box");
+            bash(format("cp %s/lib/hazelcast-*.jar %s", STABILIZER_HOME, hazelcastJarsDir.getAbsolutePath()));
+        } else if (versionSpec.startsWith("path=")) {
+            String path = versionSpec.substring(5);
+            log.info("Using Hazelcast version: path=" + path);
+            bash(format("cp %s/* %s", path, hazelcastJarsDir.getAbsolutePath()));
+        } else if (versionSpec.equals("none")) {
+            log.info("Using Hazelcast version: none");
+            //we don't need to do anything
+        } else if (versionSpec.startsWith("maven=")) {
+            String version = versionSpec.substring(6);
+            log.info("Using Hazelcast version: maven="+version);
+
+        } else {
+            log.severe("Unrecognized version spec:" + versionSpec);
+            System.exit(1);
+        }
     }
 
     private class InstallNodeTask implements Runnable {
@@ -439,6 +472,14 @@ public class Provisioner {
 
     private String getProperty(String name) {
         return (String) stabilizerProperties.get(name);
+    }
+
+    private String getProperty(String name, String defaultValue) {
+        String value = (String) stabilizerProperties.get(name);
+        if (value == null) {
+            value = defaultValue;
+        }
+        return value;
     }
 
     private void echo(String s, Object... args) {
