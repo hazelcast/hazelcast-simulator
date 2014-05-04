@@ -76,29 +76,25 @@ public final class Utils {
     }
 
 
-    public static String getText(String url) {
+    public static String getText(String url) throws IOException {
+        URL website = new URL(url);
+        URLConnection connection = website.openConnection();
+
+        BufferedReader in = null;
         try {
-            URL website = new URL(url);
-            URLConnection connection = website.openConnection();
+            in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-            BufferedReader in = null;
-            try {
-                in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String inputLine;
 
-                StringBuilder response = new StringBuilder();
-                String inputLine;
+            while ((inputLine = in.readLine()) != null)
+                response.append(inputLine);
 
-                while ((inputLine = in.readLine()) != null)
-                    response.append(inputLine);
+            in.close();
 
-                in.close();
-
-                return response.toString();
-            } finally {
-                closeQuietly(in);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            return response.toString();
+        } finally {
+            closeQuietly(in);
         }
     }
 

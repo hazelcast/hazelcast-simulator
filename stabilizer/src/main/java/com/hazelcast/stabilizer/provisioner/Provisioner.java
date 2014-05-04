@@ -21,6 +21,7 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -305,7 +306,17 @@ public class Provisioner {
             if (version.endsWith("-SNAPSHOT")) {
                 String baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
                 String mavenMetadataUrl =  format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
-                String mavenMetadata = Utils.getText(mavenMetadataUrl);
+                String mavenMetadata = null;
+                try {
+                    mavenMetadata = Utils.getText(mavenMetadataUrl);
+                }catch(FileNotFoundException e){
+                    log.severe("Could not find:"+mavenMetadataUrl);
+                    System.exit(1);
+                }catch(IOException e){
+                    log.severe("Could not load:"+mavenMetadataUrl);
+                    System.exit(1);
+                }
+
                 log.info(mavenMetadata);
                 int begin = mavenMetadata.indexOf("<extension>jar</extension>");
                 final Pattern pattern = Pattern.compile("<version>(.+?)</version>");
