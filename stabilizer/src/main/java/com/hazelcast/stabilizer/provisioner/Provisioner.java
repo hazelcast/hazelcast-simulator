@@ -219,7 +219,7 @@ public class Provisioner {
             }
 
             for (NodeMetadata node : nodes) {
-                Future f = executor.submit(new InstallNodeTask(node, compute));
+                Future f = executor.submit(new InstallNodeTask(node));
                 futures.add(f);
             }
         }
@@ -240,13 +240,9 @@ public class Provisioner {
     }
 
     private class InstallNodeTask implements Runnable {
-        private final NodeMetadata node;
-        private final ComputeService compute;
         private final String ip;
 
-        InstallNodeTask(NodeMetadata node, ComputeService compute) {
-            this.node = node;
-            this.compute = compute;
+        InstallNodeTask(NodeMetadata node) {
             this.ip = node.getPrivateAddresses().iterator().next();
         }
 
