@@ -109,7 +109,7 @@ public class Provisioner {
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
             ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar", VERSION));
             //copy the actual hazelcast jars that are going to be used by the worker.
-            scpToRemote(ip, hazelcastJarsDir.getAbsolutePath(), format("hazelcast-stabilizer-%s/lib", VERSION));
+            scpToRemote(ip, hazelcastJarsDir.getAbsolutePath()+"/*.jar", format("hazelcast-stabilizer-%s/lib", VERSION));
         }
     }
 
