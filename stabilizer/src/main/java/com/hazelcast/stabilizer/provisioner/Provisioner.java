@@ -305,8 +305,8 @@ public class Provisioner {
             String url;
             if (version.endsWith("-SNAPSHOT")) {
                 String baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
-                log.info("Loading: "+baseUrl);
-                String mavenMetadataUrl =  format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
+                 String mavenMetadataUrl =  format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
+                log.info("Loading: "+mavenMetadataUrl);
                 String mavenMetadata = null;
                 try {
                     mavenMetadata = Utils.getText(mavenMetadataUrl);
