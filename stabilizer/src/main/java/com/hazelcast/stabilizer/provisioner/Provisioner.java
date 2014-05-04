@@ -278,7 +278,7 @@ public class Provisioner {
     }
 
     private void mavenRetrieve(String artifact, String version) {
-        File userhome = new File("user.home");
+        File userhome = new File(System.getProperty("user.home"));
         File repositoryDir = Utils.toFile(userhome, ".m2", "repository");
         File artifactFile = Utils.toFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
         log.info("artifactFile: "+artifactFile);
