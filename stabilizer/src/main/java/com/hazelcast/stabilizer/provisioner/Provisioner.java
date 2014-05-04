@@ -250,6 +250,7 @@ public class Provisioner {
     private void prepareHazelcastJars() {
         File tmpDir = new File(System.getProperty("java.io.tmpdir"));
         hazelcastJarsDir = new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString());
+        hazelcastJarsDir.mkdirs();
 
         String versionSpec = getProperty("HAZELCAST_VERSION_SPEC", "outofthebox");
         if (versionSpec.equals("outofthebox")) {
