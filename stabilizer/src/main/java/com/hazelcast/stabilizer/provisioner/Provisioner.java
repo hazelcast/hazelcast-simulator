@@ -35,6 +35,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.hazelcast.stabilizer.Utils.appendText;
 import static com.hazelcast.stabilizer.Utils.fileAsLines;
@@ -258,10 +260,21 @@ public class Provisioner {
 
         String versionSpec = getProperty("HAZELCAST_VERSION_SPEC", "outofthebox");
         if (versionSpec.equals("outofthebox")) {
-            log.info("Using Hazelcast version-spec: Out of the box");
+            log.info("Using Hazelcast version-spec: outofthebox");
         } else if (versionSpec.startsWith("path=")) {
             String path = versionSpec.substring(5);
             log.info("Using Hazelcast version-spec: path=" + path);
+            File file = new File(path);
+            if (!file.exists()) {
+                log.severe("Directory :" + path + " does not exist");
+                System.exit(1);
+            }
+
+            if (!file.isDirectory()) {
+                log.severe("File :" + path + " is not a directory");
+                System.exit(1);
+            }
+
             bash(format("cp %s/* %s", path, hazelcastJarsDir.getAbsolutePath()));
         } else if (versionSpec.equals("none")) {
             log.info("Using Hazelcast version-spec: none");
@@ -281,20 +294,34 @@ public class Provisioner {
         File userhome = new File(System.getProperty("user.home"));
         File repositoryDir = Utils.toFile(userhome, ".m2", "repository");
         File artifactFile = Utils.toFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
-        log.info("artifactFile: "+artifactFile);
         if (artifactFile.exists()) {
-            log.info("Using artifact from local maven repo");
-            bash(format("cp %s %s",artifactFile.getAbsolutePath(),hazelcastJarsDir.getAbsolutePath()));
+            log.finest("Using artifact: " + artifactFile + " from local maven repository");
+
+            bash(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
         } else {
-            log.info("Downloading artifact from repository");
-            String baseUrl;
+            log.finest("Artifact: " + artifactFile + " is not found in local maven repository, trying online one");
+
+            String url;
             if (version.endsWith("-SNAPSHOT")) {
-                baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
+                String baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
+                String mavenMetadataUrl =  format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
+                String mavenMetadata = Utils.getText(mavenMetadataUrl);
+                int begin = mavenMetadata.indexOf("<extension>jar</extension>");
+                final Pattern pattern = Pattern.compile("<version>(.+?)</version>");
+                final Matcher matcher = pattern.matcher(mavenMetadata.substring(begin));
+
+                if(!matcher.find()){
+                    throw new RuntimeException("Could not find version in:"+mavenMetadata);
+                }
+
+                String versionValue = matcher.group(1); // Prints String I want to extract
+                log.info("versionValue:"+versionValue);
+                url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
             } else {
-                baseUrl = "http://repo1.maven.org/maven2";
+                String baseUrl = "http://repo1.maven.org/maven2";
+                url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
             }
 
-            String url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
             bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
         }
     }

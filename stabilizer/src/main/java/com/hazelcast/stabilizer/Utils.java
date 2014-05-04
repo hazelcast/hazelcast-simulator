@@ -43,6 +43,8 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.Socket;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -63,7 +65,6 @@ public final class Utils {
     public final static String FILE_SEPERATOR = System.getProperty("file.separator");
 
     private final static String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
-    private final static String EXCEPTION_MESSAGE_SEPARATOR = "------ %MSG% ------";
 
     public static void fixRemoteStackTrace(Throwable remoteCause, StackTraceElement[] localSideStackTrace) {
         StackTraceElement[] remoteStackTrace = remoteCause.getStackTrace();
@@ -72,6 +73,33 @@ public final class Utils {
         newStackTrace[remoteStackTrace.length] = new StackTraceElement(EXCEPTION_SEPARATOR, "", null, -1);
         System.arraycopy(localSideStackTrace, 1, newStackTrace, remoteStackTrace.length + 1, localSideStackTrace.length - 1);
         remoteCause.setStackTrace(newStackTrace);
+    }
+
+
+    public static String getText(String url) {
+        try {
+            URL website = new URL(url);
+            URLConnection connection = website.openConnection();
+
+            BufferedReader in = null;
+            try {
+                in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+
+                while ((inputLine = in.readLine()) != null)
+                    response.append(inputLine);
+
+                in.close();
+
+                return response.toString();
+            } finally {
+                closeQuietly(in);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static File toFile(File file, String... items) {
