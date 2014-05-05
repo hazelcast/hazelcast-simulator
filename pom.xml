@@ -19,6 +19,7 @@
     </repositories>
 
     <properties>
+        <!-- we want to remain java 1.6 compatible -->
         <java.version>1.6</java.version>
         <junit.version>4.11</junit.version>
         <hazelcast.version>3.2.1</hazelcast.version>
@@ -48,6 +49,21 @@
         <name>Hazelcast, Inc.</name>
         <url>http://www.hazelcast.com/</url>
     </organization>
+
+    <developers>
+        <developer>
+            <id>pveentjer</id>
+            <name>Peter Veentjer</name>
+            <email>peter.veentjer@hazelcast.com</email>
+        </developer>
+    </developers>
+
+    <distributionManagement>
+        <repository>
+            <id>release-repository</id>
+            <url>file:///tmp</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <plugins>
