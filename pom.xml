@@ -33,6 +33,12 @@
         <module>dist</module>
     </modules>
 
+    <scm>
+        <connection>scm:git:git@github.com:hazelcast/hazelcast-stabilizer.git</connection>
+        <developerConnection>scm:git:git@github.com:hazelcast/hazelcast-stabilizer.git</developerConnection>
+        <url>https://github.com/hazelcast/hazelcast-stabilizer</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
