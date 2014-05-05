@@ -16,6 +16,7 @@ import com.hazelcast.stabilizer.tests.TestRunner;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ITopicTest extends AbstractTest {
@@ -92,7 +93,7 @@ public class ITopicTest extends AbstractTest {
     }
 
     @Override
-    public void stop(long timeoutMs) throws InterruptedException {
+    public void stop(long timeoutMs) throws Exception {
         //todo: we should calculate remining timeout
         super.stop(timeoutMs);
 

@@ -167,7 +167,7 @@ public abstract class AbstractTest implements Test {
     }
 
     @Override
-    public void stop(long timeout) throws InterruptedException, TimeoutException {
+    public void stop(long timeout) throws Exception {
         long startTime = System.currentTimeMillis();
         long usedMs = 0;
         stop = true;
