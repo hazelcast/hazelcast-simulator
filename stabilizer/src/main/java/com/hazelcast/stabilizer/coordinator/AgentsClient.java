@@ -7,7 +7,8 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.stabilizer.common.AddressPair;
+import com.hazelcast.stabilizer.common.AgentAddress;
+import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
@@ -39,17 +40,15 @@ public class AgentsClient {
 
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentsClient.class);
 
-    private final Coordinator coordinator;
     private final File agentFile;
     private final List<AgentClient> agents = new LinkedList<AgentClient>();
 
     private final ExecutorService agentExecutor = Executors.newFixedThreadPool(100);
 
-    public AgentsClient(Coordinator coordinator, File agentFile) {
-        this.coordinator = coordinator;
+    public AgentsClient(File agentFile) {
         this.agentFile = agentFile;
 
-        for (AddressPair address : getMachineAddresses()) {
+        for (AgentAddress address : AgentsFile.load(agentFile)) {
             AgentClient client = new AgentClient(address);
             agents.add(client);
         }
@@ -99,45 +98,8 @@ public class AgentsClient {
         log.warning(sb.toString());
     }
 
-    private List<AddressPair> getMachineAddresses() {
-        String content = Utils.fileAsText(agentFile);
-
-        String[] addresses = content.split("\n");
-        int lineNumber = 1;
-        List<AddressPair> pairs = new LinkedList<AddressPair>();
-        for (String line : addresses) {
-            String[] chunks = line.trim().split(",");
-            AddressPair pair = new AddressPair();
-            switch (chunks.length) {
-                case 1:
-                    pair.publicAddress = chunks[0];
-                    pair.privateAddress = chunks[0];
-                    break;
-                case 2:
-                    pair.publicAddress = chunks[0];
-                    pair.privateAddress = chunks[1];
-                    break;
-                default:
-                    log.severe(format("Line %s of file %s is invalid, it should contain 1 or 2 addresses separated by a comma, " +
-                            "but contains %s", lineNumber, agentFile, chunks.length));
-                    System.exit(1);
-                    break;
-            }
-            pairs.add(pair);
-        }
-        return pairs;
-    }
-
     public int getAgentCount() {
         return agents.size();
-    }
-
-    public List<String> getPublicAddresses() {
-        List<String> result = new LinkedList<String>();
-        for (AgentClient client : agents) {
-            result.add(client.publicAddress);
-        }
-        return result;
     }
 
     public List<String> getPrivateAddresses() {
@@ -365,9 +327,9 @@ public class AgentsClient {
         final String publicAddress;
         final String privateIp;
 
-        public AgentClient(AddressPair addressPair) {
-            this.publicAddress = addressPair.publicAddress;
-            this.privateIp = addressPair.privateAddress;
+        public AgentClient(AgentAddress address) {
+            this.publicAddress = address.publicAddress;
+            this.privateIp = address.privateAddress;
         }
 
         private Object execute(String service, Object... args) throws Exception {

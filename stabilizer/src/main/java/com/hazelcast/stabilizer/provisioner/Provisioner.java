@@ -6,6 +6,8 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.stabilizer.common.AgentAddress;
+import com.hazelcast.stabilizer.common.AgentsFile;
 import joptsimple.OptionException;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -25,9 +27,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -40,7 +44,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.stabilizer.Utils.appendText;
-import static com.hazelcast.stabilizer.Utils.fileAsLines;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
@@ -65,7 +68,7 @@ public class Provisioner {
     //big number of threads, but they are used to offload ssh tasks. So there is no load on this machine..
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
 
-    private final List<String> privateIps = Collections.synchronizedList(new LinkedList<String>());
+    private final List<AgentAddress> addresses = Collections.synchronizedList(new LinkedList<AgentAddress>());
 
     public Provisioner() throws Exception {
         log.info("Hazelcast Stabilizer Provisioner");
@@ -76,11 +79,7 @@ public class Provisioner {
             agentsFile.createNewFile();
         }
 
-        for (String line : fileAsLines(agentsFile)) {
-            if (line.length() > 0) {
-                privateIps.add(line);
-            }
-        }
+        addresses.addAll(AgentsFile.load(agentsFile));
     }
 
     private static Properties loadStabilizerProperties() {
@@ -117,19 +116,19 @@ public class Provisioner {
     }
 
     public void startAgents() {
-        echoImportant("Starting %s Agents", privateIps.size());
+        echoImportant("Starting %s Agents", addresses.size());
 
-        for (String ip : privateIps) {
-            echo("Killing Agent %s", ip);
-            ssh(ip, "killall -9 java || true");
+        for (AgentAddress address : addresses) {
+            echo("Killing Agent %s", address.publicAddress);
+            ssh(address.publicAddress, "killall -9 java || true");
         }
 
-        for (String ip : privateIps) {
-            echo("Starting Agent %s", ip);
-            ssh(ip, format("nohup hazelcast-stabilizer-%s/bin/agent > agent.out 2> agent.err < /dev/null &", VERSION));
+        for (AgentAddress address : addresses) {
+            echo("Starting Agent %s", address.publicAddress);
+            ssh(address.publicAddress, format("nohup hazelcast-stabilizer-%s/bin/agent > agent.out 2> agent.err < /dev/null &", VERSION));
         }
 
-        echoImportant("Successfully started %s Agents", privateIps.size());
+        echoImportant("Successfully started %s Agents", addresses.size());
     }
 
     void startAgent(String ip) {
@@ -138,25 +137,25 @@ public class Provisioner {
     }
 
     void killAgents() {
-        echoImportant("Killing %s Agents", privateIps.size());
+        echoImportant("Killing %s Agents", addresses.size());
 
-        for (String ip : privateIps) {
-            echo("Killing Agent, %s", ip);
-            ssh(ip, "killall -9 java || true");
+        for (AgentAddress address : addresses) {
+            echo("Killing Agent, %s", address.publicAddress);
+            ssh(address.publicAddress, "killall -9 java || true");
         }
 
-        echoImportant("Successfully killed %s Agents", privateIps.size());
+        echoImportant("Successfully killed %s Agents", addresses.size());
     }
 
     public void restart() {
         prepareHazelcastJars();
-        for (String ip : privateIps) {
-            installAgent(ip);
+        for (AgentAddress address : addresses) {
+            installAgent(address.publicAddress);
         }
     }
 
     public void scale(int size) throws Exception {
-        int delta = size - privateIps.size();
+        int delta = size - addresses.size();
         if (delta == 0) {
             echo("Ignoring spawn machines, desired number of machines already exists");
         } else if (delta < 0) {
@@ -225,10 +224,16 @@ public class Provisioner {
             Set<? extends NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", batch, template);
 
             for (NodeMetadata node : nodes) {
-                String ip = node.getPrivateAddresses().iterator().next();
-                echo("\t" + ip + " LAUNCHED");
-                appendText(ip + "\n", agentsFile);
-                privateIps.add(ip);
+                String privateIpAddress = node.getPrivateAddresses().iterator().next();
+                String publicIpAddress = node.getPublicAddresses().iterator().next();
+
+                echo("\t" + publicIpAddress + " LAUNCHED");
+                appendText(publicIpAddress + "," + privateIpAddress + "\n", agentsFile);
+
+                AgentAddress address = new AgentAddress();
+                address.privateAddress = privateIpAddress;
+                address.publicAddress = publicIpAddress;
+                addresses.add(address);
             }
 
             for (NodeMetadata node : nodes) {
@@ -416,31 +421,31 @@ public class Provisioner {
     }
 
     public void download() {
-        echoImportant("Download artifacts of %s machines", privateIps.size());
+        echoImportant("Download artifacts of %s machines", addresses.size());
 
         bash("mkdir -p workers");
 
-        for (String ip : privateIps) {
-            echo("Downloading from %s", ip);
+        for (AgentAddress address : addresses) {
+            echo("Downloading from %s", address.publicAddress);
 
             String syncCommand = format("rsync  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
-                    getProperty("SSH_OPTIONS"), getProperty("USER"), ip, getVersion());
+                    getProperty("SSH_OPTIONS"), getProperty("USER"), address.publicAddress, getVersion());
 
             bash(syncCommand);
         }
 
-        echoImportant("Finished Downloading Artifacts of %s machines", privateIps.size());
+        echoImportant("Finished Downloading Artifacts of %s machines", addresses.size());
     }
 
     public void clean() {
-        echoImportant("Cleaning worker homes of %s machines", privateIps.size());
+        echoImportant("Cleaning worker homes of %s machines", addresses.size());
 
-        for (String ip : privateIps) {
-            echo("Cleaning %s", ip);
-            ssh(ip, format("rm -fr hazelcast-stabilizer-%s/workers/*", getVersion()));
+        for (AgentAddress address : addresses) {
+            echo("Cleaning %s", address.publicAddress);
+            ssh(address.publicAddress, format("rm -fr hazelcast-stabilizer-%s/workers/*", getVersion()));
         }
 
-        echoImportant("Finished cleaning worker homes of %s machines", privateIps.size());
+        echoImportant("Finished cleaning worker homes of %s machines", addresses.size());
     }
 
     public void terminate() {
@@ -448,8 +453,8 @@ public class Provisioner {
     }
 
     public void terminate(int count) {
-        if (count > privateIps.size()) {
-            count = privateIps.size();
+        if (count > addresses.size()) {
+            count = addresses.size();
         }
 
         echoImportant(format("Terminating %s %s machines (can take some time)", count, getProperty("CLOUD_PROVIDER")));
@@ -457,17 +462,21 @@ public class Provisioner {
         long startMs = System.currentTimeMillis();
 
         for (int batch : calcBatches(count)) {
-            final List<String> terminateList = privateIps.subList(0, batch);
+            final Map<String, AgentAddress> terminateMap = new HashMap<String, AgentAddress>();
+            for (AgentAddress address : addresses.subList(0, batch)) {
+                terminateMap.put(address.publicAddress, address);
+            }
 
             ComputeService computeService = getComputeService();
             computeService.destroyNodesMatching(
                     new Predicate<NodeMetadata>() {
                         @Override
                         public boolean apply(NodeMetadata nodeMetadata) {
-                            for (String ip : nodeMetadata.getPrivateAddresses()) {
-                                if (terminateList.remove(ip)) {
+                            for (String ip : nodeMetadata.getPublicAddresses()) {
+                                AgentAddress address = terminateMap.remove(ip);
+                                if (address != null) {
                                     echo(format("\t%s Terminating", ip));
-                                    privateIps.remove(ip);
+                                    addresses.remove(address);
                                     return true;
                                 }
                             }
@@ -479,21 +488,14 @@ public class Provisioner {
 
         log.info("Updating " + agentsFile.getAbsolutePath());
 
-        writeAgentsFile();
+        AgentsFile.save(agentsFile, addresses);
 
         long durationSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startMs);
         echo("Duration: " + secondsToHuman(durationSeconds));
         echoImportant("Finished terminating %s %s machines, %s machines remaining.",
-                count, CLOUD_PROVIDER, privateIps.size());
+                count, CLOUD_PROVIDER, addresses.size());
     }
 
-    private void writeAgentsFile() {
-        String text = "";
-        for (String ip : privateIps) {
-            text += ip + "\n";
-        }
-        Utils.writeText(text, agentsFile);
-    }
 
     private void bash(String command) {
         StringBuffer sout = new StringBuffer();

@@ -61,7 +61,7 @@ public class Coordinator {
     public Properties properties;
 
     private void run() throws Exception {
-        agentsClient = new AgentsClient(this, agentsFile);
+        agentsClient = new AgentsClient(agentsFile);
         agentsClient.awaitAgentsReachable();
 
         initMemberWorkerCount(workerJvmSettings);
