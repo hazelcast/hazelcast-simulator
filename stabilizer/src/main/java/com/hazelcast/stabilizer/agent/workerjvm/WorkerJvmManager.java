@@ -187,7 +187,7 @@ public class WorkerJvmManager {
         log.info("Finished terminating workers");
     }
 
-    public void destroyWorker(final WorkerJvm jvm) {
+    public void terminateWorker(final WorkerJvm jvm) {
         workerJvms.remove(jvm.id);
 
         Thread t = new Thread() {

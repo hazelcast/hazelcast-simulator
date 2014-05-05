@@ -34,7 +34,7 @@ import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
 public class WorkerJvmFailureMonitor {
     private final static ILogger log = Logger.getLogger(WorkerJvmFailureMonitor.class);
-    private  final static int LAST_SEEN_TIMEOUT_MS = 60 * 1000;
+    private final static int LAST_SEEN_TIMEOUT_MS = 60 * 1000;
 
     private final Agent agent;
     private final BlockingQueue<Failure> failureQueue = new LinkedBlockingQueue<Failure>();
@@ -66,18 +66,14 @@ public class WorkerJvmFailureMonitor {
 
             detectOomeFailure(jvm, failures);
 
-            detectUnexpectedExit(jvm, failures);
-
             detectExceptions(jvm, failures);
 
             detectInactivity(jvm, failures);
 
-            if (!failures.isEmpty()) {
-                workerJvmManager.destroyWorker(jvm);
+            detectUnexpectedExit(jvm, failures);
 
-                for (Failure failure : failures) {
-                    publish(failure);
-                }
+            for (Failure failure : failures) {
+                publish(failure);
             }
         }
     }
@@ -147,22 +143,27 @@ public class WorkerJvmFailureMonitor {
 
     private void detectUnexpectedExit(WorkerJvm jvm, List<Failure> failures) {
         Process process = jvm.process;
+        int exitCode;
         try {
-            int exitCode = process.exitValue();
-
-            if (exitCode == 0) {
-                return;
-            }
-
-            Failure failure = new Failure();
-            failure.message = "Exit code not 0, but was " + exitCode;
-            failure.agentAddress = getHostAddress();
-            failure.workerAddress = jvm.memberAddress;
-            failure.workerId = jvm.id;
-            failure.testCase = agent.getTestCase();
-            failures.add(failure);
+            exitCode = process.exitValue();
         } catch (IllegalThreadStateException ignore) {
+            //process is still running.
+            return;
         }
+
+        if (exitCode == 0) {
+            return;
+        }
+
+        agent.getWorkerJvmManager().terminateWorker(jvm);
+
+        Failure failure = new Failure();
+        failure.message = "Exit code not 0, but was " + exitCode;
+        failure.agentAddress = getHostAddress();
+        failure.workerAddress = jvm.memberAddress;
+        failure.workerId = jvm.id;
+        failure.testCase = agent.getTestCase();
+        failures.add(failure);
     }
 
     private class FailureMonitorThread extends Thread {

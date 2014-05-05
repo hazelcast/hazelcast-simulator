@@ -149,7 +149,7 @@ public class AgentRemoteService {
             try {
                 agent.getWorkerJvmManager().terminateWorkers();
             } catch (Exception e) {
-                log.severe("Failed to terminate workers", e);
+                log.severe("Failed to terminateWorker workers", e);
                 throw e;
             }
         }

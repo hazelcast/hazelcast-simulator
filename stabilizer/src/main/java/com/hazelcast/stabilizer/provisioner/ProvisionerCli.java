@@ -21,7 +21,7 @@ public class ProvisionerCli {
             "Number of machines to scale to")
             .withRequiredArg().ofType(Integer.class);
 
-    public final OptionSpec terminateSpec = parser.accepts("terminate",
+    public final OptionSpec terminateSpec = parser.accepts("terminateWorker",
             "Terminate all members in the provisioner");
 
     public final OptionSpec killSpec = parser.accepts("kill",
