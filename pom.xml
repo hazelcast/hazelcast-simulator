@@ -39,6 +39,16 @@
         <url>https://github.com/hazelcast/hazelcast-stabilizer</url>
     </scm>
 
+    <issueManagement>
+        <system>Github</system>
+        <url>https://github.com/hazelcast/hazelcast-stabilizer</url>
+    </issueManagement>
+
+    <organization>
+        <name>Hazelcast, Inc.</name>
+        <url>http://www.hazelcast.com/</url>
+    </organization>
+
     <build>
         <plugins>
             <plugin>
