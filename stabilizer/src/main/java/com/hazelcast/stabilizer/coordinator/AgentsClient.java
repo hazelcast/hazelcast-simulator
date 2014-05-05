@@ -2,12 +2,12 @@ package com.hazelcast.stabilizer.coordinator;
 
 
 import com.hazelcast.logging.ILogger;
-import com.hazelcast.stabilizer.NoWorkerAvailableException;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.stabilizer.common.AddressPair;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
@@ -33,6 +33,7 @@ import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.stabilizer.Utils.closeQuietly;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
+import static java.lang.String.format;
 
 public class AgentsClient {
 
@@ -48,7 +49,7 @@ public class AgentsClient {
         this.coordinator = coordinator;
         this.agentFile = agentFile;
 
-        for (String address : getMachineAddresses()) {
+        for (AddressPair address : getMachineAddresses()) {
             AgentClient client = new AgentClient(address);
             agents.add(client);
         }
@@ -66,9 +67,9 @@ public class AgentsClient {
                 try {
                     agent.execute(AgentRemoteService.SERVICE_ECHO, "livecheck");
                     it.remove();
-                    log.info("Connect to agent " + agent.getHost() + " OK");
+                    log.info("Connect to agent " + agent.publicAddress + " OK");
                 } catch (Exception e) {
-                    log.info("Connect to agent " + agent.getHost() + " FAILED");
+                    log.info("Connect to agent " + agent.publicAddress + " FAILED");
                     log.finest(e);
                 }
             }
@@ -92,26 +93,56 @@ public class AgentsClient {
 
         StringBuilder sb = new StringBuilder("The Coordinator has dropped the following agents because they are not reachable:\n");
         for (AgentClient agent : unchecked) {
-            sb.append("\t").append(agent.host).append("\n");
+            sb.append("\t").append(agent.publicAddress).append("\n");
         }
 
         log.warning(sb.toString());
     }
 
-    private String[] getMachineAddresses() {
+    private List<AddressPair> getMachineAddresses() {
         String content = Utils.fileAsText(agentFile);
+
         String[] addresses = content.split("\n");
-        return addresses;
+        int lineNumber = 1;
+        List<AddressPair> pairs = new LinkedList<AddressPair>();
+        for (String line : addresses) {
+            String[] chunks = line.trim().split(",");
+            AddressPair pair = new AddressPair();
+            switch (chunks.length) {
+                case 1:
+                    pair.publicAddress = chunks[0];
+                    pair.privateAddress = chunks[0];
+                    break;
+                case 2:
+                    pair.publicAddress = chunks[0];
+                    pair.privateAddress = chunks[1];
+                    break;
+                default:
+                    log.severe(format("Line %s of file %s is invalid, it should contain 1 or 2 addresses separated by a comma, " +
+                            "but contains %s", lineNumber, agentFile, chunks.length));
+                    System.exit(1);
+                    break;
+            }
+        }
+        return pairs;
     }
 
     public int getAgentCount() {
         return agents.size();
     }
 
-    public List<String> getHostAddresses() {
+    public List<String> getPublicAddresses() {
         List<String> result = new LinkedList<String>();
         for (AgentClient client : agents) {
-            result.add(client.getHost());
+            result.add(client.publicAddress);
+        }
+        return result;
+    }
+
+    public List<String> getPrivateAddresses() {
+        List<String> result = new LinkedList<String>();
+        for (AgentClient client : agents) {
+            result.add(client.privateIp);
         }
         return result;
     }
@@ -206,8 +237,8 @@ public class AgentsClient {
                 }
 
                 Utils.fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
-                if(cause instanceof RuntimeException){
-                    throw ((RuntimeException)cause);
+                if (cause instanceof RuntimeException) {
+                    throw ((RuntimeException) cause);
                 }
 
                 throw new RuntimeException(e);
@@ -308,7 +339,7 @@ public class AgentsClient {
         try {
             getAllFutures(Arrays.asList(f));
         } catch (Throwable e) {
-           //ignore
+            //ignore
         }
     }
 
@@ -330,14 +361,12 @@ public class AgentsClient {
 
     private static class AgentClient {
 
-        private final String host;
+        final String publicAddress;
+        final String privateIp;
 
-        public AgentClient(String host) {
-            this.host = host;
-        }
-
-        public String getHost() {
-            return host;
+        public AgentClient(AddressPair addressPair) {
+            this.publicAddress = addressPair.publicAddress;
+            this.privateIp = addressPair.privateAddress;
         }
 
         private Object execute(String service, Object... args) throws Exception {
@@ -369,10 +398,10 @@ public class AgentsClient {
         //and we don't want to depend on state within the socket.
         private Socket newSocket() throws IOException {
             try {
-                InetAddress hostAddress = InetAddress.getByName(host);
+                InetAddress hostAddress = InetAddress.getByName(publicAddress);
                 return new Socket(hostAddress, AgentRemoteService.PORT);
             } catch (IOException e) {
-                throw new IOException("Couldn't connect to host: " + host + ":" + AgentRemoteService.PORT, e);
+                throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, e);
             }
         }
     }

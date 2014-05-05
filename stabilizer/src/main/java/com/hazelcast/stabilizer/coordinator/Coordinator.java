@@ -69,7 +69,6 @@ public class Coordinator {
         initClientHzConfig(workerJvmSettings);
 
         int agentCount = agentsClient.getAgentCount();
-        log.info(format("Worker track logging: %s", workerJvmSettings.trackLogging));
         log.info(format("Total number of agents: %s", agentCount));
         log.info(format("Total number of Hazelcast Member workers: %s", workerJvmSettings.memberWorkerCount));
         log.info(format("Total number of Hazelcast Client workers: %s", workerJvmSettings.clientWorkerCount));
@@ -116,8 +115,11 @@ public class Coordinator {
         int port = getPort(settings);
 
         StringBuffer members = new StringBuffer();
-        for (String hostAddress : agentsClient.getHostAddresses()) {
-            members.append("<member>").append(hostAddress).append(":" + port).append("</member>\n");
+        for (String hostAddress : agentsClient.getPrivateAddresses()) {
+            members.append("<member>")
+                    .append(hostAddress)
+                    .append(":" + port)
+                    .append("</member>\n");
         }
 
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
@@ -127,8 +129,11 @@ public class Coordinator {
         int port = getPort(settings);
 
         StringBuffer members = new StringBuffer();
-        for (String hostAddress : agentsClient.getHostAddresses()) {
-            members.append("<address>").append(hostAddress).append(":" + port).append("</address>\n");
+        for (String hostAddress : agentsClient.getPrivateAddresses()) {
+            members.append("<address>")
+                    .append(hostAddress)
+                    .append(":" + port)
+                    .append("</address>\n");
         }
 
         settings.clientHzConfig = settings.clientHzConfig.replace("<!--MEMBERS-->", members);

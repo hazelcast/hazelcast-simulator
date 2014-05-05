@@ -32,10 +32,7 @@ public class CoordinatorCli {
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");
 
-    private final OptionSpec workerTrackLoggingSpec = parser.accepts("workerTrackLogging",
-            "If the agent is tracking worker logging");
-
-    private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
+      private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
             "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
                     "If nothing is specified, the agent is free to pick a vendor."
     )
@@ -174,7 +171,6 @@ public class CoordinatorCli {
             testSuite.failFast = options.valueOf(optionSpec.failFastSpec);
 
             WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
-            workerJvmSettings.trackLogging = options.has(optionSpec.workerTrackLoggingSpec);
             workerJvmSettings.vmOptions = options.valueOf(optionSpec.workerVmOptionsSpec);
             workerJvmSettings.memberWorkerCount = options.valueOf(optionSpec.memberWorkerCountSpec);
             workerJvmSettings.clientWorkerCount = options.valueOf(optionSpec.clientWorkerCountSpec);

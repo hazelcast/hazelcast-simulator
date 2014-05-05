@@ -75,8 +75,6 @@ public class WorkerJvmLauncher {
             Process process = worker.process;
             String workerId = worker.id;
             workersInProgress.add(worker);
-            //we need to consume the inputsteam.
-            new WorkerVmInputStreamConsumer(workerId, process.getInputStream(), settings.trackLogging).start();
         }
 
         log.info(format("Finished starting %s %s worker Java Virtual Machines", count, mode));

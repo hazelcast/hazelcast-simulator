@@ -19,8 +19,7 @@ import java.io.Serializable;
 
 public class WorkerJvmSettings implements Serializable {
     public String vmOptions;
-    public boolean trackLogging;
-    public String hzConfig;
+   public String hzConfig;
 
     public int memberWorkerCount;
     public int clientWorkerCount;
@@ -39,7 +38,6 @@ public class WorkerJvmSettings implements Serializable {
 
     public WorkerJvmSettings(WorkerJvmSettings settings) {
         this.vmOptions = settings.vmOptions;
-        this.trackLogging = settings.trackLogging;
         this.hzConfig = settings.hzConfig;
         this.clientHzConfig = settings.clientHzConfig;
         this.memberWorkerCount = settings.memberWorkerCount;
@@ -61,7 +59,6 @@ public class WorkerJvmSettings implements Serializable {
     public String toString() {
         return "WorkerSettings{" +
                 "\n  vmOptions='" + vmOptions + '\'' +
-                "\n, trackLogging=" + trackLogging +
                 "\n, memberWorkerCount=" + memberWorkerCount +
                 "\n, clientWorkerCount=" + clientWorkerCount +
                 "\n, mixedWorkerCount=" + mixedWorkerCount +
