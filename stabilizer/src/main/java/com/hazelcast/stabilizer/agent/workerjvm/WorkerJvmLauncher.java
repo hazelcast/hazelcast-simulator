@@ -185,12 +185,26 @@ public class WorkerJvmLauncher {
         return args.toArray(new String[args.size()]);
     }
 
+    private boolean hasExited(WorkerJvm workerJvm){
+       try {
+           workerJvm.process.exitValue();
+           return true;
+       }catch (IllegalThreadStateException e){
+           return false;
+       }
+    }
+
     private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) throws InterruptedException {
         List<WorkerJvm> todo = new ArrayList<WorkerJvm>(workers);
 
         for (int l = 0; l < workerTimeoutSec; l++) {
             for (Iterator<WorkerJvm> it = todo.iterator(); it.hasNext(); ) {
                 WorkerJvm jvm = it.next();
+
+                if(hasExited(jvm)){
+                    String message = format("Worker failed during startup, check '%s/out.log' for more info", jvm.workerHome);
+                    throw new RuntimeException(message);
+                }
 
                 String address = readAddress(jvm);
 
