@@ -9,16 +9,15 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
-public class WorkerStreamGobbler extends Thread {
+public class WorkerJvmProcessOutputGobbler extends Thread {
 
     private final PrintWriter writer;
     private final BufferedReader reader;
 
-    public WorkerStreamGobbler(InputStream in, OutputStream out) {
+    public WorkerJvmProcessOutputGobbler(InputStream in, OutputStream out) {
         writer = new PrintWriter(out);
         reader = new BufferedReader(new InputStreamReader(in));
     }
-
 
     @Override
     public void run() {

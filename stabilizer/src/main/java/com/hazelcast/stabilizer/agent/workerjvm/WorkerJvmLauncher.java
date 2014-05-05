@@ -140,7 +140,7 @@ public class WorkerJvmLauncher {
 
         Process process = processBuilder.start();
         File logFile = new File(workerHome, "out.log");
-        new WorkerStreamGobbler(process.getInputStream(), new FileOutputStream(logFile)).start();
+        new WorkerJvmProcessOutputGobbler(process.getInputStream(), new FileOutputStream(logFile)).start();
         workerJvm.process = process;
         workerJvms.put(workerId, workerJvm);
         return workerJvm;
