@@ -506,7 +506,7 @@ public class Provisioner {
             pb = pb.redirectErrorStream(true);
 
             Process shell = pb.start();
-            new StreamGobbler(shell.getInputStream(), sout).start();
+            new StringBufferStreamGobbler(shell.getInputStream(), sout).start();
 
             // wait for the shell to finish and get the return code
             int shellExitStatus = shell.waitFor();

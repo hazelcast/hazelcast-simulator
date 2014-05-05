@@ -8,6 +8,7 @@ import com.hazelcast.stabilizer.agent.JavaInstallation;
 import com.hazelcast.stabilizer.worker.Worker;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -138,6 +139,8 @@ public class WorkerJvmLauncher {
         environment.put("JAVA_HOME", javaHome);
 
         Process process = processBuilder.start();
+        File logFile = new File(workerHome, "out.log");
+        new WorkerStreamGobbler(process.getInputStream(), new FileOutputStream(logFile)).start();
         workerJvm.process = process;
         workerJvms.put(workerId, workerJvm);
         return workerJvm;
