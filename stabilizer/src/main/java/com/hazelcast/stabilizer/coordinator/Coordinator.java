@@ -21,6 +21,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
@@ -198,8 +199,12 @@ public class Coordinator {
             index++;
         }
 
-        agentsClient.spawnWorkers(settingsArray);
-
+        try {
+            agentsClient.spawnWorkers(settingsArray);
+        }catch(SpawnWorkerFailedException e){
+            log.severe(e.getMessage());
+            System.exit(1);
+        }
         long durationMs = System.currentTimeMillis() - startMs;
         log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms",
                 masterSettings.totalWorkerCount(), durationMs)));

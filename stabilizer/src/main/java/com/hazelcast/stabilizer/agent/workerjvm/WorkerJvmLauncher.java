@@ -5,6 +5,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.JavaInstallation;
+import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
 import com.hazelcast.stabilizer.worker.Worker;
 
 import java.io.File;
@@ -56,7 +57,7 @@ public class WorkerJvmLauncher {
         testSuiteDir = agent.getTestSuiteDir();
         if (!testSuiteDir.exists()) {
             if (!testSuiteDir.mkdirs()) {
-                throw new IllegalStateException("Couldn't create testSuiteDir: " + testSuiteDir.getAbsolutePath());
+                throw new SpawnWorkerFailedException("Couldn't create testSuiteDir: " + testSuiteDir.getAbsolutePath());
             }
         }
 
@@ -118,7 +119,7 @@ public class WorkerJvmLauncher {
         File workerHome = new File(testSuiteDir, workerId);
         if (!workerHome.exists()) {
             if (!workerHome.mkdir()) {
-                throw new IllegalStateException("Could not create workerhome: " + workerHome.getAbsolutePath());
+                throw new SpawnWorkerFailedException("Could not create workerhome: " + workerHome.getAbsolutePath());
             }
         }
 
@@ -202,8 +203,9 @@ public class WorkerJvmLauncher {
                 WorkerJvm jvm = it.next();
 
                 if(hasExited(jvm)){
-                    String message = format("Worker failed during startup, check '%s/out.log' for more info", jvm.workerHome);
-                    throw new RuntimeException(message);
+                    String message = format("Startup failure: worker on host %s failed during startup, check '%s/out.log' for more info",
+                            getHostAddress(), jvm.workerHome);
+                    throw new SpawnWorkerFailedException(message);
                 }
 
                 String address = readAddress(jvm);
@@ -232,7 +234,7 @@ public class WorkerJvmLauncher {
         }
         sb.append("]");
 
-        throw new RuntimeException(format("Timeout: workers %s of testsuite %s on host %s didn't start within %s seconds",
+        throw new SpawnWorkerFailedException(format("Timeout: workers %s of testsuite %s on host %s didn't start within %s seconds",
                 sb, agent.getTestSuite().id, getHostAddress(),
                 workerTimeoutSec));
     }

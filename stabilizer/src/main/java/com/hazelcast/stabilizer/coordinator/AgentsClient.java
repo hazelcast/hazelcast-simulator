@@ -205,9 +205,9 @@ public class AgentsClient {
 //                    console.statusTopic.publish(failure);
                 }
 
-                if (cause instanceof NoWorkerAvailableException) {
-                    Utils.fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
-                    throw (NoWorkerAvailableException) cause;
+                Utils.fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
+                if(cause instanceof RuntimeException){
+                    throw ((RuntimeException)cause);
                 }
 
                 throw new RuntimeException(e);
