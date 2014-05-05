@@ -27,9 +27,11 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.Test;
 import com.hazelcast.stabilizer.tests.TestDependencies;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.GetPerformanceTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
@@ -206,7 +208,6 @@ public class Worker {
                         continue;
                     }
 
-
                     sendResponse(asList(response));
 
                     List<TestCommandResponse> responses = new LinkedList<TestCommandResponse>();
@@ -264,6 +265,9 @@ public class Worker {
             for (; ; ) {
                 try {
                     TestCommandRequest request = requestQueue.take();
+                    if(request == null){
+                        throw new NullPointerException("request can't be null");
+                    }
                     doProcess(request.id, request.task);
                 } catch (Throwable e) {
                     ExceptionReporter.report(e);
@@ -271,19 +275,21 @@ public class Worker {
             }
         }
 
-        private void doProcess(long id, TestCommand testCommand) {
+        private void doProcess(long id, TestCommand command) {
             Object result = null;
             try {
-                if (testCommand instanceof InitTestCommand) {
-                    process((InitTestCommand) testCommand);
-                } else if (testCommand instanceof StartTestCommand) {
-                    process((StartTestCommand) testCommand);
-                } else if (testCommand instanceof StopTestCommand) {
-                    process((StopTestCommand) testCommand);
-                } else if (testCommand instanceof GenericTestCommand) {
-                    result = process((GenericTestCommand) testCommand);
+                if (command instanceof InitTestCommand) {
+                    process((InitTestCommand) command);
+                } else if (command instanceof StartTestCommand) {
+                    process((StartTestCommand) command);
+                } else if (command instanceof StopTestCommand) {
+                    process((StopTestCommand) command);
+                } else if (command instanceof GenericTestCommand) {
+                    result = process((GenericTestCommand) command);
+                }else if(command instanceof GetPerformanceTestCommand){
+                    result = process((GetPerformanceTestCommand)command);
                 } else {
-                    throw new RuntimeException("Unhandled task:" + testCommand.getClass());
+                    throw new RuntimeException("Unhandled task:" + command.getClass());
                 }
             } catch (Throwable e) {
                 result = e;
@@ -293,6 +299,10 @@ public class Worker {
             response.commandId = id;
             response.result = result;
             responseQueue.add(response);
+        }
+
+        private Performance process(GetPerformanceTestCommand command) {
+            return null;
         }
 
         private void process(StartTestCommand testCommand) throws Exception {

@@ -21,7 +21,7 @@ public class FailingTest extends AbstractTest {
             if (failure.equals("Exception")) {
                 ExceptionReporter.report(new RuntimeException("Wanted exception"));
             } else if (failure.equals("OOME")) {
-                List list = new LinkedList();
+                List<byte[]> list = new LinkedList<byte[]>();
                 for (; ; ) {
                     try {
                         list.add(new byte[100 * 1000 * 1000]);

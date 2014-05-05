@@ -6,7 +6,7 @@
 
     <groupId>com.hazelcast.stabilizer</groupId>
     <artifactId>stabalizer-root</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Hazelcast Stabilizer Root</name>
 
@@ -20,12 +20,12 @@
 
     <properties>
         <java.version>1.6</java.version>
-        <junit.version>4.10</junit.version>
+        <junit.version>4.11</junit.version>
         <hazelcast.version>3.2.1</hazelcast.version>
         <jopt.version>4.4</jopt.version>
         <log4j.version>1.2.17</log4j.version>
         <jclouds.version>1.7.2</jclouds.version>
-        <groovy.version>2.2.2</groovy.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <modules>
