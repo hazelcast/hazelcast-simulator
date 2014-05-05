@@ -427,8 +427,8 @@ public final class Utils {
         }
     }
 
-    public static void exitWithError(String msg) {
-        System.out.println(msg);
+    public static void exitWithError(ILogger logger, String msg) {
+        logger.severe(msg);
         System.exit(1);
     }
 
@@ -482,7 +482,7 @@ public final class Utils {
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = new File(options.valueOf(spec));
         if (!file.exists()) {
-            exitWithError(format("%s [%s] does not exist\n", desc, file));
+            exitWithError(log,format("%s [%s] does not exist\n", desc, file));
         }
         return file;
     }

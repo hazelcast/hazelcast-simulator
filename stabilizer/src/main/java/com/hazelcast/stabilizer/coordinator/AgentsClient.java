@@ -84,7 +84,7 @@ public class AgentsClient {
         agents.removeAll(unchecked);
 
         if (agents.isEmpty()) {
-            Utils.exitWithError("There are no reachable agents");
+            Utils.exitWithError(log, "There are no reachable agents");
         }
 
         if (unchecked.isEmpty()) {
@@ -123,6 +123,7 @@ public class AgentsClient {
                     System.exit(1);
                     break;
             }
+            pairs.add(pair);
         }
         return pairs;
     }

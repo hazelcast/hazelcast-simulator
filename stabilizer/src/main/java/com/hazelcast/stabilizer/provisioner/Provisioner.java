@@ -596,7 +596,7 @@ public class Provisioner {
             }
             System.exit(0);
         } catch (OptionException e) {
-            Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");
+            Utils.exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
         } catch (Throwable e) {
             log.severe(e);
             System.exit(1);

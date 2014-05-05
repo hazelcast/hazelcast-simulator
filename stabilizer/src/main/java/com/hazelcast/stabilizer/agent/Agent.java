@@ -132,7 +132,7 @@ public class Agent {
             init(agent, args);
             agent.start();
         } catch (OptionException e) {
-            exitWithError(e.getMessage() + "\nUse --help to get overview of the help options.");
+            exitWithError(log, e.getMessage() + "\nUse --help to get overview of the help options.");
         }
     }
 }

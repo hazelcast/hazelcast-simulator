@@ -1,5 +1,6 @@
 package com.hazelcast.stabilizer.coordinator;
 
+import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.TestSuite;
@@ -22,6 +23,7 @@ import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
 import static java.lang.String.format;
 
 public class CoordinatorCli {
+    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -32,7 +34,7 @@ public class CoordinatorCli {
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");
 
-      private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
+    private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
             "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
                     "If nothing is specified, the agent is free to pick a vendor."
     )
@@ -99,7 +101,7 @@ public class CoordinatorCli {
             "The client Hazelcast xml configuration file for the worker")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
 
-      private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs",
+    private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs",
             "Maximum amount of time waiting for the Test to stop")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
 
@@ -186,7 +188,7 @@ public class CoordinatorCli {
 
             coordinator.workerJvmSettings = workerJvmSettings;
         } catch (OptionException e) {
-            Utils.exitWithError(e.getMessage() + ". Use --help to get overview of the help options.");
+            Utils.exitWithError(log,e.getMessage() + ". Use --help to get overview of the help options.");
         }
     }
 
@@ -200,12 +202,12 @@ public class CoordinatorCli {
         if (testsuiteFiles.size() == 1) {
             testsuiteFileName = testsuiteFiles.get(0);
         } else if (testsuiteFiles.size() > 1) {
-            exitWithError("Too many testsuite files specified.");
+            exitWithError(log, "Too many testsuite files specified.");
         }
 
         File testSuiteFile = new File(testsuiteFileName);
         if (!testSuiteFile.exists()) {
-            Utils.exitWithError(format("Can't find testsuite file [%s]", testSuiteFile));
+            Utils.exitWithError(log, format("Can't find testsuite file [%s]", testSuiteFile));
         }
         return testSuiteFile;
     }
@@ -230,7 +232,7 @@ public class CoordinatorCli {
                 return Integer.parseInt(value);
             }
         } catch (NumberFormatException e) {
-            exitWithError(format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
+            exitWithError(log, format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
             return -1;
         }
     }
