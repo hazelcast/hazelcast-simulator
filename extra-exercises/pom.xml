@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.hazelcast.stabilizer</groupId>
         <artifactId>stabilizer-root</artifactId>
-        <version>0.2-SNAPSHOT</version>
+        <version>0.3-SNAPSHOT</version>
     </parent>
 
     <name>Extra exercises</name>

@@ -19,9 +19,8 @@ public class WorkerStreamGobbler extends Thread {
         reader = new BufferedReader(new InputStreamReader(in));
     }
 
-    /**
-     * @see Thread#run()
-     */
+
+    @Override
     public void run() {
         try {
 
