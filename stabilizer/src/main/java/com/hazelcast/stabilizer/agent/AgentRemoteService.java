@@ -25,7 +25,6 @@ public class AgentRemoteService {
 
     public static final String SERVICE_SPAWN_WORKERS = "spawnWorkers";
     public static final String SERVICE_INIT_TESTSUITE = "initTestSuite";
-    public static final String SERVICE_CLEAN_WORKERS_HOME = "cleanWorkersHome";
     public static final String SERVICE_TERMINATE_WORKERS = "terminateWorkers";
     public static final String SERVICE_EXECUTE_ALL_WORKERS = "executeOnAllWorkers";
     public static final String SERVICE_EXECUTE_SINGLE_WORKER = "executeOnSingleWorker";
@@ -76,8 +75,6 @@ public class AgentRemoteService {
                         TestSuite testSuite = (TestSuite) in.readObject();
                         byte[] bytes = (byte[]) in.readObject();
                         initTestSuite(testSuite, bytes);
-                    } else if (SERVICE_CLEAN_WORKERS_HOME.equals(service)) {
-                        cleanWorkersHome();
                     } else if (SERVICE_TERMINATE_WORKERS.equals(service)) {
                         terminateWorkers();
                     } else if (SERVICE_EXECUTE_ALL_WORKERS.equals(service)) {
@@ -131,15 +128,6 @@ public class AgentRemoteService {
                 agent.initTestSuite(testSuite, bytes);
             } catch (Exception e) {
                 log.fatal("Failed to init testsuite: " + testSuite, e);
-                throw e;
-            }
-        }
-
-        private void cleanWorkersHome() throws Exception {
-            try {
-                agent.getWorkerJvmManager().cleanWorkersHome();
-            } catch (Exception e) {
-                log.fatal("Failed to clean workers home", e);
                 throw e;
             }
         }

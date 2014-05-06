@@ -39,7 +39,7 @@ public class StringMapTest extends AbstractTest {
     private Random random = new Random();
     private final AtomicLong operations = new AtomicLong();
 
-    //properties
+    //props
     public int writePercentage = 10;
     public int threadCount = 10;
     public int keyLength = 10;

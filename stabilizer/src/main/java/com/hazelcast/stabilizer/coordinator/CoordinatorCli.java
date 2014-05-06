@@ -3,7 +3,6 @@ package com.hazelcast.stabilizer.coordinator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.stabilizer.common.StabilizerPropertiesFile;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -11,25 +10,23 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getFile;
+import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
 import static java.lang.String.format;
 
 public class CoordinatorCli {
+
+    private final static File STABILIZER_HOME = getStablizerHome();
+
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
-
-    private final OptionSpec cleanWorkersHome = parser.accepts("cleanWorkersHome",
-            "Cleans the workers home on all agents");
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
@@ -94,6 +91,13 @@ public class CoordinatorCli {
             "The file containing the list of agent machines")
             .withRequiredArg().ofType(String.class).defaultsTo("agents.txt");
 
+    private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
+            "The file containing the stabilizer properties. If no file is explicitly configured, first the " +
+                    "working directory is checked for a file 'stabilizer.properties'. If that doesn't exist, then" +
+                    "the STABILIZER_HOME/conf/stabilizer.properties is loaded."
+    )
+            .withRequiredArg().ofType(String.class);
+
     private final OptionSpec<String> hzFileSpec = parser.accepts("hzFile",
             "The Hazelcast xml configuration file for the worker")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultHzFile());
@@ -107,6 +111,8 @@ public class CoordinatorCli {
             .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
 
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
+    private final Coordinator coordinator;
+    private OptionSet options;
 
     private static String getDefaultHzFile() {
         File file = new File("hazelcast.xml");
@@ -128,60 +134,78 @@ public class CoordinatorCli {
         }
     }
 
-      public static void init(Coordinator coordinator, String[] args) throws Exception {
-        CoordinatorCli optionSpec = new CoordinatorCli();
-
-        try {
-            OptionSet options = optionSpec.parser.parse(args);
-
-            if (options.has(optionSpec.helpSpec)) {
-                optionSpec.parser.printHelpOn(System.out);
-                System.exit(0);
-            }
-
-            coordinator.cleanWorkersHome = options.has(optionSpec.cleanWorkersHome);
-
-            if (options.has(optionSpec.workerClassPathSpec)) {
-                coordinator.workerClassPath = options.valueOf(optionSpec.workerClassPathSpec);
-            }
-
-            Properties properties = StabilizerPropertiesFile.load(new File("stabilizer.properties"));
-            coordinator.properties = properties;
-            coordinator.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
-            coordinator.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
-            coordinator.testStopTimeoutMs = options.valueOf(optionSpec.testStopTimeoutMsSpec);
-            coordinator.agentsFile = getFile(optionSpec.agentsFileSpec, options, "Agents file");
-
-            TestSuite testSuite = loadTestSuite(getTestSuiteFile(options));
-            coordinator.testSuite = testSuite;
-            testSuite.duration = getDuration(optionSpec, options);
-            testSuite.failFast = options.valueOf(optionSpec.failFastSpec);
-
-            WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
-            workerJvmSettings.vmOptions = options.valueOf(optionSpec.workerVmOptionsSpec);
-            workerJvmSettings.memberWorkerCount = options.valueOf(optionSpec.memberWorkerCountSpec);
-            workerJvmSettings.clientWorkerCount = options.valueOf(optionSpec.clientWorkerCountSpec);
-            workerJvmSettings.mixedWorkerCount = options.valueOf(optionSpec.mixedWorkerCountSpec);
-            workerJvmSettings.workerStartupTimeout = options.valueOf(optionSpec.workerStartupTimeoutSpec);
-            workerJvmSettings.hzConfig = fileAsText(getFile(optionSpec.hzFileSpec, options, "Worker Hazelcast config file"));
-            workerJvmSettings.clientHzConfig = fileAsText(getFile(optionSpec.clientHzFileSpec, options, "Worker Client Hazelcast config file"));
-            workerJvmSettings.refreshJvm = options.valueOf(optionSpec.workerRefreshSpec);
-            workerJvmSettings.javaVendor = options.valueOf(optionSpec.workerJavaVendorSpec);
-            workerJvmSettings.javaVersion = options.valueOf(optionSpec.workerJavaVersionSpec);
-            workerJvmSettings.profiler = properties.getProperty("PROFILER", "none");
-            workerJvmSettings.yourkitConfig = properties.getProperty("YOURKIT_SETTINGS");
-
-            coordinator.workerJvmSettings = workerJvmSettings;
-        } catch (OptionException e) {
-            Utils.exitWithError(log,e.getMessage() + ". Use --help to get overview of the help options.");
-        }
+    public CoordinatorCli(Coordinator coordinator) {
+        this.coordinator = coordinator;
     }
 
-    private static File getTestSuiteFile(OptionSet options) {
-        String testsuiteFileName = new File(
-                Coordinator.STABILIZER_HOME + Utils.FILE_SEPERATOR + "tests" + Utils.FILE_SEPERATOR,
-                "map.properties"
-        ).getAbsolutePath();
+    public void init(String[] args) throws Exception {
+         try {
+            options = parser.parse(args);
+        } catch (OptionException e) {
+            Utils.exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
+            return;
+        }
+
+        if (options.has(helpSpec)) {
+            parser.printHelpOn(System.out);
+            System.exit(0);
+        }
+
+        if (options.has(workerClassPathSpec)) {
+            coordinator.workerClassPath = options.valueOf(workerClassPathSpec);
+        }
+
+        coordinator.props.load(getPropertiesFile());
+        coordinator.verifyEnabled = options.valueOf(verifyEnabledSpec);
+        coordinator.monitorPerformance = options.valueOf(monitorPerformanceSpec);
+        coordinator.testStopTimeoutMs = options.valueOf(testStopTimeoutMsSpec);
+        coordinator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
+
+        TestSuite testSuite = loadTestSuite(getTestSuiteFile());
+        coordinator.testSuite = testSuite;
+        testSuite.duration = getDuration();
+        testSuite.failFast = options.valueOf(failFastSpec);
+
+        WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
+        workerJvmSettings.vmOptions = options.valueOf(workerVmOptionsSpec);
+        workerJvmSettings.memberWorkerCount = options.valueOf(memberWorkerCountSpec);
+        workerJvmSettings.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
+        workerJvmSettings.mixedWorkerCount = options.valueOf(mixedWorkerCountSpec);
+        workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
+        workerJvmSettings.hzConfig = fileAsText(getFile(hzFileSpec, options, "Worker Hazelcast config file"));
+        workerJvmSettings.clientHzConfig = fileAsText(getFile(clientHzFileSpec, options, "Worker Client Hazelcast config file"));
+        workerJvmSettings.refreshJvm = options.valueOf(workerRefreshSpec);
+        workerJvmSettings.javaVendor = options.valueOf(workerJavaVendorSpec);
+        workerJvmSettings.javaVersion = options.valueOf(workerJavaVersionSpec);
+        workerJvmSettings.profiler = coordinator.props.get("PROFILER", "none");
+        workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
+
+        coordinator.workerJvmSettings = workerJvmSettings;
+    }
+
+    private File getPropertiesFile() {
+        File file;
+        if (options.has(propertiesFileSpec)) {
+            //a file was explicitly configured
+            file = new File(options.valueOf(propertiesFileSpec));
+        } else {
+            //look in the working directory first
+            file = new File("stabilizer.properties");
+            if (!file.exists()) {
+                //if not exist, then look in the conf directory.
+                file = Utils.toFile(STABILIZER_HOME, "conf", "stabilizer.properties");
+            }
+        }
+
+        if (!file.exists()) {
+            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
+        }
+
+        return file;
+    }
+
+    private  File getTestSuiteFile() {
+        String testsuiteFileName = Utils.toFile(Coordinator.STABILIZER_HOME, "tests", "map.properties").getAbsolutePath();
 
         List<String> testsuiteFiles = options.nonOptionArguments();
         if (testsuiteFiles.size() == 1) {
@@ -197,8 +221,8 @@ public class CoordinatorCli {
         return testSuiteFile;
     }
 
-    private static int getDuration(CoordinatorCli optionSpec, OptionSet options) {
-        String value = options.valueOf(optionSpec.durationSpec);
+    private int getDuration() {
+        String value = options.valueOf(durationSpec);
 
         try {
             if (value.endsWith("s")) {

@@ -40,7 +40,7 @@ public class Agent {
 
     public final static File STABILIZER_HOME = getStablizerHome();
 
-    //cli properties
+    //cli props
     public File javaInstallationsFile;
 
     //internal state

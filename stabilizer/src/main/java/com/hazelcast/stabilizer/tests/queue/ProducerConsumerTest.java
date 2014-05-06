@@ -35,7 +35,7 @@ public class ProducerConsumerTest extends AbstractTest {
     private IQueue workQueue;
     private IAtomicLong consumed;
 
-    //properties
+    //props
     public int producerCount = 4;
     public int consumerCount = 4;
     public int maxIntervalMillis = 1000;

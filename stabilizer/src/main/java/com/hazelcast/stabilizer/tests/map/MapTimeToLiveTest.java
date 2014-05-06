@@ -26,7 +26,7 @@ import java.util.UUID;
 public class MapTimeToLiveTest extends AbstractTest {
     private IMap map;
 
-    //properties
+    //props
     public int ttlSeconds = 1;
     public int threadCount = 3;
     public int putIntervalMillis = 10;

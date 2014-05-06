@@ -40,7 +40,7 @@ public class ExecutorTest extends AbstractTest {
     private IAtomicLong executedCounter;
     private IAtomicLong expectedExecutedCounter;
 
-    //properties
+    //props
     public int executorCount = 1;
     //the number of threads submitting tasks to the executor.
     public int threadCount = 5;

@@ -21,7 +21,7 @@ public class Issue2287Test extends AbstractTest {
     private ILock lock1;
     private ILock lock2;
 
-    //properties we can tinker with
+    //props we can tinker with
     public int threadCount = 10;
 
     @Override

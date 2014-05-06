@@ -37,7 +37,7 @@ public class AtomicLongTest extends AbstractTest {
     private IAtomicLong[] counters;
     private AtomicLong operations = new AtomicLong();
 
-    //properties
+    //props
     public int countersLength = 1000;
     public int threadCount = 1;
     public int logFrequency = 10000;

@@ -19,7 +19,7 @@ import java.io.Serializable;
 
 public class WorkerJvmSettings implements Serializable {
     public String vmOptions;
-   public String hzConfig;
+    public String hzConfig;
 
     public int memberWorkerCount;
     public int clientWorkerCount;

@@ -23,13 +23,13 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.stabilizer.common.StabilizerProperties;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -37,7 +37,6 @@ import static com.hazelcast.stabilizer.Utils.createUpload;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
-import static com.hazelcast.stabilizer.coordinator.CoordinatorCli.init;
 import static java.lang.String.format;
 
 public class Coordinator {
@@ -49,7 +48,6 @@ public class Coordinator {
     public boolean monitorPerformance;
     public boolean verifyEnabled = true;
     public String workerClassPath;
-    public boolean cleanWorkersHome;
     public Integer testStopTimeoutMs;
     public File agentsFile;
     public TestSuite testSuite;
@@ -58,7 +56,7 @@ public class Coordinator {
     final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
     protected AgentsClient agentsClient;
     public WorkerJvmSettings workerJvmSettings;
-    public Properties properties;
+    public StabilizerProperties props;
 
     private void run() throws Exception {
         agentsClient = new AgentsClient(agentsFile);
@@ -70,21 +68,15 @@ public class Coordinator {
 
         int agentCount = agentsClient.getAgentCount();
         log.info(format("Total number of agents: %s", agentCount));
-        log.info(format("Total number of Hazelcast Member workers: %s", workerJvmSettings.memberWorkerCount));
-        log.info(format("Total number of Hazelcast Client workers: %s", workerJvmSettings.clientWorkerCount));
-        log.info(format("Total number of Hazelcast Mixed Client & Member Workers: %s", workerJvmSettings.mixedWorkerCount));
+        log.info(format("Total number of Hazelcast member workers: %s", workerJvmSettings.memberWorkerCount));
+        log.info(format("Total number of Hazelcast client workers: %s", workerJvmSettings.clientWorkerCount));
+        log.info(format("Total number of Hazelcast mixed client & member workers: %s", workerJvmSettings.mixedWorkerCount));
 
-        agentsClient.initTestSuite(testSuite,  createUpload(workerClassPath));
+        agentsClient.initTestSuite(testSuite, createUpload(workerClassPath));
 
         startWorkers(workerJvmSettings);
 
         new FailureMonitorThread(this).start();
-
-        if (cleanWorkersHome) {
-            echo("Starting cleanup workers home");
-            agentsClient.cleanWorkersHome();
-            echo("Finished cleanup workers home");
-        }
 
         long startMs = System.currentTimeMillis();
 
@@ -206,7 +198,7 @@ public class Coordinator {
 
         try {
             agentsClient.spawnWorkers(settingsArray);
-        }catch(SpawnWorkerFailedException e){
+        } catch (SpawnWorkerFailedException e) {
             log.severe(e.getMessage());
             System.exit(1);
         }
@@ -235,7 +227,11 @@ public class Coordinator {
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         Coordinator coordinator = new Coordinator();
-        init(coordinator, args);
+        CoordinatorCli cli = new CoordinatorCli(coordinator);
+        cli.init(args);
+
+        log.info(format("Using agents file: %s", coordinator.agentsFile.getAbsolutePath()));
+        log.info(format("Using Stabilizer properties file: %s", coordinator.props.getFile().getAbsolutePath()));
 
         try {
             coordinator.run();

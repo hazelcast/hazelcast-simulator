@@ -24,7 +24,7 @@ public class MapLockTest extends AbstractTest {
     private final AtomicLong operations = new AtomicLong();
     private IMap<String, Map<Integer, Long>> resultsPerWorker;
 
-    //properties
+    //props
     public int threadCount = 10;
     public int keyCount = 1000;
     public int logFrequency = 10000;

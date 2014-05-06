@@ -155,22 +155,6 @@ public class AgentsClient {
         getAllFutures(futures);
     }
 
-    public void cleanWorkersHome() {
-        List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_CLEAN_WORKERS_HOME);
-                    return null;
-                }
-            });
-            futures.add(f);
-        }
-
-        getAllFutures(futures);
-    }
-
     private void getAllFutures(Collection<Future> futures) {
         getAllFutures(futures, TimeUnit.SECONDS.toMillis(10000));
     }

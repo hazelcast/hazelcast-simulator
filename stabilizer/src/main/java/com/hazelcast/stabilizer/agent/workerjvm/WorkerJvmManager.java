@@ -91,12 +91,6 @@ public class WorkerJvmManager {
         new AcceptorThread().start();
     }
 
-    public void cleanWorkersHome() throws IOException {
-        for (File file : WORKERS_HOME.listFiles()) {
-            Utils.delete(file);
-        }
-    }
-
     public Collection<WorkerJvm> getWorkerJvms() {
         return workerJvms.values();
     }

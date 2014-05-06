@@ -18,7 +18,7 @@ public class GrowingMapTest extends AbstractTest {
     private IMap<Long, Long> map;
     private IdGenerator idGenerator;
 
-    //properties.
+    //props.
     public int threadCount = 10;
     public int growCount = 10000;
     public boolean usePut = true;

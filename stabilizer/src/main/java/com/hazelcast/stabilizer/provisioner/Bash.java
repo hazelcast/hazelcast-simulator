@@ -4,6 +4,7 @@ package com.hazelcast.stabilizer.provisioner;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.common.StabilizerProperties;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,9 +20,9 @@ public class Bash {
     private final String sshOptions;
     private final String user;
 
-    public Bash(Properties stabilizerProperties) {
-        this.sshOptions = (String) stabilizerProperties.get("SSH_OPTIONS");
-        this.user = (String) stabilizerProperties.get("USER");
+    public Bash(StabilizerProperties stabilizerProperties) {
+        this.sshOptions = stabilizerProperties.get("SSH_OPTIONS");
+        this.user = stabilizerProperties.get("USER");
     }
 
     public void bash(String command) {

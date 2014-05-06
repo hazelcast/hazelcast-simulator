@@ -28,7 +28,7 @@ public class ITopicTest extends AbstractTest {
     private AtomicLong operations = new AtomicLong();
     private CountDownLatch listenersCompleteLatch;
 
-    //properties
+    //props
     public int topicCount = 1000;
     public int threadCount = 5;
     public int listenersPerTopic = 1;

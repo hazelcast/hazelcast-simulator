@@ -35,7 +35,7 @@ public class Issue2343Test extends AbstractTest {
     private EntryTaskScheduler idleEvictionScheduler;
     private ConcurrentMap idleScheduledEntries;
 
-    //properties we can tinker with
+    //props we can tinker with
     public int threadCount = 10;
     public int entryCountPerThread = 100;
     public int poundTimeSeconds = 60;
