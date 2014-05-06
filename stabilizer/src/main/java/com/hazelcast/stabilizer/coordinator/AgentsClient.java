@@ -9,6 +9,7 @@ import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
+import com.hazelcast.stabilizer.common.CountdownWatch;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
@@ -176,10 +177,10 @@ public class AgentsClient {
 
     //todo: probably we don't want to throw exceptions to make sure that don't abort when a agent goes down.
     private void getAllFutures(Collection<Future> futures, long timeoutMs) {
+        CountdownWatch watch = CountdownWatch.started(timeoutMs);
         for (Future future : futures) {
             try {
-                //todo: we should calculate remaining timeoutMs
-                Object o = future.get(timeoutMs, TimeUnit.MILLISECONDS);
+                Object o = future.get(watch.getRemainingMs(), TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
 //                Failure failure = new Failure();
 //                failure.message = "Timeout waiting for remote operation to complete";

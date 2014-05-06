@@ -181,7 +181,7 @@ public final class Utils {
                 closeQuietly(stream);
             }
         } catch (IOException e) {
-            throw new RuntimeException();
+            throw new RuntimeException(e);
         }
     }
 
