@@ -69,6 +69,7 @@ public class Provisioner {
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
 
     private final List<AgentAddress> addresses = Collections.synchronizedList(new LinkedList<AgentAddress>());
+    private final Shell shell;
 
     public Provisioner() throws Exception {
         log.info("Hazelcast Stabilizer Provisioner");
@@ -80,9 +81,10 @@ public class Provisioner {
         }
 
         addresses.addAll(AgentsFile.load(agentsFile));
+        shell = new Shell(stabilizerProperties);
     }
 
-    private static Properties loadStabilizerProperties() {
+    private Properties loadStabilizerProperties() {
         Properties properties = new Properties();
         File file = new File("stabilizer.properties");
 
@@ -101,17 +103,17 @@ public class Provisioner {
 
     void installAgent(String ip) {
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
-        sshQuiet(ip, format("rm -fr hazelcast-stabilizer-%s/lib", VERSION));
+        shell.sshQuiet(ip, format("rm -fr hazelcast-stabilizer-%s/lib", VERSION));
 
         //then we copy the stabilizer directory
-        scpToRemote(ip, STABILIZER_HOME, "");
+        shell.scpToRemote(ip, STABILIZER_HOME, "");
 
         String versionSpec = getProperty("HAZELCAST_VERSION_SPEC", "outofthebox");
         if (!versionSpec.equals("outofthebox")) {
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
-            ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar", VERSION));
+            shell.ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar", VERSION));
             //copy the actual hazelcast jars that are going to be used by the worker.
-            scpToRemote(ip, hazelcastJarsDir.getAbsolutePath() + "/*.jar", format("hazelcast-stabilizer-%s/lib", VERSION));
+            shell.scpToRemote(ip, hazelcastJarsDir.getAbsolutePath() + "/*.jar", format("hazelcast-stabilizer-%s/lib", VERSION));
         }
     }
 
@@ -120,20 +122,20 @@ public class Provisioner {
 
         for (AgentAddress address : addresses) {
             echo("Killing Agent %s", address.publicAddress);
-            ssh(address.publicAddress, "killall -9 java || true");
+            shell.ssh(address.publicAddress, "killall -9 java || true");
         }
 
         for (AgentAddress address : addresses) {
             echo("Starting Agent %s", address.publicAddress);
-            ssh(address.publicAddress, format("nohup hazelcast-stabilizer-%s/bin/agent > agent.out 2> agent.err < /dev/null &", VERSION));
+            shell.ssh(address.publicAddress, format("nohup hazelcast-stabilizer-%s/bin/agent > agent.out 2> agent.err < /dev/null &", VERSION));
         }
 
         echoImportant("Successfully started %s Agents", addresses.size());
     }
 
     void startAgent(String ip) {
-        ssh(ip, "killall -9 java || true");
-        ssh(ip, format("nohup hazelcast-stabilizer-%s/bin/agent > agent.out 2> agent.err < /dev/null &", getVersion()));
+        shell.ssh(ip, "killall -9 java || true");
+        shell.ssh(ip, format("nohup hazelcast-stabilizer-%s/bin/agent > agent.out 2> agent.err < /dev/null &", getVersion()));
     }
 
     void killAgents() {
@@ -141,7 +143,7 @@ public class Provisioner {
 
         for (AgentAddress address : addresses) {
             echo("Killing Agent, %s", address.publicAddress);
-            ssh(address.publicAddress, "killall -9 java || true");
+            shell.ssh(address.publicAddress, "killall -9 java || true");
         }
 
         echoImportant("Successfully killed %s Agents", addresses.size());
@@ -281,7 +283,7 @@ public class Provisioner {
                 System.exit(1);
             }
 
-            bash(format("cp %s/* %s", path, hazelcastJarsDir.getAbsolutePath()));
+            shell.bash(format("cp %s/* %s", path, hazelcastJarsDir.getAbsolutePath()));
         } else if (versionSpec.equals("none")) {
             log.info("Using Hazelcast version-spec: none");
             //we don't need to do anything
@@ -303,7 +305,7 @@ public class Provisioner {
                 artifact, version, format("%s-%s.jar", artifact, version));
         if (artifactFile.exists()) {
             log.finest("Using artifact: " + artifactFile + " from local maven repository");
-            bash(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
+            shell.bash(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
         } else {
             log.finest("Artifact: " + artifactFile + " is not found in local maven repository, trying online one");
 
@@ -335,7 +337,7 @@ public class Provisioner {
                 url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
             }
 
-            bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
+            shell.bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
         }
     }
 
@@ -361,10 +363,10 @@ public class Provisioner {
         public void run() {
             //install java if needed
             if (!"outofthebox".equals(getProperty("JDK_FLAVOR"))) {
-                ssh(ip, "touch install-java.sh");
-                ssh(ip, "chmod +x install-java.sh");
-                scpToRemote(ip, getJavaInstallScript().getAbsolutePath(), "install-java.sh");
-                ssh(ip, "bash install-java.sh");
+                shell.ssh(ip, "touch install-java.sh");
+                shell.ssh(ip, "chmod +x install-java.sh");
+                shell.scpToRemote(ip, getJavaInstallScript().getAbsolutePath(), "install-java.sh");
+                shell.ssh(ip, "bash install-java.sh");
                 echo("\t" + ip + " JAVA INSTALLED");
             }
 
@@ -423,7 +425,7 @@ public class Provisioner {
     public void download() {
         echoImportant("Download artifacts of %s machines", addresses.size());
 
-        bash("mkdir -p workers");
+        shell.bash("mkdir -p workers");
 
         for (AgentAddress address : addresses) {
             echo("Downloading from %s", address.publicAddress);
@@ -431,7 +433,7 @@ public class Provisioner {
             String syncCommand = format("rsync  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
                     getProperty("SSH_OPTIONS"), getProperty("USER"), address.publicAddress, getVersion());
 
-            bash(syncCommand);
+            shell.bash(syncCommand);
         }
 
         echoImportant("Finished Downloading Artifacts of %s machines", addresses.size());
@@ -442,7 +444,7 @@ public class Provisioner {
 
         for (AgentAddress address : addresses) {
             echo("Cleaning %s", address.publicAddress);
-            ssh(address.publicAddress, format("rm -fr hazelcast-stabilizer-%s/workers/*", getVersion()));
+            shell.ssh(address.publicAddress, format("rm -fr hazelcast-stabilizer-%s/workers/*", getVersion()));
         }
 
         echoImportant("Finished cleaning worker homes of %s machines", addresses.size());
@@ -494,55 +496,6 @@ public class Provisioner {
         echo("Duration: " + secondsToHuman(durationSeconds));
         echoImportant("Finished terminating %s %s machines, %s machines remaining.",
                 count, CLOUD_PROVIDER, addresses.size());
-    }
-
-
-    private void bash(String command) {
-        StringBuffer sout = new StringBuffer();
-
-        log.finest("Executing bash command: " + command);
-
-        try {
-            // create a process for the shell
-            ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
-            pb = pb.redirectErrorStream(true);
-
-            Process shell = pb.start();
-            new StringBufferStreamGobbler(shell.getInputStream(), sout).start();
-
-            // wait for the shell to finish and get the return code
-            int shellExitStatus = shell.waitFor();
-
-            if (shellExitStatus != 0) {
-                echo("Failed to execute [%s]", command);
-                log.severe(sout.toString());
-                System.exit(1);
-            } else {
-                log.finest("Bash output: \n" + sout);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void scpToRemote(String ip, String src, String target) {
-        String command = format("scp -r %s %s %s@%s:%s",
-                getProperty("SSH_OPTIONS"), src, getProperty("USER"), ip, target);
-        bash(command);
-    }
-
-    private void ssh(String ip, String command) {
-        String sshCommand = format("ssh %s -q %s@%s \"%s\"",
-                getProperty("SSH_OPTIONS"), getProperty("USER"), ip, command);
-        bash(sshCommand);
-    }
-
-    private void sshQuiet(String ip, String command) {
-        String sshCommand = format("ssh %s -q %s@%s \"%s\" || true",
-                getProperty("SSH_OPTIONS"), getProperty("USER"), ip, command);
-        bash(sshCommand);
     }
 
     private String getProperty(String name) {
