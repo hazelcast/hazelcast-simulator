@@ -18,6 +18,7 @@ package com.hazelcast.stabilizer.tests;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.common.CountdownWatch;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.worker.ExceptionReporter;
@@ -168,19 +169,16 @@ public abstract class AbstractTest implements Test {
 
     @Override
     public void stop(long timeout) throws Exception {
-        long startTime = System.currentTimeMillis();
-        long usedMs = 0;
         stop = true;
 
+        CountdownWatch watch = timeout == 0 ? CountdownWatch.unboundedStarted() : CountdownWatch.started(timeout);
         try {
             for (Thread thread : threads) {
-                if (timeout != 0) {
-                    usedMs = System.currentTimeMillis() - startTime;
-                    if (usedMs >= timeout) {
-                        onTimeout(thread);
-                    }
+                long remainingMs = watch.getRemainingMs();
+                if (remainingMs == 0) {
+                    onTimeout(thread);
                 }
-                thread.join(timeout - usedMs);
+                thread.join(remainingMs);
             }
         } finally {
             threads.clear();
