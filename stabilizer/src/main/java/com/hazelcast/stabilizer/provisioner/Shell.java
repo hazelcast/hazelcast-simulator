@@ -11,13 +11,15 @@ import static java.lang.String.format;
 
 public class Shell {
     private final static ILogger log = Logger.getLogger(Shell.class);
-    private final Properties properties;
+    private final String sshOptions;
+    private final String user;
 
-    Shell(Properties properties) {
-        this.properties = properties;
+    public Shell(Properties stabilizerProperties) {
+        this.sshOptions = (String) stabilizerProperties.get("SSH_OPTIONS");
+        this.user = (String) stabilizerProperties.get("USER");
     }
 
-    void bash(String command) {
+    public void bash(String command) {
         StringBuffer sout = new StringBuffer();
 
         log.finest("Executing bash command: " + command);
@@ -47,22 +49,18 @@ public class Shell {
         }
     }
 
-    void scpToRemote(String ip, String src, String target) {
-        String command = format("scp -r %s %s %s@%s:%s",
-                properties.get("SSH_OPTIONS"), src, properties.get("USER"), ip, target);
+    public void scpToRemote(String ip, String src, String target) {
+        String command = format("scp -r %s %s %s@%s:%s", sshOptions, src, user, ip, target);
         bash(command);
     }
 
-    void ssh(String ip, String command) {
-        String sshCommand = format("ssh %s -q %s@%s \"%s\"",
-                properties.get("SSH_OPTIONS"), properties.get("USER"), ip, command);
+    public void ssh(String ip, String command) {
+        String sshCommand = format("ssh %s -q %s@%s \"%s\"", sshOptions, user, ip, command);
         bash(sshCommand);
     }
 
-    void sshQuiet(String ip, String command) {
-        String sshCommand = format("ssh %s -q %s@%s \"%s\" || true",
-                properties.get("SSH_OPTIONS"), properties.get("USER"), ip, command);
+    public void sshQuiet(String ip, String command) {
+        String sshCommand = format("ssh %s -q %s@%s \"%s\" || true", sshOptions, user, ip, command);
         bash(sshCommand);
     }
-
 }

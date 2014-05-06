@@ -1,3 +1,5 @@
+#!/bin/bash
+
 PEM_FILE=$1
 PUBLIC_RSA_KEY=$2
 

@@ -9,24 +9,39 @@ import java.util.List;
 
 import static java.lang.String.format;
 
+/**
+ * Utility class to deal with the agents-file.
+ * <p/>
+ * An agent entry can either be:
+ * <ol>
+ * <li>
+ * a single address.
+ * </li>
+ * <li>
+ * 2 addresses separated with a comma. In this case the first address is the public address, used for ssh. The second
+ * address is the private address, which is used in Hazelcast members. The public private separation is needed to deal with
+ * clouds like EC2.
+ * </li>
+ * </ol>
+ */
 public class AgentsFile {
 
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentsFile.class);
 
     public static void save(File agentsFile, List<AgentAddress> addresses) {
-        StringBuffer text = new StringBuffer();
+        StringBuffer sb = new StringBuffer();
         for (AgentAddress agentAddress : addresses) {
             if (agentAddress.publicAddress.equals(agentAddress.privateAddress)) {
-                text.append(agentAddress.publicAddress)
+                sb.append(agentAddress.publicAddress)
                         .append('\n');
             } else {
-                text.append(agentAddress.publicAddress)
+                sb.append(agentAddress.publicAddress)
                         .append(',')
                         .append(agentAddress.privateAddress)
                         .append('\n');
             }
         }
-        Utils.writeText(text.toString(), agentsFile);
+        Utils.writeText(sb.toString(), agentsFile);
     }
 
     public static List<AgentAddress> load(File agentFile) {
@@ -36,7 +51,12 @@ public class AgentsFile {
         int lineNumber = 1;
         List<AgentAddress> pairs = new LinkedList<AgentAddress>();
         for (String line : addresses) {
-            String[] chunks = line.trim().split(",");
+            String trimLine = line.trim();
+            if(trimLine.isEmpty()){
+                continue;
+            }
+
+            String[] chunks = trimLine.split(",");
             switch (chunks.length) {
                 case 1:
                     pairs.add(new AgentAddress(chunks[0], chunks[0]));

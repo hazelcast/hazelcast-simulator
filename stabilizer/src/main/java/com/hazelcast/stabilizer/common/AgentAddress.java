@@ -1,14 +1,14 @@
 package com.hazelcast.stabilizer.common;
 
 public class AgentAddress {
-    public final  String publicAddress;
+    public final String publicAddress;
     public final String privateAddress;
 
     public AgentAddress(String publicAddress, String privateAddress) {
-        if(publicAddress == null){
+        if (publicAddress == null) {
             throw new NullPointerException("publicAddress can't be null");
         }
-        if(privateAddress == null){
+        if (privateAddress == null) {
             throw new NullPointerException("privateAddress can't be null");
         }
         this.publicAddress = publicAddress;

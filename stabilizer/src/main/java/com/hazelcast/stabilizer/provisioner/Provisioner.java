@@ -232,7 +232,7 @@ public class Provisioner {
                 echo("\t" + publicIpAddress + " LAUNCHED");
                 appendText(publicIpAddress + "," + privateIpAddress + "\n", agentsFile);
 
-                AgentAddress address = new AgentAddress(publicIpAddress,privateIpAddress);
+                AgentAddress address = new AgentAddress(publicIpAddress, privateIpAddress);
                 addresses.add(address);
             }
 
@@ -472,10 +472,10 @@ public class Provisioner {
                     new Predicate<NodeMetadata>() {
                         @Override
                         public boolean apply(NodeMetadata nodeMetadata) {
-                            for (String ip : nodeMetadata.getPublicAddresses()) {
-                                AgentAddress address = terminateMap.remove(ip);
+                            for (String publicAddress : nodeMetadata.getPublicAddresses()) {
+                                AgentAddress address = terminateMap.remove(publicAddress);
                                 if (address != null) {
-                                    echo(format("\t%s Terminating", ip));
+                                    echo(format("\t%s Terminating", publicAddress));
                                     addresses.remove(address);
                                     return true;
                                 }
