@@ -230,9 +230,7 @@ public class Provisioner {
                 echo("\t" + publicIpAddress + " LAUNCHED");
                 appendText(publicIpAddress + "," + privateIpAddress + "\n", agentsFile);
 
-                AgentAddress address = new AgentAddress();
-                address.privateAddress = privateIpAddress;
-                address.publicAddress = publicIpAddress;
+                AgentAddress address = new AgentAddress(publicIpAddress,privateIpAddress);
                 addresses.add(address);
             }
 

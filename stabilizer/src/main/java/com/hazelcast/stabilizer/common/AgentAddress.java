@@ -1,8 +1,20 @@
 package com.hazelcast.stabilizer.common;
 
 public class AgentAddress {
-    public String publicAddress;
-    public String privateAddress;
+    public final  String publicAddress;
+    public final String privateAddress;
+
+    public AgentAddress(String publicAddress, String privateAddress) {
+        if(publicAddress == null){
+            throw new NullPointerException("publicAddress can't be null");
+        }
+        if(privateAddress == null){
+            throw new NullPointerException("privateAddress can't be null");
+        }
+        this.publicAddress = publicAddress;
+        this.privateAddress = privateAddress;
+    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -11,18 +23,16 @@ public class AgentAddress {
 
         AgentAddress address = (AgentAddress) o;
 
-        if (privateAddress != null ? !privateAddress.equals(address.privateAddress) : address.privateAddress != null)
-            return false;
-        if (publicAddress != null ? !publicAddress.equals(address.publicAddress) : address.publicAddress != null)
-            return false;
+        if (!privateAddress.equals(address.privateAddress)) return false;
+        if (!publicAddress.equals(address.publicAddress)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = publicAddress != null ? publicAddress.hashCode() : 0;
-        result = 31 * result + (privateAddress != null ? privateAddress.hashCode() : 0);
+        int result = publicAddress.hashCode();
+        result = 31 * result + privateAddress.hashCode();
         return result;
     }
 
