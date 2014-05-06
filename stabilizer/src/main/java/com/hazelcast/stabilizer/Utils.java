@@ -58,7 +58,7 @@ import java.util.zip.ZipOutputStream;
 import static java.lang.String.format;
 
 public final class Utils {
-    private final static ILogger log = Logger.getLogger(Utils.class);
+//    private final static ILogger log = Logger.getLogger(Utils.class);
 
     private static volatile String hostAddress;
 
@@ -292,7 +292,7 @@ public final class Utils {
                         continue;
                     }
 
-                    log.finest("Zipping: " + file.getAbsolutePath());
+//                    log.finest("Zipping: " + file.getAbsolutePath());
 
                     if (file.isDirectory()) {
                         String name = base.relativize(file.toURI()).getPath();
@@ -357,8 +357,7 @@ public final class Utils {
             String fileName = zipEntry.getName();
             File file = new File(destinationDir + File.separator + fileName);
 
-            log.finest("Unzipping: " + file.getAbsolutePath());
-
+//            log.finest("Unzipping: " + file.getAbsolutePath());
 
             if (zipEntry.isDirectory()) {
                 file.mkdirs();
@@ -483,6 +482,7 @@ public final class Utils {
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = new File(options.valueOf(spec));
         if (!file.exists()) {
+            ILogger log = Logger.getLogger(Utils.class);
             exitWithError(log,format("%s [%s] does not exist\n", desc, file));
         }
         return file;
