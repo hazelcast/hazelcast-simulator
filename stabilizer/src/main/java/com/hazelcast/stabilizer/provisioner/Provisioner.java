@@ -8,6 +8,7 @@ import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
+import com.hazelcast.stabilizer.common.StabilizerPropertiesFile;
 import joptsimple.OptionException;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -53,7 +54,8 @@ import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIO
 public class Provisioner {
     private final static ILogger log = Logger.getLogger(Provisioner.class.getName());
 
-    private final Properties stabilizerProperties = loadStabilizerProperties();
+    private final Properties stabilizerProperties = StabilizerPropertiesFile.load(new File("stabilizer.properties"));
+
     private final String VERSION = Utils.getVersion();
     private final String CLOUD_PROVIDER = getProperty("CLOUD_PROVIDER");
 
@@ -79,25 +81,9 @@ public class Provisioner {
 
         addresses.addAll(AgentsFile.load(agentsFile));
         bash = new Bash(stabilizerProperties);
-        hazelcastJars = new HazelcastJars(bash,    getProperty("HAZELCAST_VERSION_SPEC", "outofthebox"));
+        hazelcastJars = new HazelcastJars(bash, getProperty("HAZELCAST_VERSION_SPEC", "outofthebox"));
     }
 
-    private Properties loadStabilizerProperties() {
-        Properties properties = new Properties();
-        File file = new File("stabilizer.properties");
-
-        try {
-            FileInputStream inputStream = new FileInputStream(file);
-            try {
-                properties.load(inputStream);
-            } catch (IOException e) {
-                Utils.closeQuietly(inputStream);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return properties;
-    }
 
     void installAgent(String ip) {
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
@@ -219,7 +205,7 @@ public class Provisioner {
         Set<Future> futures = new HashSet<Future>();
         echo("Created machines, waiting for startup (can take a few minutes)");
 
-        String groupName = getProperty("GROUP_NAME","stabilizer-agent");
+        String groupName = getProperty("GROUP_NAME", "stabilizer-agent");
 
         for (int batch : calcBatches(delta)) {
 
@@ -237,7 +223,8 @@ public class Provisioner {
             }
 
             for (NodeMetadata node : nodes) {
-                Future f = executor.submit(new InstallNodeTask(node));
+                String publicIpAddress = node.getPublicAddresses().iterator().next();
+                Future f = executor.submit(new InstallNodeTask(publicIpAddress));
                 futures.add(f);
             }
         }
@@ -260,8 +247,8 @@ public class Provisioner {
     private class InstallNodeTask implements Runnable {
         private final String ip;
 
-        InstallNodeTask(NodeMetadata node) {
-            this.ip = node.getPrivateAddresses().iterator().next();
+        InstallNodeTask(String ip) {
+            this.ip = ip;
         }
 
         @Override

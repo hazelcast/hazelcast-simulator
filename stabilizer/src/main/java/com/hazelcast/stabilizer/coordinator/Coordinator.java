@@ -245,5 +245,4 @@ public class Coordinator {
             System.exit(1);
         }
     }
-
 }

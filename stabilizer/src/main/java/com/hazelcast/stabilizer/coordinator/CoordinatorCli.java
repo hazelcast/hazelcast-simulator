@@ -3,6 +3,7 @@ package com.hazelcast.stabilizer.coordinator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.stabilizer.common.StabilizerPropertiesFile;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -127,23 +128,7 @@ public class CoordinatorCli {
         }
     }
 
-    public static Properties loadStabilizerProperties(String file) {
-        Properties properties = new Properties();
-
-        try {
-            FileInputStream inputStream = new FileInputStream(file);
-            try {
-                properties.load(inputStream);
-            } catch (IOException e) {
-                Utils.closeQuietly(inputStream);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return properties;
-    }
-
-    public static void init(Coordinator coordinator, String[] args) throws Exception {
+      public static void init(Coordinator coordinator, String[] args) throws Exception {
         CoordinatorCli optionSpec = new CoordinatorCli();
 
         try {
@@ -160,7 +145,7 @@ public class CoordinatorCli {
                 coordinator.workerClassPath = options.valueOf(optionSpec.workerClassPathSpec);
             }
 
-            Properties properties = loadStabilizerProperties("stabilizer.properties");
+            Properties properties = StabilizerPropertiesFile.load(new File("stabilizer.properties"));
             coordinator.properties = properties;
             coordinator.verifyEnabled = options.valueOf(optionSpec.verifyEnabledSpec);
             coordinator.monitorPerformance = options.valueOf(optionSpec.monitorPerformanceSpec);
