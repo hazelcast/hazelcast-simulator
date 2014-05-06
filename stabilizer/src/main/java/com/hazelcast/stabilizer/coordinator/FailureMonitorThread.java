@@ -45,7 +45,6 @@ class FailureMonitorThread extends Thread {
     private String buildMessage(Failure failure) {
         StringBuilder sb = new StringBuilder();
         sb.append("#").append(coordinator.failureList.size()).append(" ");
-        sb.append(failure.message);
         if (failure.workerAddress != null) {
             sb.append(' ');
             sb.append(failure.workerAddress);
@@ -55,6 +54,7 @@ class FailureMonitorThread extends Thread {
             sb.append(failure.agentAddress);
             sb.append(' ');
         }
+        sb.append(failure.message);
 
         if (failure.cause != null) {
             String[] lines = failure.cause.split("\n");
@@ -65,6 +65,6 @@ class FailureMonitorThread extends Thread {
             }
         }
 
-         return sb.toString();
+        return sb.toString();
     }
 }
