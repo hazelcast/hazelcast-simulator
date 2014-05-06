@@ -54,7 +54,8 @@ import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIO
 public class Provisioner {
     private final static ILogger log = Logger.getLogger(Provisioner.class.getName());
 
-    private final Properties stabilizerProperties = StabilizerPropertiesFile.load(new File("stabilizer.properties"));
+    private final File stabilizerPropertiesFile = new File("stabilizer.properties");
+    private final Properties stabilizerProperties = StabilizerPropertiesFile.load(stabilizerPropertiesFile);
 
     private final String VERSION = Utils.getVersion();
     private final String CLOUD_PROVIDER = getProperty("CLOUD_PROVIDER");
@@ -74,6 +75,8 @@ public class Provisioner {
         log.info("Hazelcast Stabilizer Provisioner");
         log.info(format("Version: %s", getVersion()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
+        log.info(format("Using agents file: %s",agentsFile.getAbsolutePath()));
+        log.info(format("Using Stabilizer properties file: %s",stabilizerPropertiesFile.getAbsolutePath()));
 
         if (!agentsFile.exists()) {
             agentsFile.createNewFile();
