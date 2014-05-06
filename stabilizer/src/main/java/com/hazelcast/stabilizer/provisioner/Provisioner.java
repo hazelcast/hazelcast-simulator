@@ -107,7 +107,7 @@ public class Provisioner {
         bash.scpToRemote(ip, STABILIZER_HOME, "");
 
         String versionSpec = getProperty("HAZELCAST_VERSION_SPEC", "outofthebox");
-        if (!versionSpec.equals("outofthebox")) {
+        if (!versionSpec.equals("outofthebox") && !versionSpec.endsWith("none")) {
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
             bash.ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar", VERSION));
             //copy the actual hazelcast jars that are going to be used by the worker.
