@@ -164,3 +164,36 @@ coordinator --memberWorkerCount 24  --duration 12h  map.properties
 ```
 
 So we can very easily play with the actual deployment.
+
+#### Installation
+
+Unzip Hazelcast stabilizer to ~/
+
+add to ~/.bashr:
+export STABILIZER_HOME=~/hazelcast-stabilizer-0.3-SNAPSHOT
+PATH=$STABILIZER_HOME/bin:$PATH
+
+Create your test working directory, e.g.
+
+mkdir ~/tests
+
+Copy the STABILIZER_HOME/conf/stabilizer.properties to the tests directory.
+Make the changes required. The main things that need to be configured are:
+
+```
+CLOUD_PROVIDER=aws-ec2
+CLOUD_IDENTITY=<your-aws-access-key>
+CLOUD_CREDENTIAL=<your-aws-secret-key>
+PUBLIC_KEY=key.pub
+IDENTITY_FILE=yourpem.pem
+USER=ec-user
+SSH_OPTIONS=-i yourpem.pem -o StrictHostKeyChecking=no
+SECURITY_GROUP=open
+```
+
+If you are using ec2, the pem is the pem you have created in ec2 and the key.pub can be generated using the 'pemtopublicrsakey'
+utility in the STABILIZER_HOME/bin directory. I prefer to copy the pem and key file within my 'tests' directory. Remember
+that '~' doesn't work; so give relative or absolute path for key/pem.
+
+The SECURITY_GROUP needs to point to an existing Security Group. make sure that port 22, 9000 are open. Also make sure that
+port 5701..5801 are open so that the HZ members can communicate with each other.
