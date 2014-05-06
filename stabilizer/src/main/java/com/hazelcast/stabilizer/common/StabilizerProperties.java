@@ -26,7 +26,7 @@ public class StabilizerProperties {
         }
     }
 
-    public File getFile(){
+    public File getFile() {
         return file;
     }
 
@@ -35,7 +35,12 @@ public class StabilizerProperties {
     }
 
     public String get(String name, String defaultValue) {
-        String value = (String) properties.get(name);
+        String value = System.getProperty(name);
+        if (value != null) {
+            return value;
+        }
+
+        value = (String) properties.get(name);
         if (value == null) {
             value = defaultValue;
         }
