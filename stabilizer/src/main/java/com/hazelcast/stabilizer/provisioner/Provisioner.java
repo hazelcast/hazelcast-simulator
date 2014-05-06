@@ -219,9 +219,11 @@ public class Provisioner {
         Set<Future> futures = new HashSet<Future>();
         echo("Created machines, waiting for startup (can take a few minutes)");
 
+        String groupName = getProperty("GROUP_NAME","stabilizer-agent");
+
         for (int batch : calcBatches(delta)) {
 
-            Set<? extends NodeMetadata> nodes = compute.createNodesInGroup("stabilizer-agent", batch, template);
+            Set<? extends NodeMetadata> nodes = compute.createNodesInGroup(groupName, batch, template);
 
             for (NodeMetadata node : nodes) {
                 String privateIpAddress = node.getPrivateAddresses().iterator().next();
