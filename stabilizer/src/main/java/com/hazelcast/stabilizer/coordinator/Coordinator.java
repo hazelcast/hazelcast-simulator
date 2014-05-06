@@ -56,7 +56,7 @@ public class Coordinator {
     final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
     protected AgentsClient agentsClient;
     public WorkerJvmSettings workerJvmSettings;
-    public StabilizerProperties props;
+    public StabilizerProperties props = new StabilizerProperties();
 
     private void run() throws Exception {
         agentsClient = new AgentsClient(agentsFile);
