@@ -78,7 +78,7 @@ public class Bash {
         private final StringBuffer stringBuffer;
 
         public BashStreamGobbler(InputStream in, StringBuffer stringBuffer) {
-            reader = new BufferedReader(new InputStreamReader(in));
+            this.reader = new BufferedReader(new InputStreamReader(in));
             this.stringBuffer = stringBuffer;
         }
 
