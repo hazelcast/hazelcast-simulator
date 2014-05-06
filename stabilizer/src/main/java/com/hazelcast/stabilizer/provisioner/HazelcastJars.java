@@ -16,13 +16,13 @@ import static java.lang.String.format;
 public class HazelcastJars {
 
     private final static ILogger log = Logger.getLogger(HazelcastJars.class);
-    private final Shell shell;
+    private final Bash bash;
     private final String versionSpec;
 
     private File hazelcastJarsDir;
 
-    public HazelcastJars(Shell shell, String versionSpec){
-        this.shell = shell;
+    public HazelcastJars(Bash bash, String versionSpec){
+        this.bash = bash;
         this.versionSpec = versionSpec;
     }
 
@@ -51,7 +51,7 @@ public class HazelcastJars {
                 System.exit(1);
             }
 
-            shell.bash(format("cp %s/* %s", path, hazelcastJarsDir.getAbsolutePath()));
+            bash.bash(format("cp %s/* %s", path, hazelcastJarsDir.getAbsolutePath()));
         } else if (versionSpec.equals("none")) {
             log.info("Using Hazelcast version-spec: none");
             //we don't need to do anything
@@ -73,7 +73,7 @@ public class HazelcastJars {
                 artifact, version, format("%s-%s.jar", artifact, version));
         if (artifactFile.exists()) {
             log.finest("Using artifact: " + artifactFile + " from local maven repository");
-            shell.bash(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
+            bash.bash(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
         } else {
             log.finest("Artifact: " + artifactFile + " is not found in local maven repository, trying online one");
 
@@ -105,7 +105,7 @@ public class HazelcastJars {
                 url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
             }
 
-            shell.bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
+            bash.bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
         }
     }
 

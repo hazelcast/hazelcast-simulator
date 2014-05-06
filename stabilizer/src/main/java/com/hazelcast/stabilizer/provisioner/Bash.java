@@ -3,26 +3,33 @@ package com.hazelcast.stabilizer.provisioner;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Properties;
 
 import static java.lang.String.format;
 
-public class Shell {
-    private final static ILogger log = Logger.getLogger(Shell.class);
+public class Bash {
+    private final static ILogger log = Logger.getLogger(Bash.class);
+
     private final String sshOptions;
     private final String user;
 
-    public Shell(Properties stabilizerProperties) {
+    public Bash(Properties stabilizerProperties) {
         this.sshOptions = (String) stabilizerProperties.get("SSH_OPTIONS");
         this.user = (String) stabilizerProperties.get("USER");
     }
 
     public void bash(String command) {
-        StringBuffer sout = new StringBuffer();
+        StringBuffer sb = new StringBuffer();
 
-        log.finest("Executing bash command: " + command);
+        if (log.isFinestEnabled()) {
+            log.finest("Executing bash command: " + command);
+        }
 
         try {
             // create a process for the shell
@@ -30,17 +37,19 @@ public class Shell {
             pb = pb.redirectErrorStream(true);
 
             Process shell = pb.start();
-            new StringBufferStreamGobbler(shell.getInputStream(), sout).start();
+            new BashStreamGobbler(shell.getInputStream(), sb).start();
 
             // wait for the shell to finish and get the return code
             int shellExitStatus = shell.waitFor();
 
             if (shellExitStatus != 0) {
-                log.info(String.format("Failed to execute [%s]", command));
-                log.severe(sout.toString());
+                log.severe(String.format("Failed to execute [%s]", command));
+                log.severe(sb.toString());
                 System.exit(1);
             } else {
-                log.finest("Bash output: \n" + sout);
+                if (log.isFinestEnabled()) {
+                    log.finest("Bash output: \n" + sb);
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -62,5 +71,29 @@ public class Shell {
     public void sshQuiet(String ip, String command) {
         String sshCommand = format("ssh %s -q %s@%s \"%s\" || true", sshOptions, user, ip, command);
         bash(sshCommand);
+    }
+
+    public static class BashStreamGobbler extends Thread {
+        private final BufferedReader reader;
+        private final StringBuffer stringBuffer;
+
+        public BashStreamGobbler(InputStream in, StringBuffer stringBuffer) {
+            reader = new BufferedReader(new InputStreamReader(in));
+            this.stringBuffer = stringBuffer;
+        }
+
+        @Override
+        public void run() {
+            try {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stringBuffer.append(line).append("\n");
+                }
+            } catch (IOException ioException) {
+                //LOGGER.warn("System command stream gobbler error", ioException);
+            } finally {
+                Utils.closeQuietly(reader);
+            }
+        }
     }
 }
