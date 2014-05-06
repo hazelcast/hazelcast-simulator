@@ -201,7 +201,8 @@ public class WorkerJvmLauncher {
                 WorkerJvm jvm = it.next();
 
                 if(hasExited(jvm)){
-                    String message = format("Startup failure: worker on host %s failed during startup, check '%s/out.log' for more info",
+                    String message = format("Startup failure: worker on host %s failed during startup, " +
+                                    "check '%s/out.log' for more info",
                             getHostAddress(), jvm.workerHome);
                     throw new SpawnWorkerFailedException(message);
                 }

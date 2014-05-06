@@ -117,7 +117,7 @@ public class Provisioner {
 
         for (AgentAddress address : addresses) {
             echo("Starting Agent %s", address.publicAddress);
-            bash.ssh(address.publicAddress, format("nohup hazelcast-stabilizer-%s/bin/agent >agent.out &", VERSION));
+            bash.ssh(address.publicAddress, format("nohup hazelcast-stabilizer-%s/bin/agent > agent.out 2> agent.err < /dev/null &", getVersion()));
         }
 
         echoImportant("Successfully started %s Agents", addresses.size());
@@ -125,7 +125,7 @@ public class Provisioner {
 
     void startAgent(String ip) {
         bash.ssh(ip, "killall -9 java || true");
-        bash.ssh(ip, format("nohup hazelcast-stabilizer-%s/bin/agent >agent.out &", getVersion()));
+        bash.ssh(ip, format("nohup hazelcast-stabilizer-%s/bin/agent > agent.out 2> agent.err < /dev/null &", getVersion()));
     }
 
     void killAgents() {
