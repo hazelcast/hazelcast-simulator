@@ -23,8 +23,6 @@ import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 import org.jclouds.sshj.config.SshjSshClientModule;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -75,8 +73,8 @@ public class Provisioner {
         log.info("Hazelcast Stabilizer Provisioner");
         log.info(format("Version: %s", getVersion()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
-        log.info(format("Using agents file: %s",agentsFile.getAbsolutePath()));
-        log.info(format("Using Stabilizer properties file: %s",stabilizerPropertiesFile.getAbsolutePath()));
+        log.info(format("Using agents file: %s", agentsFile.getAbsolutePath()));
+        log.info(format("Using Stabilizer properties file: %s", stabilizerPropertiesFile.getAbsolutePath()));
 
         if (!agentsFile.exists()) {
             agentsFile.createNewFile();
@@ -96,11 +94,16 @@ public class Provisioner {
         bash.scpToRemote(ip, STABILIZER_HOME, "");
 
         String versionSpec = getProperty("HAZELCAST_VERSION_SPEC", "outofthebox");
-        if (!versionSpec.equals("outofthebox") && !versionSpec.endsWith("none")) {
+
+
+        if (!versionSpec.equals("outofthebox")) {
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
             bash.ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar", VERSION));
-            //copy the actual hazelcast jars that are going to be used by the worker.
-            bash.scpToRemote(ip, hazelcastJars.getAbsolutePath() + "/*.jar", format("hazelcast-stabilizer-%s/lib", VERSION));
+
+            if (!versionSpec.endsWith("none")) {
+                //copy the actual hazelcast jars that are going to be used by the worker.
+                bash.scpToRemote(ip, hazelcastJars.getAbsolutePath() + "/*.jar", format("hazelcast-stabilizer-%s/lib", VERSION));
+            }
         }
     }
 
