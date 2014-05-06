@@ -5,7 +5,6 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.JavaInstallation;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
-import com.hazelcast.stabilizer.coordinator.Coordinator;
 import com.hazelcast.stabilizer.worker.Worker;
 import org.apache.log4j.Logger;
 
@@ -185,13 +184,13 @@ public class WorkerJvmLauncher {
         return args.toArray(new String[args.size()]);
     }
 
-    private boolean hasExited(WorkerJvm workerJvm){
-       try {
-           workerJvm.process.exitValue();
-           return true;
-       }catch (IllegalThreadStateException e){
-           return false;
-       }
+    private boolean hasExited(WorkerJvm workerJvm) {
+        try {
+            workerJvm.process.exitValue();
+            return true;
+        } catch (IllegalThreadStateException e) {
+            return false;
+        }
     }
 
     private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) throws InterruptedException {
@@ -201,10 +200,11 @@ public class WorkerJvmLauncher {
             for (Iterator<WorkerJvm> it = todo.iterator(); it.hasNext(); ) {
                 WorkerJvm jvm = it.next();
 
-                if(hasExited(jvm)){
+                if (hasExited(jvm)) {
                     String message = format("Startup failure: worker on host %s failed during startup, " +
                                     "check '%s/out.log' for more info",
-                            getHostAddress(), jvm.workerHome);
+                            getHostAddress(), jvm.workerHome
+                    );
                     throw new SpawnWorkerFailedException(message);
                 }
 
