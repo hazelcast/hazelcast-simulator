@@ -16,10 +16,9 @@
 package com.hazelcast.stabilizer.agent.workerjvm;
 
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.tests.Failure;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -33,7 +32,7 @@ import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
 public class WorkerJvmFailureMonitor {
-    private final static ILogger log = Logger.getLogger(WorkerJvmFailureMonitor.class);
+    private final static Logger log = Logger.getLogger(WorkerJvmFailureMonitor.class);
     private final static int LAST_SEEN_TIMEOUT_MS = 60 * 1000;
 
     private final Agent agent;
@@ -49,7 +48,7 @@ public class WorkerJvmFailureMonitor {
     }
 
     public void publish(Failure failure) {
-        log.severe("Failure detected: " + failure);
+        log.fatal("Failure detected: " + failure);
         failureQueue.add(failure);
     }
 
@@ -176,7 +175,7 @@ public class WorkerJvmFailureMonitor {
                 try {
                     detect();
                 } catch (Exception e) {
-                    log.severe("Failed to scan for failures", e);
+                    log.fatal("Failed to scan for failures", e);
                 }
                 sleepSeconds(1);
             }

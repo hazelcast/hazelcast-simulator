@@ -15,18 +15,18 @@
  */
 package com.hazelcast.stabilizer.agent.workerjvm;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.NoWorkerAvailableException;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.TestCommandFuture;
+import com.hazelcast.stabilizer.coordinator.Coordinator;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.worker.TerminateWorkerException;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +59,7 @@ public class WorkerJvmManager {
     public final static String SERVICE_POLL_WORK = "poll";
     public final static String COMMAND_PUSH_RESPONSE = "push";
 
-    private final static ILogger log = Logger.getLogger(WorkerJvmManager.class);
+    private final static Logger log = Logger.getLogger(Coordinator.class);
     public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
     public static final int PORT = 9001;
     public static final int WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS = 10000;
@@ -196,7 +196,7 @@ public class WorkerJvmManager {
                     jvm.process.destroy();
                     jvm.process.waitFor();
                 } catch (Throwable e) {
-                    log.severe("Failed to destroy worker process: " + jvm);
+                    log.fatal("Failed to destroy worker process: " + jvm);
                 }
             }
         };
@@ -208,7 +208,7 @@ public class WorkerJvmManager {
                 throw new RuntimeException("Failed to destroy worker: " + jvm);
             }
         } catch (Exception e) {
-            log.severe(e);
+            log.fatal(e);
         }
     }
 
@@ -233,7 +233,7 @@ public class WorkerJvmManager {
                 Object result = null;
                 try {
                     if (workerJvm == null) {
-                        log.warning("No worker JVM found for id: " + workerId);
+                        log.warn("No worker JVM found for id: " + workerId);
                         result = new TerminateWorkerException();
                     } else {
                         workerJvm.lastSeen = System.currentTimeMillis();
@@ -248,7 +248,7 @@ public class WorkerJvmManager {
                             if (f != null) {
                                 f.set(response.result);
                             } else {
-                                log.severe("No future found for commandId: " + response.commandId);
+                                log.fatal("No future found for commandId: " + response.commandId);
                             }
                         } else {
                             throw new RuntimeException("Unknown service:" + service);
@@ -257,7 +257,7 @@ public class WorkerJvmManager {
                 } catch (IOException e) {
                     throw e;
                 } catch (Exception e) {
-                    log.severe("Failed to process serviceId:" + service, e);
+                    log.fatal("Failed to process serviceId:" + service, e);
                     result = e;
                 }
 
@@ -265,7 +265,7 @@ public class WorkerJvmManager {
                 out.flush();
                 clientSocket.close();
             } catch (Exception e) {
-                log.severe(e);
+                log.fatal(e);
             }
         }
     }
@@ -279,12 +279,12 @@ public class WorkerJvmManager {
             for (; ; ) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    if (log.isFinestEnabled()) {
-                        log.finest("Accepted worker request from: " + clientSocket.getRemoteSocketAddress());
+                    if (log.isDebugEnabled()) {
+                        log.debug("Accepted worker request from: " + clientSocket.getRemoteSocketAddress());
                     }
                     executor.execute(new ClientSocketTask(clientSocket));
                 } catch (IOException e) {
-                    log.severe(e);
+                    log.fatal(e);
                 }
             }
         }

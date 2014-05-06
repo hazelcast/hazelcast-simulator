@@ -1,12 +1,13 @@
 package com.hazelcast.stabilizer.agent.workerjvm;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
+
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.JavaInstallation;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
+import com.hazelcast.stabilizer.coordinator.Coordinator;
 import com.hazelcast.stabilizer.worker.Worker;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,7 +29,7 @@ import static java.lang.String.format;
 
 public class WorkerJvmLauncher {
 
-    private final static ILogger log = Logger.getLogger(WorkerJvmLauncher.class);
+    private final static Logger log = Logger.getLogger(WorkerJvmLauncher.class);
 
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
     private final static String CLASSPATH = System.getProperty("java.class.path");

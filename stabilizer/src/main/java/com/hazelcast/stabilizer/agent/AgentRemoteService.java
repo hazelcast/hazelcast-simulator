@@ -1,7 +1,5 @@
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
@@ -9,6 +7,7 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -34,7 +33,7 @@ public class AgentRemoteService {
     public static final String SERVICE_PREPARE_FOR_TEST = "prepareForTest";
     public static final String SERVICE_GET_FAILURES = "failures";
 
-    private final static ILogger log = Logger.getLogger(AgentRemoteService.class);
+    private final static Logger log = Logger.getLogger(AgentRemoteService.class.getName());
 
     private Agent agent;
     private ServerSocket serverSocket;
@@ -99,14 +98,14 @@ public class AgentRemoteService {
                         throw new RuntimeException("Unknown service:" + service);
                     }
                 } catch (Exception e) {
-                    log.severe(e);
+                    log.fatal(e);
                     result = e;
                 }
 
                 out.writeObject(result);
                 out.flush();
             } catch (Throwable e) {
-                log.severe(e);
+                log.fatal(e);
             } finally {
                 Utils.closeQuietly(clientSocket);
             }
@@ -122,7 +121,7 @@ public class AgentRemoteService {
             try {
                 agent.getWorkerJvmManager().spawn(settings);
             } catch (Exception e) {
-                log.severe("Failed to spawn workers from settings:" + settings, e);
+                log.fatal("Failed to spawn workers from settings:" + settings, e);
                 throw e;
             }
         }
@@ -131,7 +130,7 @@ public class AgentRemoteService {
             try {
                 agent.initTestSuite(testSuite, bytes);
             } catch (Exception e) {
-                log.severe("Failed to init testsuite: " + testSuite, e);
+                log.fatal("Failed to init testsuite: " + testSuite, e);
                 throw e;
             }
         }
@@ -140,7 +139,7 @@ public class AgentRemoteService {
             try {
                 agent.getWorkerJvmManager().cleanWorkersHome();
             } catch (Exception e) {
-                log.severe("Failed to clean workers home", e);
+                log.fatal("Failed to clean workers home", e);
                 throw e;
             }
         }
@@ -149,7 +148,7 @@ public class AgentRemoteService {
             try {
                 agent.getWorkerJvmManager().terminateWorkers();
             } catch (Exception e) {
-                log.severe("Failed to terminateWorker workers", e);
+                log.fatal("Failed to terminateWorker workers", e);
                 throw e;
             }
         }
@@ -158,7 +157,7 @@ public class AgentRemoteService {
             try {
                 agent.echo(msg);
             } catch (Exception e) {
-                log.severe("Failed to echo", e);
+                log.fatal("Failed to echo", e);
                 throw e;
             }
         }
@@ -167,7 +166,7 @@ public class AgentRemoteService {
             try {
                 agent.setTestCase(testCase);
             } catch (Exception e) {
-                log.severe("Failed to prepareForTest for recipe:" + testCase, e);
+                log.fatal("Failed to prepareForTest for recipe:" + testCase, e);
                 throw e;
             }
         }
@@ -183,12 +182,12 @@ public class AgentRemoteService {
             for (; ; ) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    if (log.isFinestEnabled()) {
-                        log.finest("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
+                    if (log.isDebugEnabled()) {
+                        log.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
                     }
                     executor.execute(new ClientSocketTask(clientSocket));
                 } catch (IOException e) {
-                    log.severe(e);
+                    log.fatal(e);
                 }
             }
         }

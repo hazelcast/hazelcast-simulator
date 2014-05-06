@@ -15,20 +15,20 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
+
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.stabilizer.coordinator.Coordinator;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import joptsimple.OptionException;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 
 import static com.hazelcast.stabilizer.Utils.ensureExistingDirectory;
-import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.agent.AgentCli.init;
@@ -36,7 +36,8 @@ import static java.lang.String.format;
 
 public class Agent {
 
-    private final static ILogger log = Logger.getLogger(Agent.class);
+    private final static Logger log = Logger.getLogger(Coordinator.class.getName());
+
     public final static File STABILIZER_HOME = getStablizerHome();
 
     //cli properties
@@ -93,7 +94,7 @@ public class Agent {
         File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
         ensureExistingDirectory(testSuiteDir);
 
-        System.out.println("InitTestSuite:"+testSuite.id);
+        System.out.println("InitTestSuite:" + testSuite.id);
 
         File libDir = new File(testSuiteDir, "lib");
         ensureExistingDirectory(libDir);
@@ -135,4 +136,10 @@ public class Agent {
             exitWithError(log, e.getMessage() + "\nUse --help to get overview of the help options.");
         }
     }
+
+    public static void exitWithError(Logger logger, String msg) {
+        logger.fatal(msg);
+        System.exit(1);
+    }
+
 }
