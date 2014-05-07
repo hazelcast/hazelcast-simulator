@@ -116,9 +116,9 @@ public class TestCaseRunner {
             final float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
             echo(msg);
-            if (coordinator.monitorPerformance) {
-                echo(calcPerformance().toHumanString());
-            }
+//            if (coordinator.monitorPerformance) {
+//                echo(calcPerformance().toHumanString());
+//            }
         }
 
         Utils.sleepSeconds(small);
