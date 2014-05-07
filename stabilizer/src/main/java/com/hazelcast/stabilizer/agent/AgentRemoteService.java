@@ -80,11 +80,11 @@ public class AgentRemoteService {
                     } else if (SERVICE_EXECUTE_ALL_WORKERS.equals(service)) {
                         TestCommand testCommand = (TestCommand) in.readObject();
                         WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
-                        workerJvmManager.executeOnAllWorkers(testCommand);
+                        result = workerJvmManager.executeOnAllWorkers(testCommand);
                     } else if (SERVICE_EXECUTE_SINGLE_WORKER.equals(service)) {
                         TestCommand testCommand = (TestCommand) in.readObject();
                         WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
-                        workerJvmManager.executeOnSingleWorker(testCommand);
+                        result = workerJvmManager.executeOnSingleWorker(testCommand);
                     } else if (SERVICE_ECHO.equals(service)) {
                         String msg = (String) in.readObject();
                         echo(msg);
