@@ -259,8 +259,7 @@ public class AgentsClient {
                 @Override
                 public Object call() throws Exception {
                     try {
-                        agentClient.execute(AgentRemoteService.SERVICE_EXECUTE_ALL_WORKERS, testCommand);
-                        return null;
+                        return agentClient.execute(AgentRemoteService.SERVICE_EXECUTE_ALL_WORKERS, testCommand);
                     } catch (RuntimeException t) {
                         log.severe(t);
                         throw t;
@@ -282,8 +281,7 @@ public class AgentsClient {
             @Override
             public Object call() throws Exception {
                 AgentClient agentClient = agents.get(0);
-                agentClient.execute(AgentRemoteService.SERVICE_EXECUTE_SINGLE_WORKER, testCommand);
-                return null;
+                return agentClient.execute(AgentRemoteService.SERVICE_EXECUTE_SINGLE_WORKER, testCommand);
             }
         });
 
