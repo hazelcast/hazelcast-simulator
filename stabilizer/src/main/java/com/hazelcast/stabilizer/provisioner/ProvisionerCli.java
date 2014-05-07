@@ -68,8 +68,8 @@ public class ProvisionerCli {
             System.exit(0);
         }
         File propertiesFile = getPropertiesFile(options);
-        log.info(format("stabilizer.properties: %s", provisioner.props.getFile().getAbsolutePath()));
         provisioner.props.load(propertiesFile);
+        log.info(format("stabilizer.properties: %s", provisioner.props.getFile().getAbsolutePath()));
 
         provisioner.init();
 
