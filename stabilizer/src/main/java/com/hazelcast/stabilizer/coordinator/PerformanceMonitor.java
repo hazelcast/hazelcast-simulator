@@ -7,8 +7,6 @@ import com.hazelcast.stabilizer.worker.testcommands.GetOperationCountTestCommand
 
 import java.util.List;
 
-import static java.lang.String.format;
-
 public class PerformanceMonitor extends Thread {
     private final ILogger log = Logger.getLogger(PerformanceMonitor.class);
 
@@ -37,18 +35,19 @@ public class PerformanceMonitor extends Thread {
 
     private void checkPerformance() {
         GetOperationCountTestCommand getOperationCountTestCommand = new GetOperationCountTestCommand();
-        List<Long> result = (List<Long>) client.executeOnAllWorkers(getOperationCountTestCommand);
+        List<List<Long>> result = (List<List<Long>>) client.executeOnAllWorkers(getOperationCountTestCommand);
         long currentCount = 0;
-        for (Long item : result) {
-            currentCount += item;
+        for (List<Long> list : result) {
+            for (Long item : list) {
+                currentCount += item;
+            }
         }
 
         long delta = currentCount - previousCount;
         long currentMs = System.currentTimeMillis();
         long durationMs = currentMs - previousTime;
 
-        double performance = (delta * 1000d) / durationMs;
-        coordinator.performance = performance;
+        coordinator.performance = (delta * 1000d) / durationMs;
         previousTime = currentMs;
         previousCount = currentCount;
     }
