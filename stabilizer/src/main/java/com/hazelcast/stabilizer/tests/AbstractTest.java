@@ -16,11 +16,9 @@
 package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.core.HazelcastInstance;
-import sun.util.logging.resources.logging.ILogger;
-import sun.util.logging.resources.logging.Logger;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.CountdownWatch;
-import com.hazelcast.stabilizer.performance.NotAvailable;
-import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.worker.ExceptionReporter;
 
 import java.util.HashSet;
@@ -147,7 +145,7 @@ public abstract class AbstractTest implements Test {
 
     /**
      * Create the threads that are actually going to do the load.
-     *
+     * <p/>
      * This method is only called when the Test is active, not when passive.
      */
     public void createTestThreads() {
@@ -160,7 +158,7 @@ public abstract class AbstractTest implements Test {
         if (passive) {
             log.finest("Starting threads is skipped because test instance is passive");
             return;
-        }else{
+        } else {
             log.finest("Starting threads");
         }
         createTestThreads();
