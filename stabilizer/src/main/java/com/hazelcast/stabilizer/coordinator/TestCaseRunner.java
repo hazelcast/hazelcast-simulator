@@ -121,11 +121,11 @@ public class TestCaseRunner {
             Utils.sleepSeconds(period);
             final int elapsed = period * k;
             final float percentage = (100f * elapsed) / seconds;
-            String msg = format("Running %s, %-4.2f percent complete. ", secondsToHuman(elapsed), percentage);
+            String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
 
             if (coordinator.monitorPerformance) {
                 NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
-                msg += "Performance is:" + numberFormat.format(coordinator.performance);
+                msg += ": " + numberFormat.format(coordinator.performance)+" operations/second.";
             }
 
             log.info(msg);
