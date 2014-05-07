@@ -403,6 +403,10 @@ public class Provisioner {
             Provisioner provisioner = new Provisioner();
             ProvisionerCli cli = new ProvisionerCli(provisioner);
             cli.run(args);
+
+            log.info(format("stabilizer.properties: %s", provisioner.props.getFile().getAbsolutePath()));
+
+
             System.exit(0);
         } catch (Throwable e) {
             log.severe(e);
