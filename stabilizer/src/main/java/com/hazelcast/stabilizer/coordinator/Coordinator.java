@@ -58,6 +58,7 @@ public class Coordinator {
     public WorkerJvmSettings workerJvmSettings;
     public StabilizerProperties props = new StabilizerProperties();
     public volatile double performance;
+    public volatile long operationCount;
 
     private void run() throws Exception {
         agentsClient = new AgentsClient(agentsFile);

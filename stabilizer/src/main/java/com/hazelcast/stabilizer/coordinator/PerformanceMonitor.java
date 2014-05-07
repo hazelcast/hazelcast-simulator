@@ -48,6 +48,7 @@ public class PerformanceMonitor extends Thread {
         long durationMs = currentMs - previousTime;
 
         coordinator.performance = (delta * 1000d) / durationMs;
+        coordinator.operationCount = currentCount;
         previousTime = currentMs;
         previousCount = currentCount;
     }

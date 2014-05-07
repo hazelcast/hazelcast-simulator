@@ -5,7 +5,6 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
@@ -26,6 +25,7 @@ public class TestCaseRunner {
     private final Coordinator coordinator;
     private final AgentsClient agentsClient;
     private final TestSuite testSuite;
+    private final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
 
     public TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator) {
         this.testCase = testCase;
@@ -96,7 +96,8 @@ public class TestCaseRunner {
 
     private void logPerformance() {
         if (coordinator.monitorPerformance) {
-            log.info(format("Performance %s", coordinator.performance));
+            log.info("Operation-count: "+ performanceFormat.format(coordinator.operationCount));
+            log.info("Performance: "+ performanceFormat.format(coordinator.performance));
         }
     }
 
@@ -124,14 +125,10 @@ public class TestCaseRunner {
             String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
 
             if (coordinator.monitorPerformance) {
-                NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
-                msg += ": " + numberFormat.format(coordinator.performance)+" operations/second.";
+                 msg += ": " + performanceFormat.format(coordinator.performance)+" operations/second.";
             }
 
             log.info(msg);
-//            if (coordinator.monitorPerformance) {
-//                echo(calcPerformance().toHumanString());
-//            }
         }
 
         Utils.sleepSeconds(small);
@@ -140,28 +137,5 @@ public class TestCaseRunner {
     private void echo(String msg) {
         agentsClient.echo(msg);
         log.info(msg);
-    }
-
-    public Performance calcPerformance() {
-        return null;
-//        ShoutToWorkersTask task = new ShoutToWorkersTask(new GenericTestTask("calcPerformance"), "calcPerformance");
-//        Map<Member, Future<List<Performance>>> result = agentExecutor.submitToAllMembers(task);
-//        Performance performance = null;
-//        for (Future<List<Performance>> future : result.values()) {
-//            try {
-//                List<Performance> results = future.get();
-//                for (Performance p : results) {
-//                    if (performance == null) {
-//                        performance = p;
-//                    } else {
-//                        performance = performance.merge(p);
-//                    }
-//                }
-//            } catch (InterruptedException e) {
-//            } catch (ExecutionException e) {
-//                log.severe(e);
-//            }
-//        }
-//        return performance == null ? new NotAvailable() : performance;
     }
 }
