@@ -61,9 +61,9 @@ public class TestCaseRunner {
             agentsClient.executeOnAllWorkers(new StopTestCommand());
             echo("Completed Test stop");
 
-            if (coordinator.monitorPerformance) {
-                echo(calcPerformance().toHumanString());
-            }
+//            if (coordinator.monitorPerformance) {
+//                echo(calcPerformance().toHumanString());
+//            }
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
