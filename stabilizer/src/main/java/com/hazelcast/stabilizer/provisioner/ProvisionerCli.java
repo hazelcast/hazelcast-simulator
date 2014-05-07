@@ -10,6 +10,7 @@ import joptsimple.OptionSpec;
 import java.io.File;
 
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
+import static java.lang.String.format;
 
 public class ProvisionerCli {
     private final static File STABILIZER_HOME = getStablizerHome();
@@ -66,7 +67,10 @@ public class ProvisionerCli {
             parser.printHelpOn(System.out);
             System.exit(0);
         }
-        provisioner.props.load(getPropertiesFile(options));
+        File propertiesFile = getPropertiesFile(options);
+        log.info(format("stabilizer.properties: %s", provisioner.props.getFile().getAbsolutePath()));
+        provisioner.props.load(propertiesFile);
+
         provisioner.init();
 
         if (options.has(restartSpec)) {
