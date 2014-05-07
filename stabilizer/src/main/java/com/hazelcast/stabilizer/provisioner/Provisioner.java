@@ -181,16 +181,7 @@ public class Provisioner {
 
         echo("Created compute");
 
-        Template template = compute.templateBuilder()
-                .from(TemplateBuilderSpec.parse(props.get("MACHINE_SPEC")))
-                .build();
-
-        echo("Created template");
-
-        template.getOptions()
-                .inboundPorts(inboundPorts())
-                .runScript(AdminAccess.standard())
-                .securityGroups(props.get("SECURITY_GROUP"));
+        Template template = buildTemplate(compute);
 
         echo("Creating nodes");
 
@@ -234,6 +225,21 @@ public class Provisioner {
         echo("Duration: " + secondsToHuman(TimeUnit.MILLISECONDS.toSeconds(durationMs)));
         echoImportant(format("Successfully provisioned %s %s machines",
                 delta, props.get("CLOUD_PROVIDER")));
+    }
+
+    private Template buildTemplate(ComputeService compute) {
+        Template template = compute.templateBuilder()
+                .from(TemplateBuilderSpec.parse(props.get("MACHINE_SPEC")))
+                .build();
+
+        echo("Created template");
+
+        template.getOptions()
+                .inboundPorts(inboundPorts())
+                .runScript(AdminAccess.standard())
+                .securityGroups(props.get("SECURITY_GROUP"));
+
+        return template;
     }
 
     private class InstallNodeTask implements Runnable {

@@ -56,6 +56,7 @@
             <id>pveentjer</id>
             <name>Peter Veentjer</name>
             <email>peter.veentjer@hazelcast.com</email>
+            <organization>Hazelcast</organization>
         </developer>
     </developers>
 
