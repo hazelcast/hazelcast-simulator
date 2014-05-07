@@ -64,7 +64,7 @@ public class TestRunner {
             final float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, seconds, percentage);
             log.info(msg);
-            log.info(test.getOperationCount().toHumanString());
+            //log.info("Performance"+test.getOperationCount());
         }
 
         Utils.sleepSeconds(small);
@@ -100,7 +100,7 @@ public class TestRunner {
         test.stop(stopTimeoutMs);
         log.info("Finished stop");
 
-        log.info(test.getOperationCount().toHumanString());
+        //log.info(test.getOperationCount().toHumanString());
 
         log.info("Starting globalVerify");
         test.globalVerify();
