@@ -151,7 +151,7 @@ public class Provisioner {
         ports.add(80);
         ports.add(AgentRemoteService.PORT);
         ports.add(WorkerJvmManager.PORT);
-        for (int k = 5701; k < 5901; k++) {
+        for (int k = 5701; k < 5751; k++) {
             ports.add(k);
         }
 
