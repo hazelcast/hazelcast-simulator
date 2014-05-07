@@ -12,6 +12,9 @@ import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
 
@@ -61,9 +64,7 @@ public class TestCaseRunner {
             agentsClient.executeOnAllWorkers(new StopTestCommand());
             echo("Completed Test stop");
 
-//            if (coordinator.monitorPerformance) {
-//                echo(calcPerformance().toHumanString());
-//            }
+            logPerformance();
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
@@ -93,6 +94,12 @@ public class TestCaseRunner {
         }
     }
 
+    private void logPerformance() {
+        if (coordinator.monitorPerformance) {
+            log.info(format("Performance %s", coordinator.performance));
+        }
+    }
+
     private void startTestCase() {
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
         StartTestCommand startTestCommand = new StartTestCommand();
@@ -114,8 +121,14 @@ public class TestCaseRunner {
             Utils.sleepSeconds(period);
             final int elapsed = period * k;
             final float percentage = (100f * elapsed) / seconds;
-            String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
-            echo(msg);
+            String msg = format("Running %s, %-4.2f percent complete. ", secondsToHuman(elapsed), percentage);
+
+            if (coordinator.monitorPerformance) {
+                NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
+                msg += "Performance is:" + numberFormat.format(coordinator.performance);
+            }
+
+            log.info(msg);
 //            if (coordinator.monitorPerformance) {
 //                echo(calcPerformance().toHumanString());
 //            }

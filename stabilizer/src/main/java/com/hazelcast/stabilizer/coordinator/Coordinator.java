@@ -57,6 +57,7 @@ public class Coordinator {
     protected AgentsClient agentsClient;
     public WorkerJvmSettings workerJvmSettings;
     public StabilizerProperties props = new StabilizerProperties();
+    public volatile double performance;
 
     private void run() throws Exception {
         agentsClient = new AgentsClient(agentsFile);
@@ -80,7 +81,7 @@ public class Coordinator {
         new FailureMonitorThread(this).start();
 
         if (monitorPerformance) {
-            new PerformanceMonitor(agentsClient).start();
+            new PerformanceMonitor(this).start();
         }
 
         long startMs = System.currentTimeMillis();

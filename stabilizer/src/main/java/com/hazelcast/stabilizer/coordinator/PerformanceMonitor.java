@@ -13,17 +13,19 @@ public class PerformanceMonitor extends Thread {
     private final ILogger log = Logger.getLogger(PerformanceMonitor.class);
 
     private final AgentsClient client;
+    private final Coordinator coordinator;
     private long previousCount = 0;
     public long previousTime = System.currentTimeMillis();
 
-    public PerformanceMonitor(AgentsClient client) {
-        this.client = client;
+    public PerformanceMonitor(Coordinator coordinator) {
+        this.client = coordinator.agentsClient;
+        this.coordinator = coordinator;
     }
 
     @Override
     public void run() {
         for (; ; ) {
-            Utils.sleepSeconds(30);
+            Utils.sleepSeconds(10);
 
             try {
                 checkPerformance();
@@ -46,7 +48,7 @@ public class PerformanceMonitor extends Thread {
         long durationMs = currentMs - previousTime;
 
         double performance = (delta * 1000d) / durationMs;
-        log.info(format("Performance is %s operations/second", performance));
+        coordinator.performance = performance;
         previousTime = currentMs;
         previousCount = currentCount;
     }
