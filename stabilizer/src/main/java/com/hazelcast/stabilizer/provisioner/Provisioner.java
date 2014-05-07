@@ -135,7 +135,9 @@ public class Provisioner {
     public void scale(int size) throws Exception {
         int delta = size - addresses.size();
         if (delta == 0) {
-            echo("Ignoring spawn machines, desired number of machines already exists");
+            echo("Current number of machines: " + addresses.size());
+            echo("Desired number of machines: " + (addresses.size() + delta));
+            echo("Ignoring spawn machines, desired number of machines already exists.");
         } else if (delta < 0) {
             terminate(-delta);
         } else {
@@ -164,6 +166,8 @@ public class Provisioner {
 
     private void scaleUp(int delta) throws Exception {
         echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
+        echo("Current number of machines: " + addresses.size());
+        echo("Desired number of machines: " + (addresses.size() + delta));
         echo(props.get("MACHINE_SPEC"));
 
         long startTimeMs = System.currentTimeMillis();
@@ -351,6 +355,8 @@ public class Provisioner {
         }
 
         echoImportant(format("Terminating %s %s machines (can take some time)", count, props.get("CLOUD_PROVIDER")));
+        echo("Current number of machines: " + addresses.size());
+        echo("Desired number of machines: " + (addresses.size() - count));
 
         long startMs = System.currentTimeMillis();
 

@@ -23,21 +23,22 @@ public class ProvisionerCli {
 
     public final OptionSpec downloadSpec = parser.accepts("download",
             "Download all the files from the workers directory. " +
-                    "To delete all worker directories, add the --clean option"
+                    "To delete all worker directories, run with --clean"
     );
 
     public final OptionSpec cleanSpec = parser.accepts("clean",
             "Cleans the workers directories. ");
 
     public final OptionSpec<Integer> scaleSpec = parser.accepts("scale",
-            "Number of machines to scale to")
+            "Number of agent machines to scale to. If the number of machines already exists, the call is ignored. If the " +
+                    "desired number of machines is smaller than the actual number of machines, machines are terminated.")
             .withRequiredArg().ofType(Integer.class);
 
     public final OptionSpec terminateSpec = parser.accepts("terminateWorker",
-            "Terminate all members in the provisioner");
+            "Terminate all agent machines in the provisioner");
 
     public final OptionSpec killSpec = parser.accepts("kill",
-            "Kill all agents");
+            "Kill all the agent processes");
 
     public final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 

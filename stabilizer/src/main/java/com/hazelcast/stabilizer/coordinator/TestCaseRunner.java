@@ -125,7 +125,7 @@ public class TestCaseRunner {
             String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
 
             if (coordinator.monitorPerformance) {
-                 msg += ": " + performanceFormat.format(coordinator.performance)+" operations/second.";
+                 msg += ", " + performanceFormat.format(coordinator.performance)+" operations/second.";
             }
 
             log.info(msg);
