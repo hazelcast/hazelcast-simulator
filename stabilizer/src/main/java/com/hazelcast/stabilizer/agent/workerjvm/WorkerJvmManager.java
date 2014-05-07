@@ -112,7 +112,7 @@ public class WorkerJvmManager {
         return executeOnWorkers(testCommand, workerJvms.values());
     }
 
-    private List executeOnWorkers(TestCommand testCommand, Collection<WorkerJvm> workers) throws Exception {
+   private List executeOnWorkers(TestCommand testCommand, Collection<WorkerJvm> workers) throws Exception {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
         for (WorkerJvm workerJvm : workers) {
@@ -205,6 +205,8 @@ public class WorkerJvmManager {
             log.fatal(e);
         }
     }
+
+
 
     private class ClientSocketTask implements Runnable {
         private final Socket clientSocket;

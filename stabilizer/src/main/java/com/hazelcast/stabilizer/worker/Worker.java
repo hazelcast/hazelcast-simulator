@@ -27,11 +27,10 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.Test;
 import com.hazelcast.stabilizer.tests.TestDependencies;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.GetPerformanceTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.GetOperationCountTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
@@ -286,8 +285,8 @@ public class Worker {
                     process((StopTestCommand) command);
                 } else if (command instanceof GenericTestCommand) {
                     result = process((GenericTestCommand) command);
-                }else if(command instanceof GetPerformanceTestCommand){
-                    result = process((GetPerformanceTestCommand)command);
+                }else if(command instanceof GetOperationCountTestCommand){
+                    result = process((GetOperationCountTestCommand)command);
                 } else {
                     throw new RuntimeException("Unhandled task:" + command.getClass());
                 }
@@ -301,8 +300,8 @@ public class Worker {
             responseQueue.add(response);
         }
 
-        private Performance process(GetPerformanceTestCommand command) {
-            return null;
+        private Long process(GetOperationCountTestCommand command) {
+            return test.getOperationCount();
         }
 
         private void process(StartTestCommand testCommand) throws Exception {

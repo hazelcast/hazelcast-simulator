@@ -16,8 +16,8 @@
 package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
+import sun.util.logging.resources.logging.ILogger;
+import sun.util.logging.resources.logging.Logger;
 import com.hazelcast.stabilizer.common.CountdownWatch;
 import com.hazelcast.stabilizer.performance.NotAvailable;
 import com.hazelcast.stabilizer.performance.Performance;
@@ -123,8 +123,8 @@ public abstract class AbstractTest implements Test {
     }
 
     @Override
-    public Performance calcPerformance() {
-        return new NotAvailable();
+    public long getOperationCount() {
+        return -1;
     }
 
     private class CatchingRunnable implements Runnable {

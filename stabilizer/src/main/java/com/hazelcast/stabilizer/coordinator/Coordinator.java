@@ -78,6 +78,10 @@ public class Coordinator {
 
         new FailureMonitorThread(this).start();
 
+        if (monitorPerformance) {
+            new FailureMonitorThread(this).start();
+        }
+
         long startMs = System.currentTimeMillis();
 
         runTestSuite(testSuite);

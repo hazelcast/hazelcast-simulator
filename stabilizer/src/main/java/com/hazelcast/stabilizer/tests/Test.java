@@ -91,7 +91,7 @@ public interface Test {
 
     void init(TestDependencies dependencies);
 
-    Performance calcPerformance();
+    long getOperationCount();
 
 
 }

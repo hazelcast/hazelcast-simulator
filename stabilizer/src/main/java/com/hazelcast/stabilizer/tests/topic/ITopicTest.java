@@ -84,12 +84,8 @@ public class ITopicTest extends AbstractTest {
     }
 
     @Override
-    public Performance calcPerformance() {
-        OperationsPerSecond performance = new OperationsPerSecond();
-        performance.setStartMs(getStartTimeMs());
-        performance.setEndMs(getCurrentTimeMs());
-        performance.setOperations(operations.get());
-        return performance;
+    public long getOperationCount() {
+        return operations.get();
     }
 
     @Override

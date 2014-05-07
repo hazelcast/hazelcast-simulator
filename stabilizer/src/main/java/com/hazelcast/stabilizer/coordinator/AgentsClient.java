@@ -22,9 +22,11 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -41,14 +43,11 @@ public class AgentsClient {
 
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentsClient.class);
 
-    private final File agentFile;
     private final List<AgentClient> agents = new LinkedList<AgentClient>();
 
     private final ExecutorService agentExecutor = Executors.newFixedThreadPool(100);
 
     public AgentsClient(File agentFile) {
-        this.agentFile = agentFile;
-
         for (AgentAddress address : AgentsFile.load(agentFile)) {
             AgentClient client = new AgentClient(address);
             agents.add(client);
@@ -155,16 +154,18 @@ public class AgentsClient {
         getAllFutures(futures);
     }
 
-    private void getAllFutures(Collection<Future> futures) {
-        getAllFutures(futures, TimeUnit.SECONDS.toMillis(10000));
+    private List<Object> getAllFutures(Collection<Future> futures) {
+        return getAllFutures(futures, TimeUnit.SECONDS.toMillis(10000));
     }
 
     //todo: probably we don't want to throw exceptions to make sure that don't abort when a agent goes down.
-    private void getAllFutures(Collection<Future> futures, long timeoutMs) {
+    private List<Object> getAllFutures(Collection<Future> futures, long timeoutMs) {
         CountdownWatch watch = CountdownWatch.started(timeoutMs);
+        List result = new LinkedList();
         for (Future future : futures) {
             try {
                 Object o = future.get(watch.getRemainingMs(), TimeUnit.MILLISECONDS);
+                result.add(o);
             } catch (TimeoutException e) {
 //                Failure failure = new Failure();
 //                failure.message = "Timeout waiting for remote operation to complete";
@@ -194,6 +195,8 @@ public class AgentsClient {
                 throw new RuntimeException(e);
             }
         }
+
+        return result;
     }
 
     public void initTestSuite(final TestSuite testSuite, final byte[] bytes) {
@@ -249,7 +252,7 @@ public class AgentsClient {
         getAllFutures(futures);
     }
 
-    public void executeOnAllWorkers(final TestCommand testCommand) {
+    public List<? extends Object> executeOnAllWorkers(final TestCommand testCommand) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
@@ -267,7 +270,7 @@ public class AgentsClient {
             futures.add(f);
         }
 
-        getAllFutures(futures);
+        return getAllFutures(futures);
     }
 
     public void executeOnSingleWorker(final TestCommand testCommand) {
