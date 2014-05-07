@@ -37,6 +37,7 @@ public class CoordinatorCli {
                     "If nothing is specified, the agent is free to pick a vendor."
     )
             .withRequiredArg().ofType(String.class).defaultsTo("");
+
     private final OptionSpec<String> workerJavaVersionSpec = parser.accepts("workerJavaVersion",
             "The Java version (e.g. 1.6) of the JVM used by the worker). " +
                     "If nothing is specified, the agent is free to pick a version."
@@ -67,9 +68,8 @@ public class CoordinatorCli {
             "The startup timeout in seconds for a worker")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
-    private final OptionSpec<Boolean> monitorPerformanceSpec = parser.accepts("monitorPerformance",
-            "If performance monitoring should be done")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+    private final OptionSpec  monitorPerformanceSpec = parser.accepts("monitorPerformance",
+            "Track performance");
 
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
             "If test should be verified")
@@ -157,7 +157,7 @@ public class CoordinatorCli {
 
         coordinator.props.load(getPropertiesFile());
         coordinator.verifyEnabled = options.valueOf(verifyEnabledSpec);
-        coordinator.monitorPerformance = options.valueOf(monitorPerformanceSpec);
+        coordinator.monitorPerformance = options.has(monitorPerformanceSpec);
         coordinator.testStopTimeoutMs = options.valueOf(testStopTimeoutMsSpec);
         coordinator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
 
