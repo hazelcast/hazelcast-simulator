@@ -67,6 +67,7 @@ public class Coordinator {
         initClientHzConfig(workerJvmSettings);
 
         int agentCount = agentsClient.getAgentCount();
+        log.info(format("Performance monitor enabled: %s", monitorPerformance));
         log.info(format("Total number of agents: %s", agentCount));
         log.info(format("Total number of Hazelcast member workers: %s", workerJvmSettings.memberWorkerCount));
         log.info(format("Total number of Hazelcast client workers: %s", workerJvmSettings.clientWorkerCount));
@@ -79,7 +80,7 @@ public class Coordinator {
         new FailureMonitorThread(this).start();
 
         if (monitorPerformance) {
-            new FailureMonitorThread(this).start();
+            new PerformanceMonitor(agentsClient).start();
         }
 
         long startMs = System.currentTimeMillis();
