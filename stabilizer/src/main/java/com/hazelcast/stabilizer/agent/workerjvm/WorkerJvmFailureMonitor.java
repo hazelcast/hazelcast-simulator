@@ -80,6 +80,10 @@ public class WorkerJvmFailureMonitor {
     private void detectInactivity(WorkerJvm jvm, List<Failure> failures) {
         long currentMs = System.currentTimeMillis();
 
+        if(jvm.oome){
+            return;
+        }
+
         if (currentMs - LAST_SEEN_TIMEOUT_MS > jvm.lastSeen) {
             Failure failure = new Failure();
             failure.message = "Worker has not contacted agent";
@@ -130,6 +134,10 @@ public class WorkerJvmFailureMonitor {
         if (!oomeFile.exists()) {
             return;
         }
+
+        jvm.oome = true;
+
+        oomeFile.delete();
 
         Failure failure = new Failure();
         failure.message = "Out of memory";

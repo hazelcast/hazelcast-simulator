@@ -22,11 +22,9 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -37,7 +35,6 @@ import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.stabilizer.Utils.closeQuietly;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
-import static java.lang.String.format;
 
 public class AgentsClient {
 
