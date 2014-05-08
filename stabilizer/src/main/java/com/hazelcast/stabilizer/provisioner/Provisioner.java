@@ -81,7 +81,6 @@ public class Provisioner {
 
         String versionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
 
-
         if (!versionSpec.equals("outofthebox")) {
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
             bash.ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar", getVersion()));

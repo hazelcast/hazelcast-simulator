@@ -65,7 +65,7 @@ public class Bash {
     }
 
     public void ssh(String ip, String command) {
-        String sshCommand = format("ssh %s -q %s@%s \"%s\"", sshOptions, user, ip, command);
+        String sshCommand = format("ssh %s %s@%s \"%s\"", sshOptions, user, ip, command);
         bash(sshCommand);
     }
 

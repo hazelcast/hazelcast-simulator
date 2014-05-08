@@ -197,3 +197,29 @@ that '~' doesn't work; so give relative or absolute path for key/pem.
 
 The SECURITY_GROUP needs to point to an existing Security Group. make sure that port 22, 9000 are open. Also make sure that
 port 5701..5801 are open so that the HZ members can communicate with each other.
+
+#### SSH Install: Important
+
+When you frequently start/stop instances in a cloud, e.g. EC2 or GCE, then your ~/.ssh/known_hosts file is going to be polluted
+and your cloud can't be formed (you get jclouds ssh timeouts). This is because the same ip address will be handed out multiple
+times over time and this can lead to an SSH connectivity problem: man in the middle attack.
+
+To fix this problem, do the following. Make a file:
+
+```
+touch ~/.ssh/config
+```
+
+add the following content:
+```
+Host *
+    StrictHostKeyChecking no
+```
+
+And change the rights:
+
+```
+chmod 400 ~/.ssh/config
+```
+
+Now you will not have that problem again. Another solution is to clean the ~/.ssh/known_hosts file yourself.
