@@ -16,7 +16,6 @@
 package com.hazelcast.stabilizer.agent.workerjvm;
 
 import com.hazelcast.stabilizer.NoWorkerAvailableException;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.TestCommandFuture;
@@ -52,7 +51,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.throwableToString;
-import static java.lang.String.format;
 
 public class WorkerJvmManager {
 
@@ -112,7 +110,7 @@ public class WorkerJvmManager {
         return executeOnWorkers(testCommand, workerJvms.values());
     }
 
-   private List executeOnWorkers(TestCommand testCommand, Collection<WorkerJvm> workers) throws Exception {
+    private List executeOnWorkers(TestCommand testCommand, Collection<WorkerJvm> workers) throws Exception {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
         for (WorkerJvm workerJvm : workers) {
@@ -159,23 +157,8 @@ public class WorkerJvmManager {
     public void terminateWorkers() {
         log.info("Terminating workers");
 
-        List<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms.values());
-        workerJvms.clear();
-
-        for (WorkerJvm jvm : workers) {
-            jvm.process.destroy();
-        }
-
-        for (WorkerJvm jvm : workers) {
-            int exitCode = 0;
-            try {
-                exitCode = jvm.process.waitFor();
-            } catch (InterruptedException e) {
-            }
-
-            if (exitCode != 0) {
-                log.info(format("worker process %s exited with exit code: %s", jvm.id, exitCode));
-            }
+        for (WorkerJvm jvm : new LinkedList<WorkerJvm>(workerJvms.values())) {
+            terminateWorker(jvm);
         }
 
         log.info("Finished terminating workers");
@@ -199,13 +182,12 @@ public class WorkerJvmManager {
         try {
             t.join(WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS);
             if (t.isAlive()) {
-                throw new RuntimeException("Failed to destroy worker: " + jvm);
+                log.warn("WorkerJVM is still busy terminating: " + jvm);
             }
         } catch (Exception e) {
             log.fatal(e);
         }
     }
-
 
 
     private class ClientSocketTask implements Runnable {

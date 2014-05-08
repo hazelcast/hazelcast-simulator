@@ -36,7 +36,7 @@ class FailureMonitorThread extends Thread {
         List<Failure> failures = coordinator.agentsClient.getFailures();
         for (Failure failure : failures) {
             coordinator.failureList.add(failure);
-            log.severe(buildMessage(failure));
+            log.warning(buildMessage(failure));
             File file = new File("failures.txt");
             appendText(failure.toString() + "\n", file);
         }

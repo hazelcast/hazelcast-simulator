@@ -80,13 +80,13 @@ public class WorkerJvmFailureMonitor {
     private void detectInactivity(WorkerJvm jvm, List<Failure> failures) {
         long currentMs = System.currentTimeMillis();
 
-        if(jvm.oome){
+        if(jvm.oomeDetected){
             return;
         }
 
         if (currentMs - LAST_SEEN_TIMEOUT_MS > jvm.lastSeen) {
             Failure failure = new Failure();
-            failure.message = "Worker has not contacted agent";
+            failure.message = "Worker has not contacted agent for a too long period.";
             failure.agentAddress = getHostAddress();
             failure.workerAddress = jvm.memberAddress;
             failure.workerId = jvm.id;
@@ -118,7 +118,7 @@ public class WorkerJvmFailureMonitor {
             exceptionFile.delete();
 
             Failure failure = new Failure();
-            failure.message = "Exception thrown in worker";
+            failure.message = "Worked ran into an unhandled exception";
             failure.agentAddress = getHostAddress();
             failure.workerAddress = workerJvm.memberAddress;
             failure.workerId = workerJvm.id;
@@ -135,12 +135,12 @@ public class WorkerJvmFailureMonitor {
             return;
         }
 
-        jvm.oome = true;
+        jvm.oomeDetected = true;
 
         oomeFile.delete();
 
         Failure failure = new Failure();
-        failure.message = "Out of memory";
+        failure.message = "Worker ran into an Out Of Memory Error";
         failure.agentAddress = getHostAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
@@ -149,6 +149,10 @@ public class WorkerJvmFailureMonitor {
     }
 
     private void detectUnexpectedExit(WorkerJvm jvm, List<Failure> failures) {
+        if(jvm.oomeDetected){
+            return;
+        }
+
         Process process = jvm.process;
         int exitCode;
         try {
@@ -165,7 +169,7 @@ public class WorkerJvmFailureMonitor {
         agent.getWorkerJvmManager().terminateWorker(jvm);
 
         Failure failure = new Failure();
-        failure.message = "Exit code not 0, but was " + exitCode;
+        failure.message = "Worker terminated with exit code not 0, but  " + exitCode;
         failure.agentAddress = getHostAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;

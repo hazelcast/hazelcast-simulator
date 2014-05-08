@@ -27,7 +27,7 @@ public class WorkerJvm {
     public Process process;
     public File workerHome;
     public volatile long lastSeen = System.currentTimeMillis();
-    public volatile boolean oome = false;
+    public volatile boolean oomeDetected = false;
 
     public final BlockingQueue<TestCommandRequest> commandQueue = new LinkedBlockingQueue<TestCommandRequest>();
 
