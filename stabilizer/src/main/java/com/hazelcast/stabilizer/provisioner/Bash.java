@@ -70,7 +70,7 @@ public class Bash {
     }
 
     public void sshQuiet(String ip, String command) {
-        String sshCommand = format("ssh %s -q %s@%s \"%s\" || true", sshOptions, user, ip, command);
+        String sshCommand = format("ssh %s %s@%s \"%s\" || true", sshOptions, user, ip, command);
         bash(sshCommand);
     }
 
