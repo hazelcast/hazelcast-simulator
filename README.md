@@ -184,7 +184,6 @@ Make the changes required. The main things that need to be configured are:
 CLOUD_PROVIDER=aws-ec2
 CLOUD_IDENTITY=<your-aws-access-key>
 CLOUD_CREDENTIAL=<your-aws-secret-key>
-PUBLIC_KEY=key.pub
 IDENTITY_FILE=yourpem.pem
 USER=ec-user
 SSH_OPTIONS=-i yourpem.pem -o StrictHostKeyChecking=no
