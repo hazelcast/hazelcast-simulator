@@ -12,7 +12,6 @@ openssl rsa -in ${thispath}/temp1.pem -out ${thispath}/google.pem
 rm temp1.pem
 
 echo "
-
 # =====================================================================
 # Cloud selection
 # =====================================================================
@@ -193,4 +192,4 @@ PROFILER=none
 #   http://www.yourkit.com/docs/java/help/agent.jsp
 #   http://www.yourkit.com/docs/java/help/startup_options.jsp
 #
-YOURKIT_SETTINGS=-agentpath:\${STABILIZER_HOME}/yourkit/linux-x86-64/libyjpagent.so=dir=\${WORKER_HOME},sampling,monitors"
+YOURKIT_SETTINGS=-agentpath:\${STABILIZER_HOME}/yourkit/linux-x86-64/libyjpagent.so=dir=\${WORKER_HOME},sampling,monitors" > stabilizer.properties
