@@ -75,6 +75,8 @@ public class CloudInfoCli {
             cloudInfo.showHardware();
         } else if (options.has(showImagesSpec)) {
             cloudInfo.showImages();
+        }else{
+            parser.printHelpOn(System.out);
         }
     }
 
