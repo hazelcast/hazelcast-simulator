@@ -46,7 +46,10 @@ public class CloudInfo {
                 sb.append(" Ram: ").append(hardware.getRam());
                 sb.append(" Processors: ").append(hardware.getProcessors());
                 if (locationId == null) {
-                    sb.append(" Location: ").append(hardware.getLocation().getId());
+                    Location location = hardware.getLocation();
+                    if (location != null) {
+                        sb.append(" Location: ").append(location.getId());
+                    }
                 }
                 System.out.println(sb.toString());
             }

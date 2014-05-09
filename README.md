@@ -184,11 +184,11 @@ Make the changes required. The main things that need to be configured are:
 CLOUD_PROVIDER=aws-ec2
 CLOUD_IDENTITY=<your-aws-access-key>
 CLOUD_CREDENTIAL=<your-aws-secret-key>
-IDENTITY_FILE=yourpem.pem
-USER=ec-user
-SSH_OPTIONS=-i yourpem.pem -o StrictHostKeyChecking=no
+USER=yourusername
 SECURITY_GROUP=open
 ```
+
+The yourusername should be the name of your user (run whoami).
 
 If you are using ec2, the pem is the pem you have created in ec2 and the key.pub can be generated using the 'pemtopublicrsakey'
 utility in the STABILIZER_HOME/bin directory. I prefer to copy the pem and key file within my 'tests' directory. Remember
