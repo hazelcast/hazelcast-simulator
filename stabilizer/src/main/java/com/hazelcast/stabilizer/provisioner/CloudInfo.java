@@ -42,7 +42,7 @@ public class CloudInfo {
             if(verbose) {
                 System.out.println(hardware);
             }else{
-                System.out.println(hardware.getId());
+                System.out.println(hardware.getId()+" Ram: "+hardware.getRam()+" Processors: "+hardware.getProcessors());
             }
         }
     }
