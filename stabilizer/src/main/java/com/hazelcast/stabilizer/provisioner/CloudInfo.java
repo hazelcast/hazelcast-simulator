@@ -42,7 +42,10 @@ public class CloudInfo {
             if(verbose) {
                 System.out.println(hardware);
             }else{
-                System.out.println(hardware.getId()+" Ram: "+hardware.getRam()+" Processors: "+hardware.getProcessors());
+                StringBuilder sb = new StringBuilder(hardware.getId());
+                sb.append(" Ram: ").append(hardware.getRam());
+                sb.append(" Processors: ").append(hardware.getProcessors());
+                System.out.println(sb.toString());
             }
         }
     }
@@ -58,7 +61,10 @@ public class CloudInfo {
             if(verbose) {
                 System.out.println(image);
             }else{
-                System.out.println(image.getId());
+                StringBuilder sb = new StringBuilder(image.getId());
+                sb.append(" OS: ").append(image.getOperatingSystem());
+            //    sb.append(" Version: ").append(image.getVersion());
+                System.out.println(sb.toString());
             }
         }
     }
