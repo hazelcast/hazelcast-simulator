@@ -18,3 +18,4 @@ vtune/
 stabilizer/workers/*
 stabilizer/logs/*
 stabilizer/stabilizer.properties
+stabilizer.properties

@@ -15,7 +15,6 @@ import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
-import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 import org.jclouds.sshj.config.SshjSshClientModule;
@@ -48,7 +47,7 @@ import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIO
 //https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
 //https://github.com/jclouds/jclouds-examples/blob/master/minecraft-compute/src/main/java/org/jclouds/examples/minecraft/NodeManager.java
 public class Provisioner {
-    private final static ILogger log = Logger.getLogger(Provisioner.class.getName());
+    private final static ILogger log = Logger.getLogger(Provisioner.class);
 
     public final StabilizerProperties props = new StabilizerProperties();
 
@@ -70,7 +69,8 @@ public class Provisioner {
         }
         addresses.addAll(AgentsFile.load(agentsFile));
         bash = new Bash(props);
-        hazelcastJars = new HazelcastJars(bash, props.get("HAZELCAST_VERSION_SPEC", "outofthebox"));
+        String hzVersionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
+        hazelcastJars = new HazelcastJars(bash, hzVersionSpec);
     }
 
     void installAgent(String ip) {
@@ -169,22 +169,22 @@ public class Provisioner {
         echo("Current number of machines: " + addresses.size());
         echo("Desired number of machines: " + (addresses.size() + delta));
         String groupName = props.get("GROUP_NAME", "stabilizer-agent");
-        echo("GroupName:"+groupName);
+        echo("GroupName: " + groupName);
 
-        echo("Machine spec: "+props.get("MACHINE_SPEC"));
 
         long startTimeMs = System.currentTimeMillis();
 
-        String jdkFlavor = props.get("JDK_FLAVOR");
+        String jdkFlavor = props.get("JDK_FLAVOR", "outofthebox");
         if ("outofthebox".equals(jdkFlavor)) {
-            log.info("JDK Spec: outofthebox");
+            log.info("JDK spec: outofthebox");
         } else {
-            log.info(format("JDK_SPEC: %s %s", jdkFlavor, props.get("JDK_VERSION")));
+            String jdkVersion = props.get("JDK_VERSION", "7");
+            log.info(format("JDK spec: %s %s", jdkFlavor, jdkVersion));
         }
 
         hazelcastJars.prepare();
 
-        ComputeService compute = getComputeService();
+        ComputeService compute = new ComputeServiceBuilder(props).build();
 
         echo("Created compute");
 
@@ -233,16 +233,21 @@ public class Provisioner {
     }
 
     private Template buildTemplate(ComputeService compute) {
+        String machineSpec = props.get("MACHINE_SPEC", "");
+
+        echo("Machine spec: " + machineSpec);
+
         Template template = compute.templateBuilder()
-                .from(TemplateBuilderSpec.parse(props.get("MACHINE_SPEC")))
+                .from(TemplateBuilderSpec.parse(machineSpec))
                 .build();
 
         echo("Created template");
 
+        String securityGroup = props.get("SECURITY_GROUP", "");
         template.getOptions()
                 .inboundPorts(inboundPorts())
                 .runScript(AdminAccess.standard())
-                .securityGroups(props.get("SECURITY_GROUP"));
+                .securityGroups(securityGroup);
 
         return template;
     }
@@ -250,7 +255,7 @@ public class Provisioner {
     private class InstallNodeTask implements Runnable {
         private final String ip;
 
-        InstallNodeTask(String ip) {
+        private InstallNodeTask(String ip) {
             this.ip = ip;
         }
 
@@ -289,25 +294,7 @@ public class Provisioner {
         return result;
     }
 
-    private ComputeService getComputeService() {
-        //http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
-        Properties overrides = new Properties();
-        overrides.setProperty(POLL_INITIAL_PERIOD, props.get("CLOUD_POLL_INITIAL_PERIOD"));
-        overrides.setProperty(POLL_MAX_PERIOD, props.get("CLOUD_POLL_MAX_PERIOD"));
 
-        String credentials = props.get("CLOUD_CREDENTIAL");
-        File file = new File(credentials);
-        if (file.exists()) {
-            credentials = Utils.fileAsText(file);
-        }
-
-        return ContextBuilder.newBuilder(props.get("CLOUD_PROVIDER"))
-                .overrides(overrides)
-                .credentials(props.get("CLOUD_IDENTITY"), credentials)
-                .modules(asList(new SLF4JLoggingModule(), new SshjSshClientModule()))
-                .buildView(ComputeServiceContext.class)
-                .getComputeService();
-    }
 
     private File getJavaInstallScript() {
         String flavor = props.get("JDK_FLAVOR");
@@ -327,7 +314,7 @@ public class Provisioner {
             echo("Downloading from %s", address.publicAddress);
 
             String syncCommand = format("rsync  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
-                    props.get("SSH_OPTIONS"), props.get("USER"), address.publicAddress, getVersion());
+                    props.get("SSH_OPTIONS", ""), props.get("USER"), address.publicAddress, getVersion());
 
             bash.bash(syncCommand);
         }
@@ -361,14 +348,15 @@ public class Provisioner {
 
         long startMs = System.currentTimeMillis();
 
+        ComputeService compute = new ComputeServiceBuilder(props).build();
+
         for (int batchSize : calcBatches(count)) {
             final Map<String, AgentAddress> terminateMap = new HashMap<String, AgentAddress>();
             for (AgentAddress address : addresses.subList(0, batchSize)) {
                 terminateMap.put(address.publicAddress, address);
             }
 
-            ComputeService computeService = getComputeService();
-            computeService.destroyNodesMatching(
+            compute.destroyNodesMatching(
                     new Predicate<NodeMetadata>() {
                         @Override
                         public boolean apply(NodeMetadata nodeMetadata) {
