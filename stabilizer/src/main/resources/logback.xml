@@ -7,7 +7,7 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>log/jclouds.log</file>
+        <file>logs/jclouds.log</file>
 
         <encoder>
             <Pattern>%d %-5p [%c] [%thread] %m%n</Pattern>
@@ -15,7 +15,7 @@
     </appender>
 
     <appender name="WIREFILE" class="ch.qos.logback.core.FileAppender">
-        <file>log/jclouds-wire.log</file>
+        <file>logs/jclouds-wire.log</file>
 
         <encoder>
             <Pattern>%d %-5p [%c] [%thread] %m%n</Pattern>
@@ -23,7 +23,7 @@
     </appender>
 
     <appender name="COMPUTEFILE" class="ch.qos.logback.core.FileAppender">
-        <file>log/jclouds-compute.log</file>
+        <file>logs/jclouds-compute.log</file>
 
         <encoder>
             <Pattern>%d %-5p [%c] [%thread] %m%n</Pattern>
@@ -31,7 +31,7 @@
     </appender>
 
     <appender name="SSHFILE" class="ch.qos.logback.core.FileAppender">
-        <file>log/jclouds-ssh.log</file>
+        <file>logs/jclouds-ssh.log</file>
 
         <encoder>
             <Pattern>%d %-5p [%c] [%thread] %m%n</Pattern>
