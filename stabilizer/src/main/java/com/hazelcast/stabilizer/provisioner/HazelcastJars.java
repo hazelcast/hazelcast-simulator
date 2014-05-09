@@ -21,12 +21,12 @@ public class HazelcastJars {
 
     private File hazelcastJarsDir;
 
-    public HazelcastJars(Bash bash, String versionSpec){
+    public HazelcastJars(Bash bash, String versionSpec) {
         this.bash = bash;
         this.versionSpec = versionSpec;
     }
 
-    public String getAbsolutePath(){
+    public String getAbsolutePath() {
         return hazelcastJarsDir.getAbsolutePath();
     }
 
@@ -35,11 +35,12 @@ public class HazelcastJars {
         hazelcastJarsDir = new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString());
         hazelcastJarsDir.mkdirs();
 
+        log.info("Hazelcast version-spec: " + versionSpec);
+
         if (versionSpec.equals("outofthebox")) {
-            log.info("Using Hazelcast version-spec: outofthebox");
+            //we don't need to do anything.
         } else if (versionSpec.startsWith("path=")) {
             String path = versionSpec.substring(5);
-            log.info("Using Hazelcast version-spec: path=" + path);
             File file = new File(path);
             if (!file.exists()) {
                 log.severe("Directory :" + path + " does not exist");
@@ -53,11 +54,9 @@ public class HazelcastJars {
 
             bash.bash(format("cp %s/* %s", path, hazelcastJarsDir.getAbsolutePath()));
         } else if (versionSpec.equals("none")) {
-            log.info("Using Hazelcast version-spec: none");
             //we don't need to do anything
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);
-            log.info("Using Hazelcast version-spec: maven=" + version);
             mavenRetrieve("hazelcast", version);
             mavenRetrieve("hazelcast-client", version);
         } else {

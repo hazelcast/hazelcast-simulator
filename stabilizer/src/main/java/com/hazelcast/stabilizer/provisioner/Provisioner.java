@@ -168,15 +168,18 @@ public class Provisioner {
         echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
         echo("Current number of machines: " + addresses.size());
         echo("Desired number of machines: " + (addresses.size() + delta));
-        echo(props.get("MACHINE_SPEC"));
+        String groupName = props.get("GROUP_NAME", "stabilizer-agent");
+        echo("GroupName:"+groupName);
+
+        echo("Machine spec: "+props.get("MACHINE_SPEC"));
 
         long startTimeMs = System.currentTimeMillis();
 
         String jdkFlavor = props.get("JDK_FLAVOR");
         if ("outofthebox".equals(jdkFlavor)) {
-            log.info("Machines will use Java: Out of the Box.");
+            log.info("JDK Spec: outofthebox");
         } else {
-            log.info(format("Machines will use Java: %s %s", jdkFlavor, props.get("JDK_VERSION")));
+            log.info(format("JDK_SPEC: %s %s", jdkFlavor, props.get("JDK_VERSION")));
         }
 
         hazelcastJars.prepare();
@@ -191,8 +194,6 @@ public class Provisioner {
 
         Set<Future> futures = new HashSet<Future>();
         echo("Created machines, waiting for startup (can take a few minutes)");
-
-        String groupName = props.get("GROUP_NAME", "stabilizer-agent");
 
         for (int batch : calcBatches(delta)) {
 
