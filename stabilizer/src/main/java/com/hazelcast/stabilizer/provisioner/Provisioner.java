@@ -16,6 +16,7 @@ import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
+import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 import org.jclouds.sshj.config.SshjSshClientModule;
 
@@ -302,7 +303,7 @@ public class Provisioner {
         return ContextBuilder.newBuilder(props.get("CLOUD_PROVIDER"))
                 .overrides(overrides)
                 .credentials(props.get("CLOUD_IDENTITY"), credentials)
-                .modules(asList(new Log4JLoggingModule(), new SshjSshClientModule()))
+                .modules(asList(new SLF4JLoggingModule(), new SshjSshClientModule()))
                 .buildView(ComputeServiceContext.class)
                 .getComputeService();
     }
