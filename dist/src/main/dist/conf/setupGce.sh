@@ -16,7 +16,7 @@ echo "
 # Cloud selection
 # =====================================================================
 #
-# currently configured for EC2, but can also be something else. For a complete listing of supported clouds,
+# currently configured for EC2, but can also be something else. For a complete listing of supported clouds,.
 # check the following link: http://jclouds.apache.org/reference/providers/
 # aws-ec2 = Amazon EC2
 # google-compute-engine = The Google Compute Engine.
