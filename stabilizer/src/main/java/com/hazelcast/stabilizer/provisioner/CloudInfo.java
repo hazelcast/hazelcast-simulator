@@ -45,6 +45,7 @@ public class CloudInfo {
                 StringBuilder sb = new StringBuilder(hardware.getId());
                 sb.append(" Ram: ").append(hardware.getRam());
                 sb.append(" Processors: ").append(hardware.getProcessors());
+                sb.append(" Location: ").append(hardware.getLocation());
                 System.out.println(sb.toString());
             }
         }
@@ -53,7 +54,7 @@ public class CloudInfo {
     public void showImages() {
         Set<? extends Image> images = computeService.listImages();
         for (Image image : images) {
-            boolean match = locationId == null || image.getLocation().getId().equals(locationId);
+            boolean match = show(image);
             if(!match){
                 continue;
             }
@@ -67,6 +68,24 @@ public class CloudInfo {
                 System.out.println(sb.toString());
             }
         }
+    }
+
+    private boolean show(Image image) {
+        if(locationId == null){
+            return  true;
+        }
+
+        Location imageLocation = image.getLocation();
+        if(imageLocation ==null){
+            return true;
+        }
+
+        String imageLocationId = imageLocation.getId();
+        if(imageLocationId == null){
+            return true;
+        }
+
+        return locationId.equals(imageLocationId);
     }
 
     public static void main(String[] args) {
