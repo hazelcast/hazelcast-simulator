@@ -21,6 +21,7 @@ public class CloudInfo {
 
     private ComputeService computeService;
     public String locationId;
+    public boolean verbose;
 
     public void init() {
         computeService = new ComputeServiceBuilder(props).build();
@@ -38,7 +39,11 @@ public class CloudInfo {
     public void showHardware() {
         Set<? extends Hardware> hardwares = computeService.listHardwareProfiles();
         for (Hardware hardware : hardwares) {
-            System.out.println(hardware);
+            if(verbose) {
+                System.out.println(hardware);
+            }else{
+                System.out.println(hardware.getId());
+            }
         }
     }
 
@@ -46,9 +51,14 @@ public class CloudInfo {
         Set<? extends Image> images = computeService.listImages();
         for (Image image : images) {
             boolean match = locationId == null || image.getLocation().getId().equals(locationId);
+            if(!match){
+                continue;
+            }
 
-            if (match) {
+            if(verbose) {
                 System.out.println(image);
+            }else{
+                System.out.println(image.getId());
             }
         }
     }

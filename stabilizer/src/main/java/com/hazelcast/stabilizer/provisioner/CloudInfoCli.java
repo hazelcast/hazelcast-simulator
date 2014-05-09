@@ -28,6 +28,9 @@ public class CloudInfoCli {
     public final OptionSpec showImagesSpec = parser.accepts("showImages",
             "Shows all images available");
 
+    public final OptionSpec verboseSpec = parser.accepts("verbose",
+            "Shows very detailed info");
+
     public final OptionSpec<String> locationSpec = parser.accepts("location",
             "The locationId.")
             .withRequiredArg().ofType(String.class);
@@ -65,15 +68,18 @@ public class CloudInfoCli {
         cloudInfo.props.load(propertiesFile);
         log.info(format("stabilizer.properties: %s", cloudInfo.props.getFile().getAbsolutePath()));
 
-        cloudInfo.init();
 
         cloudInfo.locationId = options.valueOf(locationSpec);
+        cloudInfo.verbose = options.has(verboseSpec);
 
         if (options.has(showLocationsSpec)) {
+            cloudInfo.init();
             cloudInfo.showLocations();
         } else if (options.has(showHardwareSpec)) {
+            cloudInfo.init();
             cloudInfo.showHardware();
         } else if (options.has(showImagesSpec)) {
+            cloudInfo.init();
             cloudInfo.showImages();
         }else{
             parser.printHelpOn(System.out);
