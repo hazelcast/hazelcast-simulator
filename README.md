@@ -56,10 +56,7 @@ the changes required. In case of EC2, you only need to make the following change
 ```
 CLOUD_IDENTITY=<your-aws-access-key>
 CLOUD_CREDENTIAL=<your-aws-secret-key>
-USER=yourusername
 ```
-
-The yourusername should be the name of your user (run whoami). This will be automated in the very near future.
 
 #### SSH Install: Important
 

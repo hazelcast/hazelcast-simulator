@@ -49,11 +49,14 @@ public class TemplateBuilder {
 
         log.info("Created template");
 
-        AdminAccess x = AdminAccess.builder().adminUsername("stabilizer").build();
+        String user = props.get("USER", "stabilizer");
+        AdminAccess adminAccess = AdminAccess.builder().adminUsername(user).build();
+
+        log.info("Loginname to the remote machines: " + user);
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
-                .runScript(x)
+                .runScript(adminAccess)
                 .securityGroups(securityGroup);
 
         return template;
