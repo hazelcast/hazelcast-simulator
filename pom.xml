@@ -33,7 +33,7 @@
         <hazelcast.version>3.2.1</hazelcast.version>
         <jopt.version>4.4</jopt.version>
         <log4j.version>1.2.17</log4j.version>
-        <jclouds.version>1.8.0-SNAPSHOT</jclouds.version>
+        <jclouds.version>1.7.2</jclouds.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
