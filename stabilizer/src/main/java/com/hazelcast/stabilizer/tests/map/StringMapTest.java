@@ -19,8 +19,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.performance.OperationsPerSecond;
-import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.AbstractTest;
 import com.hazelcast.stabilizer.tests.TestRunner;
 

@@ -155,7 +155,7 @@ public class Provisioner {
 
         echo("Created compute");
 
-        Template template = new TemplateBuilder(compute,props).build();
+        Template template = new TemplateBuilder(compute, props).build();
 
         echo("Creating nodes");
 

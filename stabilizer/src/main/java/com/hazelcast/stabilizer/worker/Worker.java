@@ -241,7 +241,7 @@ public class Worker {
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
                 Object response = in.readObject();
 
-                if(response instanceof TerminateWorkerException){
+                if (response instanceof TerminateWorkerException) {
                     System.exit(0);
                 }
 
@@ -264,7 +264,7 @@ public class Worker {
             for (; ; ) {
                 try {
                     TestCommandRequest request = requestQueue.take();
-                    if(request == null){
+                    if (request == null) {
                         throw new NullPointerException("request can't be null");
                     }
                     doProcess(request.id, request.task);
@@ -285,8 +285,8 @@ public class Worker {
                     process((StopTestCommand) command);
                 } else if (command instanceof GenericTestCommand) {
                     result = process((GenericTestCommand) command);
-                }else if(command instanceof GetOperationCountTestCommand){
-                    result = process((GetOperationCountTestCommand)command);
+                } else if (command instanceof GetOperationCountTestCommand) {
+                    result = process((GetOperationCountTestCommand) command);
                 } else {
                     throw new RuntimeException("Unhandled task:" + command.getClass());
                 }

@@ -9,11 +9,9 @@ import joptsimple.OptionSpec;
 
 import java.io.File;
 
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static java.lang.String.format;
 
 public class ProvisionerCli {
-    private final static File STABILIZER_HOME = getStablizerHome();
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(ProvisionerCli.class);
 
     public final OptionParser parser = new OptionParser();
@@ -31,7 +29,8 @@ public class ProvisionerCli {
 
     public final OptionSpec<Integer> scaleSpec = parser.accepts("scale",
             "Number of agent machines to scale to. If the number of machines already exists, the call is ignored. If the " +
-                    "desired number of machines is smaller than the actual number of machines, machines are terminated.")
+                    "desired number of machines is smaller than the actual number of machines, machines are terminated."
+    )
             .withRequiredArg().ofType(Integer.class);
 
     public final OptionSpec terminateSpec = parser.accepts("terminateWorker",
@@ -50,13 +49,13 @@ public class ProvisionerCli {
             .withRequiredArg().ofType(String.class);
 
     private final Provisioner provisioner;
+    private OptionSet options;
 
     public ProvisionerCli(Provisioner provisioner) {
         this.provisioner = provisioner;
     }
 
     public void run(String[] args) throws Exception {
-        OptionSet options;
         try {
             options = parser.parse(args);
         } catch (OptionException e) {
@@ -68,8 +67,8 @@ public class ProvisionerCli {
             parser.printHelpOn(System.out);
             System.exit(0);
         }
-        File propertiesFile = getPropertiesFile(options);
-        provisioner.props.load(propertiesFile);
+
+        provisioner.props.init(getPropertiesFile());
         log.info(format("stabilizer.properties: %s", provisioner.props.getFile().getAbsolutePath()));
 
         provisioner.init();
@@ -91,25 +90,12 @@ public class ProvisionerCli {
         }
     }
 
-    private File getPropertiesFile(OptionSet options) {
-        File file;
+    private File getPropertiesFile() {
         if (options.has(propertiesFileSpec)) {
             //a file was explicitly configured
-            file = new File(options.valueOf(propertiesFileSpec));
+            return new File(options.valueOf(propertiesFileSpec));
         } else {
-            //look in the working directory first
-            file = new File("stabilizer.properties");
-            if (!file.exists()) {
-                //if not exist, then look in the conf directory.
-                file = Utils.toFile(STABILIZER_HOME, "conf", "stabilizer.properties");
-            }
+            return null;
         }
-
-        if (!file.exists()) {
-            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
-        }
-
-        return file;
     }
-
 }

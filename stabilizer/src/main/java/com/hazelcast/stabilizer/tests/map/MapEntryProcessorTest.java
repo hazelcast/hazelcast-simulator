@@ -5,8 +5,6 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.map.AbstractEntryProcessor;
-import com.hazelcast.stabilizer.performance.OperationsPerSecond;
-import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.AbstractTest;
 import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;

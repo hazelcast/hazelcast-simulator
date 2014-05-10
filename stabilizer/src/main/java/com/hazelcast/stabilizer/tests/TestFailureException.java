@@ -1,6 +1,6 @@
 package com.hazelcast.stabilizer.tests;
 
-public class TestFailureException extends RuntimeException{
+public class TestFailureException extends RuntimeException {
 
     public TestFailureException() {
     }

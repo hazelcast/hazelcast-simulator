@@ -39,15 +39,15 @@ public class ComputeServiceBuilder {
         String credentials = props.get("CLOUD_CREDENTIAL");
         File file = new File(credentials);
         if (file.exists()) {
-            if(log.isFinestEnabled()) {
-                log.finest("Loading CLOUD_CREDENTIAL from file: "+file.getAbsolutePath());
+            if (log.isFinestEnabled()) {
+                log.finest("Loading CLOUD_CREDENTIAL from file: " + file.getAbsolutePath());
             }
             credentials = Utils.fileAsText(file);
         }
 
         String cloudProvider = props.get("CLOUD_PROVIDER");
-        if(log.isFinestEnabled()){
-            log.finest("Using CLOUD_PROVIDER: "+cloudProvider);
+        if (log.isFinestEnabled()) {
+            log.finest("Using CLOUD_PROVIDER: " + cloudProvider);
         }
 
         return ContextBuilder.newBuilder(cloudProvider)

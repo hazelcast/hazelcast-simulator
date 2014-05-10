@@ -18,7 +18,7 @@ public class TestCommandFuture<E> implements Future<E> {
 
     private volatile Object result = NO_RESULT;
 
-    public TestCommandFuture(TestCommand command){
+    public TestCommandFuture(TestCommand command) {
         this.command = command;
     }
 
@@ -72,7 +72,7 @@ public class TestCommandFuture<E> implements Future<E> {
                 }
 
                 if (remainingTimeoutMs <= 0) {
-                    throw new TimeoutException("Timeout while executing : "+command);
+                    throw new TimeoutException("Timeout while executing : " + command);
                 }
 
                 long startMs = System.currentTimeMillis();

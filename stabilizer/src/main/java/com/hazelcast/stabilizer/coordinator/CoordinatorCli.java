@@ -68,7 +68,7 @@ public class CoordinatorCli {
             "The startup timeout in seconds for a worker")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
-    private final OptionSpec  monitorPerformanceSpec = parser.accepts("monitorPerformance",
+    private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
             "Track performance");
 
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
@@ -139,7 +139,7 @@ public class CoordinatorCli {
     }
 
     public void init(String[] args) throws Exception {
-         try {
+        try {
             options = parser.parse(args);
         } catch (OptionException e) {
             Utils.exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
@@ -155,7 +155,7 @@ public class CoordinatorCli {
             coordinator.workerClassPath = options.valueOf(workerClassPathSpec);
         }
 
-        coordinator.props.load(getPropertiesFile());
+        coordinator.props.init(getPropertiesFile());
         coordinator.verifyEnabled = options.valueOf(verifyEnabledSpec);
         coordinator.monitorPerformance = options.has(monitorPerformanceSpec);
         coordinator.testStopTimeoutMs = options.valueOf(testStopTimeoutMsSpec);
@@ -184,27 +184,15 @@ public class CoordinatorCli {
     }
 
     private File getPropertiesFile() {
-        File file;
         if (options.has(propertiesFileSpec)) {
             //a file was explicitly configured
-            file = new File(options.valueOf(propertiesFileSpec));
+            return new File(options.valueOf(propertiesFileSpec));
         } else {
-            //look in the working directory first
-            file = new File("stabilizer.properties");
-            if (!file.exists()) {
-                //if not exist, then look in the conf directory.
-                file = Utils.toFile(STABILIZER_HOME, "conf", "stabilizer.properties");
-            }
+            return null;
         }
-
-        if (!file.exists()) {
-            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
-        }
-
-        return file;
     }
 
-    private  File getTestSuiteFile() {
+    private File getTestSuiteFile() {
         String testsuiteFileName = Utils.toFile(Coordinator.STABILIZER_HOME, "tests", "map.properties").getAbsolutePath();
 
         List<String> testsuiteFiles = options.nonOptionArguments();

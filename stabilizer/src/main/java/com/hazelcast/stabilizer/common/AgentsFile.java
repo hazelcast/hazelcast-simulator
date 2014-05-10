@@ -52,7 +52,7 @@ public class AgentsFile {
         List<AgentAddress> pairs = new LinkedList<AgentAddress>();
         for (String line : addresses) {
             String trimLine = line.trim();
-            if(trimLine.isEmpty()){
+            if (trimLine.isEmpty()) {
                 continue;
             }
 

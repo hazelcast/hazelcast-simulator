@@ -1,5 +1,6 @@
 package com.hazelcast.stabilizer.common;
 
+import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
@@ -8,11 +9,29 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class StabilizerProperties {
+    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(StabilizerProperties.class);
 
     private final Properties properties = new Properties();
     private File file;
 
-    public void load(File file) {
+    public void init(File file) {
+        if (file == null) {
+            //look in the working directory first
+            file = new File("stabilizer.properties");
+            if (!file.exists()) {
+                //if not exist, then look in the conf directory.
+                file = Utils.toFile(Utils.getStablizerHome(), "conf", "stabilizer.properties");
+            }
+        }
+
+        if (!file.exists()) {
+            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
+        }
+
+        load(file);
+    }
+
+    private void load(File file) {
         this.file = file;
         try {
             FileInputStream inputStream = new FileInputStream(file);

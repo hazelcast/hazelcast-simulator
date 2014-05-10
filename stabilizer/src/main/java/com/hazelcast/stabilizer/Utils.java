@@ -483,7 +483,7 @@ public final class Utils {
         File file = new File(options.valueOf(spec));
         if (!file.exists()) {
             ILogger log = Logger.getLogger(Utils.class);
-            exitWithError(log,format("%s [%s] does not exist\n", desc, file));
+            exitWithError(log, format("%s [%s] does not exist\n", desc, file));
         }
         return file;
     }

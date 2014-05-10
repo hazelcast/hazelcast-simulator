@@ -9,12 +9,10 @@ import joptsimple.OptionSpec;
 
 import java.io.File;
 
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static java.lang.String.format;
 
 public class CloudInfoCli {
 
-    private final static File STABILIZER_HOME = getStablizerHome();
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(ProvisionerCli.class);
 
     public final OptionParser parser = new OptionParser();
@@ -45,18 +43,18 @@ public class CloudInfoCli {
             .withRequiredArg().ofType(String.class);
 
     private final CloudInfo cloudInfo;
+    private OptionSet options;
 
     public CloudInfoCli(CloudInfo cloudInfo) {
         this.cloudInfo = cloudInfo;
     }
 
     public void run(String[] args) throws Exception {
-        OptionSet options;
         try {
             options = parser.parse(args);
         } catch (OptionException e) {
             Utils.exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
-            return;//
+            return;
         }
 
         if (options.has(helpSpec)) {
@@ -64,10 +62,8 @@ public class CloudInfoCli {
             System.exit(0);
         }
 
-        File propertiesFile = getPropertiesFile(options);
-        cloudInfo.props.load(propertiesFile);
+        cloudInfo.props.init(getPropertiesFile());
         log.info(format("stabilizer.properties: %s", cloudInfo.props.getFile().getAbsolutePath()));
-
 
         cloudInfo.locationId = options.valueOf(locationSpec);
         cloudInfo.verbose = options.has(verboseSpec);
@@ -81,29 +77,17 @@ public class CloudInfoCli {
         } else if (options.has(showImagesSpec)) {
             cloudInfo.init();
             cloudInfo.showImages();
-        }else{
+        } else {
             parser.printHelpOn(System.out);
         }
     }
 
-    private File getPropertiesFile(OptionSet options) {
-        File file;
+    private File getPropertiesFile() {
         if (options.has(propertiesFileSpec)) {
             //a file was explicitly configured
-            file = new File(options.valueOf(propertiesFileSpec));
+            return new File(options.valueOf(propertiesFileSpec));
         } else {
-            //look in the working directory first
-            file = new File("stabilizer.properties");
-            if (!file.exists()) {
-                //if not exist, then look in the conf directory.
-                file = Utils.toFile(STABILIZER_HOME, "conf", "stabilizer.properties");
-            }
+            return null;
         }
-
-        if (!file.exists()) {
-            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
-        }
-
-        return file;
     }
 }

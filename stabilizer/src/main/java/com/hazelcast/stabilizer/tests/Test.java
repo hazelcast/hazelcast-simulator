@@ -15,9 +15,6 @@
  */
 package com.hazelcast.stabilizer.tests;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.stabilizer.performance.Performance;
-
 /**
  * The Test is the 'thing' that contains the actual logic we want to run.
  * information.

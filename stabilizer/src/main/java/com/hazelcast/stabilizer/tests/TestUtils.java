@@ -21,14 +21,9 @@ import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
 import com.hazelcast.stabilizer.TestCase;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.Utils.getFile;
-import static com.hazelcast.stabilizer.Utils.writeObject;
 import static java.lang.String.format;
 
 public class TestUtils {
@@ -38,8 +33,8 @@ public class TestUtils {
         return impl != null ? impl.node : null;
     }
 
-    public static long secondsToMillis(int seconds){
-        return seconds*1000;
+    public static long secondsToMillis(int seconds) {
+        return seconds * 1000;
     }
 
     public static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
@@ -52,14 +47,14 @@ public class TestUtils {
         return impl;
     }
 
-    public static <E> E getField(Object o, String fieldName){
+    public static <E> E getField(Object o, String fieldName) {
         try {
             Field field = o.getClass().getDeclaredField(fieldName);
             field.setAccessible(true);
-            return (E)field.get(o);
-        }catch(NoSuchFieldException e){
+            return (E) field.get(o);
+        } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
-        }catch(IllegalAccessException e){
+        } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
