@@ -65,8 +65,9 @@ like this:
 ssh-keygen -t rsa -C "your_email@example.com"
 ```
 
-Your id_rsa.pub key will automatically be copied to the remote agent machines and added to the known_hosts, so that you
-can log into that machine without a password or explicit provided credentials.
+You can press enter on all questions. Your id_rsa.pub key will automatically be copied to the remote agent machines
+and added to the ~/.ssh/known_hosts file, so that you can log into that machine without a password or explicit provided
+credentials.
 
 #### Provisioning
 

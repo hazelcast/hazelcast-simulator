@@ -13,6 +13,7 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 import java.io.File;
 import java.util.Properties;
 
+import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.newFile;
 import static java.util.Arrays.asList;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
@@ -37,25 +38,33 @@ public class ComputeServiceBuilder {
         overrides.setProperty(POLL_INITIAL_PERIOD, props.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
         overrides.setProperty(POLL_MAX_PERIOD, props.get("CLOUD_POLL_MAX_PERIOD", "1000"));
 
-        String credentials = props.get("CLOUD_CREDENTIAL");
-        File file = newFile(credentials);
-        if (file.exists()) {
-            if (log.isFinestEnabled()) {
-                log.finest("Loading CLOUD_CREDENTIAL from file: " + file.getAbsolutePath());
-            }
-            credentials = Utils.fileAsText(file);
-        }
+        String identity = load("CLOUD_IDENTITY");
+        String credential = load("CLOUD_CREDENTIAL");
 
         String cloudProvider = props.get("CLOUD_PROVIDER");
+
         if (log.isFinestEnabled()) {
             log.finest("Using CLOUD_PROVIDER: " + cloudProvider);
         }
 
         return ContextBuilder.newBuilder(cloudProvider)
                 .overrides(overrides)
-                .credentials(props.get("CLOUD_IDENTITY"), credentials)
+                .credentials(identity, credential)
                 .modules(asList(new SLF4JLoggingModule(), new SshjSshClientModule()))
                 .buildView(ComputeServiceContext.class)
                 .getComputeService();
+    }
+
+    private String load(String property) {
+        String value = props.get(property,"");
+
+        File file = newFile(value);
+        if (file.exists()) {
+            if (log.isFinestEnabled()) {
+                log.finest("Loading " + property + " from file: " + file.getAbsolutePath());
+            }
+            value = fileAsText(file);
+        }
+        return value;
     }
 }
