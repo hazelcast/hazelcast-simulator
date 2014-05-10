@@ -37,7 +37,7 @@ public class TemplateBuilder {
 
         log.info("Machine spec: " + machineSpec);
 
-        securityGroup = props.get("SECURITY_GROUP", "");
+        securityGroup = props.get("SECURITY_GROUP", "stabilizer");
 
         spec = TemplateBuilderSpec.parse(machineSpec);
 
@@ -84,18 +84,22 @@ public class TemplateBuilder {
 
         SecurityGroupApi securityGroupApi = ec2Api.getSecurityGroupApi().get();
         String region = spec.getLocationId();
-        Set<SecurityGroup> securityGroups = securityGroupApi.describeSecurityGroupsInRegion(region, securityGroup);
-        if (securityGroups.isEmpty()) {
-            log.info("Security group: '" + securityGroup + "' is not found in region '" + region + "', creating it on the fly");
-
-            securityGroupApi.createSecurityGroupInRegion(region, securityGroup, securityGroup);
-
-            //this duplication of ports is ugly since we already do it in 'inboundPorts method'
-            securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 22, 22, "0.0.0.0/0");
-            securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 9000, 9001, "0.0.0.0/0");
-            securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
-        } else {
-            log.info("Security group: '" + securityGroup + "' is found in region '" + region + "'");
+        if (region == null) {
+            region = "us-east-1";
         }
+
+        Set<SecurityGroup> securityGroups = securityGroupApi.describeSecurityGroupsInRegion(region, securityGroup);
+        if (!securityGroups.isEmpty()) {
+            log.info("Security group: '" + securityGroup + "' is found in region '" + region + "'");
+            return;
+        }
+        log.info("Security group: '" + securityGroup + "' is not found in region '" + region + "', creating it on the fly");
+
+        securityGroupApi.createSecurityGroupInRegion(region, securityGroup, securityGroup);
+
+        //this duplication of ports is ugly since we already do it in 'inboundPorts method'
+        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 22, 22, "0.0.0.0/0");
+        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 9000, 9001, "0.0.0.0/0");
+        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
     }
 }
