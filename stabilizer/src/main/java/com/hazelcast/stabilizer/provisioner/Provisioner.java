@@ -14,6 +14,7 @@ import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
+import org.jclouds.ec2.domain.SecurityGroup;
 import org.jclouds.ec2.features.SecurityGroupApi;
 import org.jclouds.net.domain.IpProtocol;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
@@ -239,17 +240,18 @@ public class Provisioner {
 
             AWSEC2Api ec2Api = compute.getContext().unwrapApi(AWSEC2Api.class);
 
-            // RestContext<NovaClient, NovaAsyncClient> context = compute.getContext().getProviderSpecificContext();
-
-            SecurityGroupApi securityGroupClient = ec2Api.getSecurityGroupApi().get();
-
-            //Set<SecurityGroup> securityGroups = securityGroupClient.describeSecurityGroupsInRegion(securityGroup);
-            //if(securityGroup.isEmpty()){
-            securityGroupClient.createSecurityGroupInRegion(spec.getLocationId(), securityGroup, securityGroup);
-            securityGroupClient.authorizeSecurityGroupIngressInRegion(spec.getLocationId(), securityGroup, IpProtocol.TCP, 22, 22, "0.0.0.0/0");
-            securityGroupClient.authorizeSecurityGroupIngressInRegion(spec.getLocationId(), securityGroup, IpProtocol.TCP, 9000, 9000, "0.0.0.0/0");
-            securityGroupClient.authorizeSecurityGroupIngressInRegion(spec.getLocationId(), securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
-            //}
+            SecurityGroupApi securityGroupApi = ec2Api.getSecurityGroupApi().get();
+            String region = spec.getLocationId();
+            Set<SecurityGroup> securityGroups = securityGroupApi.describeSecurityGroupsInRegion(region, securityGroup);
+            if (securityGroups.isEmpty()) {
+                log.info("Security group: "+securityGroup+" is not found, creating it on the fly");
+                securityGroupApi.createSecurityGroupInRegion(region, securityGroup, securityGroup);
+                securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 22, 22, "0.0.0.0/0");
+                securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 9000, 9000, "0.0.0.0/0");
+                securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
+            }else{
+                log.info("Security group: "+securityGroup+" is found");
+            }
         }
 
         Template template = compute.templateBuilder()
