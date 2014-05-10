@@ -190,10 +190,6 @@ SECURITY_GROUP=open
 
 The yourusername should be the name of your user (run whoami).
 
-If you are using ec2, the pem is the pem you have created in ec2 and the key.pub can be generated using the 'pemtopublicrsakey'
-utility in the STABILIZER_HOME/bin directory. I prefer to copy the pem and key file within my 'tests' directory. Remember
-that '~' doesn't work; so give relative or absolute path for key/pem.
-
 The SECURITY_GROUP needs to point to an existing Security Group. make sure that port 22, 9000 are open. Also make sure that
 port 5701..5801 are open so that the HZ members can communicate with each other.
 

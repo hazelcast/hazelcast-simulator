@@ -9,15 +9,11 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
-import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
-import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
-import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
-import org.jclouds.sshj.config.SshjSshClientModule;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -27,7 +23,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -39,9 +34,6 @@ import static com.hazelcast.stabilizer.Utils.appendText;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
-import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
 
 //https://jclouds.apache.org/start/compute/ good read
 //https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
@@ -171,7 +163,6 @@ public class Provisioner {
         String groupName = props.get("GROUP_NAME", "stabilizer-agent");
         echo("GroupName: " + groupName);
 
-
         long startTimeMs = System.currentTimeMillis();
 
         String jdkFlavor = props.get("JDK_FLAVOR", "outofthebox");
@@ -246,8 +237,8 @@ public class Provisioner {
         String securityGroup = props.get("SECURITY_GROUP", "");
         template.getOptions()
                 .inboundPorts(inboundPorts())
-                .runScript(AdminAccess.standard())
-                .securityGroups(securityGroup);
+                .runScript(AdminAccess.standard());
+                //.securityGroups(securityGroup);
 
         return template;
     }
@@ -293,7 +284,6 @@ public class Provisioner {
         }
         return result;
     }
-
 
 
     private File getJavaInstallScript() {
