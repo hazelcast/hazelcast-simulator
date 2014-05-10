@@ -27,6 +27,66 @@ and you send a command like "run this testsuite with 10 worker JVM's for 2 hours
 in combination with EC2 (or any other cloud), but it can also be used in a static setup like a local machine or the
 test cluster we have in Istanbul office.
 
+#### Installation
+
+At this moment in time we do not yet have a pre-build artifact. So you need to checkout the git repo:
+https://github.com/hazelcast/hazelcast-stabilizer and build it yourself with mvn clean install. After this command completes,
+in the dist/target directory you will find a zip and tar.gz file.
+
+Unzip or untar these projects to e.g. the home directory.
+
+add to ~/.bashr:
+
+```
+export STABILIZER_HOME=~/hazelcast-stabilizer-0.3-SNAPSHOT
+PATH=$STABILIZER_HOME/bin:$PATH
+```
+
+Create your tests working directory, e.g.
+
+```
+mkdir ~/tests
+```
+
+Copy the STABILIZER_HOME/conf/stabilizer.properties to the tests directory. And make
+the changes required. In case of EC2, you only need to make the following changes:
+
+```
+CLOUD_IDENTITY=<your-aws-access-key>
+CLOUD_CREDENTIAL=<your-aws-secret-key>
+USER=yourusername
+```
+
+The yourusername should be the name of your user (run whoami). This will be automated in the very near future.
+
+#### SSH Install: Important
+
+TODO: Is this still needed?
+
+When you frequently start/stop instances in a cloud, e.g. EC2 or GCE, then your ~/.ssh/known_hosts file is going to be polluted
+and your cloud can't be formed (you get jclouds ssh timeouts). This is because the same ip address will be handed out multiple
+times over time and this can lead to an SSH connectivity problem: man in the middle attack.
+
+To fix this problem, do the following. Make a file:
+
+```
+touch ~/.ssh/config
+```
+
+add the following content:
+```
+Host *
+    StrictHostKeyChecking no
+```
+
+And change the rights:
+
+```
+chmod 400 ~/.ssh/config
+```
+
+Now you will not have that problem again. Another solution is to clean the ~/.ssh/known_hosts file yourself.
+
 #### Provisioning
 
 The behavior of the cluster like clouds, os, hardware, jvm version, Hazelcast version, can be configured through the
@@ -90,13 +150,22 @@ coordinator yourtest.properties.
 
 This will create a single worker per agent and run the test for 60 seconds.
 
+### Accessing the provisioned machine
+
+When a machine is provisioned, a user with the same name as your local user is created and added to the sudoers list.
+Also the public key of your local user is copied to the remote machine and added to ~/.ssh/authorized_keys. So you
+can login to that machine using:
+
+```
+ssh yourusername@ip
+```
+
 ## Controlling the Hazelcast xml configuration
 
 By default the coordinator makes use of STABILIZER_HOME/conf/hazelcast.xml and STABILIZER_HOME/conf/client-hazelcast.xml
 to generate the correct Hazelcast configuration. But you can override this, so you can use your own configuration:
 
 coordinator --clientHzFile=your-client-hazelcast.xml --hzFile your-hazelcast.xml ....
-
 
 ## Controlling duration:
 The duration of a single test can be controlled using the --duration setting, which defaults to 60 seconds.
@@ -150,54 +219,6 @@ coordinator --memberWorkerCount 24  --duration 12h  map.properties
 
 You can very easily play with the actual deployment.
 
-#### Installation
-
-Unzip Hazelcast stabilizer to ~/
-
-add to ~/.bashr:
-export STABILIZER_HOME=~/hazelcast-stabilizer-0.3-SNAPSHOT
-PATH=$STABILIZER_HOME/bin:$PATH
-
-Create your tests working directory, e.g.
-
-mkdir ~/tests
-
-Copy the STABILIZER_HOME/conf/stabilizer.properties to the tests directory. And make
-the changes required. In case of EC2, you only need to make the following changes:
-
-```
-CLOUD_IDENTITY=<your-aws-access-key>
-CLOUD_CREDENTIAL=<your-aws-secret-key>
-USER=yourusername
-```
-
-The yourusername should be the name of your user (run whoami). This will be automated.
-
-#### SSH Install: Important
-
-When you frequently start/stop instances in a cloud, e.g. EC2 or GCE, then your ~/.ssh/known_hosts file is going to be polluted
-and your cloud can't be formed (you get jclouds ssh timeouts). This is because the same ip address will be handed out multiple
-times over time and this can lead to an SSH connectivity problem: man in the middle attack.
-
-To fix this problem, do the following. Make a file:
-
-```
-touch ~/.ssh/config
-```
-
-add the following content:
-```
-Host *
-    StrictHostKeyChecking no
-```
-
-And change the rights:
-
-```
-chmod 400 ~/.ssh/config
-```
-
-Now you will not have that problem again. Another solution is to clean the ~/.ssh/known_hosts file yourself.
 
 ### Mail Group
 
