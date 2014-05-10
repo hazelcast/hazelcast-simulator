@@ -58,33 +58,15 @@ CLOUD_IDENTITY=<your-aws-access-key>
 CLOUD_CREDENTIAL=<your-aws-secret-key>
 ```
 
-#### SSH Install: Important
-
-TODO: Is this still needed?
-
-When you frequently start/stop instances in a cloud, e.g. EC2 or GCE, then your ~/.ssh/known_hosts file is going to be polluted
-and your cloud can't be formed (you get jclouds ssh timeouts). This is because the same ip address will be handed out multiple
-times over time and this can lead to an SSH connectivity problem: man in the middle attack.
-
-To fix this problem, do the following. Make a file:
+After you have set up stabilizer, make sure you have a id_rsa.pub in your ~/.ssh directory. If not, one can be generated
+like this:
 
 ```
-touch ~/.ssh/config
+ssh-keygen -t rsa -C "your_email@example.com"
 ```
 
-add the following content:
-```
-Host *
-    StrictHostKeyChecking no
-```
-
-And change the rights:
-
-```
-chmod 400 ~/.ssh/config
-```
-
-Now you will not have that problem again. Another solution is to clean the ~/.ssh/known_hosts file yourself.
+Your id_rsa.pub key will automatically be copied to the remote agent machines and added to the known_hosts, so that you
+can log into that machine without a password or explicit provided credentials.
 
 #### Provisioning
 
