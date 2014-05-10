@@ -1,6 +1,7 @@
 package com.hazelcast.stabilizer.provisioner;
 
 import com.google.common.base.Predicate;
+import com.google.common.io.Files;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
@@ -210,9 +211,8 @@ public class Provisioner {
         public void run() {
             //install java if needed
             if (!"outofthebox".equals(props.get("JDK_FLAVOR"))) {
-                bash.ssh(ip, "touch install-java.sh");
-                bash.ssh(ip, "chmod +x install-java.sh");
-                bash.scpToRemote(ip, getJavaInstallScript().getAbsolutePath(), "install-java.sh");
+                bash.scpToRemote(ip, getJavaSupportScript(),"jdk-support.sh");
+                bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
                 bash.ssh(ip, "bash install-java.sh");
                 echo("\t" + ip + " JAVA INSTALLED");
             }
@@ -241,7 +241,6 @@ public class Provisioner {
         return result;
     }
 
-
     private File getJavaInstallScript() {
         String flavor = props.get("JDK_FLAVOR");
         String version = props.get("JDK_VERSION");
@@ -249,6 +248,11 @@ public class Provisioner {
         String script = "jdk-" + flavor + "-" + version + "-64.sh";
         File scriptDir = new File(STABILIZER_HOME, "jdk-install");
         return new File(scriptDir, script);
+    }
+
+    private File getJavaSupportScript() {
+         File scriptDir = new File(STABILIZER_HOME, "jdk-install");
+        return new File(scriptDir, "jdk-support.sh");
     }
 
     public void download() {

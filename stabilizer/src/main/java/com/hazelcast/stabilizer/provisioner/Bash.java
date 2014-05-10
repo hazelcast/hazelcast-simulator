@@ -7,6 +7,7 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -56,6 +57,10 @@ public class Bash {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void scpToRemote(String ip, File src, String target) {
+        scpToRemote(ip, src.getAbsolutePath(),target);
     }
 
     public void scpToRemote(String ip, String src, String target) {

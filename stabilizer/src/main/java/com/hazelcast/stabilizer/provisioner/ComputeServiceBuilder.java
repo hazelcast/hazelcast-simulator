@@ -1,8 +1,8 @@
 package com.hazelcast.stabilizer.provisioner;
 
+import com.google.inject.AbstractModule;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
@@ -11,6 +11,7 @@ import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
 
 import java.io.File;
+import java.util.List;
 import java.util.Properties;
 
 import static com.hazelcast.stabilizer.Utils.fileAsText;
@@ -33,26 +34,33 @@ public class ComputeServiceBuilder {
     }
 
     public ComputeService build() {
-        //http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
-        Properties overrides = new Properties();
-        overrides.setProperty(POLL_INITIAL_PERIOD, props.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
-        overrides.setProperty(POLL_MAX_PERIOD, props.get("CLOUD_POLL_MAX_PERIOD", "1000"));
+        String cloudProvider = props.get("CLOUD_PROVIDER");
 
         String identity = load("CLOUD_IDENTITY");
         String credential = load("CLOUD_CREDENTIAL");
-
-        String cloudProvider = props.get("CLOUD_PROVIDER");
 
         if (log.isFinestEnabled()) {
             log.finest("Using CLOUD_PROVIDER: " + cloudProvider);
         }
 
         return ContextBuilder.newBuilder(cloudProvider)
-                .overrides(overrides)
+                .overrides(newOverrideProperties())
                 .credentials(identity, credential)
-                .modules(asList(new SLF4JLoggingModule(), new SshjSshClientModule()))
+                .modules(getModules())
                 .buildView(ComputeServiceContext.class)
                 .getComputeService();
+    }
+
+    private List<AbstractModule> getModules() {
+        return asList(new SLF4JLoggingModule(), new SshjSshClientModule());
+    }
+
+    private Properties newOverrideProperties() {
+        //http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
+        Properties properties = new Properties();
+        properties.setProperty(POLL_INITIAL_PERIOD, props.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
+        properties.setProperty(POLL_MAX_PERIOD, props.get("CLOUD_POLL_MAX_PERIOD", "1000"));
+        return properties;
     }
 
     private String load(String property) {

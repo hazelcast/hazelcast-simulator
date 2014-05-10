@@ -2,9 +2,9 @@
 
 set -e
 
-function prepend {
-    echo $1|cat - $2 > /tmp/out && mv /tmp/out $2
-}
+source jdk-support.sh
+
+install wget
 
 cd ~
 wget --no-verbose http://ec2-54-87-52-100.compute-1.amazonaws.com/jdk-6u45-linux-x64.bin
