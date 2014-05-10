@@ -16,6 +16,14 @@
             <name>Maven2 Snapshot Repository</name>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
+
+        <repository>
+            <id>jclouds-snapshots</id>
+            <url>https://repository.apache.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
     </repositories>
 
     <properties>
@@ -25,7 +33,7 @@
         <hazelcast.version>3.2.1</hazelcast.version>
         <jopt.version>4.4</jopt.version>
         <log4j.version>1.2.17</log4j.version>
-        <jclouds.version>1.7.2</jclouds.version>
+        <jclouds.version>1.8.0-SNAPSHOT</jclouds.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
