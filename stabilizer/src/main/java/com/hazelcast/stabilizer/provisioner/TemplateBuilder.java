@@ -86,7 +86,7 @@ public class TemplateBuilder {
         String region = spec.getLocationId();
         Set<SecurityGroup> securityGroups = securityGroupApi.describeSecurityGroupsInRegion(region, securityGroup);
         if (securityGroups.isEmpty()) {
-            log.info("Security group: " + securityGroup + " is not found, creating it on the fly");
+            log.info("Security group: '" + securityGroup + "' is not found in region '" + region + "', creating it on the fly");
 
             securityGroupApi.createSecurityGroupInRegion(region, securityGroup, securityGroup);
 
@@ -95,7 +95,7 @@ public class TemplateBuilder {
             securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 9000, 9001, "0.0.0.0/0");
             securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
         } else {
-            log.info("Security group: " + securityGroup + " is found");
+            log.info("Security group: '" + securityGroup + "' is found in region '" + region + "'");
         }
     }
 }
