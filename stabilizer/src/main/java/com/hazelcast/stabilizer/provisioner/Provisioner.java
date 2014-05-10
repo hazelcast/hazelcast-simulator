@@ -237,8 +237,8 @@ public class Provisioner {
         String securityGroup = props.get("SECURITY_GROUP", "");
         template.getOptions()
                 .inboundPorts(inboundPorts())
-                .runScript(AdminAccess.standard());
-                //.securityGroups(securityGroup);
+                .runScript(AdminAccess.standard())
+                .securityGroups(securityGroup);
 
         return template;
     }
