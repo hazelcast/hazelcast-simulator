@@ -141,25 +141,6 @@ public class Provisioner {
         }
     }
 
-    private int[] inboundPorts() {
-        List<Integer> ports = new ArrayList<Integer>();
-        ports.add(22);
-        //todo:the following 2 ports should not be needed
-        ports.add(443);
-        ports.add(80);
-        ports.add(AgentRemoteService.PORT);
-        ports.add(WorkerJvmManager.PORT);
-        for (int k = 5701; k < 5751; k++) {
-            ports.add(k);
-        }
-
-        int[] result = new int[ports.size()];
-        for (int k = 0; k < result.length; k++) {
-            result[k] = ports.get(k);
-        }
-        return result;
-    }
-
     private void scaleUp(int delta) throws Exception {
         echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
         echo("Current number of machines: " + addresses.size());
@@ -183,7 +164,7 @@ public class Provisioner {
 
         echo("Created compute");
 
-        Template template = buildTemplate(compute);
+        Template template = new TemplateBuilder(compute,props).build();
 
         echo("Creating nodes");
 
@@ -225,47 +206,6 @@ public class Provisioner {
         echo("Duration: " + secondsToHuman(TimeUnit.MILLISECONDS.toSeconds(durationMs)));
         echoImportant(format("Successfully provisioned %s %s machines",
                 delta, props.get("CLOUD_PROVIDER")));
-    }
-
-    private Template buildTemplate(ComputeService compute) {
-        String machineSpec = props.get("MACHINE_SPEC", "");
-
-        String securityGroup = props.get("SECURITY_GROUP", "");
-        echo("Machine spec: " + machineSpec);
-
-        TemplateBuilderSpec spec = TemplateBuilderSpec.parse(machineSpec);
-
-        if ("aws-ec2".equals(props.get("CLOUD_PROVIDER"))) {
-            //in case of AWS, we are going to create the security group, if it doesn't exist.
-
-            AWSEC2Api ec2Api = compute.getContext().unwrapApi(AWSEC2Api.class);
-
-            SecurityGroupApi securityGroupApi = ec2Api.getSecurityGroupApi().get();
-            String region = spec.getLocationId();
-            Set<SecurityGroup> securityGroups = securityGroupApi.describeSecurityGroupsInRegion(region, securityGroup);
-            if (securityGroups.isEmpty()) {
-                log.info("Security group: "+securityGroup+" is not found, creating it on the fly");
-                securityGroupApi.createSecurityGroupInRegion(region, securityGroup, securityGroup);
-                securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 22, 22, "0.0.0.0/0");
-                securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 9000, 9000, "0.0.0.0/0");
-                securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
-            }else{
-                log.info("Security group: "+securityGroup+" is found");
-            }
-        }
-
-        Template template = compute.templateBuilder()
-                .from(spec)
-                .build();
-
-        echo("Created template");
-
-        template.getOptions()
-                .inboundPorts(inboundPorts())
-                .runScript(AdminAccess.standard())
-                .securityGroups(securityGroup);
-
-        return template;
     }
 
     private class InstallNodeTask implements Runnable {
