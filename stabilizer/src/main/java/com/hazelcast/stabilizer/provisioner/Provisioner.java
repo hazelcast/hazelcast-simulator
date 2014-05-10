@@ -9,10 +9,13 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
+import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
+import org.jclouds.ec2.features.SecurityGroupApi;
+import org.jclouds.net.domain.IpProtocol;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 
 import java.io.File;
@@ -226,15 +229,35 @@ public class Provisioner {
     private Template buildTemplate(ComputeService compute) {
         String machineSpec = props.get("MACHINE_SPEC", "");
 
+        String securityGroup = props.get("SECURITY_GROUP", "");
         echo("Machine spec: " + machineSpec);
 
+        TemplateBuilderSpec spec = TemplateBuilderSpec.parse(machineSpec);
+
+        if ("aws-ec2".equals(props.get("CLOUD_PROVIDER"))) {
+            //in case of AWS, we are going to create the security group, if it doesn't exist.
+
+            AWSEC2Api ec2Api = compute.getContext().unwrapApi(AWSEC2Api.class);
+
+            // RestContext<NovaClient, NovaAsyncClient> context = compute.getContext().getProviderSpecificContext();
+
+            SecurityGroupApi securityGroupClient = ec2Api.getSecurityGroupApi().get();
+
+            //Set<SecurityGroup> securityGroups = securityGroupClient.describeSecurityGroupsInRegion(securityGroup);
+            //if(securityGroup.isEmpty()){
+            securityGroupClient.createSecurityGroupInRegion(spec.getLocationId(), securityGroup, securityGroup);
+            securityGroupClient.authorizeSecurityGroupIngressInRegion(spec.getLocationId(), securityGroup, IpProtocol.TCP, 22, 22, "0.0.0.0/0");
+            securityGroupClient.authorizeSecurityGroupIngressInRegion(spec.getLocationId(), securityGroup, IpProtocol.TCP, 9000, 9000, "0.0.0.0/0");
+            securityGroupClient.authorizeSecurityGroupIngressInRegion(spec.getLocationId(), securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
+            //}
+        }
+
         Template template = compute.templateBuilder()
-                .from(TemplateBuilderSpec.parse(machineSpec))
+                .from(spec)
                 .build();
 
         echo("Created template");
 
-        String securityGroup = props.get("SECURITY_GROUP", "");
         template.getOptions()
                 .inboundPorts(inboundPorts())
                 .runScript(AdminAccess.standard())
