@@ -8,11 +8,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import static java.lang.String.format;
+
 public class StabilizerProperties {
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(StabilizerProperties.class);
 
     private final Properties properties = new Properties();
-    private File file;
 
     public void init(File file) {
         if (file == null) {
@@ -20,7 +21,7 @@ public class StabilizerProperties {
             file = new File("stabilizer.properties");
             if (!file.exists()) {
                 //if not exist, then look in the conf directory.
-                file = Utils.toFile(Utils.getStablizerHome(), "conf", "stabilizer.properties");
+                file = Utils.newFile(Utils.getStablizerHome(), "conf", "stabilizer.properties");
             }
         }
 
@@ -32,7 +33,8 @@ public class StabilizerProperties {
     }
 
     private void load(File file) {
-        this.file = file;
+        log.info(format("Loading stabilizer.properties: %s", file.getAbsolutePath()));
+
         try {
             FileInputStream inputStream = new FileInputStream(file);
             try {
@@ -43,10 +45,6 @@ public class StabilizerProperties {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public File getFile() {
-        return file;
     }
 
     public String get(String name) {

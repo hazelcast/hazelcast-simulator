@@ -16,13 +16,11 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getFile;
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
+import static com.hazelcast.stabilizer.Utils.newFile;
 import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
 import static java.lang.String.format;
 
 public class CoordinatorCli {
-
-    private final static File STABILIZER_HOME = getStablizerHome();
 
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(CoordinatorCli.class);
 
@@ -186,14 +184,14 @@ public class CoordinatorCli {
     private File getPropertiesFile() {
         if (options.has(propertiesFileSpec)) {
             //a file was explicitly configured
-            return new File(options.valueOf(propertiesFileSpec));
+            return newFile(options.valueOf(propertiesFileSpec));
         } else {
             return null;
         }
     }
 
     private File getTestSuiteFile() {
-        String testsuiteFileName = Utils.toFile(Coordinator.STABILIZER_HOME, "tests", "map.properties").getAbsolutePath();
+        String testsuiteFileName = newFile(Coordinator.STABILIZER_HOME, "tests", "map.properties").getAbsolutePath();
 
         List<String> testsuiteFiles = options.nonOptionArguments();
         if (testsuiteFiles.size() == 1) {

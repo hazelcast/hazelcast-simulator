@@ -9,8 +9,6 @@ import joptsimple.OptionSpec;
 
 import java.io.File;
 
-import static java.lang.String.format;
-
 public class CloudInfoCli {
 
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(ProvisionerCli.class);
@@ -18,7 +16,7 @@ public class CloudInfoCli {
     public final OptionParser parser = new OptionParser();
 
     public final OptionSpec showLocationsSpec = parser.accepts("showLocations",
-            "Shows all locations available. In Amazon for example this would be ...");
+            "Shows all locations available. In Amazon for example this would be regions and zones.");
 
     public final OptionSpec showHardwareSpec = parser.accepts("showHardware",
             "Shows all hardware available");
@@ -63,7 +61,6 @@ public class CloudInfoCli {
         }
 
         cloudInfo.props.init(getPropertiesFile());
-        log.info(format("stabilizer.properties: %s", cloudInfo.props.getFile().getAbsolutePath()));
 
         cloudInfo.locationId = options.valueOf(locationSpec);
         cloudInfo.verbose = options.has(verboseSpec);

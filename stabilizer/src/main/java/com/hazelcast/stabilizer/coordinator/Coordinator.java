@@ -238,7 +238,6 @@ public class Coordinator {
         cli.init(args);
 
         log.info(format("Using agents file: %s", coordinator.agentsFile.getAbsolutePath()));
-        log.info(format("Using Stabilizer properties file: %s", coordinator.props.getFile().getAbsolutePath()));
 
         try {
             coordinator.run();

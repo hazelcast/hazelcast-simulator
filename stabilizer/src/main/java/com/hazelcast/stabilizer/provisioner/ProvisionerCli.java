@@ -9,8 +9,6 @@ import joptsimple.OptionSpec;
 
 import java.io.File;
 
-import static java.lang.String.format;
-
 public class ProvisionerCli {
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(ProvisionerCli.class);
 
@@ -69,8 +67,6 @@ public class ProvisionerCli {
         }
 
         provisioner.props.init(getPropertiesFile());
-        log.info(format("stabilizer.properties: %s", provisioner.props.getFile().getAbsolutePath()));
-
         provisioner.init();
 
         if (options.has(restartSpec)) {
@@ -93,7 +89,7 @@ public class ProvisionerCli {
     private File getPropertiesFile() {
         if (options.has(propertiesFileSpec)) {
             //a file was explicitly configured
-            return new File(options.valueOf(propertiesFileSpec));
+            return Utils.newFile(options.valueOf(propertiesFileSpec));
         } else {
             return null;
         }

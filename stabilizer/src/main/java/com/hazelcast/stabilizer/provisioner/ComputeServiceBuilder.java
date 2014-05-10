@@ -13,6 +13,7 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 import java.io.File;
 import java.util.Properties;
 
+import static com.hazelcast.stabilizer.Utils.newFile;
 import static java.util.Arrays.asList;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
@@ -37,7 +38,7 @@ public class ComputeServiceBuilder {
         overrides.setProperty(POLL_MAX_PERIOD, props.get("CLOUD_POLL_MAX_PERIOD", "1000"));
 
         String credentials = props.get("CLOUD_CREDENTIAL");
-        File file = new File(credentials);
+        File file = newFile(credentials);
         if (file.exists()) {
             if (log.isFinestEnabled()) {
                 log.finest("Loading CLOUD_CREDENTIAL from file: " + file.getAbsolutePath());
