@@ -1,7 +1,9 @@
 hazelcast-stabilizer
 ===========================
 
-A tool for stress testing Hazelcast
+A tool for stress testing Hazelcast and Hazelcast based applications in clustered environments. This can be in a local
+machine, but can also be in a cloud like EC2 or Google Compute Engine. The Stabilizer makes use of JClouds, so in theory
+we can roll out in any cloud.
 
 #### General structure
 

@@ -4,23 +4,14 @@ import com.google.common.base.Predicate;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.agent.AgentRemoteService;
-import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
-import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
-import org.jclouds.compute.domain.TemplateBuilderSpec;
-import org.jclouds.ec2.domain.SecurityGroup;
-import org.jclouds.ec2.features.SecurityGroupApi;
-import org.jclouds.net.domain.IpProtocol;
-import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -263,7 +254,7 @@ public class Provisioner {
     public void download() {
         echoImportant("Download artifacts of %s machines", addresses.size());
 
-        bash.bash("mkdir -p workers");
+        bash.execute("mkdir -p workers");
 
         for (AgentAddress address : addresses) {
             echo("Downloading from %s", address.publicAddress);
@@ -271,7 +262,7 @@ public class Provisioner {
             String syncCommand = format("rsync  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
                     props.get("SSH_OPTIONS", ""), props.get("USER"), address.publicAddress, getVersion());
 
-            bash.bash(syncCommand);
+            bash.execute(syncCommand);
         }
 
         echoImportant("Finished Downloading Artifacts of %s machines", addresses.size());

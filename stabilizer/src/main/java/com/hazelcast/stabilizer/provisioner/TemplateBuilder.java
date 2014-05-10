@@ -49,9 +49,11 @@ public class TemplateBuilder {
 
         log.info("Created template");
 
+        AdminAccess x = AdminAccess.builder().adminUsername("stabilizer").build();
+
         template.getOptions()
                 .inboundPorts(inboundPorts())
-                .runScript(AdminAccess.standard())
+                .runScript(x)
                 .securityGroups(securityGroup);
 
         return template;
