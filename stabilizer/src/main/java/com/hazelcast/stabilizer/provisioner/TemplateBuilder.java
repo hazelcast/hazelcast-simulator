@@ -93,6 +93,7 @@ public class TemplateBuilder {
             log.info("Security group: '" + securityGroup + "' is found in region '" + region + "'");
             return;
         }
+
         log.info("Security group: '" + securityGroup + "' is not found in region '" + region + "', creating it on the fly");
 
         securityGroupApi.createSecurityGroupInRegion(region, securityGroup, securityGroup);

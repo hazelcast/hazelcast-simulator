@@ -3,23 +3,6 @@ hazelcast-stabilizer
 
 A tool for stress testing Hazelcast
 
-### Mail Group
-
-Please join the mail group if you are interested in using or developing Hazelcast.
-
-[http://groups.google.com/group/hazelcast](http://groups.google.com/group/hazelcast)
-
-#### License
-
-Hazelcast Stabilizer is available under the Apache 2 License.
-
-#### Copyright
-
-Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
-
-Visit [www.hazelcast.com](http://www.hazelcast.com/) for more info.
-
-
 #### General structure
 
 * Test: the functionality you want to test, e.g. a map. I looks a bit like a junit test, but it doesn't use annotations
@@ -99,11 +82,13 @@ provisioner --clean
 
 #### Controlling Deployment
 
-Deploying a test on workers is as simple as:
+Deploying a test on the agent machines is as simple as:
 
 ```
 coordinator yourtest.properties.
 ```
+
+This will create a single worker per agent and run the test for 60 seconds.
 
 ## Controlling the Hazelcast xml configuration
 
@@ -163,7 +148,7 @@ Or maybe you want to run 2 member JVM's per machine:
 coordinator --memberWorkerCount 24  --duration 12h  map.properties
 ```
 
-So we can very easily play with the actual deployment.
+You can very easily play with the actual deployment.
 
 #### Installation
 
@@ -173,25 +158,20 @@ add to ~/.bashr:
 export STABILIZER_HOME=~/hazelcast-stabilizer-0.3-SNAPSHOT
 PATH=$STABILIZER_HOME/bin:$PATH
 
-Create your test working directory, e.g.
+Create your tests working directory, e.g.
 
 mkdir ~/tests
 
-Copy the STABILIZER_HOME/conf/stabilizer.properties to the tests directory.
-Make the changes required. The main things that need to be configured are:
+Copy the STABILIZER_HOME/conf/stabilizer.properties to the tests directory. And make
+the changes required. In case of EC2, you only need to make the following changes:
 
 ```
-CLOUD_PROVIDER=aws-ec2
 CLOUD_IDENTITY=<your-aws-access-key>
 CLOUD_CREDENTIAL=<your-aws-secret-key>
 USER=yourusername
-SECURITY_GROUP=open
 ```
 
-The yourusername should be the name of your user (run whoami).
-
-The SECURITY_GROUP needs to point to an existing Security Group. make sure that port 22, 9000 are open. Also make sure that
-port 5701..5801 are open so that the HZ members can communicate with each other.
+The yourusername should be the name of your user (run whoami). This will be automated.
 
 #### SSH Install: Important
 
@@ -218,3 +198,19 @@ chmod 400 ~/.ssh/config
 ```
 
 Now you will not have that problem again. Another solution is to clean the ~/.ssh/known_hosts file yourself.
+
+### Mail Group
+
+Please join the mail group if you are interested in using or developing Hazelcast.
+
+[http://groups.google.com/group/hazelcast](http://groups.google.com/group/hazelcast)
+
+#### License
+
+Hazelcast Stabilizer is available under the Apache 2 License.
+
+#### Copyright
+
+Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
+
+Visit [www.hazelcast.com](http://www.hazelcast.com/) for more info.
