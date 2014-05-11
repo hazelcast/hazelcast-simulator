@@ -156,10 +156,9 @@ public class Provisioner {
 
         Template template = new TemplateBuilder(compute, props).build();
 
-        echo("Creating nodes");
+        echo("Created machines (can take a few minutes)");
 
         Set<Future> futures = new HashSet<Future>();
-        echo("Created machines, waiting for startup (can take a few minutes)");
 
         for (int batch : calcBatches(delta)) {
 

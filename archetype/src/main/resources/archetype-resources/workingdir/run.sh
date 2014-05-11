@@ -1,12 +1,12 @@
 #!/bin/bash
 
-provisioner --scale 2
+provisioner --scale 4
 
 coordinator     --workerVmOptions "-ea -server -Xms2G -Xmx2G -XX:+PrintGC -XX:+HeapDumpOnOutOfMemoryError" \
                 --clientHzFile      ../conf/client-hazelcast.xml \
                 --hzFile            ../conf/hazelcast.xml \
-                --clientWorkerCount 1 \
-                --memberWorkerCount 1 \
+                --clientWorkerCount 2 \
+                --memberWorkerCount 2 \
                 --workerClassPath   '../target/*.jar' \
                 --duration          5m \
                 ../conf/test.properties

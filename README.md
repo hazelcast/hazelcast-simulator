@@ -60,6 +60,8 @@ CLOUD_IDENTITY=<your-aws-access-key>
 CLOUD_CREDENTIAL=<your-aws-secret-key>
 ```
 
+### Setup public key
+
 After you have set up stabilizer, make sure you have a id_rsa.pub in your ~/.ssh directory. If not, one can be generated
 like this:
 
@@ -70,6 +72,48 @@ ssh-keygen -t rsa -C "your_email@example.com"
 You can press enter on all questions. Your id_rsa.pub key will automatically be copied to the remote agent machines
 and added to the ~/.ssh/known_hosts file, so that you can log into that machine without a password or explicit provided
 credentials.
+
+### Using the archetype
+
+Probably you want to write your own test. The easiest way to do that is to make use of the Stabilizer archetype which
+will generate a project for you.
+
+```
+mvn archetype:generate \
+    -Drepository=https://oss.sonatype.org/content/repositories/snapshots \
+    -DarchetypeGroupId=com.hazelcast.stabilizer \
+    -DarchetypeArtifactId=archetype \
+    -DarchetypeVersion=0.3-SNAPSHOT \
+    -DgroupId=yourgroupid  \
+    -DartifactId=yourproject
+```
+
+After this project is generated, go to the created directory and run:
+
+```
+mvn clean install
+```
+
+And then go to workingdir and edit the stabilizer.properties file. In case of EC2, you only need to alter the following:
+
+```
+CLOUD_IDENTITY=<your-aws-access-key>
+CLOUD_CREDENTIAL=<your-aws-secret-key>
+```
+
+After you have made the modifications, you can run the generated Stabilizer test:
+
+```
+./run
+```
+
+This script will:
+ * start 4 EC2 instances, install Java, install the agents.
+ * upload your jars, run the test using a 2 node test cluster and 2 client machines (the clients generate the load). This
+   test will run for 2 minutes.
+ * After the test completes the the artifacts (log files) are downloaded in the 'workers' directory
+ * terminate the 4 created instances. If you don't want to start/terminate the instances for every run, just comment out
+   'provisioner --terminate' line.  This prevents the machines from being terminated.
 
 #### Provisioning
 
