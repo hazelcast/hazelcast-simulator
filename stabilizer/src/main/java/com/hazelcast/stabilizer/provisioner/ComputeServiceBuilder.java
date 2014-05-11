@@ -48,6 +48,7 @@ public class ComputeServiceBuilder {
                 .credentials(identity, credential)
                 .modules(getModules())
                 .buildView(ComputeServiceContext.class)
+                .
                 .getComputeService();
     }
 
