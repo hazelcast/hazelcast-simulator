@@ -73,7 +73,7 @@ credentials.
 
 #### Provisioning
 
-The behavior of the cluster like clouds, os, hardware, jvm version, Hazelcast version, can be configured through the
+The behavior of the cluster like cloud, os, hardware, jvm version, Hazelcast version or region can be configured through the
 stabilizer.properties.
 
 To start a cluster:

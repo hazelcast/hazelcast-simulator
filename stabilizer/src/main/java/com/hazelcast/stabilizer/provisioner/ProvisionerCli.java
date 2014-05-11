@@ -37,6 +37,8 @@ public class ProvisionerCli {
     public final OptionSpec killSpec = parser.accepts("kill",
             "Kill all the agent processes");
 
+    public final OptionSpec listAgents = parser.accepts("list-agents", "Lists the running agents.");
+
     public final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
@@ -83,6 +85,8 @@ public class ProvisionerCli {
         } else if (options.has(scaleSpec)) {
             int size = options.valueOf(scaleSpec);
             provisioner.scale(size);
+        } else if (options.has(listAgents)) {
+            provisioner.listAgents();
         }
     }
 
