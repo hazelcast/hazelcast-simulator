@@ -115,6 +115,12 @@ This script will:
  * terminate the 4 created instances. If you don't want to start/terminate the instances for every run, just comment out
    'provisioner --terminate' line.  This prevents the machines from being terminated.
 
+The output will look something like this:
+
+```
+
+```
+
 #### Provisioning
 
 The behavior of the cluster like cloud, os, hardware, jvm version, Hazelcast version or region can be configured through the

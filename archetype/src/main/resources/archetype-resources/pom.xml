@@ -11,7 +11,7 @@
     <url>http://www.myorganization.org</url>
 
     <properties>
-        <hazelcast.version>3.2.1</hazelcast.version>
+        <hazelcast.version>${hazelcast.version}</hazelcast.version>
         <hazelcast-stabilizer.version>${project.version}</hazelcast-stabilizer.version>
     </properties>
 
@@ -34,14 +34,14 @@
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast-client</artifactId>
-            <version>${hazelcast.version}</version>
+            <version>\${hazelcast.version}</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
-            <version>${hazelcast.version}</version>
+            <version>\${hazelcast.version}</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
