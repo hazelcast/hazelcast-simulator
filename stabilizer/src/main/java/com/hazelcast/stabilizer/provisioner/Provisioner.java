@@ -198,12 +198,9 @@ public class Provisioner {
     }
 
     public void listAgents() {
-
         echo("Running Agents (from agents.txt):");
         String agents = fileAsText(agentsFile);
         echo("\t" + agents);
-
-
     }
 
     private class InstallNodeTask implements Runnable {

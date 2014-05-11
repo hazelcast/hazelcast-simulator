@@ -117,6 +117,14 @@ public final class Utils {
         return file;
     }
 
+    public static File newFile(String... items) {
+        File file = newFile(items[0]);
+        for (int k = 1; k < items.length; k++) {
+            file = new File(file, items[k]);
+        }
+        return file;
+    }
+
     public static String getHostAddress() {
         if (hostAddress != null) {
             return hostAddress;

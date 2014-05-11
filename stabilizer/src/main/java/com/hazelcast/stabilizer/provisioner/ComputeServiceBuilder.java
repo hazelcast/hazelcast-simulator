@@ -3,6 +3,7 @@ package com.hazelcast.stabilizer.provisioner;
 import com.google.inject.AbstractModule;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
@@ -34,8 +35,9 @@ public class ComputeServiceBuilder {
     }
 
     public ComputeService build() {
-        String cloudProvider = props.get("CLOUD_PROVIDER");
+        ensurePublicPrivateKeyExist();
 
+        String cloudProvider = props.get("CLOUD_PROVIDER");
         String identity = load("CLOUD_IDENTITY");
         String credential = load("CLOUD_CREDENTIAL");
 
@@ -55,6 +57,21 @@ public class ComputeServiceBuilder {
         return asList(new SLF4JLoggingModule(), new SshjSshClientModule());
     }
 
+    private void ensurePublicPrivateKeyExist() {
+        File publicKey = newFile("~", ".ssh", "id_rsa.pub");
+        if (!publicKey.exists()) {
+            Utils.exitWithError(log, "Could not found public key: " + publicKey.getAbsolutePath() + "\n" +
+                    "To create a public/private execute 'ssh-keygen -t rsa -C \"your_email@example.com\"'");
+        }
+
+        File privateKey = newFile("~", ".ssh", "id_rsa");
+        if (!privateKey.exists()) {
+            Utils.exitWithError(log, "Public key " + publicKey.getAbsolutePath() + " was found," +
+                    " but private key: " + privateKey.getAbsolutePath() + " is missing\n" +
+                    "To create a public/private key execute 'ssh-keygen -t rsa -C \"your_email@example.com\"'");
+        }
+    }
+
     private Properties newOverrideProperties() {
         //http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
         Properties properties = new Properties();
@@ -64,7 +81,7 @@ public class ComputeServiceBuilder {
     }
 
     private String load(String property) {
-        String value = props.get(property,"");
+        String value = props.get(property, "");
 
         File file = newFile(value);
         if (file.exists()) {
