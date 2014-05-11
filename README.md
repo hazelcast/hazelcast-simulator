@@ -80,7 +80,7 @@ will generate a project for you.
 
 ```
 mvn archetype:generate \
-    -Drepository=https://oss.sonatype.org/content/repositories/snapshots \
+    -DarchetypeRepository=https://oss.sonatype.org/content/repositories/snapshots \
     -DarchetypeGroupId=com.hazelcast.stabilizer \
     -DarchetypeArtifactId=archetype \
     -DarchetypeVersion=0.3-SNAPSHOT \
