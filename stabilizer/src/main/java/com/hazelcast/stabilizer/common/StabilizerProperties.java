@@ -15,9 +15,17 @@ public class StabilizerProperties {
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(StabilizerProperties.class);
 
     private final Properties properties = new Properties();
+    private File defaultPropsFile = newFile(Utils.getStablizerHome(), "conf", "stabilizer.properties");
 
+    /**
+     * Initialized the StabilizerProperties
+     *
+     * @param file the file to load the properties from. If the file is null, then first the stabilizer.properties
+     *             in the working dir is checked and otherwise the stabilizer.properties in STABILIZER_HOME/conf is
+     *             used.
+     */
     public void init(File file) {
-        load(newFile(Utils.getStablizerHome(), "conf", "stabilizer.properties"));
+        load(defaultPropsFile);
 
         if (file == null) {
             //if no file is explicitly given, we look in the working directory
@@ -27,13 +35,17 @@ public class StabilizerProperties {
             }
         }
 
-        load(file);
+        if (file != null) {
+            log.info(format("Loading stabilizer.properties: %s", file.getAbsolutePath()));
+            load(file);
+        } else {
+            log.info(format("No specific stabilizer.properties provided, relying on default settings"));
+        }
     }
 
     private void load(File file) {
-        log.info(format("Loading stabilizer.properties: %s", file.getAbsolutePath()));
 
-        if(!file.exists()){
+        if (!file.exists()) {
             Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
             return;
         }
