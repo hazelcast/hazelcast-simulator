@@ -39,6 +39,7 @@
 
     <modules>
         <module>stabilizer</module>
+        <module>archetype</module>
         <module>dist</module>
     </modules>
 
