@@ -39,6 +39,7 @@
 
     <modules>
         <module>stabilizer</module>
+        <module>archetype</module>
         <module>dist</module>
     </modules>
 
@@ -71,8 +72,14 @@
     <distributionManagement>
         <repository>
             <id>release-repository</id>
-            <url>file:///tmp</url>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
         </repository>
+        <snapshotRepository>
+            <id>snapshot-repository</id>
+            <name>Maven2 Snapshot Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <uniqueVersion>false</uniqueVersion>
+        </snapshotRepository>
     </distributionManagement>
 
     <build>
