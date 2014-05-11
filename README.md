@@ -31,9 +31,11 @@ test cluster we have in Istanbul office.
 
 #### Installation
 
-At this moment in time we do not yet have a pre-build artifact. So you need to checkout the git repo:
-https://github.com/hazelcast/hazelcast-stabilizer and build it yourself with mvn clean install. After this command completes,
-in the dist/target directory you will find a zip and tar.gz file.
+The zip/tar.gz file containing the stabilizer artifacts can be downloaded here:
+
+```
+https://oss.sonatype.org/content/repositories/snapshots/com/hazelcast/stabilizer/hazelcast-stabilizer-dist/0.3-SNAPSHOT/
+```
 
 Unzip or untar these projects to e.g. the home directory.
 
