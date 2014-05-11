@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import static com.hazelcast.stabilizer.Utils.newFile;
 import static java.lang.String.format;
 
 public class StabilizerProperties {
@@ -16,17 +17,14 @@ public class StabilizerProperties {
     private final Properties properties = new Properties();
 
     public void init(File file) {
-        if (file == null) {
-            //look in the working directory first
-            file = new File("stabilizer.properties");
-            if (!file.exists()) {
-                //if not exist, then look in the conf directory.
-                file = Utils.newFile(Utils.getStablizerHome(), "conf", "stabilizer.properties");
-            }
-        }
+        load(newFile(Utils.getStablizerHome(), "conf", "stabilizer.properties"));
 
-        if (!file.exists()) {
-            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
+        if (file == null) {
+            //if no file is explicitly given, we look in the working directory
+            File tmp = new File("stabilizer.properties");
+            if (tmp.exists()) {
+                file = tmp;
+            }
         }
 
         load(file);
@@ -34,6 +32,11 @@ public class StabilizerProperties {
 
     private void load(File file) {
         log.info(format("Loading stabilizer.properties: %s", file.getAbsolutePath()));
+
+        if(!file.exists()){
+            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
+            return;
+        }
 
         try {
             FileInputStream inputStream = new FileInputStream(file);

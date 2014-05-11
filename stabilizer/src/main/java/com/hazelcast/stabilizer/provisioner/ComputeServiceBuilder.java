@@ -39,9 +39,6 @@ public class ComputeServiceBuilder {
         String identity = load("CLOUD_IDENTITY");
         String credential = load("CLOUD_CREDENTIAL");
 
-        log.info("Identity: '"+identity+"'");
-        log.info("Credential: '"+credential+"'");
-
         if (log.isFinestEnabled()) {
             log.finest("Using CLOUD_PROVIDER: " + cloudProvider);
         }

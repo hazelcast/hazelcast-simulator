@@ -102,10 +102,18 @@ CLOUD_IDENTITY=<your-aws-access-key>
 CLOUD_CREDENTIAL=<your-aws-secret-key>
 ```
 
-After you have made the modifications, you can run the generated Stabilizer test:
+After you have made the modifications, you need to set the executable flag on the run.sh:
 
 ```
-./run
+chmod +x run.sh
+```
+
+This is needed because the maven archetype is not able to deal with the executable flag.
+
+And finally you can run the test:
+
+```
+./run.sh
 ```
 
 This script will:
