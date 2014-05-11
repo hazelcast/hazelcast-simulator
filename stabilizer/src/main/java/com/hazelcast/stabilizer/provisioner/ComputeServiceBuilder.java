@@ -13,6 +13,7 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 
 import java.io.File;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import static com.hazelcast.stabilizer.Utils.fileAsText;
@@ -45,12 +46,22 @@ public class ComputeServiceBuilder {
             log.finest("Using CLOUD_PROVIDER: " + cloudProvider);
         }
 
-        return ContextBuilder.newBuilder(cloudProvider)
-                .overrides(newOverrideProperties())
+        ContextBuilder contextBuilder = newContextBuilder(cloudProvider);
+
+        return contextBuilder.overrides(newOverrideProperties())
                 .credentials(identity, credential)
                 .modules(getModules())
                 .buildView(ComputeServiceContext.class)
                 .getComputeService();
+    }
+
+    private ContextBuilder newContextBuilder(String cloudProvider) {
+        try {
+            return ContextBuilder.newBuilder(cloudProvider);
+        }catch (NoSuchElementException e){
+            Utils.exitWithError(log,"Unrecognized cloud-provider ["+cloudProvider+"]");
+            return null;
+        }
     }
 
     private List<AbstractModule> getModules() {
@@ -61,14 +72,14 @@ public class ComputeServiceBuilder {
         File publicKey = newFile("~", ".ssh", "id_rsa.pub");
         if (!publicKey.exists()) {
             Utils.exitWithError(log, "Could not found public key: " + publicKey.getAbsolutePath() + "\n" +
-                    "To create a public/private execute 'ssh-keygen -t rsa -C \"your_email@example.com\"'");
+                    "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
 
         File privateKey = newFile("~", ".ssh", "id_rsa");
         if (!privateKey.exists()) {
             Utils.exitWithError(log, "Public key " + publicKey.getAbsolutePath() + " was found," +
                     " but private key: " + privateKey.getAbsolutePath() + " is missing\n" +
-                    "To create a public/private key execute 'ssh-keygen -t rsa -C \"your_email@example.com\"'");
+                    "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
     }
 
