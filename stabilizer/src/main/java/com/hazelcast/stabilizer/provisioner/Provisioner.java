@@ -26,9 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.Utils.appendText;
-import static com.hazelcast.stabilizer.Utils.getVersion;
-import static com.hazelcast.stabilizer.Utils.secondsToHuman;
+import static com.hazelcast.stabilizer.Utils.*;
 import static java.lang.String.format;
 
 //https://jclouds.apache.org/start/compute/ good read
@@ -198,6 +196,15 @@ public class Provisioner {
         echo("Duration: " + secondsToHuman(TimeUnit.MILLISECONDS.toSeconds(durationMs)));
         echoImportant(format("Successfully provisioned %s %s machines",
                 delta, props.get("CLOUD_PROVIDER")));
+    }
+
+    public void listAgents() {
+
+        echo("Running Agents (from agents.txt):");
+        String agents = fileAsText(agentsFile);
+        echo("\t" + agents);
+
+
     }
 
     private class InstallNodeTask implements Runnable {
