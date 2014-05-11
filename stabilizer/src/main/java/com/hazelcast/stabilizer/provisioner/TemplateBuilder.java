@@ -2,6 +2,7 @@ package com.hazelcast.stabilizer.provisioner;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
@@ -43,9 +44,7 @@ public class TemplateBuilder {
 
         initSecurityGroup();
 
-        Template template = compute.templateBuilder()
-                .from(spec)
-                .build();
+        Template template = buildTemplate();
 
         log.info("Created template");
 
@@ -60,6 +59,18 @@ public class TemplateBuilder {
                 .securityGroups(securityGroup);
 
         return template;
+    }
+
+    private Template buildTemplate() {
+        try {
+            return compute.templateBuilder()
+                    .from(spec)
+                    .build();
+        }catch(IllegalArgumentException e){
+            log.finest(e);
+            Utils.exitWithError(log, e.getMessage());
+            return null;
+        }
     }
 
     private int[] inboundPorts() {
