@@ -1,4 +1,4 @@
-package com;
+package \$packageName;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
@@ -13,16 +13,16 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class ExampleTest extends AbstractTest {
 
-    private final static ILogger log = Logger.getLogger(AtomicLongTest.class);
+    private final static ILogger log = Logger.getLogger(ExampleTest.class);
 
     private IAtomicLong totalCounter;
     private AtomicLong operations = new AtomicLong();
+    private IAtomicLong counter;
 
     //props
     public int threadCount = 1;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    private IAtomicLong counter;
 
     @Override
     public void localSetup() throws Exception {

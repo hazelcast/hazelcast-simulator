@@ -37,7 +37,7 @@ The zip/tar.gz file containing the stabilizer artifacts can be downloaded here:
 https://oss.sonatype.org/content/repositories/snapshots/com/hazelcast/stabilizer/hazelcast-stabilizer-dist/0.3-SNAPSHOT/
 ```
 
-Unzip or untar these projects to e.g. the home directory.
+Download and unpack the tar.gz or zip file to e.g. the home directory.
 
 add to ~/.bashr:
 
@@ -203,6 +203,17 @@ coordinator --memberWorkerCount 24  --duration 12h  map.properties
 
 You can very easily play with the actual deployment.
 
+### Creating your own Test.
+
+The simplest option, unless you are a Hazelcast committer, to add your own test is to make use of the archetype, e.g.
+
+```
+mvn archetype:generate -DarchetypeGroupId=com.hazelcast.stabilizer \
+                        -DarchetypeArtifactId=archetype \
+                        -DarchetypeVersion=0.3-SNAPSHOT \
+                        -DgroupId=yourcompany \
+                        -DartifactId=yourproject
+```
 
 ### Mail Group
 
