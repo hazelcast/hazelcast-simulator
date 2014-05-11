@@ -39,6 +39,9 @@ public class ComputeServiceBuilder {
         String identity = load("CLOUD_IDENTITY");
         String credential = load("CLOUD_CREDENTIAL");
 
+        log.info("Identity: '"+identity+"'");
+        log.info("Credential: '"+credential+"'");
+
         if (log.isFinestEnabled()) {
             log.finest("Using CLOUD_PROVIDER: " + cloudProvider);
         }
@@ -71,7 +74,7 @@ public class ComputeServiceBuilder {
             if (log.isFinestEnabled()) {
                 log.finest("Loading " + property + " from file: " + file.getAbsolutePath());
             }
-            value = fileAsText(file);
+            value = fileAsText(file).trim();
         }
         return value;
     }
