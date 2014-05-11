@@ -19,6 +19,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.commons.lang3.text.StrSubstitutor;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -80,6 +81,10 @@ public final class Utils {
         } else if (path.startsWith("~" + File.separator)) {
             path = USER_HOME + path.substring(1);
         }
+
+
+        StrSubstitutor substitutor = new StrSubstitutor();
+        path = substitutor.replace(path);
         return new File(path);
     }
 
