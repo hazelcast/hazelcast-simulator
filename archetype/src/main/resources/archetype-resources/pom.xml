@@ -15,6 +15,14 @@
         <hazelcast-stabilizer.version>${project.version}</hazelcast-stabilizer.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>snapshot-repository</id>
+            <name>Maven2 Snapshot Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>com.hazelcast.stabilizer</groupId>
