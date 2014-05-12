@@ -60,10 +60,11 @@ CLOUD_IDENTITY=<your-aws-access-key>
 CLOUD_CREDENTIAL=<your-aws-secret-key>
 ```
 
-### Setup public key
+### Setup public/private-key
 
-After you have set up stabilizer, make sure you have a id_rsa.pub in your ~/.ssh directory. If not, one can be generated
-like this:
+After you have set up stabilizer, make sure you have a id_rsa.pub in your ~/.ssh directory. The Provisioner will
+terminate when it needs to access the cloud and sees that the public/private key are missing. If you don't have
+a public/private key, you can generate one like this:
 
 ```
 ssh-keygen -t rsa -C "your_email@example.com"

@@ -35,10 +35,9 @@ public class CloudInfoCli {
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
             "The file containing the stabilizer properties. If no file is explicitly configured, first the " +
-                    "working directory is checked for a file 'stabilizer.properties'. If that doesn't exist, then" +
-                    "the STABILIZER_HOME/conf/stabilizer.properties is loaded."
-    )
-            .withRequiredArg().ofType(String.class);
+                    "working directory is checked for a file 'stabilizer.properties'. All missing properties" +
+                    "are always loaded from STABILIZER_HOME/conf/stabilizer.properties"
+    ).withRequiredArg().ofType(String.class);
 
     private final CloudInfo cloudInfo;
     private OptionSet options;

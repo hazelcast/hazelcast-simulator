@@ -13,6 +13,8 @@
     <properties>
         <hazelcast.version>${hazelcast.version}</hazelcast.version>
         <hazelcast-stabilizer.version>${project.version}</hazelcast-stabilizer.version>
+        <java.version>1.6</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <repositories>

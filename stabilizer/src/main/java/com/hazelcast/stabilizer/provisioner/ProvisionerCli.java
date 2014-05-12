@@ -31,22 +31,21 @@ public class ProvisionerCli {
     )
             .withRequiredArg().ofType(Integer.class);
 
-    public final OptionSpec terminateSpec = parser.accepts("terminateWorker",
+    public final OptionSpec terminateSpec = parser.accepts("terminate",
             "Terminate all agent machines in the provisioner");
 
     public final OptionSpec killSpec = parser.accepts("kill",
             "Kill all the agent processes");
 
-    public final OptionSpec listAgents = parser.accepts("list-agents", "Lists the running agents.");
+    public final OptionSpec listAgentsSpec = parser.accepts("list-agents", "Lists the running agents.");
 
     public final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
             "The file containing the stabilizer properties. If no file is explicitly configured, first the " +
-                    "working directory is checked for a file 'stabilizer.properties'. If that doesn't exist, then" +
-                    "the STABILIZER_HOME/conf/stabilizer.properties is loaded."
-    )
-            .withRequiredArg().ofType(String.class);
+                    "working directory is checked for a file 'stabilizer.properties'. All missing properties" +
+                    "are always loaded from STABILIZER_HOME/conf/stabilizer.properties"
+    ).withRequiredArg().ofType(String.class);
 
     private final Provisioner provisioner;
     private OptionSet options;
@@ -85,8 +84,10 @@ public class ProvisionerCli {
         } else if (options.has(scaleSpec)) {
             int size = options.valueOf(scaleSpec);
             provisioner.scale(size);
-        } else if (options.has(listAgents)) {
+        } else if (options.has(listAgentsSpec)) {
             provisioner.listAgents();
+        }else{
+            parser.printHelpOn(System.out);
         }
     }
 
