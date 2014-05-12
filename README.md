@@ -332,13 +332,18 @@ This will create a single worker per agent and run the test for 60 seconds.
 
 ### Accessing the provisioned machine
 
-When a machine is provisioned, a user with the same name as your local user is created and added to the sudoers list.
-Also the public key of your local user is copied to the remote machine and added to ~/.ssh/authorized_keys. So you
-can login to that machine using:
+When a machine is provisioned, by default a user with the name 'stabilizer' is create on the remote machine and added
+to the sudoers list. Also the public key of your local user is copied to the remote machine and added to
+~/.ssh/authorized_keys. So you can login to that machine using:
 
 ```
-ssh yourusername@ip
+ssh stabilizer@ip
 ```
+
+You can change name of the created user to something else in by setting the "USER=somename" property in the stabilizer
+properties. Be careful not to pick a name that is used on the target image. E.g. if you use ec2-user/ubuntu, and the
+default user of that image is ec2-user/ubuntu, then you can run into authentication problems. So probably it is best
+not to change this value, unless you know what your are doing.
 
 ## Controlling the Hazelcast xml configuration
 
