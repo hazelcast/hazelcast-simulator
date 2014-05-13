@@ -1,6 +1,6 @@
 #!/bin/bash
 
-id=$1
+GCE_id=$1
 p12File=$2
 
 thispath=$(pwd)
@@ -28,7 +28,7 @@ CLOUD_PROVIDER=google-compute-engine
 # Cloud credentials
 # =====================================================================
 #
-CLOUD_IDENTITY=${id}
+CLOUD_IDENTITY=${GCE_id}
 
 #
 # This can either be a string containing the credentials, or the path to a file (needed for google compute engine)

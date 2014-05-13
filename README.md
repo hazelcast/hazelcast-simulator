@@ -198,28 +198,23 @@ that '~' doesn't work; so give relative or absolute path for key/pem.
 The SECURITY_GROUP needs to point to an existing Security Group. make sure that port 22, 9000 are open. Also make sure that
 port 5701..5801 are open so that the HZ members can communicate with each other.
 
+#### Set up on Google Compute Engine
+
+A developer email can be obtained from the GCE admin GUI console.
+Its usually something in the form: <my account id>@developer.gserviceaccount.com
+go to API & Auth > Credentials, click Create New Client ID,  select Service Acount.
+save your p12 keystore file that is obtained when creating a "Service Account"
+
+run ./setupGce.sh script provide you <my account id>@developer.gserviceaccount.com as 1st argument and the path to your p12 file as 2nd argument
+the setupGce.sh script will create a stabilizer.properties, in the conf directory
+
+
 #### SSH Install: Important
 
 When you frequently start/stop instances in a cloud, e.g. EC2 or GCE, then your ~/.ssh/known_hosts file is going to be polluted
 and your cloud can't be formed (you get jclouds ssh timeouts). This is because the same ip address will be handed out multiple
 times over time and this can lead to an SSH connectivity problem: man in the middle attack.
 
-To fix this problem, do the following. Make a file:
+To fix this problem, do the following. Make sure SSH_OPTIONS is set not to write to you host file.
 
-```
-touch ~/.ssh/config
-```
-
-add the following content:
-```
-Host *
-    StrictHostKeyChecking no
-```
-
-And change the rights:
-
-```
-chmod 400 ~/.ssh/config
-```
-
-Now you will not have that problem again. Another solution is to clean the ~/.ssh/known_hosts file yourself.
+SSH_OPTIONS=-o UserKnownHostsFile=/dev/null
