@@ -16,7 +16,7 @@ echo "
 # Cloud selection
 # =====================================================================
 #
-# currently configured for EC2, but can also be something else. For a complete listing of supported clouds,.
+# currently configured for EC2, but can also be something else. For a complete listing of supported clouds,
 # check the following link: http://jclouds.apache.org/reference/providers/
 # aws-ec2 = Amazon EC2
 # google-compute-engine = The Google Compute Engine.
@@ -28,10 +28,14 @@ CLOUD_PROVIDER=google-compute-engine
 # Cloud credentials
 # =====================================================================
 #
-CLOUD_IDENTITY=${GCE_id}
-
+# This can be either a string containing the credentials, or the path to a file. Although it is easier to
+# place the string, it makes it very dangerous to have the file flying around in a repository because it
+# would be very easy to get it committed and everyone can see it. So it is best to create a file outside
+# of the project. For ec2 e,g you could have 2 files in your home dir: ec2.identity and ec2.credential.
 #
 # This can either be a string containing the credentials, or the path to a file (needed for google compute engine)
+#
+# Just like CLOUD_IDENTITY, it can be the string itself or a path to a file.
 #
 CLOUD_CREDENTIAL=${thispath}/google.pem
 
@@ -58,7 +62,9 @@ CLOUD_POLL_MAX_PERIOD=5000
 CLOUD_BATCH_SIZE=20
 
 #
-# Just a prefix for the agent name. Different test clusters could be given different names.
+# Just a prefix for the agent name. Different test clusters could be given different names. In GCE you need
+# to be very careful using multiple group-names, because for every port and every group-name a firewall rule is
+# made and you can only have 100 firewall rules.
 #
 GROUP_NAME=stabilizer-agent
 
@@ -99,8 +105,16 @@ GROUP_NAME=stabilizer-agent
 # for a full listing of hardware id's on EC2, check the following link
 # http://docs.amazonwebservices.com/AWSEC2/latest/UserGuide/index.html?instance-types.html
 #
-# to set a specific region, use locationId, e.g. locationId=us-east-1a. Make sure that the security group exists
-# in that location.
+# To set a specific region, use locationId, e.g. locationId=us-east-1a.
+# The security group will be created in the location specified.
+#
+# Some useful regions are:
+# EU (Ireland) Region	eu-west-1
+# Asia Pacific (Sydney) Region	ap-southeast-2
+# US East (Northern Virginia) Region	us-east-1
+# US West (Northern California) Region	us-west-1
+#
+# The default region is us-east-1
 #
 MACHINE_SPEC=osFamily=CENTOS,os64Bit=true
 
@@ -122,14 +136,15 @@ SECURITY_GROUP=open
 # The Hazelcast version can be configured in different ways:
 #   none                    : if you worker is going to get maven installed through worker dependencies, for
 #                             for more information checkout out the --workerClassPath setting on the Controller.
-#   outofthebox             : if you are fine with the default configured version.
+#   outofthebox             : if you are fine with the one provided by the Stabilizer itself.
 #   maven=version           : if you want to use a specific version from the maven repository, e.g.
 #                                   maven=3.2
 #                                   maven=3.3-SNAPSHOT
 #                             Local Hazelcast artifacts will be preferred, so you can checkout e.g. an experimental
-#                             branch, build the artifacts locally. Then these artifacts will be picked up.
-#   path=dir                : if you have a directory containing the artifacts you want to use.
-#
+#                             branch, build the artifacts locally. This will all be done on the local machine, not
+#                             on the agent machine.
+#   bringmyown              : if you want to bring your own dependencies, for more information checkout out the
+#                             --workerClassPath setting on the Controller.
 HAZELCAST_VERSION_SPEC=outofthebox
 
 # =====================================================================
@@ -161,7 +176,7 @@ JDK_64_BITS=true
 # OpenJDK supports 6/7
 # IBM supports 6/7/8 (8 is an early access version)
 #
-# Fine grained control on the version will be added in the future. Currently is is the most recent released version.
+# Fine grained control on the version will be added in the future. Currently it is the most recent released version.
 #
 JDK_VERSION=7
 
