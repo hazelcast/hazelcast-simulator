@@ -34,7 +34,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.hazelcast.stabilizer.Utils.createUpload;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
@@ -79,7 +78,20 @@ public class Coordinator {
         log.info(format("Total number of Hazelcast client workers: %s", workerJvmSettings.clientWorkerCount));
         log.info(format("Total number of Hazelcast mixed client & member workers: %s", workerJvmSettings.mixedWorkerCount));
 
-        agentsClient.initTestSuite(testSuite, createUpload(workerClassPath));
+        agentsClient.initTestSuite(testSuite);
+
+        //upload yourkit if needed
+        if ("yourkit".equals(workerJvmSettings.profiler)) {
+            //todo: in the future we'll only upload the right yourkit library 32 vs 64
+            for (String ip : agentsClient.getPublicAddresses()) {
+                String syncCommand = format("rsync --ignore-existing -av -e \"ssh %s\" %s/yourkit %s@%s:hazelcast-stabilizer-%s/yourkit",
+                        props.get("SSH_OPTIONS", ""), getStablizerHome().getAbsolutePath(), props.get("USER"), ip, getVersion());
+
+                bash.execute(syncCommand);
+            }
+        }
+
+        //todo: scp the dependencies
 
         startWorkers(workerJvmSettings);
 
