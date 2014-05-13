@@ -60,6 +60,10 @@ public class Provisioner {
     }
 
     void installAgent(String ip) {
+        bash.ssh(ip, "");
+
+        bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s", getVersion()));
+
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
         bash.sshQuiet(ip, format("rm -fr hazelcast-stabilizer-%s/lib", getVersion()));
 
@@ -68,8 +72,8 @@ public class Provisioner {
         bash.scpToRemote(ip, STABILIZER_HOME + "/jdk-install", format("hazelcast-stabilizer-%s/jdk-install", getVersion()));
         bash.scpToRemote(ip, STABILIZER_HOME + "/lib", format("hazelcast-stabilizer-%s/lib", getVersion()));
         bash.scpToRemote(ip, STABILIZER_HOME + "/tests", format("hazelcast-stabilizer-%s/tests", getVersion()));
-        //we don't copy yourkit; it will be copied when profiling is enabled. This will reduce the amount of data
-        //that needs to be uploaded.
+        //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
+        //this is done to reduce the amount of data we need to upload.
 
         String versionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
         if (!versionSpec.equals("outofthebox")) {
