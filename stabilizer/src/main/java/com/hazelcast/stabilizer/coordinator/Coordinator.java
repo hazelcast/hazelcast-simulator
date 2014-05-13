@@ -121,13 +121,13 @@ public class Coordinator {
 
         //upload yourkit if needed
         if ("yourkit".equals(workerJvmSettings.profiler)) {
-            log.info("Ensuring Yourkit dependencies available");
+            log.info("Ensuring Yourkit dependencies available on remote machines");
 
             //todo: in the future we'll only upload the right yourkit library 32 vs 64
             for (String ip : agentsClient.getPublicAddresses()) {
                 bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s/yourkit", getVersion()));
 
-                String syncCommand = format("rsync --ignore-existing -av -e \"ssh %s\" %s/yourkit %s@%s:hazelcast-stabilizer-%s/yourkit",
+                String syncCommand = format("rsync --ignore-existing -av -e \"ssh %s\" %s/yourkit %s@%s:hazelcast-stabilizer-%s/",
                         props.get("SSH_OPTIONS", ""), getStablizerHome().getAbsolutePath(), props.get("USER"), ip, getVersion());
 
                 bash.execute(syncCommand);
