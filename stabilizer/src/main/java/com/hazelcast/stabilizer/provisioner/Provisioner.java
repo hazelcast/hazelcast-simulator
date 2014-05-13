@@ -63,16 +63,22 @@ public class Provisioner {
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
         bash.sshQuiet(ip, format("rm -fr hazelcast-stabilizer-%s/lib", getVersion()));
 
-        //then we copy the stabilizer directory
-        bash.scpToRemote(ip, STABILIZER_HOME, "");
+        bash.scpToRemote(ip, STABILIZER_HOME + "/bin", format("hazelcast-stabilizer-%s/bin", getVersion()));
+        bash.scpToRemote(ip, STABILIZER_HOME + "/conf", format("hazelcast-stabilizer-%s/conf", getVersion()));
+        bash.scpToRemote(ip, STABILIZER_HOME + "/jdk-install", format("hazelcast-stabilizer-%s/jdk-install", getVersion()));
+        bash.scpToRemote(ip, STABILIZER_HOME + "/lib", format("hazelcast-stabilizer-%s/lib", getVersion()));
+        bash.scpToRemote(ip, STABILIZER_HOME + "/tests", format("hazelcast-stabilizer-%s/tests", getVersion()));
+        //we don't copy yourkit; it will be copied when profiling is enabled. This will reduce the amount of data
+        //that needs to be uploaded.
 
         String versionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
-
         if (!versionSpec.equals("outofthebox")) {
+            //todo: in the future we can improve this; we upload the hz jars, to delete them again.
+
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
             bash.ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar", getVersion()));
 
-            if (!versionSpec.endsWith("none")) {
+            if (!versionSpec.endsWith("bringmyown")) {
                 //copy the actual hazelcast jars that are going to be used by the worker.
                 bash.scpToRemote(ip, hazelcastJars.getAbsolutePath() + "/*.jar", format("hazelcast-stabilizer-%s/lib", getVersion()));
             }

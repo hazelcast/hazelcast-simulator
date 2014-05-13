@@ -39,21 +39,7 @@ public class HazelcastJars {
 
         if (versionSpec.equals("outofthebox")) {
             //we don't need to do anything.
-        } else if (versionSpec.startsWith("path=")) {
-            String path = versionSpec.substring(5);
-            File file = new File(path);
-            if (!file.exists()) {
-                log.severe("Directory :" + path + " does not exist");
-                System.exit(1);
-            }
-
-            if (!file.isDirectory()) {
-                log.severe("File :" + path + " is not a directory");
-                System.exit(1);
-            }
-
-            bash.execute(format("cp %s/* %s", path, hazelcastJarsDir.getAbsolutePath()));
-        } else if (versionSpec.equals("none")) {
+        }  else if (versionSpec.equals("bringmyown")) {
             //we don't need to do anything
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);

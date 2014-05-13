@@ -72,7 +72,11 @@
                         </goals>
                         <configuration>
                             <excludeTransitive>true</excludeTransitive>
-                            <excludeGroupIds>com.hazelcast.stabilizer</excludeGroupIds>
+                            <!-- the com.hazelcast libraries are excluded, because an explicit version is configured
+                                 in the workerdir/stabilizer.properties. If you want to provide your own hazelcast
+                                 dependencies, set HAZELCAST_VERSION_SPEC to none and remove 'com.hazelcast' from
+                                 the excludedGroupIds -->
+                            <excludeGroupIds>com.hazelcast.stabilizer,com.hazelcast</excludeGroupIds>
                             <outputDirectory>\${project.build.directory}</outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>

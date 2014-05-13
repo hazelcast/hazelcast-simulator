@@ -60,7 +60,7 @@ public class Bash {
     }
 
     public void scpToRemote(String ip, File src, String target) {
-        scpToRemote(ip, src.getAbsolutePath(),target);
+        scpToRemote(ip, src.getAbsolutePath(), target);
     }
 
     public void scpToRemote(String ip, String src, String target) {
