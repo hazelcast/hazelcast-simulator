@@ -12,13 +12,19 @@ import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.newFile;
 import static java.lang.String.format;
 
+/**
+ * StabilizerProperties will always load the properties in the stabilizer_home/conf/stabilizer.properties
+ * as defaults. If a stabilizer.properties is available in the working dir of if an explicit stabilizer.properties
+ * is configured, it will override the properties from the default.
+ */
 public class StabilizerProperties {
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(StabilizerProperties.class);
 
     private final Properties properties = new Properties();
 
-    public StabilizerProperties(){
+    public StabilizerProperties() {
         File defaultPropsFile = newFile(getStablizerHome(), "conf", "stabilizer.properties");
+        log.finest("Loading default stabilizer.properties from: " + defaultPropsFile.getAbsolutePath());
         load(defaultPropsFile);
     }
 
@@ -26,23 +32,22 @@ public class StabilizerProperties {
      * Initialized the StabilizerProperties
      *
      * @param file the file to load the properties from. If the file is null, then first the stabilizer.properties
-     *             in the working dir is checked and otherwise the stabilizer.properties in STABILIZER_HOME/conf is
-     *             used.
+     *             in the working dir is checked.
      */
     public void init(File file) {
-         if (file == null) {
+        if (file == null) {
             //if no file is explicitly given, we look in the working directory
-            File tmp = new File("stabilizer.properties");
-            if (tmp.exists()) {
-                file = tmp;
+            File fallbackPropsFile = new File("stabilizer.properties");
+            if (fallbackPropsFile.exists()) {
+                file = fallbackPropsFile;
+            } else {
+                log.warning(format("%s is not found, relying on defaults", fallbackPropsFile));
             }
         }
 
         if (file != null) {
             log.info(format("Loading stabilizer.properties: %s", file.getAbsolutePath()));
             load(file);
-        } else {
-            log.info(format("No specific stabilizer.properties provided, relying on default settings"));
         }
     }
 
