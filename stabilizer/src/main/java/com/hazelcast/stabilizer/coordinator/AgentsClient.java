@@ -107,6 +107,14 @@ public class AgentsClient {
         return result;
     }
 
+    public List<String> getPublicAddresses() {
+        List<String> result = new LinkedList<String>();
+        for (AgentClient client : agents) {
+            result.add(client.publicAddress);
+        }
+        return result;
+    }
+
     public List<Failure> getFailures() {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
@@ -197,13 +205,13 @@ public class AgentsClient {
         return result;
     }
 
-    public void initTestSuite(final TestSuite testSuite, final byte[] bytes) {
+    public void initTestSuite(final TestSuite testSuite) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_INIT_TESTSUITE, testSuite, bytes);
+                    agentClient.execute(AgentRemoteService.SERVICE_INIT_TESTSUITE, testSuite);
                     return null;
                 }
             });

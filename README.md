@@ -5,6 +5,23 @@ A tool for stress testing Hazelcast and Hazelcast based applications in clustere
 machine, but can also be in a cloud like EC2 or Google Compute Engine. The Stabilizer makes use of JClouds, so in theory
 we can roll out in any cloud.
 
+### Mail Group
+
+Please join the mail group if you are interested in using or developing Hazelcast.
+
+[http://groups.google.com/group/hazelcast](http://groups.google.com/group/hazelcast)
+
+#### License
+
+Hazelcast Stabilizer is available under the Apache 2 License.
+
+#### Copyright
+
+Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
+
+Visit [www.hazelcast.com](http://www.hazelcast.com/) for more info.
+
+
 #### General structure
 
 * Test: the functionality you want to test, e.g. a map. I looks a bit like a junit test, but it doesn't use annotations
@@ -74,6 +91,19 @@ You can press enter on all questions. The value for the email address is not rel
 should have a ida_rsa.pub and id_rsa file in your ~/.ssh directory. Your id_rsa.pub key will automatically be copied to
 the remote agent machines and added to the ~/.ssh/known_hosts file, so that you can log into that machine without
 a password or explicit provided credentials.
+
+#### Set up on Google Compute Engine
+
+For setup on GCE a developer email can be obtained from the GCE admin GUI console.
+Its usually something in the form: <my account id>@developer.gserviceaccount.com
+go to API & Auth > Credentials, click Create New Client ID,  select Service Acount.
+save your p12 keystore file that is obtained when creating a "Service Account"
+
+run ./setupGce.sh script
+provide you <my account id>@developer.gserviceaccount.com as 1st argument
+provide and the path to your p12 file as 2nd argument
+the setupGce.sh script will create your stabilizer.properties, in the conf directory
+
 
 ### Using the archetype
 
@@ -323,7 +353,7 @@ provisioner --clean
 
 #### Controlling Deployment
 
-Deploying a test on the agent machines is as simple as:
+Deploying a test on workers is as simple as:
 
 ```
 coordinator yourtest.properties.
@@ -352,6 +382,7 @@ By default the coordinator makes use of STABILIZER_HOME/conf/hazelcast.xml and S
 to generate the correct Hazelcast configuration. But you can override this, so you can use your own configuration:
 
 coordinator --clientHzFile=your-client-hazelcast.xml --hzFile your-hazelcast.xml ....
+
 
 ## Controlling duration:
 The duration of a single test can be controlled using the --duration setting, which defaults to 60 seconds.
