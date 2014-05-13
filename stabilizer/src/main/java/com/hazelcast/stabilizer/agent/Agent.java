@@ -17,7 +17,6 @@ package com.hazelcast.stabilizer.agent;
 
 
 import com.hazelcast.stabilizer.TestCase;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
@@ -87,21 +86,15 @@ public class Agent {
         return repository;
     }
 
-    public void initTestSuite(TestSuite testSuite, byte[] content) throws IOException {
+    public void initTestSuite(TestSuite testSuite) throws IOException {
         this.testSuite = testSuite;
         this.testCase = null;
 
         File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
         ensureExistingDirectory(testSuiteDir);
 
-        System.out.println("InitTestSuite:" + testSuite.id);
-
         File libDir = new File(testSuiteDir, "lib");
         ensureExistingDirectory(libDir);
-
-        if (content != null) {
-            Utils.unzip(content, libDir);
-        }
     }
 
     public void start() throws Exception {

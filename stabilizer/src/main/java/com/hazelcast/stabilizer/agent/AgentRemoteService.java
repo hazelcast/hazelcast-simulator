@@ -73,8 +73,7 @@ public class AgentRemoteService {
                         spawnWorkers(settings);
                     } else if (SERVICE_INIT_TESTSUITE.equals(service)) {
                         TestSuite testSuite = (TestSuite) in.readObject();
-                        byte[] bytes = (byte[]) in.readObject();
-                        initTestSuite(testSuite, bytes);
+                        initTestSuite(testSuite);
                     } else if (SERVICE_TERMINATE_WORKERS.equals(service)) {
                         terminateWorkers();
                     } else if (SERVICE_EXECUTE_ALL_WORKERS.equals(service)) {
@@ -123,9 +122,9 @@ public class AgentRemoteService {
             }
         }
 
-        private void initTestSuite(TestSuite testSuite, byte[] bytes) throws Exception {
+        private void initTestSuite(TestSuite testSuite) throws Exception {
             try {
-                agent.initTestSuite(testSuite, bytes);
+                agent.initTestSuite(testSuite);
             } catch (Exception e) {
                 log.fatal("Failed to init testsuite: " + testSuite, e);
                 throw e;
