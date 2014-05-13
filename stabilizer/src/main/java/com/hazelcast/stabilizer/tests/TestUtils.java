@@ -21,14 +21,9 @@ import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
 import com.hazelcast.stabilizer.TestCase;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.Utils.getFile;
-import static com.hazelcast.stabilizer.Utils.writeObject;
 import static java.lang.String.format;
 
 public class TestUtils {
@@ -38,8 +33,8 @@ public class TestUtils {
         return impl != null ? impl.node : null;
     }
 
-    public static long secondsToMillis(int seconds){
-        return seconds*1000;
+    public static long secondsToMillis(int seconds) {
+        return seconds * 1000;
     }
 
     public static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
@@ -52,14 +47,14 @@ public class TestUtils {
         return impl;
     }
 
-    public static <E> E getField(Object o, String fieldName){
+    public static <E> E getField(Object o, String fieldName) {
         try {
             Field field = o.getClass().getDeclaredField(fieldName);
             field.setAccessible(true);
-            return (E)field.get(o);
-        }catch(NoSuchFieldException e){
+            return (E) field.get(o);
+        } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
-        }catch(IllegalAccessException e){
+        } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
@@ -82,22 +77,104 @@ public class TestUtils {
                     format("Could not found a field for property [%s] on class [%s]", property, test.getClass()));
         }
         field.setAccessible(true);
+
         try {
-            if (Boolean.class.equals(field.getType()) || Boolean.TYPE.equals(field.getType())) {
-                field.set(test, Boolean.parseBoolean(value));
-            } else if (String.class.equals(field.getType())) {
-                field.set(test, value);
-            } else if (Integer.class.equals(field.getType()) || Integer.TYPE.equals(field.getType())) {
+            if (Boolean.TYPE.equals(field.getType())) {
+                //primitive boolean
+                if ("true".equals(value)) {
+                    field.set(test, true);
+                } else if ("false".equals(value)) {
+                    field.set(test, false);
+                } else {
+                    throw new NumberFormatException("Unrecognized boolean value:" + value);
+                }
+            } else if (Boolean.class.equals(field.getType())) {
+                //object boolean
+                if ("null".equals(value)) {
+                    field.set(test, null);
+                } else if ("true".equals(value)) {
+                    field.set(test, true);
+                } else if ("false".equals(value)) {
+                    field.set(test, false);
+                } else {
+                    throw new NumberFormatException("Unrecognized boolean value:" + value);
+                }
+            } else if (Byte.TYPE.equals(field.getType())) {
+                //primitive byte
+                field.set(test, Byte.parseByte(value));
+            } else if (Byte.class.equals(field.getType())) {
+                //object byte
+                if ("null".equals(value)) {
+                    field.set(test, null);
+                } else {
+                    field.set(test, Byte.parseByte(value));
+                }
+            } else if (Short.TYPE.equals(field.getType())) {
+                //primitive short
+                field.set(test, Short.parseShort(value));
+            } else if (Short.class.equals(field.getType())) {
+                //object short
+                if ("null".equals(value)) {
+                    field.set(test, null);
+                } else {
+                    field.set(test, Short.parseShort(value));
+                }
+            } else if (Integer.TYPE.equals(field.getType())) {
+                //primitive integer
                 field.set(test, Integer.parseInt(value));
-            } else if (Long.class.equals(field.getType()) || Long.TYPE.equals(field.getType())) {
+            } else if (Integer.class.equals(field.getType())) {
+                //object integer
+                if ("null".equals(value)) {
+                    field.set(test, null);
+                } else {
+                    field.set(test, Integer.parseInt(value));
+                }
+            } else if (Long.TYPE.equals(field.getType())) {
+                //primitive long
                 field.set(test, Long.parseLong(value));
-            } else if (Float.class.equals(field.getType()) || Float.TYPE.equals(field.getType())) {
+            } else if (Long.class.equals(field.getType())) {
+                //object long
+                if ("null".equals(value)) {
+                    field.set(test, null);
+                } else {
+                    field.set(test, Long.parseLong(value));
+                }
+            } else if (Float.TYPE.equals(field.getType())) {
+                //primitive float
                 field.set(test, Float.parseFloat(value));
-            } else if (Double.class.equals(field.getType()) || Double.TYPE.equals(field.getType())) {
+            } else if (Float.class.equals(field.getType())) {
+                if ("null".equals(value)) {
+                    field.set(test, null);
+                } else {
+                    field.set(test, Float.parseFloat(value));
+                }
+            } else if (Double.TYPE.equals(field.getType())) {
+                //primitive double
                 field.set(test, Double.parseDouble(value));
+            } else if (Double.class.equals(field.getType())) {
+                //object double
+                if ("null".equals(value)) {
+                    field.set(test, null);
+                } else {
+                    field.set(test, Double.parseDouble(value));
+                }
+            } else if (String.class.equals(field.getType())) {
+                //string
+                if ("null".equals(value)) {
+                    field.set(test, null);
+                } else {
+                    field.set(test, value);
+                }
+            } else if (field.getType().isEnum()) {
+                if ("null".equals(value)) {
+                    field.set(test, null);
+                } else {
+                    Object enumValue = Enum.valueOf((Class<? extends Enum>) field.getType(), value);
+                    field.set(test, enumValue);
+                }
             } else {
                 throw new RuntimeException(
-                        format("Can't bind property [%s] to field of type [%s]", property, field.getType()));
+                        format("Unhandled type [%s] for field %s.%s", field.getType(), test.getClass().getName(), field.getName()));
             }
         } catch (NumberFormatException e) {
             throw new RuntimeException(

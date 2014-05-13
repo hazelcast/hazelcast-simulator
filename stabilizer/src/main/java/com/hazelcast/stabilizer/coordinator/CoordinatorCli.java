@@ -16,13 +16,11 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getFile;
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
+import static com.hazelcast.stabilizer.Utils.newFile;
 import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
 import static java.lang.String.format;
 
 public class CoordinatorCli {
-
-    private final static File STABILIZER_HOME = getStablizerHome();
 
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(CoordinatorCli.class);
 
@@ -68,7 +66,7 @@ public class CoordinatorCli {
             "The startup timeout in seconds for a worker")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
-    private final OptionSpec  monitorPerformanceSpec = parser.accepts("monitorPerformance",
+    private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
             "Track performance");
 
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
@@ -93,10 +91,9 @@ public class CoordinatorCli {
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
             "The file containing the stabilizer properties. If no file is explicitly configured, first the " +
-                    "working directory is checked for a file 'stabilizer.properties'. If that doesn't exist, then" +
-                    "the STABILIZER_HOME/conf/stabilizer.properties is loaded."
-    )
-            .withRequiredArg().ofType(String.class);
+                    "working directory is checked for a file 'stabilizer.properties'. All missing properties" +
+                    "are always loaded from STABILIZER_HOME/conf/stabilizer.properties"
+    ).withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> hzFileSpec = parser.accepts("hzFile",
             "The Hazelcast xml configuration file for the worker")
@@ -139,7 +136,7 @@ public class CoordinatorCli {
     }
 
     public void init(String[] args) throws Exception {
-         try {
+        try {
             options = parser.parse(args);
         } catch (OptionException e) {
             Utils.exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
@@ -155,7 +152,7 @@ public class CoordinatorCli {
             coordinator.workerClassPath = options.valueOf(workerClassPathSpec);
         }
 
-        coordinator.props.load(getPropertiesFile());
+        coordinator.props.init(getPropertiesFile());
         coordinator.verifyEnabled = options.valueOf(verifyEnabledSpec);
         coordinator.monitorPerformance = options.has(monitorPerformanceSpec);
         coordinator.testStopTimeoutMs = options.valueOf(testStopTimeoutMsSpec);
@@ -184,28 +181,16 @@ public class CoordinatorCli {
     }
 
     private File getPropertiesFile() {
-        File file;
         if (options.has(propertiesFileSpec)) {
             //a file was explicitly configured
-            file = new File(options.valueOf(propertiesFileSpec));
+            return newFile(options.valueOf(propertiesFileSpec));
         } else {
-            //look in the working directory first
-            file = new File("stabilizer.properties");
-            if (!file.exists()) {
-                //if not exist, then look in the conf directory.
-                file = Utils.toFile(STABILIZER_HOME, "conf", "stabilizer.properties");
-            }
+            return null;
         }
-
-        if (!file.exists()) {
-            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
-        }
-
-        return file;
     }
 
-    private  File getTestSuiteFile() {
-        String testsuiteFileName = Utils.toFile(Coordinator.STABILIZER_HOME, "tests", "map.properties").getAbsolutePath();
+    private File getTestSuiteFile() {
+        String testsuiteFileName = newFile(Coordinator.STABILIZER_HOME, "tests", "map.properties").getAbsolutePath();
 
         List<String> testsuiteFiles = options.nonOptionArguments();
         if (testsuiteFiles.size() == 1) {

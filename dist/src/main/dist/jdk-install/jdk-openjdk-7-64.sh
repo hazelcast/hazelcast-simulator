@@ -2,11 +2,10 @@
 
 set -e
 
-function prepend {
-    echo $1|cat - $2 > /tmp/out && mv /tmp/out $2
-}
+source jdk-support.sh
 
-#sudo apt-get install -y unzip || true
+install wget
+install unzip
 
 cd ~
 wget --no-verbose http://ec2-54-87-52-100.compute-1.amazonaws.com/openjdk-1.7.0-u45-unofficial-icedtea-2.4.3-linux-amd64-image.zip

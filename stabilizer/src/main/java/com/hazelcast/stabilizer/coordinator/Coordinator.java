@@ -24,6 +24,7 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
+import com.hazelcast.stabilizer.provisioner.Bash;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 
@@ -59,8 +60,11 @@ public class Coordinator {
     public StabilizerProperties props = new StabilizerProperties();
     public volatile double performance;
     public volatile long operationCount;
+    private Bash bash;
 
     private void run() throws Exception {
+        bash = new Bash(props);
+
         agentsClient = new AgentsClient(agentsFile);
         agentsClient.awaitAgentsReachable();
 
@@ -238,7 +242,6 @@ public class Coordinator {
         cli.init(args);
 
         log.info(format("Using agents file: %s", coordinator.agentsFile.getAbsolutePath()));
-        log.info(format("Using Stabilizer properties file: %s", coordinator.props.getFile().getAbsolutePath()));
 
         try {
             coordinator.run();

@@ -11,13 +11,18 @@ import static com.hazelcast.stabilizer.Utils.appendText;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
 class FailureMonitorThread extends Thread {
-    private Coordinator coordinator;
+    private final Coordinator coordinator;
     private final ILogger log = Logger.getLogger(FailureMonitorThread.class);
+    private final File file = new File("failures-" + System.currentTimeMillis() + ".txt");
 
     public FailureMonitorThread(Coordinator coordinator) {
         super("FailureMonitorThread");
+
+        if (coordinator == null) {
+            throw new NullPointerException();
+        }
         this.coordinator = coordinator;
-        setDaemon(true);
+        this.setDaemon(true);
     }
 
     public void run() {
@@ -37,7 +42,6 @@ class FailureMonitorThread extends Thread {
         for (Failure failure : failures) {
             coordinator.failureList.add(failure);
             log.warning(buildMessage(failure));
-            File file = new File("failures.txt");
             appendText(failure.toString() + "\n", file);
         }
     }

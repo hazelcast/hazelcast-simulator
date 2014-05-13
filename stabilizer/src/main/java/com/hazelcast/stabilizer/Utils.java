@@ -19,6 +19,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.commons.lang3.text.StrSubstitutor;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -58,11 +59,9 @@ import java.util.zip.ZipOutputStream;
 import static java.lang.String.format;
 
 public final class Utils {
-//    private final static ILogger log = Logger.getLogger(Utils.class);
+    private static final String USER_HOME = System.getProperty("user.home");
 
     private static volatile String hostAddress;
-
-    public final static String FILE_SEPERATOR = System.getProperty("file.separator");
 
     private final static String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
 
@@ -75,6 +74,19 @@ public final class Utils {
         remoteCause.setStackTrace(newStackTrace);
     }
 
+    public static File newFile(String path) {
+        path = path.trim();
+        if (path.equals("~")) {
+            path = USER_HOME;
+        } else if (path.startsWith("~" + File.separator)) {
+            path = USER_HOME + path.substring(1);
+        }
+
+
+        StrSubstitutor substitutor = new StrSubstitutor();
+        path = substitutor.replace(path);
+        return new File(path);
+    }
 
     public static String getText(String url) throws IOException {
         URL website = new URL(url);
@@ -98,8 +110,16 @@ public final class Utils {
         }
     }
 
-    public static File toFile(File file, String... items) {
+    public static File newFile(File file, String... items) {
         for (int k = 0; k < items.length; k++) {
+            file = new File(file, items[k]);
+        }
+        return file;
+    }
+
+    public static File newFile(String... items) {
+        File file = newFile(items[0]);
+        for (int k = 1; k < items.length; k++) {
             file = new File(file, items[k]);
         }
         return file;
@@ -480,10 +500,10 @@ public final class Utils {
     }
 
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
-        File file = new File(options.valueOf(spec));
+        File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
             ILogger log = Logger.getLogger(Utils.class);
-            exitWithError(log,format("%s [%s] does not exist\n", desc, file));
+            exitWithError(log, format("%s [%s] does not exist\n", desc, file));
         }
         return file;
     }

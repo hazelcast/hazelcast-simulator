@@ -4,8 +4,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.performance.OperationsPerSecond;
-import com.hazelcast.stabilizer.performance.Performance;
 import com.hazelcast.stabilizer.tests.AbstractTest;
 import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
@@ -96,7 +94,7 @@ public class MapCasTest extends AbstractTest {
 
     @Override
     public long getOperationCount() {
-       return operations.get();
+        return operations.get();
     }
 
     private class Worker implements Runnable {

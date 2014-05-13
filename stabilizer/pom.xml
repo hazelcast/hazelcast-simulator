@@ -37,9 +37,20 @@
         </dependency>
 
         <!-- jclouds -->
-         <dependency>
-            <groupId>org.apache.jclouds</groupId>
-            <artifactId>jclouds-allcompute</artifactId>
+         <!--<dependency>-->
+            <!--<groupId>org.apache.jclouds</groupId>-->
+            <!--<artifactId>jclouds-allcompute</artifactId>-->
+            <!--<version>${jclouds.version}</version>-->
+        <!--</dependency>-->
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jclouds.provider</groupId>
+            <artifactId>aws-ec2</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>

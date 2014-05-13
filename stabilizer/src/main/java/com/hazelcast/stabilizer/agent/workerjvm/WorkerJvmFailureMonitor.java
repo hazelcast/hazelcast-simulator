@@ -80,7 +80,7 @@ public class WorkerJvmFailureMonitor {
     private void detectInactivity(WorkerJvm jvm, List<Failure> failures) {
         long currentMs = System.currentTimeMillis();
 
-        if(jvm.oomeDetected){
+        if (jvm.oomeDetected) {
             return;
         }
 
@@ -149,7 +149,7 @@ public class WorkerJvmFailureMonitor {
     }
 
     private void detectUnexpectedExit(WorkerJvm jvm, List<Failure> failures) {
-        if(jvm.oomeDetected){
+        if (jvm.oomeDetected) {
             return;
         }
 

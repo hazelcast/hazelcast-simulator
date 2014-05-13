@@ -1,5 +1,6 @@
 package com.hazelcast.stabilizer.common;
 
+import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
@@ -7,13 +8,50 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import static com.hazelcast.stabilizer.Utils.getStablizerHome;
+import static com.hazelcast.stabilizer.Utils.newFile;
+import static java.lang.String.format;
+
 public class StabilizerProperties {
+    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(StabilizerProperties.class);
 
     private final Properties properties = new Properties();
-    private File file;
 
-    public void load(File file) {
-        this.file = file;
+    public StabilizerProperties(){
+        File defaultPropsFile = newFile(getStablizerHome(), "conf", "stabilizer.properties");
+        load(defaultPropsFile);
+    }
+
+    /**
+     * Initialized the StabilizerProperties
+     *
+     * @param file the file to load the properties from. If the file is null, then first the stabilizer.properties
+     *             in the working dir is checked and otherwise the stabilizer.properties in STABILIZER_HOME/conf is
+     *             used.
+     */
+    public void init(File file) {
+         if (file == null) {
+            //if no file is explicitly given, we look in the working directory
+            File tmp = new File("stabilizer.properties");
+            if (tmp.exists()) {
+                file = tmp;
+            }
+        }
+
+        if (file != null) {
+            log.info(format("Loading stabilizer.properties: %s", file.getAbsolutePath()));
+            load(file);
+        } else {
+            log.info(format("No specific stabilizer.properties provided, relying on default settings"));
+        }
+    }
+
+    private void load(File file) {
+        if (!file.exists()) {
+            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
+            return;
+        }
+
         try {
             FileInputStream inputStream = new FileInputStream(file);
             try {
@@ -24,10 +62,6 @@ public class StabilizerProperties {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public File getFile() {
-        return file;
     }
 
     public String get(String name) {

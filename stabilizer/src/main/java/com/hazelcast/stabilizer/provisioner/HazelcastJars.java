@@ -21,12 +21,12 @@ public class HazelcastJars {
 
     private File hazelcastJarsDir;
 
-    public HazelcastJars(Bash bash, String versionSpec){
+    public HazelcastJars(Bash bash, String versionSpec) {
         this.bash = bash;
         this.versionSpec = versionSpec;
     }
 
-    public String getAbsolutePath(){
+    public String getAbsolutePath() {
         return hazelcastJarsDir.getAbsolutePath();
     }
 
@@ -35,29 +35,14 @@ public class HazelcastJars {
         hazelcastJarsDir = new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString());
         hazelcastJarsDir.mkdirs();
 
+        log.info("Hazelcast version-spec: " + versionSpec);
+
         if (versionSpec.equals("outofthebox")) {
-            log.info("Using Hazelcast version-spec: outofthebox");
-        } else if (versionSpec.startsWith("path=")) {
-            String path = versionSpec.substring(5);
-            log.info("Using Hazelcast version-spec: path=" + path);
-            File file = new File(path);
-            if (!file.exists()) {
-                log.severe("Directory :" + path + " does not exist");
-                System.exit(1);
-            }
-
-            if (!file.isDirectory()) {
-                log.severe("File :" + path + " is not a directory");
-                System.exit(1);
-            }
-
-            bash.bash(format("cp %s/* %s", path, hazelcastJarsDir.getAbsolutePath()));
-        } else if (versionSpec.equals("none")) {
-            log.info("Using Hazelcast version-spec: none");
+            //we don't need to do anything.
+        }  else if (versionSpec.equals("bringmyown")) {
             //we don't need to do anything
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);
-            log.info("Using Hazelcast version-spec: maven=" + version);
             mavenRetrieve("hazelcast", version);
             mavenRetrieve("hazelcast-client", version);
         } else {
@@ -68,12 +53,12 @@ public class HazelcastJars {
 
     private void mavenRetrieve(String artifact, String version) {
         File userhome = new File(System.getProperty("user.home"));
-        File repositoryDir = Utils.toFile(userhome, ".m2", "repository");
-        File artifactFile = Utils.toFile(repositoryDir, "com", "hazelcast",
+        File repositoryDir = Utils.newFile(userhome, ".m2", "repository");
+        File artifactFile = Utils.newFile(repositoryDir, "com", "hazelcast",
                 artifact, version, format("%s-%s.jar", artifact, version));
         if (artifactFile.exists()) {
             log.finest("Using artifact: " + artifactFile + " from local maven repository");
-            bash.bash(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
+            bash.execute(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
         } else {
             log.finest("Artifact: " + artifactFile + " is not found in local maven repository, trying online one");
 
@@ -105,7 +90,7 @@ public class HazelcastJars {
                 url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
             }
 
-            bash.bash(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
+            bash.execute(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
         }
     }
 

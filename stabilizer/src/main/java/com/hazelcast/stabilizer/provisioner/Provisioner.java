@@ -1,34 +1,24 @@
 package com.hazelcast.stabilizer.provisioner;
 
 import com.google.common.base.Predicate;
+import com.google.common.io.Files;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.agent.AgentRemoteService;
-import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
-import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
-import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
-import org.jclouds.compute.domain.TemplateBuilderSpec;
-import org.jclouds.logging.log4j.config.Log4JLoggingModule;
-import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
-import org.jclouds.scriptbuilder.statements.login.AdminAccess;
-import org.jclouds.sshj.config.SshjSshClientModule;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -36,19 +26,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.Utils.appendText;
-import static com.hazelcast.stabilizer.Utils.getVersion;
-import static com.hazelcast.stabilizer.Utils.secondsToHuman;
+import static com.hazelcast.stabilizer.Utils.*;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
-import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
 
 //https://jclouds.apache.org/start/compute/ good read
 //https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
 //https://github.com/jclouds/jclouds-examples/blob/master/minecraft-compute/src/main/java/org/jclouds/examples/minecraft/NodeManager.java
 public class Provisioner {
-    private final static ILogger log = Logger.getLogger(Provisioner.class.getName());
+    private final static ILogger log = Logger.getLogger(Provisioner.class);
 
     public final StabilizerProperties props = new StabilizerProperties();
 
@@ -70,23 +55,32 @@ public class Provisioner {
         }
         addresses.addAll(AgentsFile.load(agentsFile));
         bash = new Bash(props);
-        hazelcastJars = new HazelcastJars(bash, props.get("HAZELCAST_VERSION_SPEC", "outofthebox"));
+        String hzVersionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
+        hazelcastJars = new HazelcastJars(bash, hzVersionSpec);
     }
 
     void installAgent(String ip) {
+        bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s", getVersion()));
+
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
         bash.sshQuiet(ip, format("rm -fr hazelcast-stabilizer-%s/lib", getVersion()));
 
-        //then we copy the stabilizer directory
-        bash.scpToRemote(ip, STABILIZER_HOME, "");
+        bash.scpToRemote(ip, STABILIZER_HOME + "/bin", format("hazelcast-stabilizer-%s/bin", getVersion()));
+        bash.scpToRemote(ip, STABILIZER_HOME + "/conf", format("hazelcast-stabilizer-%s/conf", getVersion()));
+        bash.scpToRemote(ip, STABILIZER_HOME + "/jdk-install", format("hazelcast-stabilizer-%s/jdk-install", getVersion()));
+        bash.scpToRemote(ip, STABILIZER_HOME + "/lib", format("hazelcast-stabilizer-%s/lib", getVersion()));
+        bash.scpToRemote(ip, STABILIZER_HOME + "/tests", format("hazelcast-stabilizer-%s/tests", getVersion()));
+        //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
+        //this is done to reduce the amount of data we need to upload.
 
         String versionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
-
         if (!versionSpec.equals("outofthebox")) {
+            //todo: in the future we can improve this; we upload the hz jars, to delete them again.
+
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
             bash.ssh(ip, format("rm hazelcast-stabilizer-%s/lib/hazelcast-*.jar", getVersion()));
 
-            if (!versionSpec.endsWith("none")) {
+            if (!versionSpec.endsWith("bringmyown")) {
                 //copy the actual hazelcast jars that are going to be used by the worker.
                 bash.scpToRemote(ip, hazelcastJars.getAbsolutePath() + "/*.jar", format("hazelcast-stabilizer-%s/lib", getVersion()));
             }
@@ -145,54 +139,34 @@ public class Provisioner {
         }
     }
 
-    private int[] inboundPorts() {
-        List<Integer> ports = new ArrayList<Integer>();
-        ports.add(22);
-        //todo:the following 2 ports should not be needed
-        ports.add(443);
-        ports.add(80);
-        ports.add(AgentRemoteService.PORT);
-        ports.add(WorkerJvmManager.PORT);
-        for (int k = 5701; k < 5751; k++) {
-            ports.add(k);
-        }
-
-        int[] result = new int[ports.size()];
-        for (int k = 0; k < result.length; k++) {
-            result[k] = ports.get(k);
-        }
-        return result;
-    }
-
     private void scaleUp(int delta) throws Exception {
         echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
         echo("Current number of machines: " + addresses.size());
         echo("Desired number of machines: " + (addresses.size() + delta));
-        echo(props.get("MACHINE_SPEC"));
+        String groupName = props.get("GROUP_NAME", "stabilizer-agent");
+        echo("GroupName: " + groupName);
 
         long startTimeMs = System.currentTimeMillis();
 
-        String jdkFlavor = props.get("JDK_FLAVOR");
+        String jdkFlavor = props.get("JDK_FLAVOR", "outofthebox");
         if ("outofthebox".equals(jdkFlavor)) {
-            log.info("Machines will use Java: Out of the Box.");
+            log.info("JDK spec: outofthebox");
         } else {
-            log.info(format("Machines will use Java: %s %s", jdkFlavor, props.get("JDK_VERSION")));
+            String jdkVersion = props.get("JDK_VERSION", "7");
+            log.info(format("JDK spec: %s %s", jdkFlavor, jdkVersion));
         }
 
         hazelcastJars.prepare();
 
-        ComputeService compute = getComputeService();
+        ComputeService compute = new ComputeServiceBuilder(props).build();
 
         echo("Created compute");
 
-        Template template = buildTemplate(compute);
+        Template template = new TemplateBuilder(compute, props).build();
 
-        echo("Creating nodes");
+        echo("Created machines (can take a few minutes)");
 
         Set<Future> futures = new HashSet<Future>();
-        echo("Created machines, waiting for startup (can take a few minutes)");
-
-        String groupName = props.get("GROUP_NAME", "stabilizer-agent");
 
         for (int batch : calcBatches(delta)) {
 
@@ -231,25 +205,16 @@ public class Provisioner {
                 delta, props.get("CLOUD_PROVIDER")));
     }
 
-    private Template buildTemplate(ComputeService compute) {
-        Template template = compute.templateBuilder()
-                .from(TemplateBuilderSpec.parse(props.get("MACHINE_SPEC")))
-                .build();
-
-        echo("Created template");
-
-        template.getOptions()
-                .inboundPorts(inboundPorts())
-                .runScript(AdminAccess.standard())
-                .securityGroups(props.get("SECURITY_GROUP"));
-
-        return template;
+    public void listAgents() {
+        echo("Running Agents (from agents.txt):");
+        String agents = fileAsText(agentsFile);
+        echo("\t" + agents);
     }
 
     private class InstallNodeTask implements Runnable {
         private final String ip;
 
-        InstallNodeTask(String ip) {
+        private InstallNodeTask(String ip) {
             this.ip = ip;
         }
 
@@ -257,9 +222,8 @@ public class Provisioner {
         public void run() {
             //install java if needed
             if (!"outofthebox".equals(props.get("JDK_FLAVOR"))) {
-                bash.ssh(ip, "touch install-java.sh");
-                bash.ssh(ip, "chmod +x install-java.sh");
-                bash.scpToRemote(ip, getJavaInstallScript().getAbsolutePath(), "install-java.sh");
+                bash.scpToRemote(ip, getJavaSupportScript(),"jdk-support.sh");
+                bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
                 bash.ssh(ip, "bash install-java.sh");
                 echo("\t" + ip + " JAVA INSTALLED");
             }
@@ -288,26 +252,6 @@ public class Provisioner {
         return result;
     }
 
-    private ComputeService getComputeService() {
-        //http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
-        Properties overrides = new Properties();
-        overrides.setProperty(POLL_INITIAL_PERIOD, props.get("CLOUD_POLL_INITIAL_PERIOD"));
-        overrides.setProperty(POLL_MAX_PERIOD, props.get("CLOUD_POLL_MAX_PERIOD"));
-
-        String credentials = props.get("CLOUD_CREDENTIAL");
-        File file = new File(credentials);
-        if (file.exists()) {
-            credentials = Utils.fileAsText(file);
-        }
-
-        return ContextBuilder.newBuilder(props.get("CLOUD_PROVIDER"))
-                .overrides(overrides)
-                .credentials(props.get("CLOUD_IDENTITY"), credentials)
-                .modules(asList(new SLF4JLoggingModule(), new SshjSshClientModule()))
-                .buildView(ComputeServiceContext.class)
-                .getComputeService();
-    }
-
     private File getJavaInstallScript() {
         String flavor = props.get("JDK_FLAVOR");
         String version = props.get("JDK_VERSION");
@@ -317,18 +261,23 @@ public class Provisioner {
         return new File(scriptDir, script);
     }
 
+    private File getJavaSupportScript() {
+         File scriptDir = new File(STABILIZER_HOME, "jdk-install");
+        return new File(scriptDir, "jdk-support.sh");
+    }
+
     public void download() {
         echoImportant("Download artifacts of %s machines", addresses.size());
 
-        bash.bash("mkdir -p workers");
+        bash.execute("mkdir -p workers");
 
         for (AgentAddress address : addresses) {
             echo("Downloading from %s", address.publicAddress);
 
             String syncCommand = format("rsync  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
-                    props.get("SSH_OPTIONS"), props.get("USER"), address.publicAddress, getVersion());
+                    props.get("SSH_OPTIONS", ""), props.get("USER"), address.publicAddress, getVersion());
 
-            bash.bash(syncCommand);
+            bash.execute(syncCommand);
         }
 
         echoImportant("Finished Downloading Artifacts of %s machines", addresses.size());
@@ -360,14 +309,15 @@ public class Provisioner {
 
         long startMs = System.currentTimeMillis();
 
+        ComputeService compute = new ComputeServiceBuilder(props).build();
+
         for (int batchSize : calcBatches(count)) {
             final Map<String, AgentAddress> terminateMap = new HashMap<String, AgentAddress>();
             for (AgentAddress address : addresses.subList(0, batchSize)) {
                 terminateMap.put(address.publicAddress, address);
             }
 
-            ComputeService computeService = getComputeService();
-            computeService.destroyNodesMatching(
+            compute.destroyNodesMatching(
                     new Predicate<NodeMetadata>() {
                         @Override
                         public boolean apply(NodeMetadata nodeMetadata) {

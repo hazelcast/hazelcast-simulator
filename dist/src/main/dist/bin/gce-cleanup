@@ -1,0 +1,15 @@
+#!/bin/bash
+
+PROJECT=$1
+
+echo Deleting jclouds rules for project: $PROJECT
+
+result=$( gcutil listfirewalls --project $PROJECT | grep -i jclouds | grep -i port | awk '{print $2}' )
+
+echo $result
+
+for i in "${result[@]}"
+do
+    echo deleting $i
+    gcutil deletefirewall $i --project $PROJECT -f
+done

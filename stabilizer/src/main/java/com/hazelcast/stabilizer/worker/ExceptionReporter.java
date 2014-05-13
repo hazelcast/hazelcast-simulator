@@ -2,7 +2,6 @@ package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
 import java.io.IOException;

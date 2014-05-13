@@ -7,6 +7,7 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,7 +25,7 @@ public class Bash {
         this.user = stabilizerProperties.get("USER");
     }
 
-    public void bash(String command) {
+    public void execute(String command) {
         StringBuffer sb = new StringBuffer();
 
         if (log.isFinestEnabled()) {
@@ -58,19 +59,23 @@ public class Bash {
         }
     }
 
+    public void scpToRemote(String ip, File src, String target) {
+        scpToRemote(ip, src.getAbsolutePath(), target);
+    }
+
     public void scpToRemote(String ip, String src, String target) {
         String command = format("scp -r %s %s %s@%s:%s", sshOptions, src, user, ip, target);
-        bash(command);
+        execute(command);
     }
 
     public void ssh(String ip, String command) {
         String sshCommand = format("ssh %s %s@%s \"%s\"", sshOptions, user, ip, command);
-        bash(sshCommand);
+        execute(sshCommand);
     }
 
     public void sshQuiet(String ip, String command) {
         String sshCommand = format("ssh %s %s@%s \"%s\" || true", sshOptions, user, ip, command);
-        bash(sshCommand);
+        execute(sshCommand);
     }
 
     public static class BashStreamGobbler extends Thread {
