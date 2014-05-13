@@ -60,8 +60,6 @@ public class Provisioner {
     }
 
     void installAgent(String ip) {
-        bash.ssh(ip, "");
-
         bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s", getVersion()));
 
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
