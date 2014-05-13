@@ -152,7 +152,8 @@ public class AgentsClient {
     }
 
     private List<Object> getAllFutures(Collection<Future> futures) {
-        return getAllFutures(futures, TimeUnit.SECONDS.toMillis(10000));
+        int value = Integer.parseInt(System.getProperty("worker.testmethod.timeout","10000"));
+        return getAllFutures(futures, TimeUnit.SECONDS.toMillis(value));
     }
 
     //todo: probably we don't want to throw exceptions to make sure that don't abort when a agent goes down.

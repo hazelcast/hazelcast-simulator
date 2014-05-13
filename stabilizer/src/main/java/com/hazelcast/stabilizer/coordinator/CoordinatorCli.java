@@ -62,11 +62,7 @@ public class CoordinatorCli {
                     "Use ';' as separator for multiple entries. Wildcard '*' can also be used."
     ).withRequiredArg().ofType(String.class);
 
-    private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
-            "The startup timeout in seconds for a worker")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(60);
-
-    private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
+      private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
             "Track performance");
 
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
@@ -102,6 +98,10 @@ public class CoordinatorCli {
     private final OptionSpec<String> clientHzFileSpec = parser.accepts("clientHzFile",
             "The client Hazelcast xml configuration file for the worker")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
+
+    private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
+            "The startup timeout in seconds for a worker")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
     private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs",
             "Maximum amount of time waiting for the Test to stop")
