@@ -78,18 +78,8 @@ public class Coordinator {
         log.info(format("Total number of Hazelcast client workers: %s", workerJvmSettings.clientWorkerCount));
         log.info(format("Total number of Hazelcast mixed client & member workers: %s", workerJvmSettings.mixedWorkerCount));
 
-        agentsClient.initTestSuite(testSuite);
 
-        //upload yourkit if needed
-        if ("yourkit".equals(workerJvmSettings.profiler)) {
-            //todo: in the future we'll only upload the right yourkit library 32 vs 64
-            for (String ip : agentsClient.getPublicAddresses()) {
-                String syncCommand = format("rsync --ignore-existing -av -e \"ssh %s\" %s/yourkit %s@%s:hazelcast-stabilizer-%s/yourkit",
-                        props.get("SSH_OPTIONS", ""), getStablizerHome().getAbsolutePath(), props.get("USER"), ip, getVersion());
-
-                bash.execute(syncCommand);
-            }
-        }
+        initAgents();
 
         //todo: scp the dependencies
 
@@ -123,6 +113,25 @@ public class Coordinator {
             log.info(failureList.size() + " failures have been detected!!!!");
             log.info("-----------------------------------------------------------------------------");
             System.exit(1);
+        }
+    }
+
+    private void initAgents() {
+        agentsClient.initTestSuite(testSuite);
+
+        //upload yourkit if needed
+        if ("yourkit".equals(workerJvmSettings.profiler)) {
+            log.info("Ensuring Yourkit dependencies available");
+
+            //todo: in the future we'll only upload the right yourkit library 32 vs 64
+            for (String ip : agentsClient.getPublicAddresses()) {
+                bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s/yourkit", getVersion()));
+
+                String syncCommand = format("rsync --ignore-existing -av -e \"ssh %s\" %s/yourkit %s@%s:hazelcast-stabilizer-%s/yourkit",
+                        props.get("SSH_OPTIONS", ""), getStablizerHome().getAbsolutePath(), props.get("USER"), ip, getVersion());
+
+                bash.execute(syncCommand);
+            }
         }
     }
 
