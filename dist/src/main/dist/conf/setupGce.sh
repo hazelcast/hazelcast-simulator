@@ -1,3 +1,17 @@
+#!/bin/bash
+
+GCE_id=$1
+p12File=$2
+
+thispath=$(pwd)
+me=$(whoami)
+
+echo "usually password is: \"notasecret\""
+openssl pkcs12 -in ${thispath}/${p12File} -out ${thispath}/temp1.pem -nodes
+openssl rsa -in ${thispath}/temp1.pem -out ${thispath}/google.pem
+rm temp1.pem
+
+echo "
 # =====================================================================
 # Cloud selection
 # =====================================================================
@@ -7,7 +21,7 @@
 # aws-ec2 = Amazon EC2
 # google-compute-engine = The Google Compute Engine.
 #
-CLOUD_PROVIDER=aws-ec2
+CLOUD_PROVIDER=google-compute-engine
 
 
 # =====================================================================
@@ -19,11 +33,11 @@ CLOUD_PROVIDER=aws-ec2
 # would be very easy to get it committed and everyone can see it. So it is best to create a file outside
 # of the project. For ec2 e,g you could have 2 files in your home dir: ec2.identity and ec2.credential.
 #
-CLOUD_IDENTITY=<your-aws-access-key>
+# This can either be a string containing the credentials, or the path to a file (needed for google compute engine)
 #
 # Just like CLOUD_IDENTITY, it can be the string itself or a path to a file.
 #
-CLOUD_CREDENTIAL=<your-aws-secret-key>
+CLOUD_CREDENTIAL=${thispath}/google.pem
 
 
 # =====================================================================
@@ -53,35 +67,6 @@ CLOUD_BATCH_SIZE=20
 # made and you can only have 100 firewall rules.
 #
 GROUP_NAME=stabilizer-agent
-
-#
-# The name of the user on your local machine.
-#
-# JClouds will automatically make a new user on the remote machine  with this name as loginname. It will also copy
-# the public key of your system to the remote machine and add it to the ~/.ssh/authorized_keys. So once the instance
-# is created, you can login with 'ssh USER@ip'.
-#
-# The default value 'stabilizer' is fine in most cases. So probably you don't want to change this.
-#
-USER=stabilizer
-
-#
-# The options added to SSH. Probably you don't need to change this.
-#
-SSH_OPTIONS=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
-
-#
-# The name of the security group, the creates machines belong to.
-#
-# EC2:
-# If the security group doesn't exist, it will automatically be created. If you did not specify
-# a locationId in the MACHINES_SPEC, the location will be us-east-1. If it does exist, make sure
-# that port 22, 9000, 9001 and 5701..5751 are open. In most cases the default value is fine.
-#
-# GCE:
-# The value is not relevant.
-#
-SECURITY_GROUP=stabilizer
 
 # =====================================================================
 # Hardware selection
@@ -131,8 +116,15 @@ SECURITY_GROUP=stabilizer
 #
 # The default region is us-east-1
 #
-MACHINE_SPEC=hardwareId=m1.small,osFamily=CENTOS,os64Bit=true
+MACHINE_SPEC=osFamily=CENTOS,os64Bit=true
 
+
+SSH_OPTIONS=-o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o StrictHostKeyChecking=no
+
+USER=${me}
+
+#You need to make sure that the security-group exists.
+SECURITY_GROUP=open
 
 # =====================================================================
 # Hazelcast Version Configuration
@@ -142,6 +134,8 @@ MACHINE_SPEC=hardwareId=m1.small,osFamily=CENTOS,os64Bit=true
 # version provided by the stabilizer, but you can override it with a specific version.
 #
 # The Hazelcast version can be configured in different ways:
+#   none                    : if you worker is going to get maven installed through worker dependencies, for
+#                             for more information checkout out the --workerClassPath setting on the Controller.
 #   outofthebox             : if you are fine with the one provided by the Stabilizer itself.
 #   maven=version           : if you want to use a specific version from the maven repository, e.g.
 #                                   maven=3.2
@@ -207,11 +201,10 @@ PROFILER=none
 #
 # Make sure that the path matches the JVM 32/64 bits. In the future this will be automated.
 #
-# The libypagent.so files, which are included in Stabilizer, are for "YourKit Java Profiler 2013".
+# The libypagent.so files, which are included in Stabilizer, are for \"YourKit Java Profiler 2013\".
 #
 # For more information about the Yourkit setting, see:
 #   http://www.yourkit.com/docs/java/help/agent.jsp
 #   http://www.yourkit.com/docs/java/help/startup_options.jsp
 #
-YOURKIT_SETTINGS=-agentpath:${STABILIZER_HOME}/yourkit/linux-x86-64/libyjpagent.so=dir=${WORKER_HOME},sampling,monitors
-
+YOURKIT_SETTINGS=-agentpath:\${STABILIZER_HOME}/yourkit/linux-x86-64/libyjpagent.so=dir=\${WORKER_HOME},sampling,monitors" > stabilizer.properties
