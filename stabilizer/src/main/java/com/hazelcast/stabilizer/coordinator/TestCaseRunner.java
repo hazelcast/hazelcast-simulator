@@ -8,7 +8,7 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.RunCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 
 import java.text.NumberFormat;
@@ -103,9 +103,9 @@ public class TestCaseRunner {
 
     private void startTestCase() {
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
-        StartTestCommand startTestCommand = new StartTestCommand();
-        startTestCommand.clientOnly = workerJvmSettings.mixedWorkerCount > 0 || workerJvmSettings.clientWorkerCount > 0;
-        agentsClient.executeOnAllWorkers(startTestCommand);
+        RunCommand runCommand = new RunCommand();
+        runCommand.clientOnly = workerJvmSettings.mixedWorkerCount > 0 || workerJvmSettings.clientWorkerCount > 0;
+        agentsClient.executeOnAllWorkers(runCommand);
     }
 
     public void sleepSeconds(int seconds) {

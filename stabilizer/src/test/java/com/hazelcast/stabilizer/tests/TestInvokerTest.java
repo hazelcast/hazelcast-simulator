@@ -16,7 +16,7 @@ public class TestInvokerTest {
     @Test
     public void testRun() throws Throwable {
         DummyTest dummyTest = new DummyTest();
-        TestInvoker invoker = new TestInvoker(dummyTest);
+        TestInvoker invoker = new TestInvoker(dummyTest,new DummyTestContext());
         invoker.run();
 
         assertTrue(dummyTest.runCalled);
@@ -25,7 +25,7 @@ public class TestInvokerTest {
     @Test(expected = IllegalTestException.class)
     public void runMissing() throws Throwable {
         RunMissingTest test = new RunMissingTest();
-        new TestInvoker(test);
+        new TestInvoker(test,new DummyTestContext());
     }
 
     static class RunMissingTest {
@@ -40,19 +40,19 @@ public class TestInvokerTest {
     @Test
     public void testSetup() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
-        DummyTest dummyTest = new DummyTest();
-        TestInvoker invoker = new TestInvoker(dummyTest);
+        DummyTest test = new DummyTest();
+        TestInvoker invoker = new TestInvoker(test,testContext);
         invoker.run();
-        invoker.setup(testContext);
+        invoker.setup();
 
-        assertTrue(dummyTest.setupCalled);
-        assertSame(testContext, dummyTest.context);
+        assertTrue(test.setupCalled);
+        assertSame(testContext, test.context);
     }
 
     @Test(expected = IllegalTestException.class)
     public void setupMissing() throws Throwable {
         SetupMissingTest test = new SetupMissingTest();
-        new TestInvoker(test);
+        new TestInvoker(test,new DummyTestContext());
     }
 
 

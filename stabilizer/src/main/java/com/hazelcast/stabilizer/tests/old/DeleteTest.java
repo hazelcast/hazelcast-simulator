@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.tests;
+package com.hazelcast.stabilizer.tests.old;
+
+import com.hazelcast.stabilizer.tests.TestDependencies;
 
 /**
  * The Test is the 'thing' that contains the actual logic we want to run.
@@ -32,8 +34,6 @@ package com.hazelcast.stabilizer.tests;
  * </ol>
  */
 public interface DeleteTest {
-
-    String TEST_INSTANCE = "testInstance";
 
     void init(TestDependencies dependencies);
 

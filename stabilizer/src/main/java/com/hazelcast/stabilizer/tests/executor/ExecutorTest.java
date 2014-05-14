@@ -21,9 +21,9 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.DeleteTest;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestFailureException;
+import com.hazelcast.stabilizer.tests.TestUtils;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
@@ -148,7 +148,7 @@ public class ExecutorTest {
 
         @Override
         public void run() {
-            ExecutorTest test = (ExecutorTest) hz.getUserContext().get(DeleteTest.TEST_INSTANCE);
+            ExecutorTest test = (ExecutorTest) hz.getUserContext().get(TestUtils.TEST_INSTANCE);
             test.executedCounter.incrementAndGet();
         }
 

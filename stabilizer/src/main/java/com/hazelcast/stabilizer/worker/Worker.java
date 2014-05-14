@@ -27,13 +27,15 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.stabilizer.tests.DeleteTest;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestDependencies;
 import com.hazelcast.stabilizer.tests.TestInvoker;
+import com.hazelcast.stabilizer.tests.TestUtils;
+import com.hazelcast.stabilizer.worker.testcommands.DoneCommand;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.GetOperationCountTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.RunCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
@@ -43,7 +45,6 @@ import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -74,7 +75,8 @@ public class Worker {
     private String workerMode;
     private String workerId;
 
-    private volatile TestInvoker testInvoker;
+    private volatile TestInvoker<TestContextImpl> testInvoker;
+    private volatile TestCommand currentCommand;
 
     private final BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
     private final BlockingQueue<TestCommandResponse> responseQueue = new LinkedBlockingQueue<TestCommandResponse>();
@@ -278,14 +280,16 @@ public class Worker {
         private void doProcess(long id, TestCommand command) {
             Object result = null;
             try {
-                if (command instanceof InitTestCommand) {
+                if (command instanceof DoneCommand) {
+                    result = process((DoneCommand) command);
+                } else if (command instanceof InitTestCommand) {
                     process((InitTestCommand) command);
-                } else if (command instanceof StartTestCommand) {
-                    process((StartTestCommand) command);
+                } else if (command instanceof RunCommand) {
+                    process((RunCommand) command);
                 } else if (command instanceof StopTestCommand) {
                     process((StopTestCommand) command);
                 } else if (command instanceof GenericTestCommand) {
-                    result = process((GenericTestCommand) command);
+                    process((GenericTestCommand) command);
                 } else if (command instanceof GetOperationCountTestCommand) {
                     result = process((GetOperationCountTestCommand) command);
                 } else {
@@ -302,32 +306,38 @@ public class Worker {
         }
 
         private Long process(GetOperationCountTestCommand command) {
-        //    return test.getOperationCount();
+            //    return test.getOperationCount();
             return -1l;
         }
 
-        private void process(StartTestCommand testCommand) throws Exception {
+        private void process(final RunCommand command) throws Exception {
             try {
                 log.info("Starting test");
-//
-//                if (test == null) {
-//                    throw new IllegalStateException("No running test found");
-//                }
 
-                boolean passive = false;
-                if (testCommand.clientOnly && clientInstance == null) {
-                    passive = true;
+                if (testInvoker == null) {
+                    throw new IllegalStateException("No running test found");
                 }
 
-                //test.run(passive);
+                new CommandThread() {
+                    @Override
+                    public void doRun() throws Throwable {
+                        currentCommand = command;
+
+                        boolean passive = command.clientOnly && clientInstance == null;
+
+                        if (!passive) {
+                            testInvoker.run();
+                        }
+                    }
+                }.start();
             } catch (Exception e) {
                 log.severe("Failed to start test", e);
                 throw e;
             }
         }
 
-        public Object process(GenericTestCommand genericTestTask) throws Throwable {
-            String methodName = genericTestTask.methodName;
+        public void process(final GenericTestCommand command) throws Throwable {
+            final String methodName = command.methodName;
             try {
                 log.info("Calling test." + methodName + "()");
 
@@ -335,22 +345,24 @@ public class Worker {
                     throw new IllegalStateException("No running test to execute test." + methodName + "()");
                 }
 
-                Method method = testInvoker.getClass().getMethod(methodName);
-                Object o = method.invoke(testInvoker);
-                log.info("Finished calling test." + methodName + "()");
-                return o;
-            } catch (InvocationTargetException e) {
-                log.severe(format("Failed to execute test.%s()", methodName), e);
-                throw e.getTargetException();
+                final Method method = testInvoker.getClass().getMethod(methodName);
+                new CommandThread() {
+                    @Override
+                    public void doRun() throws Throwable {
+                        currentCommand = command;
+                        method.invoke(testInvoker);
+                        log.info("Finished calling test." + methodName + "()");
+                    }
+                }.start();
             } catch (Exception e) {
                 log.severe(format("Failed to execute test.%s()", methodName), e);
                 throw e;
             }
         }
 
-        private void process(InitTestCommand initTestCommand) throws Exception {
+        private void process(InitTestCommand command) throws Exception {
             try {
-                TestCase testCase = initTestCommand.testCase;
+                TestCase testCase = command.testCase;
                 log.info("Init Test:\n" + testCase);
 
                 String clazzName = testCase.getClassname();
@@ -361,12 +373,13 @@ public class Worker {
                 dependencies.testId = testCase.getId();
 
                 Object test = InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
-                testInvoker = new TestInvoker(test);
-
                 bindProperties(test, testCase);
 
+                TestContextImpl testContext = new TestContextImpl(testCase.id);
+                testInvoker = new TestInvoker<TestContextImpl>(test, testContext);
+
                 if (serverInstance != null) {
-                    serverInstance.getUserContext().put(DeleteTest.TEST_INSTANCE, test);
+                    serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE, test);
                 }
             } catch (Exception e) {
                 log.severe("Failed to init Test", e);
@@ -374,19 +387,66 @@ public class Worker {
             }
         }
 
-        public void process(StopTestCommand stopTask) throws Exception {
+        public void process(StopTestCommand command) throws Exception {
             try {
                 log.info("Calling test.stop");
 
                 if (testInvoker == null) {
-                    throw new IllegalStateException("No test to stop");
+                    return;
                 }
-               // test.stopTest(stopTask.timeoutMs);
+
+                testInvoker.getTestContext().stopped = true;
                 log.info("Finished calling test.stop()");
             } catch (Exception e) {
                 log.severe("Failed to execute test.stop", e);
                 throw e;
             }
+        }
+
+        public boolean process(DoneCommand command) throws Exception {
+            return currentCommand == null;
+        }
+    }
+
+    abstract class CommandThread extends Thread {
+
+        public abstract void doRun() throws Throwable;
+
+        public final void run() {
+            try {
+                doRun();
+                currentCommand = null;
+            } catch (Throwable t) {
+                ExceptionReporter.report(t);
+            }
+        }
+    }
+
+    class TestContextImpl implements TestContext {
+        private final String testId;
+        volatile boolean stopped = true;
+
+        TestContextImpl(String testId) {
+            this.testId = testId;
+        }
+
+        @Override
+        public HazelcastInstance getTargetInstance() {
+            if (clientInstance != null) {
+                return clientInstance;
+            } else {
+                return serverInstance;
+            }
+        }
+
+        @Override
+        public String getTestId() {
+            return testId;
+        }
+
+        @Override
+        public boolean isStopped() {
+            return false;
         }
     }
 }

@@ -98,13 +98,7 @@ public class WorkerJvmLauncher {
     }
 
     private String getJavaHome(String javaVendor, String javaVersion) {
-        JavaInstallation installation = agent.getJavaInstallationRepository().get(javaVendor, javaVersion);
-        if (installation != null) {
-            return installation.getJavaHome();
-        }
-
-        //nothing is found so we are going to make use of a default.
-        String javaHome = System.getProperty("java.home");
+         String javaHome = System.getProperty("java.home");
         if (javaHomePrinted.compareAndSet(false, true)) {
             log.info("java.home=" + javaHome);
         }

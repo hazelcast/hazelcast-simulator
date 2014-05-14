@@ -13,10 +13,6 @@ public class AgentCli {
 
     private final OptionParser parser = new OptionParser();
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
-    private final OptionSpec<String> javaInstallationsFileSpec = parser.accepts("javaInstallationsFile",
-            "A property file containing the Java installations used by Workers launched by this Agent")
-            .withRequiredArg().ofType(String.class)
-            .defaultsTo(Agent.STABILIZER_HOME + File.separator + "conf" + File.separator + "java-installations.properties");
 
     public static void init(Agent agent, String[] args) throws IOException {
         AgentCli agentOptionSpec = new AgentCli();
@@ -27,9 +23,5 @@ public class AgentCli {
             System.exit(0);
         }
 
-        agent.javaInstallationsFile = getFile(
-                agentOptionSpec.javaInstallationsFileSpec,
-                options,
-                "Java Installations config file");
     }
 }

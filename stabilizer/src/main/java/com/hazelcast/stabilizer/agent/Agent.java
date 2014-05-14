@@ -39,14 +39,11 @@ public class Agent {
 
     public final static File STABILIZER_HOME = getStablizerHome();
 
-    //cli props
-    public File javaInstallationsFile;
 
     //internal state
     private volatile TestSuite testSuite;
     private volatile TestCase testCase;
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
-    private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
 
     public void echo(String msg) {
@@ -82,10 +79,6 @@ public class Agent {
         this.testCase = testCase;
     }
 
-    public JavaInstallationsRepository getJavaInstallationRepository() {
-        return repository;
-    }
-
     public void initTestSuite(TestSuite testSuite) throws IOException {
         this.testSuite = testSuite;
         this.testCase = null;
@@ -101,8 +94,6 @@ public class Agent {
         ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
 
         startRestServer();
-
-        repository.load(javaInstallationsFile);
 
         workerJvmFailureMonitor.start();
 
@@ -134,5 +125,4 @@ public class Agent {
         logger.fatal(msg);
         System.exit(1);
     }
-
 }

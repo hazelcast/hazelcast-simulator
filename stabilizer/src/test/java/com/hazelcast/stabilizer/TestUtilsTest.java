@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.stabilizer.tests.TestUtils.bindProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -18,10 +19,10 @@ public class TestUtilsTest {
     public void bindProperty_string() throws IllegalAccessException {
         SomeObject someObject = new SomeObject();
 
-        TestUtils.bindProperty(someObject, "stringField", "null");
+        bindProperty(someObject, "stringField", "null");
         assertNull(someObject.stringField);
 
-        TestUtils.bindProperty(someObject, "stringField", "foo");
+        bindProperty(someObject, "stringField", "foo");
         assertEquals(someObject.stringField, "foo");
     }
 
@@ -29,10 +30,10 @@ public class TestUtilsTest {
     public void bindProperty_enum() throws IllegalAccessException {
         SomeObject someObject = new SomeObject();
 
-        TestUtils.bindProperty(someObject, "enumField", "null");
+        bindProperty(someObject, "enumField", "null");
         assertNull(someObject.enumField);
 
-        TestUtils.bindProperty(someObject, "enumField", TimeUnit.HOURS.name());
+        bindProperty(someObject, "enumField", TimeUnit.HOURS.name());
         assertEquals(someObject.enumField, TimeUnit.HOURS);
     }
 
@@ -40,7 +41,7 @@ public class TestUtilsTest {
     public void bindProperty_int() throws IllegalAccessException {
         SomeObject someObject = new SomeObject();
 
-        TestUtils.bindProperty(someObject, "intField", "10");
+        bindProperty(someObject, "intField", "10");
         assertEquals(someObject.intField,10);
     }
 
@@ -48,10 +49,10 @@ public class TestUtilsTest {
     public void bindProperty_Integer() throws IllegalAccessException {
         SomeObject someObject = new SomeObject();
 
-        TestUtils.bindProperty(someObject, "integerField", "null");
+        bindProperty(someObject, "integerField", "null");
         assertNull(someObject.integerField);
 
-        TestUtils.bindProperty(someObject, "integerField", "10");
+        bindProperty(someObject, "integerField", "10");
         assertEquals(someObject.integerField, new Integer(10));
     }
 
@@ -59,14 +60,14 @@ public class TestUtilsTest {
     public void bindProperty_unknownField() throws IllegalAccessException {
         SomeObject someObject = new SomeObject();
 
-        TestUtils.bindProperty(someObject, "don'tknow", "null");
+        bindProperty(someObject, "notexist", "null");
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_unhandeledType() throws IllegalAccessException {
         SomeObject someObject = new SomeObject();
 
-        TestUtils.bindProperty(someObject, "objectField", "null");
+        bindProperty(someObject, "objectField", "null");
     }
 
     class SomeObject {

@@ -28,6 +28,8 @@ import static java.lang.String.format;
 
 public class TestUtils {
 
+    public static final String TEST_INSTANCE = "testInstance";
+
     public static Node getNode(HazelcastInstance hz) {
         HazelcastInstanceImpl impl = getHazelcastInstanceImpl(hz);
         return impl != null ? impl.node : null;
@@ -71,7 +73,7 @@ public class TestUtils {
     }
 
     public static void bindProperty(Object test, String property, String value) throws IllegalAccessException {
-        Field field = findField(test.getClass(), property);
+        Field field = findPropetyField(test.getClass(), property);
         if (field == null) {
             throw new BindException(
                     format("Could not found a field for property [%s] on class [%s]", property, test.getClass()));
@@ -182,12 +184,12 @@ public class TestUtils {
         }
     }
 
-    public static Field findField(Class clazz, String property) {
+    public static Field findPropetyField(Class clazz, String property) {
         try {
             return clazz.getDeclaredField(property);
         } catch (NoSuchFieldException e) {
             Class superClass = clazz.getSuperclass();
-            return superClass != null ? findField(superClass, property) : null;
+            return superClass != null ? findPropetyField(superClass, property) : null;
         }
     }
 

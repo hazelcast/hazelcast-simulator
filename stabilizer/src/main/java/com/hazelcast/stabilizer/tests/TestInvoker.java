@@ -15,10 +15,11 @@ import java.util.List;
 
 import static java.lang.String.format;
 
-public class TestInvoker {
+public class TestInvoker<T extends  TestContext> {
 
     private final Object object;
     private final Class<? extends Object> clazz;
+    private final T testContext;
     private Method runMethod;
     private Method setupMethod;
 
@@ -31,7 +32,15 @@ public class TestInvoker {
     private Method localVerifyMethod;
     private Method globalVerifyMethod;
 
-    public TestInvoker(Object object) {
+    public TestInvoker(Object object, T testContext) {
+        if (object == null) {
+            throw new NullPointerException();
+        }
+        if (testContext == null) {
+            throw new NullPointerException();
+        }
+
+        this.testContext = testContext;
         this.object = object;
         this.clazz = object.getClass();
 
@@ -48,11 +57,15 @@ public class TestInvoker {
         initGlobalVerifyMethod();
     }
 
+    public T getTestContext() {
+        return testContext;
+    }
+
     public void run() throws Throwable {
         invoke(runMethod);
     }
 
-    public void setup(TestContext testContext) throws Throwable {
+    public void setup() throws Throwable {
         invoke(setupMethod, testContext);
     }
 
@@ -72,11 +85,11 @@ public class TestInvoker {
         invoke(globalVerifyMethod);
     }
 
-    public void localWarmup()throws Throwable{
+    public void localWarmup() throws Throwable {
         invoke(localWarmupMethod);
     }
 
-    public void globalWarmup()throws Throwable{
+    public void globalWarmup() throws Throwable {
         invoke(globalWarmupMethod);
     }
 
@@ -157,7 +170,6 @@ public class TestInvoker {
         assertNoArg(method);
         globalVerifyMethod = method;
     }
-
 
     private void initLocalTeardownMethod() {
         List<Method> methods = findMethod(Teardown.class, new Filter<Teardown>() {

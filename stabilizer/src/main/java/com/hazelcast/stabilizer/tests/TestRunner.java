@@ -40,7 +40,7 @@ public class TestRunner {
             throw new NullPointerException("test can't be null");
         }
         this.test = test;
-        this.testInvoker = new TestInvoker(test);
+        this.testInvoker = new TestInvoker(test,testContext);
     }
 
     public TestRunner withHazelcastInstance(HazelcastInstance hz) {
@@ -73,7 +73,7 @@ public class TestRunner {
         }
 
         log.info("Starting setup");
-        testInvoker.setup(testContext);
+        testInvoker.setup();
         log.info("Finished setup");
 
         log.info("Starting local warmup");

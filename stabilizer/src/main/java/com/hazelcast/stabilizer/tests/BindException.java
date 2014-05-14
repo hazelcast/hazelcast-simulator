@@ -1,5 +1,8 @@
 package com.hazelcast.stabilizer.tests;
 
+/**
+ * Exception thrown when a property can't be bound to a test.
+ */
 public class BindException extends RuntimeException {
     public BindException(String message) {
         super(message);
