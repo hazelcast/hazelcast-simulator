@@ -20,20 +20,22 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.tests.annotations.Performance;
+import com.hazelcast.stabilizer.tests.annotations.Run;
+import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.ThreadPool;
+import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class AtomicLongTest extends AbstractTest {
+public class AtomicLongTest {
 
     private final static ILogger log = Logger.getLogger(AtomicLongTest.class);
-
-    private IAtomicLong totalCounter;
-    private IAtomicLong[] counters;
-    private AtomicLong operations = new AtomicLong();
 
     //props
     public int countersLength = 1000;
@@ -42,28 +44,45 @@ public class AtomicLongTest extends AbstractTest {
     public int performanceUpdateFrequency = 10000;
     public String basename = "atomiclong";
 
-    @Override
-    public void localSetup() throws Exception {
+    private IAtomicLong totalCounter;
+    private IAtomicLong[] counters;
+    private AtomicLong operations = new AtomicLong();
+    private TestContext context;
+
+    @Setup
+    public void setup(TestContext context) throws Exception {
+        this.context = context;
         log.info("countersLength:" + countersLength + " threadCount:" + threadCount);
 
-        HazelcastInstance targetInstance = getTargetInstance();
+        HazelcastInstance targetInstance = context.getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong(getTestId() + ":TotalCounter");
+        totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            counters[k] = targetInstance.getAtomicLong(basename + "-" + getTestId() + "r-" + k);
+            counters[k] = targetInstance.getAtomicLong(basename + "-" + context.getTestId() + "r-" + k);
         }
     }
 
-    @Override
-    public void createTestThreads() {
+    @Teardown
+    public void teardown() throws Exception {
+        for (IAtomicLong counter : counters) {
+            counter.destroy();
+        }
+        totalCounter.destroy();
+    }
+
+    @Run
+    public void run() {
+        ThreadPool pool = new ThreadPool();
+
         for (int k = 0; k < threadCount; k++) {
-            spawn(new Worker());
+            pool.spawn(new Worker());
         }
+        pool.awaitCompletion();
     }
 
-    @Override
-    public void globalVerify() {
+    @Verify
+    public void verify() {
         long expectedCount = totalCounter.get();
         long count = 0;
         for (IAtomicLong counter : counters) {
@@ -75,15 +94,7 @@ public class AtomicLongTest extends AbstractTest {
         }
     }
 
-    @Override
-    public void globalTearDown() throws Exception {
-        for (IAtomicLong counter : counters) {
-            counter.destroy();
-        }
-        totalCounter.destroy();
-    }
-
-    @Override
+    @Performance
     public long getOperationCount() {
         return operations.get();
     }
@@ -94,7 +105,7 @@ public class AtomicLongTest extends AbstractTest {
         @Override
         public void run() {
             long iteration = 0;
-            while (!stopped()) {
+            while (!context.isStopped()) {
                 IAtomicLong counter = getRandomCounter();
                 counter.incrementAndGet();
 

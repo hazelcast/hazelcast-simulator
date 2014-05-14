@@ -21,8 +21,14 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.Test;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestFailureException;
+import com.hazelcast.stabilizer.tests.annotations.Run;
+import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.annotations.ThreadPool;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -32,13 +38,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class ExecutorTest extends AbstractTest {
+public class ExecutorTest {
 
     private final static ILogger log = Logger.getLogger(ExecutorTest.class);
-
-    private IExecutorService[] executors;
-    private IAtomicLong executedCounter;
-    private IAtomicLong expectedExecutedCounter;
 
     //props
     public int executorCount = 1;
@@ -49,28 +51,28 @@ public class ExecutorTest extends AbstractTest {
     public int submitCount = 5;
     public String basename = "executor";
 
-    @Override
-    public void localSetup() throws Exception {
-        HazelcastInstance targetInstance = getTargetInstance();
+    private IExecutorService[] executors;
+    private IAtomicLong executedCounter;
+    private IAtomicLong expectedExecutedCounter;
+    private TestContext testContext;
+    private HazelcastInstance targetInstance;
+
+    @Setup
+    public void setup(TestContext testContext) throws Exception {
+        this.testContext = testContext;
+        targetInstance = testContext.getTargetInstance();
 
         executors = new IExecutorService[executorCount];
         for (int k = 0; k < executors.length; k++) {
-            executors[k] = targetInstance.getExecutorService(basename + "-" + getTestId() + "-" + k);
+            executors[k] = targetInstance.getExecutorService(basename + "-" + testContext.getTestId() + "-" + k);
         }
 
-        executedCounter = targetInstance.getAtomicLong(getTestId() + ":ExecutedCounter");
-        expectedExecutedCounter = targetInstance.getAtomicLong(getTestId() + ":ExpectedExecutedCounter");
+        executedCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":ExecutedCounter");
+        expectedExecutedCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":ExpectedExecutedCounter");
     }
 
-    @Override
-    public void createTestThreads() {
-        for (int k = 0; k < threadCount; k++) {
-            spawn(new Worker());
-        }
-    }
-
-    @Override
-    public void globalTearDown() throws Exception {
+    @Teardown
+    public void teardown() throws Exception {
         executedCounter.destroy();
         expectedExecutedCounter.destroy();
         for (IExecutorService executor : executors) {
@@ -82,8 +84,18 @@ public class ExecutorTest extends AbstractTest {
         }
     }
 
-    @Override
-    public void globalVerify() throws Exception {
+    @Run
+    public void run() {
+        ThreadPool pool = new ThreadPool();
+
+        for (int k = 0; k < threadCount; k++) {
+            pool.spawn(new Worker());
+        }
+        pool.awaitCompletion();
+    }
+
+     @Verify
+    public void verify() throws Exception {
         log.info("globalVerify called");
         long actualCount = executedCounter.get();
         long expectedCount = expectedExecutedCounter.get();
@@ -100,7 +112,7 @@ public class ExecutorTest extends AbstractTest {
             long iteration = 0;
 
             List<Future> futureList = new LinkedList<Future>();
-            while (!stopped()) {
+            while (!testContext.isStopped()) {
                 int index = random.nextInt(executors.length);
                 IExecutorService executorService = executors[index];
                 futureList.clear();
@@ -136,7 +148,7 @@ public class ExecutorTest extends AbstractTest {
 
         @Override
         public void run() {
-            ExecutorTest test = (ExecutorTest) hz.getUserContext().get(TEST_INSTANCE);
+            ExecutorTest test = (ExecutorTest) hz.getUserContext().get(Test.TEST_INSTANCE);
             test.executedCounter.incrementAndGet();
         }
 

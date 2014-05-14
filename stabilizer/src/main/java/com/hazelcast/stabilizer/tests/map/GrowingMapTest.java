@@ -5,18 +5,20 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.core.IdGenerator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.tests.annotations.Run;
+import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.annotations.ThreadPool;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
 
 import java.util.Random;
 
-public class GrowingMapTest extends AbstractTest {
+public class GrowingMapTest {
 
     private final static ILogger log = Logger.getLogger(GrowingMapTest.class);
-
-    private IMap<Long, Long> map;
-    private IdGenerator idGenerator;
 
     //props.
     public int threadCount = 10;
@@ -28,27 +30,37 @@ public class GrowingMapTest extends AbstractTest {
     public boolean readValidation = true;
     public String basename = "map";
 
-    @Override
-    public void localSetup() throws Exception {
-        HazelcastInstance targetInstance = getTargetInstance();
-        idGenerator = targetInstance.getIdGenerator(getTestId() + ":IdGenerator");
-        map = targetInstance.getMap(basename + "-" + getTestId());
+    private IMap<Long, Long> map;
+    private IdGenerator idGenerator;
+    private TestContext testContext;
+    private HazelcastInstance targetInstance;
+
+    @Setup
+    public void setup(TestContext testContext) throws Exception {
+        this.testContext = testContext;
+
+        targetInstance = testContext.getTargetInstance();
+        idGenerator = targetInstance.getIdGenerator(testContext.getTestId() + ":IdGenerator");
+        map = targetInstance.getMap(basename + "-" + testContext.getTestId());
     }
 
-    @Override
-    public void createTestThreads() {
+    @Run
+    public void run() {
+        ThreadPool pool = new ThreadPool();
+
         for (int k = 0; k < threadCount; k++) {
-            spawn(new Worker());
+            pool.spawn(new Worker());
         }
+        pool.awaitCompletion();
     }
 
-    @Override
-    public void globalTearDown() throws Exception {
+    @Teardown
+    public void teardown() throws Exception {
         map.destroy();
     }
 
-    @Override
-    public void globalVerify() throws Exception {
+    @Verify
+    public void verify() throws Exception {
         if (removeOnStop && !map.isEmpty()) {
             throw new TestFailureException("Map should be empty, but has size:" + map.size());
         }
@@ -66,10 +78,10 @@ public class GrowingMapTest extends AbstractTest {
 
             Random random = new Random();
 
-            while (!stopped()) {
+            while (!testContext.isStopped()) {
                 int keyIndex = -1;
                 for (int k = 0; k < growCount; k++) {
-                    if (stopped()) {
+                    if (testContext.isStopped()) {
                         break;
                     }
 
@@ -93,7 +105,7 @@ public class GrowingMapTest extends AbstractTest {
 
                 if (readValidation) {
                     for (int k = 0; k <= keyIndex; k++) {
-                        if (stopped()) {
+                        if (testContext.isStopped()) {
                             break;
                         }
 
@@ -113,7 +125,7 @@ public class GrowingMapTest extends AbstractTest {
                 }
 
                 for (int k = 0; k <= keyIndex; k++) {
-                    if (stopped() && !removeOnStop) {
+                    if (testContext.isStopped() && !removeOnStop) {
                         break;
                     }
 

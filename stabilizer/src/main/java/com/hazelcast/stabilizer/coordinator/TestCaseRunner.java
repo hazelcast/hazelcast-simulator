@@ -45,7 +45,7 @@ public class TestCaseRunner {
             echo("Completed Test initialization");
 
             echo("Starting Test local setup");
-            agentsClient.executeOnAllWorkers(new GenericTestCommand("localSetup"));
+            agentsClient.executeOnAllWorkers(new GenericTestCommand("setup"));
             echo("Completed Test local setup");
 
             echo("Starting Test global setup");
@@ -83,7 +83,7 @@ public class TestCaseRunner {
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentsClient.executeOnAllWorkers(new GenericTestCommand("localTearDown"));
+            agentsClient.executeOnAllWorkers(new GenericTestCommand("teardown"));
 
             echo("Completed Test local tear down");
 

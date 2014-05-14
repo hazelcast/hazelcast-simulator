@@ -20,13 +20,18 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.tests.annotations.Run;
+import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.annotations.ThreadPool;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
 
 import java.util.Queue;
 
-public class QueueTest extends AbstractTest {
+public class QueueTest {
 
     private final static ILogger log = Logger.getLogger(QueueTest.class);
 
@@ -38,15 +43,17 @@ public class QueueTest extends AbstractTest {
     public int threadsPerQueue = 1;
     public int messagesPerQueue = 1;
     public String basename = "queue";
+    private TestContext testContext;
 
-    @Override
-    public void localSetup() throws Exception {
-        HazelcastInstance targetInstance = getTargetInstance();
+    @Setup
+    public void setup(TestContext testContext) throws Exception {
+        this.testContext = testContext;
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong(getTestId() + ":TotalCounter");
+        totalCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalCounter");
         queues = new IQueue[queueLength];
         for (int k = 0; k < queues.length; k++) {
-            queues[k] = targetInstance.getQueue(basename + "-" + getTestId() + "-" + k);
+            queues[k] = targetInstance.getQueue(basename + "-" + testContext.getTestId() + "-" + k);
         }
 
         for (IQueue<Long> queue : queues) {
@@ -56,18 +63,27 @@ public class QueueTest extends AbstractTest {
         }
     }
 
-    @Override
-    public void createTestThreads() {
-        for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
-            for (int l = 0; l < threadsPerQueue; l++) {
-                spawn(new Worker(queueIndex));
-            }
+    @Teardown
+    public void teardown() throws Exception {
+        for (IQueue queue : queues) {
+            queue.destroy();
         }
+        totalCounter.destroy();
     }
 
+    @Run
+    public void run() {
+        ThreadPool pool = new ThreadPool();
+        for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
+            for (int l = 0; l < threadsPerQueue; l++) {
+                pool.spawn(new Worker(queueIndex));
+            }
+        }
+        pool.awaitCompletion();
+    }
 
-    @Override
-    public void globalVerify() {
+    @Verify
+    public void verify() {
         long expectedCount = totalCounter.get();
         long count = 0;
         for (Queue<Long> queue : queues) {
@@ -79,14 +95,6 @@ public class QueueTest extends AbstractTest {
         if (expectedCount != count) {
             throw new TestFailureException("Expected count: " + expectedCount + " but found count was: " + count);
         }
-    }
-
-    @Override
-    public void globalTearDown() throws Exception {
-        for (IQueue queue : queues) {
-            queue.destroy();
-        }
-        totalCounter.destroy();
     }
 
     private class Worker implements Runnable {
@@ -103,7 +111,7 @@ public class QueueTest extends AbstractTest {
         public void run() {
             try {
                 long iteration = 0;
-                while (!stopped()) {
+                while (!testContext.isStopped()) {
                     long item = fromQueue.take();
                     toQueue.put(item + 1);
                     if (iteration % 2000 == 0) {

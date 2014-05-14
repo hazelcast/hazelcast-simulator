@@ -5,13 +5,19 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.tests.annotations.Run;
+import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.annotations.ThreadPool;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.annotations.Warmup;
 
 import java.util.Random;
 
-public class LockTest extends AbstractTest {
+public class LockTest {
 
     private final static ILogger log = Logger.getLogger(LockTest.class);
 
@@ -25,14 +31,19 @@ public class LockTest extends AbstractTest {
     private IAtomicLong totalMoney;
     private HazelcastInstance targetInstance;
     public String basename = "lock";
+    private TestContext testContext;
 
-    @Override
-    public void localSetup() throws Exception {
-        targetInstance = getTargetInstance();
+    @Setup
+    public void setup(TestContext testContext) throws Exception {
+        this.testContext = testContext;
+        targetInstance = testContext.getTargetInstance();
 
-        lockCounter = targetInstance.getAtomicLong(getTestId() + ":LockCounter");
-        totalMoney = targetInstance.getAtomicLong(getTestId() + ":TotalMoney");
+        lockCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":LockCounter");
+        totalMoney = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalMoney");
+    }
 
+    @Warmup(global = true)
+    public void warmup() throws Exception {
         for (int k = 0; k < lockCount; k++) {
             long key = lockCounter.getAndIncrement();
             targetInstance.getLock(getLockId(key));
@@ -42,23 +53,26 @@ public class LockTest extends AbstractTest {
         }
     }
 
-    @Override
-    public void createTestThreads() {
+    @Run
+    public void run() {
+        ThreadPool pool = new ThreadPool();
+
         for (int k = 0; k < threadCount; k++) {
-            spawn(new Worker());
+            pool.spawn(new Worker());
         }
+        pool.awaitCompletion();
     }
 
     private String getLockId(long key) {
-        return basename + "-" + getTestId() + "-" + key;
+        return basename + "-" + testContext.getTestId() + "-" + key;
     }
 
     private String getAccountId(long key) {
-        return basename + "-" + getTestId() + "-" + key;
+        return basename + "-" + testContext.getTestId() + "-" + key;
     }
 
-    @Override
-    public void globalVerify() {
+    @Verify
+    public void verify() {
         long foundTotal = 0;
         for (long k = 0; k < lockCounter.get(); k++) {
             ILock lock = targetInstance.getLock(getLockId(k));
@@ -80,8 +94,8 @@ public class LockTest extends AbstractTest {
         }
     }
 
-    @Override
-    public void globalTearDown() throws Exception {
+    @Teardown
+    public void teardown() throws Exception {
         lockCounter.destroy();
         totalMoney.destroy();
 
@@ -97,7 +111,7 @@ public class LockTest extends AbstractTest {
         @Override
         public void run() {
             long iteration = 0;
-            while (!stopped()) {
+            while (!testContext.isStopped()) {
                 long key1 = getRandomAccountKey();
                 long key2 = getRandomAccountKey();
                 int a = random.nextInt(amount);

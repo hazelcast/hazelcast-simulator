@@ -21,19 +21,58 @@ package com.hazelcast.stabilizer.tests;
  * <p/>
  * Order of lifecycle methods:
  * <ol>
- * <li>{@link #localSetup()}</li>
+ * <li>{@link #setup()}</li>
  * <li>{@link #globalSetup()}</li>
  * <li>{@link #start()}</li>
- * <li>{@link #stop(long)}</li>
+ * <li>{@link #stopTest(long)}</li>
  * <li>{@link #localVerify()}</li>
  * <li>{@link #globalVerify()}</li>
  * <li>{@link #globalTearDown()}</li>
- * <li>{@link #localTearDown()}</li>
+ * <li>{@link #teardown()}</li>
  * </ol>
  */
 public interface Test {
 
     String TEST_INSTANCE = "testInstance";
+
+    void init(TestDependencies dependencies);
+
+    /**
+     * Sets up this Test. This is where you set up your local data-structures.
+     * <p/>
+     * This method will be called on a all members of the cluster.
+     * <p/>
+     * This method should not be used to warmup the data-structures, e.g. filling them with large
+     * amounts of content. We have the warmup for that.
+     *
+     * @throws Exception
+     */
+    void setup() throws Exception;
+
+    void warmup() throws Exception;
+
+    /**
+     * Starts this test.
+     *
+     * @param active
+     * @throws Exception
+     */
+    void test(boolean active) throws Exception;
+
+    void stop();
+
+    /**
+     * Tears down this Test
+     * <p/>
+     * This method will  be called on a all members of the cluster.
+     *
+     * @throws Exception
+     */
+    void teardown() throws Exception;
+
+    void verify() throws Exception;
+
+    long getOperationCount();
 
     /**
      * Sets up this Test
@@ -45,24 +84,6 @@ public interface Test {
     void globalSetup() throws Exception;
 
     /**
-     * Sets up this Test
-     * <p/>
-     * This method will be called on a all members of the cluster.
-     *
-     * @throws Exception
-     */
-    void localSetup() throws Exception;
-
-    /**
-     * Tears down this Test
-     * <p/>
-     * This method will  be called on a all members of the cluster.
-     *
-     * @throws Exception
-     */
-    void localTearDown() throws Exception;
-
-    /**
      * Tears down this Test
      * <p/>
      * This method will only be called on a single member of the cluster.
@@ -70,25 +91,4 @@ public interface Test {
      * @throws Exception
      */
     void globalTearDown() throws Exception;
-
-    void start(boolean active) throws Exception;
-
-    /**
-     * Stops this Test.
-     * <p/>
-     * This method is synchronous, so after this method completes, the Test really should be stopped.
-     *
-     * @throws Exception
-     */
-    void stop(long timeoutMs) throws Exception;
-
-    void localVerify() throws Exception;
-
-    void globalVerify() throws Exception;
-
-    void init(TestDependencies dependencies);
-
-    long getOperationCount();
-
-
 }

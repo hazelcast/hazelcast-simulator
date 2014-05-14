@@ -37,6 +37,7 @@ public class TestUtils {
         return seconds * 1000;
     }
 
+
     public static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
         HazelcastInstanceImpl impl = null;
         if (hz instanceof HazelcastInstanceProxy) {

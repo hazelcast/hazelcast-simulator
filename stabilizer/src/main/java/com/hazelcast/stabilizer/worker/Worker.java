@@ -317,7 +317,7 @@ public class Worker {
                     passive = true;
                 }
 
-                test.start(passive);
+                test.startTest(passive);
             } catch (Exception e) {
                 log.severe("Failed to start test", e);
                 throw e;
@@ -379,7 +379,7 @@ public class Worker {
                 if (test == null) {
                     throw new IllegalStateException("No test to stop");
                 }
-                test.stop(stopTask.timeoutMs);
+                test.stopTest(stopTask.timeoutMs);
                 log.info("Finished calling test.stop()");
             } catch (Exception e) {
                 log.severe("Failed to execute test.stop", e);

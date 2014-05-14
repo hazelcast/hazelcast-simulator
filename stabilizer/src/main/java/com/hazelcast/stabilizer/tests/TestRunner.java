@@ -70,7 +70,7 @@ public class TestRunner {
         Utils.sleepSeconds(small);
     }
 
-    public void run(Test test, int durationSec) throws Exception {
+    public void run(Object test, int durationSec) throws Exception {
         if (hazelcastInstance == null) {
             hazelcastInstance = Hazelcast.newHazelcastInstance();
         }
@@ -80,24 +80,22 @@ public class TestRunner {
         dependencies.serverInstance = hazelcastInstance;
         dependencies.testId = UUID.randomUUID().toString();
 
-        test.init(dependencies);
-
-        log.info("Starting localSetup");
-        test.localSetup();
-        log.info("Finished localSetup");
+        log.info("Starting setup");
+        test.setup();
+        log.info("Finished setup");
 
         log.info("Starting globalSetup");
         test.globalSetup();
         log.info("Finished globalSetup");
 
         log.info("Starting start");
-        test.start(false);
+        test.startTest(false);
         log.info("Finished start");
 
         sleepSeconds(test, durationSec);
 
         log.info("Starting stop");
-        test.stop(stopTimeoutMs);
+        test.stopTest(stopTimeoutMs);
         log.info("Finished stop");
 
         //log.info(test.getOperationCount().toHumanString());
@@ -114,9 +112,9 @@ public class TestRunner {
         test.globalTearDown();
         log.info("Finished globalTearDown");
 
-        log.info("Starting localTearDown");
-        test.localTearDown();
-        log.info("Finished localTearDown");
+        log.info("Starting teardown");
+        test.teardown();
+        log.info("Finished teardown");
 
         hazelcastInstance.getLifecycleService().shutdown();
         log.info("Finished");
