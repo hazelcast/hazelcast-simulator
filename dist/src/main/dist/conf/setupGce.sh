@@ -22,7 +22,7 @@ echo "
 # google-compute-engine = The Google Compute Engine.
 #
 CLOUD_PROVIDER=google-compute-engine
-
+CLOUD_IDENTITY=${GCE_id}
 
 # =====================================================================
 # Cloud credentials
