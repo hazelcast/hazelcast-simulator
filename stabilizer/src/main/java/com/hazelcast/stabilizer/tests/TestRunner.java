@@ -32,25 +32,30 @@ public class TestRunner {
     private final TestInvoker testInvoker;
 
     private HazelcastInstance hazelcastInstance;
-    private int duratioSeconds = 60;
-    private final  TestContextImpl testContext = new TestContextImpl();
+    private int durationSeconds = 60;
+    private final TestContextImpl testContext = new TestContextImpl();
 
     public TestRunner(Object test) {
-        if(test == null){
-            throw new NullPointerException();
+        if (test == null) {
+            throw new NullPointerException("test can't be null");
         }
         this.test = test;
-        testInvoker = new TestInvoker(test);
-
+        this.testInvoker = new TestInvoker(test);
     }
 
     public TestRunner withHazelcastInstance(HazelcastInstance hz) {
+        if (hz == null) {
+            throw new NullPointerException("hz can't be null");
+        }
         this.hazelcastInstance = hz;
         return this;
     }
 
-    public TestRunner withDuration(int seconds) {
-        this.duratioSeconds = seconds;
+    public TestRunner withDuration(int durationSeconds) {
+        if (durationSeconds < 0) {
+            throw new IllegalArgumentException("Duration can't be smaller than 0");
+        }
+        this.durationSeconds = durationSeconds;
         return this;
     }
 
@@ -58,8 +63,8 @@ public class TestRunner {
         return hazelcastInstance;
     }
 
-    public long getDuratioSeconds() {
-        return duratioSeconds;
+    public long getDurationSeconds() {
+        return durationSeconds;
     }
 
     public void run() throws Throwable {
@@ -72,53 +77,59 @@ public class TestRunner {
         log.info("Finished setup");
 
         log.info("Starting local warmup");
-        testInvoker.warmup(true);
+        testInvoker.localWarmup();
         log.info("Finished local warmup");
 
         log.info("Starting global warmup");
-        testInvoker.warmup(true);
+        testInvoker.globalWarmup();
         log.info("Finished global warmup");
 
         log.info("Starting run");
-        new StopThread().run();
+        testContext.stopped = false;
+        new StopThread().start();
         testInvoker.run();
-        testContext.stopped=false;
         log.info("Finished start");
 
         //log.info(test.getOperationCount().toHumanString());
 
         log.info("Starting globalVerify");
-        testInvoker.verify(false);
+        testInvoker.globalVerify();
         log.info("Finished globalVerify");
 
         log.info("Starting localVerify");
-        testInvoker.verify(true);
+        testInvoker.localVerify();
         log.info("Finished localVerify");
 
         log.info("Starting globalTearDown");
-        testInvoker.teardown(false);
+        testInvoker.globalTeardown();
         log.info("Finished globalTearDown");
 
         log.info("Starting local teardown");
-        testInvoker.teardown(true);
+        testInvoker.localTeardown();
         log.info("Finished local teardown");
 
-        hazelcastInstance.getLifecycleService().shutdown();
+        hazelcastInstance.shutdown();
         log.info("Finished");
     }
 
     private class StopThread extends Thread {
 
         public void run() {
-            for (int k = 1; k <= duratioSeconds; k++) {
-                Utils.sleepSeconds(1);
-                final float percentage = (100f * k) / duratioSeconds;
-                String msg = format("Running %s of %s seconds %-4.2f percent complete", k, duratioSeconds, percentage);
+            int period = 30;
+            int big = durationSeconds / period;
+            int small = durationSeconds % period;
+
+            for (int k = 1; k <= big; k++) {
+                Utils.sleepSeconds(period);
+                final int elapsed = period * k;
+                final float percentage = (100f * elapsed) / durationSeconds;
+                String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, durationSeconds, percentage);
                 log.info(msg);
                 //log.info("Performance"+test.getOperationCount());
             }
 
-            testContext.stopped=true;
+            Utils.sleepSeconds(small);
+            testContext.stopped = true;
         }
     }
 

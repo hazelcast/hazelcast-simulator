@@ -37,7 +37,6 @@ public class TestUtils {
         return seconds * 1000;
     }
 
-
     public static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
         HazelcastInstanceImpl impl = null;
         if (hz instanceof HazelcastInstanceProxy) {
@@ -60,7 +59,7 @@ public class TestUtils {
         }
     }
 
-    public static void bindProperties(DeleteTest test, TestCase testCase) throws NoSuchFieldException, IllegalAccessException {
+    public static void bindProperties(Object test, TestCase testCase) throws NoSuchFieldException, IllegalAccessException {
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
             String property = entry.getKey();
             if ("class".equals(property)) {
@@ -71,10 +70,10 @@ public class TestUtils {
         }
     }
 
-    public static void bindProperty(DeleteTest test, String property, String value) throws IllegalAccessException {
+    public static void bindProperty(Object test, String property, String value) throws IllegalAccessException {
         Field field = findField(test.getClass(), property);
         if (field == null) {
-            throw new RuntimeException(
+            throw new BindException(
                     format("Could not found a field for property [%s] on class [%s]", property, test.getClass()));
         }
         field.setAccessible(true);
@@ -87,7 +86,7 @@ public class TestUtils {
                 } else if ("false".equals(value)) {
                     field.set(test, false);
                 } else {
-                    throw new NumberFormatException("Unrecognized boolean value:" + value);
+                    throw new BindException("Unrecognized boolean value:" + value);
                 }
             } else if (Boolean.class.equals(field.getType())) {
                 //object boolean
@@ -98,7 +97,7 @@ public class TestUtils {
                 } else if ("false".equals(value)) {
                     field.set(test, false);
                 } else {
-                    throw new NumberFormatException("Unrecognized boolean value:" + value);
+                    throw new BindException("Unrecognized boolean value:" + value);
                 }
             } else if (Byte.TYPE.equals(field.getType())) {
                 //primitive byte
@@ -174,11 +173,11 @@ public class TestUtils {
                     field.set(test, enumValue);
                 }
             } else {
-                throw new RuntimeException(
+                throw new BindException(
                         format("Unhandled type [%s] for field %s.%s", field.getType(), test.getClass().getName(), field.getName()));
             }
         } catch (NumberFormatException e) {
-            throw new RuntimeException(
+            throw new BindException(
                     format("Failed to convert property [%s] value [%s] to type [%s]", property, value, field.getType()), e);
         }
     }

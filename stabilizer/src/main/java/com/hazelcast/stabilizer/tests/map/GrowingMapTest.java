@@ -47,7 +47,6 @@ public class GrowingMapTest {
     @Run
     public void run() {
         ThreadPool pool = new ThreadPool();
-
         for (int k = 0; k < threadCount; k++) {
             pool.spawn(new Worker());
         }

@@ -21,10 +21,13 @@ public class TestInvoker {
     private final Class<? extends Object> clazz;
     private Method runMethod;
     private Method setupMethod;
+
     private Method localTeardownMethod;
     private Method globalTeardownMethod;
+
     private Method localWarmupMethod;
     private Method globalWarmupMethod;
+
     private Method localVerifyMethod;
     private Method globalVerifyMethod;
 
@@ -46,87 +49,44 @@ public class TestInvoker {
     }
 
     public void run() throws Throwable {
-        try {
-            runMethod.invoke(object);
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
-        }
+        invoke(runMethod);
     }
 
     public void setup(TestContext testContext) throws Throwable {
-        if (testContext == null) {
-            throw new NullPointerException();
-        }
-
-        try {
-            setupMethod.invoke(object, testContext);
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
-        }
+        invoke(setupMethod, testContext);
     }
 
-    public void teardown(boolean local) throws Throwable {
-        Method method;
-
-        if (local) {
-            if (localTeardownMethod == null) {
-                return;
-            }
-            method = localTeardownMethod;
-        } else {
-            if (globalTeardownMethod == null) {
-                return;
-            }
-            method = globalTeardownMethod;
-        }
-
-        try {
-            method.invoke(object);
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
-        }
+    public void globalTeardown() throws Throwable {
+        invoke(globalTeardownMethod);
     }
 
-
-    public void verify(boolean local) throws Throwable {
-        Method method;
-
-        if (local) {
-            if (localVerifyMethod == null) {
-                return;
-            }
-            method = localVerifyMethod;
-        } else {
-            if (globalVerifyMethod == null) {
-                return;
-            }
-            method = globalVerifyMethod;
-        }
-
-        try {
-            method.invoke(object);
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
-        }
+    public void localTeardown() throws Throwable {
+        invoke(localTeardownMethod);
     }
 
-    public void warmup(boolean local) throws Throwable {
-        Method method;
+    public void localVerify() throws Throwable {
+        invoke(localVerifyMethod);
+    }
 
-        if (local) {
-            if (localWarmupMethod == null) {
-                return;
-            }
-            method = localWarmupMethod;
-        } else {
-            if (globalWarmupMethod == null) {
-                return;
-            }
-            method = globalWarmupMethod;
+    public void globalVerify() throws Throwable {
+        invoke(globalVerifyMethod);
+    }
+
+    public void localWarmup()throws Throwable{
+        invoke(localWarmupMethod);
+    }
+
+    public void globalWarmup()throws Throwable{
+        invoke(globalWarmupMethod);
+    }
+
+    private Object invoke(Method method, Object... args) throws Throwable {
+        if (method == null) {
+            return null;
         }
 
         try {
-            method.invoke(object);
+            return method.invoke(object, args);
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
         }
@@ -285,7 +245,7 @@ public class TestInvoker {
 
     private void assertNotStatic(Method method) {
         if (Modifier.isStatic(method.getModifiers())) {
-            throw new IllegalArgumentException(
+            throw new IllegalTestException(
                     format("Method  %s can't be static", method.getName()));
 
         }
@@ -296,7 +256,7 @@ public class TestInvoker {
             return;
         }
 
-        throw new IllegalArgumentException(format("Method '%s' can't have any args", method));
+        throw new IllegalTestException(format("Method '%s' can't have any args", method));
     }
 
     private void assertTestContextArgument(Method method) {
@@ -308,25 +268,25 @@ public class TestInvoker {
             return;
         }
 
-        throw new IllegalArgumentException(
+        throw new IllegalTestException(
                 "Method " + clazz + "." + method + " should have single argument of type " + TestContext.class);
     }
 
     private void assertExactlyOne(List<Method> methods, Class<? extends Annotation> annotation) {
         if (methods.size() == 0) {
-            throw new IllegalArgumentException(
+            throw new IllegalTestException(
                     format("No method annotated with %s found on class %s", annotation.getName(), clazz.getName()));
         } else if (methods.size() == 1) {
             return;
         } else {
-            throw new IllegalArgumentException(
+            throw new IllegalTestException(
                     format("Too many methods on class %s with annotation %s", clazz.getName(), annotation.getName()));
         }
     }
 
     private void assertAtMostOne(List<Method> methods, Class<? extends Annotation> annotation) {
         if (methods.size() > 1) {
-            throw new IllegalArgumentException(
+            throw new IllegalTestException(
                     format("Too many methods on class %s with annotation %s", clazz.getName(), annotation.getName()));
         }
     }
@@ -336,7 +296,7 @@ public class TestInvoker {
             return;
         }
 
-        throw new IllegalArgumentException("Method " + clazz + "." + method + " should have a void return type");
+        throw new IllegalTestException("Method " + clazz + "." + method + " should have a void return type");
     }
 
     private List<Method> findMethod(Class<? extends Annotation> annotation) {

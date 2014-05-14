@@ -29,6 +29,7 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.tests.DeleteTest;
 import com.hazelcast.stabilizer.tests.TestDependencies;
+import com.hazelcast.stabilizer.tests.TestInvoker;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.GetOperationCountTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
@@ -73,7 +74,7 @@ public class Worker {
     private String workerMode;
     private String workerId;
 
-    private volatile DeleteTest test;
+    private volatile TestInvoker testInvoker;
 
     private final BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
     private final BlockingQueue<TestCommandResponse> responseQueue = new LinkedBlockingQueue<TestCommandResponse>();
@@ -301,16 +302,17 @@ public class Worker {
         }
 
         private Long process(GetOperationCountTestCommand command) {
-            return test.getOperationCount();
+        //    return test.getOperationCount();
+            return -1l;
         }
 
         private void process(StartTestCommand testCommand) throws Exception {
             try {
                 log.info("Starting test");
-
-                if (test == null) {
-                    throw new IllegalStateException("No running test found");
-                }
+//
+//                if (test == null) {
+//                    throw new IllegalStateException("No running test found");
+//                }
 
                 boolean passive = false;
                 if (testCommand.clientOnly && clientInstance == null) {
@@ -329,12 +331,12 @@ public class Worker {
             try {
                 log.info("Calling test." + methodName + "()");
 
-                if (test == null) {
+                if (testInvoker == null) {
                     throw new IllegalStateException("No running test to execute test." + methodName + "()");
                 }
 
-                Method method = test.getClass().getMethod(methodName);
-                Object o = method.invoke(test);
+                Method method = testInvoker.getClass().getMethod(methodName);
+                Object o = method.invoke(testInvoker);
                 log.info("Finished calling test." + methodName + "()");
                 return o;
             } catch (InvocationTargetException e) {
@@ -358,8 +360,8 @@ public class Worker {
                 dependencies.serverInstance = serverInstance;
                 dependencies.testId = testCase.getId();
 
-                test = (DeleteTest) InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
-                test.init(dependencies);
+                Object test = InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
+                testInvoker = new TestInvoker(test);
 
                 bindProperties(test, testCase);
 
@@ -376,7 +378,7 @@ public class Worker {
             try {
                 log.info("Calling test.stop");
 
-                if (test == null) {
+                if (testInvoker == null) {
                     throw new IllegalStateException("No test to stop");
                 }
                // test.stopTest(stopTask.timeoutMs);

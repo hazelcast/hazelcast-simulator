@@ -3,12 +3,15 @@ package com.hazelcast.stabilizer.tests;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import org.junit.Test;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class TestInvokerTest {
+    // =================== setup ========================
 
     @Test
     public void testRun() throws Throwable {
@@ -18,6 +21,21 @@ public class TestInvokerTest {
 
         assertTrue(dummyTest.runCalled);
     }
+
+    @Test(expected = IllegalTestException.class)
+    public void runMissing() throws Throwable {
+        RunMissingTest test = new RunMissingTest();
+        new TestInvoker(test);
+    }
+
+    static class RunMissingTest {
+
+        @Setup
+        void setup(TestContext context) {
+        }
+    }
+
+    // =================== setup ========================
 
     @Test
     public void testSetup() throws Throwable {
@@ -29,6 +47,66 @@ public class TestInvokerTest {
 
         assertTrue(dummyTest.setupCalled);
         assertSame(testContext, dummyTest.context);
+    }
+
+    @Test(expected = IllegalTestException.class)
+    public void setupMissing() throws Throwable {
+        SetupMissingTest test = new SetupMissingTest();
+        new TestInvoker(test);
+    }
+
+
+    static class SetupMissingTest {
+
+        @Run
+        void run() {
+        }
+    }
+
+    // =================== setup ========================
+
+
+    static class FullTest{
+
+        @Setup
+        void setup(TestContext testContext){
+
+        }
+
+        @Warmup(global = false)
+        void localWarmup(){
+
+        }
+
+        @Warmup(global = true)
+        void globalWarmup(){
+
+        }
+
+        @Run
+        void run(){
+
+        }
+
+        @Verify(global = false)
+        void localVerify(){
+
+        }
+
+        @Verify(global = false)
+        void globalVerify(){
+
+        }
+
+        @Verify(global = false)
+        void localTeardown(){
+
+        }
+
+        @Verify(global = true)
+        void globalTeardown(){
+
+        }
     }
 
     static class DummyTest {
