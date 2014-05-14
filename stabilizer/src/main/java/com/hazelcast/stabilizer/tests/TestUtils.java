@@ -60,7 +60,7 @@ public class TestUtils {
         }
     }
 
-    public static void bindProperties(Test test, TestCase testCase) throws NoSuchFieldException, IllegalAccessException {
+    public static void bindProperties(DeleteTest test, TestCase testCase) throws NoSuchFieldException, IllegalAccessException {
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
             String property = entry.getKey();
             if ("class".equals(property)) {
@@ -71,7 +71,7 @@ public class TestUtils {
         }
     }
 
-    public static void bindProperty(Test test, String property, String value) throws IllegalAccessException {
+    public static void bindProperty(DeleteTest test, String property, String value) throws IllegalAccessException {
         Field field = findField(test.getClass(), property);
         if (field == null) {
             throw new RuntimeException(

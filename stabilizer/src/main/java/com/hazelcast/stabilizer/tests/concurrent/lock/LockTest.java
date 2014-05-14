@@ -168,9 +168,9 @@ public class LockTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         LockTest test = new LockTest();
-        new TestRunner().run(test, 20);
+        new TestRunner(test).run();
     }
 }
 

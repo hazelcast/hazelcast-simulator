@@ -128,9 +128,9 @@ public class AtomicLongTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         AtomicLongTest test = new AtomicLongTest();
-        new TestRunner().run(test, 60);
+        new TestRunner(test).run();
     }
 }
 

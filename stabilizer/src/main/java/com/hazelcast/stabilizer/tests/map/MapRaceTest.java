@@ -137,8 +137,8 @@ public class MapRaceTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         MapRaceTest test = new MapRaceTest();
-        new TestRunner().run(test, 20);
+        new TestRunner(test).run();
     }
 }

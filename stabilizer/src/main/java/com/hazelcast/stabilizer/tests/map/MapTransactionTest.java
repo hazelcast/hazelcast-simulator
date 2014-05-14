@@ -150,9 +150,9 @@ public class MapTransactionTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         MapTransactionTest test = new MapTransactionTest();
-        new TestRunner().run(test, 20);
+        new TestRunner(test).run();
     }
 }
 

@@ -151,8 +151,8 @@ public class MapCasTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         MapCasTest test = new MapCasTest();
-        new TestRunner().run(test, 20);
+        new TestRunner(test).run();
     }
 }

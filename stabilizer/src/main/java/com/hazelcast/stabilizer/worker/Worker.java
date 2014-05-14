@@ -27,7 +27,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.stabilizer.tests.Test;
+import com.hazelcast.stabilizer.tests.DeleteTest;
 import com.hazelcast.stabilizer.tests.TestDependencies;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.GetOperationCountTestCommand;
@@ -73,7 +73,7 @@ public class Worker {
     private String workerMode;
     private String workerId;
 
-    private volatile Test test;
+    private volatile DeleteTest test;
 
     private final BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
     private final BlockingQueue<TestCommandResponse> responseQueue = new LinkedBlockingQueue<TestCommandResponse>();
@@ -317,7 +317,7 @@ public class Worker {
                     passive = true;
                 }
 
-                test.startTest(passive);
+                //test.run(passive);
             } catch (Exception e) {
                 log.severe("Failed to start test", e);
                 throw e;
@@ -358,13 +358,13 @@ public class Worker {
                 dependencies.serverInstance = serverInstance;
                 dependencies.testId = testCase.getId();
 
-                test = (Test) InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
+                test = (DeleteTest) InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
                 test.init(dependencies);
 
                 bindProperties(test, testCase);
 
                 if (serverInstance != null) {
-                    serverInstance.getUserContext().put(Test.TEST_INSTANCE, test);
+                    serverInstance.getUserContext().put(DeleteTest.TEST_INSTANCE, test);
                 }
             } catch (Exception e) {
                 log.severe("Failed to init Test", e);
@@ -379,7 +379,7 @@ public class Worker {
                 if (test == null) {
                     throw new IllegalStateException("No test to stop");
                 }
-                test.stopTest(stopTask.timeoutMs);
+               // test.stopTest(stopTask.timeoutMs);
                 log.info("Finished calling test.stop()");
             } catch (Exception e) {
                 log.severe("Failed to execute test.stop", e);

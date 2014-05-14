@@ -129,9 +129,9 @@ public class QueueTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         QueueTest test = new QueueTest();
-        new TestRunner().run(test, 60);
+        new TestRunner(test).run();
         System.exit(0);
     }
 }

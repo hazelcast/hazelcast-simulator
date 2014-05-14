@@ -15,7 +15,7 @@
  */
 package com.hazelcast.stabilizer.tests;
 
-public abstract class AbstractTest implements Test {
+public abstract class AbstractTest implements DeleteTest {
 
 //    private final static ILogger log = Logger.getLogger(AbstractTest.class);
 //

@@ -150,9 +150,9 @@ public class ProducerConsumerTest {
     static class Work implements Serializable {
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         ProducerConsumerTest test = new ProducerConsumerTest();
-        new TestRunner().run(test, 180);
+        new TestRunner(test).run();
         System.exit(0);
     }
 }

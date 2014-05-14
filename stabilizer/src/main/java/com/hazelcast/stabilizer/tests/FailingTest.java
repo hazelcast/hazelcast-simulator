@@ -29,8 +29,8 @@ public class FailingTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         FailingTest test = new FailingTest();
-        new TestRunner().run(test, 10);
+        new TestRunner(test).run();
     }
 }

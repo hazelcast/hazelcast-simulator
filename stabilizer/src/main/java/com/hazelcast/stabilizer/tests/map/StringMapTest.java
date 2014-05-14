@@ -169,9 +169,9 @@ public class StringMapTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         StringMapTest test = new StringMapTest();
         test.writePercentage = 0;
-        new TestRunner().run(test, 20);
+        new TestRunner(test).run();
     }
 }

@@ -31,7 +31,7 @@ package com.hazelcast.stabilizer.tests;
  * <li>{@link #teardown()}</li>
  * </ol>
  */
-public interface Test {
+public interface DeleteTest {
 
     String TEST_INSTANCE = "testInstance";
 

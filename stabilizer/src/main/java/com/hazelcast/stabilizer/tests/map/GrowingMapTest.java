@@ -150,8 +150,8 @@ public class GrowingMapTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         GrowingMapTest test = new GrowingMapTest();
-        new TestRunner().run(test, 20);
+        new TestRunner(test).run();
     }
 }
