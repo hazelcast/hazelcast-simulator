@@ -12,6 +12,7 @@ public class FailingTest {
 
     public String failure = "Exception";
 
+
     @Run
     public void run() {
         if (failure.equals("Exception")) {

@@ -125,7 +125,11 @@ public class TestInvoker<T extends TestContext> {
 
     private void initRunMethod() {
         List<Method> methods = findMethod(Run.class);
-        assertExactlyOne(methods, Run.class);
+        assertAtMostOne(methods, Verify.class);
+
+        if (methods.isEmpty()) {
+            return;
+        }
 
         Method method = methods.get(0);
         method.setAccessible(true);
