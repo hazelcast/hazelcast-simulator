@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.tests;
+package com.hazelcast.stabilizer.tests.utils;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.instance.HazelcastInstanceImpl;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
 import com.hazelcast.stabilizer.TestCase;
+import com.hazelcast.stabilizer.tests.BindException;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -27,6 +28,8 @@ import java.util.Map;
 import static java.lang.String.format;
 
 public class TestUtils {
+
+    public static final String TEST_INSTANCE = "testInstance";
 
     public static Node getNode(HazelcastInstance hz) {
         HazelcastInstanceImpl impl = getHazelcastInstanceImpl(hz);
@@ -59,7 +62,7 @@ public class TestUtils {
         }
     }
 
-    public static void bindProperties(Test test, TestCase testCase) throws NoSuchFieldException, IllegalAccessException {
+    public static void bindProperties(Object test, TestCase testCase) throws NoSuchFieldException, IllegalAccessException {
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
             String property = entry.getKey();
             if ("class".equals(property)) {
@@ -70,10 +73,10 @@ public class TestUtils {
         }
     }
 
-    public static void bindProperty(Test test, String property, String value) throws IllegalAccessException {
-        Field field = findField(test.getClass(), property);
+    public static void bindProperty(Object test, String property, String value) throws IllegalAccessException {
+        Field field = findPropetyField(test.getClass(), property);
         if (field == null) {
-            throw new RuntimeException(
+            throw new BindException(
                     format("Could not found a field for property [%s] on class [%s]", property, test.getClass()));
         }
         field.setAccessible(true);
@@ -86,7 +89,7 @@ public class TestUtils {
                 } else if ("false".equals(value)) {
                     field.set(test, false);
                 } else {
-                    throw new NumberFormatException("Unrecognized boolean value:" + value);
+                    throw new BindException("Unrecognized boolean value:" + value);
                 }
             } else if (Boolean.class.equals(field.getType())) {
                 //object boolean
@@ -97,7 +100,7 @@ public class TestUtils {
                 } else if ("false".equals(value)) {
                     field.set(test, false);
                 } else {
-                    throw new NumberFormatException("Unrecognized boolean value:" + value);
+                    throw new BindException("Unrecognized boolean value:" + value);
                 }
             } else if (Byte.TYPE.equals(field.getType())) {
                 //primitive byte
@@ -173,21 +176,21 @@ public class TestUtils {
                     field.set(test, enumValue);
                 }
             } else {
-                throw new RuntimeException(
+                throw new BindException(
                         format("Unhandled type [%s] for field %s.%s", field.getType(), test.getClass().getName(), field.getName()));
             }
         } catch (NumberFormatException e) {
-            throw new RuntimeException(
+            throw new BindException(
                     format("Failed to convert property [%s] value [%s] to type [%s]", property, value, field.getType()), e);
         }
     }
 
-    public static Field findField(Class clazz, String property) {
+    public static Field findPropetyField(Class clazz, String property) {
         try {
             return clazz.getDeclaredField(property);
         } catch (NoSuchFieldException e) {
             Class superClass = clazz.getSuperclass();
-            return superClass != null ? findField(superClass, property) : null;
+            return superClass != null ? findPropetyField(superClass, property) : null;
         }
     }
 

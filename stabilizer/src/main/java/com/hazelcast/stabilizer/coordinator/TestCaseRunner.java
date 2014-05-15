@@ -8,7 +8,7 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.StartTestCommand;
+import com.hazelcast.stabilizer.worker.testcommands.RunCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 
 import java.text.NumberFormat;
@@ -37,7 +37,7 @@ public class TestCaseRunner {
     public boolean run() throws Exception {
         echo(format("Running Test : %s\n%s", testCase.getId(), testCase));
 
-        int oldCount = coordinator.failureList.size();
+        int oldFailureCount = coordinator.failureList.size();
         try {
             echo("Starting Test initialization");
             agentsClient.prepareAgentsForTests(testCase);
@@ -45,12 +45,19 @@ public class TestCaseRunner {
             echo("Completed Test initialization");
 
             echo("Starting Test local setup");
-            agentsClient.executeOnAllWorkers(new GenericTestCommand("localSetup"));
+            agentsClient.executeOnAllWorkers(new GenericTestCommand("setup"));
+            agentsClient.waitDone();
             echo("Completed Test local setup");
 
-            echo("Starting Test global setup");
-            agentsClient.executeOnSingleWorker(new GenericTestCommand("globalSetup"));
-            echo("Completed Test global setup");
+            echo("Starting Test local warmup");
+            agentsClient.executeOnSingleWorker(new GenericTestCommand("localWarmup"));
+            agentsClient.waitDone();
+            echo("Completed Test local warmup");
+
+            echo("Starting Test global warmup");
+            agentsClient.executeOnSingleWorker(new GenericTestCommand("globalWarmup"));
+            agentsClient.waitDone();
+            echo("Completed Test global warmup");
 
             echo("Starting Test start");
             startTestCase();
@@ -69,25 +76,29 @@ public class TestCaseRunner {
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
                 agentsClient.executeOnSingleWorker(new GenericTestCommand("globalVerify"));
+                agentsClient.waitDone();
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
                 agentsClient.executeOnAllWorkers(new GenericTestCommand("localVerify"));
+                agentsClient.waitDone();
                 echo("Completed Test local verify");
             } else {
                 echo("Skipping Test verification");
             }
 
             echo("Starting Test global tear down");
-            agentsClient.executeOnSingleWorker(new GenericTestCommand("globalTearDown"));
+            agentsClient.executeOnSingleWorker(new GenericTestCommand("globalTeardown"));
+            agentsClient.waitDone();
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentsClient.executeOnAllWorkers(new GenericTestCommand("localTearDown"));
+            agentsClient.waitDone();
+            agentsClient.executeOnAllWorkers(new GenericTestCommand("localTeardown"));
 
             echo("Completed Test local tear down");
 
-            return coordinator.failureList.size() == oldCount;
+            return coordinator.failureList.size() == oldFailureCount;
         } catch (Exception e) {
             log.severe("Failed", e);
             return false;
@@ -103,9 +114,9 @@ public class TestCaseRunner {
 
     private void startTestCase() {
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
-        StartTestCommand startTestCommand = new StartTestCommand();
-        startTestCommand.clientOnly = workerJvmSettings.mixedWorkerCount > 0 || workerJvmSettings.clientWorkerCount > 0;
-        agentsClient.executeOnAllWorkers(startTestCommand);
+        RunCommand runCommand = new RunCommand();
+        runCommand.clientOnly = workerJvmSettings.mixedWorkerCount > 0 || workerJvmSettings.clientWorkerCount > 0;
+        agentsClient.executeOnAllWorkers(runCommand);
     }
 
     public void sleepSeconds(int seconds) {

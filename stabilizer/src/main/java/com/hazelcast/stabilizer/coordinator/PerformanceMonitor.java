@@ -35,7 +35,7 @@ public class PerformanceMonitor extends Thread {
 
     private void checkPerformance() {
         GetOperationCountTestCommand getOperationCountTestCommand = new GetOperationCountTestCommand();
-        List<List<Long>> result = (List<List<Long>>) client.executeOnAllWorkers(getOperationCountTestCommand);
+        List<List<Long>> result = client.executeOnAllWorkers(getOperationCountTestCommand);
         long currentCount = 0;
         for (List<Long> list : result) {
             for (Long item : list) {

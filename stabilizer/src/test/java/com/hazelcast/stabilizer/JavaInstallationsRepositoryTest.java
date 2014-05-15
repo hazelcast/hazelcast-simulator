@@ -15,7 +15,7 @@ public class JavaInstallationsRepositoryTest {
     @Test
     public void test() throws Exception {
         JavaInstallationsRepository repository = new JavaInstallationsRepository();
-        File file = TestUtils.writeToTempFile("" +
+        File file = TestUtilsTest.writeToTempFile("" +
                         "1.vendor=sun\n" +
                         "1.version=1.5\n" +
                         "1.javaHome=/tmp\n" +
