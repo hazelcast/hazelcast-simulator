@@ -15,6 +15,7 @@ import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.RunCommand;
 import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -23,6 +24,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertFalse;
 
+@Ignore
 public class AgentSmokeTest {
 
     private AgentsClient client;
