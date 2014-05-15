@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class IntegrationTest {
+public class AgentSmokeTest {
 
     private AgentsClient client;
 
@@ -50,11 +50,11 @@ public class IntegrationTest {
 
         System.out.println("localWarmup");
         client.executeOnAllWorkers(new GenericTestCommand("localWarmup"));
-        waitDone(client);
+        client.waitDone();
 
         System.out.println("globalWarmup");
         client.executeOnAllWorkers(new GenericTestCommand("globalWarmup"));
-        waitDone(client);
+        client.waitDone();
 
         System.out.println("run");
         RunCommand runCommand = new RunCommand();
@@ -65,23 +65,23 @@ public class IntegrationTest {
 
         System.out.println("stop");
         client.executeOnAllWorkers(new StopTestCommand());
-        waitDone(client);
+        client.waitDone();
 
         System.out.println("localVerify");
         client.executeOnAllWorkers(new GenericTestCommand("localVerify"));
-        waitDone(client);
+        client.waitDone();
 
         System.out.println("globalVerify");
         client.executeOnAllWorkers(new GenericTestCommand("globalVerify"));
-        waitDone(client);
+        client.waitDone();
 
         System.out.println("globalTeardown");
         client.executeOnAllWorkers(new GenericTestCommand("globalTeardown"));
-        waitDone(client);
+        client.waitDone();
 
         System.out.println("localTeardown");
         client.executeOnAllWorkers(new GenericTestCommand("localTeardown"));
-        waitDone(client);
+        client.waitDone();
 
         System.out.println("Done");
     }
@@ -98,24 +98,7 @@ public class IntegrationTest {
         client.spawnWorkers(new WorkerJvmSettings[]{workerJvmSettings});
     }
 
-    private void waitDone(AgentsClient client) {
-        for (; ; ) {
-            List<List<Boolean>> result = client.executeOnAllWorkers(new DoneCommand());
-            boolean complete = true;
-            for (List<Boolean> l : result) {
-                for (Boolean b : l) {
-                    if (!b) {
-                        complete = false;
-                        break;
-                    }
-                }
-            }
 
-            if (complete) return;
-            System.out.println("Not done");
-            Utils.sleepSeconds(1);
-        }
-    }
 
     private void startAgent() throws InterruptedException {
         new Thread() {

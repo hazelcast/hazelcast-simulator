@@ -12,6 +12,7 @@ import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.CountdownWatch;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
+import com.hazelcast.stabilizer.worker.testcommands.DoneCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 
 import java.io.File;
@@ -157,6 +158,27 @@ public class AgentsClient {
         }
 
         getAllFutures(futures);
+    }
+
+    public void waitDone() {
+        for (; ; ) {
+            List<List<Boolean>> result = executeOnAllWorkers(new DoneCommand());
+            boolean complete = true;
+            for (List<Boolean> l : result) {
+                for (Boolean b : l) {
+                    if (!b) {
+                        complete = false;
+                        break;
+                    }
+                }
+            }
+
+            if (complete) {
+                return;
+            }
+            System.out.println("Not done");
+            Utils.sleepSeconds(1);
+        }
     }
 
     private <E> List<E> getAllFutures(Collection<Future> futures) {
