@@ -278,26 +278,22 @@ public class Worker {
             }
         }
 
-        private void doProcess(long id, TestCommand command) {
+        private void doProcess(long id, TestCommand command) throws Throwable {
             Object result = null;
-            try {
-                if (command instanceof DoneCommand) {
-                    result = process((DoneCommand) command);
-                } else if (command instanceof InitTestCommand) {
-                    process((InitTestCommand) command);
-                } else if (command instanceof RunCommand) {
-                    process((RunCommand) command);
-                } else if (command instanceof StopTestCommand) {
-                    process((StopTestCommand) command);
-                } else if (command instanceof GenericTestCommand) {
-                    process((GenericTestCommand) command);
-                } else if (command instanceof GetOperationCountTestCommand) {
-                    result = process((GetOperationCountTestCommand) command);
-                } else {
-                    throw new RuntimeException("Unhandled task:" + command.getClass());
-                }
-            } catch (Throwable e) {
-                result = e;
+            if (command instanceof DoneCommand) {
+                result = process((DoneCommand) command);
+            } else if (command instanceof InitTestCommand) {
+                process((InitTestCommand) command);
+            } else if (command instanceof RunCommand) {
+                process((RunCommand) command);
+            } else if (command instanceof StopTestCommand) {
+                process((StopTestCommand) command);
+            } else if (command instanceof GenericTestCommand) {
+                process((GenericTestCommand) command);
+            } else if (command instanceof GetOperationCountTestCommand) {
+                result = process((GetOperationCountTestCommand) command);
+            } else {
+                throw new RuntimeException("Unhandled task:" + command.getClass());
             }
 
             TestCommandResponse response = new TestCommandResponse();
@@ -351,7 +347,7 @@ public class Worker {
                         try {
                             method.invoke(testInvoker);
                             log.info("Finished calling test." + methodName + "()");
-                        }catch(InvocationTargetException e){
+                        } catch (InvocationTargetException e) {
                             log.severe("Failed to call test." + methodName + "()");
                             throw e.getCause();
                         }
@@ -363,7 +359,7 @@ public class Worker {
             }
         }
 
-        private void process(InitTestCommand command) throws Exception {
+        private void process(InitTestCommand command) throws Throwable {
             try {
                 TestCase testCase = command.testCase;
                 log.info("Init Test:\n" + testCase);
@@ -379,7 +375,7 @@ public class Worker {
                 if (serverInstance != null) {
                     serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE, test);
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.severe("Failed to init Test", e);
                 throw e;
             }
