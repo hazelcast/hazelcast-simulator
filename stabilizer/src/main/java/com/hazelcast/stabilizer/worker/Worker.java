@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -347,8 +348,13 @@ public class Worker {
                 new CommandThread(command) {
                     @Override
                     public void doRun() throws Throwable {
-                        method.invoke(testInvoker);
-                        log.info("Finished calling test." + methodName + "()");
+                        try {
+                            method.invoke(testInvoker);
+                            log.info("Finished calling test." + methodName + "()");
+                        }catch(InvocationTargetException e){
+                            log.severe("Failed to call test." + methodName + "()");
+                            throw e.getCause();
+                        }
                     }
                 }.start();
             } catch (Exception e) {
@@ -424,7 +430,7 @@ public class Worker {
 
     class TestContextImpl implements TestContext {
         private final String testId;
-        volatile boolean stopped = true;
+        volatile boolean stopped = false;
 
         TestContextImpl(String testId) {
             this.testId = testId;

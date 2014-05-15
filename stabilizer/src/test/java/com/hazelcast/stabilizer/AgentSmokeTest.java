@@ -3,12 +3,13 @@ package com.hazelcast.stabilizer;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.coordinator.AgentsClient;
+import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
-import com.hazelcast.stabilizer.worker.testcommands.DoneCommand;
+import com.hazelcast.stabilizer.tests.map.MapRaceTest;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.RunCommand;
@@ -19,6 +20,8 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
+import static org.junit.Assert.assertFalse;
 
 public class AgentSmokeTest {
 
@@ -31,14 +34,35 @@ public class AgentSmokeTest {
     }
 
     @Test
-    public void test() throws Exception {
+    public void testSuccess() throws Exception {
+        TestCase testCase = new TestCase();
+        testCase.setProperty("class", FooTest.class.getName());
+        test(testCase);
+    }
+
+    @Test
+    public void testThrowingFailures() throws Exception {
+        TestCase testCase = new TestCase();
+        testCase.setProperty("class", MapRaceTest.class.getName());
+        test(testCase);
+
+        cooldown();
+
+        List<Failure> failures = client.getFailures();
+        assertFalse("No failures found",failures.isEmpty());
+    }
+
+    private void cooldown() {
+        System.out.println("Cooldown");
+        Utils.sleepSeconds(10);
+        System.out.println("Finished cooldown");
+    }
+
+    public void test(TestCase testCase) throws Exception {
         TestSuite testSuite = new TestSuite();
         client.initTestSuite(testSuite);
 
         spawnWorkers(client);
-
-        TestCase testCase = new TestCase();
-        testCase.setProperty("class", FooTest.class.getName());
         client.prepareAgentsForTests(testCase);
 
         InitTestCommand initTestCommand = new InitTestCommand(testCase);
@@ -61,7 +85,9 @@ public class AgentSmokeTest {
         runCommand.clientOnly = false;
         client.executeOnAllWorkers(runCommand);
 
+        System.out.println("Running for 30 seconds");
         Utils.sleepSeconds(30);
+        System.out.println("Finished running");
 
         System.out.println("stop");
         client.executeOnAllWorkers(new StopTestCommand());
@@ -97,7 +123,6 @@ public class AgentSmokeTest {
 
         client.spawnWorkers(new WorkerJvmSettings[]{workerJvmSettings});
     }
-
 
 
     private void startAgent() throws InterruptedException {

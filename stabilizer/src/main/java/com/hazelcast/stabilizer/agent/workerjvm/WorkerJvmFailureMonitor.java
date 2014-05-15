@@ -113,7 +113,11 @@ public class WorkerJvmFailureMonitor {
         }
 
         for (File exceptionFile : exceptionFiles) {
+
             String cause = fileAsText(exceptionFile);
+
+            log.info("Worker: "+workerJvm.id+" ran into an exception\n"+cause);
+
             //we rename it so that we don't detect the same exception again.
             exceptionFile.delete();
 

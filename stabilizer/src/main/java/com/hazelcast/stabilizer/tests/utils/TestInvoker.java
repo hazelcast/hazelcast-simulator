@@ -1,5 +1,7 @@
 package com.hazelcast.stabilizer.tests.utils;
 
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
@@ -18,6 +20,8 @@ import java.util.List;
 import static java.lang.String.format;
 
 public class TestInvoker<T extends TestContext> {
+
+    private final static ILogger log = Logger.getLogger(TestInvoker.class);
 
     private final Object object;
     private final Class<? extends Object> clazz;
@@ -103,7 +107,7 @@ public class TestInvoker<T extends TestContext> {
         try {
             return method.invoke(object, args);
         } catch (InvocationTargetException e) {
-            throw e.getTargetException();
+            throw e.getCause();
         }
     }
 

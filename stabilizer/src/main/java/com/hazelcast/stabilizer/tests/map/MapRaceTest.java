@@ -29,7 +29,7 @@ public class MapRaceTest {
     //props
     public int threadCount = 10;
     public int keyCount = 1000;
-    public int logFrequency = 100000;
+    public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
     public String basename = "map";
 
@@ -67,7 +67,7 @@ public class MapRaceTest {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
-    }
+     }
 
     @Verify
     public void verify() throws Exception {
@@ -102,11 +102,12 @@ public class MapRaceTest {
 
         @Override
         public void run() {
-            for (int k = 0; k < keyCount; k++) {
+             for (int k = 0; k < keyCount; k++) {
                 result.put(k, 0L);
             }
 
             long iteration = 0;
+
             while (!testContext.isStopped()) {
                 Integer key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);

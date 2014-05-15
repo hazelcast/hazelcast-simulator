@@ -64,6 +64,66 @@ public class TestInvokerTest {
         }
     }
 
+    // =================== local verify ========================
+
+    @Test
+    public void localVerify() throws Throwable {
+        DummyTestContext testContext = new DummyTestContext();
+        LocalVerifyTest test = new LocalVerifyTest();
+        TestInvoker invoker = new TestInvoker(test,testContext);
+        invoker.localVerify();
+
+        assertTrue(test.localVerifyCalled);
+    }
+
+    static class LocalVerifyTest {
+        boolean localVerifyCalled;
+
+        @Verify(global = false)
+        void verify() {
+            localVerifyCalled=true;
+        }
+
+        @Setup
+        void setup(TestContext testContext){
+
+        }
+        @Run
+        void run(){
+
+        }
+    }
+
+    // =================== global verify ========================
+
+    @Test
+    public void globalVerify() throws Throwable {
+        DummyTestContext testContext = new DummyTestContext();
+        GlobalVerifyTest test = new GlobalVerifyTest();
+        TestInvoker invoker = new TestInvoker(test,testContext);
+        invoker.globalVerify();
+
+        assertTrue(test.globalVerifyCalled);
+    }
+
+    static class GlobalVerifyTest {
+        boolean globalVerifyCalled;
+
+        @Verify(global = true)
+        void verify() {
+            globalVerifyCalled=true;
+        }
+
+        @Setup
+        void setup(TestContext testContext){
+
+        }
+        @Run
+        void run(){
+
+        }
+    }
+
     // =================== setup ========================
 
 
