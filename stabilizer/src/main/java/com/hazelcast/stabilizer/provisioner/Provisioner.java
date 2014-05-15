@@ -72,14 +72,8 @@ public class Provisioner {
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/junit*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/log4j*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/stabilizer*", "lib");
-       // bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/tests/", "tests");
 
-//        bash.scpToRemote(ip, STABILIZER_HOME + "/bin", format("hazelcast-stabilizer-%s/bin", getVersion()));
-//        bash.scpToRemote(ip, STABILIZER_HOME + "/conf", format("hazelcast-stabilizer-%s/conf", getVersion()));
-//        bash.scpToRemote(ip, STABILIZER_HOME + "/jdk-install", format("hazelcast-stabilizer-%s/jdk-install", getVersion()));
-//        bash.scpToRemote(ip, STABILIZER_HOME + "/lib", format("hazelcast-stabilizer-%s/lib", getVersion()));
-//        bash.scpToRemote(ip, STABILIZER_HOME + "/tests", format("hazelcast-stabilizer-%s/tests", getVersion()));
 //        //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
         //this is done to reduce the amount of data we need to upload.
 
