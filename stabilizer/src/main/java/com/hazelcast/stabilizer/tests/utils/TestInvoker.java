@@ -113,7 +113,11 @@ public class TestInvoker<T extends TestContext> {
 
     private void initSetupMethod() {
         List<Method> methods = findMethod(Setup.class);
-        assertExactlyOne(methods, Setup.class);
+        assertAtMostOne(methods, Setup.class);
+
+        if(methods.isEmpty()){
+            return;
+        }
 
         Method method = methods.get(0);
         method.setAccessible(true);
@@ -125,11 +129,7 @@ public class TestInvoker<T extends TestContext> {
 
     private void initRunMethod() {
         List<Method> methods = findMethod(Run.class);
-        assertAtMostOne(methods, Verify.class);
-
-        if (methods.isEmpty()) {
-            return;
-        }
+        assertExactlyOne(methods, Run.class);
 
         Method method = methods.get(0);
         method.setAccessible(true);
