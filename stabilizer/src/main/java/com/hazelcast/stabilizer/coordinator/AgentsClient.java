@@ -161,6 +161,7 @@ public class AgentsClient {
     }
 
     public void waitDone() {
+        long startTimeMs = System.currentTimeMillis();
         for (; ; ) {
             List<List<Boolean>> result = executeOnAllWorkers(new DoneCommand());
             boolean complete = true;
@@ -176,13 +177,15 @@ public class AgentsClient {
             if (complete) {
                 return;
             }
-            System.out.println("Not done");
-            Utils.sleepSeconds(1);
+
+            long durationMs = System.currentTimeMillis() - startTimeMs;
+            log.info("Waiting for completion: " + Utils.secondsToHuman(durationMs / 1000));
+            Utils.sleepSeconds(5);
         }
     }
 
     private <E> List<E> getAllFutures(Collection<Future> futures) {
-        int value = Integer.parseInt(System.getProperty("worker.testmethod.timeout","10000"));
+        int value = Integer.parseInt(System.getProperty("worker.testmethod.timeout", "10000"));
         return getAllFutures(futures, TimeUnit.SECONDS.toMillis(value));
     }
 
@@ -299,7 +302,6 @@ public class AgentsClient {
 
         return getAllFutures(futures);
     }
-
 
 
     public void executeOnSingleWorker(final TestCommand testCommand) {
