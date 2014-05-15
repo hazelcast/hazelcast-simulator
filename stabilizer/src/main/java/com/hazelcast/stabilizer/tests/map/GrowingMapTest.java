@@ -16,6 +16,8 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 
 import java.util.Random;
 
+import static org.junit.Assert.assertTrue;
+
 public class GrowingMapTest {
 
     private final static ILogger log = Logger.getLogger(GrowingMapTest.class);
@@ -60,9 +62,9 @@ public class GrowingMapTest {
 
     @Verify
     public void verify() throws Exception {
-        if (removeOnStop && !map.isEmpty()) {
-            throw new TestFailureException("Map should be empty, but has size:" + map.size());
-        }
+
+
+        assertTrue("Map should be empty, but has size:" + map.size(),removeOnStop && !map.isEmpty());
     }
 
     private class Worker implements Runnable {

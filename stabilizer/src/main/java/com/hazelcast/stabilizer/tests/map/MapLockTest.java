@@ -21,6 +21,8 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static org.junit.Assert.assertEquals;
+
 public class MapLockTest {
 
     private final static ILogger log = Logger.getLogger(MapLockTest.class);
@@ -87,9 +89,7 @@ public class MapLockTest {
             }
         }
 
-        if (failures > 0) {
-            throw new TestFailureException("Failures found:" + failures);
-        }
+        assertEquals(0,failures);
     }
 
     @Performance

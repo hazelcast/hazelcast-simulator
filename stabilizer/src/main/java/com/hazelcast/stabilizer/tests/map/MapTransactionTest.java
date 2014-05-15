@@ -25,6 +25,8 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static org.junit.Assert.assertEquals;
+
 public class MapTransactionTest {
 
     private final static ILogger log = Logger.getLogger(MapTransactionTest.class);
@@ -93,9 +95,7 @@ public class MapTransactionTest {
             }
         }
 
-        if (failures > 0) {
-            throw new TestFailureException("Failures found:" + failures);
-        }
+        assertEquals(0,failures);
     }
 
     @Performance

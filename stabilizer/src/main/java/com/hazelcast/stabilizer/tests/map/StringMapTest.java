@@ -111,7 +111,6 @@ public class StringMapTest {
         return sb.toString();
     }
 
-
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner();

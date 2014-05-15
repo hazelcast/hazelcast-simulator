@@ -21,16 +21,17 @@ import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
-import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.io.Serializable;
 import java.util.Random;
+
+import static org.junit.Assert.assertEquals;
 
 public class ProducerConsumerTest {
 
@@ -68,21 +69,19 @@ public class ProducerConsumerTest {
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner();
         for (int k = 0; k < producerCount; k++) {
-            spawner.spawn("ProducerThread",new Producer(k));
+            spawner.spawn("ProducerThread", new Producer(k));
         }
         for (int k = 0; k < consumerCount; k++) {
-            spawner.spawn("ConsumerThread",new Consumer(k));
+            spawner.spawn("ConsumerThread", new Consumer(k));
         }
         spawner.awaitCompletion();
     }
 
     @Verify
     public void verify() {
-        long total = workQueue.size() + consumed.get();
-        long produced = this.produced.get();
-        if (produced != total) {
-            throw new TestFailureException("Produced count: " + produced + " but total: " + total);
-        }
+        long expected = workQueue.size() + consumed.get();
+        long actual = produced.get();
+        assertEquals(expected, actual);
     }
 
     private class Producer implements Runnable {

@@ -38,6 +38,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertEquals;
+
 public class ExecutorTest {
 
     private final static ILogger log = Logger.getLogger(ExecutorTest.class);
@@ -96,12 +98,9 @@ public class ExecutorTest {
 
      @Verify
     public void verify() throws Exception {
-        log.info("globalVerify called");
-        long actualCount = executedCounter.get();
-        long expectedCount = expectedExecutedCounter.get();
-        if (actualCount != expectedCount) {
-            throw new TestFailureException("ActualCount:" + actualCount + " doesn't match ExpectedCount:" + expectedCount);
-        }
+        long actual = executedCounter.get();
+        long expected = expectedExecutedCounter.get();
+        assertEquals(expected, actual);
     }
 
     private class Worker implements Runnable {

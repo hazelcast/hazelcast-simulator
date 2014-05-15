@@ -21,17 +21,18 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
-import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static org.junit.Assert.assertEquals;
 
 public class AtomicLongTest {
 
@@ -82,15 +83,13 @@ public class AtomicLongTest {
 
     @Verify
     public void verify() {
-        long expectedCount = totalCounter.get();
-        long count = 0;
+        long expected = totalCounter.get();
+        long actual = 0;
         for (IAtomicLong counter : counters) {
-            count += counter.get();
+            actual += counter.get();
         }
 
-        if (expectedCount != count) {
-            throw new TestFailureException("Expected count: " + expectedCount + " but found count was: " + count);
-        }
+        assertEquals(expected, actual);
     }
 
     @Performance

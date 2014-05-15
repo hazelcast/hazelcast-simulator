@@ -6,16 +6,19 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
-import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class LockTest {
 
@@ -72,25 +75,18 @@ public class LockTest {
 
     @Verify
     public void verify() {
-        long foundTotal = 0;
+        long actual = 0;
         for (long k = 0; k < lockCounter.get(); k++) {
             ILock lock = targetInstance.getLock(getLockId(k));
-            if (lock.isLocked()) {
-                throw new TestFailureException("Lock should be unlocked");
-            }
+            assertFalse("Lock should be unlocked", lock.isLocked());
 
             IAtomicLong account = targetInstance.getAtomicLong(getAccountId(k));
-            if (account.get() < 0) {
-                throw new TestFailureException("Amount can't be smaller than zero on account");
-            }
-
-            foundTotal += account.get();
+            assertTrue("Amount can't be smaller than zero on account", account.get() < 0);
+            actual += account.get();
         }
 
-        if (foundTotal != totalMoney.get()) {
-            throw new TestFailureException("Money was lost/created: Found money was: "
-                    + foundTotal + " expected:" + totalMoney.get());
-        }
+        long expected = totalMoney.get();
+        assertEquals("Money was lost/created", expected, actual);
     }
 
     @Teardown

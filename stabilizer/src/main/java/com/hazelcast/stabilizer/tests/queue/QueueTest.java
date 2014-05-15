@@ -21,15 +21,16 @@ import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestFailureException;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
-import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Queue;
+
+import static org.junit.Assert.assertEquals;
 
 public class QueueTest {
 
@@ -84,17 +85,15 @@ public class QueueTest {
 
     @Verify
     public void verify() {
-        long expectedCount = totalCounter.get();
-        long count = 0;
+        long expected = totalCounter.get();
+        long actual = 0;
         for (Queue<Long> queue : queues) {
             for (Long l : queue) {
-                count += l;
+                actual += l;
             }
         }
 
-        if (expectedCount != count) {
-            throw new TestFailureException("Expected count: " + expectedCount + " but found count was: " + count);
-        }
+        assertEquals(expected, actual);
     }
 
     private class Worker implements Runnable {
