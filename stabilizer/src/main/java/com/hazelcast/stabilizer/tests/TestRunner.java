@@ -89,7 +89,7 @@ public class TestRunner {
         testContext.stopped = false;
         new StopThread().start();
         testInvoker.run();
-        log.info("Finished start");
+        log.info("Finshed run");
 
         //log.info(test.getOperationCount().toHumanString());
 
@@ -115,8 +115,9 @@ public class TestRunner {
 
     private class StopThread extends Thread {
 
+        @Override
         public void run() {
-            int period = 30;
+            int period = 5;
             int big = durationSeconds / period;
             int small = durationSeconds % period;
 
@@ -129,7 +130,9 @@ public class TestRunner {
                 //log.info("Performance"+test.getOperationCount());
             }
 
+
             Utils.sleepSeconds(small);
+            log.info("Notified test to stop");
             testContext.stopped = true;
         }
     }

@@ -29,7 +29,7 @@ public class MapRaceTest {
     //props
     public int threadCount = 10;
     public int keyCount = 1000;
-    public int logFrequency = 10000;
+    public int logFrequency = 100000;
     public int performanceUpdateFrequency = 10000;
     public String basename = "map";
 
