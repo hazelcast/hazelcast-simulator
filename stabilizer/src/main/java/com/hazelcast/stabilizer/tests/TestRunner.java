@@ -41,7 +41,7 @@ public class TestRunner {
             throw new NullPointerException("test can't be null");
         }
         this.test = test;
-        this.testInvoker = new TestInvoker(test,testContext);
+        this.testInvoker = new TestInvoker(test, testContext);
     }
 
     public TestRunner withHazelcastInstance(HazelcastInstance hz) {

@@ -88,7 +88,7 @@ public class MapRaceTest {
             }
         }
 
-        assertEquals(0, failures);
+        assertEquals("There should not be any data races", 0, failures);
     }
 
     @Performance

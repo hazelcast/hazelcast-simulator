@@ -10,8 +10,8 @@ import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
-import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
 
@@ -63,7 +63,7 @@ public class GrowingMapTest {
     public void verify() throws Exception {
 
 
-        assertTrue("Map should be empty, but has size:" + map.size(),removeOnStop && !map.isEmpty());
+        assertTrue("Map should be empty, but has size:" + map.size(), removeOnStop && !map.isEmpty());
     }
 
     private class Worker implements Runnable {

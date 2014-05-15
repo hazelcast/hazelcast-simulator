@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static com.hazelcast.stabilizer.Utils.throwableToString;
 import static com.hazelcast.stabilizer.Utils.writeText;
 
@@ -18,7 +17,6 @@ public class ExceptionReporter {
 
     public static void report(Throwable cause) {
         log.severe("Exception detected", cause);
-        sleepSeconds(2);
 
         //we need to write to a temp file before and then rename the file so that the worker will not see
         //a partially written failure.

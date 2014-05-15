@@ -21,14 +21,13 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
-import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.utils.TestUtils;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -96,7 +95,7 @@ public class ExecutorTest {
         spawner.awaitCompletion();
     }
 
-     @Verify
+    @Verify
     public void verify() throws Exception {
         long actual = executedCounter.get();
         long expected = expectedExecutedCounter.get();
