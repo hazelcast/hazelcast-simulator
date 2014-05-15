@@ -50,19 +50,7 @@ public class TestInvokerTest {
         assertSame(testContext, test.context);
     }
 
-    @Test(expected = IllegalTestException.class)
-    public void setupMissing() throws Throwable {
-        SetupMissingTest test = new SetupMissingTest();
-        new TestInvoker(test,new DummyTestContext());
-    }
 
-
-    static class SetupMissingTest {
-
-        @Run
-        void run() {
-        }
-    }
 
     // =================== local verify ========================
 
