@@ -1,4 +1,4 @@
-package $package;
+package com.hazelcast.stabilizer.tests;
 
 
 import com.hazelcast.core.HazelcastInstance;
@@ -56,7 +56,6 @@ public class ExampleTest {
         long actual = counter.get();
 
         assertEquals(expected, actual);
-
     }
 
     @Teardown
@@ -97,3 +96,4 @@ public class ExampleTest {
         new TestRunner(test).run();
     }
 }
+

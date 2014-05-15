@@ -48,7 +48,7 @@ public class WorkerJvmFailureMonitor {
     }
 
     public void publish(Failure failure) {
-        log.fatal("Failure detected: " + failure);
+        log.warn("Failure detected: " + failure);
         failureQueue.add(failure);
     }
 
@@ -92,7 +92,7 @@ public class WorkerJvmFailureMonitor {
             failure.workerId = jvm.id;
             failure.testCase = agent.getTestCase();
             failures.add(failure);
-        }
+     }
     }
 
     private void detectExceptions(WorkerJvm workerJvm, List<Failure> failures) {
@@ -116,7 +116,6 @@ public class WorkerJvmFailureMonitor {
 
             String cause = fileAsText(exceptionFile);
 
-            log.info("Worker: "+workerJvm.id+" ran into an exception\n"+cause);
 
             //we rename it so that we don't detect the same exception again.
             exceptionFile.delete();
