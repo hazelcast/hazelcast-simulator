@@ -67,7 +67,12 @@ public class Provisioner {
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/bin/", "bin");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/conf/", "conf");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/jdk-install/", "jdk-install");
-        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/", "lib");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/hazelcast*", "lib");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/jopt*", "lib");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/junit*", "lib");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/log4j*", "lib");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/stabilizer*", "lib");
+       // bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/tests/", "tests");
 
 //        bash.scpToRemote(ip, STABILIZER_HOME + "/bin", format("hazelcast-stabilizer-%s/bin", getVersion()));
