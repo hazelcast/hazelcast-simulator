@@ -318,11 +318,9 @@ public class Worker {
                     throw new IllegalStateException("No running test found");
                 }
 
-                new CommandThread() {
+                new CommandThread(command) {
                     @Override
                     public void doRun() throws Throwable {
-                        currentCommand = command;
-
                         boolean passive = command.clientOnly && clientInstance == null;
 
                         if (!passive) {
@@ -346,10 +344,9 @@ public class Worker {
                 }
 
                 final Method method = testInvoker.getClass().getMethod(methodName);
-                new CommandThread() {
+                new CommandThread(command) {
                     @Override
                     public void doRun() throws Throwable {
-                        currentCommand = command;
                         method.invoke(testInvoker);
                         log.info("Finished calling test." + methodName + "()");
                     }
@@ -410,14 +407,22 @@ public class Worker {
 
     abstract class CommandThread extends Thread {
 
+        private final TestCommand command;
+
+        public CommandThread(TestCommand command) {
+            this.command = command;
+        }
+
         public abstract void doRun() throws Throwable;
 
         public final void run() {
             try {
+                currentCommand = command;
                 doRun();
-                currentCommand = null;
             } catch (Throwable t) {
                 ExceptionReporter.report(t);
+            } finally {
+                currentCommand = null;
             }
         }
     }
@@ -446,7 +451,7 @@ public class Worker {
 
         @Override
         public boolean isStopped() {
-            return false;
+            return stopped;
         }
     }
 }

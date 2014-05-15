@@ -7,10 +7,12 @@ import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.worker.testcommands.DoneCommand;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.RunCommand;
+import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,15 +42,47 @@ public class IntegrationTest {
         client.prepareAgentsForTests(testCase);
 
         InitTestCommand initTestCommand = new InitTestCommand(testCase);
+        System.out.println("InitTest");
         client.executeOnAllWorkers(initTestCommand);
 
+        System.out.println("setup");
         client.executeOnAllWorkers(new GenericTestCommand("setup"));
 
+        System.out.println("localWarmup");
+        client.executeOnAllWorkers(new GenericTestCommand("localWarmup"));
+        waitDone(client);
+
+        System.out.println("globalWarmup");
+        client.executeOnAllWorkers(new GenericTestCommand("globalWarmup"));
+        waitDone(client);
+
+        System.out.println("run");
         RunCommand runCommand = new RunCommand();
         runCommand.clientOnly = false;
         client.executeOnAllWorkers(runCommand);
 
+        Utils.sleepSeconds(30);
+
+        System.out.println("stop");
+        client.executeOnAllWorkers(new StopTestCommand());
         waitDone(client);
+
+        System.out.println("localVerify");
+        client.executeOnAllWorkers(new GenericTestCommand("localVerify"));
+        waitDone(client);
+
+        System.out.println("globalVerify");
+        client.executeOnAllWorkers(new GenericTestCommand("globalVerify"));
+        waitDone(client);
+
+        System.out.println("globalTeardown");
+        client.executeOnAllWorkers(new GenericTestCommand("globalTeardown"));
+        waitDone(client);
+
+        System.out.println("localTeardown");
+        client.executeOnAllWorkers(new GenericTestCommand("localTeardown"));
+        waitDone(client);
+
         System.out.println("Done");
     }
 
@@ -105,14 +139,24 @@ public class IntegrationTest {
     }
 
     public static class FooTest {
+        private TestContext context;
+
         @Run
         void run() {
+            while (!context.isStopped()) {
+                Utils.sleepSeconds(1);
+                System.out.println("Running");
+            }
+        }
+
+        @Warmup
+        void warmup() {
             Utils.sleepSeconds(10);
         }
 
         @Setup
         void setup(TestContext context) {
-
+            this.context = context;
         }
     }
 }
