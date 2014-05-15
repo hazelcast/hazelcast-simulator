@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import static com.hazelcast.stabilizer.Utils.getVersion;
 import static java.lang.String.format;
 
 public class Bash {
@@ -57,6 +58,13 @@ public class Bash {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void copyToAgentStabilizerDir(String ip, String src, String target) {
+        String syncCommand = format("rsync -av -e \"ssh %s\" %s %s@%s:hazelcast-stabilizer-%s/%s",
+                sshOptions, src,user, ip, getVersion(), target);
+
+        execute(syncCommand);
     }
 
     public void scpToRemote(String ip, File src, String target) {
