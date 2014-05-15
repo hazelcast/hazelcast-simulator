@@ -64,13 +64,18 @@ public class Provisioner {
 
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
         bash.sshQuiet(ip, format("rm -fr hazelcast-stabilizer-%s/lib", getVersion()));
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/bin", "bin");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/conf", "conf");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/jdk-install", "jdk-install");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib", "lib");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/tests", "tests");
 
-        bash.scpToRemote(ip, STABILIZER_HOME + "/bin", format("hazelcast-stabilizer-%s/bin", getVersion()));
-        bash.scpToRemote(ip, STABILIZER_HOME + "/conf", format("hazelcast-stabilizer-%s/conf", getVersion()));
-        bash.scpToRemote(ip, STABILIZER_HOME + "/jdk-install", format("hazelcast-stabilizer-%s/jdk-install", getVersion()));
-        bash.scpToRemote(ip, STABILIZER_HOME + "/lib", format("hazelcast-stabilizer-%s/lib", getVersion()));
-        bash.scpToRemote(ip, STABILIZER_HOME + "/tests", format("hazelcast-stabilizer-%s/tests", getVersion()));
-        //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
+//        bash.scpToRemote(ip, STABILIZER_HOME + "/bin", format("hazelcast-stabilizer-%s/bin", getVersion()));
+//        bash.scpToRemote(ip, STABILIZER_HOME + "/conf", format("hazelcast-stabilizer-%s/conf", getVersion()));
+//        bash.scpToRemote(ip, STABILIZER_HOME + "/jdk-install", format("hazelcast-stabilizer-%s/jdk-install", getVersion()));
+//        bash.scpToRemote(ip, STABILIZER_HOME + "/lib", format("hazelcast-stabilizer-%s/lib", getVersion()));
+//        bash.scpToRemote(ip, STABILIZER_HOME + "/tests", format("hazelcast-stabilizer-%s/tests", getVersion()));
+//        //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
         //this is done to reduce the amount of data we need to upload.
 
         String versionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
