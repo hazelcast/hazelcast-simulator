@@ -98,6 +98,7 @@ public class MapCasTest {
             }
         }
 
+        log.info("Failures: "+failures);
         assertEquals("There should not be any data races", 0, failures);
     }
 
