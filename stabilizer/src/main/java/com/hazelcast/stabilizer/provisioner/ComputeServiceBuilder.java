@@ -18,6 +18,7 @@ import java.util.Properties;
 
 import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.newFile;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
@@ -58,8 +59,8 @@ public class ComputeServiceBuilder {
     private ContextBuilder newContextBuilder(String cloudProvider) {
         try {
             return ContextBuilder.newBuilder(cloudProvider);
-        }catch (NoSuchElementException e){
-            Utils.exitWithError(log,"Unrecognized cloud-provider ["+cloudProvider+"]");
+        } catch (NoSuchElementException e) {
+            Utils.exitWithError(log, "Unrecognized cloud-provider [" + cloudProvider + "]");
             return null;
         }
     }
@@ -95,12 +96,13 @@ public class ComputeServiceBuilder {
         String value = props.get(property, "");
 
         File file = newFile(value);
-        if (file.exists()) {
-            if (log.isFinestEnabled()) {
-                log.finest("Loading " + property + " from file: " + file.getAbsolutePath());
-            }
-            value = fileAsText(file).trim();
+        if (!file.exists()) {
+            Utils.exitWithError(log, format("Can't find %s file %s", property, value));
         }
-        return value;
+
+        if (log.isFinestEnabled()) {
+            log.finest("Loading " + property + " from file: " + file.getAbsolutePath());
+        }
+        return fileAsText(file).trim();
     }
 }
