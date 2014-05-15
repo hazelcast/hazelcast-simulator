@@ -280,26 +280,28 @@ public class Worker {
 
         private void doProcess(long id, TestCommand command) throws Throwable {
             Object result = null;
-            if (command instanceof DoneCommand) {
-                result = process((DoneCommand) command);
-            } else if (command instanceof InitTestCommand) {
-                process((InitTestCommand) command);
-            } else if (command instanceof RunCommand) {
-                process((RunCommand) command);
-            } else if (command instanceof StopTestCommand) {
-                process((StopTestCommand) command);
-            } else if (command instanceof GenericTestCommand) {
-                process((GenericTestCommand) command);
-            } else if (command instanceof GetOperationCountTestCommand) {
-                result = process((GetOperationCountTestCommand) command);
-            } else {
-                throw new RuntimeException("Unhandled task:" + command.getClass());
+            try {
+                if (command instanceof DoneCommand) {
+                    result = process((DoneCommand) command);
+                } else if (command instanceof InitTestCommand) {
+                    process((InitTestCommand) command);
+                } else if (command instanceof RunCommand) {
+                    process((RunCommand) command);
+                } else if (command instanceof StopTestCommand) {
+                    process((StopTestCommand) command);
+                } else if (command instanceof GenericTestCommand) {
+                    process((GenericTestCommand) command);
+                } else if (command instanceof GetOperationCountTestCommand) {
+                    result = process((GetOperationCountTestCommand) command);
+                } else {
+                    throw new RuntimeException("Unhandled task:" + command.getClass());
+                }
+            } finally {
+                TestCommandResponse response = new TestCommandResponse();
+                response.commandId = id;
+                response.result = result;
+                responseQueue.add(response);
             }
-
-            TestCommandResponse response = new TestCommandResponse();
-            response.commandId = id;
-            response.result = result;
-            responseQueue.add(response);
         }
 
         private Long process(GetOperationCountTestCommand command) {
