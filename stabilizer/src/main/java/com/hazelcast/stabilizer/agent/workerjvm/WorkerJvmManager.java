@@ -114,6 +114,10 @@ public class WorkerJvmManager {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
         for (WorkerJvm workerJvm : workers) {
+            if(workerJvm.oomeDetected){
+                continue;
+            }
+
             TestCommandFuture future = new TestCommandFuture(testCommand);
             TestCommandRequest request = new TestCommandRequest();
             request.id = requestIdGenerator.incrementAndGet();
