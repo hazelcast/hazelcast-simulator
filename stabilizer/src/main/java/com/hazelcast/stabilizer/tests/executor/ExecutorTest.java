@@ -23,11 +23,11 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestFailureException;
-import com.hazelcast.stabilizer.tests.TestUtils;
+import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
-import com.hazelcast.stabilizer.tests.annotations.ThreadPool;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 
 import java.io.Serializable;
@@ -86,12 +86,12 @@ public class ExecutorTest {
 
     @Run
     public void run() {
-        ThreadPool pool = new ThreadPool();
+        ThreadSpawner spawner = new ThreadSpawner();
 
         for (int k = 0; k < threadCount; k++) {
-            pool.spawn(new Worker());
+            spawner.spawn(new Worker());
         }
-        pool.awaitCompletion();
+        spawner.awaitCompletion();
     }
 
      @Verify

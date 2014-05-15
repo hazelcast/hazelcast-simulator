@@ -1,5 +1,7 @@
-package com.hazelcast.stabilizer.tests;
+package com.hazelcast.stabilizer.tests.utils;
 
+import com.hazelcast.stabilizer.tests.IllegalTestException;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
@@ -15,7 +17,7 @@ import java.util.List;
 
 import static java.lang.String.format;
 
-public class TestInvoker<T extends  TestContext> {
+public class TestInvoker<T extends TestContext> {
 
     private final Object object;
     private final Class<? extends Object> clazz;

@@ -1,7 +1,8 @@
-package com.hazelcast.stabilizer.tests;
+package com.hazelcast.stabilizer.tests.misc;
 
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
-import com.hazelcast.stabilizer.worker.ExceptionReporter;
+import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 
 import java.util.LinkedList;
 import java.util.List;

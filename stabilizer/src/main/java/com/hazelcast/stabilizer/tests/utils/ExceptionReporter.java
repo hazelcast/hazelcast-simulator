@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.worker;
+package com.hazelcast.stabilizer.tests.utils;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;

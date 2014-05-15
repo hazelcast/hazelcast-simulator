@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.tests;
+package com.hazelcast.stabilizer.tests.utils;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.instance.HazelcastInstanceImpl;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
 import com.hazelcast.stabilizer.TestCase;
+import com.hazelcast.stabilizer.tests.BindException;
 
 import java.lang.reflect.Field;
 import java.util.Map;

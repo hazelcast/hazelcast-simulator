@@ -28,9 +28,9 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestDependencies;
-import com.hazelcast.stabilizer.tests.TestInvoker;
-import com.hazelcast.stabilizer.tests.TestUtils;
+import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
+import com.hazelcast.stabilizer.tests.utils.TestInvoker;
+import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.worker.testcommands.DoneCommand;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
 import com.hazelcast.stabilizer.worker.testcommands.GetOperationCountTestCommand;
@@ -58,7 +58,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.writeObject;
-import static com.hazelcast.stabilizer.tests.TestUtils.bindProperties;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.bindProperties;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
@@ -363,11 +363,6 @@ public class Worker {
                 log.info("Init Test:\n" + testCase);
 
                 String clazzName = testCase.getClassname();
-
-                TestDependencies dependencies = new TestDependencies();
-                dependencies.clientInstance = clientInstance;
-                dependencies.serverInstance = serverInstance;
-                dependencies.testId = testCase.getId();
 
                 Object test = InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
                 bindProperties(test, testCase);

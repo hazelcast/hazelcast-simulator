@@ -1,15 +1,13 @@
 package com.hazelcast.stabilizer;
 
 import com.hazelcast.stabilizer.tests.BindException;
-import com.hazelcast.stabilizer.tests.TestUtils;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.tests.TestUtils.bindProperty;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.bindProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 

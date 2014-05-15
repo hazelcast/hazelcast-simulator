@@ -26,7 +26,7 @@ import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
-import com.hazelcast.stabilizer.tests.annotations.ThreadPool;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 
 import java.util.Queue;
@@ -73,13 +73,13 @@ public class QueueTest {
 
     @Run
     public void run() {
-        ThreadPool pool = new ThreadPool();
+        ThreadSpawner spawner = new ThreadSpawner();
         for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
             for (int l = 0; l < threadsPerQueue; l++) {
-                pool.spawn(new Worker(queueIndex));
+                spawner.spawn(new Worker(queueIndex));
             }
         }
-        pool.awaitCompletion();
+        spawner.awaitCompletion();
     }
 
     @Verify

@@ -11,7 +11,7 @@ import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
-import com.hazelcast.stabilizer.tests.annotations.ThreadPool;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 
@@ -61,11 +61,11 @@ public class MapLockTest {
 
     @Run
     public void run() {
-        ThreadPool pool = new ThreadPool();
+        ThreadSpawner spawner = new ThreadSpawner();
         for (int k = 0; k < threadCount; k++) {
-            pool.spawn(new Worker());
+            spawner.spawn(new Worker());
         }
-        pool.awaitCompletion();
+        spawner.awaitCompletion();
     }
 
     @Verify(global = true)
