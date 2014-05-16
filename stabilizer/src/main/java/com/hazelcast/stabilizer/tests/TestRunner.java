@@ -15,6 +15,8 @@
  */
 package com.hazelcast.stabilizer.tests;
 
+import com.hazelcast.config.Config;
+import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
@@ -22,6 +24,9 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.utils.TestInvoker;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.UUID;
 
 import static java.lang.String.format;
@@ -50,6 +55,25 @@ public class TestRunner {
         }
         this.hazelcastInstance = hz;
         return this;
+    }
+
+    public TestRunner withHazelcastConfig(File file) throws IOException {
+        if (file == null) {
+            throw new NullPointerException("file can't be null");
+        }
+
+        if (!file.exists()) {
+            throw new IllegalArgumentException(format("file [%s] doesn't exist", file.getAbsolutePath()));
+        }
+
+        FileInputStream fis = new FileInputStream(file);
+        try {
+            Config config = new XmlConfigBuilder(fis).build();
+            hazelcastInstance = Hazelcast.newHazelcastInstance(config);
+            return this;
+        } finally {
+            Utils.closeQuietly(fis);
+        }
     }
 
     public TestRunner withDuration(int durationSeconds) {
