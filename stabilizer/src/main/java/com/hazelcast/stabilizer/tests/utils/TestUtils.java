@@ -216,8 +216,6 @@ public class TestUtils {
             } else {
                 return findPropertyField(superClass, property);
             }
-
-            return findPropertyField(superClass, property);
         }
     }
 
