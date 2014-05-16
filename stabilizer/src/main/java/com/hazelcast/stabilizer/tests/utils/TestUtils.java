@@ -23,6 +23,7 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.tests.BindException;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 
 import static java.lang.String.format;
@@ -74,11 +75,7 @@ public class TestUtils {
     }
 
     public static void bindProperty(Object test, String property, String value) throws IllegalAccessException {
-        Field field = findPropetyField(test.getClass(), property);
-        if (field == null) {
-            throw new BindException(
-                    format("Could not found a field for property [%s] on class [%s]", property, test.getClass()));
-        }
+        Field field = findPropertyField(test.getClass(), property);
         field.setAccessible(true);
 
         try {
@@ -175,7 +172,7 @@ public class TestUtils {
                     try {
                         Object enumValue = Enum.valueOf((Class<? extends Enum>) field.getType(), value);
                         field.set(test, enumValue);
-                    }catch (IllegalArgumentException e){
+                    } catch (IllegalArgumentException e) {
                         throw new NumberFormatException(e.getMessage());
                     }
                 }
@@ -185,17 +182,36 @@ public class TestUtils {
             }
         } catch (NumberFormatException e) {
             throw new BindException(
-                    format("Failed to bind [%s] to property [%s.%s] of type [%s]",
-                            value, test.getClass().getName(),property, field.getType()));
+                    format("Failed to bind value [%s] to property [%s.%s] of type [%s]",
+                            value, test.getClass().getName(), property, field.getType())
+            );
         }
     }
 
-    public static Field findPropetyField(Class clazz, String property) {
+    public static Field findPropertyField(Class clazz, String property) {
         try {
-            return clazz.getDeclaredField(property);
+            Field field = clazz.getDeclaredField(property);
+
+            if (Modifier.isStatic(field.getModifiers())) {
+                throw new BindException(
+                        format("Property [%s.%s] can't be static", clazz.getName(), property));
+            }
+
+
+            if (Modifier.isFinal(field.getModifiers())) {
+                throw new BindException(
+                        format("Property [%s.%s] can't be final", clazz.getName(), property));
+            }
+
+            return field;
         } catch (NoSuchFieldException e) {
             Class superClass = clazz.getSuperclass();
-            return superClass != null ? findPropetyField(superClass, property) : null;
+            if (superClass == null) {
+                throw new BindException(
+                        format("Property [%s.%s] does not exist", clazz.getName(), property));
+
+            }
+            return findPropertyField(superClass, property);
         }
     }
 
