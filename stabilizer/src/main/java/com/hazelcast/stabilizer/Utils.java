@@ -52,6 +52,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.locks.LockSupport;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -444,6 +445,14 @@ public final class Utils {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void sleepNanos(long nanos){
+        if(nanos<=0){
+            return;
+        }
+
+        LockSupport.parkNanos(nanos);
     }
 
     public static void exitWithError(ILogger logger, String msg) {
