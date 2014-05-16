@@ -76,6 +76,11 @@ public class TestUtils {
 
     public static void bindProperty(Object test, String property, String value) throws IllegalAccessException {
         Field field = findPropertyField(test.getClass(), property);
+        if (field == null) {
+            throw new BindException(
+                    format("Property [%s.%s] does not exist", test.getClass().getName(), property));
+        }
+
         field.setAccessible(true);
 
         try {
@@ -207,10 +212,11 @@ public class TestUtils {
         } catch (NoSuchFieldException e) {
             Class superClass = clazz.getSuperclass();
             if (superClass == null) {
-                throw new BindException(
-                        format("Property [%s.%s] does not exist", clazz.getName(), property));
-
+                return null;
+            } else {
+                return findPropertyField(superClass, property);
             }
+
             return findPropertyField(superClass, property);
         }
     }
