@@ -31,22 +31,36 @@ import java.util.UUID;
 
 import static java.lang.String.format;
 
-public class TestRunner {
+/**
+ * A utility class to run a test locally. This is purely meant for developing purposes; when you are writing a test
+ * you want to see quickly if it works at all without needing to deploy it through an agent on a worker.
+ *
+ * @param <E>
+ */
+public class TestRunner<E> {
 
     private final static ILogger log = Logger.getLogger(TestRunner.class);
-    private final Object test;
+    private final E test;
     private final TestInvoker testInvoker;
 
     private HazelcastInstance hazelcastInstance;
     private int durationSeconds = 60;
     private final TestContextImpl testContext = new TestContextImpl();
 
-    public TestRunner(Object test) {
+    public TestRunner(E test) {
         if (test == null) {
             throw new NullPointerException("test can't be null");
         }
         this.test = test;
         this.testInvoker = new TestInvoker(test, testContext);
+    }
+
+    public E getTest() {
+        return test;
+    }
+
+    public HazelcastInstance getHazelcastInstance() {
+        return hazelcastInstance;
     }
 
     public TestRunner withHazelcastInstance(HazelcastInstance hz) {
@@ -82,10 +96,6 @@ public class TestRunner {
         }
         this.durationSeconds = durationSeconds;
         return this;
-    }
-
-    public HazelcastInstance getHazelcastInstance() {
-        return hazelcastInstance;
     }
 
     public long getDurationSeconds() {
