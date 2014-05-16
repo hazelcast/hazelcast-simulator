@@ -131,12 +131,14 @@ After this project is generated, go to the created directory and run:
 mvn clean install
 ```
 
-And then go to workingdir and edit the stabilizer.properties file. In case of EC2, you only need to alter the following:
+And then go to workdir and edit the stabilizer.properties file. In case of EC2, you only need to alter the following:
 
 ```
-CLOUD_IDENTITY=<your-aws-access-key>
-CLOUD_CREDENTIAL=<your-aws-secret-key>
+CLOUD_IDENTITY=~/ec2.identity
+CLOUD_CREDENTIAL=~/ec2.credential
 ```
+
+The ec2.identity file should contain your access key and the ec2.credential your secret key.
 
 After you have made the modifications, you need to set the executable flag on the run.sh:
 
@@ -166,7 +168,7 @@ The output will look something like this:
 INFO  12:58:24 Hazelcast Stabilizer Provisioner
 INFO  12:58:24 Version: 0.3-SNAPSHOT
 INFO  12:58:24 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3-SNAPSHOT
-INFO  12:58:24 Loading stabilizer.properties: /java/projects/Hazelcast/example/yourproject/workingdir/stabilizer.properties
+INFO  12:58:24 Loading stabilizer.properties: /java/projects/Hazelcast/example/yourproject/workdir/stabilizer.properties
 INFO  12:58:24 ==============================================================
 INFO  12:58:24 Provisioning 4 aws-ec2 machines
 INFO  12:58:24 ==============================================================
@@ -205,8 +207,8 @@ INFO  13:03:03 ==============================================================
 INFO  13:03:03 Hazelcast Stabilizer Coordinator
 INFO  13:03:03 Version: 0.3-SNAPSHOT
 INFO  13:03:03 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3-SNAPSHOT
-INFO  13:03:04 Loading stabilizer.properties: /java/projects/Hazelcast/example/yourproject/workingdir/stabilizer.properties
-INFO  13:03:04 Using agents file: /java/projects/Hazelcast/example/yourproject/workingdir/agents.txt
+INFO  13:03:04 Loading stabilizer.properties: /java/projects/Hazelcast/example/yourproject/workdir/stabilizer.properties
+INFO  13:03:04 Using agents file: /java/projects/Hazelcast/example/yourproject/workdir/agents.txt
 INFO  13:03:04 Waiting for agents to start
 INFO  13:03:04 Connect to agent 75.101.216.36 OK
 INFO  13:03:04 Connect to agent 54.80.136.253 OK
@@ -271,7 +273,7 @@ INFO  13:09:05 -----------------------------------------------------------------
 INFO  13:09:05 Hazelcast Stabilizer Provisioner
 INFO  13:09:05 Version: 0.3-SNAPSHOT
 INFO  13:09:05 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3-SNAPSHOT
-INFO  13:09:05 Loading stabilizer.properties: /java/projects/Hazelcast/example/yourproject/workingdir/stabilizer.properties
+INFO  13:09:05 Loading stabilizer.properties: /java/projects/Hazelcast/example/yourproject/workdir/stabilizer.properties
 INFO  13:09:05 ==============================================================
 INFO  13:09:05 Download artifacts of 4 machines
 INFO  13:09:05 ==============================================================
@@ -285,7 +287,7 @@ INFO  13:09:15 ==============================================================
 INFO  13:09:16 Hazelcast Stabilizer Provisioner
 INFO  13:09:16 Version: 0.3-SNAPSHOT
 INFO  13:09:16 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3-SNAPSHOT
-INFO  13:09:16 Loading stabilizer.properties: /java/projects/Hazelcast/example/yourproject/workingdir/stabilizer.properties
+INFO  13:09:16 Loading stabilizer.properties: /java/projects/Hazelcast/example/yourproject/workdir/stabilizer.properties
 INFO  13:09:16 ==============================================================
 INFO  13:09:16 Terminating 4 aws-ec2 machines (can take some time)
 INFO  13:09:16 ==============================================================
@@ -295,7 +297,7 @@ INFO  13:09:53 	75.101.216.36 Terminating
 INFO  13:09:53 	54.82.114.29 Terminating
 INFO  13:09:53 	54.80.136.253 Terminating
 INFO  13:09:53 	54.87.117.225 Terminating
-INFO  13:10:38 Updating /java/projects/Hazelcast/example/yourproject/workingdir/agents.txt
+INFO  13:10:38 Updating /java/projects/Hazelcast/example/yourproject/workdir/agents.txt
 INFO  13:10:38 Duration: 00d 00h 01m 21s
 INFO  13:10:38 ==============================================================
 INFO  13:10:38 Finished terminating 4 aws-ec2 machines, 0 machines remaining.

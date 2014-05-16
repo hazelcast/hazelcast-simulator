@@ -17,7 +17,7 @@
         </fileSet>
 
         <fileSet filtered="true" packaged="false">
-            <directory>workingdir</directory>
+            <directory>workdir</directory>
 
             <includes>
                 <include>**/*.*</include>
