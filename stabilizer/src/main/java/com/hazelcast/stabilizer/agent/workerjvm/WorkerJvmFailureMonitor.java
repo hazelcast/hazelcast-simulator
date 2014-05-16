@@ -123,7 +123,7 @@ public class WorkerJvmFailureMonitor {
 
             Failure failure = new Failure();
             failure.message = "Worked ran into an unhandled exception";
-            failure.message = "Worker exception";
+            failure.type = "Worker exception";
             failure.agentAddress = getHostAddress();
             failure.workerAddress = workerJvm.memberAddress;
             failure.workerId = workerJvm.id;
@@ -146,7 +146,7 @@ public class WorkerJvmFailureMonitor {
 
         Failure failure = new Failure();
         failure.message = "Worker ran into an Out Of Memory Error";
-        failure.message = "Worker oome";
+        failure.type = "Worker oome";
         failure.agentAddress = getHostAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
@@ -176,7 +176,7 @@ public class WorkerJvmFailureMonitor {
 
         Failure failure = new Failure();
         failure.message = "Worker terminated with exit code not 0, but  " + exitCode;
-        failure.message = "Worker exit";
+        failure.type = "Worker exit";
         failure.agentAddress = getHostAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
