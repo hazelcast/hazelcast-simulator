@@ -89,7 +89,7 @@ public class TestUtils {
                 } else if ("false".equals(value)) {
                     field.set(test, false);
                 } else {
-                    throw new BindException("Unrecognized boolean value:" + value);
+                    throw new NumberFormatException("Unrecognized boolean value:" + value);
                 }
             } else if (Boolean.class.equals(field.getType())) {
                 //object boolean
@@ -100,7 +100,7 @@ public class TestUtils {
                 } else if ("false".equals(value)) {
                     field.set(test, false);
                 } else {
-                    throw new BindException("Unrecognized boolean value:" + value);
+                    throw new NumberFormatException("Unrecognized boolean value:" + value);
                 }
             } else if (Byte.TYPE.equals(field.getType())) {
                 //primitive byte
@@ -172,16 +172,21 @@ public class TestUtils {
                 if ("null".equals(value)) {
                     field.set(test, null);
                 } else {
-                    Object enumValue = Enum.valueOf((Class<? extends Enum>) field.getType(), value);
-                    field.set(test, enumValue);
+                    try {
+                        Object enumValue = Enum.valueOf((Class<? extends Enum>) field.getType(), value);
+                        field.set(test, enumValue);
+                    }catch (IllegalArgumentException e){
+                        throw new NumberFormatException(e.getMessage());
+                    }
                 }
             } else {
                 throw new BindException(
-                        format("Unhandled type [%s] for field %s.%s", field.getType(), test.getClass().getName(), field.getName()));
+                        format("Unhandled type [%s] for field [%s.%s]", field.getType(), test.getClass().getName(), field.getName()));
             }
         } catch (NumberFormatException e) {
             throw new BindException(
-                    format("Failed to convert property [%s] value [%s] to type [%s]", property, value, field.getType()), e);
+                    format("Failed to bind [%s] to property [%s.%s] of type [%s]",
+                            value, test.getClass().getName(),property, field.getType()));
         }
     }
 
