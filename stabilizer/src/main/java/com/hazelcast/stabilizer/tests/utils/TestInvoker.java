@@ -4,6 +4,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
@@ -38,6 +39,8 @@ public class TestInvoker<T extends TestContext> {
     private Method localVerifyMethod;
     private Method globalVerifyMethod;
 
+    private Method operationCountMethod;
+
     public TestInvoker(Object object, T testContext) {
         if (object == null) {
             throw new NullPointerException();
@@ -61,10 +64,17 @@ public class TestInvoker<T extends TestContext> {
 
         initLocalVerifyMethod();
         initGlobalVerifyMethod();
+
+        initGetOperationCountMethod();
     }
 
     public T getTestContext() {
         return testContext;
+    }
+
+    public long getOperationCount() throws Throwable {
+        Long count = invoke(operationCountMethod);
+        return count == null ? -1 : count;
     }
 
     public void run() throws Throwable {
@@ -99,13 +109,13 @@ public class TestInvoker<T extends TestContext> {
         invoke(globalWarmupMethod);
     }
 
-    private Object invoke(Method method, Object... args) throws Throwable {
+    private <E> E invoke(Method method, Object... args) throws Throwable {
         if (method == null) {
             return null;
         }
 
         try {
-            return method.invoke(object, args);
+            return (E) method.invoke(object, args);
         } catch (InvocationTargetException e) {
             throw e.getCause();
         }
@@ -115,7 +125,7 @@ public class TestInvoker<T extends TestContext> {
         List<Method> methods = findMethod(Setup.class);
         assertAtMostOne(methods, Setup.class);
 
-        if(methods.isEmpty()){
+        if (methods.isEmpty()) {
             return;
         }
 
@@ -127,6 +137,22 @@ public class TestInvoker<T extends TestContext> {
         setupMethod = method;
     }
 
+    private void initGetOperationCountMethod() {
+        List<Method> methods = findMethod(Performance.class);
+        assertAtMostOne(methods, Performance.class);
+
+        if (methods.isEmpty()) {
+            return;
+        }
+
+        Method method = methods.get(0);
+        method.setAccessible(true);
+        assertNotStatic(method);
+        assertNoArgs(method);
+        assertReturnType(method, Long.TYPE);
+        operationCountMethod = method;
+    }
+
     private void initRunMethod() {
         List<Method> methods = findMethod(Run.class);
         assertExactlyOne(methods, Run.class);
@@ -135,7 +161,7 @@ public class TestInvoker<T extends TestContext> {
         method.setAccessible(true);
         assertVoidReturnType(method);
         assertNotStatic(method);
-        assertNoArg(method);
+        assertNoArgs(method);
         runMethod = method;
     }
 
@@ -156,7 +182,7 @@ public class TestInvoker<T extends TestContext> {
         method.setAccessible(true);
         assertVoidReturnType(method);
         assertNotStatic(method);
-        assertNoArg(method);
+        assertNoArgs(method);
         localVerifyMethod = method;
     }
 
@@ -177,7 +203,7 @@ public class TestInvoker<T extends TestContext> {
         method.setAccessible(true);
         assertVoidReturnType(method);
         assertNotStatic(method);
-        assertNoArg(method);
+        assertNoArgs(method);
         globalVerifyMethod = method;
     }
 
@@ -198,7 +224,7 @@ public class TestInvoker<T extends TestContext> {
         method.setAccessible(true);
         assertVoidReturnType(method);
         assertNotStatic(method);
-        assertNoArg(method);
+        assertNoArgs(method);
         localTeardownMethod = method;
     }
 
@@ -219,7 +245,7 @@ public class TestInvoker<T extends TestContext> {
         method.setAccessible(true);
         assertVoidReturnType(method);
         assertNotStatic(method);
-        assertNoArg(method);
+        assertNoArgs(method);
         globalTeardownMethod = method;
     }
 
@@ -240,7 +266,7 @@ public class TestInvoker<T extends TestContext> {
         method.setAccessible(true);
         assertVoidReturnType(method);
         assertNotStatic(method);
-        assertNoArg(method);
+        assertNoArgs(method);
         localWarmupMethod = method;
     }
 
@@ -261,7 +287,7 @@ public class TestInvoker<T extends TestContext> {
         method.setAccessible(true);
         assertVoidReturnType(method);
         assertNotStatic(method);
-        assertNoArg(method);
+        assertNoArgs(method);
         globalWarmupMethod = method;
     }
 
@@ -273,7 +299,7 @@ public class TestInvoker<T extends TestContext> {
         }
     }
 
-    private void assertNoArg(Method method) {
+    private void assertNoArgs(Method method) {
         if (method.getParameterTypes().length == 0) {
             return;
         }
@@ -314,11 +340,15 @@ public class TestInvoker<T extends TestContext> {
     }
 
     private void assertVoidReturnType(Method method) {
-        if (Void.TYPE.equals(method.getReturnType())) {
+        assertReturnType(method, Void.TYPE);
+    }
+
+    private void assertReturnType(Method method, Class expectedType) {
+        if (expectedType.equals(method.getReturnType())) {
             return;
         }
 
-        throw new IllegalTestException("Method " + clazz + "." + method + " should have a void return type");
+        throw new IllegalTestException("Method " + clazz + "." + method + " should have returnType: " + expectedType);
     }
 
     private List<Method> findMethod(Class<? extends Annotation> annotation) {

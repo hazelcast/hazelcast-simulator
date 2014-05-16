@@ -1,13 +1,14 @@
 package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestInvoker;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -112,48 +113,27 @@ public class TestInvokerTest {
         }
     }
 
-    // =================== setup ========================
+    // =================== performance ========================
 
+    @Test
+    public void performance() throws Throwable {
+        DummyTestContext testContext = new DummyTestContext();
+        PerformanceTest test = new PerformanceTest();
+        TestInvoker invoker = new TestInvoker(test,testContext);
+        long count = invoker.getOperationCount();
 
-    static class FullTest{
+        assertEquals(20, count);
+    }
 
-        @Setup
-        void setup(TestContext testContext){
+    static class PerformanceTest {
 
-        }
-
-        @Warmup(global = false)
-        void localWarmup(){
-
-        }
-
-        @Warmup(global = true)
-        void globalWarmup(){
-
+        @Performance
+        public long getCount(){
+            return 20;
         }
 
         @Run
         void run(){
-
-        }
-
-        @Verify(global = false)
-        void localVerify(){
-
-        }
-
-        @Verify(global = false)
-        void globalVerify(){
-
-        }
-
-        @Verify(global = false)
-        void localTeardown(){
-
-        }
-
-        @Verify(global = true)
-        void globalTeardown(){
 
         }
     }

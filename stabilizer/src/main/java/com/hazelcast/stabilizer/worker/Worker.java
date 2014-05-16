@@ -304,9 +304,8 @@ public class Worker {
             }
         }
 
-        private Long process(GetOperationCountTestCommand command) {
-            //    return test.getOperationCount();
-            return -1l;
+        private Long process(GetOperationCountTestCommand command) throws Throwable {
+           return testInvoker.getOperationCount();
         }
 
         private void process(final RunCommand command) throws Exception {

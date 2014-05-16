@@ -70,12 +70,17 @@ mkdir ~/tests
 ```
 
 Copy the STABILIZER_HOME/conf/stabilizer.properties to the tests directory. And make
-the changes required. In case of EC2, you only need to make the following changes:
+the changes required. In case of EC2, you only need to set your ec2 identity/credential:
 
 ```
-CLOUD_IDENTITY=<your-aws-access-key>
-CLOUD_CREDENTIAL=<your-aws-secret-key>
+CLOUD_IDENTITY=~/ec2.identity
+CLOUD_CREDENTIAL=~/ec2.credential
 ```
+
+The simplest thing you can do is to make a file '~/ec2.identity' containing your access key. And another
+file '~/ec2.credential' containing your secret key. The reason why need to create files instead of just
+setting the values in this the stabilizer.properties, is security: it is too easy to share your credentials
+with the outside world.
 
 ### Setup public/private-key
 

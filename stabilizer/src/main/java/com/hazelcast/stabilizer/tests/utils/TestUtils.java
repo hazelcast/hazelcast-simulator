@@ -202,7 +202,6 @@ public class TestUtils {
                         format("Property [%s.%s] can't be static", clazz.getName(), property));
             }
 
-
             if (Modifier.isFinal(field.getModifiers())) {
                 throw new BindException(
                         format("Property [%s.%s] can't be final", clazz.getName(), property));
