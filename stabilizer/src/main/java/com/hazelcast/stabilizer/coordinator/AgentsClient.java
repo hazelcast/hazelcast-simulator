@@ -85,6 +85,7 @@ public class AgentsClient {
         }
 
         if (unchecked.isEmpty()) {
+            log.info("All agents are reachable!");
             return;
         }
 

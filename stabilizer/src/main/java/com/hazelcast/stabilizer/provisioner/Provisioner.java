@@ -1,7 +1,6 @@
 package com.hazelcast.stabilizer.provisioner;
 
 import com.google.common.base.Predicate;
-import com.google.common.io.Files;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
@@ -26,7 +25,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.Utils.*;
+import static com.hazelcast.stabilizer.Utils.appendText;
+import static com.hazelcast.stabilizer.Utils.fileAsText;
+import static com.hazelcast.stabilizer.Utils.getVersion;
+import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
 
 //https://jclouds.apache.org/start/compute/ good read
@@ -124,10 +126,15 @@ public class Provisioner {
     }
 
     public void restart() {
+        echoImportant("Restarting %s Agents", addresses.size());
+
         hazelcastJars.prepare();
         for (AgentAddress address : addresses) {
+            echo("Installing agent: " + address.publicAddress);
             installAgent(address.publicAddress);
         }
+
+        echoImportant("Restarting %s Agents", addresses.size());
     }
 
     public void scale(int size) throws Exception {
@@ -226,7 +233,7 @@ public class Provisioner {
         public void run() {
             //install java if needed
             if (!"outofthebox".equals(props.get("JDK_FLAVOR"))) {
-                bash.scpToRemote(ip, getJavaSupportScript(),"jdk-support.sh");
+                bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
                 bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
                 bash.ssh(ip, "bash install-java.sh");
                 echo("\t" + ip + " JAVA INSTALLED");
@@ -266,7 +273,7 @@ public class Provisioner {
     }
 
     private File getJavaSupportScript() {
-         File scriptDir = new File(STABILIZER_HOME, "jdk-install");
+        File scriptDir = new File(STABILIZER_HOME, "jdk-install");
         return new File(scriptDir, "jdk-support.sh");
     }
 

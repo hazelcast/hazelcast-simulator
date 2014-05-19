@@ -68,7 +68,6 @@ public class StringMapTest {
 
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
-
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
     }
 
@@ -170,7 +169,7 @@ public class StringMapTest {
 
     public static void main(String[] args) throws Throwable {
         StringMapTest test = new StringMapTest();
-        test.writePercentage = 0;
+        test.writePercentage = 10;
         new TestRunner(test).run();
     }
 }
