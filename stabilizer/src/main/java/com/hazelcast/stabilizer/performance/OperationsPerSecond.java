@@ -50,7 +50,7 @@ public class OperationsPerSecond implements Performance<OperationsPerSecond> {
         }
 
         StringBuffer sb = new StringBuffer();
-        sb.append("Performance = ").append(performance).append(" operations/second ");
+        sb.append("Performance = ").append(performance).append(" ops/s ");
         return sb.toString();
     }
 }

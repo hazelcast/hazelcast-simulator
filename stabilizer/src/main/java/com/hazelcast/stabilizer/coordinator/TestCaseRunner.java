@@ -108,7 +108,7 @@ public class TestCaseRunner {
     private void logPerformance() {
         if (coordinator.monitorPerformance) {
             log.info("Operation-count: " + performanceFormat.format(coordinator.operationCount));
-            log.info("Performance: " + performanceFormat.format(coordinator.performance)+" Operations/second");
+            log.info("Performance: " + performanceFormat.format(coordinator.performance)+" ops/s");
         }
     }
 
@@ -136,7 +136,7 @@ public class TestCaseRunner {
             String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
 
             if (coordinator.monitorPerformance) {
-                msg += ", " + performanceFormat.format(coordinator.performance) + " operations/second.";
+                msg += ", " + performanceFormat.format(coordinator.performance) + " ops/s.";
             }
 
             log.info(msg);
