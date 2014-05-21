@@ -108,7 +108,8 @@ public class TestCaseRunner {
     private void logPerformance() {
         if (coordinator.monitorPerformance) {
             log.info("Operation-count: " + performanceFormat.format(coordinator.operationCount));
-            log.info("Performance: " + performanceFormat.format(coordinator.performance)+" ops/s");
+            double performance = (coordinator.operationCount * 1.0d)/testSuite.duration;
+            log.info("Performance: " + performanceFormat.format(performance)+" ops/s");
         }
     }
 

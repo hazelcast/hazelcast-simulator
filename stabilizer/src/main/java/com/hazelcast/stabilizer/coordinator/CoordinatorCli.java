@@ -176,6 +176,7 @@ public class CoordinatorCli {
         workerJvmSettings.javaVersion = options.valueOf(workerJavaVersionSpec);
         workerJvmSettings.profiler = coordinator.props.get("PROFILER", "none");
         workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
+        workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS","");
 
         coordinator.workerJvmSettings = workerJvmSettings;
     }

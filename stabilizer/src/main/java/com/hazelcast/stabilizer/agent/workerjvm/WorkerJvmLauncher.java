@@ -162,7 +162,11 @@ public class WorkerJvmLauncher {
                     .replace("${STABILIZER_HOME}", STABILIZER_HOME.getAbsolutePath())
                     .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());
             args.add(agentSetting);
+        }else if("hprof".equals(settings.profiler)){
+            String agentSetting = settings.yourkitConfig;
+            args.add(agentSetting);
         }
+
         args.add("-XX:OnOutOfMemoryError=\"\"touch worker.oome\"\"");
         args.add("-DSTABILIZER_HOME=" + STABILIZER_HOME);
         args.add("-Dhazelcast.logging.type=log4j");
