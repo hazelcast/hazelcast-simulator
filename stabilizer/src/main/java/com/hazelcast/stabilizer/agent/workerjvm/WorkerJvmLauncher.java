@@ -163,8 +163,7 @@ public class WorkerJvmLauncher {
                     .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());
             args.add(agentSetting);
         }else if("hprof".equals(settings.profiler)){
-            String agentSetting = settings.yourkitConfig;
-            args.add(agentSetting);
+            args.add(settings.hprofSettings);
         }
 
         args.add("-XX:OnOutOfMemoryError=\"\"touch worker.oome\"\"");
