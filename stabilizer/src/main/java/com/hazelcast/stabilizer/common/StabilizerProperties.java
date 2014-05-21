@@ -1,6 +1,7 @@
 package com.hazelcast.stabilizer.common;
 
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
@@ -18,7 +19,7 @@ import static java.lang.String.format;
  * is configured, it will override the properties from the default.
  */
 public class StabilizerProperties {
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(StabilizerProperties.class);
+    private final static ILogger log = Logger.getLogger(StabilizerProperties.class);
 
     private final Properties properties = new Properties();
 
