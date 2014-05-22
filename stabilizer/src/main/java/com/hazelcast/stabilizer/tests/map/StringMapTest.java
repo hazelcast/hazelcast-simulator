@@ -76,7 +76,7 @@ public class StringMapTest {
         map.destroy();
     }
 
-    @Warmup
+    @Warmup(global = false)
     public void warmup() {
         log.info("Warmup has run");
         keys = new String[keyCount];

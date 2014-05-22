@@ -50,7 +50,7 @@ public class TestCaseRunner {
             echo("Completed Test local setup");
 
             echo("Starting Test local warmup");
-            agentsClient.executeOnSingleWorker(new GenericTestCommand("localWarmup"));
+            agentsClient.executeOnAllWorkers(new GenericTestCommand("localWarmup"));
             agentsClient.waitDone();
             echo("Completed Test local warmup");
 
