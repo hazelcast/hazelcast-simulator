@@ -39,7 +39,9 @@ public class PerformanceMonitor extends Thread {
         long currentCount = 0;
         for (List<Long> list : result) {
             for (Long item : list) {
-                currentCount += item;
+                if (item != null) {
+                    currentCount += item;
+                }
             }
         }
 

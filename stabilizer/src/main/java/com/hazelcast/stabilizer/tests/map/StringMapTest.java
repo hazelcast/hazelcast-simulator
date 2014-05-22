@@ -78,6 +78,7 @@ public class StringMapTest {
 
     @Warmup
     public void warmup() {
+        log.info("Warmup has run");
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
             keys[k] = makeString(keyLength);
@@ -131,7 +132,8 @@ public class StringMapTest {
         public void run() {
             long iteration = 0;
             while (!testContext.isStopped()) {
-                Object key = keys[random.nextInt(keys.length)];
+
+                Object key = newKey();
 
                 if (shouldWrite(iteration)) {
                     Object value = values[random.nextInt(values.length)];
@@ -154,6 +156,11 @@ public class StringMapTest {
 
                 iteration++;
             }
+        }
+
+        private Object newKey() {
+            int length = keys.length;
+            return keys[random.nextInt(length)];
         }
 
         private boolean shouldWrite(long iteration) {
