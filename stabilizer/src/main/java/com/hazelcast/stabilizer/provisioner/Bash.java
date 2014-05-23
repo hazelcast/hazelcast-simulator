@@ -62,7 +62,7 @@ public class Bash {
 
     public void copyToAgentStabilizerDir(String ip, String src, String target) {
         String syncCommand = format("rsync -av -e \"ssh %s\" %s %s@%s:hazelcast-stabilizer-%s/%s",
-                sshOptions, src,user, ip, getVersion(), target);
+                sshOptions, src, user, ip, getVersion(), target);
 
         execute(syncCommand);
     }

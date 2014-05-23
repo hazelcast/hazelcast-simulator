@@ -39,7 +39,7 @@ public class HazelcastJars {
 
         if (versionSpec.equals("outofthebox")) {
             //we don't need to do anything.
-        }  else if (versionSpec.equals("bringmyown")) {
+        } else if (versionSpec.equals("bringmyown")) {
             //we don't need to do anything
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);

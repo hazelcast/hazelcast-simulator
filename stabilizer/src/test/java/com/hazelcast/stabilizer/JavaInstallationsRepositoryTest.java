@@ -16,15 +16,15 @@ public class JavaInstallationsRepositoryTest {
     public void test() throws Exception {
         JavaInstallationsRepository repository = new JavaInstallationsRepository();
         File file = TestUtilsTest.writeToTempFile("" +
-                        "1.vendor=sun\n" +
-                        "1.version=1.5\n" +
-                        "1.javaHome=/tmp\n" +
-                        "2.vendor=sun\n" +
-                        "2.version=1.6\n" +
-                        "2.javaHome=/tmp\n" +
-                        "3.vendor=openjdk\n" +
-                        "3.version=1.5\n" +
-                        "3.javaHome=/tmp\n"
+                "1.vendor=sun\n" +
+                "1.version=1.5\n" +
+                "1.javaHome=/tmp\n" +
+                "2.vendor=sun\n" +
+                "2.version=1.6\n" +
+                "2.javaHome=/tmp\n" +
+                "3.vendor=openjdk\n" +
+                "3.version=1.5\n" +
+                "3.javaHome=/tmp\n"
         );
         repository.load(file);
 

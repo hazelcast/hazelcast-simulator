@@ -51,7 +51,7 @@ public class AgentSmokeTest {
         cooldown();
 
         List<Failure> failures = client.getFailures();
-        assertFalse("No failures found",failures.isEmpty());
+        assertFalse("No failures found", failures.isEmpty());
     }
 
     private void cooldown() {

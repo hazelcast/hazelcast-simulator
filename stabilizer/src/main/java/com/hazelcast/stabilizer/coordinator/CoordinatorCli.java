@@ -62,7 +62,7 @@ public class CoordinatorCli {
                     "Use ';' as separator for multiple entries. Wildcard '*' can also be used."
     ).withRequiredArg().ofType(String.class);
 
-      private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
+    private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
             "Track performance");
 
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
@@ -176,7 +176,7 @@ public class CoordinatorCli {
         workerJvmSettings.javaVersion = options.valueOf(workerJavaVersionSpec);
         workerJvmSettings.profiler = coordinator.props.get("PROFILER", "none");
         workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
-        workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS","");
+        workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS", "");
 
         coordinator.workerJvmSettings = workerJvmSettings;
     }

@@ -4,10 +4,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import java.io.File;
 import java.io.IOException;
-
-import static com.hazelcast.stabilizer.Utils.getFile;
 
 public class AgentCli {
 

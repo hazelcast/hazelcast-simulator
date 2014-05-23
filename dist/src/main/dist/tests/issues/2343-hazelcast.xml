@@ -20,5 +20,5 @@
     <map name="map">
         <max-idle-seconds>5</max-idle-seconds>
     </map>
-    
+
 </hazelcast>

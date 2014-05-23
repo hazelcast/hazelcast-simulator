@@ -93,7 +93,7 @@ public class WorkerJvmFailureMonitor {
             failure.workerId = jvm.id;
             failure.testCase = agent.getTestCase();
             failures.add(failure);
-     }
+        }
     }
 
     private void detectExceptions(WorkerJvm workerJvm, List<Failure> failures) {
