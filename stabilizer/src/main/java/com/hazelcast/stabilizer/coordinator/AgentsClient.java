@@ -55,7 +55,9 @@ public class AgentsClient {
     public void awaitAgentsReachable() {
         List<AgentClient> unchecked = new LinkedList<AgentClient>(agents);
 
+        echo("--------------------------------------------------------------");
         log.info("Waiting for agents to start");
+        echo("--------------------------------------------------------------");
 
         for (int k = 0; k < 12; k++) {
             Iterator<AgentClient> it = unchecked.iterator();
@@ -81,11 +83,15 @@ public class AgentsClient {
         agents.removeAll(unchecked);
 
         if (agents.isEmpty()) {
+            echo("--------------------------------------------------------------");
             Utils.exitWithError(log, "There are no reachable agents");
+            echo("--------------------------------------------------------------");
         }
 
         if (unchecked.isEmpty()) {
+            echo("--------------------------------------------------------------");
             log.info("All agents are reachable!");
+            echo("--------------------------------------------------------------");
             return;
         }
 
@@ -94,7 +100,9 @@ public class AgentsClient {
             sb.append("\t").append(agent.publicAddress).append("\n");
         }
 
+        echo("--------------------------------------------------------------");
         log.warning(sb.toString());
+        echo("--------------------------------------------------------------");
     }
 
     public int getAgentCount() {

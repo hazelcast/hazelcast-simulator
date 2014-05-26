@@ -177,7 +177,7 @@ public class CoordinatorCli {
         workerJvmSettings.mixedWorkerCount = options.valueOf(mixedWorkerCountSpec);
         workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
         workerJvmSettings.hzConfig = loadHzConfig();
-        workerJvmSettings.clientHzConfig = loadClientConfig();
+        workerJvmSettings.clientHzConfig = loadClientHzConfig();
         workerJvmSettings.refreshJvm = options.valueOf(workerRefreshSpec);
 //        workerJvmSettings.javaVendor = options.valueOf(workerJavaVendorSpec);
 //        workerJvmSettings.javaVersion = options.valueOf(workerJavaVersionSpec);
@@ -188,9 +188,9 @@ public class CoordinatorCli {
         coordinator.workerJvmSettings = workerJvmSettings;
     }
 
-    private String loadClientConfig() {
+    private String loadClientHzConfig() {
         File file = getFile(clientHzFileSpec, options, "Worker Client Hazelcast config file");
-        log.finest("Loading Hazelcast client configuration: " + file.getAbsolutePath());
+        log.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
