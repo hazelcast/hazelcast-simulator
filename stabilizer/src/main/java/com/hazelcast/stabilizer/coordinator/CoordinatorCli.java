@@ -190,17 +190,13 @@ public class CoordinatorCli {
 
     private String loadClientConfig() {
         File file = getFile(clientHzFileSpec, options, "Worker Client Hazelcast config file");
-        if (log.isFinestEnabled()) {
-            log.finest("Loading Hazelcast client configuration from: " + file.getAbsolutePath());
-        }
+        log.finest("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
     private String loadHzConfig() {
         File file = getFile(hzFileSpec, options, "Worker Hazelcast config file");
-        if (log.isFinestEnabled()) {
-            log.finest("Loading Hazelcast configuration from: " + file.getAbsolutePath());
-        }
+        log.info("Loading Hazelcast configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
@@ -228,6 +224,7 @@ public class CoordinatorCli {
         }
 
         File testSuiteFile = new File(testsuiteFileName);
+        log.info("Loading testsuite file: "+testSuiteFile.getAbsolutePath());
         if (!testSuiteFile.exists()) {
             Utils.exitWithError(log, format("Can't find testsuite file [%s]", testSuiteFile));
         }

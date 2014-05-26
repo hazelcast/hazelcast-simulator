@@ -315,7 +315,7 @@ public class Coordinator {
         CoordinatorCli cli = new CoordinatorCli(coordinator);
         cli.init(args);
 
-        log.info(format("Using agents file: %s", coordinator.agentsFile.getAbsolutePath()));
+        log.info(format("Loading agents file: %s", coordinator.agentsFile.getAbsolutePath()));
 
         try {
             coordinator.run();

@@ -35,7 +35,9 @@ public class TestCaseRunner {
     }
 
     public boolean run() throws Exception {
+        echo("--------------------------------------------------------------");
         echo(format("Running Test : %s\n%s", testCase.getId(), testCase));
+        echo("--------------------------------------------------------------");
 
         int oldFailureCount = coordinator.failureList.size();
         try {
