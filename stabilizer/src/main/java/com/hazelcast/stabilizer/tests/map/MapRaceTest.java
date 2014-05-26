@@ -67,7 +67,7 @@ public class MapRaceTest {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
-     }
+    }
 
     @Verify
     public void verify() throws Exception {
@@ -102,7 +102,7 @@ public class MapRaceTest {
 
         @Override
         public void run() {
-             for (int k = 0; k < keyCount; k++) {
+            for (int k = 0; k < keyCount; k++) {
                 result.put(k, 0L);
             }
 

@@ -2,7 +2,7 @@
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
 <log4j:configuration>
 
-     <appender name="file" class="org.apache.log4j.FileAppender">
+    <appender name="file" class="org.apache.log4j.FileAppender">
         <param name="File" value="worker.log"/>
         <param name="Threshold" value="INFO"/>
         <layout class="org.apache.log4j.PatternLayout">

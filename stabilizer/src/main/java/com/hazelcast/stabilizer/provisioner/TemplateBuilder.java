@@ -66,7 +66,7 @@ public class TemplateBuilder {
             return compute.templateBuilder()
                     .from(spec)
                     .build();
-        }catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             log.finest(e);
             Utils.exitWithError(log, e.getMessage());
             return null;

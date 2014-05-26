@@ -86,7 +86,7 @@ public class ProvisionerCli {
             provisioner.scale(size);
         } else if (options.has(listAgentsSpec)) {
             provisioner.listAgents();
-        }else{
+        } else {
             parser.printHelpOn(System.out);
         }
     }

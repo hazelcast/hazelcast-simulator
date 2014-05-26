@@ -114,7 +114,7 @@ public class WorkerJvmManager {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
         for (WorkerJvm workerJvm : workers) {
-            if(workerJvm.oomeDetected){
+            if (workerJvm.oomeDetected) {
                 continue;
             }
 

@@ -40,7 +40,7 @@ public class TestUtilsTest {
         SomeObject someObject = new SomeObject();
 
         bindProperty(someObject, "intField", "10");
-        assertEquals(someObject.intField,10);
+        assertEquals(someObject.intField, 10);
     }
 
     @Test

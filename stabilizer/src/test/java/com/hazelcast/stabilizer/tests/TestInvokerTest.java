@@ -18,7 +18,7 @@ public class TestInvokerTest {
     @Test
     public void testRun() throws Throwable {
         DummyTest dummyTest = new DummyTest();
-        TestInvoker invoker = new TestInvoker(dummyTest,new DummyTestContext());
+        TestInvoker invoker = new TestInvoker(dummyTest, new DummyTestContext());
         invoker.run();
 
         assertTrue(dummyTest.runCalled);
@@ -27,7 +27,7 @@ public class TestInvokerTest {
     @Test(expected = IllegalTestException.class)
     public void runMissing() throws Throwable {
         RunMissingTest test = new RunMissingTest();
-        new TestInvoker(test,new DummyTestContext());
+        new TestInvoker(test, new DummyTestContext());
     }
 
     static class RunMissingTest {
@@ -43,7 +43,7 @@ public class TestInvokerTest {
     public void testSetup() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
         DummyTest test = new DummyTest();
-        TestInvoker invoker = new TestInvoker(test,testContext);
+        TestInvoker invoker = new TestInvoker(test, testContext);
         invoker.run();
         invoker.setup();
 
@@ -52,14 +52,13 @@ public class TestInvokerTest {
     }
 
 
-
     // =================== local verify ========================
 
     @Test
     public void localVerify() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
         LocalVerifyTest test = new LocalVerifyTest();
-        TestInvoker invoker = new TestInvoker(test,testContext);
+        TestInvoker invoker = new TestInvoker(test, testContext);
         invoker.localVerify();
 
         assertTrue(test.localVerifyCalled);
@@ -70,15 +69,16 @@ public class TestInvokerTest {
 
         @Verify(global = false)
         void verify() {
-            localVerifyCalled=true;
+            localVerifyCalled = true;
         }
 
         @Setup
-        void setup(TestContext testContext){
+        void setup(TestContext testContext) {
 
         }
+
         @Run
-        void run(){
+        void run() {
 
         }
     }
@@ -89,7 +89,7 @@ public class TestInvokerTest {
     public void globalVerify() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
         GlobalVerifyTest test = new GlobalVerifyTest();
-        TestInvoker invoker = new TestInvoker(test,testContext);
+        TestInvoker invoker = new TestInvoker(test, testContext);
         invoker.globalVerify();
 
         assertTrue(test.globalVerifyCalled);
@@ -100,15 +100,16 @@ public class TestInvokerTest {
 
         @Verify(global = true)
         void verify() {
-            globalVerifyCalled=true;
+            globalVerifyCalled = true;
         }
 
         @Setup
-        void setup(TestContext testContext){
+        void setup(TestContext testContext) {
 
         }
+
         @Run
-        void run(){
+        void run() {
 
         }
     }
@@ -119,7 +120,7 @@ public class TestInvokerTest {
     public void performance() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
         PerformanceTest test = new PerformanceTest();
-        TestInvoker invoker = new TestInvoker(test,testContext);
+        TestInvoker invoker = new TestInvoker(test, testContext);
         long count = invoker.getOperationCount();
 
         assertEquals(20, count);
@@ -128,12 +129,12 @@ public class TestInvokerTest {
     static class PerformanceTest {
 
         @Performance
-        public long getCount(){
+        public long getCount() {
             return 20;
         }
 
         @Run
-        void run(){
+        void run() {
 
         }
     }

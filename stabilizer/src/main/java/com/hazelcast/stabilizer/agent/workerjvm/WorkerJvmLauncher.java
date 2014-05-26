@@ -3,7 +3,6 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
-import com.hazelcast.stabilizer.agent.JavaInstallation;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
 import com.hazelcast.stabilizer.worker.Worker;
 import org.apache.log4j.Logger;
@@ -98,7 +97,7 @@ public class WorkerJvmLauncher {
     }
 
     private String getJavaHome(String javaVendor, String javaVersion) {
-         String javaHome = System.getProperty("java.home");
+        String javaHome = System.getProperty("java.home");
         if (javaHomePrinted.compareAndSet(false, true)) {
             log.info("java.home=" + javaHome);
         }
@@ -162,7 +161,7 @@ public class WorkerJvmLauncher {
                     .replace("${STABILIZER_HOME}", STABILIZER_HOME.getAbsolutePath())
                     .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());
             args.add(agentSetting);
-        }else if("hprof".equals(settings.profiler)){
+        } else if ("hprof".equals(settings.profiler)) {
             args.add(settings.hprofSettings);
         }
 
@@ -199,7 +198,7 @@ public class WorkerJvmLauncher {
 
                 if (hasExited(jvm)) {
                     String message = format("Startup failure: worker on host %s failed during startup, " +
-                                    "check '%s/out.log' for more info",
+                            "check '%s/out.log' for more info",
                             getHostAddress(), jvm.workerHome
                     );
                     throw new SpawnWorkerFailedException(message);
