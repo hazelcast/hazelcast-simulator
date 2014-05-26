@@ -1,6 +1,7 @@
 package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.TestSuite;
@@ -22,7 +23,7 @@ import static java.lang.String.format;
 
 public class CoordinatorCli {
 
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(CoordinatorCli.class);
+    private final static ILogger log = Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -30,18 +31,18 @@ public class CoordinatorCli {
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");
 
-    private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
-            "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
-                    "If nothing is specified, the agent is free to pick a vendor."
-    )
-            .withRequiredArg().ofType(String.class).defaultsTo("");
-
-    private final OptionSpec<String> workerJavaVersionSpec = parser.accepts("workerJavaVersion",
-            "The Java version (e.g. 1.6) of the JVM used by the worker). " +
-                    "If nothing is specified, the agent is free to pick a version."
-    )
-            .withRequiredArg().ofType(String.class).defaultsTo("");
-
+    //    private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
+//            "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
+//                    "If nothing is specified, the agent is free to pick a vendor."
+//    )
+//            .withRequiredArg().ofType(String.class).defaultsTo("");
+//
+//    private final OptionSpec<String> workerJavaVersionSpec = parser.accepts("workerJavaVersion",
+//            "The Java version (e.g. 1.6) of the JVM used by the worker). " +
+//                    "If nothing is specified, the agent is free to pick a version."
+//    )
+//            .withRequiredArg().ofType(String.class).defaultsTo("");
+//
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
             "Number of Cluster member Worker JVM's. If no value is specified and no mixed members are specified, " +
                     "then the number of cluster members will be equal to the number of machines in the agents file"
@@ -62,7 +63,7 @@ public class CoordinatorCli {
                     "Use ';' as separator for multiple entries. Wildcard '*' can also be used."
     ).withRequiredArg().ofType(String.class);
 
-      private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
+    private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
             "Track performance");
 
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
@@ -92,11 +93,17 @@ public class CoordinatorCli {
     ).withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> hzFileSpec = parser.accepts("hzFile",
-            "The Hazelcast xml configuration file for the worker")
+            "The Hazelcast xml configuration file for the worker. If one is not explicitly configured, first" +
+                    "the 'hazelcast.xml' in the working directory is loaded, if that doesn't exist then " +
+                    "STABILIZER_HOME/conf/hazelcast.xml is loaded."
+    )
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultHzFile());
 
     private final OptionSpec<String> clientHzFileSpec = parser.accepts("clientHzFile",
-            "The client Hazelcast xml configuration file for the worker")
+            "The client Hazelcast xml configuration file for the worker. If one is not explicitly configured, first" +
+                    "the 'client-hazelcast.xml' in the working directory is loaded, if that doesn't exist then " +
+                    "STABILIZER_HOME/conf/client-hazelcast.xml is loaded."
+    )
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
 
     private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
@@ -169,16 +176,32 @@ public class CoordinatorCli {
         workerJvmSettings.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
         workerJvmSettings.mixedWorkerCount = options.valueOf(mixedWorkerCountSpec);
         workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
-        workerJvmSettings.hzConfig = fileAsText(getFile(hzFileSpec, options, "Worker Hazelcast config file"));
-        workerJvmSettings.clientHzConfig = fileAsText(getFile(clientHzFileSpec, options, "Worker Client Hazelcast config file"));
+        workerJvmSettings.hzConfig = loadHzConfig();
+        workerJvmSettings.clientHzConfig = loadClientConfig();
         workerJvmSettings.refreshJvm = options.valueOf(workerRefreshSpec);
-        workerJvmSettings.javaVendor = options.valueOf(workerJavaVendorSpec);
-        workerJvmSettings.javaVersion = options.valueOf(workerJavaVersionSpec);
+//        workerJvmSettings.javaVendor = options.valueOf(workerJavaVendorSpec);
+//        workerJvmSettings.javaVersion = options.valueOf(workerJavaVersionSpec);
         workerJvmSettings.profiler = coordinator.props.get("PROFILER", "none");
         workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
-        workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS","");
+        workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS", "");
 
         coordinator.workerJvmSettings = workerJvmSettings;
+    }
+
+    private String loadClientConfig() {
+        File file = getFile(clientHzFileSpec, options, "Worker Client Hazelcast config file");
+        if (log.isFinestEnabled()) {
+            log.finest("Loading Hazelcast client configuration from: " + file.getAbsolutePath());
+        }
+        return fileAsText(file);
+    }
+
+    private String loadHzConfig() {
+        File file = getFile(hzFileSpec, options, "Worker Hazelcast config file");
+        if (log.isFinestEnabled()) {
+            log.finest("Loading Hazelcast configuration from: " + file.getAbsolutePath());
+        }
+        return fileAsText(file);
     }
 
     private File getPropertiesFile() {
@@ -191,13 +214,17 @@ public class CoordinatorCli {
     }
 
     private File getTestSuiteFile() {
-        String testsuiteFileName = newFile(Coordinator.STABILIZER_HOME, "tests", "map.properties").getAbsolutePath();
+        String testsuiteFileName = null;
 
         List<String> testsuiteFiles = options.nonOptionArguments();
-        if (testsuiteFiles.size() == 1) {
+        if (testsuiteFiles.isEmpty()) {
+            testsuiteFileName = new File("test.properties").getAbsolutePath();
+        } else if (testsuiteFiles.size() == 1) {
             testsuiteFileName = testsuiteFiles.get(0);
         } else if (testsuiteFiles.size() > 1) {
             exitWithError(log, "Too many testsuite files specified.");
+            //won't be executed.
+            return null;
         }
 
         File testSuiteFile = new File(testsuiteFileName);

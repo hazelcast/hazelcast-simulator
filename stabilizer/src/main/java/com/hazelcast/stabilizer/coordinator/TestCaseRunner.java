@@ -44,10 +44,10 @@ public class TestCaseRunner {
             agentsClient.executeOnAllWorkers(new InitTestCommand(testCase));
             echo("Completed Test initialization");
 
-            echo("Starting Test local setup");
+            echo("Starting Test setup");
             agentsClient.executeOnAllWorkers(new GenericTestCommand("setup"));
             agentsClient.waitDone();
-            echo("Completed Test local setup");
+            echo("Completed Test setup");
 
             echo("Starting Test local warmup");
             agentsClient.executeOnAllWorkers(new GenericTestCommand("localWarmup"));
@@ -95,7 +95,6 @@ public class TestCaseRunner {
             echo("Starting Test local tear down");
             agentsClient.waitDone();
             agentsClient.executeOnAllWorkers(new GenericTestCommand("localTeardown"));
-
             echo("Completed Test local tear down");
 
             return coordinator.failureList.size() == oldFailureCount;
