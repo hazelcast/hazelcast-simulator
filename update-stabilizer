@@ -1,0 +1,4 @@
+VERSION=0.3-SNAPSHOT
+mvn clean install -DskipTests
+rm -fr ~/hazelcast-stabilizer-${VERSION} 
+unzip -q -d ~ dist/target/hazelcast-stabilizer-${VERSION}-dist.zip 

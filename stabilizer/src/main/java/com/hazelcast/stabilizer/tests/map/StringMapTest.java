@@ -133,10 +133,10 @@ public class StringMapTest {
             long iteration = 0;
             while (!testContext.isStopped()) {
 
-                Object key = newKey();
+                Object key = randomKey();
 
                 if (shouldWrite(iteration)) {
-                    Object value = values[random.nextInt(values.length)];
+                    Object value = randomValue();
                     if (usePut) {
                         map.put(key, value);
                     } else {
@@ -158,7 +158,11 @@ public class StringMapTest {
             }
         }
 
-        private Object newKey() {
+        private Object randomValue() {
+            return values[random.nextInt(values.length)];
+        }
+
+        private Object randomKey() {
             int length = keys.length;
             return keys[random.nextInt(length)];
         }

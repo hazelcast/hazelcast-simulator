@@ -127,6 +127,8 @@ public class Coordinator {
                     bash.execute(syncCommand);
                 }
             }
+
+            log.info(format("Finished copying workerClasspath '%s' to agents", workerClassPath));
         }
 
         //todo: copy the hazelcast jars

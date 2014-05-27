@@ -176,7 +176,7 @@ public class Provisioner {
 
         Template template = new TemplateBuilder(compute, props).build();
 
-        echo("Created machines (can take a few minutes)");
+        echo("Creating machines (can take a few minutes)");
 
         Set<Future> futures = new HashSet<Future>();
 
