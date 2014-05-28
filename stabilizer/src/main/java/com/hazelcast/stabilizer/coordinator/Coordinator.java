@@ -253,6 +253,8 @@ public class Coordinator {
     }
 
     long startWorkers() throws Exception {
+        echo("Starting workers");
+
         long startMs = System.currentTimeMillis();
 
         int agentCount = agentsClient.getAgentCount();
