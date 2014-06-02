@@ -48,7 +48,7 @@ public class WorkerJvmFailureMonitor {
     }
 
     public void publish(Failure failure) {
-        log.fatal("Failure detected: " + failure);
+        log.warn("Failure detected: " + failure);
         failureQueue.add(failure);
     }
 
@@ -80,7 +80,7 @@ public class WorkerJvmFailureMonitor {
     private void detectInactivity(WorkerJvm jvm, List<Failure> failures) {
         long currentMs = System.currentTimeMillis();
 
-        if(jvm.oomeDetected){
+        if (jvm.oomeDetected) {
             return;
         }
 
@@ -114,7 +114,10 @@ public class WorkerJvmFailureMonitor {
         }
 
         for (File exceptionFile : exceptionFiles) {
+
             String cause = fileAsText(exceptionFile);
+
+
             //we rename it so that we don't detect the same exception again.
             exceptionFile.delete();
 
@@ -152,7 +155,7 @@ public class WorkerJvmFailureMonitor {
     }
 
     private void detectUnexpectedExit(WorkerJvm jvm, List<Failure> failures) {
-        if(jvm.oomeDetected){
+        if (jvm.oomeDetected) {
             return;
         }
 

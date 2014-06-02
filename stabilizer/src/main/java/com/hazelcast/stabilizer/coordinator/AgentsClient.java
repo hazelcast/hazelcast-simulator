@@ -12,6 +12,7 @@ import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.CountdownWatch;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
+import com.hazelcast.stabilizer.worker.testcommands.DoneCommand;
 import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
 
 import java.io.File;
@@ -116,6 +117,14 @@ public class AgentsClient {
         return result;
     }
 
+    public List<String> getPublicAddresses() {
+        List<String> result = new LinkedList<String>();
+        for (AgentClient client : agents) {
+            result.add(client.publicAddress);
+        }
+        return result;
+    }
+
     public List<Failure> getFailures() {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
@@ -160,12 +169,37 @@ public class AgentsClient {
         getAllFutures(futures);
     }
 
-    private List<Object> getAllFutures(Collection<Future> futures) {
-        return getAllFutures(futures, TimeUnit.SECONDS.toMillis(10000));
+    public void waitDone() {
+        long startTimeMs = System.currentTimeMillis();
+        for (; ; ) {
+            List<List<Boolean>> result = executeOnAllWorkers(new DoneCommand());
+            boolean complete = true;
+            for (List<Boolean> l : result) {
+                for (Boolean b : l) {
+                    if (!b) {
+                        complete = false;
+                        break;
+                    }
+                }
+            }
+
+            if (complete) {
+                return;
+            }
+
+            long durationMs = System.currentTimeMillis() - startTimeMs;
+            log.info("Waiting for completion: " + Utils.secondsToHuman(durationMs / 1000));
+            Utils.sleepSeconds(5);
+        }
+    }
+
+    private <E> List<E> getAllFutures(Collection<Future> futures) {
+        int value = Integer.parseInt(System.getProperty("worker.testmethod.timeout", "10000"));
+        return getAllFutures(futures, TimeUnit.SECONDS.toMillis(value));
     }
 
     //todo: probably we don't want to throw exceptions to make sure that don't abort when a agent goes down.
-    private List<Object> getAllFutures(Collection<Future> futures, long timeoutMs) {
+    private <E> List<E> getAllFutures(Collection<Future> futures, long timeoutMs) {
         CountdownWatch watch = CountdownWatch.started(timeoutMs);
         List result = new LinkedList();
         for (Future future : futures) {
@@ -205,13 +239,13 @@ public class AgentsClient {
         return result;
     }
 
-    public void initTestSuite(final TestSuite testSuite, final byte[] bytes) {
+    public void initTestSuite(final TestSuite testSuite) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_INIT_TESTSUITE, testSuite, bytes);
+                    agentClient.execute(AgentRemoteService.SERVICE_INIT_TESTSUITE, testSuite);
                     return null;
                 }
             });
@@ -258,7 +292,7 @@ public class AgentsClient {
         getAllFutures(futures);
     }
 
-    public List<? extends Object> executeOnAllWorkers(final TestCommand testCommand) {
+    public <E> List<E> executeOnAllWorkers(final TestCommand testCommand) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
@@ -277,6 +311,7 @@ public class AgentsClient {
 
         return getAllFutures(futures);
     }
+
 
     public void executeOnSingleWorker(final TestCommand testCommand) {
         if (agents.isEmpty()) {

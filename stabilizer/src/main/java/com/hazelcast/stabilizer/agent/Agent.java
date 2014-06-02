@@ -17,7 +17,6 @@ package com.hazelcast.stabilizer.agent;
 
 
 import com.hazelcast.stabilizer.TestCase;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
@@ -40,14 +39,11 @@ public class Agent {
 
     public final static File STABILIZER_HOME = getStablizerHome();
 
-    //cli props
-    public File javaInstallationsFile;
 
     //internal state
     private volatile TestSuite testSuite;
     private volatile TestCase testCase;
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
-    private final JavaInstallationsRepository repository = new JavaInstallationsRepository();
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
 
     public void echo(String msg) {
@@ -83,33 +79,21 @@ public class Agent {
         this.testCase = testCase;
     }
 
-    public JavaInstallationsRepository getJavaInstallationRepository() {
-        return repository;
-    }
-
-    public void initTestSuite(TestSuite testSuite, byte[] content) throws IOException {
+    public void initTestSuite(TestSuite testSuite) throws IOException {
         this.testSuite = testSuite;
         this.testCase = null;
 
         File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
         ensureExistingDirectory(testSuiteDir);
 
-        System.out.println("InitTestSuite:" + testSuite.id);
-
         File libDir = new File(testSuiteDir, "lib");
         ensureExistingDirectory(libDir);
-
-        if (content != null) {
-            Utils.unzip(content, libDir);
-        }
     }
 
     public void start() throws Exception {
         ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
 
         startRestServer();
-
-        repository.load(javaInstallationsFile);
 
         workerJvmFailureMonitor.start();
 
@@ -141,5 +125,4 @@ public class Agent {
         logger.fatal(msg);
         System.exit(1);
     }
-
 }

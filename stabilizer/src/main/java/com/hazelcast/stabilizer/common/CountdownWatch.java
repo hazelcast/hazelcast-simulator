@@ -5,7 +5,7 @@ public class CountdownWatch {
 
     private CountdownWatch(long delay) {
         if (delay < 0) {
-            throw new IllegalArgumentException("Delay cannot be negative, passed "+delay+".");
+            throw new IllegalArgumentException("Delay cannot be negative, passed " + delay + ".");
         }
 
         long now = System.currentTimeMillis();

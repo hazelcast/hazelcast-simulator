@@ -20,20 +20,22 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.AbstractTest;
-import com.hazelcast.stabilizer.tests.TestFailureException;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.tests.annotations.Run;
+import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.io.Serializable;
 import java.util.Random;
 
-public class ProducerConsumerTest extends AbstractTest {
+import static org.junit.Assert.assertEquals;
+
+public class ProducerConsumerTest {
 
     private final static ILogger log = Logger.getLogger(ProducerConsumerTest.class);
-
-    private IAtomicLong produced;
-    private IQueue workQueue;
-    private IAtomicLong consumed;
 
     //props
     public int producerCount = 4;
@@ -41,39 +43,45 @@ public class ProducerConsumerTest extends AbstractTest {
     public int maxIntervalMillis = 1000;
     public String basename = "queue";
 
-    @Override
-    public void localSetup() throws Exception {
-        HazelcastInstance targetInstance = getTargetInstance();
+    private IAtomicLong produced;
+    private IQueue workQueue;
+    private IAtomicLong consumed;
+    private TestContext testContext;
 
-        produced = targetInstance.getAtomicLong(basename + "-" + getTestId() + ":Produced");
-        consumed = targetInstance.getAtomicLong(basename + "-" + getTestId() + ":Consumed");
-        workQueue = targetInstance.getQueue(basename + "-" + getTestId() + ":WorkQueue");
+    @Setup
+    public void setup(TestContext testContext) throws Exception {
+        this.testContext = testContext;
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
+
+        produced = targetInstance.getAtomicLong(basename + "-" + testContext.getTestId() + ":Produced");
+        consumed = targetInstance.getAtomicLong(basename + "-" + testContext.getTestId() + ":Consumed");
+        workQueue = targetInstance.getQueue(basename + "-" + testContext.getTestId() + ":WorkQueue");
     }
 
-    @Override
-    public void createTestThreads() {
-        for (int k = 0; k < producerCount; k++) {
-            spawn(new Producer(k));
-        }
-        for (int k = 0; k < consumerCount; k++) {
-            spawn(new Consumer(k));
-        }
-    }
-
-    @Override
-    public void globalVerify() {
-        long total = workQueue.size() + consumed.get();
-        long produced = this.produced.get();
-        if (produced != total) {
-            throw new TestFailureException("Produced count: " + produced + " but total: " + total);
-        }
-    }
-
-    @Override
-    public void globalTearDown() throws Exception {
+    @Teardown
+    public void teardown() throws Exception {
         produced.destroy();
         workQueue.destroy();
         consumed.destroy();
+    }
+
+    @Run
+    public void run() {
+        ThreadSpawner spawner = new ThreadSpawner();
+        for (int k = 0; k < producerCount; k++) {
+            spawner.spawn("ProducerThread", new Producer(k));
+        }
+        for (int k = 0; k < consumerCount; k++) {
+            spawner.spawn("ConsumerThread", new Consumer(k));
+        }
+        spawner.awaitCompletion();
+    }
+
+    @Verify
+    public void verify() {
+        long expected = workQueue.size() + consumed.get();
+        long actual = produced.get();
+        assertEquals(expected, actual);
     }
 
     private class Producer implements Runnable {
@@ -88,7 +96,7 @@ public class ProducerConsumerTest extends AbstractTest {
         @Override
         public void run() {
             long iter = 0;
-            while (!stopped()) {
+            while (!testContext.isStopped()) {
                 try {
                     Thread.sleep(rand.nextInt(maxIntervalMillis) * consumerCount);
                     produced.incrementAndGet();
@@ -116,7 +124,7 @@ public class ProducerConsumerTest extends AbstractTest {
         @Override
         public void run() {
             long iter = 0;
-            while (!stopped()) {
+            while (!testContext.isStopped()) {
                 try {
                     workQueue.take();
                     consumed.incrementAndGet();
@@ -141,9 +149,9 @@ public class ProducerConsumerTest extends AbstractTest {
     static class Work implements Serializable {
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         ProducerConsumerTest test = new ProducerConsumerTest();
-        new TestRunner().run(test, 180);
+        new TestRunner(test).run();
         System.exit(0);
     }
 }
