@@ -78,6 +78,10 @@ public class CoordinatorCli {
             "It the testsuite should fail immediately when a Test from a testsuite fails instead of continuing ")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
+    private final OptionSpec<Boolean> parallelSpec = parser.accepts("parallel",
+            "It tests should be run in parallel.")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
             "Worker VM options (quotes can be used)")
             .withRequiredArg().ofType(String.class).defaultsTo("");
@@ -164,6 +168,7 @@ public class CoordinatorCli {
         coordinator.monitorPerformance = options.has(monitorPerformanceSpec);
         coordinator.testStopTimeoutMs = options.valueOf(testStopTimeoutMsSpec);
         coordinator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
+        coordinator.parallel = options.has(parallelSpec);
 
         TestSuite testSuite = loadTestSuite(getTestSuiteFile());
         coordinator.testSuite = testSuite;

@@ -64,6 +64,7 @@ public class Coordinator {
     public volatile double performance;
     public volatile long operationCount;
     private Bash bash;
+    public boolean parallel;
 
     private void run() throws Exception {
         bash = new Bash(props);
