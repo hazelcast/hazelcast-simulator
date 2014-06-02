@@ -25,6 +25,7 @@ public class Failure implements Serializable {
     private static final long serialVersionUID = 1;
 
     public String message;
+    public String type;
     public String agentAddress;
     public String workerAddress;
     public String workerId;
@@ -37,6 +38,7 @@ public class Failure implements Serializable {
         StringBuffer sb = new StringBuffer();
         sb.append("Failure[\n");
         sb.append("   message='").append(message).append("'\n");
+        sb.append("   type='").append(type).append("'\n");
         sb.append("   agentAddress=").append(agentAddress).append("\n");
         sb.append("   time=").append(time).append("\n");
         sb.append("   workerAddress=").append(workerAddress).append("\n");

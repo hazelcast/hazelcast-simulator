@@ -39,36 +39,36 @@
     </appender>
 
     <root>
-        <level value="info" />
+        <level value="info"/>
     </root>
 
     <logger name="org.jclouds">
-        <level value="DEBUG" />
-        <appender-ref ref="FILE" />
+        <level value="DEBUG"/>
+        <appender-ref ref="FILE"/>
     </logger>
 
     <logger name="jclouds.compute">
-        <level value="DEBUG" />
-        <appender-ref ref="COMPUTEFILE" />
+        <level value="DEBUG"/>
+        <appender-ref ref="COMPUTEFILE"/>
     </logger>
 
     <logger name="jclouds.wire">
-        <level value="DEBUG" />
-        <appender-ref ref="WIREFILE" />
+        <level value="DEBUG"/>
+        <appender-ref ref="WIREFILE"/>
     </logger>
 
     <logger name="jclouds.headers">
-        <level value="DEBUG" />
-        <appender-ref ref="WIREFILE" />
+        <level value="DEBUG"/>
+        <appender-ref ref="WIREFILE"/>
     </logger>
 
     <logger name="jclouds.ssh">
-        <level value="DEBUG" />
-        <appender-ref ref="SSHFILE" />
+        <level value="DEBUG"/>
+        <appender-ref ref="SSHFILE"/>
     </logger>
 
     <logger name="net.schmizz">
-        <level value="DEBUG" />
-        <appender-ref ref="SSHFILE" />
+        <level value="DEBUG"/>
+        <appender-ref ref="SSHFILE"/>
     </logger>
 </configuration>

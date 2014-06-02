@@ -38,7 +38,7 @@
                                 <descriptor>src/main/config/build-distribution-archive.xml</descriptor>
                             </descriptors>
                             <finalName>hazelcast-stabilizer-${project.version}</finalName>
-                         </configuration>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

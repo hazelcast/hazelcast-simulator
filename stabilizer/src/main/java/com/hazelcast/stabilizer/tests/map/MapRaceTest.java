@@ -4,11 +4,15 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.performance.OperationsPerSecond;
-import com.hazelcast.stabilizer.performance.Performance;
-import com.hazelcast.stabilizer.tests.AbstractTest;
-import com.hazelcast.stabilizer.tests.TestFailureException;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.tests.annotations.Performance;
+import com.hazelcast.stabilizer.tests.annotations.Run;
+import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,13 +20,11 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MapRaceTest extends AbstractTest {
+import static org.junit.Assert.assertEquals;
+
+public class MapRaceTest {
 
     private final static ILogger log = Logger.getLogger(MapRaceTest.class);
-
-    private IMap<Integer, Long> map;
-    private final AtomicLong operations = new AtomicLong();
-    private IMap<String, Map<Integer, Long>> resultsPerWorker;
 
     //props
     public int threadCount = 10;
@@ -31,38 +33,44 @@ public class MapRaceTest extends AbstractTest {
     public int performanceUpdateFrequency = 10000;
     public String basename = "map";
 
-    @Override
-    public void localSetup() throws Exception {
-        HazelcastInstance targetInstance = getTargetInstance();
+    private IMap<Integer, Long> map;
+    private final AtomicLong operations = new AtomicLong();
+    private IMap<String, Map<Integer, Long>> resultsPerWorker;
+    private TestContext testContext;
 
-        map = targetInstance.getMap(basename + "-" + getTestId());
-        resultsPerWorker = targetInstance.getMap("ResultMap" + getTestId());
+    @Setup
+    public void setup(TestContext testContext) throws Exception {
+        this.testContext = testContext;
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
+
+        map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+        resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
     }
 
-    @Override
-    public void createTestThreads() {
-        for (int k = 0; k < threadCount; k++) {
-            spawn(new Worker());
-        }
+    @Teardown
+    public void teardown() throws Exception {
+        map.destroy();
+        resultsPerWorker.destroy();
     }
 
-    @Override
-    public void globalSetup() throws Exception {
-        super.globalSetup();
-
+    @Warmup(global = true)
+    public void warmup() throws Exception {
         for (int k = 0; k < keyCount; k++) {
             map.put(k, 0l);
         }
     }
 
-    @Override
-    public void globalTearDown() throws Exception {
-        map.destroy();
-        resultsPerWorker.destroy();
+    @Run
+    public void run() {
+        ThreadSpawner spawner = new ThreadSpawner();
+        for (int k = 0; k < threadCount; k++) {
+            spawner.spawn(new Worker());
+        }
+        spawner.awaitCompletion();
     }
 
-    @Override
-    public void globalVerify() throws Exception {
+    @Verify
+    public void verify() throws Exception {
         long[] amount = new long[keyCount];
 
         for (Map<Integer, Long> map : resultsPerWorker.values()) {
@@ -80,12 +88,10 @@ public class MapRaceTest extends AbstractTest {
             }
         }
 
-        if (failures > 0) {
-            throw new TestFailureException("Failures found:" + failures);
-        }
+        assertEquals("There should not be any data races", 0, failures);
     }
 
-    @Override
+    @Performance
     public long getOperationCount() {
         return operations.get();
     }
@@ -101,7 +107,8 @@ public class MapRaceTest extends AbstractTest {
             }
 
             long iteration = 0;
-            while (!stopped()) {
+
+            while (!testContext.isStopped()) {
                 Integer key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
 
@@ -130,8 +137,8 @@ public class MapRaceTest extends AbstractTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         MapRaceTest test = new MapRaceTest();
-        new TestRunner().run(test, 20);
+        new TestRunner(test).run();
     }
 }

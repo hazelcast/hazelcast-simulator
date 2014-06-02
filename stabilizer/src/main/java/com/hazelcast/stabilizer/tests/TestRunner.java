@@ -15,110 +15,179 @@
  */
 package com.hazelcast.stabilizer.tests;
 
+import com.hazelcast.config.Config;
+import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.tests.utils.TestInvoker;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
-public class TestRunner {
+/**
+ * A utility class to run a test locally. This is purely meant for developing purposes; when you are writing a test
+ * you want to see quickly if it works at all without needing to deploy it through an agent on a worker.
+ *
+ * @param <E>
+ */
+public class TestRunner<E> {
 
     private final static ILogger log = Logger.getLogger(TestRunner.class);
+    private final E test;
+    private final TestInvoker testInvoker;
 
     private HazelcastInstance hazelcastInstance;
-    private long stopTimeoutMs = TimeUnit.SECONDS.toMillis(60);
+    private int durationSeconds = 60;
+    private final TestContextImpl testContext = new TestContextImpl();
+
+    public TestRunner(E test) {
+        if (test == null) {
+            throw new NullPointerException("test can't be null");
+        }
+        this.test = test;
+        this.testInvoker = new TestInvoker(test, testContext);
+    }
+
+    public E getTest() {
+        return test;
+    }
 
     public HazelcastInstance getHazelcastInstance() {
         return hazelcastInstance;
     }
 
-    public void setHazelcastInstance(HazelcastInstance hz) {
+    public TestRunner withHazelcastInstance(HazelcastInstance hz) {
+        if (hz == null) {
+            throw new NullPointerException("hz can't be null");
+        }
         this.hazelcastInstance = hz;
+        return this;
     }
 
-    public static ILogger getLog() {
-        return log;
-    }
-
-    public long getStopTimeoutMs() {
-        return stopTimeoutMs;
-    }
-
-    public void setStopTimeoutMs(long stopTimeoutMs) {
-        this.stopTimeoutMs = stopTimeoutMs;
-    }
-
-    public void sleepSeconds(Test test, int seconds) {
-        int period = 30;
-        int big = seconds / period;
-        int small = seconds % period;
-
-        for (int k = 1; k <= big; k++) {
-            Utils.sleepSeconds(period);
-            final int elapsed = period * k;
-            final float percentage = (100f * elapsed) / seconds;
-            String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, seconds, percentage);
-            log.info(msg);
-            //log.info("Performance"+test.getOperationCount());
+    public TestRunner withHazelcastConfig(File file) throws IOException {
+        if (file == null) {
+            throw new NullPointerException("file can't be null");
         }
 
-        Utils.sleepSeconds(small);
+        if (!file.exists()) {
+            throw new IllegalArgumentException(format("file [%s] doesn't exist", file.getAbsolutePath()));
+        }
+
+        FileInputStream fis = new FileInputStream(file);
+        try {
+            Config config = new XmlConfigBuilder(fis).build();
+            hazelcastInstance = Hazelcast.newHazelcastInstance(config);
+            return this;
+        } finally {
+            Utils.closeQuietly(fis);
+        }
     }
 
-    public void run(Test test, int durationSec) throws Exception {
+    public TestRunner withDuration(int durationSeconds) {
+        if (durationSeconds < 0) {
+            throw new IllegalArgumentException("Duration can't be smaller than 0");
+        }
+        this.durationSeconds = durationSeconds;
+        return this;
+    }
+
+    public long getDurationSeconds() {
+        return durationSeconds;
+    }
+
+    public void run() throws Throwable {
         if (hazelcastInstance == null) {
             hazelcastInstance = Hazelcast.newHazelcastInstance();
         }
 
-        TestDependencies dependencies = new TestDependencies();
-        dependencies.clientInstance = null;
-        dependencies.serverInstance = hazelcastInstance;
-        dependencies.testId = UUID.randomUUID().toString();
+        log.info("Starting setup");
+        testInvoker.setup();
+        log.info("Finished setup");
 
-        test.init(dependencies);
+        log.info("Starting local warmup");
+        testInvoker.localWarmup();
+        log.info("Finished local warmup");
 
-        log.info("Starting localSetup");
-        test.localSetup();
-        log.info("Finished localSetup");
+        log.info("Starting global warmup");
+        testInvoker.globalWarmup();
+        log.info("Finished global warmup");
 
-        log.info("Starting globalSetup");
-        test.globalSetup();
-        log.info("Finished globalSetup");
-
-        log.info("Starting start");
-        test.start(false);
-        log.info("Finished start");
-
-        sleepSeconds(test, durationSec);
-
-        log.info("Starting stop");
-        test.stop(stopTimeoutMs);
-        log.info("Finished stop");
+        log.info("Starting run");
+        testContext.stopped = false;
+        new StopThread().start();
+        testInvoker.run();
+        log.info("Finshed run");
 
         //log.info(test.getOperationCount().toHumanString());
 
         log.info("Starting globalVerify");
-        test.globalVerify();
+        testInvoker.globalVerify();
         log.info("Finished globalVerify");
 
         log.info("Starting localVerify");
-        test.localVerify();
+        testInvoker.localVerify();
         log.info("Finished localVerify");
 
         log.info("Starting globalTearDown");
-        test.globalTearDown();
+        testInvoker.globalTeardown();
         log.info("Finished globalTearDown");
 
-        log.info("Starting localTearDown");
-        test.localTearDown();
-        log.info("Finished localTearDown");
+        log.info("Starting local teardown");
+        testInvoker.localTeardown();
+        log.info("Finished local teardown");
 
-        hazelcastInstance.getLifecycleService().shutdown();
+        hazelcastInstance.shutdown();
         log.info("Finished");
+    }
+
+    private class StopThread extends Thread {
+
+        @Override
+        public void run() {
+            int period = 5;
+            int big = durationSeconds / period;
+            int small = durationSeconds % period;
+
+            for (int k = 1; k <= big; k++) {
+                Utils.sleepSeconds(period);
+                final int elapsed = period * k;
+                final float percentage = (100f * elapsed) / durationSeconds;
+                String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, durationSeconds, percentage);
+                log.info(msg);
+                //log.info("Performance"+test.getOperationCount());
+            }
+
+
+            Utils.sleepSeconds(small);
+            log.info("Notified test to stop");
+            testContext.stopped = true;
+        }
+    }
+
+    private class TestContextImpl implements TestContext {
+        final String testId = UUID.randomUUID().toString();
+        volatile boolean stopped;
+
+        @Override
+        public HazelcastInstance getTargetInstance() {
+            return hazelcastInstance;
+        }
+
+        @Override
+        public String getTestId() {
+            return testId;
+        }
+
+        @Override
+        public boolean isStopped() {
+            return stopped;
+        }
     }
 }

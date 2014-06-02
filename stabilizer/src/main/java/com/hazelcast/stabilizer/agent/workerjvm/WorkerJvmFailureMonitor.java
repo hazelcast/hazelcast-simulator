@@ -87,6 +87,7 @@ public class WorkerJvmFailureMonitor {
         if (currentMs - LAST_SEEN_TIMEOUT_MS > jvm.lastSeen) {
             Failure failure = new Failure();
             failure.message = "Worker has not contacted agent for a too long period.";
+            failure.type = "Worker timeout";
             failure.agentAddress = getHostAddress();
             failure.workerAddress = jvm.memberAddress;
             failure.workerId = jvm.id;
@@ -119,6 +120,7 @@ public class WorkerJvmFailureMonitor {
 
             Failure failure = new Failure();
             failure.message = "Worked ran into an unhandled exception";
+            failure.type = "Worker exception";
             failure.agentAddress = getHostAddress();
             failure.workerAddress = workerJvm.memberAddress;
             failure.workerId = workerJvm.id;
@@ -141,6 +143,7 @@ public class WorkerJvmFailureMonitor {
 
         Failure failure = new Failure();
         failure.message = "Worker ran into an Out Of Memory Error";
+        failure.type = "Worker oome";
         failure.agentAddress = getHostAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
@@ -170,6 +173,7 @@ public class WorkerJvmFailureMonitor {
 
         Failure failure = new Failure();
         failure.message = "Worker terminated with exit code not 0, but  " + exitCode;
+        failure.type = "Worker exit";
         failure.agentAddress = getHostAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;

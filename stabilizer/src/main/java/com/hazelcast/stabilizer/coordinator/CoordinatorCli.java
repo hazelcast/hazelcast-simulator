@@ -1,6 +1,7 @@
 package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.tests.TestSuite;
@@ -16,15 +17,13 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getFile;
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
+import static com.hazelcast.stabilizer.Utils.newFile;
 import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
 import static java.lang.String.format;
 
 public class CoordinatorCli {
 
-    private final static File STABILIZER_HOME = getStablizerHome();
-
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(CoordinatorCli.class);
+    private final static ILogger log = Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -32,18 +31,18 @@ public class CoordinatorCli {
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");
 
-    private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
-            "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
-                    "If nothing is specified, the agent is free to pick a vendor."
-    )
-            .withRequiredArg().ofType(String.class).defaultsTo("");
-
-    private final OptionSpec<String> workerJavaVersionSpec = parser.accepts("workerJavaVersion",
-            "The Java version (e.g. 1.6) of the JVM used by the worker). " +
-                    "If nothing is specified, the agent is free to pick a version."
-    )
-            .withRequiredArg().ofType(String.class).defaultsTo("");
-
+    //    private final OptionSpec<String> workerJavaVendorSpec = parser.accepts("workerJavaVendor",
+//            "The Java vendor (e.g. openjdk or sun) of the JVM used by the worker). " +
+//                    "If nothing is specified, the agent is free to pick a vendor."
+//    )
+//            .withRequiredArg().ofType(String.class).defaultsTo("");
+//
+//    private final OptionSpec<String> workerJavaVersionSpec = parser.accepts("workerJavaVersion",
+//            "The Java version (e.g. 1.6) of the JVM used by the worker). " +
+//                    "If nothing is specified, the agent is free to pick a version."
+//    )
+//            .withRequiredArg().ofType(String.class).defaultsTo("");
+//
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
             "Number of Cluster member Worker JVM's. If no value is specified and no mixed members are specified, " +
                     "then the number of cluster members will be equal to the number of machines in the agents file"
@@ -64,11 +63,7 @@ public class CoordinatorCli {
                     "Use ';' as separator for multiple entries. Wildcard '*' can also be used."
     ).withRequiredArg().ofType(String.class);
 
-    private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
-            "The startup timeout in seconds for a worker")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(60);
-
-    private final OptionSpec  monitorPerformanceSpec = parser.accepts("monitorPerformance",
+    private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
             "Track performance");
 
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
@@ -93,18 +88,27 @@ public class CoordinatorCli {
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
             "The file containing the stabilizer properties. If no file is explicitly configured, first the " +
-                    "working directory is checked for a file 'stabilizer.properties'. If that doesn't exist, then" +
-                    "the STABILIZER_HOME/conf/stabilizer.properties is loaded."
-    )
-            .withRequiredArg().ofType(String.class);
+                    "working directory is checked for a file 'stabilizer.properties'. All missing properties" +
+                    "are always loaded from STABILIZER_HOME/conf/stabilizer.properties"
+    ).withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> hzFileSpec = parser.accepts("hzFile",
-            "The Hazelcast xml configuration file for the worker")
+            "The Hazelcast xml configuration file for the worker. If one is not explicitly configured, first" +
+                    "the 'hazelcast.xml' in the working directory is loaded, if that doesn't exist then " +
+                    "STABILIZER_HOME/conf/hazelcast.xml is loaded."
+    )
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultHzFile());
 
     private final OptionSpec<String> clientHzFileSpec = parser.accepts("clientHzFile",
-            "The client Hazelcast xml configuration file for the worker")
+            "The client Hazelcast xml configuration file for the worker. If one is not explicitly configured, first" +
+                    "the 'client-hazelcast.xml' in the working directory is loaded, if that doesn't exist then " +
+                    "STABILIZER_HOME/conf/client-hazelcast.xml is loaded."
+    )
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
+
+    private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
+            "The startup timeout in seconds for a worker")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
     private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs",
             "Maximum amount of time waiting for the Test to stop")
@@ -139,7 +143,7 @@ public class CoordinatorCli {
     }
 
     public void init(String[] args) throws Exception {
-         try {
+        try {
             options = parser.parse(args);
         } catch (OptionException e) {
             Utils.exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
@@ -155,7 +159,7 @@ public class CoordinatorCli {
             coordinator.workerClassPath = options.valueOf(workerClassPathSpec);
         }
 
-        coordinator.props.load(getPropertiesFile());
+        coordinator.props.init(getPropertiesFile());
         coordinator.verifyEnabled = options.valueOf(verifyEnabledSpec);
         coordinator.monitorPerformance = options.has(monitorPerformanceSpec);
         coordinator.testStopTimeoutMs = options.valueOf(testStopTimeoutMsSpec);
@@ -172,49 +176,55 @@ public class CoordinatorCli {
         workerJvmSettings.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
         workerJvmSettings.mixedWorkerCount = options.valueOf(mixedWorkerCountSpec);
         workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
-        workerJvmSettings.hzConfig = fileAsText(getFile(hzFileSpec, options, "Worker Hazelcast config file"));
-        workerJvmSettings.clientHzConfig = fileAsText(getFile(clientHzFileSpec, options, "Worker Client Hazelcast config file"));
+        workerJvmSettings.hzConfig = loadHzConfig();
+        workerJvmSettings.clientHzConfig = loadClientHzConfig();
         workerJvmSettings.refreshJvm = options.valueOf(workerRefreshSpec);
-        workerJvmSettings.javaVendor = options.valueOf(workerJavaVendorSpec);
-        workerJvmSettings.javaVersion = options.valueOf(workerJavaVersionSpec);
+//        workerJvmSettings.javaVendor = options.valueOf(workerJavaVendorSpec);
+//        workerJvmSettings.javaVersion = options.valueOf(workerJavaVersionSpec);
         workerJvmSettings.profiler = coordinator.props.get("PROFILER", "none");
         workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
+        workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS", "");
 
         coordinator.workerJvmSettings = workerJvmSettings;
     }
 
-    private File getPropertiesFile() {
-        File file;
-        if (options.has(propertiesFileSpec)) {
-            //a file was explicitly configured
-            file = new File(options.valueOf(propertiesFileSpec));
-        } else {
-            //look in the working directory first
-            file = new File("stabilizer.properties");
-            if (!file.exists()) {
-                //if not exist, then look in the conf directory.
-                file = Utils.toFile(STABILIZER_HOME, "conf", "stabilizer.properties");
-            }
-        }
-
-        if (!file.exists()) {
-            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
-        }
-
-        return file;
+    private String loadClientHzConfig() {
+        File file = getFile(clientHzFileSpec, options, "Worker Client Hazelcast config file");
+        log.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
+        return fileAsText(file);
     }
 
-    private  File getTestSuiteFile() {
-        String testsuiteFileName = Utils.toFile(Coordinator.STABILIZER_HOME, "tests", "map.properties").getAbsolutePath();
+    private String loadHzConfig() {
+        File file = getFile(hzFileSpec, options, "Worker Hazelcast config file");
+        log.info("Loading Hazelcast configuration: " + file.getAbsolutePath());
+        return fileAsText(file);
+    }
+
+    private File getPropertiesFile() {
+        if (options.has(propertiesFileSpec)) {
+            //a file was explicitly configured
+            return newFile(options.valueOf(propertiesFileSpec));
+        } else {
+            return null;
+        }
+    }
+
+    private File getTestSuiteFile() {
+        String testsuiteFileName = null;
 
         List<String> testsuiteFiles = options.nonOptionArguments();
-        if (testsuiteFiles.size() == 1) {
+        if (testsuiteFiles.isEmpty()) {
+            testsuiteFileName = new File("test.properties").getAbsolutePath();
+        } else if (testsuiteFiles.size() == 1) {
             testsuiteFileName = testsuiteFiles.get(0);
         } else if (testsuiteFiles.size() > 1) {
             exitWithError(log, "Too many testsuite files specified.");
+            //won't be executed.
+            return null;
         }
 
         File testSuiteFile = new File(testsuiteFileName);
+        log.info("Loading testsuite file: "+testSuiteFile.getAbsolutePath());
         if (!testSuiteFile.exists()) {
             Utils.exitWithError(log, format("Can't find testsuite file [%s]", testSuiteFile));
         }

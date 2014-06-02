@@ -114,6 +114,10 @@ public class WorkerJvmManager {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
         for (WorkerJvm workerJvm : workers) {
+            if (workerJvm.oomeDetected) {
+                continue;
+            }
+
             TestCommandFuture future = new TestCommandFuture(testCommand);
             TestCommandRequest request = new TestCommandRequest();
             request.id = requestIdGenerator.incrementAndGet();
@@ -132,6 +136,7 @@ public class WorkerJvmManager {
                 results.add(result);
             } catch (ExecutionException e) {
                 Failure failure = new Failure();
+                failure.type = "worker exception";
                 failure.message = e.getMessage();
                 failure.agentAddress = getHostAddress();
                 failure.workerAddress = workerJvm.memberAddress;

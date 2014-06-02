@@ -19,6 +19,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.commons.lang3.text.StrSubstitutor;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -51,6 +52,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.locks.LockSupport;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -58,11 +60,9 @@ import java.util.zip.ZipOutputStream;
 import static java.lang.String.format;
 
 public final class Utils {
-//    private final static ILogger log = Logger.getLogger(Utils.class);
+    private static final String USER_HOME = System.getProperty("user.home");
 
     private static volatile String hostAddress;
-
-    public final static String FILE_SEPERATOR = System.getProperty("file.separator");
 
     private final static String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
 
@@ -75,6 +75,19 @@ public final class Utils {
         remoteCause.setStackTrace(newStackTrace);
     }
 
+    public static File newFile(String path) {
+        path = path.trim();
+        if (path.equals("~")) {
+            path = USER_HOME;
+        } else if (path.startsWith("~" + File.separator)) {
+            path = USER_HOME + path.substring(1);
+        }
+
+
+        StrSubstitutor substitutor = new StrSubstitutor();
+        path = substitutor.replace(path);
+        return new File(path);
+    }
 
     public static String getText(String url) throws IOException {
         URL website = new URL(url);
@@ -98,8 +111,16 @@ public final class Utils {
         }
     }
 
-    public static File toFile(File file, String... items) {
+    public static File newFile(File file, String... items) {
         for (int k = 0; k < items.length; k++) {
+            file = new File(file, items[k]);
+        }
+        return file;
+    }
+
+    public static File newFile(String... items) {
+        File file = newFile(items[0]);
+        for (int k = 1; k < items.length; k++) {
             file = new File(file, items[k]);
         }
         return file;
@@ -426,6 +447,14 @@ public final class Utils {
         }
     }
 
+    public static void sleepNanos(long nanos) {
+        if (nanos <= 0) {
+            return;
+        }
+
+        LockSupport.parkNanos(nanos);
+    }
+
     public static void exitWithError(ILogger logger, String msg) {
         logger.severe(msg);
         System.exit(1);
@@ -480,43 +509,11 @@ public final class Utils {
     }
 
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
-        File file = new File(options.valueOf(spec));
+        File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
             ILogger log = Logger.getLogger(Utils.class);
-            exitWithError(log,format("%s [%s] does not exist\n", desc, file));
+            exitWithError(log, format("%s [%s] does not exist\n", desc, file));
         }
         return file;
-    }
-
-    public static byte[] createUpload(String workerClassPath) throws IOException {
-        if (workerClassPath == null) {
-            return null;
-        }
-
-        String[] parts = workerClassPath.split(";");
-        List<File> files = new LinkedList<File>();
-        for (String filePath : parts) {
-            File file = new File(filePath);
-
-            if (file.getName().contains("*")) {
-                File parent = file.getParentFile();
-                if (!parent.isDirectory()) {
-                    throw new IOException(format("Can't create upload, file [%s] is not a directory", parent));
-                }
-
-                String regex = file.getName().replace("*", "(.*)");
-                for (File child : parent.listFiles()) {
-                    if (child.getName().matches(regex)) {
-                        files.add(child);
-                    }
-                }
-            } else if (file.exists()) {
-                files.add(file);
-            } else {
-                throw new IOException(format("Can't create upload, file [%s] doesn't exist", filePath));
-            }
-        }
-
-        return zip(files);
     }
 }

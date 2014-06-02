@@ -19,25 +19,23 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.performance.OperationsPerSecond;
-import com.hazelcast.stabilizer.performance.Performance;
-import com.hazelcast.stabilizer.tests.AbstractTest;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.tests.annotations.Performance;
+import com.hazelcast.stabilizer.tests.annotations.Run;
+import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class StringMapTest extends AbstractTest {
+public class StringMapTest {
 
     private final static ILogger log = Logger.getLogger(StringMapTest.class);
 
     private final static String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
-
-    private IMap<Object, Object> map;
-    private String[] keys;
-    private String[] values;
-    private Random random = new Random();
-    private final AtomicLong operations = new AtomicLong();
 
     //props
     public int writePercentage = 10;
@@ -51,8 +49,15 @@ public class StringMapTest extends AbstractTest {
     public boolean usePut = true;
     public String basename = "map";
 
-    @Override
-    public void localSetup() throws Exception {
+    private IMap<Object, Object> map;
+    private String[] keys;
+    private String[] values;
+    private Random random = new Random();
+    private final AtomicLong operations = new AtomicLong();
+    private TestContext testContext;
+
+    @Setup
+    public void setup(TestContext testContext) throws Exception {
         if (writePercentage < 0) {
             throw new IllegalArgumentException("Write percentage can't be smaller than 0");
         }
@@ -61,9 +66,19 @@ public class StringMapTest extends AbstractTest {
             throw new IllegalArgumentException("Write percentage can't be larger than 100");
         }
 
-        HazelcastInstance targetInstance = getTargetInstance();
+        this.testContext = testContext;
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
+        map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+    }
 
-        map = targetInstance.getMap(basename + "-" + getTestId());
+    @Teardown
+    public void teardown() throws Exception {
+        map.destroy();
+    }
+
+    @Warmup(global = false)
+    public void warmup() {
+        log.info("Warmup has run");
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
             keys[k] = makeString(keyLength);
@@ -86,13 +101,6 @@ public class StringMapTest extends AbstractTest {
         }
     }
 
-    @Override
-    public void createTestThreads() {
-        for (int k = 0; k < threadCount; k++) {
-            spawn(new Worker());
-        }
-    }
-
     private String makeString(int length) {
         StringBuilder sb = new StringBuilder();
         for (int k = 0; k < length; k++) {
@@ -103,12 +111,16 @@ public class StringMapTest extends AbstractTest {
         return sb.toString();
     }
 
-    @Override
-    public void globalTearDown() throws Exception {
-        map.destroy();
+    @Run
+    public void run() {
+        ThreadSpawner spawner = new ThreadSpawner();
+        for (int k = 0; k < threadCount; k++) {
+            spawner.spawn(new Worker());
+        }
+        spawner.awaitCompletion();
     }
 
-    @Override
+    @Performance
     public long getOperationCount() {
         return operations.get();
     }
@@ -119,11 +131,12 @@ public class StringMapTest extends AbstractTest {
         @Override
         public void run() {
             long iteration = 0;
-            while (!stopped()) {
-                Object key = keys[random.nextInt(keys.length)];
+            while (!testContext.isStopped()) {
+
+                Object key = randomKey();
 
                 if (shouldWrite(iteration)) {
-                    Object value = values[random.nextInt(values.length)];
+                    Object value = randomValue();
                     if (usePut) {
                         map.put(key, value);
                     } else {
@@ -145,6 +158,15 @@ public class StringMapTest extends AbstractTest {
             }
         }
 
+        private Object randomValue() {
+            return values[random.nextInt(values.length)];
+        }
+
+        private Object randomKey() {
+            int length = keys.length;
+            return keys[random.nextInt(length)];
+        }
+
         private boolean shouldWrite(long iteration) {
             if (writePercentage == 0) {
                 return false;
@@ -156,9 +178,9 @@ public class StringMapTest extends AbstractTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         StringMapTest test = new StringMapTest();
-        test.writePercentage = 0;
-        new TestRunner().run(test, 20);
+        test.writePercentage = 10;
+        new TestRunner(test).run();
     }
 }
