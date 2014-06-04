@@ -185,7 +185,7 @@ public class Worker {
 
             log.info("Successfully started Hazelcast Stabilizer Worker:" + workerId);
         } catch (Throwable e) {
-            ExceptionReporter.report(e);
+            ExceptionReporter.report(null,e);
             System.exit(1);
         }
     }
@@ -218,7 +218,7 @@ public class Worker {
 
                     sendResponse(responses);
                 } catch (Throwable e) {
-                    ExceptionReporter.report(e);
+                    ExceptionReporter.report(null,e);
                 }
             }
         }
@@ -273,7 +273,7 @@ public class Worker {
                     }
                     doProcess(request.id, request.task);
                 } catch (Throwable e) {
-                    ExceptionReporter.report(e);
+                    ExceptionReporter.report(null,e);
                 }
             }
         }
@@ -418,7 +418,7 @@ public class Worker {
                 currentCommand = command;
                 doRun();
             } catch (Throwable t) {
-                ExceptionReporter.report(t);
+                ExceptionReporter.report(null,t);
             } finally {
                 currentCommand = null;
             }
