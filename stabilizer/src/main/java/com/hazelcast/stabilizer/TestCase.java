@@ -27,6 +27,8 @@ public class TestCase implements Serializable {
     public HashMap<String, String> properties = new HashMap<String, String>();
 
     public TestCase() {
+        //we need to delay some so that id is unique.
+        Utils.sleepMillis(1);
     }
 
     public String getClassname() {

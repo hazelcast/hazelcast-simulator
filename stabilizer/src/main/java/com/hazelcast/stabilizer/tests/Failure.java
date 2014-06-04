@@ -54,7 +54,7 @@ public class Failure implements Serializable {
                 sb.append("    ").append(testString[k]).append("\n");
             }
         } else {
-            sb.append("   test=").append("null").append("\n");
+            sb.append("   test=").append("unknown").append("\n");
         }
 
         if (cause != null) {

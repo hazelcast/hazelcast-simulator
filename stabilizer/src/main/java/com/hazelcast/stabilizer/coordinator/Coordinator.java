@@ -36,6 +36,10 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
@@ -222,6 +226,26 @@ public class Coordinator {
 
         long startMs = System.currentTimeMillis();
 
+        if(parallel){
+            runParallel();
+        }else{
+            runSequential();
+        }
+
+        terminateWorkers();
+
+        //the coordinator needs to sleep some to make sure that it will get failures if they are there.
+        log.info("Starting cool down (20 sec)");
+        Utils.sleepSeconds(20);
+        log.info("Finished cool down");
+
+        long elapsedMs = System.currentTimeMillis() - startMs;
+        log.info(format("Total running time: %s seconds", elapsedMs / 1000));
+    }
+
+    private void runSequential() throws Exception {
+        echo(format("Running %s tests sequentially",testSuite.size()));
+
         for (TestCase testCase : testSuite.testCaseList) {
             TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this);
             boolean success = runner.run();
@@ -235,16 +259,42 @@ public class Coordinator {
                 startWorkers();
             }
         }
+    }
 
-        terminateWorkers();
+    private void runParallel() throws InterruptedException, java.util.concurrent.ExecutionException {
+        echo(format("Running %s tests parallel",testSuite.size()));
 
-        //the coordinator needs to sleep some to make sure that it will get failures if they are there.
-        log.info("Starting cool down (20 sec)");
-        Utils.sleepSeconds(20);
-        log.info("Finished cool down");
+        ExecutorService executor = Executors.newFixedThreadPool(testSuite.size());
 
-        long elapsedMs = System.currentTimeMillis() - startMs;
-        log.info(format("Total running time: %s seconds", elapsedMs / 1000));
+        List<Future> futures = new LinkedList<Future>();
+        for (final TestCase testCase : testSuite.testCaseList) {
+           Future f = executor.submit(new Runnable() {
+               @Override
+               public void run() {
+                   try {
+                       TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this);
+                       boolean success = runner.run();
+                       if (!success && testSuite.failFast) {
+                           log.info("Aborting testsuite due to failure");
+                           return;
+                       }
+
+//                       if (!success || workerJvmSettings.refreshJvm) {
+//                           terminateWorkers();
+//                           startWorkers();
+//                       }
+                   } catch (Exception e) {
+                       throw new RuntimeException(e);
+                   }
+               }
+           });
+
+            futures.add(f);
+        }
+
+        for(Future f: futures){
+            f.get();
+        }
     }
 
     void terminateWorkers() throws Exception {

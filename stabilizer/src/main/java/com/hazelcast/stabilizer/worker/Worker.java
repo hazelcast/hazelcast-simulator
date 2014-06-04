@@ -29,7 +29,6 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
-import com.hazelcast.stabilizer.tests.utils.StabilizerTest;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.worker.testcommands.DoneCommand;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
@@ -78,8 +77,8 @@ public class Worker {
     private String workerMode;
     private String workerId;
 
-    private final ConcurrentMap<String, StabilizerTest<TestContextImpl>> tests
-            = new ConcurrentHashMap<String, StabilizerTest<TestContextImpl>>();
+    private final ConcurrentMap<String, TestContainer<TestContextImpl>> tests
+            = new ConcurrentHashMap<String, TestContainer<TestContextImpl>>();
     private volatile TestCommand currentCommand;
 
     private final BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
@@ -323,7 +322,7 @@ public class Worker {
             try {
                 log.info("Starting test");
 
-                final StabilizerTest<TestContextImpl> test = tests.get(command.testId);
+                final TestContainer<TestContextImpl> test = tests.get(command.testId);
                 if (test == null) {
                     throw new IllegalStateException("Failed to process command: " + command + " no test with " +
                             "testId" + command.testId + " is found");
@@ -350,7 +349,7 @@ public class Worker {
             try {
                 log.info("Calling test." + methodName + "()");
 
-                final StabilizerTest<TestContextImpl> test = tests.get(command.testId);
+                final TestContainer<TestContextImpl> test = tests.get(command.testId);
                 if (test == null) {
                     throw new IllegalStateException("Failed to process command: " + command + " no test with " +
                             "testId" + command.testId + " is found");
@@ -391,8 +390,8 @@ public class Worker {
                 bindProperties(test, testCase);
 
                 TestContextImpl testContext = new TestContextImpl(testCase.id);
-                StabilizerTest<TestContextImpl> stabilizerTest = new StabilizerTest<TestContextImpl>(test, testContext);
-                tests.put(testContext.getTestId(), stabilizerTest);
+                TestContainer<TestContextImpl> testContainer = new TestContainer<TestContextImpl>(test, testContext);
+                tests.put(testContext.getTestId(), testContainer);
 
                 if (serverInstance != null) {
                     serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE, test);
@@ -407,7 +406,7 @@ public class Worker {
             try {
                 log.info("Calling test.stop");
 
-                StabilizerTest<TestContextImpl> test = tests.get(command.testId);
+                TestContainer<TestContextImpl> test = tests.get(command.testId);
                 if (test == null) {
                     log.warning("Can't stop test, test with id " + command.testId + " does not exist");
                     return;
