@@ -20,9 +20,9 @@ import java.util.List;
 
 import static java.lang.String.format;
 
-public class TestInvoker<T extends TestContext> {
+public class StabilizerTest<T extends TestContext> {
 
-    private final static ILogger log = Logger.getLogger(TestInvoker.class);
+    private final static ILogger log = Logger.getLogger(StabilizerTest.class);
 
     private final Object object;
     private final Class<? extends Object> clazz;
@@ -41,7 +41,7 @@ public class TestInvoker<T extends TestContext> {
 
     private Method operationCountMethod;
 
-    public TestInvoker(Object object, T testContext) {
+    public StabilizerTest(Object object, T testContext) {
         if (object == null) {
             throw new NullPointerException();
         }

@@ -17,6 +17,10 @@ import java.util.Locale;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
 
+/**
+ * TestCase runner is responsible for running a single test case. Multiple test-cases can be run in parallel,
+ * by having multiple testcase runners in parallel.
+ */
 public class TestCaseRunner {
 
     private final static ILogger log = Logger.getLogger(TestCaseRunner.class);
@@ -42,22 +46,21 @@ public class TestCaseRunner {
         int oldFailureCount = coordinator.failureList.size();
         try {
             echo("Starting Test initialization");
-            agentsClient.prepareAgentsForTests(testCase);
             agentsClient.executeOnAllWorkers(new InitTestCommand(testCase));
             echo("Completed Test initialization");
 
             echo("Starting Test setup");
-            agentsClient.executeOnAllWorkers(new GenericTestCommand("setup"));
+            agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "setup"));
             agentsClient.waitDone();
             echo("Completed Test setup");
 
             echo("Starting Test local warmup");
-            agentsClient.executeOnAllWorkers(new GenericTestCommand("localWarmup"));
+            agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localWarmup"));
             agentsClient.waitDone();
             echo("Completed Test local warmup");
 
             echo("Starting Test global warmup");
-            agentsClient.executeOnSingleWorker(new GenericTestCommand("globalWarmup"));
+            agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalWarmup"));
             agentsClient.waitDone();
             echo("Completed Test global warmup");
 
@@ -70,19 +73,19 @@ public class TestCaseRunner {
             echo("Test finished running");
 
             echo("Starting Test stop");
-            agentsClient.executeOnAllWorkers(new StopTestCommand());
+            agentsClient.executeOnAllWorkers(new StopTestCommand(testCase.id));
             echo("Completed Test stop");
 
             logPerformance();
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
-                agentsClient.executeOnSingleWorker(new GenericTestCommand("globalVerify"));
+                agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalVerify"));
                 agentsClient.waitDone();
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
-                agentsClient.executeOnAllWorkers(new GenericTestCommand("localVerify"));
+                agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localVerify"));
                 agentsClient.waitDone();
                 echo("Completed Test local verify");
             } else {
@@ -90,13 +93,13 @@ public class TestCaseRunner {
             }
 
             echo("Starting Test global tear down");
-            agentsClient.executeOnSingleWorker(new GenericTestCommand("globalTeardown"));
+            agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalTeardown"));
             agentsClient.waitDone();
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
             agentsClient.waitDone();
-            agentsClient.executeOnAllWorkers(new GenericTestCommand("localTeardown"));
+            agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localTeardown"));
             echo("Completed Test local tear down");
 
             return coordinator.failureList.size() == oldFailureCount;
@@ -116,7 +119,7 @@ public class TestCaseRunner {
 
     private void startTestCase() {
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
-        RunCommand runCommand = new RunCommand();
+        RunCommand runCommand = new RunCommand(testCase.id);
         runCommand.clientOnly = workerJvmSettings.mixedWorkerCount > 0 || workerJvmSettings.clientWorkerCount > 0;
         agentsClient.executeOnAllWorkers(runCommand);
     }

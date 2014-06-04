@@ -16,7 +16,6 @@
 package com.hazelcast.stabilizer.agent;
 
 
-import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
@@ -39,10 +38,8 @@ public class Agent {
 
     public final static File STABILIZER_HOME = getStablizerHome();
 
-
     //internal state
     private volatile TestSuite testSuite;
-    private volatile TestCase testCase;
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
 
@@ -71,17 +68,8 @@ public class Agent {
         return workerJvmManager;
     }
 
-    public TestCase getTestCase() {
-        return testCase;
-    }
-
-    public void setTestCase(TestCase testCase) {
-        this.testCase = testCase;
-    }
-
     public void initTestSuite(TestSuite testSuite) throws IOException {
         this.testSuite = testSuite;
-        this.testCase = null;
 
         File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
         ensureExistingDirectory(testSuiteDir);

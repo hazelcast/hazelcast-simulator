@@ -5,7 +5,7 @@ import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.tests.utils.TestInvoker;
+import com.hazelcast.stabilizer.tests.utils.StabilizerTest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -18,7 +18,7 @@ public class TestInvokerTest {
     @Test
     public void testRun() throws Throwable {
         DummyTest dummyTest = new DummyTest();
-        TestInvoker invoker = new TestInvoker(dummyTest, new DummyTestContext());
+        StabilizerTest invoker = new StabilizerTest(dummyTest, new DummyTestContext());
         invoker.run();
 
         assertTrue(dummyTest.runCalled);
@@ -27,7 +27,7 @@ public class TestInvokerTest {
     @Test(expected = IllegalTestException.class)
     public void runMissing() throws Throwable {
         RunMissingTest test = new RunMissingTest();
-        new TestInvoker(test, new DummyTestContext());
+        new StabilizerTest(test, new DummyTestContext());
     }
 
     static class RunMissingTest {
@@ -43,7 +43,7 @@ public class TestInvokerTest {
     public void testSetup() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
         DummyTest test = new DummyTest();
-        TestInvoker invoker = new TestInvoker(test, testContext);
+        StabilizerTest invoker = new StabilizerTest(test, testContext);
         invoker.run();
         invoker.setup();
 
@@ -58,7 +58,7 @@ public class TestInvokerTest {
     public void localVerify() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
         LocalVerifyTest test = new LocalVerifyTest();
-        TestInvoker invoker = new TestInvoker(test, testContext);
+        StabilizerTest invoker = new StabilizerTest(test, testContext);
         invoker.localVerify();
 
         assertTrue(test.localVerifyCalled);
@@ -89,7 +89,7 @@ public class TestInvokerTest {
     public void globalVerify() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
         GlobalVerifyTest test = new GlobalVerifyTest();
-        TestInvoker invoker = new TestInvoker(test, testContext);
+        StabilizerTest invoker = new StabilizerTest(test, testContext);
         invoker.globalVerify();
 
         assertTrue(test.globalVerifyCalled);
@@ -120,7 +120,7 @@ public class TestInvokerTest {
     public void performance() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
         PerformanceTest test = new PerformanceTest();
-        TestInvoker invoker = new TestInvoker(test, testContext);
+        StabilizerTest invoker = new StabilizerTest(test, testContext);
         long count = invoker.getOperationCount();
 
         assertEquals(20, count);

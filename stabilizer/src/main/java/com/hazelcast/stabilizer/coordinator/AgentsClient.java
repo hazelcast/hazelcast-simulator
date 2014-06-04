@@ -153,22 +153,6 @@ public class AgentsClient {
         return result;
     }
 
-    public void prepareAgentsForTests(final TestCase testCase) {
-        List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_PREPARE_FOR_TEST, testCase);
-                    return null;
-                }
-            });
-            futures.add(f);
-        }
-
-        getAllFutures(futures);
-    }
-
     public void waitDone() {
         long startTimeMs = System.currentTimeMillis();
         for (; ; ) {

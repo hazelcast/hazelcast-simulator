@@ -30,7 +30,8 @@ public class Failure implements Serializable {
     public String workerAddress;
     public String workerId;
     public Date time = new Date();
-    public TestCase testCase;
+    public String testId;
+    public TestSuite testSuite;
     public String cause;
 
     @Override
@@ -43,6 +44,9 @@ public class Failure implements Serializable {
         sb.append("   time=").append(time).append("\n");
         sb.append("   workerAddress=").append(workerAddress).append("\n");
         sb.append("   workerId=").append(workerId).append("\n");
+
+        TestCase testCase = testSuite.getTestCase(testId);
+
         if (testCase != null) {
             String[] testString = testCase.toString().split("\n");
             sb.append("   test=").append(testString[0]).append("\n");

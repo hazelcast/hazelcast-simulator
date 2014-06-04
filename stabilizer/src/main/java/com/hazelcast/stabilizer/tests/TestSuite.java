@@ -86,6 +86,20 @@ public class TestSuite implements Serializable {
     public int duration;
     public boolean failFast;
 
+    public TestCase getTestCase(String testCaseId){
+        if(testCaseId == null){
+            return null;
+        }
+
+        for(TestCase testCase: testCaseList){
+            if(testCaseId.equals(testCase.getId())){
+                return testCase;
+            }
+        }
+
+        return null;
+    }
+
     public void addTest(TestCase testCase) {
         testCaseList.add(testCase);
     }

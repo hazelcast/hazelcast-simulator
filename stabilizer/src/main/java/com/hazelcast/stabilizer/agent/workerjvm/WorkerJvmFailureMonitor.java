@@ -91,7 +91,7 @@ public class WorkerJvmFailureMonitor {
             failure.agentAddress = getHostAddress();
             failure.workerAddress = jvm.memberAddress;
             failure.workerId = jvm.id;
-            failure.testCase = agent.getTestCase();
+            failure.testSuite = agent.getTestSuite();
             failures.add(failure);
         }
     }
@@ -114,9 +114,11 @@ public class WorkerJvmFailureMonitor {
         }
 
         for (File exceptionFile : exceptionFiles) {
+            String content = fileAsText(exceptionFile);
 
-            String cause = fileAsText(exceptionFile);
-
+            int indexOf = content.indexOf("\n");
+            String testId = content.substring(0, indexOf);
+            String cause = content.substring(indexOf + 1);
 
             //we rename it so that we don't detect the same exception again.
             exceptionFile.delete();
@@ -127,7 +129,8 @@ public class WorkerJvmFailureMonitor {
             failure.agentAddress = getHostAddress();
             failure.workerAddress = workerJvm.memberAddress;
             failure.workerId = workerJvm.id;
-            failure.testCase = agent.getTestCase();
+            failure.testId = testId;
+            failure.testSuite = agent.getTestSuite();
             failure.cause = cause;
             failures.add(failure);
         }
@@ -150,7 +153,7 @@ public class WorkerJvmFailureMonitor {
         failure.agentAddress = getHostAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
-        failure.testCase = agent.getTestCase();
+        failure.testSuite = agent.getTestSuite();
         failures.add(failure);
     }
 
@@ -180,7 +183,7 @@ public class WorkerJvmFailureMonitor {
         failure.agentAddress = getHostAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
-        failure.testCase = agent.getTestCase();
+        failure.testSuite = agent.getTestSuite();
         failures.add(failure);
     }
 
