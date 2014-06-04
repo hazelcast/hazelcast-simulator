@@ -20,6 +20,12 @@ import java.util.List;
 
 import static java.lang.String.format;
 
+/**
+ * Since the test is based on annotations, there is no API we can call very easily.
+ * That is the task of this test container.
+ *
+ * @param <T>
+ */
 public class TestContainer<T extends TestContext> {
 
     private final static ILogger log = Logger.getLogger(TestContainer.class);

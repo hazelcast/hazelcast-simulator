@@ -23,15 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 public class TestCase implements Serializable {
-    public String id = "" + System.currentTimeMillis();
+    public String id;
     public HashMap<String, String> properties = new HashMap<String, String>();
 
-    public TestCase() {
-        //we need to delay some so that id is unique.
-        Utils.sleepMillis(1);
-    }
-
-    public String getClassname() {
+     public String getClassname() {
         return properties.get("class");
     }
 

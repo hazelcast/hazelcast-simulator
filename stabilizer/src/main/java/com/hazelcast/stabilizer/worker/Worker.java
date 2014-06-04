@@ -365,6 +365,10 @@ public class Worker {
                         } catch (InvocationTargetException e) {
                             log.severe("Failed to call test." + methodName + "()");
                             throw e.getCause();
+                        } finally {
+                            if ("localTeardown".equals(methodName)) {
+                                tests.remove(command.testId);
+                            }
                         }
                     }
                 }.start();

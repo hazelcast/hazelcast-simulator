@@ -30,22 +30,24 @@ public class TestCaseRunner {
     private final AgentsClient agentsClient;
     private final TestSuite testSuite;
     private final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
+    private final String prefix;
 
     public TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator) {
         this.testCase = testCase;
         this.coordinator = coordinator;
         this.testSuite = testSuite;
         this.agentsClient = coordinator.agentsClient;
+        this.prefix = testCase.id.equals("") ? "" : testCase.id + " ";
     }
 
     public boolean run() throws Exception {
-        echo("--------------------------------------------------------------");
-        echo(format("Running Test : %s\n%s", testCase.getId(), testCase));
-        echo("--------------------------------------------------------------");
+        log.info("--------------------------------------------------------------\n" +
+                format("Running Test : %s\n%s", testCase.getId(), testCase) + "\n" +
+                "--------------------------------------------------------------");
 
         int oldFailureCount = coordinator.failureList.size();
         try {
-            echo("Starting Test initialization");
+            echo(prefix + "Starting Test initialization");
             agentsClient.executeOnAllWorkers(new InitTestCommand(testCase));
             echo("Completed Test initialization");
 
@@ -144,14 +146,14 @@ public class TestCaseRunner {
                 msg += ", " + performanceFormat.format(coordinator.performance) + " ops/s.";
             }
 
-            log.info(msg);
+            log.info(prefix + msg);
         }
 
         Utils.sleepSeconds(small);
     }
 
     private void echo(String msg) {
-        agentsClient.echo(msg);
-        log.info(msg);
+        agentsClient.echo(prefix + msg);
+        log.info(prefix + msg);
     }
 }
