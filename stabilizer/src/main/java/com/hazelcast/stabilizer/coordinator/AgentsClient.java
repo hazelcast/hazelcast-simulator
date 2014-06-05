@@ -153,7 +153,7 @@ public class AgentsClient {
         return result;
     }
 
-    public void waitDone() {
+    public void waitDone(String prefix) {
         long startTimeMs = System.currentTimeMillis();
         for (; ; ) {
             List<List<Boolean>> result = executeOnAllWorkers(new DoneCommand());
@@ -172,7 +172,7 @@ public class AgentsClient {
             }
 
             long durationMs = System.currentTimeMillis() - startTimeMs;
-            log.info("Waiting for completion: " + Utils.secondsToHuman(durationMs / 1000));
+            log.info(prefix+"Waiting for completion: " + Utils.secondsToHuman(durationMs / 1000));
             Utils.sleepSeconds(5);
         }
     }
