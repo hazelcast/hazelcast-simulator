@@ -55,7 +55,7 @@ public class SimpleLockTest {
             System.out.println(account+" "+account.get());
 
             assertFalse("Lock should be unlocked", lock.isLocked());
-            assertTrue("Amount is !< 0 ", account.get() >= 0);
+            assertTrue("Amount is < 0 ", account.get() >= 0);
             value += account.get();
         }
         assertEquals(totalValue, value);
