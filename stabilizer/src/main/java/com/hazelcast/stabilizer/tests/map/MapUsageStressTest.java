@@ -134,10 +134,7 @@ public class MapUsageStressTest {
     //happens just on one machien.
     @Warmup
     public void warmup() {
-        log.info("===WARMUP===");
-
         values = new String[valueCount];
-
 
         for (int k = 0; k < values.length; k++) {
             values[k] = makeString(valueLength);
@@ -165,7 +162,6 @@ public class MapUsageStressTest {
                 v = (v + 1 == values.length ? 0 : v + 1);
             }
         }
-        log.info("===WARMUP===");
     }
 
     private String makeString(int length) {
