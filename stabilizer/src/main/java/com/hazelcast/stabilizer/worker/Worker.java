@@ -29,7 +29,6 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
-import com.hazelcast.stabilizer.tests.utils.TestInvoker;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.worker.testcommands.DoneCommand;
 import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
@@ -53,6 +52,8 @@ import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -76,7 +77,8 @@ public class Worker {
     private String workerMode;
     private String workerId;
 
-    private volatile TestInvoker<TestContextImpl> testInvoker;
+    private final ConcurrentMap<String, TestContainer<TestContextImpl>> tests
+            = new ConcurrentHashMap<String, TestContainer<TestContextImpl>>();
     private volatile TestCommand currentCommand;
 
     private final BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
@@ -185,7 +187,7 @@ public class Worker {
 
             log.info("Successfully started Hazelcast Stabilizer Worker:" + workerId);
         } catch (Throwable e) {
-            ExceptionReporter.report(e);
+            ExceptionReporter.report(null, e);
             System.exit(1);
         }
     }
@@ -218,7 +220,7 @@ public class Worker {
 
                     sendResponse(responses);
                 } catch (Throwable e) {
-                    ExceptionReporter.report(e);
+                    ExceptionReporter.report(null, e);
                 }
             }
         }
@@ -273,7 +275,7 @@ public class Worker {
                     }
                     doProcess(request.id, request.task);
                 } catch (Throwable e) {
-                    ExceptionReporter.report(e);
+                    ExceptionReporter.report(null, e);
                 }
             }
         }
@@ -305,15 +307,25 @@ public class Worker {
         }
 
         private Long process(GetOperationCountTestCommand command) throws Throwable {
-            return testInvoker.getOperationCount();
+//            final StabilizerTest<TestContextImpl> test = tests.get(command.testId);
+//            if (test == null) {
+//                throw new IllegalStateException("Failed to process command: " + command + " no test with " +
+//                        "testId" + command.testId + " is found");
+//            }
+//
+//
+//            return testInvoker.getOperationCount();
+            return -1l;
         }
 
         private void process(final RunCommand command) throws Exception {
             try {
                 log.info("Starting test");
 
-                if (testInvoker == null) {
-                    throw new IllegalStateException("No running test found");
+                final TestContainer<TestContextImpl> test = tests.get(command.testId);
+                if (test == null) {
+                    throw new IllegalStateException("Failed to process command: " + command + " no test with " +
+                            "testId" + command.testId + " is found");
                 }
 
                 new CommandThread(command) {
@@ -322,7 +334,7 @@ public class Worker {
                         boolean passive = command.clientOnly && clientInstance == null;
 
                         if (!passive) {
-                            testInvoker.run();
+                            test.run();
                         }
                     }
                 }.start();
@@ -337,20 +349,26 @@ public class Worker {
             try {
                 log.info("Calling test." + methodName + "()");
 
-                if (testInvoker == null) {
-                    throw new IllegalStateException("No running test to execute test." + methodName + "()");
+                final TestContainer<TestContextImpl> test = tests.get(command.testId);
+                if (test == null) {
+                    throw new IllegalStateException("Failed to process command: " + command + " no test with " +
+                            "testId" + command.testId + " is found");
                 }
 
-                final Method method = testInvoker.getClass().getMethod(methodName);
+                final Method method = test.getClass().getMethod(methodName);
                 new CommandThread(command) {
                     @Override
                     public void doRun() throws Throwable {
                         try {
-                            method.invoke(testInvoker);
+                            method.invoke(test);
                             log.info("Finished calling test." + methodName + "()");
                         } catch (InvocationTargetException e) {
                             log.severe("Failed to call test." + methodName + "()");
                             throw e.getCause();
+                        } finally {
+                            if ("localTeardown".equals(methodName)) {
+                                tests.remove(command.testId);
+                            }
                         }
                     }
                 }.start();
@@ -363,7 +381,12 @@ public class Worker {
         private void process(InitTestCommand command) throws Throwable {
             try {
                 TestCase testCase = command.testCase;
+
                 log.info("Init Test:\n" + testCase);
+                if (tests.containsKey(testCase.getId())) {
+                    throw new IllegalStateException("Can't init testcase: " + command + ", another test with the same " +
+                            "testId already exists");
+                }
 
                 String clazzName = testCase.getClassname();
 
@@ -371,7 +394,8 @@ public class Worker {
                 bindProperties(test, testCase);
 
                 TestContextImpl testContext = new TestContextImpl(testCase.id);
-                testInvoker = new TestInvoker<TestContextImpl>(test, testContext);
+                TestContainer<TestContextImpl> testContainer = new TestContainer<TestContextImpl>(test, testContext);
+                tests.put(testContext.getTestId(), testContainer);
 
                 if (serverInstance != null) {
                     serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE, test);
@@ -386,11 +410,13 @@ public class Worker {
             try {
                 log.info("Calling test.stop");
 
-                if (testInvoker == null) {
+                TestContainer<TestContextImpl> test = tests.get(command.testId);
+                if (test == null) {
+                    log.warning("Can't stop test, test with id " + command.testId + " does not exist");
                     return;
                 }
 
-                testInvoker.getTestContext().stopped = true;
+                test.getTestContext().stopped = true;
                 log.info("Finished calling test.stop()");
             } catch (Exception e) {
                 log.severe("Failed to execute test.stop", e);
@@ -418,7 +444,7 @@ public class Worker {
                 currentCommand = command;
                 doRun();
             } catch (Throwable t) {
-                ExceptionReporter.report(t);
+                ExceptionReporter.report(null, t);
             } finally {
                 currentCommand = null;
             }

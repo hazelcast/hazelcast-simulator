@@ -17,6 +17,10 @@ import java.util.Locale;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
 
+/**
+ * TestCase runner is responsible for running a single test case. Multiple test-cases can be run in parallel,
+ * by having multiple testcase runners in parallel.
+ */
 public class TestCaseRunner {
 
     private final static ILogger log = Logger.getLogger(TestCaseRunner.class);
@@ -26,39 +30,40 @@ public class TestCaseRunner {
     private final AgentsClient agentsClient;
     private final TestSuite testSuite;
     private final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
+    private final String prefix;
 
     public TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator) {
         this.testCase = testCase;
         this.coordinator = coordinator;
         this.testSuite = testSuite;
         this.agentsClient = coordinator.agentsClient;
+        this.prefix = testCase.id.equals("") ? "" : testCase.id + " ";
     }
 
     public boolean run() throws Exception {
-        echo("--------------------------------------------------------------");
-        echo(format("Running Test : %s\n%s", testCase.getId(), testCase));
-        echo("--------------------------------------------------------------");
+        log.info("--------------------------------------------------------------\n" +
+                format("Running Test : %s\n%s", testCase.getId(), testCase) + "\n" +
+                "--------------------------------------------------------------");
 
         int oldFailureCount = coordinator.failureList.size();
         try {
-            echo("Starting Test initialization");
-            agentsClient.prepareAgentsForTests(testCase);
+            echo(prefix + "Starting Test initialization");
             agentsClient.executeOnAllWorkers(new InitTestCommand(testCase));
             echo("Completed Test initialization");
 
             echo("Starting Test setup");
-            agentsClient.executeOnAllWorkers(new GenericTestCommand("setup"));
-            agentsClient.waitDone();
+            agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "setup"));
+            agentsClient.waitDone(prefix);
             echo("Completed Test setup");
 
             echo("Starting Test local warmup");
-            agentsClient.executeOnAllWorkers(new GenericTestCommand("localWarmup"));
-            agentsClient.waitDone();
+            agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localWarmup"));
+            agentsClient.waitDone(prefix);
             echo("Completed Test local warmup");
 
             echo("Starting Test global warmup");
-            agentsClient.executeOnSingleWorker(new GenericTestCommand("globalWarmup"));
-            agentsClient.waitDone();
+            agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalWarmup"));
+            agentsClient.waitDone(prefix);
             echo("Completed Test global warmup");
 
             echo("Starting Test start");
@@ -70,33 +75,33 @@ public class TestCaseRunner {
             echo("Test finished running");
 
             echo("Starting Test stop");
-            agentsClient.executeOnAllWorkers(new StopTestCommand());
+            agentsClient.executeOnAllWorkers(new StopTestCommand(testCase.id));
             echo("Completed Test stop");
 
             logPerformance();
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
-                agentsClient.executeOnSingleWorker(new GenericTestCommand("globalVerify"));
-                agentsClient.waitDone();
+                agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalVerify"));
+                agentsClient.waitDone(prefix);
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
-                agentsClient.executeOnAllWorkers(new GenericTestCommand("localVerify"));
-                agentsClient.waitDone();
+                agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localVerify"));
+                agentsClient.waitDone(prefix);
                 echo("Completed Test local verify");
             } else {
                 echo("Skipping Test verification");
             }
 
             echo("Starting Test global tear down");
-            agentsClient.executeOnSingleWorker(new GenericTestCommand("globalTeardown"));
-            agentsClient.waitDone();
+            agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalTeardown"));
+            agentsClient.waitDone(prefix);
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentsClient.waitDone();
-            agentsClient.executeOnAllWorkers(new GenericTestCommand("localTeardown"));
+            agentsClient.waitDone(prefix);
+            agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localTeardown"));
             echo("Completed Test local tear down");
 
             return coordinator.failureList.size() == oldFailureCount;
@@ -116,7 +121,7 @@ public class TestCaseRunner {
 
     private void startTestCase() {
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
-        RunCommand runCommand = new RunCommand();
+        RunCommand runCommand = new RunCommand(testCase.id);
         runCommand.clientOnly = workerJvmSettings.mixedWorkerCount > 0 || workerJvmSettings.clientWorkerCount > 0;
         agentsClient.executeOnAllWorkers(runCommand);
     }
@@ -141,14 +146,14 @@ public class TestCaseRunner {
                 msg += ", " + performanceFormat.format(coordinator.performance) + " ops/s.";
             }
 
-            log.info(msg);
+            log.info(prefix + msg);
         }
 
         Utils.sleepSeconds(small);
     }
 
     private void echo(String msg) {
-        agentsClient.echo(msg);
-        log.info(msg);
+        agentsClient.echo(prefix + msg);
+        log.info(prefix + msg);
     }
 }

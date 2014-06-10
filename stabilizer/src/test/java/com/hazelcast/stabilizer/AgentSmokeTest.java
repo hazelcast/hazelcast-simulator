@@ -65,25 +65,24 @@ public class AgentSmokeTest {
         client.initTestSuite(testSuite);
 
         spawnWorkers(client);
-        client.prepareAgentsForTests(testCase);
 
         InitTestCommand initTestCommand = new InitTestCommand(testCase);
         System.out.println("InitTest");
         client.executeOnAllWorkers(initTestCommand);
 
         System.out.println("setup");
-        client.executeOnAllWorkers(new GenericTestCommand("setup"));
+        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"setup"));
 
         System.out.println("localWarmup");
-        client.executeOnAllWorkers(new GenericTestCommand("localWarmup"));
-        client.waitDone();
+        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"localWarmup"));
+        client.waitDone("");
 
         System.out.println("globalWarmup");
-        client.executeOnAllWorkers(new GenericTestCommand("globalWarmup"));
-        client.waitDone();
+        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"globalWarmup"));
+        client.waitDone("");
 
         System.out.println("run");
-        RunCommand runCommand = new RunCommand();
+        RunCommand runCommand = new RunCommand(testCase.id);
         runCommand.clientOnly = false;
         client.executeOnAllWorkers(runCommand);
 
@@ -92,24 +91,24 @@ public class AgentSmokeTest {
         System.out.println("Finished running");
 
         System.out.println("stop");
-        client.executeOnAllWorkers(new StopTestCommand());
-        client.waitDone();
+        client.executeOnAllWorkers(new StopTestCommand(testCase.id));
+        client.waitDone("");
 
         System.out.println("localVerify");
-        client.executeOnAllWorkers(new GenericTestCommand("localVerify"));
-        client.waitDone();
+        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"localVerify"));
+        client.waitDone("");
 
         System.out.println("globalVerify");
-        client.executeOnAllWorkers(new GenericTestCommand("globalVerify"));
-        client.waitDone();
+        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"globalVerify"));
+        client.waitDone("");
 
         System.out.println("globalTeardown");
-        client.executeOnAllWorkers(new GenericTestCommand("globalTeardown"));
-        client.waitDone();
+        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"globalTeardown"));
+        client.waitDone("");
 
         System.out.println("localTeardown");
-        client.executeOnAllWorkers(new GenericTestCommand("localTeardown"));
-        client.waitDone();
+        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"localTeardown"));
+        client.waitDone("");
 
         System.out.println("Done");
     }
@@ -125,7 +124,6 @@ public class AgentSmokeTest {
 
         client.spawnWorkers(new WorkerJvmSettings[]{workerJvmSettings});
     }
-
 
     private void startAgent() throws InterruptedException {
         new Thread() {

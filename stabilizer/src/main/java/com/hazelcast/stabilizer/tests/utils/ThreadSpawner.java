@@ -7,10 +7,34 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Responsible for spawning threads. You can use your own threads, but make sure that you detect exceptions thrown
+ * and report them to the {@link com.hazelcast.stabilizer.tests.utils.ExceptionReporter}.
+ */
 public class ThreadSpawner {
 
     private final List<Thread> threads = Collections.synchronizedList(new LinkedList<Thread>());
     private final ConcurrentMap<String, AtomicInteger> idMap = new ConcurrentHashMap<String, AtomicInteger>();
+    private final String testId;
+
+    /**
+     * Creates a ThreadSpawner that is not tied to a particular test. Probably this is not the constructor you want
+     * because if multiple tests are running at the same time and one of these tests fails, it will be harder to figure
+     * out which test failed.
+     */
+    public ThreadSpawner() {
+        this(null);
+    }
+
+    /**
+     * The id of the test this spawner belongs to. This is needed to correlate an exception to a specific test-case.
+     *
+     * @param testId is allowed to be null, then no correlation is made.
+     */
+    public ThreadSpawner(String testId) {
+        this.testId = testId;
+    }
+
 
     public Thread spawn(Runnable runnable) {
         return spawn("Thread", runnable);
@@ -63,7 +87,7 @@ public class ThreadSpawner {
             try {
                 super.run();
             } catch (Throwable t) {
-                ExceptionReporter.report(t);
+                ExceptionReporter.report(testId, t);
             }
         }
     }

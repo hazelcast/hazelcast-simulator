@@ -141,7 +141,7 @@ public class WorkerJvmManager {
                 failure.agentAddress = getHostAddress();
                 failure.workerAddress = workerJvm.memberAddress;
                 failure.workerId = workerJvm.id;
-                failure.testCase = agent.getTestCase();
+                failure.testSuite = agent.getTestSuite();
                 failure.cause = throwableToString(e);
                 agent.getWorkerJvmFailureMonitor().publish(failure);
                 throw new FailureAlreadyThrownRuntimeException(e);

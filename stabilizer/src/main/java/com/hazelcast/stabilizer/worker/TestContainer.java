@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.utils;
+package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -20,11 +20,17 @@ import java.util.List;
 
 import static java.lang.String.format;
 
-public class TestInvoker<T extends TestContext> {
+/**
+ * Since the test is based on annotations, there is no API we can call very easily.
+ * That is the task of this test container.
+ *
+ * @param <T>
+ */
+public class TestContainer<T extends TestContext> {
 
-    private final static ILogger log = Logger.getLogger(TestInvoker.class);
+    private final static ILogger log = Logger.getLogger(TestContainer.class);
 
-    private final Object object;
+    private final Object testObject;
     private final Class<? extends Object> clazz;
     private final T testContext;
     private Method runMethod;
@@ -41,8 +47,8 @@ public class TestInvoker<T extends TestContext> {
 
     private Method operationCountMethod;
 
-    public TestInvoker(Object object, T testContext) {
-        if (object == null) {
+    public TestContainer(Object testObject, T testContext) {
+        if (testObject == null) {
             throw new NullPointerException();
         }
         if (testContext == null) {
@@ -50,8 +56,8 @@ public class TestInvoker<T extends TestContext> {
         }
 
         this.testContext = testContext;
-        this.object = object;
-        this.clazz = object.getClass();
+        this.testObject = testObject;
+        this.clazz = testObject.getClass();
 
         initRunMethod();
         initSetupMethod();
@@ -115,7 +121,7 @@ public class TestInvoker<T extends TestContext> {
         }
 
         try {
-            return (E) method.invoke(object, args);
+            return (E) method.invoke(testObject, args);
         } catch (InvocationTargetException e) {
             throw e.getCause();
         }

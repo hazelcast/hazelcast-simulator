@@ -74,7 +74,7 @@ public class AtomicLongTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner();
+        ThreadSpawner spawner = new ThreadSpawner(context.getTestId());
         for (int k = 0; k < threadCount; k++) {
             spawner.spawn(new Worker());
         }

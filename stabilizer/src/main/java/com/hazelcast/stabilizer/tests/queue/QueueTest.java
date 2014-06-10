@@ -74,7 +74,7 @@ public class QueueTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner();
+        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
             for (int l = 0; l < threadsPerQueue; l++) {
                 spawner.spawn(new Worker(queueIndex));

@@ -42,13 +42,12 @@ public class ExampleTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner();
+        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int k = 0; k < threadCount; k++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
     }
-
 
     @Verify
     public void verify() {
@@ -56,7 +55,6 @@ public class ExampleTest {
         long actual = counter.get();
 
         assertEquals(expected, actual);
-
     }
 
     @Teardown
@@ -89,7 +87,6 @@ public class ExampleTest {
 
             totalCounter.addAndGet(iteration);
         }
-
     }
 
     public static void main(String[] args) throws Throwable {
