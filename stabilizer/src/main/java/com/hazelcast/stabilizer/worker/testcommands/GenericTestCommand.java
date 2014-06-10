@@ -19,16 +19,19 @@ public class GenericTestCommand extends TestCommand {
 
     public static final long serialVersionUID = 0l;
 
+    public String testId;
     public String methodName;
 
-    public GenericTestCommand(String methodName) {
+    public GenericTestCommand(String testId, String methodName) {
+       this.testId = testId;
         this.methodName = methodName;
     }
 
     @Override
     public String toString() {
         return "GenericTestCommand{" +
-                "methodName='" + methodName + '\'' +
+                "testId='" + testId + '\'' +
+                ", methodName='" + methodName + '\'' +
                 '}';
     }
 }

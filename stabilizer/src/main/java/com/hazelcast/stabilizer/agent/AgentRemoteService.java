@@ -29,8 +29,7 @@ public class AgentRemoteService {
     public static final String SERVICE_EXECUTE_ALL_WORKERS = "executeOnAllWorkers";
     public static final String SERVICE_EXECUTE_SINGLE_WORKER = "executeOnSingleWorker";
     public static final String SERVICE_ECHO = "echo";
-    public static final String SERVICE_PREPARE_FOR_TEST = "prepareForTest";
-    public static final String SERVICE_GET_FAILURES = "failures";
+     public static final String SERVICE_GET_FAILURES = "failures";
 
     private final static Logger log = Logger.getLogger(AgentRemoteService.class.getName());
 
@@ -87,10 +86,7 @@ public class AgentRemoteService {
                     } else if (SERVICE_ECHO.equals(service)) {
                         String msg = (String) in.readObject();
                         echo(msg);
-                    } else if (SERVICE_PREPARE_FOR_TEST.equals(service)) {
-                        TestCase recipe = (TestCase) in.readObject();
-                        prepareForTest(recipe);
-                    } else {
+                    }  else {
                         throw new RuntimeException("Unknown service:" + service);
                     }
                 } catch (Exception e) {
@@ -145,15 +141,6 @@ public class AgentRemoteService {
                 agent.echo(msg);
             } catch (Exception e) {
                 log.fatal("Failed to echo", e);
-                throw e;
-            }
-        }
-
-        private void prepareForTest(TestCase testCase) throws Exception {
-            try {
-                agent.setTestCase(testCase);
-            } catch (Exception e) {
-                log.fatal("Failed to prepareForTest for recipe:" + testCase, e);
                 throw e;
             }
         }

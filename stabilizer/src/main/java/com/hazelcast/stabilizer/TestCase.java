@@ -23,13 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 public class TestCase implements Serializable {
-    public String id = "" + System.currentTimeMillis();
+    public String id;
     public HashMap<String, String> properties = new HashMap<String, String>();
 
-    public TestCase() {
-    }
-
-    public String getClassname() {
+     public String getClassname() {
         return properties.get("class");
     }
 
