@@ -44,7 +44,7 @@ public class MapLockTest {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
-        resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
+        resultsPerWorker = targetInstance.getMap(basename+"ResultMap" + testContext.getTestId());
     }
 
     @Teardown

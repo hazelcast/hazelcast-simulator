@@ -57,7 +57,7 @@ public class GrowingMapTest {
 
     @Teardown
     public void teardown() throws Exception {
-        map.destroy();
+        //map.destroy();
     }
 
     @Verify

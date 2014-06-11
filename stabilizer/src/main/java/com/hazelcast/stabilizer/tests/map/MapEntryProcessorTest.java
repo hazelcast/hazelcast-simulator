@@ -45,7 +45,7 @@ public class MapEntryProcessorTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
-        resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
+        resultsPerWorker = targetInstance.getMap(basename+"ResultMap" + testContext.getTestId());
     }
 
     @Teardown
@@ -83,7 +83,9 @@ public class MapEntryProcessorTest {
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             long expected = amount[k];
+
             long found = map.get(k);
+
             if (expected != found) {
                 failures++;
             }

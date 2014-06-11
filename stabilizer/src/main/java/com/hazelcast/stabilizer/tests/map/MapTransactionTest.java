@@ -50,7 +50,7 @@ public class MapTransactionTest {
         targetInstance = testContext.getTargetInstance();
         mapName = basename + "-" + testContext.getTestId();
         map = targetInstance.getMap(mapName);
-        resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
+        resultsPerWorker = targetInstance.getMap(basename+"ResultMap" + testContext.getTestId());
     }
 
     @Teardown
