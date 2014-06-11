@@ -81,7 +81,7 @@ public class LockTest {
             assertFalse("Lock should be unlocked", lock.isLocked());
 
             IAtomicLong account = targetInstance.getAtomicLong(getAccountId(k));
-            assertTrue("Amount can't be smaller than zero on account", account.get() < 0);
+            assertTrue("Amount can't be smaller than zero on account", account.get() >= 0);
             actual += account.get();
         }
 
