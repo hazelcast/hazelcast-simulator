@@ -15,6 +15,7 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class GrowingMapTest {
@@ -62,8 +63,10 @@ public class GrowingMapTest {
     @Verify
     public void verify() throws Exception {
 
-
-        assertTrue("Map should be empty, but has size:" + map.size(), removeOnStop && !map.isEmpty());
+        if(removeOnStop){
+            assertEquals("Map should be empty, but has size:", 0, map.size());
+            assertTrue("Map should be empty, but has size:", map.isEmpty());
+        }
     }
 
     private class Worker implements Runnable {
