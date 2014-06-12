@@ -40,7 +40,7 @@ public class MapCasTest {
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "map";
+    public String basename = "mapcas";
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();
@@ -72,7 +72,11 @@ public class MapCasTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner();
+        if(map.size()!=keyCount){
+            throw new RuntimeException("warmup has not run since the map is not filled correctly, foundsize:"+map.size());
+        }
+
+        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int k = 0; k < threadCount; k++) {
             spawner.spawn(new Worker());
         }

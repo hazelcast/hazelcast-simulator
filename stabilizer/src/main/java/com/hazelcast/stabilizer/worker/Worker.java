@@ -79,7 +79,9 @@ public class Worker {
 
     private final ConcurrentMap<String, TestContainer<TestContextImpl>> tests
             = new ConcurrentHashMap<String, TestContainer<TestContextImpl>>();
-    private volatile TestCommand currentCommand;
+
+    private final ConcurrentMap<String,TestCommand> commands
+            = new ConcurrentHashMap<String, TestCommand>();
 
     private final BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
     private final BlockingQueue<TestCommandResponse> responseQueue = new LinkedBlockingQueue<TestCommandResponse>();
@@ -328,7 +330,7 @@ public class Worker {
                             "testId" + command.testId + " is found");
                 }
 
-                new CommandThread(command) {
+                new CommandThread(command, command.testId) {
                     @Override
                     public void doRun() throws Throwable {
                         boolean passive = command.clientOnly && clientInstance == null;
@@ -346,28 +348,31 @@ public class Worker {
 
         public void process(final GenericTestCommand command) throws Throwable {
             final String methodName = command.methodName;
-            try {
-                log.info("Calling test." + methodName + "()");
+            final String testId = command.testId;
+            final String testName = "".equals(testId)?"test":testId;
 
-                final TestContainer<TestContextImpl> test = tests.get(command.testId);
+            try {
+                log.info(format("Calling %s.%s()",testName,methodName));
+
+                final TestContainer<TestContextImpl> test = tests.get(testId);
                 if (test == null) {
                     throw new IllegalStateException("Failed to process command: " + command + " no test with " +
-                            "testId" + command.testId + " is found");
+                            "testId" + testId + " is found");
                 }
 
                 final Method method = test.getClass().getMethod(methodName);
-                new CommandThread(command) {
+                new CommandThread(command, command.testId) {
                     @Override
                     public void doRun() throws Throwable {
                         try {
                             method.invoke(test);
-                            log.info("Finished calling test." + methodName + "()");
+                            log.info(format("Finished %s.%s()",testName,methodName));
                         } catch (InvocationTargetException e) {
-                            log.severe("Failed to call test." + methodName + "()");
+                            log.severe(format("Failed %s.%s()", testName, methodName));
                             throw e.getCause();
                         } finally {
                             if ("localTeardown".equals(methodName)) {
-                                tests.remove(command.testId);
+                                tests.remove(testId);
                             }
                         }
                     }
@@ -424,28 +429,30 @@ public class Worker {
         }
 
         public boolean process(DoneCommand command) throws Exception {
-            return currentCommand == null;
+            return !commands.containsKey(command.testId);
         }
     }
 
     abstract class CommandThread extends Thread {
 
         private final TestCommand command;
+        private final String testId;
 
-        public CommandThread(TestCommand command) {
+        public CommandThread(TestCommand command,String testId) {
             this.command = command;
+            this.testId = testId;
         }
 
         public abstract void doRun() throws Throwable;
 
         public final void run() {
             try {
-                currentCommand = command;
+                commands.put(testId,command);
                 doRun();
             } catch (Throwable t) {
                 ExceptionReporter.report(null, t);
             } finally {
-                currentCommand = null;
+                commands.remove(testId);
             }
         }
     }

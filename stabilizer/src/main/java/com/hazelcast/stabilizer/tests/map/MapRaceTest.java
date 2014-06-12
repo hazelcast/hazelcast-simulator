@@ -22,6 +22,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * This test verifies that there are race problems if the IMap is not used correctly.
+ *
+ */
 public class MapRaceTest {
 
     private final static ILogger log = Logger.getLogger(MapRaceTest.class);
@@ -31,7 +35,7 @@ public class MapRaceTest {
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "map";
+    public String basename = "maprace";
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();

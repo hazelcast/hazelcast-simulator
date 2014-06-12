@@ -53,17 +53,17 @@ public class TestCaseRunner {
 
             echo("Starting Test setup");
             agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "setup"));
-            agentsClient.waitDone(prefix);
+            agentsClient.waitDone(prefix, testCase.id);
             echo("Completed Test setup");
 
             echo("Starting Test local warmup");
             agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localWarmup"));
-            agentsClient.waitDone(prefix);
+            agentsClient.waitDone(prefix, testCase.id);
             echo("Completed Test local warmup");
 
             echo("Starting Test global warmup");
             agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalWarmup"));
-            agentsClient.waitDone(prefix);
+            agentsClient.waitDone(prefix, testCase.id);
             echo("Completed Test global warmup");
 
             echo("Starting Test start");
@@ -83,12 +83,12 @@ public class TestCaseRunner {
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
                 agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalVerify"));
-                agentsClient.waitDone(prefix);
+                agentsClient.waitDone(prefix, testCase.id);
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
                 agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localVerify"));
-                agentsClient.waitDone(prefix);
+                agentsClient.waitDone(prefix, testCase.id);
                 echo("Completed Test local verify");
             } else {
                 echo("Skipping Test verification");
@@ -96,11 +96,11 @@ public class TestCaseRunner {
 
             echo("Starting Test global tear down");
             agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalTeardown"));
-            agentsClient.waitDone(prefix);
+            agentsClient.waitDone(prefix, testCase.id);
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentsClient.waitDone(prefix);
+            agentsClient.waitDone(prefix, testCase.id);
             agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localTeardown"));
             echo("Completed Test local tear down");
 

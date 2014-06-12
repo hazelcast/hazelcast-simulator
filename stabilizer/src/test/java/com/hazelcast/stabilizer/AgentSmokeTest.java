@@ -75,11 +75,11 @@ public class AgentSmokeTest {
 
         System.out.println("localWarmup");
         client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"localWarmup"));
-        client.waitDone("");
+        client.waitDone("",testCase.id);
 
         System.out.println("globalWarmup");
         client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"globalWarmup"));
-        client.waitDone("");
+        client.waitDone("",testCase.id);
 
         System.out.println("run");
         RunCommand runCommand = new RunCommand(testCase.id);
@@ -92,23 +92,23 @@ public class AgentSmokeTest {
 
         System.out.println("stop");
         client.executeOnAllWorkers(new StopTestCommand(testCase.id));
-        client.waitDone("");
+        client.waitDone("",testCase.id);
 
         System.out.println("localVerify");
         client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"localVerify"));
-        client.waitDone("");
+        client.waitDone("",testCase.id);
 
         System.out.println("globalVerify");
         client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"globalVerify"));
-        client.waitDone("");
+        client.waitDone("",testCase.id);
 
         System.out.println("globalTeardown");
         client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"globalTeardown"));
-        client.waitDone("");
+        client.waitDone("",testCase.id);
 
         System.out.println("localTeardown");
         client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"localTeardown"));
-        client.waitDone("");
+        client.waitDone("",testCase.id);
 
         System.out.println("Done");
     }

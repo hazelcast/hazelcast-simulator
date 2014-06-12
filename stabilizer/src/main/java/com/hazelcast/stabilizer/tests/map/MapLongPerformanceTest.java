@@ -28,7 +28,7 @@ public class MapLongPerformanceTest {
     public int keyCount = 1000000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "map";
+    public String basename = "maplong";
     public int writePercentage = 10;
 
     private IMap<Integer, Long> map;

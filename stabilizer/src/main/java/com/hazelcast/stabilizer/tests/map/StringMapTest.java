@@ -47,7 +47,7 @@ public class StringMapTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
     public boolean usePut = true;
-    public String basename = "map";
+    public String basename = "stringmap";
 
     private IMap<Object, Object> map;
     private String[] keys;
