@@ -41,8 +41,8 @@ public class LockTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
 
-        lockCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":LockCounter");
-        totalMoney = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalMoney");
+        lockCounter = targetInstance.getAtomicLong(basename+testContext.getTestId() + ":LockCounter");
+        totalMoney = targetInstance.getAtomicLong(basename+testContext.getTestId() + ":TotalMoney");
     }
 
     @Warmup(global = true)
