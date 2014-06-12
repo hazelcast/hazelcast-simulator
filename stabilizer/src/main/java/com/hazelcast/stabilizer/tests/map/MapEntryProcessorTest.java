@@ -32,7 +32,7 @@ public class MapEntryProcessorTest {
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "map";
+    public String basename = this.getClass().getName();
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();
@@ -48,7 +48,7 @@ public class MapEntryProcessorTest {
         resultsPerWorker = targetInstance.getMap(basename+"ResultMap" + testContext.getTestId());
     }
 
-    @Teardown
+    @Teardown(global = true)
     public void teardown() throws Exception {
         map.destroy();
         resultsPerWorker.destroy();
@@ -56,15 +56,15 @@ public class MapEntryProcessorTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0l);
+        for (int key = 0; key < keyCount; key++) {
+            map.put(key, 0l);
         }
     }
 
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
@@ -91,7 +91,7 @@ public class MapEntryProcessorTest {
             }
         }
 
-        assertEquals(0, failures);
+        assertEquals("entry processor executions went missing", 0, failures);
     }
 
     @Performance
@@ -105,9 +105,6 @@ public class MapEntryProcessorTest {
 
         @Override
         public void run() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
-            }
 
             long iteration = 0;
             while (!testContext.isStopped()) {
