@@ -40,7 +40,7 @@ public class MapUsageStressTest {
     private final static String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
 
     private String basename = this.getClass().getName();
-    public int threadCount = 10;
+    public int threadCount = 3;
     public int valueLength = 100;
     public int keyCount = 1000;
     public int valueCount = 1000;
@@ -48,7 +48,7 @@ public class MapUsageStressTest {
 
     public boolean randomDistributionUniform=false;
 
-    //add up to 1
+    //check these add up to 1
     public double writeProb = 0.4;
     public double getProb = 0.2;
 
@@ -58,7 +58,7 @@ public class MapUsageStressTest {
     public double exicuteOnProb = 0.15;
     //
 
-    //add up to 1   (writeProb is splitup into sub styles)
+    //check these add up to 1   (writeProb is split up into sub styles)
     public double writeUsingPutProb = 0.15;
     public double writeUsingPutIfAbsent = 0.15;
     public double writeUsingPutExpireProb = 0.4;
@@ -131,8 +131,7 @@ public class MapUsageStressTest {
         }
     }
 
-    //happens just on one machien.
-    @Warmup
+    @Warmup(global = true)
     public void warmup() {
         values = new String[valueCount];
 
@@ -185,8 +184,8 @@ public class MapUsageStressTest {
         spawner.awaitCompletion();
     }
 
-    @Teardown
-    public void globalTearDown() throws Exception {
+    @Teardown(global = true)
+    public void tearDown() throws Exception {
         for (int i = 0; i < maxMaps; i++) {
             IMap map = targetInstance.getMap(basename + i);
             map.destroy();
@@ -226,7 +225,6 @@ public class MapUsageStressTest {
                 }else{
                     mapIdx = mapsZipfian.nextInt();
                     key = kesyZipfian.nextInt();
-
                 }
 
                 IMap map = targetInstance.getMap(basename + mapIdx);
@@ -261,7 +259,7 @@ public class MapUsageStressTest {
                         }
                     }
                     else{
-                        log.info("DID NOT ADD UP to (1) "+writeUsingPutExpireProb + writeUsingPutIfAbsent + writeUsingPutProb);
+                        log.info("CHECK ALL your probability's add up to 1 ");
                     }
 
                 }else if(chance < getProb + writeProb){
@@ -278,10 +276,10 @@ public class MapUsageStressTest {
                     map.remove(key);
                 }
                 else if(chance < exicuteOnProb + removeProb + replaceProb + clearProb + getProb + writeProb){
-                    map.executeOnKey(key, new EntryProcessorImpl(entryProcessorDelayMills));
+                    map.executeOnKey(key, new EntryProcessorImpl(9));
                 }
                 else{
-                    log.info("DID NOT ADD UP");
+                    log.info("CHECK ALL your probability's add up to 1");
                 }
             }
         }
