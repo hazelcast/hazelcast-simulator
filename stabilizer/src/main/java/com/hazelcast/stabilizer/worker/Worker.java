@@ -384,21 +384,20 @@ public class Worker {
 
                 log.info("Init Test:\n" + testCase);
                 if (tests.containsKey(testCase.getId())) {
-                    throw new IllegalStateException("Can't init testcase: " + command + ", another test with the same " +
-                            "testId already exists");
+                    throw new IllegalStateException("Can't init testcase: " + command + ", another test with [" + testCase.id +
+                            "] testId already exists");
                 }
 
                 String clazzName = testCase.getClassname();
-
-                Object test = InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
-                bindProperties(test, testCase);
+                Object testObject = InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
+                bindProperties(testObject, testCase);
 
                 TestContextImpl testContext = new TestContextImpl(testCase.id);
-                TestContainer<TestContextImpl> testContainer = new TestContainer<TestContextImpl>(test, testContext);
+                TestContainer<TestContextImpl> testContainer = new TestContainer<TestContextImpl>(testObject, testContext);
                 tests.put(testContext.getTestId(), testContainer);
 
                 if (serverInstance != null) {
-                    serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE, test);
+                    serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE+":"+testCase.id, testObject);
                 }
             } catch (Throwable e) {
                 log.severe("Failed to init Test", e);
