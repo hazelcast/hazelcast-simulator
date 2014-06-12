@@ -50,7 +50,7 @@ public class ExecutorTest {
     //the number of outstanding submits, before doing get. A count of 1 means that you wait for every task
     //to complete, before sending in the next.
     public int submitCount = 5;
-    public String basename = "executor";
+    public String basename = this.getClass().getName();
 
     private IExecutorService[] executors;
     private IAtomicLong executedCounter;
@@ -72,7 +72,7 @@ public class ExecutorTest {
         expectedExecutedCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":ExpectedExecutedCounter");
     }
 
-    @Teardown
+    @Teardown(global = true)
     public void teardown() throws Exception {
         executedCounter.destroy();
         expectedExecutedCounter.destroy();

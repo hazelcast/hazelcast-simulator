@@ -33,7 +33,7 @@ public class LockTest {
     private IAtomicLong lockCounter;
     private IAtomicLong totalMoney;
     private HazelcastInstance targetInstance;
-    public String basename = "lock";
+    public String basename = this.getClass().getName();
     private TestContext testContext;
 
     @Setup
@@ -89,7 +89,7 @@ public class LockTest {
         assertEquals("Money was lost/created", expected, actual);
     }
 
-    @Teardown
+    @Teardown(global = true)
     public void teardown() throws Exception {
         lockCounter.destroy();
         totalMoney.destroy();
