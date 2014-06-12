@@ -31,7 +31,7 @@ public class MapLockTest {
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "map";
+    public String basename = this.getClass().getName();
 
 
     private IMap<Integer, Long> map;
@@ -44,10 +44,10 @@ public class MapLockTest {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
-        resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
+        resultsPerWorker = targetInstance.getMap(basename+"ResultMap" + testContext.getTestId());
     }
 
-    @Teardown
+    @Teardown(global = true)
     public void teardown() throws Exception {
         map.destroy();
         resultsPerWorker.destroy();
@@ -55,8 +55,8 @@ public class MapLockTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0l);
+        for (int key = 0; key < keyCount; key++) {
+            map.put(key, 0l);
         }
     }
 
@@ -102,9 +102,6 @@ public class MapLockTest {
 
         @Override
         public void run() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
-            }
 
             long iteration = 0;
             while (!testContext.isStopped()) {
