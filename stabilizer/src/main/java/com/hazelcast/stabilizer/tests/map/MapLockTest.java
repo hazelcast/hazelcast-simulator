@@ -31,7 +31,7 @@ public class MapLockTest {
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "map";
+    public String basename = this.getClass().getName();
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();
@@ -43,7 +43,7 @@ public class MapLockTest {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
-        resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
+        resultsPerWorker = targetInstance.getMap(basename+"ResultMap" + testContext.getTestId());
     }
 
     @Teardown
