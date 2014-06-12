@@ -32,7 +32,7 @@ public class MapEntryProcessorTest {
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = this.getClass().getName();
+    public String basename = "map";
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();
@@ -45,10 +45,10 @@ public class MapEntryProcessorTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
-        resultsPerWorker = targetInstance.getMap(basename+"ResultMap" + testContext.getTestId());
+        resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
     }
 
-    @Teardown(global = true)
+    @Teardown
     public void teardown() throws Exception {
         map.destroy();
         resultsPerWorker.destroy();
@@ -56,15 +56,15 @@ public class MapEntryProcessorTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for (int key = 0; key < keyCount; key++) {
-            map.put(key, 0l);
+        for (int k = 0; k < keyCount; k++) {
+            map.put(k, 0l);
         }
     }
 
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int i = 0; i < threadCount; i++) {
+        for (int k = 0; k < threadCount; k++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
@@ -83,15 +83,13 @@ public class MapEntryProcessorTest {
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             long expected = amount[k];
-
             long found = map.get(k);
-
             if (expected != found) {
                 failures++;
             }
         }
 
-        assertEquals("entry processor executions went missing", 0, failures);
+        assertEquals(0, failures);
     }
 
     @Performance
@@ -105,6 +103,9 @@ public class MapEntryProcessorTest {
 
         @Override
         public void run() {
+            for (int k = 0; k < keyCount; k++) {
+                result.put(k, 0L);
+            }
 
             long iteration = 0;
             while (!testContext.isStopped()) {
