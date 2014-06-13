@@ -76,6 +76,7 @@ public class TestCaseRunner {
 
             echo("Starting Test stop");
             agentsClient.executeOnAllWorkers(new StopTestCommand(testCase.id));
+            agentsClient.waitDone(prefix, testCase.id);
             echo("Completed Test stop");
 
             logPerformance();
