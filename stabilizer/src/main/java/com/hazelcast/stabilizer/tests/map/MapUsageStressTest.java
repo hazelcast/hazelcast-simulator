@@ -28,11 +28,14 @@ import com.hazelcast.stabilizer.tests.map.helpers.ScrambledZipfianGenerator;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertEquals;
 
 public class MapUsageStressTest {
 
@@ -46,54 +49,39 @@ public class MapUsageStressTest {
     public int valueCount = 1000;
     public int maxMaps = 1;
 
-    public boolean randomDistributionUniform=false;
+    public boolean randomDistributionUniform=true;
 
     //check these add up to 1
     public double writeProb = 0.4;
     public double getProb = 0.2;
-
-    public double clearProb = 0;
-    public double replaceProb = 0.15;
-    public double removeProb = 0.1;
-    public double exicuteOnProb = 0.15;
+    public double removeProb = 0.2;
+    public double deleteProb = 0.2;
     //
 
     //check these add up to 1   (writeProb is split up into sub styles)
-    public double writeUsingPutProb = 0.15;
+    public double writeUsingPutProb = 0.25;
     public double writeUsingPutIfAbsent = 0.15;
-    public double writeUsingPutExpireProb = 0.4;
-    public double lockAndMod = 0.3;
+    public double writeUsingPutExpireProb = 0.5;
+    public double replaceProb = 0.1;
     //
 
     public int minExpireMillis = 200;
     public int maxExpireMillis = 8000;
 
-    public int migrationListenerCount = 1;
-    public int migrationListenerDelayMills = 40;
-
-    public int membershipListenerCount = 1;
-    public int membershipListenerDelayMills = 30;
-
-    public int lifecycleListenerCount = 1;
-    public int lifecycleListenerDelayMills = 20;
-
-    public int distributedObjectListenerCount = 1;
-    public int distributedObjectListenerDelayMills = 10;
-
-    public int localMapEntryListenerCount = 0;
-    public int localMapEntryListenerDelayMills = 0;
-
+    public int localMapEntryListenerCount = 1;
     public int mapEntryListenerCount = 1;
-    public int mapEntryListenerDelayMills = 0;
 
-    public int entryProcessorDelayMills = 100;
+    private final AtomicInteger localAddCount = new AtomicInteger(0);
+    private final AtomicInteger localRemoveCount = new AtomicInteger(0);
+    private final AtomicInteger localUpdateCount = new AtomicInteger(0);
+    private final AtomicInteger localEvictCount = new AtomicInteger(0);
 
 
     private String[] values;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    private List listeners = new ArrayList();
+    private Map<String, EntryListenerImpl> listeners = new HashMap();
 
     ScrambledZipfianGenerator mapsZipfian = new ScrambledZipfianGenerator(maxMaps);
     ScrambledZipfianGenerator kesyZipfian = new ScrambledZipfianGenerator(keyCount);
@@ -102,33 +90,6 @@ public class MapUsageStressTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-
-        for (int k = 0; k < migrationListenerCount; k++) {
-            MigrationnListenerImpl l = new MigrationnListenerImpl();
-            listeners.add(l);
-
-            try{
-                targetInstance.getPartitionService().addMigrationListener(l);
-            }catch(UnsupportedOperationException e){}
-        }
-
-        for (int k = 0; k < membershipListenerCount; k++) {
-            MembershipListenerImpl l = new MembershipListenerImpl();
-            listeners.add(l);
-            targetInstance.getCluster().addMembershipListener(l);
-        }
-
-        for (int k = 0; k < lifecycleListenerCount; k++) {
-            LifecycleListenerImpl l = new LifecycleListenerImpl();
-            listeners.add(l);
-            targetInstance.getLifecycleService().addLifecycleListener(l);
-        }
-
-        for (int k = 0; k < distributedObjectListenerCount; k++) {
-            DistributedObjectListenerImpl l = new DistributedObjectListenerImpl();
-            listeners.add(l);
-            targetInstance.addDistributedObjectListener(l);
-        }
     }
 
     @Warmup(global = true)
@@ -140,24 +101,25 @@ public class MapUsageStressTest {
         }
 
         for (int i = 0; i < maxMaps; i++) {
-            IMap map = targetInstance.getMap(basename + i);
+            String name = basename + i;
+            IMap map = targetInstance.getMap(name);
 
             for (int count = 0; count < mapEntryListenerCount; count++) {
-                EntryListenerImpl l = new EntryListenerImpl(mapEntryListenerDelayMills);
-                listeners.add(l);
+                EntryListenerImpl l = new EntryListenerImpl();
+                listeners.put(name, l);
                 map.addEntryListener(l, true);
             }
 
             for (int count = 0; count < localMapEntryListenerCount; count++) {
-                EntryListenerImpl l = new EntryListenerImpl(localMapEntryListenerDelayMills);
-                listeners.add(l);
-
+                EntryListenerImpl l = new EntryListenerImpl();
+                listeners.put(name+"local", l);
                 map.addLocalEntryListener(l);
             }
 
             int v = 0;
             for (int k = 0; k < keyCount; k++) {
                 map.put(k, values[v]);
+                localAddCount.getAndIncrement();
                 v = (v + 1 == values.length ? 0 : v + 1);
             }
         }
@@ -198,18 +160,45 @@ public class MapUsageStressTest {
     }
 
 
-    @Verify
+    @Verify(global = false)
     public void verify() throws Exception {
-        for(Object o : listeners){
-            log.info(o.toString());
-        }
 
+        Thread.sleep(10000);
+
+        /*
         for (int i = 0; i < maxMaps; i++) {
-            IMap map = targetInstance.getMap(basename + i);
-            log.info(map.toString()+" sz="+map.size());
+            String name = basename + i;
+            IMap map = targetInstance.getMap(name);
+            EntryListenerImpl e = listeners.get(name);
+
+            log.info(e.toString());
+
+
+            int expectedMapSz = e.addCount.get() - (e.evictCount.get() + e.removeCount.get());
+            assertEquals(expectedMapSz, map.size());
+        }
+        */
+
+        for (int i = 0; i < localMapEntryListenerCount; i++) {
+            String name = basename + i;
+            EntryListenerImpl e = listeners.get(name+"local");
+
+            while(true){
+
+
+                System.out.println("add = "+localAddCount.get() +" "+ e.addCount.get());
+                System.out.println("update = "+localUpdateCount.get() +" "+ e.updateCount.get());
+
+                System.out.println("remove = "+localRemoveCount.get() +" "+ e.removeCount.get());
+                System.out.println("evict = "+localEvictCount.get() +" "+ e.evictCount.get());
+
+
+                Thread.sleep(3000);
+                //assertEquals(localAddCount.get(), e.addCount.get());
+                //assertEquals(localUpdateCount.get(), e.updateCount.get());
+            }
         }
     }
-
 
     private class Worker implements Runnable {
         private final Random random = new Random();
@@ -236,195 +225,83 @@ public class MapUsageStressTest {
 
                     chance = random.nextDouble();
                     if (chance < writeUsingPutProb) {
-                        map.put(key, value);
-                    }
-                    else if(chance < writeUsingPutIfAbsent + writeUsingPutProb ){
-                        map.putIfAbsent(key, value);
-                    }
-                    else if ( chance <  writeUsingPutExpireProb + writeUsingPutIfAbsent + writeUsingPutProb) {
-                        int expire = random.nextInt(maxExpireMillis) + minExpireMillis;
-                        map.put(key, value, expire, TimeUnit.MILLISECONDS);
-                    }
-                    else if ( chance < lockAndMod + writeUsingPutExpireProb + writeUsingPutIfAbsent + writeUsingPutProb) {
 
                         map.lock(key);
                         try{
-                            value = map.get(key);
-                            if(value==null){
-                                value = values[random.nextInt(values.length)];
+                            if(map.containsKey(key)){
+                                localUpdateCount.getAndIncrement();
+                            }else {
+                                localAddCount.getAndIncrement();
                             }
                             map.put(key, value);
                         }finally {
                             map.unlock(key);
                         }
                     }
-                    else{
-                        log.info("CHECK ALL your probability's add up to 1 ");
+                    else if(chance < writeUsingPutIfAbsent + writeUsingPutProb ){
+
+                        map.lock(key);
+                        try{
+                            if(map.putIfAbsent(key, value) == null ){
+                                localAddCount.getAndIncrement();
+                            }
+                        }finally {
+                            map.unlock(key);
+                        }
+
                     }
+                    else if ( chance <  writeUsingPutExpireProb + writeUsingPutIfAbsent + writeUsingPutProb) {
+                        int expire = random.nextInt(maxExpireMillis) + minExpireMillis;
+
+                        map.lock(key);
+                        try{
+                            if(map.containsKey(key)){
+                                localUpdateCount.getAndIncrement();
+                            }else {
+                                localAddCount.getAndIncrement();
+                            }
+                            map.put(key, value, expire, TimeUnit.MILLISECONDS);
+                        }
+                        finally {
+                            map.unlock(key);
+                        }
+                    }
+                    else if(chance < replaceProb + writeUsingPutExpireProb + writeUsingPutIfAbsent + writeUsingPutProb){
+
+                        Object orig = map.get(key);
+                        if ( orig !=null && map.replace(key, orig, value) ){
+                            localUpdateCount.getAndIncrement();
+                        }
+                    }
+
 
                 }else if(chance < getProb + writeProb){
                     map.get(key);
                 }
-                else if(chance < clearProb + getProb + writeProb){
-                    map.clear();
+                else if(chance < removeProb + getProb + writeProb){
+                    Object o = map.remove(key);
+                    if(o != null){
+                        localRemoveCount.getAndIncrement();
+                    }
                 }
-                else if(chance < replaceProb + clearProb + getProb + writeProb){
-                    Object value = values[random.nextInt(values.length)];
-                    map.replace(key, value);
+                else if (chance < deleteProb + removeProb + getProb + writeProb ){
+
+                    map.lock(key);
+                    try{
+                        if(map.containsKey(key)){
+                            localRemoveCount.getAndIncrement();
+                        }
+                        map.delete(key);
+                    }finally {
+                        map.unlock(key);
+                    }
+
                 }
-                else if(chance < removeProb + replaceProb + clearProb + getProb + writeProb){
-                    map.remove(key);
-                }
-                else if(chance < exicuteOnProb + removeProb + replaceProb + clearProb + getProb + writeProb){
-                    map.executeOnKey(key, new EntryProcessorImpl(9));
-                }
-                else{
-                    log.info("CHECK ALL your probability's add up to 1");
-                }
+
             }
         }
     }
 
-
-
-    public static class EntryProcessorImpl implements  EntryProcessor {
-
-        public int entryProcessorDelayMills =0;
-
-        public EntryProcessorImpl(int entryProcessorDelayNs){
-            this.entryProcessorDelayMills = entryProcessorDelayNs;
-        }
-
-        public Object process(Map.Entry entry) {
-            entry.setValue("modded Value");
-            Utils.sleepMillis(entryProcessorDelayMills);
-            return entry.getValue();
-        }
-
-        @Override
-        public EntryBackupProcessor getBackupProcessor() {
-            Utils.sleepMillis(entryProcessorDelayMills);
-            return null;
-        }
-
-        @Override
-        public String toString() {
-            return "EntryProcessorImpl{" +
-                    "entryProcessorDelayMills=" + entryProcessorDelayMills +
-                    '}';
-        }
-    }
-
-
-    public class MigrationnListenerImpl implements MigrationListener {
-        public final AtomicInteger startedCount = new AtomicInteger();
-        public final AtomicInteger completedCount = new AtomicInteger();
-        public final AtomicInteger failedCount = new AtomicInteger();
-
-        @Override
-        public void migrationStarted(MigrationEvent migrationEvent) {
-            Utils.sleepMillis(migrationListenerDelayMills);
-            startedCount.incrementAndGet();
-        }
-
-        @Override
-        public void migrationCompleted(MigrationEvent migrationEvent) {
-            Utils.sleepMillis(migrationListenerDelayMills);
-            completedCount.incrementAndGet();
-        }
-
-        @Override
-        public void migrationFailed(MigrationEvent migrationEvent) {
-            Utils.sleepMillis(migrationListenerDelayMills);
-            failedCount.incrementAndGet();
-        }
-
-        @Override
-        public String toString() {
-            return "MigrationnListenerImpl{" +
-                    "startedCount=" + startedCount +
-                    ", completedCount=" + completedCount +
-                    ", failedCount=" + failedCount +
-                    '}';
-        }
-    }
-
-
-    public class MembershipListenerImpl implements MembershipListener {
-        public final AtomicInteger addCount = new AtomicInteger();
-        public final AtomicInteger removeCount = new AtomicInteger();
-        public final AtomicInteger updateCount = new AtomicInteger();
-
-        @Override
-        public void memberAdded(MembershipEvent membershipEvent) {
-            Utils.sleepMillis(membershipListenerDelayMills);
-            addCount.incrementAndGet();
-        }
-
-        @Override
-        public void memberRemoved(MembershipEvent membershipEvent) {
-            Utils.sleepMillis(membershipListenerDelayMills);
-            removeCount.incrementAndGet();
-        }
-
-        @Override
-        public void memberAttributeChanged(MemberAttributeEvent memberAttributeEvent) {
-            Utils.sleepMillis(membershipListenerDelayMills);
-            updateCount.incrementAndGet();
-        }
-
-        @Override
-        public String toString() {
-            return "MembershipListenerImpl{" +
-                    "addCount=" + addCount +
-                    ", removeCount=" + removeCount +
-                    ", updateCount=" + updateCount +
-                    '}';
-        }
-    }
-
-    public class LifecycleListenerImpl implements LifecycleListener {
-        public final AtomicInteger count = new AtomicInteger();
-
-        @Override
-        public void stateChanged(LifecycleEvent lifecycleEvent) {
-            Utils.sleepMillis(lifecycleListenerDelayMills);
-            count.incrementAndGet();
-        }
-
-        @Override
-        public String toString() {
-            return "LifecycleListenerImpl{" +
-                    "count=" + count +
-                    '}';
-        }
-    }
-
-
-    public class DistributedObjectListenerImpl implements DistributedObjectListener {
-        public final AtomicInteger addCount = new AtomicInteger();
-        public final AtomicInteger removeCount = new AtomicInteger();
-
-        @Override
-        public void distributedObjectCreated(DistributedObjectEvent distributedObjectEvent) {
-            Utils.sleepMillis(distributedObjectListenerDelayMills);
-            addCount.incrementAndGet();
-        }
-
-        @Override
-        public void distributedObjectDestroyed(DistributedObjectEvent distributedObjectEvent) {
-            Utils.sleepMillis(distributedObjectListenerDelayMills);
-            removeCount.incrementAndGet();
-        }
-
-        @Override
-        public String toString() {
-            return "DistributedObjectListenerImpl{" +
-                    "addCount=" + addCount +
-                    ", removeCount=" + removeCount +
-                    '}';
-        }
-    }
 
     public class EntryListenerImpl implements EntryListener<Object, Object> {
 
@@ -432,33 +309,28 @@ public class MapUsageStressTest {
         public final AtomicInteger removeCount = new AtomicInteger();
         public final AtomicInteger updateCount = new AtomicInteger();
         public final AtomicInteger evictCount = new AtomicInteger();
-        private final int delay;
 
-        public EntryListenerImpl(int delayNs) {
-            this.delay = delayNs;
+        public EntryListenerImpl( ) {
+
         }
 
         @Override
         public void entryAdded(EntryEvent<Object, Object> objectObjectEntryEvent) {
-            Utils.sleepMillis(delay);
             addCount.incrementAndGet();
         }
 
         @Override
         public void entryRemoved(EntryEvent<Object, Object> objectObjectEntryEvent) {
-            Utils.sleepMillis(delay);
             removeCount.incrementAndGet();
         }
 
         @Override
         public void entryUpdated(EntryEvent<Object, Object> objectObjectEntryEvent) {
-            Utils.sleepMillis(delay);
             updateCount.incrementAndGet();
         }
 
         @Override
         public void entryEvicted(EntryEvent<Object, Object> objectObjectEntryEvent) {
-            Utils.sleepMillis(delay);
             evictCount.incrementAndGet();
         }
 
@@ -474,7 +346,6 @@ public class MapUsageStressTest {
     }
 
     public static void main(String[] args) throws Throwable {
-
         new TestRunner(new MapUsageStressTest()).run();
     }
 }
