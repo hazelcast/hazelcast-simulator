@@ -153,10 +153,10 @@ public class AgentsClient {
         return result;
     }
 
-    public void waitDone(String prefix) {
+    public void waitDone(String prefix,String testId) {
         long startTimeMs = System.currentTimeMillis();
         for (; ; ) {
-            List<List<Boolean>> result = executeOnAllWorkers(new DoneCommand());
+            List<List<Boolean>> result = executeOnAllWorkers(new DoneCommand(testId));
             boolean complete = true;
             for (List<Boolean> l : result) {
                 for (Boolean b : l) {

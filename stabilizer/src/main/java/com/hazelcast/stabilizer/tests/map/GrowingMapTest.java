@@ -30,7 +30,7 @@ public class GrowingMapTest {
     public int logFrequency = 10000;
     public boolean removeOnStop = true;
     public boolean readValidation = true;
-    public String basename = "map";
+    public String basename = "growningmap";
 
     private IMap<Long, Long> map;
     private IdGenerator idGenerator;

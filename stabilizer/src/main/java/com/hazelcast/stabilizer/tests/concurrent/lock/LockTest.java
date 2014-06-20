@@ -33,7 +33,7 @@ public class LockTest {
     private IAtomicLong lockCounter;
     private IAtomicLong totalMoney;
     private HazelcastInstance targetInstance;
-    public String basename = this.getClass().getName();
+    public String basename = "lock";
     private TestContext testContext;
 
     @Setup
@@ -81,7 +81,7 @@ public class LockTest {
             assertFalse("Lock should be unlocked", lock.isLocked());
 
             IAtomicLong account = targetInstance.getAtomicLong(getAccountId(k));
-            assertTrue("Amount can't be smaller than zero on account", account.get() >= 0);
+            assertTrue("Amount can't be smaller than zero on account", account.get() < 0);
             actual += account.get();
         }
 
@@ -89,7 +89,7 @@ public class LockTest {
         assertEquals("Money was lost/created", expected, actual);
     }
 
-    @Teardown(global = true)
+    @Teardown
     public void teardown() throws Exception {
         lockCounter.destroy();
         totalMoney.destroy();
@@ -151,12 +151,11 @@ public class LockTest {
                 iteration++;
             }
 
-//            totalCounter.addAndGet(iteration);
+            totalMoney.addAndGet(iteration);
         }
 
         private long getRandomAccountKey() {
             long key = random.nextLong() % lockCounter.get();
-
 
             if (key < 0) key = -key;
             return key;
@@ -165,8 +164,7 @@ public class LockTest {
 
     public static void main(String[] args) throws Throwable {
         LockTest test = new LockTest();
-        new TestRunner(test).run();
+        new TestRunner(test).withDuration(10).run();
     }
 }
-
 

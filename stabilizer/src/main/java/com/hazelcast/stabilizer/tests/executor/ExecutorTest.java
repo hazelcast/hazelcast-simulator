@@ -22,10 +22,12 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.map.MapCasTest;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -116,7 +118,7 @@ public class ExecutorTest {
                 futureList.clear();
 
                 for (int k = 0; k < submitCount; k++) {
-                    Future future = executorService.submit(new Task());
+                    Future future = executorService.submit(new Task(testContext.getTestId()));
                     futureList.add(future);
                     iteration++;
                 }
@@ -143,10 +145,15 @@ public class ExecutorTest {
 
     private static class Task implements Runnable, Serializable, HazelcastInstanceAware {
         private transient HazelcastInstance hz;
+        private final String testId;
+
+        private Task(String testId) {
+            this.testId = testId;
+        }
 
         @Override
         public void run() {
-            ExecutorTest test = (ExecutorTest) hz.getUserContext().get(TestUtils.TEST_INSTANCE);
+            ExecutorTest test = (ExecutorTest) hz.getUserContext().get(TestUtils.TEST_INSTANCE + ":" + testId);
             test.executedCounter.incrementAndGet();
         }
 
@@ -154,5 +161,10 @@ public class ExecutorTest {
         public void setHazelcastInstance(HazelcastInstance hz) {
             this.hz = hz;
         }
+    }
+
+    public static void main(String[] args) throws Throwable {
+        ExecutorTest test = new ExecutorTest();
+        new TestRunner(test).run();
     }
 }
