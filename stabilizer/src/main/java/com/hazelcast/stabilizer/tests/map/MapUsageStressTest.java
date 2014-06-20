@@ -70,6 +70,7 @@ public class MapUsageStressTest {
     private final AtomicLong localRemoveCount = new AtomicLong(0);
     private final AtomicLong localUpdateCount = new AtomicLong(0);
     private final AtomicLong localEvictCount = new AtomicLong(0);
+    private final AtomicLong localReplaceCount = new AtomicLong(0);
 
 
     private String[] values;
@@ -144,21 +145,21 @@ public class MapUsageStressTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
-        Thread.sleep(5000);
 
         IMap map = targetInstance.getMap(basename);
         EntryListenerImpl e = listeners.get(basename);
 
-        System.out.println("add = "+localAddCount.get() +" "+ e.addCount.get());
-        System.out.println("update = "+localUpdateCount.get() +" "+ e.updateCount.get());
-        System.out.println("remove = "+localRemoveCount.get() +" "+ e.removeCount.get());
-        System.out.println("evict = "+localEvictCount.get() +" "+ e.evictCount.get());
-
+        long addedTotal = localAddCount.get() + localReplaceCount.get();
+        long replaceTrickCount = e.addCount.get() - localAddCount.get();
         long expectedMapSz = e.addCount.get() - (e.evictCount.get() + e.removeCount.get());
-        assertEquals(expectedMapSz, map.size());
 
-        //assertEquals(localAddCount.get(), e.addCount.get());
-        //assertEquals(localUpdateCount.get(), e.updateCount.get());
+        assertEquals("add Events ",      addedTotal,               e.addCount.get());
+        assertEquals("update Events ",   localUpdateCount.get(),   e.updateCount.get());
+        assertEquals("remove Events ",   localRemoveCount.get(),   e.removeCount.get());
+        assertEquals("evict Events ",    localEvictCount.get(),    e.evictCount.get());
+
+        assertEquals("add Events caused By Replace ", localReplaceCount.get(), replaceTrickCount);
+        assertEquals("mapSZ "+ map.size(),  expectedMapSz );
     }
 
     private class Worker implements Runnable {
@@ -209,7 +210,7 @@ public class MapUsageStressTest {
                     else if(chance < replaceProb + writeUsingPutIfAbsent + writeUsingPutProb){
                         Object orig = map.get(key);
                         if ( orig !=null && map.replace(key, orig, value) ){
-                            localAddCount.getAndIncrement();
+                            localReplaceCount.getAndIncrement();
                         }
                     }
                 }else if(chance < evictProb + writeProb){
@@ -242,6 +243,23 @@ public class MapUsageStressTest {
                 }
             }
         }
+    }
+
+    private void printInfo() throws Exception{
+        IMap map = targetInstance.getMap(basename);
+        EntryListenerImpl e = listeners.get(basename);
+
+        long addedTotal = localAddCount.get() + localReplaceCount.get();
+        System.out.println("add = "+addedTotal +" "+ e.addCount.get());
+        System.out.println("update = "+localUpdateCount.get() +" "+ e.updateCount.get());
+        System.out.println("remove = "+localRemoveCount.get() +" "+ e.removeCount.get());
+        System.out.println("evict = "+localEvictCount.get() +" "+ e.evictCount.get());
+
+        long replaceTrickCount = e.addCount.get() - localAddCount.get();
+        System.out.println("replaced = " + localReplaceCount.get() + " " + replaceTrickCount);
+
+        long expectedMapSz = e.addCount.get() - (e.evictCount.get() + e.removeCount.get());
+        System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
     }
 
 
