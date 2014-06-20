@@ -18,29 +18,22 @@ package com.hazelcast.stabilizer.tests.map;
 import com.hazelcast.core.*;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.map.EntryBackupProcessor;
-import com.hazelcast.map.EntryProcessor;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.*;
 import com.hazelcast.stabilizer.tests.map.helpers.ScrambledZipfianGenerator;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
-public class MapUsageStressTest {
+public class MapEntryListenerTest {
 
-    private final static ILogger log = Logger.getLogger(MapUsageStressTest.class);
+    private final static ILogger log = Logger.getLogger(MapEntryListenerTest.class);
     private final static String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
 
     private String basename = this.getClass().getName();
@@ -304,6 +297,6 @@ public class MapUsageStressTest {
     }
 
     public static void main(String[] args) throws Throwable {
-        new TestRunner(new MapUsageStressTest()).run();
+        new TestRunner(new MapEntryListenerTest()).run();
     }
 }
