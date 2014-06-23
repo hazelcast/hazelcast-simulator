@@ -83,18 +83,21 @@ public class MapEntryListenerTest {
         for (int k = 0; k < values.length; k++) {
             values[k] = makeString(valueLength);
         }
+
+        IMap map = targetInstance.getMap(basename);
+
+        for (int i = 0; i < mapEntryListenerCount; i++) {
+            EntryListenerImpl l = new EntryListenerImpl();
+            listeners.put(basename, l);
+            map.addEntryListener(l, true);
+        }
+
     }
 
     @Warmup(global = true)
     public void warmup() {
 
         IMap map = targetInstance.getMap(basename);
-
-        for (int count = 0; count < mapEntryListenerCount; count++) {
-            EntryListenerImpl l = new EntryListenerImpl();
-            listeners.put(basename, l);
-            map.addEntryListener(l, true);
-        }
 
         int v = 0;
         for (int k = 0; k < keyCount; k++) {
