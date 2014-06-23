@@ -138,7 +138,6 @@ public class MapEntryListenerTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
-
         printInfo();
 
         IMap map = targetInstance.getMap(basename);
