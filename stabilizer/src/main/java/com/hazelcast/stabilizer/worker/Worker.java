@@ -357,7 +357,7 @@ public class Worker {
                 final TestContainer<TestContextImpl> test = tests.get(testId);
                 if (test == null) {
                     throw new IllegalStateException("Failed to process command: " + command + " no test with " +
-                            "testId" + testId + " is found");
+                            "testId " + testId + " is found");
                 }
 
                 final Method method = test.getClass().getMethod(methodName);
