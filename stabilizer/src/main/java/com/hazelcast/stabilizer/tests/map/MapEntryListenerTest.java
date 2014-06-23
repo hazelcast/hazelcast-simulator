@@ -78,15 +78,15 @@ public class MapEntryListenerTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+
+        values = new String[valueCount];
+        for (int k = 0; k < values.length; k++) {
+            values[k] = makeString(valueLength);
+        }
     }
 
     @Warmup(global = true)
     public void warmup() {
-        values = new String[valueCount];
-
-        for (int k = 0; k < values.length; k++) {
-            values[k] = makeString(valueLength);
-        }
 
         IMap map = targetInstance.getMap(basename);
 
