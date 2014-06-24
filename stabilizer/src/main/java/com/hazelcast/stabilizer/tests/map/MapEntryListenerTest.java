@@ -280,7 +280,7 @@ public class MapEntryListenerTest {
         System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
     }
 
-    public class Count implements DataSerializable{
+    public static class Count implements DataSerializable{
         public  AtomicLong localAddCount = new AtomicLong(0);
         public  AtomicLong localRemoveCount = new AtomicLong(0);
         public  AtomicLong localUpdateCount = new AtomicLong(0);
