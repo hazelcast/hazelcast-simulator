@@ -18,16 +18,21 @@ package com.hazelcast.stabilizer.tests.map;
 import com.hazelcast.core.*;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.*;
 import com.hazelcast.stabilizer.tests.map.helpers.ScrambledZipfianGenerator;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
@@ -69,7 +74,10 @@ public class MapEntryListenerTest {
 
     private Map<String, EntryListenerImpl> listeners = new HashMap();
 
-    ScrambledZipfianGenerator kesyZipfian = new ScrambledZipfianGenerator(keyCount);
+    public static final AtomicBoolean addResult = new AtomicBoolean(true);
+
+
+    private ScrambledZipfianGenerator kesyZipfian = new ScrambledZipfianGenerator(keyCount);
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -238,7 +246,11 @@ public class MapEntryListenerTest {
                 }
             }
             IList results = targetInstance.getList(basename+"results");
-            results.add(count);
+
+
+            if(addResult.compareAndSet(true, false)){
+                results.add(count);
+            }
         }
     }
 
@@ -268,12 +280,12 @@ public class MapEntryListenerTest {
         System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
     }
 
-    public class Count implements Serializable{
-        public final AtomicLong localAddCount = new AtomicLong(0);
-        public final AtomicLong localRemoveCount = new AtomicLong(0);
-        public final AtomicLong localUpdateCount = new AtomicLong(0);
-        public final AtomicLong localEvictCount = new AtomicLong(0);
-        public final AtomicLong localReplaceCount = new AtomicLong(0);
+    public class Count implements DataSerializable{
+        public  AtomicLong localAddCount = new AtomicLong(0);
+        public  AtomicLong localRemoveCount = new AtomicLong(0);
+        public  AtomicLong localUpdateCount = new AtomicLong(0);
+        public  AtomicLong localEvictCount = new AtomicLong(0);
+        public  AtomicLong localReplaceCount = new AtomicLong(0);
 
         public void add(Count c){
             localAddCount.addAndGet(c.localAddCount.get());
@@ -281,6 +293,22 @@ public class MapEntryListenerTest {
             localUpdateCount.addAndGet(c.localUpdateCount.get());
             localEvictCount.addAndGet(c.localEvictCount.get());
             localReplaceCount.addAndGet(c.localReplaceCount.get());
+        }
+
+        public void writeData(ObjectDataOutput out) throws IOException {
+            out.writeObject(localAddCount);
+            out.writeObject(localRemoveCount);
+            out.writeObject(localUpdateCount);
+            out.writeObject(localEvictCount);
+            out.writeObject(localReplaceCount);
+        }
+
+        public void readData(ObjectDataInput in) throws IOException {
+            localAddCount = in.readObject();
+            localRemoveCount = in.readObject();
+            localUpdateCount = in.readObject();
+            localEvictCount = in.readObject();
+            localReplaceCount = in.readObject();
         }
     }
 
