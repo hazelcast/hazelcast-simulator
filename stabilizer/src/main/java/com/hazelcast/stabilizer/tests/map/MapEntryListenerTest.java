@@ -287,6 +287,9 @@ public class MapEntryListenerTest {
         public  AtomicLong localEvictCount = new AtomicLong(0);
         public  AtomicLong localReplaceCount = new AtomicLong(0);
 
+        public Count(){
+        }
+
         public void add(Count c){
             localAddCount.addAndGet(c.localAddCount.get());
             localRemoveCount.addAndGet(c.localRemoveCount.get());
