@@ -24,6 +24,7 @@ import com.hazelcast.stabilizer.tests.annotations.*;
 import com.hazelcast.stabilizer.tests.map.helpers.ScrambledZipfianGenerator;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -247,8 +248,8 @@ public class MapEntryListenerTest {
 
         Count total = new Count();
 
-        for(Count count : counts){
-            total.add(count);
+        for(Count c : counts){
+            total.add(c);
         }
 
         IMap map = targetInstance.getMap(basename);
@@ -267,7 +268,7 @@ public class MapEntryListenerTest {
         System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
     }
 
-    public class Count{
+    public class Count implements Serializable{
         public final AtomicLong localAddCount = new AtomicLong(0);
         public final AtomicLong localRemoveCount = new AtomicLong(0);
         public final AtomicLong localUpdateCount = new AtomicLong(0);
