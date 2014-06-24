@@ -59,12 +59,8 @@ public class MapEntryListenerTest {
 
     public int mapEntryListenerCount = 1;
 
-    private final AtomicLong localAddCount = new AtomicLong(0);
-    private final AtomicLong localRemoveCount = new AtomicLong(0);
-    private final AtomicLong localUpdateCount = new AtomicLong(0);
-    private final AtomicLong localEvictCount = new AtomicLong(0);
-    private final AtomicLong localReplaceCount = new AtomicLong(0);
 
+    private Count count = new Count();
 
     private String[] values;
     private TestContext testContext;
@@ -102,7 +98,7 @@ public class MapEntryListenerTest {
         int v = 0;
         for (int k = 0; k < keyCount; k++) {
             map.put(k, values[v]);
-            localAddCount.getAndIncrement();
+            count.localAddCount.getAndIncrement();
             v = (v + 1 == values.length ? 0 : v + 1);
         }
     }
@@ -146,16 +142,16 @@ public class MapEntryListenerTest {
         IMap map = targetInstance.getMap(basename);
         EntryListenerImpl e = listeners.get(basename);
 
-        long addedTotal = localAddCount.get() + localReplaceCount.get();
-        long replaceTrickCount = e.addCount.get() - localAddCount.get();
-        long expectedMapSz = e.addCount.get() - (localReplaceCount.get() - e.evictCount.get() + e.removeCount.get());
+        long addedTotal = count.localAddCount.get() + count.localReplaceCount.get();
+        long replaceTrickCount = e.addCount.get() - count.localAddCount.get();
+        long expectedMapSz = e.addCount.get() - (count.localReplaceCount.get() - e.evictCount.get() + e.removeCount.get());
 
         assertEquals("add Events ",      addedTotal,               e.addCount.get());
-        assertEquals("update Events ",   localUpdateCount.get(),   e.updateCount.get());
-        assertEquals("remove Events ",   localRemoveCount.get(),   e.removeCount.get());
-        assertEquals("evict Events ",    localEvictCount.get(),    e.evictCount.get());
+        assertEquals("update Events ",   count.localUpdateCount.get(),   e.updateCount.get());
+        assertEquals("remove Events ",   count.localRemoveCount.get(),   e.removeCount.get());
+        assertEquals("evict Events ",    count.localEvictCount.get(),    e.evictCount.get());
 
-        assertEquals("add Events caused By Replace ", localReplaceCount.get(), replaceTrickCount);
+        assertEquals("add Events caused By Replace ", count.localReplaceCount.get(), replaceTrickCount);
 
         assertEquals("mapSZ ",  expectedMapSz, map.size());
     }
@@ -186,9 +182,9 @@ public class MapEntryListenerTest {
                         map.lock(key);
                         try{
                             if(map.containsKey(key)){
-                                localUpdateCount.getAndIncrement();
+                                count.localUpdateCount.getAndIncrement();
                             }else {
-                                localAddCount.getAndIncrement();
+                                count.localAddCount.getAndIncrement();
                             }
                             map.put(key, value);
                         }finally {
@@ -199,7 +195,7 @@ public class MapEntryListenerTest {
                         map.lock(key);
                         try{
                             if(map.putIfAbsent(key, value) == null ){
-                                localAddCount.getAndIncrement();
+                                count.localAddCount.getAndIncrement();
                             }
                         }finally {
                             map.unlock(key);
@@ -208,14 +204,14 @@ public class MapEntryListenerTest {
                     else if(chance < replaceProb + writeUsingPutIfAbsent + writeUsingPutProb){
                         Object orig = map.get(key);
                         if ( orig !=null && map.replace(key, orig, value) ){
-                            localReplaceCount.getAndIncrement();
+                            count.localReplaceCount.getAndIncrement();
                         }
                     }
                 }else if(chance < evictProb + writeProb){
                     map.lock(key);
                     try{
                         if(map.containsKey(key)){
-                            localEvictCount.getAndIncrement();
+                            count.localEvictCount.getAndIncrement();
                         }
                         map.evict(key);
                     }finally {
@@ -225,14 +221,14 @@ public class MapEntryListenerTest {
                 else if(chance < removeProb + evictProb + writeProb){
                     Object o = map.remove(key);
                     if(o != null){
-                        localRemoveCount.getAndIncrement();
+                        count.localRemoveCount.getAndIncrement();
                     }
                 }
                 else if (chance < deleteProb + removeProb + evictProb + writeProb ){
                     map.lock(key);
                     try{
                         if(map.containsKey(key)){
-                            localRemoveCount.getAndIncrement();
+                            count.localRemoveCount.getAndIncrement();
                         }
                         map.delete(key);
                     }finally {
@@ -240,26 +236,52 @@ public class MapEntryListenerTest {
                     }
                 }
             }
+            IList results = targetInstance.getList(basename+"results");
+            results.add(count);
         }
     }
 
     private void printInfo() throws Exception{
+
+        IList<Count> counts = targetInstance.getList(basename+"results");
+
+        Count total = new Count();
+
+        for(Count count : counts){
+            total.add(count);
+        }
+
         IMap map = targetInstance.getMap(basename);
         EntryListenerImpl e = listeners.get(basename);
 
-        long addedTotal = localAddCount.get() + localReplaceCount.get();
+        long addedTotal = total.localAddCount.get() + total.localReplaceCount.get();
+        long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
+        long expectedMapSz = e.addCount.get()  - (total.localReplaceCount.get() + e.evictCount.get() + e.removeCount.get());
+
+
         System.out.println("add = "+addedTotal +" "+ e.addCount.get());
-        System.out.println("update = "+localUpdateCount.get() +" "+ e.updateCount.get());
-        System.out.println("remove = "+localRemoveCount.get() +" "+ e.removeCount.get());
-        System.out.println("evict = "+localEvictCount.get() +" "+ e.evictCount.get());
-
-        long replaceTrickCount = e.addCount.get() - localAddCount.get();
-        System.out.println("replaced = " + localReplaceCount.get() + " " + replaceTrickCount);
-
-        long expectedMapSz = e.addCount.get()  - (localReplaceCount.get() + e.evictCount.get() + e.removeCount.get());
+        System.out.println("update = "+total.localUpdateCount.get() +" "+ e.updateCount.get());
+        System.out.println("remove = "+total.localRemoveCount.get() +" "+ e.removeCount.get());
+        System.out.println("evict = "+total.localEvictCount.get() +" "+ e.evictCount.get());
+        System.out.println("replaced = " + total.localReplaceCount.get() + " " + replaceTrickCount);
         System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
     }
 
+    public class Count{
+        public final AtomicLong localAddCount = new AtomicLong(0);
+        public final AtomicLong localRemoveCount = new AtomicLong(0);
+        public final AtomicLong localUpdateCount = new AtomicLong(0);
+        public final AtomicLong localEvictCount = new AtomicLong(0);
+        public final AtomicLong localReplaceCount = new AtomicLong(0);
+
+        public void add(Count c){
+            localAddCount.addAndGet(c.localAddCount.get());
+            localRemoveCount.addAndGet(c.localRemoveCount.get());
+            localUpdateCount.addAndGet(c.localUpdateCount.get());
+            localEvictCount.addAndGet(c.localEvictCount.get());
+            localReplaceCount.addAndGet(c.localReplaceCount.get());
+        }
+    }
 
     public class EntryListenerImpl implements EntryListener<Object, Object> {
 
