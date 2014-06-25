@@ -245,9 +245,8 @@ public class MapEntryListenerTest {
                     }
                 }
             }
+
             IList results = targetInstance.getList(basename+"results");
-
-
             if(addResult.compareAndSet(true, false)){
                 results.add(count);
             }
