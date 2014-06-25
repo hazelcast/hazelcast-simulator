@@ -153,19 +153,26 @@ public class MapEntryListenerTest {
     public void verify() throws Exception {
         printInfo();
 
+        IList<Count> counts = targetInstance.getList(basename+"results");
+        Count total = new Count();
+        for(Count c : counts){
+            total.add(c);
+        }
+
+
         IMap map = targetInstance.getMap(basename);
         EntryListenerImpl e = listeners.get(basename);
 
-        long addedTotal = count.localAddCount.get() + count.localReplaceCount.get();
-        long replaceTrickCount = e.addCount.get() - count.localAddCount.get();
-        long expectedMapSz = e.addCount.get() - (count.localReplaceCount.get() - e.evictCount.get() + e.removeCount.get());
+        long addedTotal = total.localAddCount.get() + total.localReplaceCount.get();
+        long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
+        long expectedMapSz = e.addCount.get() - (total.localReplaceCount.get() - e.evictCount.get() + e.removeCount.get());
 
         assertEquals("add Events ",      addedTotal,               e.addCount.get());
-        assertEquals("update Events ",   count.localUpdateCount.get(),   e.updateCount.get());
-        assertEquals("remove Events ",   count.localRemoveCount.get(),   e.removeCount.get());
-        assertEquals("evict Events ",    count.localEvictCount.get(),    e.evictCount.get());
+        assertEquals("update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
+        assertEquals("remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
+        assertEquals("evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
 
-        assertEquals("add Events caused By Replace ", count.localReplaceCount.get(), replaceTrickCount);
+        assertEquals("add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
 
         assertEquals("mapSZ ",  expectedMapSz, map.size());
     }
@@ -261,9 +268,7 @@ public class MapEntryListenerTest {
     private void printInfo() throws Exception{
 
         IList<Count> counts = targetInstance.getList(basename+"results");
-
         Count total = new Count();
-
         for(Count c : counts){
             total.add(c);
         }
