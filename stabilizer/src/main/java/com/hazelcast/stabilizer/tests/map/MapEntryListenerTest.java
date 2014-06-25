@@ -296,6 +296,18 @@ public class MapEntryListenerTest {
         System.out.println("evict = "+total.localEvictCount.get() +" "+ e.evictCount.get());
         System.out.println("replaced = " + total.localReplaceCount.get() + " " + replaceTrickCount);
         System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
+
+
+        assertEquals("HI add Events ",      addedTotal,                     e.addCount.get());
+        assertEquals("HI update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
+        assertEquals("HI remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
+        assertEquals("HI evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
+
+        assertEquals("HI add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
+
+        assertEquals("HI mapSZ ", expectedMapSz, map.size());
+
+
     }
 
     public static class Count implements DataSerializable{
