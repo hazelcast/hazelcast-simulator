@@ -172,14 +172,16 @@ public class MapEntryListenerTest {
         long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
         long expectedMapSz = e.addCount.get() - (total.localReplaceCount.get() - e.evictCount.get() + e.removeCount.get());
 
-        assertEquals("add Events ",      addedTotal,               e.addCount.get());
+
+
+        assertEquals("add Events ",      addedTotal,                     e.addCount.get());
         assertEquals("update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
         assertEquals("remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
         assertEquals("evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
 
         assertEquals("add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
 
-        assertEquals("mapSZ ",  expectedMapSz, map.size());
+        assertEquals("mapSZ ", expectedMapSz, map.size());
     }
 
     private class Worker implements Runnable {
@@ -271,6 +273,8 @@ public class MapEntryListenerTest {
     }
 
     private void printInfo() throws Exception{
+
+        Thread.sleep(10000);
 
         IList<Count> counts = targetInstance.getList(basename+"results");
         Count total = new Count();
