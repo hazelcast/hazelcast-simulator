@@ -110,6 +110,7 @@ public class MapEntryListenerTest {
             count.localAddCount.getAndIncrement();
             v = (v + 1 == values.length ? 0 : v + 1);
         }
+        System.out.println("init map with "+keyCount+" items");
 
         //so we are assuming that the node who makes the global warmup is not active in the test
         //so you put his results in hear as this is all the effect he has on the test
@@ -131,6 +132,8 @@ public class MapEntryListenerTest {
 
     @Run
     public void run() {
+        System.out.println("Running with threads="+threadCount);
+
         ThreadSpawner spawner = new ThreadSpawner( testContext.getTestId() );
         for (int k = 0; k < threadCount; k++) {
             spawner.spawn(new Worker());
@@ -151,6 +154,8 @@ public class MapEntryListenerTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
+        System.out.println("verify ");
+
         printInfo();
 
         IList<Count> counts = targetInstance.getList(basename+"results");
