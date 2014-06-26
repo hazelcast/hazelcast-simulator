@@ -433,12 +433,12 @@ public class MapEntryListenerTest {
         }
     }
 
-    public class EntryListenerImpl implements EntryListener<Object, Object> {
+    public static class EntryListenerImpl implements DataSerializable, EntryListener<Object, Object> {
 
-        public final AtomicLong addCount = new AtomicLong();
-        public final AtomicLong removeCount = new AtomicLong();
-        public final AtomicLong updateCount = new AtomicLong();
-        public final AtomicLong evictCount = new AtomicLong();
+        public AtomicLong addCount = new AtomicLong();
+        public AtomicLong removeCount = new AtomicLong();
+        public AtomicLong updateCount = new AtomicLong();
+        public AtomicLong evictCount = new AtomicLong();
 
         public EntryListenerImpl( ) { }
 
@@ -460,6 +460,20 @@ public class MapEntryListenerTest {
         @Override
         public void entryEvicted(EntryEvent<Object, Object> objectObjectEntryEvent) {
             evictCount.incrementAndGet();
+        }
+
+        public void writeData(ObjectDataOutput out) throws IOException {
+            out.writeObject(addCount);
+            out.writeObject(removeCount);
+            out.writeObject(updateCount);
+            out.writeObject(evictCount);
+        }
+
+        public void readData(ObjectDataInput in) throws IOException {
+            addCount = in.readObject();
+            removeCount = in.readObject();
+            updateCount = in.readObject();
+            evictCount = in.readObject();
         }
 
         @Override
