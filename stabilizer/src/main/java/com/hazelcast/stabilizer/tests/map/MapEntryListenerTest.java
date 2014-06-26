@@ -100,7 +100,7 @@ public class MapEntryListenerTest {
     }
 
     @Warmup(global = true)
-    public void warmup() {
+    public void globalWarmup() {
 
         IMap map = targetInstance.getMap(basename);
 
