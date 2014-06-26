@@ -250,11 +250,15 @@ public class MapEntryListenerTest {
 
     @Verify(global = true)
     public void golbalVerify() throws Exception {
-        System.out.println("Global verify ");
 
-        IList<Count> counts = targetInstance.getList(basename+"results");
-        for(Count c : counts){
-            System.out.println(c);
+        ILock lock = targetInstance.getLock("Lock2");
+        if(lock.tryLock()){
+            System.out.println("Global verify ");
+
+            IList<Count> counts = targetInstance.getList(basename+"results");
+            for(Count c : counts){
+                System.out.println(c);
+            }
         }
     }
 
