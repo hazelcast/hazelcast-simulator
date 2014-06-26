@@ -102,20 +102,26 @@ public class MapEntryListenerTest {
     @Warmup(global = true)
     public void globalWarmup() {
 
-        IMap map = targetInstance.getMap(basename);
+        ILock lock = targetInstance.getLock("lock");
 
-        int v = 0;
-        for (int k = 0; k < keyCount; k++) {
-            map.put(k, values[v]);
-            count.localAddCount.getAndIncrement();
-            v = (v + 1 == values.length ? 0 : v + 1);
+        if(lock.tryLock()){
+
+            IMap map = targetInstance.getMap(basename);
+
+            int v = 0;
+            for (int k = 0; k < keyCount; k++) {
+                map.put(k, values[v]);
+                count.localAddCount.getAndIncrement();
+                v = (v + 1 == values.length ? 0 : v + 1);
+            }
+            System.out.println("init map with "+keyCount+" items");
+
+            //so we are assuming that the node who makes the global warmup is not active in the test
+            //so you put his results in hear as this is all the effect he has on the test
+            IList results = targetInstance.getList(basename+"results");
+            results.add(count);
+
         }
-        System.out.println("init map with "+keyCount+" items");
-
-        //so we are assuming that the node who makes the global warmup is not active in the test
-        //so you put his results in hear as this is all the effect he has on the test
-        IList results = targetInstance.getList(basename+"results");
-        results.add(count);
     }
 
     private String makeString(int length) {
