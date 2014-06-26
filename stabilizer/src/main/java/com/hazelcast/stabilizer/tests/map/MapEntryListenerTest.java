@@ -152,38 +152,6 @@ public class MapEntryListenerTest {
         return 1;
     }
 
-    @Verify(global = false)
-    public void verify() throws Exception {
-        System.out.println("verify ");
-
-        printInfo();
-
-        IList<Count> counts = targetInstance.getList(basename+"results");
-        Count total = new Count();
-        for(Count c : counts){
-            total.add(c);
-        }
-
-
-        IMap map = targetInstance.getMap(basename);
-        EntryListenerImpl e = listeners.get(basename);
-
-        long addedTotal = total.localAddCount.get() + total.localReplaceCount.get();
-        long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
-        long expectedMapSz = e.addCount.get() - (total.localReplaceCount.get() - e.evictCount.get() + e.removeCount.get());
-
-
-
-        assertEquals("add Events ",      addedTotal,                     e.addCount.get());
-        assertEquals("update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
-        assertEquals("remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
-        assertEquals("evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
-
-        assertEquals("add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
-
-        assertEquals("mapSZ ", expectedMapSz, map.size());
-    }
-
     private class Worker implements Runnable {
         private final Random random = new Random();
         int key;
@@ -268,9 +236,83 @@ public class MapEntryListenerTest {
             IList results = targetInstance.getList(basename+"results");
             if(addResult.compareAndSet(true, false)){
                 results.add(count);
+                System.out.println("actions for This = "+count);
             }
         }
     }
+
+
+    @Verify(global = false)
+    public void verify() throws Exception {
+        System.out.println("verify ");
+
+
+        IList<Count> counts = targetInstance.getList(basename+"results");
+        Count total = new Count();
+        for(Count c : counts){
+            total.add(c);
+        }
+
+        IMap map = targetInstance.getMap(basename);
+        EntryListenerImpl e = listeners.get(basename);
+
+        long addedTotal = total.localAddCount.get() + total.localReplaceCount.get();
+        long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
+        long expectedMapSz = e.addCount.get()  - (total.localReplaceCount.get() + e.evictCount.get() + e.removeCount.get());
+
+
+        System.out.println("add = "+addedTotal +" "+ e.addCount.get());
+        System.out.println("update = "+total.localUpdateCount.get() +" "+ e.updateCount.get());
+        System.out.println("remove = "+total.localRemoveCount.get() +" "+ e.removeCount.get());
+        System.out.println("evict = "+total.localEvictCount.get() +" "+ e.evictCount.get());
+        System.out.println("replaced = " + total.localReplaceCount.get() + " " + replaceTrickCount);
+        System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
+
+
+        assertEquals(" Add Events ",      addedTotal,                     e.addCount.get());
+        assertEquals(" Update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
+        assertEquals(" Remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
+        assertEquals(" Evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
+
+        assertEquals(" Add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
+
+        assertEquals(" MapSZ ", expectedMapSz, map.size());
+
+
+        /*
+        printInfo();
+
+        IList<Count> counts = targetInstance.getList(basename+"results");
+        Count total = new Count();
+        for(Count c : counts){
+            total.add(c);
+        }
+
+
+        IMap map = targetInstance.getMap(basename);
+        EntryListenerImpl e = listeners.get(basename);
+
+        long addedTotal = total.localAddCount.get() + total.localReplaceCount.get();
+        long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
+        long expectedMapSz = e.addCount.get() - (total.localReplaceCount.get() - e.evictCount.get() + e.removeCount.get());
+
+
+
+        assertEquals("add Events ",      addedTotal,                     e.addCount.get());
+        assertEquals("update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
+        assertEquals("remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
+        assertEquals("evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
+
+        assertEquals("add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
+
+        assertEquals("mapSZ ", expectedMapSz, map.size());
+
+        */
+
+
+    }
+
+
 
     private void printInfo() throws Exception{
 
@@ -306,8 +348,6 @@ public class MapEntryListenerTest {
         assertEquals("HI add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
 
         assertEquals("HI mapSZ ", expectedMapSz, map.size());
-
-
     }
 
     public static class Count implements DataSerializable{
@@ -342,6 +382,17 @@ public class MapEntryListenerTest {
             localUpdateCount = in.readObject();
             localEvictCount = in.readObject();
             localReplaceCount = in.readObject();
+        }
+
+        @Override
+        public String toString() {
+            return "Count{" +
+                    "localAddCount=" + localAddCount +
+                    ", localRemoveCount=" + localRemoveCount +
+                    ", localUpdateCount=" + localUpdateCount +
+                    ", localEvictCount=" + localEvictCount +
+                    ", localReplaceCount=" + localReplaceCount +
+                    '}';
         }
     }
 
