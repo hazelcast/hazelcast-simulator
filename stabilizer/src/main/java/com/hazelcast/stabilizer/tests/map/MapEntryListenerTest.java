@@ -242,7 +242,18 @@ public class MapEntryListenerTest {
     }
 
 
-    @Verify(global = false)
+    @Verify(global = true)
+    public void golbalVerify() throws Exception {
+        System.out.println("Global verify ");
+
+        IList<Count> counts = targetInstance.getList(basename+"results");
+        for(Count c : counts){
+            System.out.println(c);
+        }
+    }
+
+
+        @Verify(global = false)
     public void verify() throws Exception {
         System.out.println("verify ");
 
