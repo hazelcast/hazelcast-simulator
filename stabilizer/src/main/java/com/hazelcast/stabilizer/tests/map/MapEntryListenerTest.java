@@ -239,11 +239,15 @@ public class MapEntryListenerTest {
                 }
             }
 
+            IList resultListners = targetInstance.getList(basename+"listeners");
             IList results = targetInstance.getList(basename+"results");
             if(addResult.compareAndSet(true, false)){
                 results.add(count);
+                resultListners.addAll(listeners.values());
+
                 System.out.println("actions for This = "+count);
             }
+
         }
     }
 
@@ -258,6 +262,18 @@ public class MapEntryListenerTest {
             IList<Count> counts = targetInstance.getList(basename+"results");
             for(Count c : counts){
                 System.out.println(c);
+            }
+
+            IList<EntryListenerImpl> resultListners = targetInstance.getList(basename+"listeners");
+
+            for(int i=0; i<resultListners.size()-1; i++){
+
+                EntryListenerImpl a = resultListners.get(i);
+                EntryListenerImpl b = resultListners.get(i+1);
+
+                assertEquals("not same amount of event in all listeners", a, b);
+
+                System.out.println("same OK");
             }
         }
     }
@@ -454,6 +470,30 @@ public class MapEntryListenerTest {
                     ", updateCount=" + updateCount +
                     ", evictCount=" + evictCount +
                     '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            EntryListenerImpl that = (EntryListenerImpl) o;
+
+            if (addCount != null ? !addCount.equals(that.addCount) : that.addCount != null) return false;
+            if (evictCount != null ? !evictCount.equals(that.evictCount) : that.evictCount != null) return false;
+            if (removeCount != null ? !removeCount.equals(that.removeCount) : that.removeCount != null) return false;
+            if (updateCount != null ? !updateCount.equals(that.updateCount) : that.updateCount != null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = addCount != null ? addCount.hashCode() : 0;
+            result = 31 * result + (removeCount != null ? removeCount.hashCode() : 0);
+            result = 31 * result + (updateCount != null ? updateCount.hashCode() : 0);
+            result = 31 * result + (evictCount != null ? evictCount.hashCode() : 0);
+            return result;
         }
     }
 
