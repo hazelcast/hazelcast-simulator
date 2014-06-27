@@ -24,6 +24,8 @@ import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.*;
+import com.hazelcast.stabilizer.tests.map.helpers.Count;
+import com.hazelcast.stabilizer.tests.map.helpers.EntryListenerImpl;
 import com.hazelcast.stabilizer.tests.map.helpers.ScrambledZipfianGenerator;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -48,7 +50,7 @@ public class MapEntryListenerTest {
     public int keyCount = 1000;
     public int valueCount = 1000;
 
-    public boolean randomDistributionUniform=true;
+    public boolean randomDistributionUniform=false;
 
     //check these add up to 1
     public double writeProb = 0.4;
@@ -63,8 +65,7 @@ public class MapEntryListenerTest {
     public double replaceProb = 0.25;
     //
 
-    public int mapEntryListenerCount = 1;
-
+    private int mapEntryListenerCount = 1;
 
     private Count count = new Count();
 
@@ -96,13 +97,12 @@ public class MapEntryListenerTest {
             listeners.put(basename, l);
             map.addEntryListener(l, true);
         }
-
     }
 
     @Warmup(global = true)
     public void globalWarmup() {
 
-        ILock lock = targetInstance.getLock("lock");
+        ILock lock = targetInstance.getLock(basename+"lock");
 
         if(lock.tryLock()){
 
@@ -120,7 +120,6 @@ public class MapEntryListenerTest {
             //so you put his results in hear as this is all the effect he has on the test
             IList results = targetInstance.getList(basename+"results");
             results.add(count);
-
         }
     }
 
@@ -155,7 +154,7 @@ public class MapEntryListenerTest {
 
     @Performance
     public long getOperationCount() {
-        return 1;
+        return count.total();
     }
 
     private class Worker implements Runnable {
@@ -242,6 +241,11 @@ public class MapEntryListenerTest {
             IList resultListners = targetInstance.getList(basename+"listeners");
             IList results = targetInstance.getList(basename+"results");
             if(addResult.compareAndSet(true, false)){
+
+                try {
+                    Thread.sleep(6000);
+                } catch (InterruptedException e) { e.printStackTrace(); }
+
                 results.add(count);
                 resultListners.addAll(listeners.values());
 
@@ -255,7 +259,7 @@ public class MapEntryListenerTest {
     @Verify(global = true)
     public void golbalVerify() throws Exception {
 
-        ILock lock = targetInstance.getLock("Lock2");
+        ILock lock = targetInstance.getLock(basename+"Lock2");
         if(lock.tryLock()){
             System.out.println("Global verify ");
 
@@ -265,24 +269,19 @@ public class MapEntryListenerTest {
             }
 
             IList<EntryListenerImpl> resultListners = targetInstance.getList(basename+"listeners");
-
             for(int i=0; i<resultListners.size()-1; i++){
-
                 EntryListenerImpl a = resultListners.get(i);
                 EntryListenerImpl b = resultListners.get(i+1);
 
                 assertEquals("not same amount of event in all listeners", a, b);
-
-                System.out.println("same OK");
             }
         }
     }
 
 
-        @Verify(global = false)
+    @Verify(global = false)
     public void verify() throws Exception {
         System.out.println("verify ");
-
 
         IList<Count> counts = targetInstance.getList(basename+"results");
         Count total = new Count();
@@ -297,14 +296,12 @@ public class MapEntryListenerTest {
         long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
         long expectedMapSz = e.addCount.get()  - (total.localReplaceCount.get() + e.evictCount.get() + e.removeCount.get());
 
-
         System.out.println("add = "+addedTotal +" "+ e.addCount.get());
         System.out.println("update = "+total.localUpdateCount.get() +" "+ e.updateCount.get());
         System.out.println("remove = "+total.localRemoveCount.get() +" "+ e.removeCount.get());
         System.out.println("evict = "+total.localEvictCount.get() +" "+ e.evictCount.get());
         System.out.println("replaced = " + total.localReplaceCount.get() + " " + replaceTrickCount);
         System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
-
 
         assertEquals(" Add Events ",      addedTotal,                     e.addCount.get());
         assertEquals(" Update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
@@ -314,201 +311,6 @@ public class MapEntryListenerTest {
         assertEquals(" Add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
 
         assertEquals(" MapSZ ", expectedMapSz, map.size());
-
-
-        /*
-        printInfo();
-
-        IList<Count> counts = targetInstance.getList(basename+"results");
-        Count total = new Count();
-        for(Count c : counts){
-            total.add(c);
-        }
-
-
-        IMap map = targetInstance.getMap(basename);
-        EntryListenerImpl e = listeners.get(basename);
-
-        long addedTotal = total.localAddCount.get() + total.localReplaceCount.get();
-        long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
-        long expectedMapSz = e.addCount.get() - (total.localReplaceCount.get() - e.evictCount.get() + e.removeCount.get());
-
-
-
-        assertEquals("add Events ",      addedTotal,                     e.addCount.get());
-        assertEquals("update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
-        assertEquals("remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
-        assertEquals("evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
-
-        assertEquals("add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
-
-        assertEquals("mapSZ ", expectedMapSz, map.size());
-
-        */
-
-
-    }
-
-
-
-    private void printInfo() throws Exception{
-
-        Thread.sleep(10000);
-
-        IList<Count> counts = targetInstance.getList(basename+"results");
-        Count total = new Count();
-        for(Count c : counts){
-            total.add(c);
-        }
-
-        IMap map = targetInstance.getMap(basename);
-        EntryListenerImpl e = listeners.get(basename);
-
-        long addedTotal = total.localAddCount.get() + total.localReplaceCount.get();
-        long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
-        long expectedMapSz = e.addCount.get()  - (total.localReplaceCount.get() + e.evictCount.get() + e.removeCount.get());
-
-
-        System.out.println("add = "+addedTotal +" "+ e.addCount.get());
-        System.out.println("update = "+total.localUpdateCount.get() +" "+ e.updateCount.get());
-        System.out.println("remove = "+total.localRemoveCount.get() +" "+ e.removeCount.get());
-        System.out.println("evict = "+total.localEvictCount.get() +" "+ e.evictCount.get());
-        System.out.println("replaced = " + total.localReplaceCount.get() + " " + replaceTrickCount);
-        System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
-
-
-        assertEquals("HI add Events ",      addedTotal,                     e.addCount.get());
-        assertEquals("HI update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
-        assertEquals("HI remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
-        assertEquals("HI evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
-
-        assertEquals("HI add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
-
-        assertEquals("HI mapSZ ", expectedMapSz, map.size());
-    }
-
-    public static class Count implements DataSerializable{
-        public  AtomicLong localAddCount = new AtomicLong(0);
-        public  AtomicLong localRemoveCount = new AtomicLong(0);
-        public  AtomicLong localUpdateCount = new AtomicLong(0);
-        public  AtomicLong localEvictCount = new AtomicLong(0);
-        public  AtomicLong localReplaceCount = new AtomicLong(0);
-
-        public Count(){
-        }
-
-        public void add(Count c){
-            localAddCount.addAndGet(c.localAddCount.get());
-            localRemoveCount.addAndGet(c.localRemoveCount.get());
-            localUpdateCount.addAndGet(c.localUpdateCount.get());
-            localEvictCount.addAndGet(c.localEvictCount.get());
-            localReplaceCount.addAndGet(c.localReplaceCount.get());
-        }
-
-        public void writeData(ObjectDataOutput out) throws IOException {
-            out.writeObject(localAddCount);
-            out.writeObject(localRemoveCount);
-            out.writeObject(localUpdateCount);
-            out.writeObject(localEvictCount);
-            out.writeObject(localReplaceCount);
-        }
-
-        public void readData(ObjectDataInput in) throws IOException {
-            localAddCount = in.readObject();
-            localRemoveCount = in.readObject();
-            localUpdateCount = in.readObject();
-            localEvictCount = in.readObject();
-            localReplaceCount = in.readObject();
-        }
-
-        @Override
-        public String toString() {
-            return "Count{" +
-                    "localAddCount=" + localAddCount +
-                    ", localRemoveCount=" + localRemoveCount +
-                    ", localUpdateCount=" + localUpdateCount +
-                    ", localEvictCount=" + localEvictCount +
-                    ", localReplaceCount=" + localReplaceCount +
-                    '}';
-        }
-    }
-
-    public static class EntryListenerImpl implements DataSerializable, EntryListener<Object, Object> {
-
-        public AtomicLong addCount = new AtomicLong();
-        public AtomicLong removeCount = new AtomicLong();
-        public AtomicLong updateCount = new AtomicLong();
-        public AtomicLong evictCount = new AtomicLong();
-
-        public EntryListenerImpl( ) { }
-
-        @Override
-        public void entryAdded(EntryEvent<Object, Object> objectObjectEntryEvent) {
-            addCount.incrementAndGet();
-        }
-
-        @Override
-        public void entryRemoved(EntryEvent<Object, Object> objectObjectEntryEvent) {
-            removeCount.incrementAndGet();
-        }
-
-        @Override
-        public void entryUpdated(EntryEvent<Object, Object> objectObjectEntryEvent) {
-            updateCount.incrementAndGet();
-        }
-
-        @Override
-        public void entryEvicted(EntryEvent<Object, Object> objectObjectEntryEvent) {
-            evictCount.incrementAndGet();
-        }
-
-        public void writeData(ObjectDataOutput out) throws IOException {
-            out.writeObject(addCount);
-            out.writeObject(removeCount);
-            out.writeObject(updateCount);
-            out.writeObject(evictCount);
-        }
-
-        public void readData(ObjectDataInput in) throws IOException {
-            addCount = in.readObject();
-            removeCount = in.readObject();
-            updateCount = in.readObject();
-            evictCount = in.readObject();
-        }
-
-        @Override
-        public String toString() {
-            return "EntryCounter{" +
-                    "addCount=" + addCount +
-                    ", removeCount=" + removeCount +
-                    ", updateCount=" + updateCount +
-                    ", evictCount=" + evictCount +
-                    '}';
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            EntryListenerImpl that = (EntryListenerImpl) o;
-
-            if (addCount != null ? !addCount.equals(that.addCount) : that.addCount != null) return false;
-            if (evictCount != null ? !evictCount.equals(that.evictCount) : that.evictCount != null) return false;
-            if (removeCount != null ? !removeCount.equals(that.removeCount) : that.removeCount != null) return false;
-            if (updateCount != null ? !updateCount.equals(that.updateCount) : that.updateCount != null) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = addCount != null ? addCount.hashCode() : 0;
-            result = 31 * result + (removeCount != null ? removeCount.hashCode() : 0);
-            result = 31 * result + (updateCount != null ? updateCount.hashCode() : 0);
-            result = 31 * result + (evictCount != null ? evictCount.hashCode() : 0);
-            return result;
-        }
     }
 
     public static void main(String[] args) throws Throwable {
