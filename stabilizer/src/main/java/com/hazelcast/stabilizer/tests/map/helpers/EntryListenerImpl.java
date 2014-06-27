@@ -64,17 +64,17 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
 
         EntryListenerImpl that = (EntryListenerImpl) o;
 
-        if (addCount != null ? !addCount.equals(that.addCount) : that.addCount != null) return false;
-        if (evictCount != null ? !evictCount.equals(that.evictCount) : that.evictCount != null) return false;
-        if (removeCount != null ? !removeCount.equals(that.removeCount) : that.removeCount != null) return false;
-        if (updateCount != null ? !updateCount.equals(that.updateCount) : that.updateCount != null) return false;
+        if (addCount.get() == that.addCount.get() &&
+            evictCount.get() == that.evictCount.get() &&
+            removeCount.get() == that.removeCount.get() &&
+            updateCount.get() == that.updateCount.get()){
 
-        return true;
+            return true;
+        }
+        return false;
     }
 
     @Override
