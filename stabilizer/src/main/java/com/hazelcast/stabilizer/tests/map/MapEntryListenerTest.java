@@ -117,7 +117,7 @@ public class MapEntryListenerTest {
             System.out.println("init map with "+keyCount+" items");
 
             //so we are assuming that the node who makes the global warmup is not active in the test
-            //so you put his results in hear as this is all the effect he has on the test
+            //so you put its results in hear as this is all the effect it has on the test
             IList results = targetInstance.getList(basename+"results");
             results.add(count);
         }
