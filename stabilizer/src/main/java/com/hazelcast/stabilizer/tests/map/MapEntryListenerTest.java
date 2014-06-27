@@ -171,12 +171,12 @@ public class MapEntryListenerTest {
                     key = kesyZipfian.nextInt();
                 }
 
-                IMap map = targetInstance.getMap(basename);
+                final IMap map = targetInstance.getMap(basename);
 
                 double chance = random.nextDouble();
                 if (chance < writeProb) {
 
-                    Object value = values[random.nextInt(values.length)];
+                    final Object value = values[random.nextInt(values.length)];
 
                     chance = random.nextDouble();
                     if (chance < writeUsingPutProb) {
@@ -268,7 +268,13 @@ public class MapEntryListenerTest {
                 System.out.println(c);
             }
 
+
+
             IList<EntryListenerImpl> resultListners = targetInstance.getList(basename+"listeners");
+            for(EntryListenerImpl l : resultListners){
+                System.out.println(l);
+            }
+
             for(int i=0; i<resultListners.size()-1; i++){
                 EntryListenerImpl a = resultListners.get(i);
                 EntryListenerImpl b = resultListners.get(i+1);
