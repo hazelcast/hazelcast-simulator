@@ -70,7 +70,7 @@ public class CoordinatorCli {
 
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
             "Worker VM options (quotes can be used)")
-            .withRequiredArg().ofType(String.class).defaultsTo("");
+            .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> agentsFileSpec = parser.accepts("agentsFile",
             "The file containing the list of agent machines")
