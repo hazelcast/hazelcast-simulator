@@ -131,7 +131,7 @@ public class MapTransactionTest {
                 increment(key, increment);
 
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration + " map size="+map.size());
                 }
 
                 if (iteration % performanceUpdateFrequency == 0) {

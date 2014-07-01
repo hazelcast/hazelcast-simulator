@@ -73,7 +73,7 @@ public class MapCasTest {
     @Run
     public void run() {
         if(map.size()!=keyCount){
-            throw new RuntimeException("warmup has not run since the map is not filled correctly, foundsize:"+map.size());
+            throw new RuntimeException("warmup has not run since the map is not filled correctly, found size:"+map.size());
         }
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
@@ -135,7 +135,7 @@ public class MapCasTest {
                 }
 
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration + " map size="+map.size());
                 }
 
                 if (iteration % performanceUpdateFrequency == 0) {

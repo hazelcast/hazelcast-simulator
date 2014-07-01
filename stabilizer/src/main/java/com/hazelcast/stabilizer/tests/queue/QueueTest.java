@@ -113,8 +113,8 @@ public class QueueTest {
                 while (!testContext.isStopped()) {
                     long item = fromQueue.take();
                     toQueue.put(item + 1);
-                    if (iteration % 2000 == 0) {
-                        log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    if (iteration % 200 == 0) {
+                        log.info(Thread.currentThread().getName() + " At iteration: " + iteration+" fromQueue size="+fromQueue.size()+", toQueue size="+toQueue.size());
                     }
                     iteration++;
                 }
