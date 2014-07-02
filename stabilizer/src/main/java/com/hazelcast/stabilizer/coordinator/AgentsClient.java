@@ -55,9 +55,9 @@ public class AgentsClient {
     public void awaitAgentsReachable() {
         List<AgentClient> unchecked = new LinkedList<AgentClient>(agents);
 
-        echo("--------------------------------------------------------------");
+        log.info("--------------------------------------------------------------");
         log.info("Waiting for agents to start");
-        echo("--------------------------------------------------------------");
+        log.info("--------------------------------------------------------------");
 
         for (int k = 0; k < 12; k++) {
             Iterator<AgentClient> it = unchecked.iterator();
@@ -83,15 +83,15 @@ public class AgentsClient {
         agents.removeAll(unchecked);
 
         if (agents.isEmpty()) {
-            echo("--------------------------------------------------------------");
+            log.info("--------------------------------------------------------------");
             Utils.exitWithError(log, "There are no reachable agents");
-            echo("--------------------------------------------------------------");
+            log.info("--------------------------------------------------------------");
         }
 
         if (unchecked.isEmpty()) {
-            echo("--------------------------------------------------------------");
+            log.info("--------------------------------------------------------------");
             log.info("All agents are reachable!");
-            echo("--------------------------------------------------------------");
+            log.info("--------------------------------------------------------------");
             return;
         }
 
@@ -100,9 +100,9 @@ public class AgentsClient {
             sb.append("\t").append(agent.publicAddress).append("\n");
         }
 
-        echo("--------------------------------------------------------------");
+        log.info("--------------------------------------------------------------");
         log.warning(sb.toString());
-        echo("--------------------------------------------------------------");
+        log.info("--------------------------------------------------------------");
     }
 
     public int getAgentCount() {
