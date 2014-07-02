@@ -45,8 +45,8 @@ public class AgentsClient {
 
     private final ExecutorService agentExecutor = Executors.newFixedThreadPool(100);
 
-    public AgentsClient(File agentFile) {
-        for (AgentAddress address : AgentsFile.load(agentFile)) {
+    public AgentsClient(List<AgentAddress> agentAddresses) {
+        for (AgentAddress address : agentAddresses) {
             AgentClient client = new AgentClient(address);
             agents.add(client);
         }
