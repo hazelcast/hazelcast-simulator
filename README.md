@@ -140,7 +140,7 @@ CLOUD_CREDENTIAL=~/ec2.credential
 
 The ec2.identity file should contain your access key and the ec2.credential your secret key.
 
-After you have made the modifications, you need to set the executable flag on the run.sh:
+After you have made the modifications, you need to set the executable flag on the run.sh in the workdir directory:
 
 ```
 chmod +x run.sh
