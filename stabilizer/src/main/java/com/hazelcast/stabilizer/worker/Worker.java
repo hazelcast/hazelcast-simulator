@@ -309,15 +309,13 @@ public class Worker {
         }
 
         private Long process(GetOperationCountTestCommand command) throws Throwable {
-//            final StabilizerTest<TestContextImpl> test = tests.get(command.testId);
-//            if (test == null) {
-//                throw new IllegalStateException("Failed to process command: " + command + " no test with " +
-//                        "testId" + command.testId + " is found");
-//            }
-//
-//
-//            return testInvoker.getOperationCount();
-            return -1l;
+            long result = 0;
+
+            for(TestContainer testContainer: tests.values()){
+                result+=testContainer.getOperationCount();
+            }
+
+            return result;
         }
 
         private void process(final RunCommand command) throws Exception {
