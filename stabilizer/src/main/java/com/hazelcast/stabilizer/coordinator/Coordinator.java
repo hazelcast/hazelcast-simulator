@@ -196,7 +196,8 @@ public class Coordinator {
                     .append("</member>\n");
         }
 
-        String home = Utils.getStablizerHome().getAbsolutePath();
+        String home = "/home/users/stabilizer/hazelcast-stabilizer-0.3-SNAPSHOT";
+        //String home = Utils.getStablizerHome().getAbsolutePath();
 
         String ssl = "<ssl enabled=\"true\">\n" +
                 "            <factory-class-name>com.hazelcast.nio.ssl.BasicSSLContextFactory</factory-class-name>\n" +
@@ -224,7 +225,8 @@ public class Coordinator {
                     .append("</address>\n");
         }
 
-        String home = Utils.getStablizerHome().getAbsolutePath();
+        String home = "/home/users/stabilizer/hazelcast-stabilizer-0.3-SNAPSHOT";
+        //String home = Utils.getStablizerHome().getAbsolutePath();
 
         String ssl = "<ssl enabled=\"true\">\n" +
                 "            <factory-class-name>com.hazelcast.nio.ssl.BasicSSLContextFactory</factory-class-name>\n" +
