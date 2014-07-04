@@ -210,8 +210,8 @@ public class Coordinator {
                 "            </properties>\n" +
                 "        </ssl>";
 
-        settings.clientHzConfig = settings.clientHzConfig.replace("<!--MEMBERS-->", members);
-        settings.clientHzConfig = settings.clientHzConfig.replace("<!--SSL-->", ssl);
+        settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
+        settings.hzConfig = settings.hzConfig.replace("<!--SSL-->", ssl);
     }
 
     private void initClientHzConfig(WorkerJvmSettings settings) throws Exception {
