@@ -10,6 +10,7 @@ import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static com.hazelcast.stabilizer.Utils.getVersion;
@@ -22,7 +23,7 @@ public class Communicator {
     public File agentsFile;
     protected AgentsClient agentsClient;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         log.info("Stabilizer Communicator");
         log.info(format("Version: %s\n", getVersion()));
         log.info(format("STABILIZER_HOME: %s\n", STABILIZER_HOME));

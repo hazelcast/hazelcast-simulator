@@ -67,8 +67,8 @@ public class WorkerMessageProcessorTest {
         try {
             verify(container1).sendMessage(message);
             verify(container2, never()).sendMessage(message);
-        } catch (WantedButNotInvoked e) { //the message was not deliver to testContainerMock1
-            verify(container2).sendMessage(message); //so it should go to testContainerMock2
+        } catch (WantedButNotInvoked e) { //the message was not deliver to container1
+            verify(container2).sendMessage(message); //so it should go to container2
         }
     }
 
