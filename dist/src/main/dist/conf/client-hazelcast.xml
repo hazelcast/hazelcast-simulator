@@ -14,6 +14,7 @@
         <cluster-members>
             <!--MEMBERS-->
         </cluster-members>
+        <!--SSL-->
     </network>
 
 </hazelcast-client>

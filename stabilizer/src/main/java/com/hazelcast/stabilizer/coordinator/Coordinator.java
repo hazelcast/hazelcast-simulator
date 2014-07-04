@@ -196,7 +196,21 @@ public class Coordinator {
                     .append("</member>\n");
         }
 
-        settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
+        String home = Utils.getStablizerHome().getAbsolutePath();
+
+        String ssl = "<ssl enabled=\"true\">\n" +
+                "            <factory-class-name>com.hazelcast.nio.ssl.BasicSSLContextFactory</factory-class-name>\n" +
+                "            <properties>\n" +
+                "                <property name=\"keyStore\">"+ home +"/conf/keystore_default.jks</property>\n" +
+                "                <property name=\"keyStorePassword\">default</property>\n" +
+                "                <property name=\"keyManagerAlgorithm\">SunX509</property>\n" +
+                "                <property name=\"trustManagerAlgorithm\">SunX509</property>\n" +
+                "                <property name=\"protocol\">TLS</property>\n" +
+                "            </properties>\n" +
+                "        </ssl>";
+
+        settings.clientHzConfig = settings.clientHzConfig.replace("<!--MEMBERS-->", members);
+        settings.clientHzConfig = settings.clientHzConfig.replace("<!--SSL-->", ssl);
     }
 
     private void initClientHzConfig(WorkerJvmSettings settings) throws Exception {
@@ -210,7 +224,21 @@ public class Coordinator {
                     .append("</address>\n");
         }
 
+        String home = Utils.getStablizerHome().getAbsolutePath();
+
+        String ssl = "<ssl enabled=\"true\">\n" +
+                "            <factory-class-name>com.hazelcast.nio.ssl.BasicSSLContextFactory</factory-class-name>\n" +
+                "            <properties>\n" +
+                "                <property name=\"keyStore\">"+ home +"/conf/keystore_default.jks</property>\n" +
+                "                <property name=\"keyStorePassword\">default</property>\n" +
+                "                <property name=\"keyManagerAlgorithm\">SunX509</property>\n" +
+                "                <property name=\"trustManagerAlgorithm\">SunX509</property>\n" +
+                "                <property name=\"protocol\">TLS</property>\n" +
+                "            </properties>\n" +
+                "        </ssl>";
+
         settings.clientHzConfig = settings.clientHzConfig.replace("<!--MEMBERS-->", members);
+        settings.clientHzConfig = settings.clientHzConfig.replace("<!--SSL-->", ssl);
     }
 
     private int getPort(WorkerJvmSettings settings) throws UnsupportedEncodingException {
