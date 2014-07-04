@@ -71,8 +71,6 @@ public class WorkerJvmLauncher {
 
         for (int k = 0; k < count; k++) {
             WorkerJvm worker = startWorkerJvm(mode);
-            Process process = worker.process;
-            String workerId = worker.id;
             workersInProgress.add(worker);
         }
 
