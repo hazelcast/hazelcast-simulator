@@ -69,6 +69,7 @@ public class Coordinator {
     public volatile long operationCount;
     private Bash bash;
     public boolean parallel;
+    public boolean sslConnection;
 
     private void run() throws Exception {
         bash = new Bash(props);
@@ -211,7 +212,10 @@ public class Coordinator {
                 "        </ssl>";
 
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
-        settings.hzConfig = settings.hzConfig.replace("<!--SSL-->", ssl);
+
+        if(sslConnection){
+            settings.hzConfig = settings.hzConfig.replace("<!--SSL-->", ssl);
+        }
     }
 
     private void initClientHzConfig(WorkerJvmSettings settings) throws Exception {
@@ -240,7 +244,10 @@ public class Coordinator {
                 "        </ssl>";
 
         settings.clientHzConfig = settings.clientHzConfig.replace("<!--MEMBERS-->", members);
-        settings.clientHzConfig = settings.clientHzConfig.replace("<!--SSL-->", ssl);
+
+        if(sslConnection){
+            settings.clientHzConfig = settings.clientHzConfig.replace("<!--SSL-->", ssl);
+        }
     }
 
     private int getPort(WorkerJvmSettings settings) throws UnsupportedEncodingException {

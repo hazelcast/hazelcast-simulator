@@ -68,6 +68,9 @@ public class CoordinatorCli {
     private final OptionSpec parallelSpec = parser.accepts("parallel",
             "It tests should be run in parallel.");
 
+    private final OptionSpec sslSpec = parser.accepts("ssl",
+            "Use ssl connection for communications.");
+
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
             "Worker VM options (quotes can be used)")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
@@ -152,6 +155,7 @@ public class CoordinatorCli {
         coordinator.monitorPerformance = options.has(monitorPerformanceSpec);
         coordinator.testStopTimeoutMs = options.valueOf(testStopTimeoutMsSpec);
         coordinator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
+        coordinator.sslConnection = options.has(sslSpec);
         coordinator.parallel = options.has(parallelSpec);
 
         TestSuite testSuite = loadTestSuite(getTestSuiteFile());
