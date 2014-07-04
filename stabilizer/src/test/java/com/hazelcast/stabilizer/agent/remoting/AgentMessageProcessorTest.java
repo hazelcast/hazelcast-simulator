@@ -1,6 +1,7 @@
 package com.hazelcast.stabilizer.agent.remoting;
 
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.stabilizer.common.messaging.DummyRunnableMessage;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import org.junit.Before;

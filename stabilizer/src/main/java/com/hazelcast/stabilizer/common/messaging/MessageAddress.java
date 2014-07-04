@@ -13,6 +13,7 @@ public class MessageAddress implements Serializable {
     public MessageAddress(String agentAddress, String workerAddress, String testAddress) {
         this.agentAddress = agentAddress;
         this.workerAddress = workerAddress;
+        this.testAddress = testAddress;
     }
 
     public String getAgentAddress() {

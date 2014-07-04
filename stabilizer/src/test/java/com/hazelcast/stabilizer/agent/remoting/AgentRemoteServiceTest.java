@@ -3,6 +3,7 @@ package com.hazelcast.stabilizer.agent.remoting;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.common.AgentAddress;
+import com.hazelcast.stabilizer.common.messaging.DummyRunnableMessage;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
