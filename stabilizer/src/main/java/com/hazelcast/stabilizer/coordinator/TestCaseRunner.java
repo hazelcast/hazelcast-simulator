@@ -5,11 +5,12 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.tests.TestSuite;
-import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.RunCommand;
-import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
+import com.hazelcast.stabilizer.worker.commands.GenericCommand;
+import com.hazelcast.stabilizer.worker.commands.InitCommand;
+import com.hazelcast.stabilizer.worker.commands.RunCommand;
+import com.hazelcast.stabilizer.worker.commands.StopCommand;
 
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -48,21 +49,21 @@ public class TestCaseRunner {
         int oldFailureCount = coordinator.failureList.size();
         try {
             echo(prefix + "Starting Test initialization");
-            agentsClient.executeOnAllWorkers(new InitTestCommand(testCase));
+            agentsClient.executeOnAllWorkers(new InitCommand(testCase));
             echo("Completed Test initialization");
 
             echo("Starting Test setup");
-            agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "setup"));
+            agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "setup"));
             agentsClient.waitDone(prefix, testCase.id);
             echo("Completed Test setup");
 
             echo("Starting Test local warmup");
-            agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localWarmup"));
+            agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localWarmup"));
             agentsClient.waitDone(prefix, testCase.id);
             echo("Completed Test local warmup");
 
             echo("Starting Test global warmup");
-            agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalWarmup"));
+            agentsClient.executeOnSingleWorker(new GenericCommand(testCase.id, "globalWarmup"));
             agentsClient.waitDone(prefix, testCase.id);
             echo("Completed Test global warmup");
 
@@ -75,7 +76,7 @@ public class TestCaseRunner {
             echo("Test finished running");
 
             echo("Starting Test stop");
-            agentsClient.executeOnAllWorkers(new StopTestCommand(testCase.id));
+            agentsClient.executeOnAllWorkers(new StopCommand(testCase.id));
             agentsClient.waitDone(prefix, testCase.id);
             echo("Completed Test stop");
 
@@ -83,12 +84,12 @@ public class TestCaseRunner {
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
-                agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalVerify"));
+                agentsClient.executeOnSingleWorker(new GenericCommand(testCase.id, "globalVerify"));
                 agentsClient.waitDone(prefix, testCase.id);
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
-                agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localVerify"));
+                agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localVerify"));
                 agentsClient.waitDone(prefix, testCase.id);
                 echo("Completed Test local verify");
             } else {
@@ -96,13 +97,13 @@ public class TestCaseRunner {
             }
 
             echo("Starting Test global tear down");
-            agentsClient.executeOnSingleWorker(new GenericTestCommand(testCase.id, "globalTeardown"));
+            agentsClient.executeOnSingleWorker(new GenericCommand(testCase.id, "globalTeardown"));
             agentsClient.waitDone(prefix, testCase.id);
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
             agentsClient.waitDone(prefix, testCase.id);
-            agentsClient.executeOnAllWorkers(new GenericTestCommand(testCase.id, "localTeardown"));
+            agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localTeardown"));
             echo("Completed Test local tear down");
 
             return coordinator.failureList.size() == oldFailureCount;

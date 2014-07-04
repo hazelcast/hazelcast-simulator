@@ -15,7 +15,7 @@
  */
 package com.hazelcast.stabilizer.agent.workerjvm;
 
-import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
+import com.hazelcast.stabilizer.worker.commands.CommandRequest;
 
 import java.io.File;
 import java.util.concurrent.BlockingQueue;
@@ -29,7 +29,7 @@ public class WorkerJvm {
     public volatile long lastSeen = System.currentTimeMillis();
     public volatile boolean oomeDetected = false;
 
-    public final BlockingQueue<TestCommandRequest> commandQueue = new LinkedBlockingQueue<TestCommandRequest>();
+    public final BlockingQueue<CommandRequest> commandQueue = new LinkedBlockingQueue<CommandRequest>();
 
     public WorkerJvm(String id) {
         this.id = id;

@@ -3,7 +3,8 @@ package com.hazelcast.stabilizer.coordinator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.worker.testcommands.GetOperationCountTestCommand;
+import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
+import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class PerformanceMonitor extends Thread {
     }
 
     private void checkPerformance() {
-        GetOperationCountTestCommand getOperationCountTestCommand = new GetOperationCountTestCommand();
+        GetOperationCountCommand getOperationCountTestCommand = new GetOperationCountCommand();
         List<List<Long>> result = client.executeOnAllWorkers(getOperationCountTestCommand);
         long currentCount = 0;
         for (List<Long> list : result) {

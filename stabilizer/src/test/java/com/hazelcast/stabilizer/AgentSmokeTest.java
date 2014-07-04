@@ -4,7 +4,7 @@ import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
-import com.hazelcast.stabilizer.coordinator.AgentsClient;
+import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestSuite;
@@ -12,10 +12,10 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.MapRaceTest;
-import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.RunCommand;
-import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
+import com.hazelcast.stabilizer.worker.commands.GenericCommand;
+import com.hazelcast.stabilizer.worker.commands.InitCommand;
+import com.hazelcast.stabilizer.worker.commands.RunCommand;
+import com.hazelcast.stabilizer.worker.commands.StopCommand;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -68,19 +68,19 @@ public class AgentSmokeTest {
 
         spawnWorkers(client);
 
-        InitTestCommand initTestCommand = new InitTestCommand(testCase);
+        InitCommand initTestCommand = new InitCommand(testCase);
         System.out.println("InitTest");
         client.executeOnAllWorkers(initTestCommand);
 
         System.out.println("setup");
-        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"setup"));
+        client.executeOnAllWorkers(new GenericCommand(testCase.id,"setup"));
 
         System.out.println("localWarmup");
-        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"localWarmup"));
+        client.executeOnAllWorkers(new GenericCommand(testCase.id,"localWarmup"));
         client.waitDone("",testCase.id);
 
         System.out.println("globalWarmup");
-        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"globalWarmup"));
+        client.executeOnAllWorkers(new GenericCommand(testCase.id,"globalWarmup"));
         client.waitDone("",testCase.id);
 
         System.out.println("run");
@@ -93,23 +93,23 @@ public class AgentSmokeTest {
         System.out.println("Finished running");
 
         System.out.println("stop");
-        client.executeOnAllWorkers(new StopTestCommand(testCase.id));
+        client.executeOnAllWorkers(new StopCommand(testCase.id));
         client.waitDone("",testCase.id);
 
         System.out.println("localVerify");
-        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"localVerify"));
+        client.executeOnAllWorkers(new GenericCommand(testCase.id,"localVerify"));
         client.waitDone("",testCase.id);
 
         System.out.println("globalVerify");
-        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"globalVerify"));
+        client.executeOnAllWorkers(new GenericCommand(testCase.id,"globalVerify"));
         client.waitDone("",testCase.id);
 
         System.out.println("globalTeardown");
-        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"globalTeardown"));
+        client.executeOnAllWorkers(new GenericCommand(testCase.id,"globalTeardown"));
         client.waitDone("",testCase.id);
 
         System.out.println("localTeardown");
-        client.executeOnAllWorkers(new GenericTestCommand(testCase.id,"localTeardown"));
+        client.executeOnAllWorkers(new GenericCommand(testCase.id,"localTeardown"));
         client.waitDone("",testCase.id);
 
         System.out.println("Done");
