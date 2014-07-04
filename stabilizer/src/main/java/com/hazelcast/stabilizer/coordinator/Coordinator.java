@@ -122,70 +122,13 @@ public class Coordinator {
 
         agentsClient.initTestSuite(testSuite);
 
-        if (workerClassPath != null) {
-            log.info(format("Copying workerClasspath '%s' to agents", workerClassPath));
-
-            List<File> upload = createUpload();
-
-            for (String ip : agentsClient.getPublicAddresses()) {
-                for (File file : upload) {
-                    String syncCommand = format("rsync --ignore-existing -av -e \"ssh %s\" %s %s@%s:hazelcast-stabilizer-%s/workers/%s/lib",
-                            props.get("SSH_OPTIONS", ""), file.getAbsolutePath(), props.get("USER"), ip, getVersion(), testSuite.id);
-
-                    bash.execute(syncCommand);
-                }
-            }
-
-            log.info(format("Finished copying workerClasspath '%s' to agents", workerClassPath));
-        }
-
+        uploadWorkerClassPath();
         //todo: copy the hazelcast jars
-
-        //upload yourkit if needed
-        if ("yourkit".equals(workerJvmSettings.profiler)) {
-            log.info("Ensuring Yourkit dependencies available on remote machines");
-
-            //todo: in the future we'll only upload the right yourkit library 32 vs 64
-            for (String ip : agentsClient.getPublicAddresses()) {
-                bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s/yourkit", getVersion()));
-
-                String syncCommand = format("rsync --ignore-existing -av -e \"ssh %s\" %s/yourkit %s@%s:hazelcast-stabilizer-%s/",
-                        props.get("SSH_OPTIONS", ""), getStablizerHome().getAbsolutePath(), props.get("USER"), ip, getVersion());
-
-                bash.execute(syncCommand);
-            }
-        }
+        uploadYourKitIfNeeded();
     }
 
-    public List<File> createUpload() throws IOException {
-        if (workerClassPath == null) {
-            return Collections.EMPTY_LIST;
-        }
-
-        List<File> files = new LinkedList<File>();
-        for (String filePath : workerClassPath.split(";")) {
-            File file = new File(filePath);
-
-            if (file.getName().contains("*")) {
-                File parent = file.getParentFile();
-                if (!parent.isDirectory()) {
-                    throw new IOException(format("Can't create upload, file [%s] is not a directory", parent));
-                }
-
-                String regex = file.getName().replace("*", "(.*)");
-                for (File child : parent.listFiles()) {
-                    if (child.getName().matches(regex)) {
-                        files.add(child);
-                    }
-                }
-            } else if (file.exists()) {
-                files.add(file);
-            } else {
-                Utils.exitWithError(log, format("Can't create workerClassPath upload, file [%s] doesn't exist", filePath));
-            }
-        }
-
-        return files;
+    private List<File> createUpload() throws IOException {
+        return Utils.getFilesFromClassPath(workerClassPath);
     }
 
     private void initHzConfig(WorkerJvmSettings settings) throws Exception {
@@ -362,6 +305,41 @@ public class Coordinator {
     private void echo(String msg) {
         agentsClient.echo(msg);
         log.info(msg);
+    }
+
+    private void uploadWorkerClassPath() throws IOException {
+        if (workerClassPath != null) {
+            log.info(format("Copying workerClasspath '%s' to agents", workerClassPath));
+
+            List<File> upload = createUpload();
+
+            for (String ip : agentsClient.getPublicAddresses()) {
+                for (File file : upload) {
+                    String syncCommand = format("rsync --ignore-existing -av -e \"ssh %s\" %s %s@%s:hazelcast-stabilizer-%s/workers/%s/lib",
+                            props.get("SSH_OPTIONS", ""), file.getAbsolutePath(), props.get("USER"), ip, getVersion(), testSuite.id);
+
+                    bash.execute(syncCommand);
+                }
+            }
+
+            log.info(format("Finished copying workerClasspath '%s' to agents", workerClassPath));
+        }
+    }
+
+    private void uploadYourKitIfNeeded() {
+        if ("yourkit".equals(workerJvmSettings.profiler)) {
+            log.info("Ensuring Yourkit dependencies available on remote machines");
+
+            //todo: in the future we'll only upload the right yourkit library 32 vs 64
+            for (String ip : agentsClient.getPublicAddresses()) {
+                bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s/yourkit", getVersion()));
+
+                String syncCommand = format("rsync --ignore-existing -av -e \"ssh %s\" %s/yourkit %s@%s:hazelcast-stabilizer-%s/",
+                        props.get("SSH_OPTIONS", ""), getStablizerHome().getAbsolutePath(), props.get("USER"), ip, getVersion());
+
+                bash.execute(syncCommand);
+            }
+        }
     }
 
     public static void main(String[] args) throws Exception {
