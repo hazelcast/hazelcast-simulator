@@ -7,12 +7,12 @@ import org.apache.log4j.Logger;
 
 import java.util.concurrent.TimeoutException;
 
-public class MessageProcessor {
-    private static final Logger log = Logger.getLogger(MessageProcessor.class);
+public class AgentMessageProcessor {
+    private static final Logger log = Logger.getLogger(AgentMessageProcessor.class);
 
     private WorkerJvmManager workerJvmManager;
 
-    public MessageProcessor(WorkerJvmManager workerJvmManager) {
+    public AgentMessageProcessor(WorkerJvmManager workerJvmManager) {
         this.workerJvmManager = workerJvmManager;
     }
 
@@ -40,7 +40,7 @@ public class MessageProcessor {
         if (message instanceof Runnable) {
             processLocalRunnableMessage((Runnable) message);
         } else {
-            throw new UnsupportedOperationException("Not implemented yet");
+            throw new UnsupportedOperationException("Non-runnable messages to agents are not implemented yet");
         }
     }
 

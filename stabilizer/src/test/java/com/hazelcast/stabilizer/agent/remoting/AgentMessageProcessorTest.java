@@ -12,15 +12,15 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 
-public class MessageProcessorTest {
+public class AgentMessageProcessorTest {
 
-    private MessageProcessor messageProcessor;
+    private AgentMessageProcessor agentMessageProcessor;
     private WorkerJvmManager workerJvmManagerMock;
 
     @Before
     public void setUp() {
         workerJvmManagerMock = mock(WorkerJvmManager.class);
-        messageProcessor = new MessageProcessor(workerJvmManagerMock);
+        agentMessageProcessor = new AgentMessageProcessor(workerJvmManagerMock);
     }
 
     @Test
@@ -28,7 +28,7 @@ public class MessageProcessorTest {
         MessageAddress address = MessageAddress.builder().toAllAgents().build();
         DummyRunnableMessage message = new DummyRunnableMessage(address);
 
-        messageProcessor.process(message);
+        agentMessageProcessor.process(message);
         assertTrue(message.isExecuted());
         verify(workerJvmManagerMock, never()).sendMessage(any(Message.class));
     }
@@ -37,7 +37,7 @@ public class MessageProcessorTest {
     public void testWorkerMessage() throws TimeoutException, InterruptedException {
         MessageAddress address = MessageAddress.builder().toAllAgents().toAllWorkers().build();
         DummyRunnableMessage message = new DummyRunnableMessage(address);
-        messageProcessor.process(message);
+        agentMessageProcessor.process(message);
 
         assertFalse(message.isExecuted());
         verify(workerJvmManagerMock).sendMessage(message);

@@ -8,8 +8,9 @@ public class MessageAddress implements Serializable {
 
     private String agentAddress;
     private String workerAddress;
+    private String testAddress;
 
-    public MessageAddress(String agentAddress, String workerAddress) {
+    public MessageAddress(String agentAddress, String workerAddress, String testAddress) {
         this.agentAddress = agentAddress;
         this.workerAddress = workerAddress;
     }
@@ -22,6 +23,10 @@ public class MessageAddress implements Serializable {
         return workerAddress;
     }
 
+    public String getTestAddress() {
+        return testAddress;
+    }
+
     public static MessageAddressBuilder builder() {
         return new MessageAddressBuilder();
     }
@@ -29,6 +34,7 @@ public class MessageAddress implements Serializable {
     public static class MessageAddressBuilder {
         private String agentAddress;
         private String workerAddress;
+        private String testAddress;
 
         public MessageAddressBuilder toAllAgents() {
             agentAddress = BROADCAST_PREFIX;
@@ -50,8 +56,28 @@ public class MessageAddress implements Serializable {
             return this;
         }
 
+        public MessageAddressBuilder toAllTests() {
+            testAddress = BROADCAST_PREFIX;
+            return this;
+        }
+
+        public MessageAddressBuilder toRandomTest() {
+            testAddress = RANDOM_PREFIX;
+            return this;
+        }
+
         public MessageAddress build() {
-            return new MessageAddress(agentAddress, workerAddress);
+            validate();
+            return new MessageAddress(agentAddress, workerAddress, testAddress);
+        }
+
+        private void validate() {
+            if (agentAddress == null && workerAddress != null) {
+                throw new IllegalStateException("Agent address cannot be empty when worker address is specified");
+            }
+            if (workerAddress == null && testAddress != null) {
+                throw new IllegalStateException("Worker address cannot be empty when test address is specified");
+            }
         }
     }
 }

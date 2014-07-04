@@ -9,4 +9,6 @@ public interface TestContext {
     String getTestId();
 
     boolean isStopped();
+
+    void stop();
 }

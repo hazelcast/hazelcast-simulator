@@ -30,14 +30,14 @@ public class AgentRemoteService {
     private final static Logger log = Logger.getLogger(AgentRemoteService.class.getName());
 
     final private Agent agent;
-    final private MessageProcessor messageProcessor;
+    final private AgentMessageProcessor agentMessageProcessor;
     private ServerSocket serverSocket;
     private final Executor executor = Executors.newFixedThreadPool(20);
     private AcceptorThread acceptorThread;
 
-    public AgentRemoteService(Agent agent, MessageProcessor messageProcessor) {
+    public AgentRemoteService(Agent agent, AgentMessageProcessor agentMessageProcessor) {
         this.agent = agent;
-        this.messageProcessor = messageProcessor;
+        this.agentMessageProcessor = agentMessageProcessor;
     }
 
     public void start() throws IOException {
@@ -70,7 +70,7 @@ public class AgentRemoteService {
                     if (log.isDebugEnabled()) {
                         log.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
                     }
-                    executor.execute(new ClientSocketTask(clientSocket, agent, messageProcessor));
+                    executor.execute(new ClientSocketTask(clientSocket, agent, agentMessageProcessor));
                 } catch (IOException e) {
                     log.fatal(e);
                 }

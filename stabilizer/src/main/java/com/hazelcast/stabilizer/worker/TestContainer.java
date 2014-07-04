@@ -2,8 +2,10 @@ package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.annotations.MessageConsumer;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
@@ -47,6 +49,8 @@ public class TestContainer<T extends TestContext> {
 
     private Method operationCountMethod;
 
+    private Method messageConsumerMethod;
+
     public TestContainer(Object testObject, T testContext) {
         if (testObject == null) {
             throw new NullPointerException();
@@ -59,6 +63,10 @@ public class TestContainer<T extends TestContext> {
         this.testObject = testObject;
         this.clazz = testObject.getClass();
 
+        initMethods();
+    }
+
+    private void initMethods() {
         initRunMethod();
         initSetupMethod();
 
@@ -72,6 +80,8 @@ public class TestContainer<T extends TestContext> {
         initGlobalVerifyMethod();
 
         initGetOperationCountMethod();
+
+        initMessageConsumerMethod();
     }
 
     public T getTestContext() {
@@ -113,6 +123,10 @@ public class TestContainer<T extends TestContext> {
 
     public void globalWarmup() throws Throwable {
         invoke(globalWarmupMethod);
+    }
+
+    public void sendMessage(Message message) throws Throwable {
+        invoke(messageConsumerMethod, message);
     }
 
     private <E> E invoke(Method method, Object... args) throws Throwable {
@@ -297,6 +311,22 @@ public class TestContainer<T extends TestContext> {
         globalWarmupMethod = method;
     }
 
+    private void initMessageConsumerMethod() {
+        List<Method> methods = findMethod(MessageConsumer.class);
+        if (methods.isEmpty()) {
+            return;
+        }
+
+        assertAtMostOne(methods, MessageConsumer.class);
+        Method method = methods.get(0);
+        method.setAccessible(true);
+        assertVoidReturnType(method);
+        assertNotStatic(method);
+        assertArguments(method, Message.class);
+        messageConsumerMethod = method;
+
+    }
+
     private void assertNotStatic(Method method) {
         if (Modifier.isStatic(method.getModifiers())) {
             throw new IllegalTestException(
@@ -324,6 +354,23 @@ public class TestContainer<T extends TestContext> {
 
         throw new IllegalTestException(
                 "Method " + clazz + "." + method + " should have single argument of type " + TestContext.class);
+    }
+
+    private void assertArguments(Method method, Class<?>...arguments) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        if (parameterTypes.length != arguments.length) {
+            throw new IllegalTestException(
+                    format("Method %s must have %s arguments, but %s arguments found",
+                            method, arguments.length, parameterTypes.length));
+        }
+
+        for (int i = 0; i < arguments.length; i++) {
+            if (!parameterTypes[i].isAssignableFrom(arguments[i])) {
+                throw new IllegalTestException(
+                        format("Method %s has %s. argument of type %s where type %s is expected",
+                                method, i+1, parameterTypes[i], arguments[i]));
+            }
+        }
     }
 
     private void assertExactlyOne(List<Method> methods, Class<? extends Annotation> annotation) {

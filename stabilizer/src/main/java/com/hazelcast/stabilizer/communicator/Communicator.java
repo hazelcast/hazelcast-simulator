@@ -46,6 +46,7 @@ public class Communicator {
         Message message = new UseAllMemoryMessage(MessageAddress.builder()
                 .toRandomAgent()
                 .toAllWorkers()
+                .toAllTests()
                 .build());
 
         agentsClient.sendMessage(message);

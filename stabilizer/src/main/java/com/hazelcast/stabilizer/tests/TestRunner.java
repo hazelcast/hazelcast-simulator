@@ -189,5 +189,10 @@ public class TestRunner<E> {
         public boolean isStopped() {
             return stopped;
         }
+
+        @Override
+        public void stop() {
+            throw new UnsupportedOperationException("Not implemented");
+        }
     }
 }

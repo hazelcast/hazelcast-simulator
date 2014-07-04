@@ -24,12 +24,12 @@ class ClientSocketTask implements Runnable {
 
     private final Socket clientSocket;
     private final Agent agent;
-    private final MessageProcessor messageProcessor;
+    private final AgentMessageProcessor agentMessageProcessor;
 
-    ClientSocketTask(Socket clientSocket, Agent agent, MessageProcessor messageProcessor) {
+    ClientSocketTask(Socket clientSocket, Agent agent, AgentMessageProcessor agentMessageProcessor) {
         this.clientSocket = clientSocket;
         this.agent = agent;
-        this.messageProcessor = messageProcessor;
+        this.agentMessageProcessor = agentMessageProcessor;
     }
 
     @Override
@@ -98,7 +98,7 @@ class ClientSocketTask implements Runnable {
                 break;
             case SERVICE_PROCESS_MESSAGE:
                 Message message = (Message) in.readObject();
-                messageProcessor.process(message);
+                agentMessageProcessor.process(message);
                 break;
             default:
                 throw new RuntimeException("Unknown service:" + service);

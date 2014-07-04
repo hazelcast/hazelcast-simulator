@@ -28,6 +28,7 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.messaging.Message;
+import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
@@ -79,11 +80,13 @@ public class Worker {
     private String workerMode;
     private String workerId;
 
-    private final ConcurrentMap<String, TestContainer<TestContextImpl>> tests
-            = new ConcurrentHashMap<String, TestContainer<TestContextImpl>>();
+    private final ConcurrentMap<String, TestContainer<TestContext>> tests
+            = new ConcurrentHashMap<String, TestContainer<TestContext>>();
 
     private final ConcurrentMap<String,Command> commands
             = new ConcurrentHashMap<String, Command>();
+
+    private WorkerMessageProcessor workerMessageProcessor = new WorkerMessageProcessor(tests);
 
     private final BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
     private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
@@ -316,10 +319,7 @@ public class Worker {
 
         private void process(MessageCommand command) {
             Message message = command.getMessage();
-            if (message instanceof Runnable) {
-                Runnable executable = (Runnable) message;
-                executable.run();
-            }
+            workerMessageProcessor.processMessage(message);
         }
 
         private Long process(GetOperationCountCommand command) throws Throwable {
@@ -336,7 +336,7 @@ public class Worker {
             try {
                 log.info("Starting test");
 
-                final TestContainer<TestContextImpl> test = tests.get(command.testId);
+                final TestContainer<TestContext> test = tests.get(command.testId);
                 if (test == null) {
                     throw new IllegalStateException("Failed to process command: " + command + " no test with " +
                             "testId" + command.testId + " is found");
@@ -366,7 +366,7 @@ public class Worker {
             try {
                 log.info(format("Calling %s.%s()",testName,methodName));
 
-                final TestContainer<TestContextImpl> test = tests.get(testId);
+                final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
                     throw new IllegalStateException("Failed to process command: " + command + " no test with " +
                             "testId " + testId + " is found");
@@ -410,7 +410,7 @@ public class Worker {
                 bindProperties(testObject, testCase);
 
                 TestContextImpl testContext = new TestContextImpl(testCase.id);
-                TestContainer<TestContextImpl> testContainer = new TestContainer<TestContextImpl>(testObject, testContext);
+                TestContainer<TestContext> testContainer = new TestContainer<TestContext>(testObject, testContext);
                 tests.put(testContext.getTestId(), testContainer);
 
                 if (serverInstance != null) {
@@ -426,13 +426,13 @@ public class Worker {
             try {
                 log.info("Calling test.stop");
 
-                TestContainer<TestContextImpl> test = tests.get(command.testId);
+                TestContainer<TestContext> test = tests.get(command.testId);
                 if (test == null) {
                     log.warning("Can't stop test, test with id " + command.testId + " does not exist");
                     return;
                 }
 
-                test.getTestContext().stopped = true;
+                test.getTestContext().stop();
                 log.info("Finished calling test.stop()");
             } catch (Exception e) {
                 log.severe("Failed to execute test.stop", e);
@@ -494,6 +494,11 @@ public class Worker {
         @Override
         public boolean isStopped() {
             return stopped;
+        }
+
+        @Override
+        public void stop() {
+            stopped = true;
         }
     }
 }
