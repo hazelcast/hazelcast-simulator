@@ -25,6 +25,7 @@ import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
+import com.hazelcast.stabilizer.common.GitInfo;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 import com.hazelcast.stabilizer.provisioner.Bash;
 import com.hazelcast.stabilizer.tests.Failure;
@@ -344,7 +345,8 @@ public class Coordinator {
 
     public static void main(String[] args) throws Exception {
         log.info("Hazelcast Stabilizer Coordinator");
-        log.info(format("Version: %s", getVersion()));
+        log.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         Coordinator coordinator = new Coordinator();

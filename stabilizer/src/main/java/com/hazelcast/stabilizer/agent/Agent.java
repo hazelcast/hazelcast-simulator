@@ -18,6 +18,7 @@ package com.hazelcast.stabilizer.agent;
 
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.stabilizer.common.GitInfo;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import joptsimple.OptionException;
@@ -97,7 +98,8 @@ public class Agent {
 
     public static void main(String[] args) throws Exception {
         log.info("Stabilizer Agent");
-        log.info(format("Version: %s\n", getVersion()));
+        log.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
         log.info(format("STABILIZER_HOME: %s\n", STABILIZER_HOME));
 
         try {
