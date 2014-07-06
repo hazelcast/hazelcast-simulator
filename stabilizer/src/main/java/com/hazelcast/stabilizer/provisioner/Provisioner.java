@@ -6,6 +6,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
+import com.hazelcast.stabilizer.common.GitInfo;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -376,7 +377,8 @@ public class Provisioner {
 
     public static void main(String[] args) {
         log.info("Hazelcast Stabilizer Provisioner");
-        log.info(format("Version: %s", getVersion()));
+        log.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         try {
