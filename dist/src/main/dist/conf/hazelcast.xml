@@ -15,9 +15,7 @@
                 <!--MEMBERS-->
             </tcp-ip>
         </join>
-
         <!--SSL-->
-
     </network>
-
+    <!--license-key-->
 </hazelcast>

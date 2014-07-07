@@ -211,10 +211,13 @@ public class Coordinator {
                 "            </properties>\n" +
                 "        </ssl>";
 
+        String licenseKey = "<license-key>ABNKCFLH9DO3500101R8W0YR74Z00X</license-key>";
+
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
 
         if(sslConnection){
             settings.hzConfig = settings.hzConfig.replace("<!--SSL-->", ssl);
+            settings.hzConfig = settings.hzConfig.replace("<!--license-key-->", licenseKey);
         }
     }
 
