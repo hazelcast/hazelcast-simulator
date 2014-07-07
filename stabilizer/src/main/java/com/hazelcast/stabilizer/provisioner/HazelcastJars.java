@@ -45,7 +45,8 @@ public class HazelcastJars {
             String version = versionSpec.substring(6);
             //mavenRetrieve("hazelcast", version);
             mavenRetrieve("hazelcast-ee-all", version);
-            mavenRetrieve("hazelcast-client", version);
+            mavenRetrieve("hazelcast-ee-all", version);
+            //mavenRetrieve("hazelcast-client", version);
         } else {
             log.severe("Unrecognized version spec:" + versionSpec);
             System.exit(1);
