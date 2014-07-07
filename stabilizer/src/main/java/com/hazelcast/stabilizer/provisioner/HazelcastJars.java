@@ -43,7 +43,8 @@ public class HazelcastJars {
             //we don't need to do anything
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);
-            mavenRetrieve("hazelcast", version);
+            //mavenRetrieve("hazelcast", version);
+            mavenRetrieve("hazelcast-enterprise", version);
             mavenRetrieve("hazelcast-client", version);
         } else {
             log.severe("Unrecognized version spec:" + versionSpec);
@@ -54,8 +55,8 @@ public class HazelcastJars {
     private void mavenRetrieve(String artifact, String version) {
         File userhome = new File(System.getProperty("user.home"));
         File repositoryDir = Utils.newFile(userhome, ".m2", "repository");
-        File artifactFile = Utils.newFile(repositoryDir, "com", "hazelcast",
-                artifact, version, format("%s-%s.jar", artifact, version));
+        File artifactFile = Utils.newFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
+
         if (artifactFile.exists()) {
             log.info("Using artifact: " + artifactFile + " from local maven repository");
             bash.execute(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
