@@ -57,10 +57,10 @@ public class HazelcastJars {
         File artifactFile = Utils.newFile(repositoryDir, "com", "hazelcast",
                 artifact, version, format("%s-%s.jar", artifact, version));
         if (artifactFile.exists()) {
-            log.finest("Using artifact: " + artifactFile + " from local maven repository");
+            log.info("Using artifact: " + artifactFile + " from local maven repository");
             bash.execute(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
         } else {
-            log.finest("Artifact: " + artifactFile + " is not found in local maven repository, trying online one");
+            log.info("Artifact: " + artifactFile + " is not found in local maven repository, trying online one");
 
             String url;
             if (version.endsWith("-SNAPSHOT")) {
