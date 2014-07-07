@@ -29,7 +29,7 @@ public class InitCommand extends Command {
 
     @Override
     public String toString() {
-        return "InitTestCommand{" +
+        return "InitCommand{" +
                 "testRecipe=" + testCase +
                 '}';
     }

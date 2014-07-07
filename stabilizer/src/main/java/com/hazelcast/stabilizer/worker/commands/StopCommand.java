@@ -13,7 +13,7 @@ public class StopCommand extends Command {
 
     @Override
     public String toString() {
-        return "StopTestCommand{" +
+        return "StopCommand{" +
                 "testId='" + testId + '\'' +
                 ", timeoutMs=" + timeoutMs +
                 '}';

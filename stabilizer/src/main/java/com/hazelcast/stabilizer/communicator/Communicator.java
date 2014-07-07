@@ -23,6 +23,8 @@ public class Communicator {
     public File agentsFile;
     protected AgentsClient agentsClient;
 
+    public Message message;
+
     public static void main(String[] args) throws IOException {
         log.info("Stabilizer Communicator");
         log.info(format("Version: %s\n", getVersion()));
@@ -44,12 +46,6 @@ public class Communicator {
 
     private void run() throws Exception {
         initAgents();
-        Message message = new UseAllMemoryMessage(MessageAddress.builder()
-                .toRandomAgent()
-                .toAllWorkers()
-                .toAllTests()
-                .build());
-
         agentsClient.sendMessage(message);
     }
 

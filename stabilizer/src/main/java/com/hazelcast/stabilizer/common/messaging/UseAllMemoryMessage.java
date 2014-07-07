@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@MessageSpec("useHeap")
 public class UseAllMemoryMessage extends RunnableMessage {
     private final static Logger log = Logger.getLogger(UseAllMemoryMessage.class);
 

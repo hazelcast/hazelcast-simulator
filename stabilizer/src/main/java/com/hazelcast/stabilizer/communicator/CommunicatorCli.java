@@ -3,6 +3,7 @@ package com.hazelcast.stabilizer.communicator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.common.messaging.MessageAddressParser;
 import joptsimple.BuiltinHelpFormatter;
@@ -12,6 +13,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import java.io.IOException;
+import java.util.List;
 
 import static com.hazelcast.stabilizer.Utils.getFile;
 
@@ -61,7 +63,10 @@ public class CommunicatorCli {
             System.exit(0);
         }
 
-        communicator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
+        String messageAddressString = options.valueOf(messageAddressSpec);
+        String messageTypeSpec = options.valueOf(this.messageTypeSpec);
 
+        communicator.message = Message.newBySpec(messageTypeSpec, messageAddressString);
+        communicator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
     }
 }

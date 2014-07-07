@@ -8,7 +8,9 @@ public class MessageTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void message_address_cannot_be_null() {
-       new Message(null);
+       new Message(null) {
+
+       };
     }
 
 }
