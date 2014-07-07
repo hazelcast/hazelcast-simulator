@@ -39,8 +39,12 @@ public class WorkerMessageProcessor {
                 testContainer.sendMessage(message);
             }
         } else if (MessageAddress.RANDOM_PREFIX.equals(testAddress)) {
-            TestContainer<?> randomTestContainer = getRandomTestContainer();
-            randomTestContainer.sendMessage(message);
+            TestContainer<?> randomTestContainer = getRandomTestContainerOrNull();
+            if (randomTestContainer == null) {
+                log.warning("No test container is known to this worker. Is it a race-condition?");
+            } else {
+                randomTestContainer.sendMessage(message);
+            }
         }
     }
 
@@ -57,8 +61,11 @@ public class WorkerMessageProcessor {
         executable.run();
     }
 
-    public TestContainer<?> getRandomTestContainer() {
+    public TestContainer<?> getRandomTestContainerOrNull() {
         TestContainer<?>[] testContainers = tests.values().toArray(new TestContainer<?>[]{});
+        if (testContainers.length == 0) {
+            return null;
+        }
         TestContainer<?> randomTestContainer = testContainers[random.nextInt(testContainers.length)];
         return randomTestContainer;
     }

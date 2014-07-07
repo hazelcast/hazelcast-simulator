@@ -126,13 +126,21 @@ public class WorkerJvmManager {
     }
 
     private void sendMessageToRandomWorker(Message message) throws TimeoutException, InterruptedException {
-        WorkerJvm randomWorker = getRandomWorker();
-        Command command = new MessageCommand(message);
-        executeOnWorkers(command, Arrays.asList(randomWorker));
+        WorkerJvm randomWorker = getRandomWorkerOrNull();
+        if (randomWorker == null) {
+            log.warn("No worker is known to this agent. Is it a race-condition?");
+        } else {
+            Command command = new MessageCommand(message);
+            executeOnWorkers(command, Arrays.asList(randomWorker));
+        }
     }
 
-    private WorkerJvm getRandomWorker() {
-        WorkerJvm[] workers = workerJvms.values().toArray(new WorkerJvm[workerJvms.size()]);
+    private WorkerJvm getRandomWorkerOrNull() {
+        Collection<WorkerJvm> jvmCollection = workerJvms.values();
+        if (jvmCollection.isEmpty()) {
+            return null;
+        }
+        WorkerJvm[] workers = jvmCollection.toArray(new WorkerJvm[jvmCollection.size()]);
         return workers[random.nextInt(workers.length)];
     }
 

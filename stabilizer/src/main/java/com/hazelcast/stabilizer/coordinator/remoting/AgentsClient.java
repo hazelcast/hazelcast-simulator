@@ -287,7 +287,10 @@ public class AgentsClient {
 
     private Future<Object> sendMessageToRandomAgent(final Message message) {
         Random random = new Random();
-        final AgentClient agentClient = agents.get(random.nextInt(agents.size()));
+        final AgentClient agentClient = getRandomAgentClientOrNull(random);
+        if (agentClient == null) {
+            throw new IllegalStateException("No agent exists. Is this a race condition?");
+        }
         return agentExecutor.submit(new Callable<Object>() {
             @Override
             public Object call() throws Exception {
@@ -295,6 +298,13 @@ public class AgentsClient {
                 return null;
             }
         });
+    }
+
+    private AgentClient getRandomAgentClientOrNull(Random random) {
+        if (agents.size() == 0) {
+            return null;
+        }
+        return agents.get(random.nextInt(agents.size()));
     }
 
     private List<Future> sendMessageToAllAgents(final Message message) {
