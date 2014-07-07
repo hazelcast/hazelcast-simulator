@@ -2,7 +2,7 @@ package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.stabilizer.common.messaging.Message;
-import com.hazelcast.stabilizer.tests.annotations.MessageConsumer;
+import com.hazelcast.stabilizer.tests.annotations.Receive;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
@@ -97,7 +97,7 @@ public class TestInvokerTest {
 
         }
 
-        @MessageConsumer
+        @Receive
         public void receive(Message message) {
             messagePassed = message;
         }

@@ -214,13 +214,22 @@ public class WorkerJvmManager {
         log.info("Finished terminating workers");
     }
 
+    public void terminateRandomWorker() {
+        WorkerJvm randomWorker = getRandomWorkerOrNull();
+        if (randomWorker == null) {
+            log.warn("Attempt to terminating a random worker detected, but no worker is running.");
+            return;
+        }
+        terminateWorker(randomWorker);
+    }
+
     public void terminateWorker(final WorkerJvm jvm) {
         workerJvms.remove(jvm.id);
 
         Thread t = new Thread() {
             public void run() {
                 try {
-                    jvm.process.destroy();
+                    jvm.process.destroy(); //this sends SIGTERM on *nix
                     jvm.process.waitFor();
                 } catch (Throwable e) {
                     log.fatal("Failed to destroy worker process: " + jvm);

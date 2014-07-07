@@ -5,7 +5,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.annotations.MessageConsumer;
+import com.hazelcast.stabilizer.tests.annotations.Receive;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
@@ -312,12 +312,12 @@ public class TestContainer<T extends TestContext> {
     }
 
     private void initMessageConsumerMethod() {
-        List<Method> methods = findMethod(MessageConsumer.class);
+        List<Method> methods = findMethod(Receive.class);
         if (methods.isEmpty()) {
             return;
         }
 
-        assertAtMostOne(methods, MessageConsumer.class);
+        assertAtMostOne(methods, Receive.class);
         Method method = methods.get(0);
         method.setAccessible(true);
         assertVoidReturnType(method);
