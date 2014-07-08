@@ -205,7 +205,7 @@ public class MapEntryListenerTest {
                     else if(chance < replaceProb + writeUsingPutIfAbsent + writeUsingPutProb){
                         Object orig = map.get(key);
                         if ( orig !=null && map.replace(key, orig, value) ){
-                            count.localReplaceCount.getAndIncrement();
+                            count.localUpdateCount.getAndIncrement();
                         }
                     }
                 }else if(chance < evictProb + writeProb){
@@ -298,24 +298,18 @@ public class MapEntryListenerTest {
         IMap map = targetInstance.getMap(basename);
         EntryListenerImpl e = listeners.get(basename);
 
-        long addedTotal = total.localAddCount.get() + total.localReplaceCount.get();
-        long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
-        long expectedMapSz = e.addCount.get()  - (total.localReplaceCount.get() + e.evictCount.get() + e.removeCount.get());
+        long expectedMapSz = e.addCount.get()  - (e.evictCount.get() + e.removeCount.get());
 
-        System.out.println("add = "+addedTotal +" "+ e.addCount.get());
+        System.out.println("add = "+ total.localAddCount.get() +" "+ e.addCount.get());
         System.out.println("update = "+total.localUpdateCount.get() +" "+ e.updateCount.get());
         System.out.println("remove = "+total.localRemoveCount.get() +" "+ e.removeCount.get());
         System.out.println("evict = "+total.localEvictCount.get() +" "+ e.evictCount.get());
-        System.out.println("replaced = " + total.localReplaceCount.get() + " " + replaceTrickCount);
         System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
 
-        assertEquals(" Add Events ",      addedTotal,                     e.addCount.get());
+        assertEquals(" Add Events ",      total.localAddCount.get(),      e.addCount.get());
         assertEquals(" Update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
         assertEquals(" Remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
         assertEquals(" Evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
-
-        assertEquals(" Add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
-
         assertEquals(" MapSZ ", expectedMapSz, map.size());
     }
 
