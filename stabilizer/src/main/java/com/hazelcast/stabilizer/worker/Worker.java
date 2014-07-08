@@ -103,6 +103,9 @@ public class Worker {
             throw new IllegalStateException("Unknown worker mode:" + workerMode);
         }
 
+        workerMessageProcessor.setHazelcastServerInstance(serverInstance);
+        workerMessageProcessor.setHazelcastClientInstance(clientInstance);
+
         new TestCommandRequestProcessingThread().start();
         new SocketThread().start();
 

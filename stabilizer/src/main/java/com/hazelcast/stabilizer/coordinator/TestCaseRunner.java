@@ -6,6 +6,7 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
+import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
 import com.hazelcast.stabilizer.worker.commands.InitCommand;
@@ -14,6 +15,7 @@ import com.hazelcast.stabilizer.worker.commands.StopCommand;
 
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.Set;
 
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
@@ -23,7 +25,7 @@ import static java.lang.String.format;
  * by having multiple testcase runners in parallel.
  */
 public class TestCaseRunner {
-
+    private static final String NON_CRITICAL_FAILURES = "non.critical.failures";
     private final static ILogger log = Logger.getLogger(TestCaseRunner.class);
 
     private final TestCase testCase;
@@ -32,6 +34,7 @@ public class TestCaseRunner {
     private final TestSuite testSuite;
     private final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
     private final String prefix;
+    private final Set<Failure.Type> nonCriticalFailures;
 
     public TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator) {
         this.testCase = testCase;
@@ -39,6 +42,10 @@ public class TestCaseRunner {
         this.testSuite = testSuite;
         this.agentsClient = coordinator.agentsClient;
         this.prefix = testCase.id.equals("") ? "" : testCase.id + " ";
+
+        String nonCriticalFailuresProperty = testCase.getProperty(NON_CRITICAL_FAILURES);
+        nonCriticalFailures = Failure.Type.fromPropertyValue(nonCriticalFailuresProperty);
+
     }
 
     public boolean run() throws Exception {
@@ -134,8 +141,8 @@ public class TestCaseRunner {
         int small = seconds % period;
 
         for (int k = 1; k <= big; k++) {
-            if (coordinator.failureList.size() > 0) {
-                echo("Failure detected, aborting execution of test");
+            if (shouldTerminate()) {
+                echo("Critical Failure detected, aborting execution of test");
                 return;
             }
 
@@ -152,6 +159,15 @@ public class TestCaseRunner {
         }
 
         Utils.sleepSeconds(small);
+    }
+
+    private boolean shouldTerminate() {
+        for (Failure failure : coordinator.failureList) {
+            if (!nonCriticalFailures.contains(failure)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void echo(String msg) {

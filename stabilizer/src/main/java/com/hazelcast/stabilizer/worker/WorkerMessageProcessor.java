@@ -1,5 +1,7 @@
 package com.hazelcast.stabilizer.worker;
 
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.messaging.Message;
@@ -16,11 +18,24 @@ public class WorkerMessageProcessor {
     private String testAddress;
     private Random random = new Random();
 
+    private HazelcastInstance hazelcastServerInstance;
+    private HazelcastInstance hazelcastClientInstance;
+
     public WorkerMessageProcessor(ConcurrentMap<String, TestContainer<TestContext>> tests) {
         this.tests = tests;
     }
 
+    public void setHazelcastServerInstance(HazelcastInstance hazelcastServerInstance) {
+        this.hazelcastServerInstance = hazelcastServerInstance;
+    }
+
+    public void setHazelcastClientInstance(HazelcastInstance hazelcastClientInstance) {
+        this.hazelcastClientInstance = hazelcastClientInstance;
+    }
+
     public void processMessage(Message message) {
+        injectHazecastInstance(message);
+
         if (message.getMessageAddress().getTestAddress() == null) {
             processLocalMessage(message);
         } else {
@@ -28,6 +43,19 @@ public class WorkerMessageProcessor {
                 processTestMessage(message);
             } catch (Throwable throwable) {
                 log.severe("Error while processing message", throwable);
+            }
+        }
+    }
+
+    private void injectHazecastInstance(Message message) {
+        if (message instanceof HazelcastInstanceAware) {
+            if (hazelcastServerInstance != null) {
+                ((HazelcastInstanceAware) message).setHazelcastInstance(hazelcastServerInstance);
+            } else if (hazelcastClientInstance != null) {
+                ((HazelcastInstanceAware) message).setHazelcastInstance(hazelcastClientInstance);
+            } else {
+                log.warning("Message "+message.getClass().getName()+" implements "
+                        +HazelcastInstanceAware.class+" interface, but no instance is currently running in this worker.");
             }
         }
     }
@@ -57,6 +85,7 @@ public class WorkerMessageProcessor {
     }
 
     private void processLocalRunnableMessage(Runnable message) {
+        log.info("Processing local runnable message: "+message.getClass().getName());
         Runnable executable = message;
         executable.run();
     }

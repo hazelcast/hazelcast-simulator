@@ -181,7 +181,7 @@ public class WorkerJvmManager {
                 results.add(result);
             } catch (ExecutionException e) {
                 Failure failure = new Failure();
-                failure.type = "worker exception";
+                failure.type = Failure.Type.WORKER_EXCEPTION;
                 failure.message = e.getMessage();
                 failure.agentAddress = getHostAddress();
                 failure.workerAddress = workerJvm.memberAddress;

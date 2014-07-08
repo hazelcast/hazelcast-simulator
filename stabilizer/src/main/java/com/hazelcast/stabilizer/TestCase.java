@@ -26,7 +26,7 @@ public class TestCase implements Serializable {
     public String id;
     public HashMap<String, String> properties = new HashMap<String, String>();
 
-     public String getClassname() {
+    public String getClassname() {
         return properties.get("class");
     }
 
