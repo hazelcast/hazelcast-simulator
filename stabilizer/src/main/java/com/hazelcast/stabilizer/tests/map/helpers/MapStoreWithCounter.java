@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.map;
+package com.hazelcast.stabilizer.tests.map.helpers;
 
 import com.hazelcast.core.MapStore;
 
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MapStoreWithCounter implements MapStore<Object, Object> {
 
-    protected final Map store = new ConcurrentHashMap();
+    public final Map store = new ConcurrentHashMap();
 
     protected AtomicInteger countStore = new AtomicInteger(0);
     protected AtomicInteger countDelete = new AtomicInteger(0);
