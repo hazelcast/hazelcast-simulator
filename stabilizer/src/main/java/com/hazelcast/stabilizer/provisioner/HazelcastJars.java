@@ -18,12 +18,13 @@ public class HazelcastJars {
     private final static ILogger log = Logger.getLogger(HazelcastJars.class);
     private final Bash bash;
     private final String versionSpec;
-
+    private final String enterprise;
     private File hazelcastJarsDir;
 
-    public HazelcastJars(Bash bash, String versionSpec) {
+    public HazelcastJars(Bash bash, String versionSpec, String enterprise) {
         this.bash = bash;
         this.versionSpec = versionSpec;
+        this.enterprise = enterprise;
     }
 
     public String getAbsolutePath() {
@@ -43,10 +44,16 @@ public class HazelcastJars {
             //we don't need to do anything
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);
-            //mavenRetrieve("hazelcast", version);
-            mavenRetrieve("hazelcast-ee-all", version);
-            mavenRetrieve("hazelcast-ee-all", version);
-            //mavenRetrieve("hazelcast-client", version);
+
+            if(enterprise.equals("no")){
+                mavenRetrieve("hazelcast", version);
+                mavenRetrieve("hazelcast-client", version);
+            }
+            else{
+                mavenRetrieve("hazelcast-ee-all", version);
+                mavenRetrieve("hazelcast-ee-all", version);
+            }
+
         } else {
             log.severe("Unrecognized version spec:" + versionSpec);
             System.exit(1);

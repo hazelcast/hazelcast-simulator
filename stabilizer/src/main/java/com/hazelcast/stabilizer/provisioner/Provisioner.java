@@ -58,7 +58,8 @@ public class Provisioner {
         addresses.addAll(AgentsFile.load(agentsFile));
         bash = new Bash(props);
         String hzVersionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
-        hazelcastJars = new HazelcastJars(bash, hzVersionSpec);
+        String enterprise = props.get("ENTERPRISE", "no");
+        hazelcastJars = new HazelcastJars(bash, hzVersionSpec, enterprise);
     }
 
     void installAgent(String ip) {
@@ -167,6 +168,7 @@ public class Provisioner {
             String jdkVersion = props.get("JDK_VERSION", "7");
             log.info(format("JDK spec: %s %s", jdkFlavor, jdkVersion));
         }
+
 
         hazelcastJars.prepare();
 
