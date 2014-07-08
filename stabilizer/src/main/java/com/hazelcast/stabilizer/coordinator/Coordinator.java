@@ -70,6 +70,7 @@ public class Coordinator {
     private Bash bash;
     public boolean parallel;
     public boolean sslConnection;
+    public String licencekey;
 
     private void run() throws Exception {
         bash = new Bash(props);
@@ -211,7 +212,7 @@ public class Coordinator {
                 "            </properties>\n" +
                 "        </ssl>";
 
-        String licenseKey = "<license-key>ABNKCFLH9DO3500101R8W0YR74Z00X</license-key>";
+        String licenseKey = "<license-key>"+ licencekey +"</license-key>";
 
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);
 

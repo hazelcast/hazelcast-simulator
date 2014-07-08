@@ -31,6 +31,11 @@ public class CoordinatorCli {
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");
 
+    private final OptionSpec<String> keySpec = parser.accepts("key",
+            "your hazelcast Enterprise Licence Key")
+            .withRequiredArg().ofType(String.class).defaultsTo("NO-KEY-GIVEN");
+
+
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
             "Number of Cluster member Worker JVM's. If no value is specified and no mixed members are specified, " +
                     "then the number of cluster members will be equal to the number of machines in the agents file"
@@ -157,6 +162,8 @@ public class CoordinatorCli {
         coordinator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
         coordinator.sslConnection = options.has(sslSpec);
         coordinator.parallel = options.has(parallelSpec);
+        coordinator.licencekey = options.valueOf(keySpec);
+
 
         TestSuite testSuite = loadTestSuite(getTestSuiteFile());
         coordinator.testSuite = testSuite;
