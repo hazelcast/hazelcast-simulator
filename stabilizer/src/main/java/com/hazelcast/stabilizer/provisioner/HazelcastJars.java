@@ -45,13 +45,13 @@ public class HazelcastJars {
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);
 
-            if(enterprise.equals("no")){
-                mavenRetrieve("hazelcast", version);
-                mavenRetrieve("hazelcast-client", version);
+            if(enterprise.equals("true")){
+                mavenRetrieve("hazelcast-ee-all", version);
+                mavenRetrieve("hazelcast-ee-all", version);
             }
             else{
-                mavenRetrieve("hazelcast-ee-all", version);
-                mavenRetrieve("hazelcast-ee-all", version);
+                mavenRetrieve("hazelcast", version);
+                mavenRetrieve("hazelcast-client", version);
             }
 
         } else {

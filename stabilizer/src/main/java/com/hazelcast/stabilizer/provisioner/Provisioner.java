@@ -58,7 +58,7 @@ public class Provisioner {
         addresses.addAll(AgentsFile.load(agentsFile));
         bash = new Bash(props);
         String hzVersionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
-        String enterprise = props.get("ENTERPRISE", "no");
+        String enterprise = props.get("ENTERPRISE", "false");
         hazelcastJars = new HazelcastJars(bash, hzVersionSpec, enterprise);
     }
 
