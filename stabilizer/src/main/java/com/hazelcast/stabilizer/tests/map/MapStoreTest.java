@@ -35,6 +35,7 @@ public class MapStoreTest {
     public double replaceProb = 0.25;
     //
 
+    public double destroyProb = 1;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
