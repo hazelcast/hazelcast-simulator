@@ -212,6 +212,7 @@ public class Coordinator {
                 "            </properties>\n" +
                 "        </ssl>";
 
+
         String licenseKey = "<license-key>"+ licencekey +"</license-key>";
 
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", members);

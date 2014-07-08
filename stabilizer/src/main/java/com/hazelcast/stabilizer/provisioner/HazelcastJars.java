@@ -46,8 +46,9 @@ public class HazelcastJars {
             String version = versionSpec.substring(6);
 
             if(enterprise.equals("true")){
-                mavenRetrieve("hazelcast-ee-all", version);
-                mavenRetrieve("hazelcast-ee-all", version);
+
+                mavenRetrieve("hazelcast-ee-core", version);
+                //mavenRetrieve("hazelcast-ee-all", version);
             }
             else{
                 mavenRetrieve("hazelcast", version);
