@@ -29,7 +29,7 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
     @Override
     public void store(Object key, Object value) {
 
-        System.out.println("store "+key+" "+value);
+        //System.out.println("store "+key+" "+value);
         countStore.incrementAndGet();
         store.put(key, value);
     }
