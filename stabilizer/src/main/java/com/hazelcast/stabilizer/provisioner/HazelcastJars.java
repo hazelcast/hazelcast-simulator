@@ -49,6 +49,7 @@ public class HazelcastJars {
 
                 mavenRetrieve("hazelcast-ee-core", version);
                 //mavenRetrieve("hazelcast-ee-all", version);
+                mavenRetrieve("hazelcast-client", version);
             }
             else{
                 mavenRetrieve("hazelcast", version);
