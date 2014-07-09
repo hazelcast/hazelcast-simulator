@@ -1,4 +1,5 @@
-#### Coordinator
+Coordinator
+===========================
 
 The Coordinator is responsible for actually running the test using the agents.
 

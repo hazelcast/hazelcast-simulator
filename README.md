@@ -5,17 +5,17 @@ A tool for stress testing Hazelcast and Hazelcast based applications in clustere
 machine, but can also be in a cloud like EC2 or Google Compute Engine. The Stabilizer makes use of JClouds, so in theory
 we can roll out in any cloud.
 
-* [Hazelcast Structure](STRUCTURE.md)
+* [Hazelcast Structure](docs/STRUCTURE.md)
 
-* [Installing Stabilizer](INSTALL.md)
+* [Installing Stabilizer](docs/INSTALL.md)
 
 * [Using the Stabilizer Archetype](docs/ARCHETYPE.md)
 
-* [Provisioning machines](PROVISIONER.md)
+* [Provisioning machines](docs/PROVISIONER.md)
 
-* [Running tests with the Coordinator](COORDINATOR.md)
+* [Running tests with the Coordinator](docs/COORDINATOR.md)
 
-* [Writing tests](TESTS.md)
+* [Writing tests](docs/TESTS.md)
 
 ### Mail Group
 

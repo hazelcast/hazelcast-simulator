@@ -1,4 +1,5 @@
-#### Installation
+Installation
+===========================
 
 The zip/tar.gz file containing the stabilizer artifacts can be downloaded here:
 

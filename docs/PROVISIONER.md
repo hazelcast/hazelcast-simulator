@@ -1,7 +1,11 @@
-#### Provisioning
+Provisioning
+===========================
+
+The provisioner is responsible for provisioning (starting/stopping) instances in a cloud. It will start an Operating System instance,
+install Java, open firewall ports and install Stabilizer Agent.
 
 The behavior of the cluster like cloud, os, hardware, jvm version, Hazelcast version or region can be configured through the
-stabilizer.properties.
+stabilizer.properties. 
 
 To start a cluster:
 

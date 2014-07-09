@@ -1,4 +1,5 @@
-#### General structure
+General structure
+===========================
 
 * Test: the functionality you want to test, e.g. a map. I looks a bit like a junit test, but it doesn't use annotations
 and has a bunch of methods that one can override.

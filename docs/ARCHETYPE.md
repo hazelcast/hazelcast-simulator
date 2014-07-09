@@ -1,5 +1,5 @@
-### Using the archetype
-
+Using the archetype
+===========================
 Probably you want to write your own test. The easiest way to do that is to make use of the Stabilizer archetype which
 will generate a project for you.
 
