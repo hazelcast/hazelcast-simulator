@@ -52,11 +52,11 @@ public class Count implements DataSerializable {
     @Override
     public String toString() {
         return "Count{" +
-                "localAddCount=" + localAddCount +
-                ", localRemoveCount=" + localRemoveCount +
-                ", localUpdateCount=" + localUpdateCount +
-                ", localEvictCount=" + localEvictCount +
-                ", localReplaceCount=" + localReplaceCount +
+                "putCount=" + localAddCount +
+                ", putTransientCount=" + localRemoveCount +
+                ", putIfAbsentCount=" + localUpdateCount +
+                ", replaceCount=" + localEvictCount +
+                ", getCount=" + localReplaceCount +
                 '}';
     }
 }

@@ -2,12 +2,15 @@ package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.map.helpers.Count;
+import com.hazelcast.stabilizer.tests.map.helpers.MapOpperationsCount;
 import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -47,6 +50,7 @@ public class MapStoreTest {
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+    private MapOpperationsCount count = new MapOpperationsCount();
 
     public MapStoreTest(){}
 
@@ -84,37 +88,57 @@ public class MapStoreTest {
                     chance = random.nextDouble();
                     if (chance < writeUsingPutProb) {
                         map.put(key, value);
+                        count.putCount.incrementAndGet();
                     }
                     if (chance < writeUsingPutTTLProb + writeUsingPutProb) {
                         long delay = 1 + random.nextInt(maxExpireySeconds);
                         int k =  putTTlKeyDomain + random.nextInt(putTTlKeyDomain);
                         map.putTransient(k, delay, delay, TimeUnit.SECONDS);
-
+                        count.putTransientCount.incrementAndGet();
                     }
                     else if(chance < writeUsingPutIfAbsent + writeUsingPutTTLProb + writeUsingPutProb ){
                         map.putIfAbsent(key, value);
+                        count.putIfAbsentCount.incrementAndGet();
                     }
                     else if(chance < writeUsingReplaceProb + writeUsingPutIfAbsent + writeUsingPutTTLProb + writeUsingPutProb){
                         Object orig = map.get(key);
                         if ( orig !=null ){
                             map.replace(key, orig, value);
+                            count.replaceCount.incrementAndGet();
                         }
                     }
 
                 }else if(chance < getProb + writeProb){
                     map.get(key);
+                    count.getCount.incrementAndGet();
                 }
                 else if(chance < getAsyncProb + getProb + writeProb){
                     map.getAsync(key);
+                    count.getAsyncCount.incrementAndGet();
                 }
                 else if (chance < deleteProb + getAsyncProb + getProb + writeProb ){
                     map.delete(key);
+                    count.deleteCount.incrementAndGet();
                 }
                 else if (chance < destroyProb + deleteProb + getAsyncProb + getProb + writeProb ){
                     map.destroy();
+                    count.destroyCount.incrementAndGet();
                 }
             }
+            IList results = targetInstance.getList(basename+"report");
+            results.add(count);
         }
+    }
+
+    @Verify(global = true)
+    public void globalVerify() throws Exception {
+
+        IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
+        MapOpperationsCount total = new MapOpperationsCount();
+        for(MapOpperationsCount i : results){
+            total.add(i);
+        }
+        System.out.println(total);
     }
 
     @Verify(global = false)
@@ -141,7 +165,6 @@ public class MapStoreTest {
             }
 
         }catch(UnsupportedOperationException e){}
-
     }
 
     public static void main(String[] args) throws Throwable {
