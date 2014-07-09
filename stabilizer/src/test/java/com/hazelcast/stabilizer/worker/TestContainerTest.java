@@ -1,13 +1,14 @@
-package com.hazelcast.stabilizer.tests;
+package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.stabilizer.common.messaging.Message;
+import com.hazelcast.stabilizer.tests.IllegalTestException;
+import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Receive;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.worker.TestContainer;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -15,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-public class TestInvokerTest {
+public class TestContainerTest {
     // =================== setup ========================
 
     @Test

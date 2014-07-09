@@ -120,6 +120,8 @@ public class WorkerJvmManager {
         String workerAddress = message.getMessageAddress().getWorkerAddress();
         if (MessageAddress.BROADCAST_PREFIX.equals(workerAddress)) {
             sendMessageToAllWorkers(message);
+        } else  if (MessageAddress.OLDEST_MEMBER_PREFIX.equals(workerAddress)) {
+            sendMessageToAllWorkers(message); //send to all workers as they have to evaluate who is the oldest worker
         } else if (MessageAddress.RANDOM_PREFIX.equals(workerAddress)) {
             sendMessageToRandomWorker(message);
         }

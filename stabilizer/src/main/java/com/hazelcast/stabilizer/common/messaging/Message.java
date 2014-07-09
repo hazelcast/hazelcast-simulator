@@ -1,6 +1,8 @@
 package com.hazelcast.stabilizer.common.messaging;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class Message implements Serializable {
     private MessageAddress messageAddress;
@@ -19,4 +21,5 @@ public abstract class Message implements Serializable {
     public static Message newBySpec(String messageTypeSpec, String messageAddressSpec) {
         return MessagesFactory.bySpec(messageTypeSpec, messageAddressSpec);
     }
+
 }

@@ -5,6 +5,7 @@ import java.io.Serializable;
 public class MessageAddress implements Serializable {
     public static final String BROADCAST_PREFIX = "*";
     public static final String RANDOM_PREFIX = "R";
+    public static final String OLDEST_MEMBER_PREFIX = "O";
 
     private String agentAddress;
     private String workerAddress;

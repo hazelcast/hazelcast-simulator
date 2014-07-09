@@ -15,12 +15,18 @@
  */
 package com.hazelcast.stabilizer.tests;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.hazelcast.stabilizer.TestCase;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -59,16 +65,17 @@ public class Failure implements Serializable {
         }
 
         public static String getIdsAsString() {
-            Type[] types = Type.values();
-            StringBuilder builder = new StringBuilder();
-
-            for (int i = 0; i < types.length; i++) {
-                builder.append(types[i].id);
-                if (i + 1 < types.length) {
-                    builder.append(", ");
+            Iterable<Type> iterableTypes = new Iterable<Type>() {
+                @Override
+                public Iterator<Type> iterator() {
+                    return Iterators.forArray(Type.values());
                 }
-            }
-            return builder.toString();
+            };
+            return Joiner.on(", ").join(Iterables.transform(iterableTypes, new Function<Type, String>() {
+                public String apply(Type o) {
+                    return o.id;
+                }
+            }));
         }
 
         private static Type getById(String id) {
