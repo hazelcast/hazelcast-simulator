@@ -9,7 +9,7 @@ we can roll out in any cloud.
 
 * [Installing Stabilizer](INSTALL.md)
 
-* [Using the Stabilizer Archetype](ARCHETYPE.md)
+* [Using the Stabilizer Archetype](docs/ARCHETYPE.md)
 
 * [Provisioning machines](PROVISIONER.md)
 
