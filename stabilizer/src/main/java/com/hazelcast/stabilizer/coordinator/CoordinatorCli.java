@@ -4,6 +4,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -64,6 +65,11 @@ public class CoordinatorCli {
     private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
             "It the testsuite should fail immediately when a Test from a testsuite fails instead of continuing ")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
+    private final OptionSpec<String> tolerableFailureSpec = parser.accepts("tolerableFailure",
+            String.format("It the test should not fail when given failure is detected. List of known failures: '%s'",
+                    Failure.Type.getIdsAsString()))
+            .withRequiredArg().ofType(String.class);
 
     private final OptionSpec parallelSpec = parser.accepts("parallel",
             "It tests should be run in parallel.");
@@ -158,6 +164,7 @@ public class CoordinatorCli {
         coordinator.testSuite = testSuite;
         testSuite.duration = getDuration();
         testSuite.failFast = options.valueOf(failFastSpec);
+        testSuite.tolerableFailures = Failure.Type.fromPropertyValue(options.valueOf(tolerableFailureSpec));
 
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
         workerJvmSettings.vmOptions = options.valueOf(workerVmOptionsSpec);

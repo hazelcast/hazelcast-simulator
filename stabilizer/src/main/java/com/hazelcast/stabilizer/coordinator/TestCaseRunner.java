@@ -25,7 +25,6 @@ import static java.lang.String.format;
  * by having multiple testcase runners in parallel.
  */
 public class TestCaseRunner {
-    private static final String NON_CRITICAL_FAILURES = "non.critical.failures";
     private final static ILogger log = Logger.getLogger(TestCaseRunner.class);
 
     private final TestCase testCase;
@@ -43,8 +42,7 @@ public class TestCaseRunner {
         this.agentsClient = coordinator.agentsClient;
         this.prefix = testCase.id.equals("") ? "" : testCase.id + " ";
 
-        String nonCriticalFailuresProperty = testCase.getProperty(NON_CRITICAL_FAILURES);
-        nonCriticalFailures = Failure.Type.fromPropertyValue(nonCriticalFailuresProperty);
+        nonCriticalFailures = testSuite.tolerableFailures;
 
     }
 
@@ -163,7 +161,7 @@ public class TestCaseRunner {
 
     private boolean shouldTerminate() {
         for (Failure failure : coordinator.failureList) {
-            if (!nonCriticalFailures.contains(failure)) {
+            if (!nonCriticalFailures.contains(failure.type)) {
                 return true;
             }
         }

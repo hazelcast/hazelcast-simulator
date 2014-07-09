@@ -58,6 +58,19 @@ public class Failure implements Serializable {
             return result;
         }
 
+        public static String getIdsAsString() {
+            Type[] types = Type.values();
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = 0; i < types.length; i++) {
+                builder.append(types[i].id);
+                if (i + 1 < types.length) {
+                    builder.append(", ");
+                }
+            }
+            return builder.toString();
+        }
+
         private static Type getById(String id) {
             for (Type type : Type.values()) {
                 if (type.id.equals(id)) {

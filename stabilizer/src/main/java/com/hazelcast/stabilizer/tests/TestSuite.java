@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import static com.hazelcast.stabilizer.Utils.loadProperties;
 import static java.lang.String.format;
@@ -86,6 +87,7 @@ public class TestSuite implements Serializable {
     public List<TestCase> testCaseList = new LinkedList<TestCase>();
     public int duration;
     public boolean failFast;
+    public Set<Failure.Type> tolerableFailures = Collections.EMPTY_SET;
 
     public TestCase getTestCase(String testCaseId){
         if(testCaseId == null){
