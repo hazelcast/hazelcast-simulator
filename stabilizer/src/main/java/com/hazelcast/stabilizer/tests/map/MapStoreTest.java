@@ -72,6 +72,9 @@ public class MapStoreTest {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
+
+        IList results = targetInstance.getList(basename+"report");
+        results.add(count);
     }
 
 
@@ -130,8 +133,6 @@ public class MapStoreTest {
                     count.destroyCount.incrementAndGet();
                 }
             }
-            IList results = targetInstance.getList(basename+"report");
-            results.add(count);
         }
     }
 
@@ -143,7 +144,7 @@ public class MapStoreTest {
         for(MapOpperationsCount i : results){
             total.add(i);
         }
-        System.out.println(total);
+        System.out.println(basename+": "+total+" total of "+results.size());
     }
 
     @Verify(global = false)
@@ -154,20 +155,18 @@ public class MapStoreTest {
             final int writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
             Thread.sleep( (writeDelaySeconds + writeDelaySeconds/2 + maxExpireySeconds + 1) * 1000 );
 
-            System.out.println("verify "+basename+" !!");
-
             final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
             final IMap map = targetInstance.getMap(basename);
 
-            System.out.println("map size  =" + map.size() );
-            System.out.println("map local =" + map.getAll(map.localKeySet()).entrySet() );
-            System.out.println("map Store =" + mapStore.store.entrySet() );
+            System.out.println(basename+ ": map size  =" + map.size() );
+            System.out.println(basename+ ": map local =" + map.getAll(map.localKeySet()).entrySet() );
+            System.out.println(basename+ ": map Store =" + mapStore.store.entrySet() );
 
             for(Object k: map.localKeySet()){
                 assertEquals( map.get(k), mapStore.store.get(k) );
             }
 
-            assertEquals("locak key set of each member should be equal to the local instance mapStore size "
+            assertEquals("local key set of each member should be equal to the local instance mapStore size "
                     , map.localKeySet().size(), mapStore.store.size());
 
             for(int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++){
