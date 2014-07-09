@@ -31,10 +31,10 @@ public class MapStoreTest {
     private int putTTlKeyDomain = keyCount;
 
     //check these add up to 1
-    public double writeProb = 0.45;
-    public double getProb = 0.25;
+    public double writeProb = 0.4;
+    public double getProb = 0.2;
     public double getAsyncProb = 0.15;
-    public double deleteProb = 0.15;
+    public double deleteProb = 0.2;
     public double destroyProb = 0.5;
     //
 
@@ -90,7 +90,7 @@ public class MapStoreTest {
                         map.put(key, value);
                         count.putCount.incrementAndGet();
                     }
-                    if (chance < writeUsingPutTTLProb + writeUsingPutProb) {
+                    else if (chance < writeUsingPutTTLProb + writeUsingPutProb) {
                         long delay = 1 + random.nextInt(maxExpireySeconds);
                         int k =  putTTlKeyDomain + random.nextInt(putTTlKeyDomain);
                         map.putTransient(k, delay, delay, TimeUnit.SECONDS);
