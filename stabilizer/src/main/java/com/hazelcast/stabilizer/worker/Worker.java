@@ -109,7 +109,7 @@ public class Worker {
         if (serverInstance == null) {
             address = "client:" + getHostAddress();
         } else {
-            InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getSocketAddress();
+            InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getInetSocketAddress();
             address = socketAddress.getAddress().getHostAddress() + ":" + socketAddress.getPort();
         }
         File file = new File("worker.address");
