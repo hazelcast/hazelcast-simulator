@@ -260,12 +260,12 @@ public class MapEntryListenerTest {
 
             IList<Count> counts = targetInstance.getList(basename+"results");
             for(Count c : counts){
-                System.out.println(c);
+                //System.out.println(c);
             }
 
             IList<EntryListenerImpl> resultListners = targetInstance.getList(basename+"listeners");
             for(EntryListenerImpl l : resultListners){
-                System.out.println(l);
+                //System.out.println(l);
             }
 
             for(int i=0; i<resultListners.size()-1; i++){

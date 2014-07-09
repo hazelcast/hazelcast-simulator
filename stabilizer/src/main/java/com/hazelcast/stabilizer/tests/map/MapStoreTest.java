@@ -153,7 +153,7 @@ public class MapStoreTest {
         try{
             MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
             final int writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
-            Thread.sleep( (writeDelaySeconds + writeDelaySeconds/2 + maxExpireySeconds + 1) * 1000 );
+            Thread.sleep( (writeDelaySeconds*2 + maxExpireySeconds + 1) * 1000 );
 
             final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
             final IMap map = targetInstance.getMap(basename);
