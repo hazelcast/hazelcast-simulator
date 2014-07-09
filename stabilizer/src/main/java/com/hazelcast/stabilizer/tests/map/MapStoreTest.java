@@ -78,12 +78,12 @@ public class MapStoreTest {
                         map.put(key, value);
                     }
                     else if(chance < writeUsingPutIfAbsent + writeUsingPutProb ){
-                        //map.putIfAbsent(key, value);
+                        map.putIfAbsent(key, value);
                     }
                     else if(chance < replaceProb + writeUsingPutIfAbsent + writeUsingPutProb){
                         Object orig = map.get(key);
                         if ( orig !=null ){
-                            //map.replace(key, orig, value);
+                            map.replace(key, orig, value);
                         }
                     }
                 }else if(chance < evictProb + writeProb){
@@ -93,10 +93,10 @@ public class MapStoreTest {
                     //map.remove(key);
                 }
                 else if (chance < deleteProb + removeProb + evictProb + writeProb ){
-                    //map.delete(key);
+                    map.delete(key);
                 }
                 else if (chance < destroyProb + deleteProb + removeProb + evictProb + writeProb ){
-                    //map.destroy();
+                    map.destroy();
                 }
             }
         }
@@ -109,27 +109,24 @@ public class MapStoreTest {
             Thread.sleep(7000);
 
             System.out.println("verify "+basename+" !!");
-
             final IMap map = targetInstance.getMap(basename);
             MapStoreWithCounter mapStore = (MapStoreWithCounter) targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig().getImplementation();
 
             System.out.println("map size       =" + map.size() );
+            System.out.println(map.localKeySet().size() + "== " + mapStore.store.size() );
+
             System.out.println("map local      =" + map.getAll(map.localKeySet()).entrySet() );
             System.out.println("map Store      =" + mapStore.store.entrySet() );
 
-            //this is still wrong as some other node is putting to the keys you own.
-            //how to do it 1) real DB,  TimeStamp on all events, and check the last ones
-            /*
             for(Object k: map.localKeySet()){
-                Object storeValue = mapStore.store.get(k);
-                assertEquals( map.get(k), storeValue );
+                assertEquals( map.get(k), mapStore.store.get(k) );
             }
-            */
+
         }catch(UnsupportedOperationException e){}
+
     }
 
     public static void main(String[] args) throws Throwable {
         new TestRunner(new MapStoreTest()).run();
     }
-
 }
