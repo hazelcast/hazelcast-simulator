@@ -78,25 +78,25 @@ public class MapStoreTest {
                         map.put(key, value);
                     }
                     else if(chance < writeUsingPutIfAbsent + writeUsingPutProb ){
-                        map.putIfAbsent(key, value);
+                        //map.putIfAbsent(key, value);
                     }
                     else if(chance < replaceProb + writeUsingPutIfAbsent + writeUsingPutProb){
                         Object orig = map.get(key);
                         if ( orig !=null ){
-                            map.replace(key, orig, value);
+                            //map.replace(key, orig, value);
                         }
                     }
                 }else if(chance < evictProb + writeProb){
-                    map.evict(key);
+                    //map.evict(key);
                 }
                 else if(chance < removeProb + evictProb + writeProb){
-                    map.remove(key);
+                    //map.remove(key);
                 }
                 else if (chance < deleteProb + removeProb + evictProb + writeProb ){
-                    map.delete(key);
+                    //map.delete(key);
                 }
                 else if (chance < destroyProb + deleteProb + removeProb + evictProb + writeProb ){
-                    map.destroy();
+                    //map.destroy();
                 }
             }
         }
@@ -109,9 +109,9 @@ public class MapStoreTest {
         final IMap map = targetInstance.getMap(basename);
         MapStoreWithCounter mapStore = (MapStoreWithCounter) targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig().getImplementation();
 
-        System.out.println("map local keys =" + map.localKeySet());
-        System.out.println("map local      =" + map.getAll(map.localKeySet()).entrySet());
-        System.out.println("map Store      =" + mapStore.store.entrySet());
+        System.out.println("map size       =" + map.size() );
+        System.out.println("map local      =" + map.getAll(map.localKeySet()).entrySet() );
+        System.out.println("map Store      =" + mapStore.store.entrySet() );
 
         //this is still wrong as some other node is putting to the keys you own.
         //how to do it 1) real DB,  TimeStamp on all events, and check the last ones
