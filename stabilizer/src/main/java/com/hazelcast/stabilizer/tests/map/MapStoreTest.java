@@ -1,5 +1,6 @@
 package com.hazelcast.stabilizer.tests.map;
 
+import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -11,6 +12,7 @@ import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -32,10 +34,16 @@ public class MapStoreTest {
     //
 
     //check these add up to 1   (writeProb is split up into sub styles)
-    public double writeUsingPutProb = 0.5;
-    public double writeUsingPutIfAbsent = 0.25;
-    public double replaceProb = 0.25;
+    public double writeUsingPutProb = 0.4;
+    public double writeUsingPutTTLProb = 0.3;
+    public double writeUsingPutIfAbsent = 0.15;
+    public double writeUsingReplaceProb = 0.15;
     //
+
+    private int writeDelaySeconds = 0;
+
+    private int maxExpireySeconds = 3;
+
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -46,6 +54,16 @@ public class MapStoreTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+
+        try{
+            MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
+
+            if(mapStoreConfig!=null){
+                writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
+            }
+
+        }catch(UnsupportedOperationException e){}
+
     }
 
     @Run
@@ -77,15 +95,23 @@ public class MapStoreTest {
                     if (chance < writeUsingPutProb) {
                         map.put(key, value);
                     }
-                    else if(chance < writeUsingPutIfAbsent + writeUsingPutProb ){
+                    if (chance < writeUsingPutTTLProb + writeUsingPutProb) {
+                        long delay = writeDelaySeconds + random.nextInt(maxExpireySeconds);
+
+                        int k = keyCount + random.nextInt(5000);
+
+                        map.put(k, delay, delay,TimeUnit.SECONDS );
+                    }
+                    else if(chance < writeUsingPutIfAbsent + writeUsingPutTTLProb + writeUsingPutProb ){
                         map.putIfAbsent(key, value);
                     }
-                    else if(chance < replaceProb + writeUsingPutIfAbsent + writeUsingPutProb){
+                    else if(chance < writeUsingReplaceProb + writeUsingPutIfAbsent + writeUsingPutTTLProb + writeUsingPutProb){
                         Object orig = map.get(key);
                         if ( orig !=null ){
                             map.replace(key, orig, value);
                         }
                     }
+
                 }else if(chance < evictProb + writeProb){
                     //map.evict(key);
                 }
@@ -106,7 +132,7 @@ public class MapStoreTest {
     public void verify() throws Exception {
 
         try{
-            Thread.sleep(7000);
+            Thread.sleep( (writeDelaySeconds + writeDelaySeconds/2) * 1000 );
 
             System.out.println("verify "+basename+" !!");
             final IMap map = targetInstance.getMap(basename);
