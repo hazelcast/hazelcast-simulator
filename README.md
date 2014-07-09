@@ -46,11 +46,14 @@ and you send a command like "run this testsuite with 10 worker JVM's for 2 hours
 in combination with EC2 (or any other cloud), but it can also be used in a static setup like a local machine or the
 test cluster we have in Istanbul office.
 
-
 * [Installing Stabilizer](INSTALL.md)
+
 * [Using the Stabilizer Archetype](ARCHETYPE.md)
+
 * [Provisioning machines](PROVISIONER.md)
+
 * [Running tests with the Coordinator](COORDINATOR.md)
+
 * [Writing tests](TESTS.md)
 
 ### Mail Group
