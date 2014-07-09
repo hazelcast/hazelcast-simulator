@@ -182,8 +182,8 @@ public class Coordinator {
         terminateWorkers();
 
         //the coordinator needs to sleep some to make sure that it will get failures if they are there.
-        log.info("Starting cool down (20 sec)");
-        Utils.sleepSeconds(20);
+        log.info("Starting cool down (10 sec)");
+        Utils.sleepSeconds(10);
         log.info("Finished cool down");
 
         long elapsedMs = System.currentTimeMillis() - startMs;
