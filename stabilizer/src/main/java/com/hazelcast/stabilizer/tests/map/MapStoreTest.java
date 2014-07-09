@@ -18,6 +18,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNull;
 
 /**
  * Created by danny on 6/27/14.
@@ -28,7 +29,9 @@ public class MapStoreTest {
     public int threadCount = 3;
     public int keyCount = 10;
 
-    private int putTTlKeyDomain = keyCount;
+    private int putTTlKeyDomain;
+    private int putTTlKeyRange;
+
 
     //check these add up to 1
     public double writeProb = 0.4;
@@ -58,6 +61,8 @@ public class MapStoreTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+        putTTlKeyDomain = keyCount;
+        putTTlKeyRange = keyCount;
     }
 
     @Run
@@ -92,7 +97,7 @@ public class MapStoreTest {
                     }
                     else if (chance < writeUsingPutTTLProb + writeUsingPutProb) {
                         long delay = 1 + random.nextInt(maxExpireySeconds);
-                        int k =  putTTlKeyDomain + random.nextInt(putTTlKeyDomain);
+                        int k =  putTTlKeyDomain + random.nextInt(putTTlKeyRange);
                         map.putTransient(k, delay, delay, TimeUnit.SECONDS);
                         count.putTransientCount.incrementAndGet();
                     }
@@ -154,14 +159,19 @@ public class MapStoreTest {
             final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
             final IMap map = targetInstance.getMap(basename);
 
-            System.out.println("map size       =" + map.size() );
-            System.out.println(map.localKeySet().size() + "==" + mapStore.store.size() );
-
-            System.out.println("map local      =" + map.getAll(map.localKeySet()).entrySet() );
-            System.out.println("map Store      =" + mapStore.store.entrySet() );
+            System.out.println("map size  =" + map.size() );
+            System.out.println("map local =" + map.getAll(map.localKeySet()).entrySet() );
+            System.out.println("map Store =" + mapStore.store.entrySet() );
 
             for(Object k: map.localKeySet()){
                 assertEquals( map.get(k), mapStore.store.get(k) );
+            }
+
+            assertEquals("locak key set of each member should be equal to the local instance mapStore size "
+                    ,map.localKeySet().size(), mapStore.store.size());
+
+            for(int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++){
+                assertNull("TTL key should not be in the map", map.get(k) );
             }
 
         }catch(UnsupportedOperationException e){}
