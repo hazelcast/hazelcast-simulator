@@ -40,7 +40,7 @@ public class MapStoreTest {
     public double writeUsingReplaceProb = 0.15;
     //
 
-    private int writeDelaySeconds = 0;
+    private int writeDelaySeconds = 1;
 
     private int maxExpireySeconds = 3;
 
