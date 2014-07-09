@@ -162,6 +162,8 @@ public class MapStoreTest {
             System.out.println(basename+ ": map local =" + map.getAll(map.localKeySet()).entrySet() );
             System.out.println(basename+ ": map Store =" + mapStore.store.entrySet() );
 
+            System.out.println(basename+ ": "+ mapStore);
+
             for(Object k: map.localKeySet()){
                 assertEquals( map.get(k), mapStore.store.get(k) );
             }

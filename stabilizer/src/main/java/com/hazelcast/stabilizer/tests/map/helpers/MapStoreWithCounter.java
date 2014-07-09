@@ -2,62 +2,59 @@ package com.hazelcast.stabilizer.tests.map.helpers;
 
 import com.hazelcast.core.MapStore;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MapStoreWithCounter implements MapStore<Object, Object> {
+    private Random random = new Random();
+
+    public int minDelay=0;
+    public int maxDelay=0;
 
     public final Map store = new ConcurrentHashMap();
+    public AtomicInteger storeCount = new AtomicInteger(0);
+    public AtomicInteger deleteCount = new AtomicInteger(0);
+    public AtomicInteger countLoad = new AtomicInteger(0);
 
-    protected AtomicInteger countStore = new AtomicInteger(0);
-    protected AtomicInteger countDelete = new AtomicInteger(0);
-    protected List<AtomicInteger> batchOpCountList = Collections.synchronizedList(new ArrayList<AtomicInteger>());
-
-
-    public MapStoreWithCounter(){
-        //System.out.println("===>>"+this.getClass().getName()+" INSTANCE !!");
-    }
-
+    public MapStoreWithCounter(){}
 
     @Override
     public void store(Object key, Object value) {
-        countStore.incrementAndGet();
+        delay();
+        storeCount.incrementAndGet();
         store.put(key, value);
     }
 
     @Override
     public void storeAll(Map<Object, Object> map) {
-        batchOpCountList.add(new AtomicInteger(map.size()));
-
-        countStore.addAndGet(map.size());
         for (Map.Entry<Object, Object> kvp : map.entrySet()) {
-            store.put(kvp.getKey(), kvp.getValue());
+            store(kvp.getKey(), kvp.getValue());
         }
     }
 
     @Override
     public void delete(Object key) {
-        countDelete.incrementAndGet();
+        delay();
+        deleteCount.incrementAndGet();
         store.remove(key);
     }
 
     @Override
     public void deleteAll(Collection<Object> keys) {
-        countDelete.addAndGet(keys.size());
         for (Object key : keys) {
-            store.remove(key);
+            delete(key);
         }
     }
 
     @Override
     public Object load(Object key) {
+        delay();
+        countLoad.incrementAndGet();
         return store.get(key);
     }
 
@@ -65,7 +62,7 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
     public Map<Object, Object> loadAll(Collection<Object> keys) {
         Map result = new HashMap();
         for (Object key : keys) {
-            final Object v = store.get(key);
+            final Object v = load(key);
             if (v != null) {
                 result.put(key, v);
             }
@@ -75,35 +72,29 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
 
     @Override
     public Set<Object> loadAllKeys() {
+        delay();
         return store.keySet();
     }
 
-    public int getStoreOpCount() {
-        return countStore.intValue();
-    }
-
-    public int getDeleteOpCount() {
-        return countDelete.intValue();
-    }
-
-    public List<AtomicInteger> getBatchStoreOpCount() {
-        return batchOpCountList;
-    }
-
-    public int size() {
-        return store.size();
-    }
-
-
-    public int findNumberOfBatchsEqualWriteBatchSize(int writeBatchsize) {
-        int count = 0;
-        final List<AtomicInteger> batchStoreOpCount = getBatchStoreOpCount();
-        for (AtomicInteger atomicInteger : batchStoreOpCount) {
-            final int value = atomicInteger.intValue();
-            if (value == writeBatchsize) {
-                count++;
+    private void delay(){
+        if(maxDelay!=0){
+            try {
+                int delay =  minDelay + random.nextInt(maxDelay);
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
-        return count;
+    }
+
+    @Override
+    public String toString() {
+        return "MapStoreWithCounter{" +
+                "minDelay=" + minDelay +
+                ", maxDelay=" + maxDelay +
+                ", storeCount=" + storeCount +
+                ", deleteCount=" + deleteCount +
+                ", countLoad=" + countLoad +
+                '}';
     }
 }
