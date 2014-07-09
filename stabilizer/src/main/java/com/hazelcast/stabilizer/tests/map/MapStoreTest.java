@@ -168,7 +168,7 @@ public class MapStoreTest {
             }
 
             assertEquals("locak key set of each member should be equal to the local instance mapStore size "
-                    ,map.localKeySet().size(), mapStore.store.size());
+                    , map.localKeySet().size(), mapStore.store.size());
 
             for(int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++){
                 assertNull("TTL key should not be in the map", map.get(k) );
