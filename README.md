@@ -53,18 +53,6 @@ test cluster we have in Istanbul office.
 * [Running tests with the Coordinator](COORDINATOR.md)
 * [Writing tests](TESTS.md)
 
-### Creating your own Test.
-
-The simplest option, unless you are a Hazelcast committer, to add your own test is to make use of the archetype, e.g.
-
-```
-mvn archetype:generate -DarchetypeGroupId=com.hazelcast.stabilizer \
-                        -DarchetypeArtifactId=archetype \
-                        -DarchetypeVersion=0.3-SNAPSHOT \
-                        -DgroupId=yourcompany \
-                        -DartifactId=yourproject
-```
-
 ### Mail Group
 
 Please join the mail group if you are interested in using or developing Hazelcast.
