@@ -25,10 +25,12 @@ public class MapStoreTest {
     public int threadCount = 3;
     public int keyCount = 10;
 
+    private int putTTlKeyDomain = keyCount;
+
     //check these add up to 1
     public double writeProb = 0.45;
-    public double evictProb = 0.25;
-    public double removeProb = 0.15;
+    public double getProb = 0.25;
+    public double getAsyncProb = 0.15;
     public double deleteProb = 0.15;
     public double destroyProb = 0.5;
     //
@@ -39,8 +41,6 @@ public class MapStoreTest {
     public double writeUsingPutIfAbsent = 0.15;
     public double writeUsingReplaceProb = 0.15;
     //
-
-    private int writeDelaySeconds = 1;
 
     private int maxExpireySeconds = 3;
 
@@ -54,16 +54,6 @@ public class MapStoreTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-
-        try{
-            MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
-
-            if(mapStoreConfig!=null){
-                writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
-            }
-
-        }catch(UnsupportedOperationException e){}
-
     }
 
     @Run
@@ -96,10 +86,10 @@ public class MapStoreTest {
                         map.put(key, value);
                     }
                     if (chance < writeUsingPutTTLProb + writeUsingPutProb) {
-                        long delay = writeDelaySeconds + random.nextInt(maxExpireySeconds);
+                        long delay = 1 + random.nextInt(maxExpireySeconds);
+                        int k =  putTTlKeyDomain + random.nextInt(putTTlKeyDomain);
+                        map.putTransient(k, delay, delay, TimeUnit.SECONDS);
 
-                        int k = keyCount*2 + random.nextInt(keyCount);
-                        map.put(k, delay, delay,TimeUnit.SECONDS );
                     }
                     else if(chance < writeUsingPutIfAbsent + writeUsingPutTTLProb + writeUsingPutProb ){
                         map.putIfAbsent(key, value);
@@ -111,16 +101,16 @@ public class MapStoreTest {
                         }
                     }
 
-                }else if(chance < evictProb + writeProb){
-                    //map.evict(key);
+                }else if(chance < getProb + writeProb){
+                    map.get(key);
                 }
-                else if(chance < removeProb + evictProb + writeProb){
-                    //map.remove(key);
+                else if(chance < getAsyncProb + getProb + writeProb){
+                    map.getAsync(key);
                 }
-                else if (chance < deleteProb + removeProb + evictProb + writeProb ){
+                else if (chance < deleteProb + getAsyncProb + getProb + writeProb ){
                     map.delete(key);
                 }
-                else if (chance < destroyProb + deleteProb + removeProb + evictProb + writeProb ){
+                else if (chance < destroyProb + deleteProb + getAsyncProb + getProb + writeProb ){
                     map.destroy();
                 }
             }
@@ -131,11 +121,14 @@ public class MapStoreTest {
     public void verify() throws Exception {
 
         try{
+            MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
+            final int writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
             Thread.sleep( (writeDelaySeconds + writeDelaySeconds/2 + maxExpireySeconds) * 1000 );
 
             System.out.println("verify "+basename+" !!");
+
+            final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
             final IMap map = targetInstance.getMap(basename);
-            MapStoreWithCounter mapStore = (MapStoreWithCounter) targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig().getImplementation();
 
             System.out.println("map size       =" + map.size() );
             System.out.println(map.localKeySet().size() + "==" + mapStore.store.size() );
