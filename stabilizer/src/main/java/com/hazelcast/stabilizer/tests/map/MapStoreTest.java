@@ -98,8 +98,7 @@ public class MapStoreTest {
                     if (chance < writeUsingPutTTLProb + writeUsingPutProb) {
                         long delay = writeDelaySeconds + random.nextInt(maxExpireySeconds);
 
-                        int k = keyCount + random.nextInt(5000);
-
+                        int k = keyCount*2 + random.nextInt(keyCount);
                         map.put(k, delay, delay,TimeUnit.SECONDS );
                     }
                     else if(chance < writeUsingPutIfAbsent + writeUsingPutTTLProb + writeUsingPutProb ){
@@ -132,7 +131,7 @@ public class MapStoreTest {
     public void verify() throws Exception {
 
         try{
-            Thread.sleep( (writeDelaySeconds + writeDelaySeconds/2) * 1000 );
+            Thread.sleep( (writeDelaySeconds + writeDelaySeconds/2 + maxExpireySeconds) * 1000 );
 
             System.out.println("verify "+basename+" !!");
             final IMap map = targetInstance.getMap(basename);
