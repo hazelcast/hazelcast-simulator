@@ -35,7 +35,7 @@ public class MapStoreTest {
     public double getProb = 0.2;
     public double getAsyncProb = 0.15;
     public double deleteProb = 0.2;
-    public double destroyProb = 0.5;
+    public double destroyProb = 0.05;
     //
 
     //check these add up to 1   (writeProb is split up into sub styles)
@@ -147,7 +147,7 @@ public class MapStoreTest {
         try{
             MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
             final int writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
-            Thread.sleep( (writeDelaySeconds + writeDelaySeconds/2 + maxExpireySeconds) * 1000 );
+            Thread.sleep( (writeDelaySeconds + writeDelaySeconds/2 + maxExpireySeconds + 1) * 1000 );
 
             System.out.println("verify "+basename+" !!");
 
