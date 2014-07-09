@@ -13,10 +13,12 @@ import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 class FailureMonitorThread extends Thread {
     private final Coordinator coordinator;
     private final ILogger log = Logger.getLogger(FailureMonitorThread.class);
-    private final File file = new File("failures-" + System.currentTimeMillis() + ".txt");
+    private final File file;
 
     public FailureMonitorThread(Coordinator coordinator) {
         super("FailureMonitorThread");
+
+        file = new File("failures-" + coordinator.testSuite.id + ".txt");
 
         if (coordinator == null) {
             throw new NullPointerException();
