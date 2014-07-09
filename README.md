@@ -47,11 +47,11 @@ in combination with EC2 (or any other cloud), but it can also be used in a stati
 test cluster we have in Istanbul office.
 
 
-[Installing Stabilizer](INSTALL.md)
-[Using the Stabilizer Archetype](ARCHETYPE.md)
-[Provisioning machines](PROVISIONER.md)
-[Running tests with the Coordinator](COORDINATOR.md)
-[Writing tests](TESTS.md)
+* [Installing Stabilizer](INSTALL.md)
+* [Using the Stabilizer Archetype](ARCHETYPE.md)
+* [Provisioning machines](PROVISIONER.md)
+* [Running tests with the Coordinator](COORDINATOR.md)
+* [Writing tests](TESTS.md)
 
 ### Creating your own Test.
 
