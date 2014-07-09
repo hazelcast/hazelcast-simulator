@@ -104,6 +104,9 @@ public class MapStoreTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
+
+        Thread.sleep(7000);
+
         System.out.println("verify "+basename+" !!");
 
         final IMap map = targetInstance.getMap(basename);
