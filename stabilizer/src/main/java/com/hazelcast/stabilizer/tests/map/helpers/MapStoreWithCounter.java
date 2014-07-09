@@ -22,7 +22,7 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
 
 
     public MapStoreWithCounter(){
-        System.out.println("===>>"+this.getClass().getName()+" INSTANCE !!");
+        //System.out.println("===>>"+this.getClass().getName()+" INSTANCE !!");
     }
 
 

@@ -33,9 +33,9 @@ public class MapStoreTest {
     //check these add up to 1
     public double writeProb = 0.4;
     public double getProb = 0.2;
-    public double getAsyncProb = 0.1;
-    public double deleteProb = 0.1;
-    public double destroyProb = 0.2;
+    public double getAsyncProb = 0.15;
+    public double deleteProb = 0.2;
+    public double destroyProb = 0.05;
     //
 
     //check these add up to 1   (writeProb is split up into sub styles)
