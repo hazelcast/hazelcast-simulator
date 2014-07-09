@@ -9,7 +9,7 @@ https://oss.sonatype.org/content/repositories/snapshots/com/hazelcast/stabilizer
 
 Download and unpack the tar.gz or zip file to e.g. the home directory.
 
-add to ~/.bashr:
+add to ~/.bashr when using Linux or ~/.profile when using OSX:
 
 ```
 export STABILIZER_HOME=~/hazelcast-stabilizer-0.3-SNAPSHOT
