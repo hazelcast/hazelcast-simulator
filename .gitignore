@@ -17,3 +17,4 @@ agents.txt
 vtune/
 stabilizer/workers/*
 stabilizer/logs/*
+stabilizer-git.properties

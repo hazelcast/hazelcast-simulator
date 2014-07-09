@@ -46,6 +46,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -61,6 +62,7 @@ import static java.lang.String.format;
 
 public final class Utils {
     private static final String USER_HOME = System.getProperty("user.home");
+    private static final ILogger log = Logger.getLogger(Utils.class);
 
     private static volatile String hostAddress;
 
@@ -511,9 +513,39 @@ public final class Utils {
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
-            ILogger log = Logger.getLogger(Utils.class);
             exitWithError(log, format("%s [%s] does not exist\n", desc, file));
         }
         return file;
+    }
+
+    public static List<File> getFilesFromClassPath(String classpath) throws IOException {
+        if (classpath == null) {
+            return Collections.EMPTY_LIST;
+        }
+
+        List<File> files = new LinkedList<File>();
+        for (String filePath : classpath.split(";")) {
+            File file = new File(filePath);
+
+            if (file.getName().contains("*")) {
+                File parent = file.getParentFile();
+                if (!parent.isDirectory()) {
+                    throw new IOException(format("Cannot convert classpath to java.io.File. [%s] is not a directory", parent));
+                }
+
+                String regex = file.getName().replace("*", "(.*)");
+                for (File child : parent.listFiles()) {
+                    if (child.getName().matches(regex)) {
+                        files.add(child);
+                    }
+                }
+            } else if (file.exists()) {
+                files.add(file);
+            } else {
+                Utils.exitWithError(log, format("Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
+            }
+        }
+
+        return files;
     }
 }

@@ -6,6 +6,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
+import com.hazelcast.stabilizer.common.GitInfo;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -331,23 +332,7 @@ public class Provisioner {
             for (AgentAddress address : addresses.subList(0, batchSize)) {
                 terminateMap.put(address.publicAddress, address);
             }
-
-            compute.destroyNodesMatching(
-                    new Predicate<NodeMetadata>() {
-                        @Override
-                        public boolean apply(NodeMetadata nodeMetadata) {
-                            for (String publicAddress : nodeMetadata.getPublicAddresses()) {
-                                AgentAddress address = terminateMap.remove(publicAddress);
-                                if (address != null) {
-                                    echo(format("\t%s Terminating", publicAddress));
-                                    addresses.remove(address);
-                                    return true;
-                                }
-                            }
-                            return false;
-                        }
-                    }
-            );
+            destroyNodes(compute, terminateMap);
         }
 
         log.info("Updating " + agentsFile.getAbsolutePath());
@@ -358,6 +343,25 @@ public class Provisioner {
         echo("Duration: " + secondsToHuman(durationSeconds));
         echoImportant("Finished terminating %s %s machines, %s machines remaining.",
                 count, props.get("CLOUD_PROVIDER"), addresses.size());
+    }
+
+    private void destroyNodes(ComputeService compute, final Map<String, AgentAddress> terminateMap) {
+        compute.destroyNodesMatching(
+                new Predicate<NodeMetadata>() {
+                    @Override
+                    public boolean apply(NodeMetadata nodeMetadata) {
+                        for (String publicAddress : nodeMetadata.getPublicAddresses()) {
+                            AgentAddress address = terminateMap.remove(publicAddress);
+                            if (address != null) {
+                                echo(format("\t%s Terminating", publicAddress));
+                                addresses.remove(address);
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                }
+        );
     }
 
 
@@ -373,7 +377,8 @@ public class Provisioner {
 
     public static void main(String[] args) {
         log.info("Hazelcast Stabilizer Provisioner");
-        log.info(format("Version: %s", getVersion()));
+        log.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         try {

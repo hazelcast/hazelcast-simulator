@@ -29,13 +29,14 @@ public class AgentRemoteService {
     public static final String SERVICE_EXECUTE_ALL_WORKERS = "executeOnAllWorkers";
     public static final String SERVICE_EXECUTE_SINGLE_WORKER = "executeOnSingleWorker";
     public static final String SERVICE_ECHO = "echo";
-     public static final String SERVICE_GET_FAILURES = "failures";
+    public static final String SERVICE_GET_FAILURES = "failures";
 
     private final static Logger log = Logger.getLogger(AgentRemoteService.class.getName());
 
     private Agent agent;
     private ServerSocket serverSocket;
     private final Executor executor = Executors.newFixedThreadPool(20);
+    private AcceptorThread acceptorThread;
 
     public AgentRemoteService(Agent agent) {
         this.agent = agent;
@@ -44,7 +45,13 @@ public class AgentRemoteService {
     public void start() throws IOException {
         serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(Utils.getHostAddress()));
         log.info("Started Agent Remote Service on :" + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
-        new AcceptorThread().start();
+        acceptorThread = new AcceptorThread();
+        acceptorThread.start();
+    }
+
+    public void stop() throws IOException {
+        acceptorThread.stopMe();
+        serverSocket.close();
     }
 
     private class ClientSocketTask implements Runnable {
@@ -148,12 +155,18 @@ public class AgentRemoteService {
 
 
     private class AcceptorThread extends Thread {
+        private volatile boolean stopped = false;
+
         public AcceptorThread() {
             super("AcceptorThread");
         }
 
+        public void stopMe() {
+            stopped = true;
+        }
+
         public void run() {
-            for (; ; ) {
+            while ( !stopped ) {
                 try {
                     Socket clientSocket = serverSocket.accept();
                     if (log.isDebugEnabled()) {

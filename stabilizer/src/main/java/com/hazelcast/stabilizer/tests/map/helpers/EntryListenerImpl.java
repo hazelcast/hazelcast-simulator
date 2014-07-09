@@ -64,6 +64,8 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
 
     @Override
     public boolean equals(Object o) {
+        if (o == null) return false;
+        if (!(o instanceof EntryListenerImpl)) return false;
 
         EntryListenerImpl that = (EntryListenerImpl) o;
 

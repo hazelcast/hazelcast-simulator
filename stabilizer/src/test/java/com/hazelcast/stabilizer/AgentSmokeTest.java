@@ -2,6 +2,8 @@ package com.hazelcast.stabilizer;
 
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.stabilizer.common.AgentAddress;
+import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.coordinator.AgentsClient;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -143,7 +145,8 @@ public class AgentSmokeTest {
         File agentFile = File.createTempFile("agents", "txt");
         agentFile.deleteOnExit();
         Utils.writeText("192.168.1.105", agentFile);
-        return new AgentsClient(agentFile);
+        List<AgentAddress> agentAddresses = AgentsFile.load(agentFile);
+        return new AgentsClient(agentAddresses);
     }
 
     public static class FooTest {
