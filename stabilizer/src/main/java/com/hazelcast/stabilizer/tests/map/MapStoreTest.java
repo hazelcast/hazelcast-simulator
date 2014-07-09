@@ -139,7 +139,7 @@ public class MapStoreTest {
             MapStoreWithCounter mapStore = (MapStoreWithCounter) targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig().getImplementation();
 
             System.out.println("map size       =" + map.size() );
-            System.out.println(map.localKeySet().size() + "== " + mapStore.store.size() );
+            System.out.println(map.localKeySet().size() + "==" + mapStore.store.size() );
 
             System.out.println("map local      =" + map.getAll(map.localKeySet()).entrySet() );
             System.out.println("map Store      =" + mapStore.store.entrySet() );
