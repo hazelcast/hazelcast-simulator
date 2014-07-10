@@ -56,7 +56,7 @@ public class AgentRemoteServiceTest {
         MessageAddress address = MessageAddress.builder().toRandomAgent().build();
         Message message = new DummyRunnableMessage(address);
         client.sendMessage(message);
-        verify(agentMessageProcessorMock).process(any(Message.class));
+        verify(agentMessageProcessorMock).submit(any(Message.class));
     }
 
 

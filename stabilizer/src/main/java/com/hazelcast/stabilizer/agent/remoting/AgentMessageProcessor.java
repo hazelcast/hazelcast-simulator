@@ -6,10 +6,13 @@ import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.common.messaging.TerminateRandomWorker;
 import org.apache.log4j.Logger;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 public class AgentMessageProcessor {
     private static final Logger log = Logger.getLogger(AgentMessageProcessor.class);
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     private WorkerJvmManager workerJvmManager;
 
@@ -17,13 +20,24 @@ public class AgentMessageProcessor {
         this.workerJvmManager = workerJvmManager;
     }
 
-    public void process(Message message) {
-        MessageAddress messageAddress = message.getMessageAddress();
-        if (messageAddress.getWorkerAddress() == null) {
-            processLocalMessage(message);
-        } else {
-            processWorkerMessage(message);
-        }
+    public void submit(final Message message) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                MessageAddress messageAddress = message.getMessageAddress();
+                if (shouldProcess(message)) {
+                    if (messageAddress.getWorkerAddress() == null) {
+                        processLocalMessage(message);
+                    } else {
+                        processWorkerMessage(message);
+                    }
+                }
+            }
+        });
+    }
+
+    private boolean shouldProcess(Message message) {
+        return true;
     }
 
     private void processWorkerMessage(Message message) {

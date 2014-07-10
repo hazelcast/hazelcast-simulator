@@ -29,7 +29,7 @@ public class AgentMessageProcessorTest {
         MessageAddress address = MessageAddress.builder().toAllAgents().build();
         DummyRunnableMessage message = new DummyRunnableMessage(address);
 
-        agentMessageProcessor.process(message);
+        agentMessageProcessor.submit(message);
         assertTrue(message.isExecuted());
         verify(workerJvmManagerMock, never()).sendMessage(any(Message.class));
     }
@@ -38,7 +38,7 @@ public class AgentMessageProcessorTest {
     public void testWorkerMessage() throws TimeoutException, InterruptedException {
         MessageAddress address = MessageAddress.builder().toAllAgents().toAllWorkers().build();
         DummyRunnableMessage message = new DummyRunnableMessage(address);
-        agentMessageProcessor.process(message);
+        agentMessageProcessor.submit(message);
 
         assertFalse(message.isExecuted());
         verify(workerJvmManagerMock).sendMessage(message);

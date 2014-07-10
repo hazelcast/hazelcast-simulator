@@ -98,7 +98,7 @@ class ClientSocketTask implements Runnable {
                 break;
             case SERVICE_PROCESS_MESSAGE:
                 Message message = (Message) in.readObject();
-                agentMessageProcessor.process(message);
+                agentMessageProcessor.submit(message);
                 break;
             default:
                 throw new RuntimeException("Unknown service:" + service);

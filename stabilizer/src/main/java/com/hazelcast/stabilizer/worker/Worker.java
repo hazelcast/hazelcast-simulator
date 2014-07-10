@@ -28,7 +28,6 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.messaging.Message;
-import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
@@ -322,7 +321,7 @@ public class Worker {
 
         private void process(MessageCommand command) {
             Message message = command.getMessage();
-            workerMessageProcessor.processMessage(message);
+            workerMessageProcessor.submit(message);
         }
 
         private Long process(GetOperationCountCommand command) throws Throwable {

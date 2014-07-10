@@ -36,7 +36,7 @@ public class WorkerMessageProcessorTest {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.processMessage(message);
+        workerMessageProcessor.submit(message);
         assertTrue(message.isExecuted());
     }
 
@@ -45,7 +45,7 @@ public class WorkerMessageProcessorTest {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toAllTests().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.processMessage(message);
+        workerMessageProcessor.submit(message);
 
         assertFalse(message.isExecuted());
         verify(testContainerMock1).sendMessage(message);
@@ -57,7 +57,7 @@ public class WorkerMessageProcessorTest {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toRandomTest().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.processMessage(message);
+        workerMessageProcessor.submit(message);
 
         assertFalse(message.isExecuted());
         verifyMessageSentToEitherOr(testContainerMock1, testContainerMock2, message);
