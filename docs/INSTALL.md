@@ -51,6 +51,10 @@ should have a ida_rsa.pub and id_rsa file in your ~/.ssh directory. Your id_rsa.
 the remote agent machines and added to the ~/.ssh/known_hosts file, so that you can log into that machine without
 a password or explicit provided credentials.
 
+### Install wget
+
+Make sure wget is installed. For Linux machines in most cases it is installed, but on OSX it isn't out of the box.
+
 #### Set up on Google Compute Engine
 
 For setup on GCE a developer email can be obtained from the GCE admin GUI console.
