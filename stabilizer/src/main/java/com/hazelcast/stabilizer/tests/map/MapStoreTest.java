@@ -4,6 +4,7 @@ import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
@@ -82,57 +83,59 @@ public class MapStoreTest {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
+                try{
+                    final int key = random.nextInt(keyCount);
+                    final IMap map = targetInstance.getMap(basename);
 
-                final int key = random.nextInt(keyCount);
-                final IMap map = targetInstance.getMap(basename);
+                    double chance = random.nextDouble();
+                    if ( (chance -= writeProb) < 0 ) {
 
-                double chance = random.nextDouble();
-                if ( (chance -= writeProb) < 0 ) {
+                        final Object value = random.nextInt(keyCount);
 
-                    final Object value = random.nextInt(keyCount);
-
-                    chance = random.nextDouble();
-                    if ( (chance -= writeUsingPutProb) < 0) {
-                        map.put(key, value);
-                        count.putCount.incrementAndGet();
-                    }
-                    else if ( (chance -= writeUsingPutAsyncProb) < 0 ) {
-                        map.putAsync(key, value);
-                        count.putAsyncCount.incrementAndGet();
-                    }
-                    else if ( (chance -= writeUsingPutTTLProb ) < 0 ) {
-                        long delay = 1 + random.nextInt(maxTTLExpireySeconds);
-                        int k =  putTTlKeyDomain + random.nextInt(putTTlKeyRange);
-                        map.putTransient(k, delay, delay, TimeUnit.SECONDS);
-                        count.putTransientCount.incrementAndGet();
-                    }
-                    else if( (chance -= writeUsingPutIfAbsent) < 0 ){
-                        map.putIfAbsent(key, value);
-                        count.putIfAbsentCount.incrementAndGet();
-                    }
-                    else if( (chance -= writeUsingReplaceProb ) <= 0 ){
-                        Object orig = map.get(key);
-                        if ( orig !=null ){
-                            map.replace(key, orig, value);
-                            count.replaceCount.incrementAndGet();
+                        chance = random.nextDouble();
+                        if ( (chance -= writeUsingPutProb) < 0) {
+                            map.put(key, value);
+                            count.putCount.incrementAndGet();
                         }
-                    }
+                        else if ( (chance -= writeUsingPutAsyncProb) < 0 ) {
+                            map.putAsync(key, value);
+                            count.putAsyncCount.incrementAndGet();
+                        }
+                        else if ( (chance -= writeUsingPutTTLProb ) < 0 ) {
+                            long delay = 1 + random.nextInt(maxTTLExpireySeconds);
+                            int k =  putTTlKeyDomain + random.nextInt(putTTlKeyRange);
+                            map.putTransient(k, delay, delay, TimeUnit.SECONDS);
+                            count.putTransientCount.incrementAndGet();
+                        }
+                        else if( (chance -= writeUsingPutIfAbsent) < 0 ){
+                            map.putIfAbsent(key, value);
+                            count.putIfAbsentCount.incrementAndGet();
+                        }
+                        else if( (chance -= writeUsingReplaceProb ) <= 0 ){
+                            Object orig = map.get(key);
+                            if ( orig !=null ){
+                                map.replace(key, orig, value);
+                                count.replaceCount.incrementAndGet();
+                            }
+                        }
 
-                }else if( (chance -= getProb) < 0 ){
-                    map.get(key);
-                    count.getCount.incrementAndGet();
-                }
-                else if( (chance -=  getAsyncProb) < 0 ){
-                    map.getAsync(key);
-                    count.getAsyncCount.incrementAndGet();
-                }
-                else if ( (chance -= deleteProb) < 0 ){
-                    map.delete(key);
-                    count.deleteCount.incrementAndGet();
-                }
-                else if ( (chance -= destroyProb) <= 0 ){
-                    map.destroy();
-                    count.destroyCount.incrementAndGet();
+                    }else if( (chance -= getProb) < 0 ){
+                        map.get(key);
+                        count.getCount.incrementAndGet();
+                    }
+                    else if( (chance -=  getAsyncProb) < 0 ){
+                        map.getAsync(key);
+                        count.getAsyncCount.incrementAndGet();
+                    }
+                    else if ( (chance -= deleteProb) < 0 ){
+                        map.delete(key);
+                        count.deleteCount.incrementAndGet();
+                    }
+                    else if ( (chance -= destroyProb) <= 0 ){
+                        map.destroy();
+                        count.destroyCount.incrementAndGet();
+                    }
+                }catch(DistributedObjectDestroyedException e){
                 }
             }
         }
