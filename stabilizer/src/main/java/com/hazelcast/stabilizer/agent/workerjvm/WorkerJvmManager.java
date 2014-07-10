@@ -34,7 +34,9 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -94,10 +96,11 @@ public class WorkerJvmManager {
     }
 
     public Object executeOnSingleWorker(TestCommand testCommand) throws Exception {
-        Collection<WorkerJvm> workers = new LinkedList<WorkerJvm>(workerJvms.values());
+        List<WorkerJvm> workers = new ArrayList<WorkerJvm>(workerJvms.values());
         if (workers.isEmpty()) {
             throw new NoWorkerAvailableException("No worker JVM's found");
         }
+        workers = Collections.singletonList(workers.get(0));
         List results = executeOnWorkers(testCommand, workers);
         if (results.isEmpty()) {
             log.info("No results found");
