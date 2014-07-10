@@ -3,8 +3,8 @@ package com.hazelcast.stabilizer.common.messaging;
 import com.hazelcast.stabilizer.NativeUtils;
 
 @MessageSpec("unblockTraffic")
-public class UnblockTraffic extends RunnableMessage {
-    public UnblockTraffic(MessageAddress messageAddress) {
+public class UnblockTrafficMessage extends RunnableMessage {
+    public UnblockTrafficMessage(MessageAddress messageAddress) {
         super(messageAddress);
     }
 

@@ -10,10 +10,10 @@ import java.io.Serializable;
  *
  */
 @MessageSpec("blockHzTraffic")
-public class BlockTraffic extends RunnableMessage {
+public class BlockTrafficMessage extends RunnableMessage {
     private static final String ports = "5700:5800";
 
-    public BlockTraffic(MessageAddress messageAddress) {
+    public BlockTrafficMessage(MessageAddress messageAddress) {
         super(messageAddress);
     }
 
