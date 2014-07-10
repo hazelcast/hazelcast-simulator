@@ -8,7 +8,9 @@ coordinator --memberWorkerCount 2 \
 	--clientWorkerCount 2 \
 	--duration 1m \
 	--parallel \
-	../../test.properties
+	../test.properties
 done
 
 provisioner --download
+
+echo "The End"

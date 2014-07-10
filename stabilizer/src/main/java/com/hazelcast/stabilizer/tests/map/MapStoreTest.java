@@ -35,6 +35,7 @@ public class MapStoreTest {
 
     //check these add up to 1   (writeProb is split up into sub styles)
     public double writeUsingPutProb = 0.4;
+    public double writeUsingPutAsyncProb = 0.0;
     public double writeUsingPutTTLProb = 0.3;
     public double writeUsingPutIfAbsent = 0.15;
     public double writeUsingReplaceProb = 0.15;
@@ -95,17 +96,21 @@ public class MapStoreTest {
                         map.put(key, value);
                         count.putCount.incrementAndGet();
                     }
-                    else if (chance < writeUsingPutTTLProb + writeUsingPutProb) {
+                    else if (chance < writeUsingPutAsyncProb + writeUsingPutProb) {
+                        map.putAsync(key, value);
+                        count.putAsyncCount.incrementAndGet();
+                    }
+                    else if (chance < writeUsingPutTTLProb + writeUsingPutAsyncProb + writeUsingPutProb) {
                         long delay = 1 + random.nextInt(maxTTLExpireySeconds);
                         int k =  putTTlKeyDomain + random.nextInt(putTTlKeyRange);
                         map.putTransient(k, delay, delay, TimeUnit.SECONDS);
                         count.putTransientCount.incrementAndGet();
                     }
-                    else if(chance < writeUsingPutIfAbsent + writeUsingPutTTLProb + writeUsingPutProb ){
+                    else if(chance < writeUsingPutIfAbsent + writeUsingPutTTLProb + writeUsingPutAsyncProb + writeUsingPutProb ){
                         map.putIfAbsent(key, value);
                         count.putIfAbsentCount.incrementAndGet();
                     }
-                    else if(chance < writeUsingReplaceProb + writeUsingPutIfAbsent + writeUsingPutTTLProb + writeUsingPutProb){
+                    else if(chance < writeUsingReplaceProb + writeUsingPutIfAbsent + writeUsingPutTTLProb + writeUsingPutAsyncProb + writeUsingPutProb){
                         Object orig = map.get(key);
                         if ( orig !=null ){
                             map.replace(key, orig, value);

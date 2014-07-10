@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class MapOpperationsCount implements DataSerializable {
     public AtomicLong putCount = new AtomicLong(0);
+    public AtomicLong putAsyncCount = new AtomicLong(0);
+
     public AtomicLong putTransientCount = new AtomicLong(0);
     public AtomicLong putIfAbsentCount = new AtomicLong(0);
     public AtomicLong replaceCount = new AtomicLong(0);
@@ -21,6 +23,7 @@ public class MapOpperationsCount implements DataSerializable {
 
     public void add(MapOpperationsCount c){
         putCount.addAndGet(c.putCount.get());
+        putAsyncCount.addAndGet(c.putAsyncCount.get());
         putTransientCount.addAndGet(c.putTransientCount.get());
         putIfAbsentCount.addAndGet(c.putIfAbsentCount.get());
         replaceCount.addAndGet(c.replaceCount.get());
@@ -32,6 +35,7 @@ public class MapOpperationsCount implements DataSerializable {
 
     public void writeData(ObjectDataOutput out) throws IOException {
         out.writeObject(putCount);
+        out.writeObject(putAsyncCount);
         out.writeObject(putTransientCount);
         out.writeObject(putIfAbsentCount);
         out.writeObject(replaceCount);
@@ -43,6 +47,7 @@ public class MapOpperationsCount implements DataSerializable {
 
     public void readData(ObjectDataInput in) throws IOException {
         putCount = in.readObject();
+        putAsyncCount = in.readObject();
         putTransientCount = in.readObject();
         putIfAbsentCount = in.readObject();
         replaceCount = in.readObject();
@@ -54,6 +59,7 @@ public class MapOpperationsCount implements DataSerializable {
 
     public long total(){
         return  putCount.get() +
+                putAsyncCount.get() +
                 putTransientCount.get() +
                 putIfAbsentCount.get() +
                 replaceCount.get() +
@@ -67,6 +73,7 @@ public class MapOpperationsCount implements DataSerializable {
     public String toString() {
         return "MapOpperationsCount{" +
                 "putCount=" + putCount +
+                ", putAsyncCount=" + putAsyncCount +
                 ", putTransientCount=" + putTransientCount +
                 ", putIfAbsentCount=" + putIfAbsentCount +
                 ", replaceCount=" + replaceCount +
