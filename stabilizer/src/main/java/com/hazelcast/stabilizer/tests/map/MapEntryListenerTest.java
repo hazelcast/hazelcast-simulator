@@ -110,7 +110,6 @@ public class MapEntryListenerTest {
 
             Count initCounter = new Count();
 
-
             int v = 0;
             for (int k = 0; k < keyCount; k++) {
                 map.put(k, values[v]);
