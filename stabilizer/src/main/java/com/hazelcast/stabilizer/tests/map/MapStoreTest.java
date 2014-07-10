@@ -177,7 +177,7 @@ public class MapStoreTest {
                 assertEquals( map.get(k), mapStore.store.get(k) );
             }
 
-            assertEquals("local key set of each member should be equal to the local instance mapStore size "
+            assertEquals("local key set of each member should be equal to the local instance mapStore size"
                     , map.localKeySet().size(), mapStore.store.size());
 
             for(int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++){
