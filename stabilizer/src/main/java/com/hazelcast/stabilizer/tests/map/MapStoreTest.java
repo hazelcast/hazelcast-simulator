@@ -9,7 +9,6 @@ import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.tests.map.helpers.Count;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOpperationsCount;
 import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
@@ -44,7 +43,7 @@ public class MapStoreTest {
     public int mapStoreMaxDelay = 0;
     public int mapStoreMinDelay = 0;
 
-    public int maxExpireySeconds = 3;
+    public int maxTTLExpireySeconds = 3;
 
     private int putTTlKeyDomain;
     private int putTTlKeyRange;
@@ -97,7 +96,7 @@ public class MapStoreTest {
                         count.putCount.incrementAndGet();
                     }
                     else if (chance < writeUsingPutTTLProb + writeUsingPutProb) {
-                        long delay = 1 + random.nextInt(maxExpireySeconds);
+                        long delay = 1 + random.nextInt(maxTTLExpireySeconds);
                         int k =  putTTlKeyDomain + random.nextInt(putTTlKeyRange);
                         map.putTransient(k, delay, delay, TimeUnit.SECONDS);
                         count.putTransientCount.incrementAndGet();
@@ -151,7 +150,7 @@ public class MapStoreTest {
         try{
             MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
             final int writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
-            Thread.sleep( (writeDelaySeconds*2 + maxExpireySeconds + 1) * 1000 );
+            Thread.sleep( (writeDelaySeconds*2 + maxTTLExpireySeconds + 1) * 1000 );
 
             final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
             final IMap map = targetInstance.getMap(basename);
