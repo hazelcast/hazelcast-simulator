@@ -12,6 +12,7 @@ public class MessageAddressParser {
 
     public static final String BROADCAST_MODE = "*";
     public static final String RANDOM_MODE = "R";
+    public static final String OLDEST_MEMBER = "O";
 
     public static final String ADDRESS_SEPARATOR = ",";
 
@@ -73,6 +74,8 @@ public class MessageAddressParser {
             address = MessageAddress.BROADCAST_PREFIX;
         } else if (RANDOM_MODE.equals(mode)) {
             address = MessageAddress.RANDOM_PREFIX;
+        } else if (OLDEST_MEMBER.equals(mode)) {
+            address = MessageAddress.OLDEST_MEMBER_PREFIX;
         } else {
             throw unknownAddressMode(mode);
         }
@@ -81,14 +84,16 @@ public class MessageAddressParser {
 
     private RuntimeException unknownAddressMode(String agentMode) {
         return new IllegalArgumentException(
-                String.format("Unknown address mode '%s', known address modes: %s, %s", agentMode, BROADCAST_MODE, RANDOM_MODE)
+                String.format("Unknown address mode '%s', known address modes: %s, %s, %s",
+                        agentMode, BROADCAST_MODE, RANDOM_MODE, OLDEST_MEMBER)
         );
     }
 
     private RuntimeException wrongFormat(String address) {
         return new IllegalArgumentException(
-                String.format("Address has to be in a format Syntax: %s=<%s,%s>[,%s=<%s,%s>[,%s=<%s, %s>]], found: '%s'",
-                        AGENT, BROADCAST_MODE, RANDOM_MODE, WORKER, BROADCAST_MODE, RANDOM_MODE, TEST, BROADCAST_MODE, RANDOM_MODE,
+                String.format("Address has to be in a format Syntax: %s=<%s,%s>[,%s=<%s,%s>[,%s=<%s, %s, %s>]], found: '%s'",
+                        AGENT, BROADCAST_MODE, RANDOM_MODE, WORKER, BROADCAST_MODE, RANDOM_MODE, TEST,
+                        BROADCAST_MODE, RANDOM_MODE,OLDEST_MEMBER,
                         address));
     }
 }

@@ -1,16 +1,19 @@
 package com.hazelcast.stabilizer.agent.remoting;
 
+import com.hazelcast.stabilizer.AssertTask;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.messaging.DummyRunnableMessage;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import org.junit.Before;
 import org.junit.Test;
+import org.omg.CORBA.TIMEOUT;
 
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static com.hazelcast.stabilizer.TestSupport.*;
 
 
 public class AgentMessageProcessorTest {
@@ -27,10 +30,15 @@ public class AgentMessageProcessorTest {
     @Test
     public void testLocalMessage() throws TimeoutException, InterruptedException {
         MessageAddress address = MessageAddress.builder().toAllAgents().build();
-        DummyRunnableMessage message = new DummyRunnableMessage(address);
+        final DummyRunnableMessage message = new DummyRunnableMessage(address);
 
         agentMessageProcessor.submit(message);
-        assertTrue(message.isExecuted());
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                assertTrue(message.isExecuted());
+            }
+        });
         verify(workerJvmManagerMock, never()).sendMessage(any(Message.class));
     }
 
@@ -41,6 +49,6 @@ public class AgentMessageProcessorTest {
         agentMessageProcessor.submit(message);
 
         assertFalse(message.isExecuted());
-        verify(workerJvmManagerMock).sendMessage(message);
+        verify(workerJvmManagerMock, timeout(TIMEOUT)).sendMessage(message);
     }
 }

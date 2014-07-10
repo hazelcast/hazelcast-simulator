@@ -1,5 +1,7 @@
 package com.hazelcast.stabilizer.worker;
 
+import com.hazelcast.stabilizer.AssertTask;
+import com.hazelcast.stabilizer.TestSupport;
 import com.hazelcast.stabilizer.common.messaging.DummyRunnableMessage;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
@@ -13,6 +15,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
+import static com.hazelcast.stabilizer.TestSupport.*;
 
 public class WorkerMessageProcessorTest {
 
@@ -34,10 +37,15 @@ public class WorkerMessageProcessorTest {
     @Test
     public void testRunnableLocalMessage() {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().build();
-        DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
+        final DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
         workerMessageProcessor.submit(message);
-        assertTrue(message.isExecuted());
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                assertTrue(message.isExecuted());
+            }
+        });
     }
 
     @Test
@@ -48,25 +56,23 @@ public class WorkerMessageProcessorTest {
         workerMessageProcessor.submit(message);
 
         assertFalse(message.isExecuted());
-        verify(testContainerMock1).sendMessage(message);
-        verify(testContainerMock2).sendMessage(message);
+        verify(testContainerMock1, timeout(TIMEOUT)).sendMessage(message);
+        verify(testContainerMock2, timeout(TIMEOUT)).sendMessage(message);
     }
 
     @Test
     public void testMessageToRandomTest() throws Throwable {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toRandomTest().build();
-        DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
+        final DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
         workerMessageProcessor.submit(message);
-
-        assertFalse(message.isExecuted());
         verifyMessageSentToEitherOr(testContainerMock1, testContainerMock2, message);
     }
 
     private void verifyMessageSentToEitherOr(TestContainer<?> container1, TestContainer<?> container2, Message message) throws Throwable {
         try {
-            verify(container1).sendMessage(message);
-            verify(container2, never()).sendMessage(message);
+            verify(container1, timeout(TIMEOUT)).sendMessage(message);
+            verify(container2, timeout(TIMEOUT).never()).sendMessage(message);
         } catch (WantedButNotInvoked e) { //the message was not deliver to container1
             verify(container2).sendMessage(message); //so it should go to container2
         }
