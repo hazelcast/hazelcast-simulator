@@ -26,10 +26,6 @@ public class MapStoreTest {
     public int threadCount = 3;
     public int keyCount = 10;
 
-    private int putTTlKeyDomain;
-    private int putTTlKeyRange;
-
-
     //check these add up to 1
     public double writeProb = 0.4;
     public double getProb = 0.2;
@@ -50,6 +46,8 @@ public class MapStoreTest {
 
     public int maxExpireySeconds = 3;
 
+    private int putTTlKeyDomain;
+    private int putTTlKeyRange;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
