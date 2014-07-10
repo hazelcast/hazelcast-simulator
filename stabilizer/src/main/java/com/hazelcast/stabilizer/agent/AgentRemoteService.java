@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
@@ -37,6 +36,7 @@ public class AgentRemoteService {
     private ServerSocket serverSocket;
     private final Executor executor = Executors.newFixedThreadPool(20);
     private AcceptorThread acceptorThread;
+
 
     public AgentRemoteService(Agent agent) {
         this.agent = agent;
@@ -93,7 +93,7 @@ public class AgentRemoteService {
                     } else if (SERVICE_ECHO.equals(service)) {
                         String msg = (String) in.readObject();
                         echo(msg);
-                    }  else {
+                    } else {
                         throw new RuntimeException("Unknown service:" + service);
                     }
                 } catch (Exception e) {
@@ -166,9 +166,12 @@ public class AgentRemoteService {
         }
 
         public void run() {
-            while ( !stopped ) {
+            while (!stopped) {
                 try {
                     Socket clientSocket = serverSocket.accept();
+
+                    agent.signalUsed();
+
                     if (log.isDebugEnabled()) {
                         log.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
                     }

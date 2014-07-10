@@ -43,6 +43,11 @@ public class Agent {
     private volatile TestSuite testSuite;
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
+    private final HarakiriMonitor harakiriMonitor = new HarakiriMonitor(this);
+    public String cloudIdentity;
+    public String cloudCredential;
+    public String cloudProvider;
+    protected volatile long lastUsed = System.currentTimeMillis();
 
     public void echo(String msg) {
         log.info(msg);
@@ -88,6 +93,8 @@ public class Agent {
 
         workerJvmManager.start();
 
+        harakiriMonitor.start();
+
         log.info("Stabilizer Agent is ready for action");
     }
 
@@ -101,18 +108,48 @@ public class Agent {
         log.info(format("Version: %s, Commit: %s, Build Time: %s",
                 getVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
         log.info(format("STABILIZER_HOME: %s\n", STABILIZER_HOME));
+        logInterestingSystemProperties();
 
         try {
             Agent agent = new Agent();
             init(agent, args);
+
+            log.info("CloudIdentity: " + agent.cloudIdentity);
+            log.info("CloudCredential " + agent.cloudCredential);
+            log.info("CloudProvider " + agent.cloudProvider);
+
             agent.start();
         } catch (OptionException e) {
             exitWithError(log, e.getMessage() + "\nUse --help to get overview of the help options.");
         }
     }
 
+    private static void logInterestingSystemProperties() {
+        logSystemProperty("java.class.path");
+        logSystemProperty("java.home");
+        logSystemProperty("java.vendor");
+        logSystemProperty("java.vendor.url");
+        logSystemProperty("sun.java.command");
+        logSystemProperty("java.version");
+        logSystemProperty("os.arch");
+        logSystemProperty("os.name");
+        logSystemProperty("os.version");
+        logSystemProperty("user.dir");
+        logSystemProperty("user.home");
+        logSystemProperty("user.name");
+        logSystemProperty("STABILIZER_HOME");
+    }
+
+    private static void logSystemProperty(String name) {
+        log.info(format("%s=%s", name, System.getProperty(name)));
+    }
+
     public static void exitWithError(Logger logger, String msg) {
         logger.fatal(msg);
         System.exit(1);
+    }
+
+    public void signalUsed() {
+        lastUsed = System.currentTimeMillis();
     }
 }

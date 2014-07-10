@@ -40,8 +40,8 @@ public class ComputeServiceBuilder {
         ensurePublicPrivateKeyExist();
 
         String cloudProvider = props.get("CLOUD_PROVIDER");
-        String identity = load("CLOUD_IDENTITY");
-        String credential = load("CLOUD_CREDENTIAL");
+        String identity = props.get("CLOUD_IDENTITY");
+        String credential = props.get("CLOUD_CREDENTIAL");
 
         if (log.isFinestEnabled()) {
             log.finest("Using CLOUD_PROVIDER: " + cloudProvider);
@@ -90,19 +90,5 @@ public class ComputeServiceBuilder {
         properties.setProperty(POLL_INITIAL_PERIOD, props.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
         properties.setProperty(POLL_MAX_PERIOD, props.get("CLOUD_POLL_MAX_PERIOD", "1000"));
         return properties;
-    }
-
-    private String load(String property) {
-        String value = props.get(property, "");
-
-        File file = newFile(value);
-        if (!file.exists()) {
-            Utils.exitWithError(log, format("Can't find %s file %s", property, value));
-        }
-
-        if (log.isFinestEnabled()) {
-            log.finest("Loading " + property + " from file: " + file.getAbsolutePath());
-        }
-        return fileAsText(file).trim();
     }
 }

@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.newFile;
 import static java.lang.String.format;
@@ -71,7 +72,15 @@ public class StabilizerProperties {
     }
 
     public String get(String name) {
-        return (String) properties.get(name);
+        String value = (String) properties.get(name);
+
+        if ("CLOUD_IDENTITY".equals(name)) {
+            value = load("CLOUD_IDENTITY",value);
+        }else if("CLOUD_CREDENTIAL".equals(name)){
+            value = load("CLOUD_CREDENTIAL",value);
+        }
+
+        return value;
     }
 
     public String get(String name, String defaultValue) {
@@ -85,5 +94,17 @@ public class StabilizerProperties {
             value = defaultValue;
         }
         return value;
+    }
+
+    private String load(String property, String value) {
+        File file = newFile(value);
+        if (!file.exists()) {
+            Utils.exitWithError(log, format("Can't find %s file %s", property, value));
+        }
+
+        if (log.isFinestEnabled()) {
+            log.finest("Loading " + property + " from file: " + file.getAbsolutePath());
+        }
+        return fileAsText(file).trim();
     }
 }
