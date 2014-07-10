@@ -20,9 +20,6 @@ import java.util.concurrent.TimeUnit;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
 
-/**
- * Created by danny on 6/27/14.
- */
 public class MapStoreTest {
 
     public String basename = this.getClass().getName();
