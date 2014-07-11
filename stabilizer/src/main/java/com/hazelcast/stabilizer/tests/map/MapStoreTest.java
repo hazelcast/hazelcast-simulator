@@ -62,6 +62,16 @@ public class MapStoreTest {
         targetInstance = testContext.getTargetInstance();
         putTTlKeyDomain = keyCount;
         putTTlKeyRange = keyCount;
+
+
+        try{
+            MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
+            MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
+
+            mapStore.maxDelay = mapStoreMaxDelay;
+            mapStore.minDelay = mapStoreMinDelay;
+
+        }catch(UnsupportedOperationException e){}
     }
 
     @Run
