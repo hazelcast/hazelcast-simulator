@@ -1,11 +1,13 @@
 package com.hazelcast.stabilizer.common.messaging;
 
+import com.hazelcast.stabilizer.common.KeyValuePair;
 import org.apache.log4j.Logger;
 import org.reflections.Reflections;
-import org.reflections.util.ConfigurationBuilder;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -14,22 +16,51 @@ class MessagesFactory {
     private final static Logger log = Logger.getLogger(MessagesFactory.class);
     private static final MessagesFactory instance = new MessagesFactory();
 
-    private final Map<String, Constructor<? extends Message>> specs;
+    private final Map<String, Constructor<? extends Message>> noAttributeConstructors;
+    private final Map<String, Constructor<? extends Message>> attributeConstructors;
     private final MessageAddressParser messageAddressParser;
 
     private MessagesFactory() {
-        specs = findMessages();
+        noAttributeConstructors = new HashMap<String, Constructor<? extends Message>>();
+        attributeConstructors = new HashMap<String, Constructor<? extends Message>>();
         messageAddressParser = new MessageAddressParser();
+        findAndInitMessageTypes();
     }
 
     static Message bySpec(String messageTypeSpec, String messageAddressSpec) {
-        Constructor<? extends Message> constructor = instance.specs.get(messageTypeSpec);
+        MessageAddress address = instance.messageAddressParser.parse(messageAddressSpec);
+        return bySpec(messageTypeSpec, address);
+    }
+
+    static Message bySpec(String messageTypeSpec, MessageAddress messageAddress) {
+        Constructor<? extends Message> constructor = instance.noAttributeConstructors.get(messageTypeSpec);
+
         if (constructor == null) {
             throw new IllegalArgumentException("Unknown message type " + messageTypeSpec + ".");
         }
-        MessageAddress messageAddress = instance.messageAddressParser.parse(messageAddressSpec);
+        return createInstance(constructor, messageAddress, null);
+    }
+
+    static Message bySpec(String messageTypeSpec, String messageAddressSpec,
+                          KeyValuePair<? extends Serializable, ? extends Serializable> attribute) {
+        MessageAddress address = instance.messageAddressParser.parse(messageAddressSpec);
+        return bySpec(messageTypeSpec, address, attribute);
+    }
+
+    static Message bySpec(String messageTypeSpec, MessageAddress messageAddress,
+                          KeyValuePair<? extends Serializable, ? extends Serializable> attribute) {
+        Constructor<? extends Message> constructor = instance.attributeConstructors.get(messageTypeSpec);
+
+        if (constructor == null) {
+            throw new IllegalArgumentException("Unknown message type " + messageTypeSpec + ".");
+        }
+        return createInstance(constructor, messageAddress, attribute);
+    }
+
+    private static Message createInstance(Constructor<? extends Message> constructor, MessageAddress messageAddress,
+                                          KeyValuePair<? extends Serializable, ? extends Serializable> attribute) {
         try {
-            return constructor.newInstance(messageAddress);
+            return attribute == null ? constructor.newInstance(messageAddress) : constructor.newInstance(messageAddress, attribute);
         } catch (InstantiationException e) {
             throw new IllegalStateException("Error while creating a new message", e);
         } catch (IllegalAccessException e) {
@@ -39,28 +70,40 @@ class MessagesFactory {
         }
     }
 
-    private Map<String, Constructor<? extends Message>> findMessages() {
+    private void findAndInitMessageTypes() {
         Reflections reflections = new Reflections("");
         Set<Class<?>> typesAnnotatedWith = reflections.getTypesAnnotatedWith(MessageSpec.class);
 
-        Map<String, Constructor<? extends Message>> messageSpecs = new HashMap<String, Constructor<? extends Message>>();
         for (Class<?> clazz : typesAnnotatedWith) {
             if (Message.class.isAssignableFrom(clazz)) {
-                Class<? extends Message> messageClass = (Class<? extends Message>) clazz;
-                try {
-                    Constructor<? extends Message> constructor = messageClass.getConstructor(MessageAddress.class);
-                    MessageSpec messageSpec = messageClass.getAnnotation(MessageSpec.class);
-                    String spec = messageSpec.value();
-                    messageSpecs.put(spec, constructor);
-                } catch (NoSuchMethodException e) {
-                    log.error("Error while searching for message types. Does the "
-                            +clazz.getName()+" have a constructor with "+MessageAddress.class.getName()+" as an argument?", e);
-                }
+                registerMessage((Class<? extends Message>) clazz);
             } else {
                 log.warn("Class "+clazz.getName()+" is annotated with "+MessageSpec.class.getName()+", however it does" +
                         "not extend "+Message.class.getName()+".");
             }
         }
-        return messageSpecs;
+    }
+
+    private void registerMessage(Class<? extends Message> clazz) {
+        String spec = getSpecString(clazz);
+        try {
+            Constructor<? extends Message> constructor = clazz.getConstructor(MessageAddress.class);
+            noAttributeConstructors.put(spec, constructor);
+        } catch (NoSuchMethodException e) {
+            log.error("Error while searching for message types. Does the "
+                    +clazz.getName()+" have a constructor with "+MessageAddress.class.getName()+" as an argument?", e);
+        }
+        try {
+            Constructor<? extends Message> constructor = clazz.getConstructor(MessageAddress.class, KeyValuePair.class);
+            attributeConstructors.put(spec, constructor);
+        } catch (NoSuchMethodException e) {
+            log.debug("Class "+clazz.getName()+" does not have a constructor accepting "+KeyValuePair.class.getName()+"+.");
+        }
+
+    }
+
+    private String getSpecString(Class<? extends Message> messageClass) {
+        MessageSpec messageSpec = messageClass.getAnnotation(MessageSpec.class);
+        return messageSpec.value();
     }
 }

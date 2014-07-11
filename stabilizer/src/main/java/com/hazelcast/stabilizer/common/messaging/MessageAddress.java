@@ -58,6 +58,12 @@ public class MessageAddress implements Serializable {
             return this;
         }
 
+        public MessageAddressBuilder toOldestMember() {
+            agentAddress = BROADCAST_PREFIX;
+            workerAddress = OLDEST_MEMBER_PREFIX;
+            return this;
+        }
+
         public MessageAddressBuilder toAllTests() {
             testAddress = BROADCAST_PREFIX;
             return this;

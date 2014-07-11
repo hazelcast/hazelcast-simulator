@@ -1,8 +1,10 @@
 package com.hazelcast.stabilizer.common.messaging;
 
+import com.hazelcast.stabilizer.common.KeyValuePair;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
 
 public class MessagesFactoryTest {
 
@@ -17,6 +19,19 @@ public class MessagesFactoryTest {
         MessageAddress address = message.getMessageAddress();
 
         assertEquals(DummyRunnableMessage.class, message.getClass());
+        assertEquals(MessageAddress.BROADCAST_PREFIX, address.getAgentAddress());
+        assertNull(address.getWorkerAddress());
+        assertNull(address.getTestAddress());
+    }
+
+    @Test
+    public void testBySpec_withAttribute() throws Exception {
+        KeyValuePair<String, String> attribute = new KeyValuePair<String, String>("foo", "bar");
+        Message message = MessagesFactory.bySpec("dummyMessage", "Agent=*", attribute);
+        MessageAddress address = message.getMessageAddress();
+
+        assertEquals(DummyRunnableMessage.class, message.getClass());
+        assertThat(((DummyRunnableMessage)message).getAttribute(), is(equalTo(attribute)));
         assertEquals(MessageAddress.BROADCAST_PREFIX, address.getAgentAddress());
         assertNull(address.getWorkerAddress());
         assertNull(address.getTestAddress());
