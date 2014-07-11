@@ -13,8 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MapStoreWithCounter implements MapStore<Object, Object> {
     private Random random = new Random();
 
-    public int minDelay=0;
-    public int maxDelay=0;
+    public static int minDelay=0;
+    public static int maxDelay=0;
 
     public final Map store = new ConcurrentHashMap();
     public AtomicInteger storeCount = new AtomicInteger(0);

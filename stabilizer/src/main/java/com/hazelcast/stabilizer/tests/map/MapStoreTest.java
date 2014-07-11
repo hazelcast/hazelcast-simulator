@@ -65,21 +65,10 @@ public class MapStoreTest {
         targetInstance = testContext.getTargetInstance();
         putTTlKeyDomain = keyCount;
         putTTlKeyRange = keyCount;
+
+        MapStoreWithCounter.maxDelay = mapStoreMaxDelay;
+        MapStoreWithCounter.minDelay = mapStoreMinDelay;
     }
-
-    @Warmup(global = false)
-    public void warmup() {
-
-        try{
-            MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
-            MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
-
-            mapStore.maxDelay = mapStoreMaxDelay;
-            mapStore.minDelay = mapStoreMinDelay;
-
-        }catch(UnsupportedOperationException e){}
-    }
-
 
     @Run
     public void run() {
@@ -175,7 +164,8 @@ public class MapStoreTest {
         try{
             MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
             final int writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
-            Thread.sleep( (writeDelaySeconds*2 + maxTTLExpireySeconds + 1) * 1000 );
+
+            Thread.sleep( (mapStoreMaxDelay*2 + writeDelaySeconds*2 + maxTTLExpireySeconds+1 ) * 1000 );
 
             final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
             final IMap map = targetInstance.getMap(basename);
