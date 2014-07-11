@@ -114,7 +114,6 @@ public class MapEntryListenerTest {
                 count.localAddCount.getAndIncrement();
                 v = (v + 1 == values.length ? 0 : v + 1);
             }
-            System.out.println("init map with "+keyCount+" items");
 
             //so we are assuming that the node who makes the global warmup is not active in the test
             //so you put its results in hear as this is all the effect it has on the test
@@ -137,7 +136,6 @@ public class MapEntryListenerTest {
 
     @Run
     public void run() {
-        System.out.println("Running with threads="+threadCount);
 
         ThreadSpawner spawner = new ThreadSpawner( testContext.getTestId() );
         for (int k = 0; k < threadCount; k++) {
@@ -205,7 +203,7 @@ public class MapEntryListenerTest {
                     else if(chance < replaceProb + writeUsingPutIfAbsent + writeUsingPutProb){
                         Object orig = map.get(key);
                         if ( orig !=null && map.replace(key, orig, value) ){
-                            count.localReplaceCount.getAndIncrement();
+                            count.localUpdateCount.getAndIncrement();
                         }
                     }
                 }else if(chance < evictProb + writeProb){
@@ -248,8 +246,6 @@ public class MapEntryListenerTest {
 
                 results.add(count);
                 resultListners.addAll(listeners.values());
-
-                System.out.println("actions for This = "+count);
             }
 
         }
@@ -261,18 +257,15 @@ public class MapEntryListenerTest {
 
         ILock lock = targetInstance.getLock(basename+"Lock2");
         if(lock.tryLock()){
-            System.out.println("Global verify ");
 
             IList<Count> counts = targetInstance.getList(basename+"results");
             for(Count c : counts){
-                System.out.println(c);
+                //System.out.println(c);
             }
-
-
 
             IList<EntryListenerImpl> resultListners = targetInstance.getList(basename+"listeners");
             for(EntryListenerImpl l : resultListners){
-                System.out.println(l);
+                //System.out.println(l);
             }
 
             for(int i=0; i<resultListners.size()-1; i++){
@@ -287,7 +280,6 @@ public class MapEntryListenerTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
-        System.out.println("verify ");
 
         IList<Count> counts = targetInstance.getList(basename+"results");
         Count total = new Count();
@@ -298,24 +290,18 @@ public class MapEntryListenerTest {
         IMap map = targetInstance.getMap(basename);
         EntryListenerImpl e = listeners.get(basename);
 
-        long addedTotal = total.localAddCount.get() + total.localReplaceCount.get();
-        long replaceTrickCount = e.addCount.get() - total.localAddCount.get();
-        long expectedMapSz = e.addCount.get()  - (total.localReplaceCount.get() + e.evictCount.get() + e.removeCount.get());
+        long expectedMapSz = e.addCount.get()  - (e.evictCount.get() + e.removeCount.get());
 
-        System.out.println("add = "+addedTotal +" "+ e.addCount.get());
-        System.out.println("update = "+total.localUpdateCount.get() +" "+ e.updateCount.get());
-        System.out.println("remove = "+total.localRemoveCount.get() +" "+ e.removeCount.get());
-        System.out.println("evict = "+total.localEvictCount.get() +" "+ e.evictCount.get());
-        System.out.println("replaced = " + total.localReplaceCount.get() + " " + replaceTrickCount);
-        System.out.println("mapSZ = "+ map.size() + " " + expectedMapSz );
+        System.out.println(basename+": add = "+ total.localAddCount.get() +" "+ e.addCount.get());
+        System.out.println(basename+": update = "+total.localUpdateCount.get() +" "+ e.updateCount.get());
+        System.out.println(basename+": remove = " + total.localRemoveCount.get() + " " + e.removeCount.get());
+        System.out.println(basename+": evict = " + total.localEvictCount.get() + " " + e.evictCount.get());
+        System.out.println(basename+": mapSZ = " + map.size() + " " + expectedMapSz);
 
-        assertEquals(" Add Events ",      addedTotal,                     e.addCount.get());
+        assertEquals(" Add Events ",      total.localAddCount.get(),      e.addCount.get());
         assertEquals(" Update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
         assertEquals(" Remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
         assertEquals(" Evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
-
-        assertEquals(" Add Events caused By Replace ", total.localReplaceCount.get(), replaceTrickCount);
-
         assertEquals(" MapSZ ", expectedMapSz, map.size());
     }
 
