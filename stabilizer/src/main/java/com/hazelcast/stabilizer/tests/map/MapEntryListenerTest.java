@@ -108,17 +108,19 @@ public class MapEntryListenerTest {
 
             IMap map = targetInstance.getMap(basename);
 
+            Count initCounter = new Count();
+
             int v = 0;
             for (int k = 0; k < keyCount; k++) {
                 map.put(k, values[v]);
-                count.localAddCount.getAndIncrement();
+                initCounter.localAddCount.getAndIncrement();
                 v = (v + 1 == values.length ? 0 : v + 1);
             }
 
             //so we are assuming that the node who makes the global warmup is not active in the test
             //so you put its results in hear as this is all the effect it has on the test
             IList results = targetInstance.getList(basename+"results");
-            results.add(count);
+            results.add(initCounter);
         }
     }
 

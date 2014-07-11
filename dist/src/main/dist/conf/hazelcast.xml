@@ -17,4 +17,11 @@
         </join>
     </network>
 
+    <map name="MapStore*">
+        <map-store enabled="true">
+            <class-name>com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter</class-name>
+            <write-delay-seconds>5</write-delay-seconds>
+        </map-store>
+    </map>
+
 </hazelcast>
