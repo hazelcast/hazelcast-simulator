@@ -96,7 +96,7 @@ public class MapStoreTest {
                     double chance = random.nextDouble();
                     if ( (chance -= writeProb) < 0 ) {
 
-                        final Object value = random.nextInt(keyCount);
+                        final Object value = random.nextInt();
 
                         chance = random.nextDouble();
                         if ( (chance -= writeUsingPutProb) < 0) {
