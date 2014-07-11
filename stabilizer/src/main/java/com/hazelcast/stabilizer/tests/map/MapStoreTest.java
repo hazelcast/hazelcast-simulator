@@ -3,6 +3,7 @@ package com.hazelcast.stabilizer.tests.map;
 import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
+import com.hazelcast.core.ILock;
 import com.hazelcast.core.IMap;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -10,6 +11,8 @@ import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.map.helpers.Count;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOpperationsCount;
 import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
@@ -62,7 +65,10 @@ public class MapStoreTest {
         targetInstance = testContext.getTargetInstance();
         putTTlKeyDomain = keyCount;
         putTTlKeyRange = keyCount;
+    }
 
+    @Warmup(global = false)
+    public void warmup() {
 
         try{
             MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
@@ -73,6 +79,7 @@ public class MapStoreTest {
 
         }catch(UnsupportedOperationException e){}
     }
+
 
     @Run
     public void run() {
