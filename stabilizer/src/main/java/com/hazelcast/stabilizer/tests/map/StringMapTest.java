@@ -147,7 +147,7 @@ public class StringMapTest {
                 }
 
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration +" map size="+map.size());
+                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration );
                 }
 
                 if (iteration % performanceUpdateFrequency == 0) {
