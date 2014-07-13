@@ -4,7 +4,7 @@
 
     <groupId>com.hazelcast.stabilizer</groupId>
     <artifactId>stabilizer-root</artifactId>
-    <version>0.3-EA</version>
+    <version>0.3-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Hazelcast Stabilizer Root</name>
 
@@ -45,7 +45,7 @@
         <connection>scm:git:git@github.com:hazelcast/hazelcast-stabilizer.git</connection>
         <developerConnection>scm:git:git@github.com:hazelcast/hazelcast-stabilizer.git</developerConnection>
         <url>https://github.com/hazelcast/hazelcast-stabilizer</url>
-        <tag>0.3-EA</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
