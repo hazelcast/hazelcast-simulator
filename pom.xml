@@ -6,7 +6,7 @@
 
     <groupId>com.hazelcast.stabilizer</groupId>
     <artifactId>stabilizer-root</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT5801</version>
     <packaging>pom</packaging>
     <name>Hazelcast Stabilizer Root</name>
 
