@@ -26,12 +26,6 @@
         </repository>
     </repositories>
 
-    <scm>
-        <connection>scm:git:git://github.com/hazelcast/hazelcast-stabilizer.git</connection>
-        <developerConnection>scm:git:git@github.com:hazelcast/hazelcast-stabilizer.git</developerConnection>
-        <url>https://github.com/hazelcast/hazelcast-stabilizer/</url>
-    </scm>
-
     <properties>
         <!-- we want to remain java 1.6 compatible -->
         <java.version>1.6</java.version>
