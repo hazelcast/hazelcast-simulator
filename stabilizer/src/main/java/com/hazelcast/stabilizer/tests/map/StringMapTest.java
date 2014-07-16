@@ -15,8 +15,7 @@
  */
 package com.hazelcast.stabilizer.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
+import com.hazelcast.core.*;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -26,6 +25,7 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
@@ -35,7 +35,6 @@ public class StringMapTest {
 
     private final static ILogger log = Logger.getLogger(StringMapTest.class);
 
-    private final static String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
 
     //props
     public int writePercentage = 10;
@@ -48,11 +47,13 @@ public class StringMapTest {
     public int performanceUpdateFrequency = 10000;
     public boolean usePut = true;
     public String basename = "stringmap";
+    public boolean preventLocalCalls = false;
+    public int minNumberOfMembers = 0;
+
 
     private IMap<Object, Object> map;
     private String[] keys;
     private String[] values;
-    private Random random = new Random();
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
 
@@ -77,39 +78,43 @@ public class StringMapTest {
     }
 
     @Warmup(global = false)
-    public void warmup() {
+    public void warmup() throws InterruptedException {
+        waitForCluser();
+
         log.info("Warmup has run");
+        warmUpPartitions(testContext.getTargetInstance());
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
-            keys[k] = makeString(keyLength);
+            keys[k] = StringUtils.generateKey(keyLength, preventLocalCalls, testContext.getTargetInstance());
         }
 
         values = new String[valueCount];
         for (int k = 0; k < values.length; k++) {
-            values[k] = makeString(valueLength);
+            values[k] = StringUtils.makeString(valueLength);
         }
 
-        //if our threads are not going to do any writes, we must fill the map so that a read is possible. Otherwise
-        //the map remains empty.
-        if (writePercentage == 0) {
-            Random random = new Random();
-            for (int k = 0; k < keys.length; k++) {
-                String key = keys[random.nextInt(keyCount)];
-                String value = values[random.nextInt(valueCount)];
-                map.put(key, value);
+        Random random = new Random();
+
+
+        for (int k = 0; k < keys.length; k++) {
+            String key = keys[random.nextInt(keyCount)];
+            String value = values[random.nextInt(valueCount)];
+            map.put(key, value);
+        }
+    }
+
+    private void waitForCluser() {
+        while (testContext.getTargetInstance().getCluster().getMembers().size() < minNumberOfMembers) {
+            try {
+                Thread.sleep(1000);
+                System.out.println("Waiting for other cluster member. Minimum no. of member: "+minNumberOfMembers +
+                        ", current no. members: " + testContext.getTargetInstance().getCluster().getMembers().size());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    private String makeString(int length) {
-        StringBuilder sb = new StringBuilder();
-        for (int k = 0; k < length; k++) {
-            char c = alphabet.charAt(random.nextInt(alphabet.length()));
-            sb.append(c);
-        }
-
-        return sb.toString();
-    }
 
     @Run
     public void run() {
@@ -118,6 +123,20 @@ public class StringMapTest {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
+    }
+
+    public void warmUpPartitions(HazelcastInstance...instances) throws InterruptedException {
+        for (HazelcastInstance instance : instances) {
+            final PartitionService ps = instance.getPartitionService();
+            for (Partition partition : ps.getPartitions()) {
+                while (partition.getOwner() == null) {
+                    Thread.sleep(10);
+                }
+            }
+        }
+        for (int i = 0; i < 100000; i++) {
+            map.get(i);
+        }
     }
 
     @Performance
