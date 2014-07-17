@@ -13,8 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MapStoreWithCounter implements MapStore<Object, Object> {
     private Random random = new Random();
 
-    public static int minDelay=0;
-    public static int maxDelay=0;
+    public static int minDelayMs =0;
+    public static int maxDelayMs =0;
 
     public final Map store = new ConcurrentHashMap();
     public AtomicInteger storeCount = new AtomicInteger(0);
@@ -77,9 +77,9 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
     }
 
     private void delay(){
-        if(maxDelay!=0){
+        if(maxDelayMs !=0){
             try {
-                int delay =  minDelay + random.nextInt(maxDelay);
+                int delay =  minDelayMs + random.nextInt(maxDelayMs);
                 Thread.sleep(delay);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -90,8 +90,8 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
     @Override
     public String toString() {
         return "MapStoreWithCounter{" +
-                "minDelay=" + minDelay +
-                ", maxDelay=" + maxDelay +
+                "minDelayMs=" + minDelayMs +
+                ", maxDelayMs=" + maxDelayMs +
                 ", storeCount=" + storeCount +
                 ", deleteCount=" + deleteCount +
                 ", countLoad=" + countLoad +

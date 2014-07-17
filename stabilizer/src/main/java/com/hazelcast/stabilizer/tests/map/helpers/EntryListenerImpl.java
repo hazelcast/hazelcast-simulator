@@ -7,35 +7,64 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
 
 import java.io.IOException;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class EntryListenerImpl implements DataSerializable, EntryListener<Object, Object> {
+
+    private Random random = new Random();
 
     public AtomicLong addCount = new AtomicLong();
     public AtomicLong removeCount = new AtomicLong();
     public AtomicLong updateCount = new AtomicLong();
     public AtomicLong evictCount = new AtomicLong();
 
-    public EntryListenerImpl( ) { }
+    public int minDelayMs;
+    public int maxDelayMs;
+
+    //Default Needed
+    public EntryListenerImpl(){
+
+    }
+
+    public EntryListenerImpl(int minDelayMs, int maxDelayMs) {
+        this.minDelayMs = minDelayMs;
+        this.maxDelayMs = maxDelayMs;
+    }
 
     @Override
     public void entryAdded(EntryEvent<Object, Object> objectObjectEntryEvent) {
+        delay();
         addCount.incrementAndGet();
     }
 
     @Override
     public void entryRemoved(EntryEvent<Object, Object> objectObjectEntryEvent) {
+        delay();
         removeCount.incrementAndGet();
     }
 
     @Override
     public void entryUpdated(EntryEvent<Object, Object> objectObjectEntryEvent) {
+        delay();
         updateCount.incrementAndGet();
     }
 
     @Override
     public void entryEvicted(EntryEvent<Object, Object> objectObjectEntryEvent) {
+        delay();
         evictCount.incrementAndGet();
+    }
+
+    private void delay(){
+        if(maxDelayMs!=0){
+            int delayMs =  minDelayMs + random.nextInt(maxDelayMs);
+            try {
+                Thread.sleep(delayMs);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void writeData(ObjectDataOutput out) throws IOException {
@@ -43,6 +72,9 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
         out.writeObject(removeCount);
         out.writeObject(updateCount);
         out.writeObject(evictCount);
+
+        out.writeInt(minDelayMs);
+        out.writeInt(maxDelayMs);
     }
 
     public void readData(ObjectDataInput in) throws IOException {
@@ -50,6 +82,9 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
         removeCount = in.readObject();
         updateCount = in.readObject();
         evictCount = in.readObject();
+
+        minDelayMs = in.readInt();
+        maxDelayMs = in.readInt();
     }
 
     @Override

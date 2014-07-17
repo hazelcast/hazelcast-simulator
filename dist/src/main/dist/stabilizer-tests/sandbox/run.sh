@@ -10,7 +10,7 @@ coordinator --memberWorkerCount 2 \
 	--clientWorkerCount 2 \
 	--duration 1m \
 	--parallel \
-	test.properties
+	sandBoxTest.properties
 done
 
 provisioner --download

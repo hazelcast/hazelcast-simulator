@@ -1,18 +1,3 @@
-/*
- * Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
@@ -30,29 +15,28 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
 
-public class MapTimeToLiveTest {
+public class MapAsyncOpsTest {
 
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 10;
 
     //check these add up to 1
-    public double putTTLProb = 0.4;
-    public double putAsyncTTLProb = 0.3;
-    public double getProb = 0.2;
-    public double getAsyncProb = 0.1;
-    public double destroyProb = 0.0;
+    public double PutAsyncProb = 0.2;
+    public double PutAsyncTTLProb = 0.2;
+    public double getAsyncProb = 0.2;
+    public double removeAsyncProb = 0.2;
+    public double destroyProb = 0.2;
     //
-    public int maxTTLExpireyMs = 3000;
-    public int minTTLExpireyMs = 1;
+    public int maxTTLExpireySeconds = 3;
 
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+    private MapOpperationsCount count = new MapOpperationsCount();
 
-    public MapTimeToLiveTest(){
+    public MapAsyncOpsTest(){
     }
 
     @Setup
@@ -68,10 +52,13 @@ public class MapTimeToLiveTest {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
+
+        IList results = targetInstance.getList(basename+"report");
+        results.add(count);
     }
 
+
     private class Worker implements Runnable {
-        private MapOpperationsCount count = new MapOpperationsCount();
         private final Random random = new Random();
         @Override
         public void run() {
@@ -81,25 +68,24 @@ public class MapTimeToLiveTest {
                     final IMap map = targetInstance.getMap(basename);
 
                     double chance = random.nextDouble();
-                    if ( (chance -= putTTLProb) < 0 ) {
+                    if ( (chance -= PutAsyncProb) < 0 ) {
                         final Object value = random.nextInt();
-                        int delayMs = minTTLExpireyMs + random.nextInt(maxTTLExpireyMs);
-                        map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
-                        count.putTTLCount.incrementAndGet();
+                        map.putAsync(key, value);
+                        count.putAsyncCount.incrementAndGet();
                     }
-                    if ( (chance -= putAsyncTTLProb) < 0 ) {
+                    if ( (chance -= PutAsyncTTLProb) < 0 ) {
                         final Object value = random.nextInt();
-                        int delayMs =  minTTLExpireyMs + random.nextInt(maxTTLExpireyMs);
-                        map.putAsync(key, value, delayMs, TimeUnit.MILLISECONDS);
+                        int delay = 1 + random.nextInt(maxTTLExpireySeconds);
+                        map.putAsync(key, value, delay, TimeUnit.SECONDS);
                         count.putAsyncTTLCount.incrementAndGet();
-                    }
-                    else if( (chance -= getProb) < 0  ){
-                        map.get(key);
-                        count.getCount.incrementAndGet();
                     }
                     else if( (chance -= getAsyncProb) < 0 ){
                         map.getAsync(key);
                         count.getAsyncCount.incrementAndGet();
+                    }
+                    else if( (chance -= removeAsyncProb) < 0  ){
+                        map.removeAsync(key);
+                        count.removeAsyncCount.incrementAndGet();
                     }
                     else if ( (chance -= destroyProb) <= 0 ){
                         map.destroy();
@@ -108,14 +94,11 @@ public class MapTimeToLiveTest {
 
                 }catch(DistributedObjectDestroyedException e){}
             }
-            IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
-            results.add(count);
         }
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        Thread.sleep(maxTTLExpireyMs * 3);
 
         IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
         MapOpperationsCount total = new MapOpperationsCount();
@@ -123,11 +106,19 @@ public class MapTimeToLiveTest {
             total.add(i);
         }
         System.out.println(basename+": "+total+" total of "+results.size());
-
-        final IMap map = targetInstance.getMap(basename);
-        assertEquals("Map Size not 0, some TTL events not processed", 0, map.size());
     }
 
+    @Verify(global = false)
+    public void verify() throws Exception {
+        try{
+            Thread.sleep( maxTTLExpireySeconds * 2 );
+
+            final IMap map = targetInstance.getMap(basename);
+
+            System.out.println(basename+ ": map size  =" + map.size() );
+
+        }catch(UnsupportedOperationException e){}
+    }
 
     public static void main(String[] args) throws Throwable {
         new TestRunner(new MapAsyncOpsTest()).run();

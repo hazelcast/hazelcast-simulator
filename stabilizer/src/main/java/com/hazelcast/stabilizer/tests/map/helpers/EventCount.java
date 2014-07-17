@@ -7,17 +7,17 @@ import com.hazelcast.nio.serialization.DataSerializable;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Count implements DataSerializable {
+public class EventCount implements DataSerializable {
     public AtomicLong localAddCount = new AtomicLong(0);
     public  AtomicLong localRemoveCount = new AtomicLong(0);
     public  AtomicLong localUpdateCount = new AtomicLong(0);
     public  AtomicLong localEvictCount = new AtomicLong(0);
     public  AtomicLong localReplaceCount = new AtomicLong(0);
 
-    public Count(){
+    public EventCount(){
     }
 
-    public void add(Count c){
+    public void add(EventCount c){
         localAddCount.addAndGet(c.localAddCount.get());
         localRemoveCount.addAndGet(c.localRemoveCount.get());
         localUpdateCount.addAndGet(c.localUpdateCount.get());

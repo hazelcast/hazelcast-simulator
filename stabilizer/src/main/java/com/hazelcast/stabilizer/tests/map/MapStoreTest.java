@@ -3,7 +3,6 @@ package com.hazelcast.stabilizer.tests.map;
 import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.core.ILock;
 import com.hazelcast.core.IMap;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -11,8 +10,6 @@ import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.tests.annotations.Warmup;
-import com.hazelcast.stabilizer.tests.map.helpers.Count;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOpperationsCount;
 import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
@@ -45,17 +42,17 @@ public class MapStoreTest {
     public double writeUsingReplaceProb = 0.15;
     //
 
-    public int mapStoreMaxDelay = 0;
-    public int mapStoreMinDelay = 0;
+    public int mapStoreMaxDelayMs = 0;
+    public int mapStoreMinDelayMs = 0;
 
-    public int maxTTLExpireySeconds = 3;
+    public int maxTTLExpireyMs = 3000;
+    public int minTTLExpireyMs = 100;
 
     private int putTTlKeyDomain;
     private int putTTlKeyRange;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private MapOpperationsCount count = new MapOpperationsCount();
 
     public MapStoreTest(){}
 
@@ -66,8 +63,8 @@ public class MapStoreTest {
         putTTlKeyDomain = keyCount;
         putTTlKeyRange = keyCount;
 
-        MapStoreWithCounter.maxDelay = mapStoreMaxDelay;
-        MapStoreWithCounter.minDelay = mapStoreMinDelay;
+        MapStoreWithCounter.maxDelayMs = mapStoreMaxDelayMs;
+        MapStoreWithCounter.minDelayMs = mapStoreMinDelayMs;
     }
 
     @Run
@@ -77,13 +74,11 @@ public class MapStoreTest {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
-
-        IList results = targetInstance.getList(basename+"report");
-        results.add(count);
     }
 
 
     private class Worker implements Runnable {
+        private MapOpperationsCount count = new MapOpperationsCount();
         private final Random random = new Random();
 
         @Override
@@ -108,9 +103,9 @@ public class MapStoreTest {
                             count.putAsyncCount.incrementAndGet();
                         }
                         else if ( (chance -= writeUsingPutTTLProb ) < 0 ) {
-                            long delay = 1 + random.nextInt(maxTTLExpireySeconds);
+                            long delayMs = minTTLExpireyMs + random.nextInt(maxTTLExpireyMs);
                             int k =  putTTlKeyDomain + random.nextInt(putTTlKeyRange);
-                            map.putTransient(k, delay, delay, TimeUnit.SECONDS);
+                            map.putTransient(k, delayMs, delayMs, TimeUnit.MILLISECONDS);
                             count.putTransientCount.incrementAndGet();
                         }
                         else if( (chance -= writeUsingPutIfAbsent) < 0 ){
@@ -144,6 +139,8 @@ public class MapStoreTest {
                 }catch(DistributedObjectDestroyedException e){
                 }
             }
+            IList results = targetInstance.getList(basename+"report");
+            results.add(count);
         }
     }
 
@@ -165,7 +162,7 @@ public class MapStoreTest {
             MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
             final int writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
 
-            Thread.sleep( (mapStoreMaxDelay*2 + writeDelaySeconds*2 + maxTTLExpireySeconds+1 ) * 1000 );
+            Thread.sleep(mapStoreMaxDelayMs*2 + maxTTLExpireyMs*2 + ((writeDelaySeconds*2)*1000));
 
             final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
             final IMap map = targetInstance.getMap(basename);
@@ -180,13 +177,11 @@ public class MapStoreTest {
                 assertEquals( map.get(k), mapStore.store.get(k) );
             }
 
-            assertEquals("local key set of each member should be equal to the local instance mapStore size"
-                    , map.localKeySet().size(), mapStore.store.size());
+            assertEquals("sets should be equals", map.getAll(map.localKeySet()).entrySet(), mapStore.store.entrySet());
 
             for(int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++){
                 assertNull("TTL key should not be in the map", map.get(k) );
             }
-
         }catch(UnsupportedOperationException e){}
     }
 
