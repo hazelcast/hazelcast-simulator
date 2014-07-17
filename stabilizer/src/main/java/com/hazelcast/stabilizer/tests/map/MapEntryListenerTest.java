@@ -16,8 +16,6 @@
 package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.*;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.*;
@@ -26,10 +24,7 @@ import com.hazelcast.stabilizer.tests.map.helpers.EntryListenerImpl;
 import com.hazelcast.stabilizer.tests.map.helpers.ScrambledZipfianGenerator;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertEquals;
 
@@ -62,7 +57,7 @@ public class MapEntryListenerTest {
     private HazelcastInstance targetInstance;
     private EntryListenerImpl listener;
     private ScrambledZipfianGenerator kesyZipfian = new ScrambledZipfianGenerator(keyCount);
-    private int sleepSecsCatchEvents = 8000;
+    private int sleepMs_CatchEvents = 8000;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -117,7 +112,7 @@ public class MapEntryListenerTest {
         spawner.awaitCompletion();
 
         try {
-            Thread.sleep(sleepSecsCatchEvents);
+            Thread.sleep(sleepMs_CatchEvents);
         } catch (InterruptedException e) { e.printStackTrace(); }
 
         IList resultListners = targetInstance.getList(basename+"listeners");
