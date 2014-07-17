@@ -73,8 +73,8 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
         out.writeObject(updateCount);
         out.writeObject(evictCount);
 
-        out.write(minDelayMs);
-        out.write(maxDelayMs);
+        out.writeInt(minDelayMs);
+        out.writeInt(maxDelayMs);
     }
 
     public void readData(ObjectDataInput in) throws IOException {
