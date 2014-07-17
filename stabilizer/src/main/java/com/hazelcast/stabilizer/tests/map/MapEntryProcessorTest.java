@@ -109,7 +109,10 @@ public class MapEntryProcessorTest {
                 Integer key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
 
-                int delayMs =  minProcessorDelayMs + random.nextInt(maxProcessorDealyMs);
+                int delayMs=0;
+                if(maxProcessorDealyMs!=0){
+                    delayMs =  minProcessorDelayMs + random.nextInt(maxProcessorDealyMs);
+                }
 
                 map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
                 increment(key, increment);

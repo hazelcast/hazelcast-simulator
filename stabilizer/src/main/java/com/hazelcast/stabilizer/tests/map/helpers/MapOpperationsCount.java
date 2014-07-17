@@ -98,12 +98,12 @@ public class MapOpperationsCount implements DataSerializable {
         destroyCount = in.readObject();
     }
 
-
     @Override
     public String toString() {
         return "MapOpperationsCount{" +
                 "putCount=" + putCount +
                 ", putAsyncCount=" + putAsyncCount +
+                ", putTTLCount=" + putTTLCount +
                 ", putAsyncTTLCount=" + putAsyncTTLCount +
                 ", putTransientCount=" + putTransientCount +
                 ", putIfAbsentCount=" + putIfAbsentCount +
