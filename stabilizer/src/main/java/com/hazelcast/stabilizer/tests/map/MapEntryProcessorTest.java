@@ -59,6 +59,7 @@ public class MapEntryProcessorTest {
         for (int k = 0; k < keyCount; k++) {
             map.put(k, 0l);
         }
+        System.out.println(basename+" map size ==>"+map.size());
     }
 
     @Run
@@ -144,7 +145,8 @@ public class MapEntryProcessorTest {
         @Override
         public Object process(Map.Entry<Integer, Long> entry) {
             delay();
-            entry.setValue(entry.getValue() + increment);
+            long l = entry.getValue() + increment;
+            entry.setValue(l);
             return null;
         }
 
