@@ -35,8 +35,8 @@ public class MapOpperationsCount implements DataSerializable {
         putCount.addAndGet(c.putCount.get());
         putAsyncCount.addAndGet(c.putAsyncCount.get());
 
-        putTTLCount.addAndGet(putTTLCount.get());
-        putAsyncTTLCount.addAndGet(putAsyncTTLCount.get());
+        putTTLCount.addAndGet(c.putTTLCount.get());
+        putAsyncTTLCount.addAndGet(c.putAsyncTTLCount.get());
 
         putTransientCount.addAndGet(c.putTransientCount.get());
         putIfAbsentCount.addAndGet(c.putIfAbsentCount.get());
@@ -46,8 +46,8 @@ public class MapOpperationsCount implements DataSerializable {
         getCount.addAndGet(c.getCount.get());
         getAsyncCount.addAndGet(c.getAsyncCount.get());
 
-        removeCount.addAndGet(removeCount.get());
-        removeAsyncCount.addAndGet(removeAsyncCount.get());
+        removeCount.addAndGet(c.removeCount.get());
+        removeAsyncCount.addAndGet(c.removeAsyncCount.get());
 
         deleteCount.addAndGet(c.deleteCount.get());
         destroyCount.addAndGet(c.destroyCount.get());
