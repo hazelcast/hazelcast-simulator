@@ -22,6 +22,11 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
     public int minDelayMs;
     public int maxDelayMs;
 
+    //Default Needed
+    public EntryListenerImpl(){
+
+    }
+
     public EntryListenerImpl(int minDelayMs, int maxDelayMs) {
         this.minDelayMs = minDelayMs;
         this.maxDelayMs = maxDelayMs;
