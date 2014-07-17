@@ -96,7 +96,7 @@ public class MapEntryProcessorTest {
         private final Random random = new Random();
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
-        public void Worker(){
+        public Worker(){
             for (int k = 0; k < keyCount; k++) {
                 result.put(k, 0L);
             }
@@ -106,7 +106,7 @@ public class MapEntryProcessorTest {
         public void run() {
 
             while (!testContext.isStopped()) {
-                Integer key = random.nextInt(keyCount);
+                int key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
 
                 int delayMs=0;
