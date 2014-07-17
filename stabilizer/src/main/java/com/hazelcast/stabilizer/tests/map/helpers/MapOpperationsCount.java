@@ -8,14 +8,22 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class MapOpperationsCount implements DataSerializable {
+
     public AtomicLong putCount = new AtomicLong(0);
     public AtomicLong putAsyncCount = new AtomicLong(0);
+    public AtomicLong putAsyncTTLCount = new AtomicLong(0);
 
     public AtomicLong putTransientCount = new AtomicLong(0);
     public AtomicLong putIfAbsentCount = new AtomicLong(0);
+
     public AtomicLong replaceCount = new AtomicLong(0);
+
     public AtomicLong getCount = new AtomicLong(0);
     public AtomicLong getAsyncCount = new AtomicLong(0);
+
+    public AtomicLong removeCount = new AtomicLong(0);
+    public AtomicLong removeAsyncCount = new AtomicLong(0);
+
     public AtomicLong deleteCount = new AtomicLong(0);
     public AtomicLong destroyCount = new AtomicLong(0);
 
@@ -31,6 +39,10 @@ public class MapOpperationsCount implements DataSerializable {
         getAsyncCount.addAndGet(c.getAsyncCount.get());
         deleteCount.addAndGet(c.deleteCount.get());
         destroyCount.addAndGet(c.destroyCount.get());
+
+        putAsyncTTLCount.addAndGet(putAsyncTTLCount.get());
+        removeCount.addAndGet(removeCount.get());
+        removeAsyncCount.addAndGet(removeAsyncCount.get());
     }
 
     public void writeData(ObjectDataOutput out) throws IOException {
@@ -43,6 +55,10 @@ public class MapOpperationsCount implements DataSerializable {
         out.writeObject(getAsyncCount);
         out.writeObject(deleteCount);
         out.writeObject(destroyCount);
+
+        out.writeObject(putAsyncTTLCount);
+        out.writeObject(removeCount);
+        out.writeObject(removeAsyncCount);
     }
 
     public void readData(ObjectDataInput in) throws IOException {
@@ -55,6 +71,10 @@ public class MapOpperationsCount implements DataSerializable {
         getAsyncCount = in.readObject();
         deleteCount = in.readObject();
         destroyCount = in.readObject();
+
+        putAsyncTTLCount = in.readObject();
+        removeCount = in.readObject();
+        removeAsyncCount = in.readObject();
     }
 
     public long total(){
@@ -74,11 +94,14 @@ public class MapOpperationsCount implements DataSerializable {
         return "MapOpperationsCount{" +
                 "putCount=" + putCount +
                 ", putAsyncCount=" + putAsyncCount +
+                ", putAsyncTTLCount=" + putAsyncTTLCount +
                 ", putTransientCount=" + putTransientCount +
                 ", putIfAbsentCount=" + putIfAbsentCount +
                 ", replaceCount=" + replaceCount +
                 ", getCount=" + getCount +
                 ", getAsyncCount=" + getAsyncCount +
+                ", removeCount=" + removeCount +
+                ", removeAsyncCount=" + removeAsyncCount +
                 ", deleteCount=" + deleteCount +
                 ", destroyCount=" + destroyCount +
                 '}';

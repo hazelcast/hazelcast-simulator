@@ -18,38 +18,30 @@ package com.hazelcast.stabilizer.tests.map;
 import com.hazelcast.core.*;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.*;
-import com.hazelcast.stabilizer.tests.map.helpers.Count;
+import com.hazelcast.stabilizer.tests.map.helpers.EventCount;
 import com.hazelcast.stabilizer.tests.map.helpers.EntryListenerImpl;
 import com.hazelcast.stabilizer.tests.map.helpers.ScrambledZipfianGenerator;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
 public class MapEntryListenerTest {
 
-    private final static ILogger log = Logger.getLogger(MapEntryListenerTest.class);
     private final static String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
 
-    private String basename = this.getClass().getName();
+    public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int valueLength = 100;
     public int keyCount = 1000;
     public int valueCount = 1000;
-
     public boolean randomDistributionUniform=false;
 
     //check these add up to 1
@@ -58,27 +50,21 @@ public class MapEntryListenerTest {
     public double removeProb = 0.2;
     public double deleteProb = 0.2;
     //
-
     //check these add up to 1   (writeProb is split up into sub styles)
     public double writeUsingPutProb = 0.5;
     public double writeUsingPutIfAbsent = 0.25;
     public double replaceProb = 0.25;
     //
 
-    private int mapEntryListenerCount = 1;
+    public int mapEntryListenerCount = 1;
 
-    private Count count = new Count();
-
+    private EventCount eventCount = new EventCount();
     private String[] values;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-
     private Map<String, EntryListenerImpl> listeners = new HashMap();
-
-    public static final AtomicBoolean addResult = new AtomicBoolean(true);
-
-
     private ScrambledZipfianGenerator kesyZipfian = new ScrambledZipfianGenerator(keyCount);
+    private int sleepSecsCatchEvents = 8000;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -101,27 +87,18 @@ public class MapEntryListenerTest {
 
     @Warmup(global = true)
     public void globalWarmup() {
+        IMap map = targetInstance.getMap(basename);
 
-        ILock lock = targetInstance.getLock(basename+"lock");
+        EventCount initCounter = new EventCount();
 
-        if(lock.tryLock()){
-
-            IMap map = targetInstance.getMap(basename);
-
-            Count initCounter = new Count();
-
-            int v = 0;
-            for (int k = 0; k < keyCount; k++) {
-                map.put(k, values[v]);
-                initCounter.localAddCount.getAndIncrement();
-                v = (v + 1 == values.length ? 0 : v + 1);
-            }
-
-            //so we are assuming that the node who makes the global warmup is not active in the test
-            //so you put its results in hear as this is all the effect it has on the test
-            IList results = targetInstance.getList(basename+"results");
-            results.add(initCounter);
+        int v = 0;
+        for (int k = 0; k < keyCount; k++) {
+            map.put(k, values[v]);
+            initCounter.localAddCount.getAndIncrement();
+            v = (v + 1 == values.length ? 0 : v + 1);
         }
+        IList results = targetInstance.getList(basename+"results");
+        results.add(initCounter);
     }
 
     private String makeString(int length) {
@@ -144,6 +121,17 @@ public class MapEntryListenerTest {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
+
+        IList resultListners = targetInstance.getList(basename+"listeners");
+        IList results = targetInstance.getList(basename+"results");
+
+        try {
+            Thread.sleep(sleepSecsCatchEvents);
+        } catch (InterruptedException e) { e.printStackTrace(); }
+
+        results.add(eventCount);
+        resultListners.addAll(listeners.values());
+
     }
 
     @Teardown(global = true)
@@ -154,7 +142,7 @@ public class MapEntryListenerTest {
 
     @Performance
     public long getOperationCount() {
-        return count.total();
+        return eventCount.total();
     }
 
     private class Worker implements Runnable {
@@ -183,9 +171,9 @@ public class MapEntryListenerTest {
                         map.lock(key);
                         try{
                             if(map.containsKey(key)){
-                                count.localUpdateCount.getAndIncrement();
+                                eventCount.localUpdateCount.getAndIncrement();
                             }else {
-                                count.localAddCount.getAndIncrement();
+                                eventCount.localAddCount.getAndIncrement();
                             }
                             map.put(key, value);
                         }finally {
@@ -196,7 +184,7 @@ public class MapEntryListenerTest {
                         map.lock(key);
                         try{
                             if(map.putIfAbsent(key, value) == null ){
-                                count.localAddCount.getAndIncrement();
+                                eventCount.localAddCount.getAndIncrement();
                             }
                         }finally {
                             map.unlock(key);
@@ -205,14 +193,14 @@ public class MapEntryListenerTest {
                     else if(chance < replaceProb + writeUsingPutIfAbsent + writeUsingPutProb){
                         Object orig = map.get(key);
                         if ( orig !=null && map.replace(key, orig, value) ){
-                            count.localUpdateCount.getAndIncrement();
+                            eventCount.localUpdateCount.getAndIncrement();
                         }
                     }
                 }else if(chance < evictProb + writeProb){
                     map.lock(key);
                     try{
                         if(map.containsKey(key)){
-                            count.localEvictCount.getAndIncrement();
+                            eventCount.localEvictCount.getAndIncrement();
                         }
                         map.evict(key);
                     }finally {
@@ -222,14 +210,14 @@ public class MapEntryListenerTest {
                 else if(chance < removeProb + evictProb + writeProb){
                     Object o = map.remove(key);
                     if(o != null){
-                        count.localRemoveCount.getAndIncrement();
+                        eventCount.localRemoveCount.getAndIncrement();
                     }
                 }
                 else if (chance < deleteProb + removeProb + evictProb + writeProb ){
                     map.lock(key);
                     try{
                         if(map.containsKey(key)){
-                            count.localRemoveCount.getAndIncrement();
+                            eventCount.localRemoveCount.getAndIncrement();
                         }
                         map.delete(key);
                     }finally {
@@ -237,19 +225,6 @@ public class MapEntryListenerTest {
                     }
                 }
             }
-
-            IList resultListners = targetInstance.getList(basename+"listeners");
-            IList results = targetInstance.getList(basename+"results");
-            if(addResult.compareAndSet(true, false)){
-
-                try {
-                    Thread.sleep(6000);
-                } catch (InterruptedException e) { e.printStackTrace(); }
-
-                results.add(count);
-                resultListners.addAll(listeners.values());
-            }
-
         }
     }
 
@@ -260,15 +235,7 @@ public class MapEntryListenerTest {
         ILock lock = targetInstance.getLock(basename+"Lock2");
         if(lock.tryLock()){
 
-            IList<Count> counts = targetInstance.getList(basename+"results");
-            for(Count c : counts){
-                //System.out.println(c);
-            }
-
             IList<EntryListenerImpl> resultListners = targetInstance.getList(basename+"listeners");
-            for(EntryListenerImpl l : resultListners){
-                //System.out.println(l);
-            }
 
             for(int i=0; i<resultListners.size()-1; i++){
                 EntryListenerImpl a = resultListners.get(i);
@@ -283,9 +250,9 @@ public class MapEntryListenerTest {
     @Verify(global = false)
     public void verify() throws Exception {
 
-        IList<Count> counts = targetInstance.getList(basename+"results");
-        Count total = new Count();
-        for(Count c : counts){
+        IList<EventCount> eventCounts = targetInstance.getList(basename+"results");
+        EventCount total = new EventCount();
+        for(EventCount c : eventCounts){
             total.add(c);
         }
 
