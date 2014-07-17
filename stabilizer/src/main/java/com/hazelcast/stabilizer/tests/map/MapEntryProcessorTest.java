@@ -115,6 +115,8 @@ public class MapEntryProcessorTest {
                     delayMs =  minProcessorDelayMs + random.nextInt(maxProcessorDealyMs);
                 }
 
+                System.out.println(basename+" key="+key+" value="+map.get(key));
+
                 map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
                 increment(key, increment);
             }
@@ -145,6 +147,9 @@ public class MapEntryProcessorTest {
         @Override
         public Object process(Map.Entry<Integer, Long> entry) {
             delay();
+
+            System.out.println("entry ==" + entry);
+
             long l = entry.getValue() + increment;
             entry.setValue(l);
             return null;
