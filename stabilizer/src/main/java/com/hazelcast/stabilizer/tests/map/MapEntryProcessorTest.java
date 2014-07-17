@@ -28,11 +28,13 @@ public class MapEntryProcessorTest {
     private final static ILogger log = Logger.getLogger(MapEntryProcessorTest.class);
 
     //props
+    public String basename = this.getClass().getName();
     public int threadCount = 10;
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "mapentryprocessor";
+    public int minProcessorDelayMs = 0;
+    public int maxProcessorDealyMs = 0;
 
     private IMap<Integer, Long> map;
     private final AtomicLong operations = new AtomicLong();
@@ -112,7 +114,17 @@ public class MapEntryProcessorTest {
                 Integer key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
 
-                map.executeOnKey(key, new IncrementEntryProcessor(increment));
+                int delayMs=0;
+                if(maxProcessorDealyMs !=0){
+                    try {
+                        int delay =  minProcessorDelayMs + random.nextInt(maxProcessorDealyMs);
+                        Thread.sleep(delay);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
                 increment(key, increment);
 
                 if (iteration % logFrequency == 0) {
@@ -126,6 +138,14 @@ public class MapEntryProcessorTest {
                 iteration++;
             }
 
+
+            //sleep to give time for the last EntryProcessor tasks to complete.
+            try {
+                Thread.sleep(maxProcessorDealyMs * 2);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
             resultsPerWorker.put(UUID.randomUUID().toString(), result);
         }
 
@@ -136,15 +156,28 @@ public class MapEntryProcessorTest {
 
     private static class IncrementEntryProcessor extends AbstractEntryProcessor<Integer, Long> {
         private final long increment;
+        private final long delayMs;
 
-        private IncrementEntryProcessor(long increment) {
+        private IncrementEntryProcessor(long increment, long delayMs) {
             this.increment = increment;
+            this.delayMs = delayMs;
         }
 
         @Override
         public Object process(Map.Entry<Integer, Long> entry) {
+            delay();
             entry.setValue(entry.getValue() + increment);
             return null;
+        }
+
+        private void delay(){
+            if(delayMs!=0){
+                try {
+                    Thread.sleep(delayMs);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
