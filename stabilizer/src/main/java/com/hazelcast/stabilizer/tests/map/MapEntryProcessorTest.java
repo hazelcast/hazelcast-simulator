@@ -147,9 +147,6 @@ public class MapEntryProcessorTest {
         @Override
         public Object process(Map.Entry<Integer, Long> entry) {
             delay();
-
-            System.out.println("entry ==" + entry);
-
             long l = entry.getValue() + increment;
             entry.setValue(l);
             return null;
