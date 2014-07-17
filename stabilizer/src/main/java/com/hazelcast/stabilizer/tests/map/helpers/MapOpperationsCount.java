@@ -11,6 +11,8 @@ public class MapOpperationsCount implements DataSerializable {
 
     public AtomicLong putCount = new AtomicLong(0);
     public AtomicLong putAsyncCount = new AtomicLong(0);
+
+    public AtomicLong putTTLCount = new AtomicLong(0);
     public AtomicLong putAsyncTTLCount = new AtomicLong(0);
 
     public AtomicLong putTransientCount = new AtomicLong(0);
@@ -32,62 +34,70 @@ public class MapOpperationsCount implements DataSerializable {
     public void add(MapOpperationsCount c){
         putCount.addAndGet(c.putCount.get());
         putAsyncCount.addAndGet(c.putAsyncCount.get());
+
+        putTTLCount.addAndGet(putTTLCount.get());
+        putAsyncTTLCount.addAndGet(putAsyncTTLCount.get());
+
         putTransientCount.addAndGet(c.putTransientCount.get());
         putIfAbsentCount.addAndGet(c.putIfAbsentCount.get());
+
         replaceCount.addAndGet(c.replaceCount.get());
+
         getCount.addAndGet(c.getCount.get());
         getAsyncCount.addAndGet(c.getAsyncCount.get());
-        deleteCount.addAndGet(c.deleteCount.get());
-        destroyCount.addAndGet(c.destroyCount.get());
 
-        putAsyncTTLCount.addAndGet(putAsyncTTLCount.get());
         removeCount.addAndGet(removeCount.get());
         removeAsyncCount.addAndGet(removeAsyncCount.get());
+
+        deleteCount.addAndGet(c.deleteCount.get());
+        destroyCount.addAndGet(c.destroyCount.get());
     }
 
     public void writeData(ObjectDataOutput out) throws IOException {
         out.writeObject(putCount);
         out.writeObject(putAsyncCount);
+
+        out.writeObject(putTTLCount);
+        out.writeObject(putAsyncTTLCount);
+
         out.writeObject(putTransientCount);
         out.writeObject(putIfAbsentCount);
+
         out.writeObject(replaceCount);
+
         out.writeObject(getCount);
         out.writeObject(getAsyncCount);
-        out.writeObject(deleteCount);
-        out.writeObject(destroyCount);
 
-        out.writeObject(putAsyncTTLCount);
         out.writeObject(removeCount);
         out.writeObject(removeAsyncCount);
+
+        out.writeObject(deleteCount);
+        out.writeObject(destroyCount);
     }
 
     public void readData(ObjectDataInput in) throws IOException {
+
         putCount = in.readObject();
         putAsyncCount = in.readObject();
+
+        putTTLCount = in.readObject();
+        putAsyncTTLCount = in.readObject();
+
         putTransientCount = in.readObject();
         putIfAbsentCount = in.readObject();
+
         replaceCount = in.readObject();
+
         getCount = in.readObject();
         getAsyncCount = in.readObject();
-        deleteCount = in.readObject();
-        destroyCount = in.readObject();
 
-        putAsyncTTLCount = in.readObject();
         removeCount = in.readObject();
         removeAsyncCount = in.readObject();
+
+        deleteCount = in.readObject();
+        destroyCount = in.readObject();
     }
 
-    public long total(){
-        return  putCount.get() +
-                putAsyncCount.get() +
-                putTransientCount.get() +
-                putIfAbsentCount.get() +
-                replaceCount.get() +
-                getCount.get() +
-                getAsyncCount.get() +
-                deleteCount.get() +
-                destroyCount.get();
-    }
 
     @Override
     public String toString() {

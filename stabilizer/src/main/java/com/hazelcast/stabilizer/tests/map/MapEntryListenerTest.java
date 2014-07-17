@@ -56,13 +56,11 @@ public class MapEntryListenerTest {
     public double replaceProb = 0.25;
     //
 
-    public int mapEntryListenerCount = 1;
 
-    private EventCount eventCount = new EventCount();
     private String[] values;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private Map<String, EntryListenerImpl> listeners = new HashMap();
+    private EntryListenerImpl listener;
     private ScrambledZipfianGenerator kesyZipfian = new ScrambledZipfianGenerator(keyCount);
     private int sleepSecsCatchEvents = 8000;
 
@@ -77,12 +75,8 @@ public class MapEntryListenerTest {
         }
 
         IMap map = targetInstance.getMap(basename);
-
-        for (int i = 0; i < mapEntryListenerCount; i++) {
-            EntryListenerImpl l = new EntryListenerImpl();
-            listeners.put(basename, l);
-            map.addEntryListener(l, true);
-        }
+        listener = new EntryListenerImpl();
+        map.addEntryListener(listener, true);
     }
 
     @Warmup(global = true)
@@ -122,16 +116,12 @@ public class MapEntryListenerTest {
         }
         spawner.awaitCompletion();
 
-        IList resultListners = targetInstance.getList(basename+"listeners");
-        IList results = targetInstance.getList(basename+"results");
-
         try {
             Thread.sleep(sleepSecsCatchEvents);
         } catch (InterruptedException e) { e.printStackTrace(); }
 
-        results.add(eventCount);
-        resultListners.addAll(listeners.values());
-
+        IList resultListners = targetInstance.getList(basename+"listeners");
+        resultListners.add(listener);
     }
 
     @Teardown(global = true)
@@ -140,12 +130,9 @@ public class MapEntryListenerTest {
         map.destroy();
     }
 
-    @Performance
-    public long getOperationCount() {
-        return eventCount.total();
-    }
 
     private class Worker implements Runnable {
+        private EventCount eventCount = new EventCount();
         private final Random random = new Random();
         int key;
 
@@ -225,6 +212,8 @@ public class MapEntryListenerTest {
                     }
                 }
             }
+            IList results = targetInstance.getList(basename+"eventCount");
+            results.add(eventCount);
         }
     }
 
@@ -232,17 +221,13 @@ public class MapEntryListenerTest {
     @Verify(global = true)
     public void golbalVerify() throws Exception {
 
-        ILock lock = targetInstance.getLock(basename+"Lock2");
-        if(lock.tryLock()){
+        IList<EntryListenerImpl> resultListners = targetInstance.getList(basename + "listeners");
 
-            IList<EntryListenerImpl> resultListners = targetInstance.getList(basename+"listeners");
+        for(int i=0; i<resultListners.size()-1; i++){
+            EntryListenerImpl a = resultListners.get(i);
+            EntryListenerImpl b = resultListners.get(i+1);
 
-            for(int i=0; i<resultListners.size()-1; i++){
-                EntryListenerImpl a = resultListners.get(i);
-                EntryListenerImpl b = resultListners.get(i+1);
-
-                assertEquals("not same amount of event in all listeners", a, b);
-            }
+            assertEquals("not same amount of event in all listeners", a, b);
         }
     }
 
@@ -250,14 +235,14 @@ public class MapEntryListenerTest {
     @Verify(global = false)
     public void verify() throws Exception {
 
-        IList<EventCount> eventCounts = targetInstance.getList(basename+"results");
+        IList<EventCount> eventCounts = targetInstance.getList(basename+"eventCount");
         EventCount total = new EventCount();
         for(EventCount c : eventCounts){
             total.add(c);
         }
 
         IMap map = targetInstance.getMap(basename);
-        EntryListenerImpl e = listeners.get(basename);
+        EntryListenerImpl e = listener;
 
         long expectedMapSz = e.addCount.get()  - (e.evictCount.get() + e.removeCount.get());
 

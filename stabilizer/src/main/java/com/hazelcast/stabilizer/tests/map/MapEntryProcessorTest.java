@@ -138,7 +138,6 @@ public class MapEntryProcessorTest {
                 iteration++;
             }
 
-
             //sleep to give time for the last EntryProcessor tasks to complete.
             try {
                 Thread.sleep(maxProcessorDealyMs * 2);
