@@ -89,7 +89,7 @@ public class MapEntryListenerTest {
             initCounter.localAddCount.getAndIncrement();
             v = (v + 1 == values.length ? 0 : v + 1);
         }
-        IList results = targetInstance.getList(basename+"results");
+        IList results = targetInstance.getList(basename+"eventCount");
         results.add(initCounter);
     }
 

@@ -19,8 +19,8 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
     public AtomicLong updateCount = new AtomicLong();
     public AtomicLong evictCount = new AtomicLong();
 
-    public final int minDelayMs;
-    public final int maxDelayMs;
+    public int minDelayMs;
+    public int maxDelayMs;
 
     public EntryListenerImpl(int minDelayMs, int maxDelayMs) {
         this.minDelayMs = minDelayMs;
@@ -67,6 +67,9 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
         out.writeObject(removeCount);
         out.writeObject(updateCount);
         out.writeObject(evictCount);
+
+        out.write(minDelayMs);
+        out.write(maxDelayMs);
     }
 
     public void readData(ObjectDataInput in) throws IOException {
@@ -74,6 +77,9 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
         removeCount = in.readObject();
         updateCount = in.readObject();
         evictCount = in.readObject();
+
+        minDelayMs = in.readInt();
+        maxDelayMs = in.readInt();
     }
 
     @Override
