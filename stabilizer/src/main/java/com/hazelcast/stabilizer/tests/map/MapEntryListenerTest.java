@@ -39,6 +39,9 @@ public class MapEntryListenerTest {
     public int valueCount = 1000;
     public boolean randomDistributionUniform=false;
 
+    public int maxEntryListenerDelayMs=0;
+    public int minEntryListenerDelayMs=0;
+
     //check these add up to 1
     public double writeProb = 0.4;
     public double evictProb = 0.2;
@@ -70,7 +73,7 @@ public class MapEntryListenerTest {
         }
 
         IMap map = targetInstance.getMap(basename);
-        listener = new EntryListenerImpl();
+        listener = new EntryListenerImpl(minEntryListenerDelayMs, maxEntryListenerDelayMs);
         map.addEntryListener(listener, true);
     }
 
