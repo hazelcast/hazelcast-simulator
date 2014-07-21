@@ -275,9 +275,9 @@ public class AgentsClient {
         log.info("Sending message '"+message+"' to address '"+message.getMessageAddress()+"'");
         MessageAddress messageAddress = message.getMessageAddress();
         List<Future> futures;
-        if (MessageAddress.BROADCAST_PREFIX.equals(messageAddress.getAgentAddress())) {
+        if (MessageAddress.BROADCAST.equals(messageAddress.getAgentAddress())) {
             futures = sendMessageToAllAgents(message);
-        } else if (MessageAddress.RANDOM_PREFIX.equals(messageAddress.getAgentAddress())) {
+        } else if (MessageAddress.RANDOM.equals(messageAddress.getAgentAddress())) {
             Future future = sendMessageToRandomAgent(message);
             futures = Arrays.asList(future);
         } else {

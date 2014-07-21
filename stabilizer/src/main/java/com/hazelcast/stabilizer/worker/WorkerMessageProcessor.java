@@ -70,12 +70,10 @@ public class WorkerMessageProcessor {
 
     private boolean shouldProcess(Message message) {
         String workerAddress = message.getMessageAddress().getWorkerAddress();
-        if (workerAddress.equals(MessageAddress.BROADCAST_PREFIX) || workerAddress.equals(MessageAddress.RANDOM_PREFIX)) {
-            return true;
-        } else if (workerAddress.equals(MessageAddress.OLDEST_MEMBER_PREFIX)) {
+        if (workerAddress.equals(MessageAddress.WORKER_WITH_OLDEST_MEMBER)) {
             return isMaster();
         } else {
-            throw new UnsupportedOperationException("Unknown addressing mode '"+workerAddress+"'.");
+            return true;
         }
     }
 
@@ -120,11 +118,11 @@ public class WorkerMessageProcessor {
 
     private void processTestMessage(Message message) throws Throwable {
         String testAddress = message.getMessageAddress().getTestAddress();
-        if (MessageAddress.BROADCAST_PREFIX.equals(testAddress)) {
+        if (MessageAddress.BROADCAST.equals(testAddress)) {
             for (TestContainer<TestContext> testContainer : tests.values()) {
                 testContainer.sendMessage(message);
             }
-        } else if (MessageAddress.RANDOM_PREFIX.equals(testAddress)) {
+        } else if (MessageAddress.RANDOM.equals(testAddress)) {
             TestContainer<?> randomTestContainer = getRandomTestContainerOrNull();
             if (randomTestContainer == null) {
                 log.warning("No test container is known to this worker. Is it a race-condition?");

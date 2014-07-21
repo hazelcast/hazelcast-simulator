@@ -22,6 +22,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class WorkerJvm {
+    public Mode mode;
     public volatile boolean detectFailure = true;
     public final String id;
     public volatile String memberAddress;
@@ -43,5 +44,11 @@ public class WorkerJvm {
                 ", memberAddress='" + memberAddress + '\'' +
                 ", workerHome=" + workerHome +
                 '}';
+    }
+
+    public static enum Mode {
+        SERVER,
+        CLIENT,
+        MIXED
     }
 }
