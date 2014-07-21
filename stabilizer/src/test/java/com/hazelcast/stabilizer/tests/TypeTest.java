@@ -41,4 +41,16 @@ public class TypeTest {
     public void testFromPropertyValue_unknownId() throws Exception {
         fromPropertyValue("workerException, foo");
     }
+
+    @Test
+    public void testGetIdsAsString() {
+        String idsAsString = Failure.Type.getIdsAsString();
+        Failure.Type[] types = Failure.Type.values();
+
+        for (Failure.Type type : types) {
+            assertTrue(idsAsString.contains(type.getId()));
+        }
+    }
+
+
 }
