@@ -144,7 +144,6 @@ public class MapIndexTest {
                             employees = map.values( pagingPredicate );
 
                             for(Employee emp : employees){
-                                assertTrue( emp.getAge() > maxAge-10 && emp.getAge() < maxAge);
                                 assertTrue( emp.getSalary() > maxSal-100.0 && emp.getSalary() < maxSal);
                             }
 
