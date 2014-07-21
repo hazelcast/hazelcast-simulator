@@ -1,9 +1,14 @@
 package com.hazelcast.stabilizer.tests.map.helpers;
 
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.DataSerializable;
+
+import java.io.IOException;
 import java.io.Serializable;
 
 
-public class OppCounterIdxTest implements Serializable {
+public class OppCounterIdxTest implements DataSerializable {
     public long predicateBuilderCount=0;
     public long sqlStringCount=0;
     public long pagePredCount=0;
@@ -12,6 +17,22 @@ public class OppCounterIdxTest implements Serializable {
 
     public OppCounterIdxTest(){
 
+    }
+
+    public void writeData(ObjectDataOutput out) throws IOException {
+        out.writeLong(predicateBuilderCount);
+        out.writeLong(sqlStringCount);
+        out.writeLong(pagePredCount);
+        out.writeLong(updateEmployeCount);
+        out.writeLong(destroyCount);
+    }
+
+    public void readData(ObjectDataInput in) throws IOException {
+        predicateBuilderCount = in.readInt();
+        sqlStringCount = in.readInt();
+        pagePredCount = in.readInt();
+        updateEmployeCount = in.readInt();
+        destroyCount = in.readInt();
     }
 
     @Override
