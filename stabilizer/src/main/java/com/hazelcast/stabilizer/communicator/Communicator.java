@@ -39,7 +39,7 @@ public class Communicator {
             communicator.run();
             System.exit(0);
         } catch (Exception e) {
-            log.error("Failed to run testsuite", e);
+            log.error("Failed to communicate", e);
             System.exit(1);
         }
     }
