@@ -65,7 +65,7 @@ public class MapIndexTest {
         long free = Runtime.getRuntime().freeMemory();
         long total =  Runtime.getRuntime().totalMemory();
         long used = total - free;
-        System.out.println("used = "+humanReadableByteCount(used, true));
+        //System.out.println("used = "+humanReadableByteCount(used, true));
 
         map.addIndex( "id", true );
         map.addIndex( "name", true );
@@ -76,7 +76,7 @@ public class MapIndexTest {
         free = Runtime.getRuntime().freeMemory();
         total =  Runtime.getRuntime().totalMemory();
         used = total - free;
-        System.out.println("used = "+humanReadableByteCount(used, true));
+        //System.out.println("used = "+humanReadableByteCount(used, true));
     }
 
     @Run
@@ -120,39 +120,39 @@ public class MapIndexTest {
 
                     else if ( (chance -= sqlString) < 0) {
 
-                        final boolean avtive = random.nextBoolean();
+                        final boolean active = random.nextBoolean();
                         final int age = random.nextInt(Employee.MAX_AGE);
-                        Collection<Employee> employees = map.values( new SqlPredicate( "active="+avtive+" AND age >"+age ) );
+                        Collection<Employee> employees = map.values( new SqlPredicate( "active="+active+" AND age >"+age ) );
 
                         counter.sqlStringCount++;
 
                         for(Employee emp : employees){
-                            assertTrue( avtive == emp.isActive());
+                            assertTrue( active == emp.isActive());
                             assertTrue(emp.getAge() > age);
                         }
                     }
 
                     else if ( (chance -= pagePred) < 0) {
 
-
                         final int maxAge = random.nextInt(Employee.MAX_AGE);
                         final double maxSal = random.nextDouble() * Employee.MAX_SALARY;
 
-                        Predicate  betweenAge = Predicates.between("age", maxAge-10, maxAge);
                         Predicate  betweenSlayer = Predicates.between("salary", maxSal-100.0, maxSal);
+                        PagingPredicate pagingPredicate = new PagingPredicate( betweenSlayer , 5);
+                        Collection<Employee> employees;
+                        do{
+                            employees = map.values( pagingPredicate );
 
+                            for(Employee emp : employees){
+                                assertTrue( emp.getAge() > maxAge-10 && emp.getAge() < maxAge);
+                                assertTrue( emp.getSalary() > maxSal-100.0 && emp.getSalary() < maxSal);
+                            }
 
+                            pagingPredicate.nextPage();
 
-                        PagingPredicate pagingPredicate = new PagingPredicate( Predicates.and(betweenAge, betweenSlayer), 5);
-                        Collection<Employee> employees = map.values( pagingPredicate );
+                        }while( ! employees.isEmpty());
 
                         counter.pagePredCount++;
-
-                        for(Employee emp : employees){
-                            assertTrue( emp.getAge() > maxAge-10 && emp.getAge() < maxAge);
-                            assertTrue( emp.getSalary() > maxSal-100.0 && emp.getSalary() < maxSal);
-                        }
-
                     }
 
                     else if ( (chance -= updateEmploye) < 0 ){
@@ -188,23 +188,10 @@ public class MapIndexTest {
             total.add(c);
         }
 
-        System.out.println(basename+" "+total+" form "+counters.size());
+        System.out.println(basename+" "+total+" from "+counters.size());
     }
 
-    @Verify(global = false)
-    public void verify() throws Exception {
 
-        try{
-            final IMap map = targetInstance.getMap(basename);
-
-            System.out.println(basename+ ": map size  =" + map.size() );
-
-            long free = Runtime.getRuntime().freeMemory();
-            long total =  Runtime.getRuntime().totalMemory();
-            long used = total - free;
-            System.out.println("used = "+humanReadableByteCount(used, true));
-        }catch(UnsupportedOperationException e){}
-    }
 
     public static void main(String[] args) throws Throwable {
         new TestRunner(new MapIndexTest()).run();
