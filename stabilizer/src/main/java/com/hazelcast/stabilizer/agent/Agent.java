@@ -16,6 +16,8 @@
 package com.hazelcast.stabilizer.agent;
 
 
+import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
+import com.hazelcast.stabilizer.agent.remoting.AgentMessageProcessor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.GitInfo;
@@ -99,7 +101,8 @@ public class Agent {
     }
 
     private void startRestServer() throws IOException {
-        AgentRemoteService agentRemoteService = new AgentRemoteService(this);
+        AgentMessageProcessor agentMessageProcessor = new AgentMessageProcessor(workerJvmManager);
+        AgentRemoteService agentRemoteService = new AgentRemoteService(this, agentMessageProcessor);
         agentRemoteService.start();
     }
 

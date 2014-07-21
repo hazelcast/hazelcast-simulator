@@ -1,31 +1,26 @@
-package com.hazelcast.stabilizer.coordinator;
+package com.hazelcast.stabilizer.coordinator.remoting;
 
 
 import com.hazelcast.logging.ILogger;
-import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.agent.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.AgentAddress;
-import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.CountdownWatch;
+import com.hazelcast.stabilizer.common.messaging.Message;
+import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
-import com.hazelcast.stabilizer.worker.testcommands.DoneCommand;
-import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
+import com.hazelcast.stabilizer.worker.commands.DoneCommand;
+import com.hazelcast.stabilizer.worker.commands.Command;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -34,8 +29,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.stabilizer.Utils.closeQuietly;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.*;
 
 public class AgentsClient {
 
@@ -64,7 +59,7 @@ public class AgentsClient {
             while (it.hasNext()) {
                 AgentClient agent = it.next();
                 try {
-                    agent.execute(AgentRemoteService.SERVICE_ECHO, "livecheck");
+                    agent.execute(SERVICE_ECHO, "livecheck");
                     it.remove();
                     log.info("Connect to agent " + agent.publicAddress + " OK");
                 } catch (Exception e) {
@@ -131,7 +126,7 @@ public class AgentsClient {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    return agentClient.execute(AgentRemoteService.SERVICE_GET_FAILURES);
+                    return agentClient.execute(SERVICE_GET_FAILURES);
                 }
             });
             futures.add(f);
@@ -229,7 +224,7 @@ public class AgentsClient {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_INIT_TESTSUITE, testSuite);
+                    agentClient.execute(SERVICE_INIT_TESTSUITE, testSuite);
                     return null;
                 }
             });
@@ -245,7 +240,7 @@ public class AgentsClient {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_TERMINATE_WORKERS);
+                    agentClient.execute(SERVICE_TERMINATE_WORKERS);
                     return null;
                 }
             });
@@ -265,7 +260,7 @@ public class AgentsClient {
                 public Object call() throws Exception {
                     AgentClient agentClient = agents.get(index);
                     WorkerJvmSettings settings = workerJvmSettingsArray[index];
-                    agentClient.execute(AgentRemoteService.SERVICE_SPAWN_WORKERS, settings);
+                    agentClient.execute(SERVICE_SPAWN_WORKERS, settings);
                     return null;
                 }
             });
@@ -276,14 +271,76 @@ public class AgentsClient {
         getAllFutures(futures);
     }
 
-    public <E> List<E> executeOnAllWorkers(final TestCommand testCommand) {
+    public void sendMessage(final Message message) {
+        MessageAddress messageAddress = message.getMessageAddress();
+        List<Future> futures;
+        if (MessageAddress.BROADCAST_PREFIX.equals(messageAddress.getAgentAddress())) {
+            futures = sendMessageToAllAgents(message);
+        } else if (MessageAddress.RANDOM_PREFIX.equals(messageAddress.getAgentAddress())) {
+            Future future = sendMessageToRandomAgent(message);
+            futures = Arrays.asList(future);
+        } else {
+            throw new UnsupportedOperationException("Not Implemented yet");
+        }
+        getAllFutures(futures);
+    }
+
+    private Future<Object> sendMessageToRandomAgent(final Message message) {
+        Random random = new Random();
+        final AgentClient agentClient = getRandomAgentClientOrNull(random);
+        if (agentClient == null) {
+            throw new IllegalStateException("No agent exists. Is this a race condition?");
+        }
+        return agentExecutor.submit(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                agentClient.execute(SERVICE_PROCESS_MESSAGE, message);
+                return null;
+            }
+        });
+    }
+
+    private AgentClient getRandomAgentClientOrNull(Random random) {
+        if (agents.size() == 0) {
+            return null;
+        }
+        return agents.get(random.nextInt(agents.size()));
+    }
+
+    private List<Future> sendMessageToAllAgents(final Message message) {
+        List<Future> futures = new ArrayList<Future>();
+        for (final AgentClient agentClient : agents) {
+            Future<Object> future = agentExecutor.submit(new Callable<Object>() {
+                @Override
+                public Object call() throws Exception {
+                    agentClient.execute(SERVICE_PROCESS_MESSAGE, message);
+                    return null;
+                }
+            });
+            futures.add(future);
+        }
+        return futures;
+    }
+
+    public <E> List<String> getWorkers(final AgentClient agentClient) {
+        Future future = agentExecutor.submit(new Callable<List<String>>() {
+            @Override
+            public List<String> call() throws Exception {
+                return (List<String>) agentClient.execute(SERVICE_GET_ALL_WORKERS);
+            }
+        });
+        return getAllFutures(Arrays.asList(future));
+    }
+
+
+    public <E> List<E> executeOnAllWorkers(final Command command) {
         List<Future> futures = new LinkedList<Future>();
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
                     try {
-                        return agentClient.execute(AgentRemoteService.SERVICE_EXECUTE_ALL_WORKERS, testCommand);
+                        return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
                     } catch (RuntimeException t) {
                         log.severe(t);
                         throw t;
@@ -297,7 +354,7 @@ public class AgentsClient {
     }
 
 
-    public void executeOnSingleWorker(final TestCommand testCommand) {
+    public void executeOnSingleWorker(final Command command) {
         if (agents.isEmpty()) {
             return;
         }
@@ -306,7 +363,7 @@ public class AgentsClient {
             @Override
             public Object call() throws Exception {
                 AgentClient agentClient = agents.get(0);
-                return agentClient.execute(AgentRemoteService.SERVICE_EXECUTE_SINGLE_WORKER, testCommand);
+                return agentClient.execute(SERVICE_EXECUTE_SINGLE_WORKER, command);
             }
         });
 
@@ -323,7 +380,7 @@ public class AgentsClient {
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    agentClient.execute(AgentRemoteService.SERVICE_ECHO, msg);
+                    agentClient.execute(SERVICE_ECHO, msg);
                     return null;
                 }
             });
@@ -331,52 +388,5 @@ public class AgentsClient {
         }
 
         getAllFutures(futures);
-    }
-
-    private static class AgentClient {
-
-        final String publicAddress;
-        final String privateIp;
-
-        public AgentClient(AgentAddress address) {
-            this.publicAddress = address.publicAddress;
-            this.privateIp = address.privateAddress;
-        }
-
-        private Object execute(String service, Object... args) throws Exception {
-            Socket socket = newSocket();
-
-            try {
-                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                oos.writeObject(service);
-                for (Object arg : args) {
-                    oos.writeObject(arg);
-                }
-                oos.flush();
-
-                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                Object response = in.readObject();
-
-                if (response instanceof Exception) {
-                    Exception exception = (Exception) response;
-                    Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
-                    throw exception;
-                }
-                return response;
-            } finally {
-                closeQuietly(socket);
-            }
-        }
-
-        //we create a new socket for every request because it could be that the agents is not reachable
-        //and we don't want to depend on state within the socket.
-        private Socket newSocket() throws IOException {
-            try {
-                InetAddress hostAddress = InetAddress.getByName(publicAddress);
-                return new Socket(hostAddress, AgentRemoteService.PORT);
-            } catch (IOException e) {
-                throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, e);
-            }
-        }
     }
 }

@@ -1,6 +1,6 @@
-package com.hazelcast.stabilizer.worker.testcommands;
+package com.hazelcast.stabilizer.worker.commands;
 
-public class RunCommand extends TestCommand {
+public class RunCommand extends Command {
 
     public static final long serialVersionUID = 0l;
 

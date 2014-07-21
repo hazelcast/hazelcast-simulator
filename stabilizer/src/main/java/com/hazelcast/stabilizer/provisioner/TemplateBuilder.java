@@ -3,7 +3,7 @@ package com.hazelcast.stabilizer.provisioner;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.agent.AgentRemoteService;
+import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 import org.jclouds.aws.ec2.AWSEC2Api;

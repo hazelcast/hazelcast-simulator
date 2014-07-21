@@ -1,19 +1,19 @@
-package com.hazelcast.stabilizer.worker.testcommands;
+package com.hazelcast.stabilizer.worker.commands;
 
-public class StopTestCommand extends TestCommand {
+public class StopCommand extends Command {
 
     public static final long serialVersionUID = 0l;
 
     public String testId;
     public long timeoutMs;
 
-    public StopTestCommand(String testId) {
+    public StopCommand(String testId) {
         this.testId = testId;
     }
 
     @Override
     public String toString() {
-        return "StopTestCommand{" +
+        return "StopCommand{" +
                 "testId='" + testId + '\'' +
                 ", timeoutMs=" + timeoutMs +
                 '}';

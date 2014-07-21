@@ -15,17 +15,84 @@
  */
 package com.hazelcast.stabilizer.tests;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import com.hazelcast.stabilizer.TestCase;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 public class Failure implements Serializable {
+    public enum Type {
+        WORKER_EXCEPTION("Worker exception", "workerException"),
+        WORKER_TIMEOUT("Worker timeout", "workerTimeout"),
+        WORKER_OOM("Worker Out Of Memory Error", "workerOOM"),
+        WORKER_EXIT("Worker exit", "workerExit");
+
+        private String humanReadable;
+        private String id;
+
+        private Type(String humanReadable, String id) {
+            this.humanReadable = humanReadable;
+            this.id = id;
+        }
+
+        @Override
+        public String toString() {
+            return humanReadable;
+        }
+
+        public static Set<Type> fromPropertyValue(String propertyValue) {
+            if (propertyValue == null || propertyValue.isEmpty()) {
+                return Collections.emptySet();
+            }
+            Set<Type> result = new HashSet<Type>();
+            StringTokenizer tokenizer = new StringTokenizer(propertyValue, ",");
+            while (tokenizer.hasMoreTokens()) {
+                String id = tokenizer.nextToken().trim();
+                Type failureType = getById(id);
+                result.add(failureType);
+            }
+            return result;
+        }
+
+        public static String getIdsAsString() {
+            Iterable<Type> iterableTypes = new Iterable<Type>() {
+                @Override
+                public Iterator<Type> iterator() {
+                    return Iterators.forArray(Type.values());
+                }
+            };
+            return Joiner.on(", ").join(Iterables.transform(iterableTypes, new Function<Type, String>() {
+                public String apply(Type o) {
+                    return o.id;
+                }
+            }));
+        }
+
+        private static Type getById(String id) {
+            for (Type type : Type.values()) {
+                if (type.id.equals(id)) {
+                    return type;
+                }
+            }
+            throw new IllegalArgumentException("Unknown failure ID: '"+id+"'.");
+        }
+    }
+
 
     private static final long serialVersionUID = 1;
 
     public String message;
-    public String type;
+    public Type type;
     public String agentAddress;
     public String workerAddress;
     public String workerId;

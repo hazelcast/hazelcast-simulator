@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.stabilizer.worker.testcommands;
+package com.hazelcast.stabilizer.worker.commands;
 
-public class GenericTestCommand extends TestCommand {
+public class GenericCommand extends Command {
 
     public static final long serialVersionUID = 0l;
 
     public String testId;
     public String methodName;
 
-    public GenericTestCommand(String testId, String methodName) {
+    public GenericCommand(String testId, String methodName) {
        this.testId = testId;
         this.methodName = methodName;
     }
 
     @Override
     public String toString() {
-        return "GenericTestCommand{" +
+        return "GenericCommand{" +
                 "testId='" + testId + '\'' +
                 ", methodName='" + methodName + '\'' +
                 '}';

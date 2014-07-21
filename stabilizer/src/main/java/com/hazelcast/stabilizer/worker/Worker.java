@@ -27,18 +27,20 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
-import com.hazelcast.stabilizer.worker.testcommands.DoneCommand;
-import com.hazelcast.stabilizer.worker.testcommands.GenericTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.GetOperationCountTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.InitTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.RunCommand;
-import com.hazelcast.stabilizer.worker.testcommands.StopTestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
-import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
+import com.hazelcast.stabilizer.worker.commands.Command;
+import com.hazelcast.stabilizer.worker.commands.DoneCommand;
+import com.hazelcast.stabilizer.worker.commands.GenericCommand;
+import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
+import com.hazelcast.stabilizer.worker.commands.InitCommand;
+import com.hazelcast.stabilizer.worker.commands.MessageCommand;
+import com.hazelcast.stabilizer.worker.commands.RunCommand;
+import com.hazelcast.stabilizer.worker.commands.StopCommand;
+import com.hazelcast.stabilizer.worker.commands.CommandRequest;
+import com.hazelcast.stabilizer.worker.commands.CommandResponse;
 
 import java.io.File;
 import java.io.ObjectInputStream;
@@ -77,14 +79,16 @@ public class Worker {
     private String workerMode;
     private String workerId;
 
-    private final ConcurrentMap<String, TestContainer<TestContextImpl>> tests
-            = new ConcurrentHashMap<String, TestContainer<TestContextImpl>>();
+    private final ConcurrentMap<String, TestContainer<TestContext>> tests
+            = new ConcurrentHashMap<String, TestContainer<TestContext>>();
 
-    private final ConcurrentMap<String,TestCommand> commands
-            = new ConcurrentHashMap<String, TestCommand>();
+    private final ConcurrentMap<String,Command> commands
+            = new ConcurrentHashMap<String, Command>();
 
-    private final BlockingQueue<TestCommandRequest> requestQueue = new LinkedBlockingQueue<TestCommandRequest>();
-    private final BlockingQueue<TestCommandResponse> responseQueue = new LinkedBlockingQueue<TestCommandResponse>();
+    private WorkerMessageProcessor workerMessageProcessor = new WorkerMessageProcessor(tests);
+
+    private final BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
+    private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
 
     public void start() throws Exception {
         if ("server".equals(workerMode)) {
@@ -97,6 +101,9 @@ public class Worker {
         } else {
             throw new IllegalStateException("Unknown worker mode:" + workerMode);
         }
+
+        workerMessageProcessor.setHazelcastServerInstance(serverInstance);
+        workerMessageProcessor.setHazelcastClientInstance(clientInstance);
 
         new TestCommandRequestProcessingThread().start();
         new SocketThread().start();
@@ -205,19 +212,19 @@ public class Worker {
         public void run() {
             for (; ; ) {
                 try {
-                    List<TestCommandRequest> requests = execute(WorkerJvmManager.SERVICE_POLL_WORK, workerId);
-                    for (TestCommandRequest request : requests) {
+                    List<CommandRequest> requests = execute(WorkerJvmManager.SERVICE_POLL_WORK, workerId);
+                    for (CommandRequest request : requests) {
                         requestQueue.add(request);
                     }
 
-                    TestCommandResponse response = responseQueue.poll(1, TimeUnit.SECONDS);
+                    CommandResponse response = responseQueue.poll(1, TimeUnit.SECONDS);
                     if (response == null) {
                         continue;
                     }
 
                     sendResponse(asList(response));
 
-                    List<TestCommandResponse> responses = new LinkedList<TestCommandResponse>();
+                    List<CommandResponse> responses = new LinkedList<CommandResponse>();
                     responseQueue.drainTo(responses);
 
                     sendResponse(responses);
@@ -227,8 +234,8 @@ public class Worker {
             }
         }
 
-        private void sendResponse(List<TestCommandResponse> responses) throws Exception {
-            for (TestCommandResponse response : responses) {
+        private void sendResponse(List<CommandResponse> responses) throws Exception {
+            for (CommandResponse response : responses) {
                 execute(WorkerJvmManager.COMMAND_PUSH_RESPONSE, workerId, response);
             }
         }
@@ -271,7 +278,7 @@ public class Worker {
         public void run() {
             for (; ; ) {
                 try {
-                    TestCommandRequest request = requestQueue.take();
+                    CommandRequest request = requestQueue.take();
                     if (request == null) {
                         throw new NullPointerException("request can't be null");
                     }
@@ -282,33 +289,42 @@ public class Worker {
             }
         }
 
-        private void doProcess(long id, TestCommand command) throws Throwable {
+        private void doProcess(long id, Command command) throws Throwable {
             Object result = null;
             try {
                 if (command instanceof DoneCommand) {
                     result = process((DoneCommand) command);
-                } else if (command instanceof InitTestCommand) {
-                    process((InitTestCommand) command);
+                } else if (command instanceof InitCommand) {
+                    process((InitCommand) command);
                 } else if (command instanceof RunCommand) {
                     process((RunCommand) command);
-                } else if (command instanceof StopTestCommand) {
-                    process((StopTestCommand) command);
-                } else if (command instanceof GenericTestCommand) {
-                    process((GenericTestCommand) command);
-                } else if (command instanceof GetOperationCountTestCommand) {
-                    result = process((GetOperationCountTestCommand) command);
+                } else if (command instanceof StopCommand) {
+                    process((StopCommand) command);
+                } else if (command instanceof GenericCommand) {
+                    process((GenericCommand) command);
+                } else if (command instanceof GetOperationCountCommand) {
+                    result = process((GetOperationCountCommand) command);
+                } else if (command instanceof MessageCommand) {
+                    process((MessageCommand) command);
                 } else {
                     throw new RuntimeException("Unhandled task:" + command.getClass());
                 }
             } finally {
-                TestCommandResponse response = new TestCommandResponse();
-                response.commandId = id;
-                response.result = result;
-                responseQueue.add(response);
+                if (command.awaitReply()) {
+                    CommandResponse response = new CommandResponse();
+                    response.commandId = id;
+                    response.result = result;
+                    responseQueue.add(response);
+                }
             }
         }
 
-        private Long process(GetOperationCountTestCommand command) throws Throwable {
+        private void process(MessageCommand command) {
+            Message message = command.getMessage();
+            workerMessageProcessor.submit(message);
+        }
+
+        private Long process(GetOperationCountCommand command) throws Throwable {
             long result = 0;
 
             for(TestContainer testContainer: tests.values()){
@@ -322,7 +338,7 @@ public class Worker {
             try {
                 log.info("Starting test");
 
-                final TestContainer<TestContextImpl> test = tests.get(command.testId);
+                final TestContainer<TestContext> test = tests.get(command.testId);
                 if (test == null) {
                     throw new IllegalStateException("Failed to process command: " + command + " no test with " +
                             "testId" + command.testId + " is found");
@@ -344,7 +360,7 @@ public class Worker {
             }
         }
 
-        public void process(final GenericTestCommand command) throws Throwable {
+        public void process(final GenericCommand command) throws Throwable {
             final String methodName = command.methodName;
             final String testId = command.testId;
             final String testName = "".equals(testId)?"test":testId;
@@ -352,7 +368,7 @@ public class Worker {
             try {
                 log.info(format("Calling %s.%s()",testName,methodName));
 
-                final TestContainer<TestContextImpl> test = tests.get(testId);
+                final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
                     throw new IllegalStateException("Failed to process command: " + command + " no test with " +
                             "testId " + testId + " is found");
@@ -381,7 +397,7 @@ public class Worker {
             }
         }
 
-        private void process(InitTestCommand command) throws Throwable {
+        private void process(InitCommand command) throws Throwable {
             try {
                 TestCase testCase = command.testCase;
 
@@ -392,11 +408,11 @@ public class Worker {
                 }
 
                 String clazzName = testCase.getClassname();
-                Object testObject = InitTestCommand.class.getClassLoader().loadClass(clazzName).newInstance();
+                Object testObject = InitCommand.class.getClassLoader().loadClass(clazzName).newInstance();
                 bindProperties(testObject, testCase);
 
                 TestContextImpl testContext = new TestContextImpl(testCase.id);
-                TestContainer<TestContextImpl> testContainer = new TestContainer<TestContextImpl>(testObject, testContext);
+                TestContainer<TestContext> testContainer = new TestContainer<TestContext>(testObject, testContext);
                 tests.put(testContext.getTestId(), testContainer);
 
                 if (serverInstance != null) {
@@ -408,17 +424,17 @@ public class Worker {
             }
         }
 
-        public void process(StopTestCommand command) throws Exception {
+        public void process(StopCommand command) throws Exception {
             try {
                 log.info("Calling test.stop");
 
-                TestContainer<TestContextImpl> test = tests.get(command.testId);
+                TestContainer<TestContext> test = tests.get(command.testId);
                 if (test == null) {
                     log.warning("Can't stop test, test with id " + command.testId + " does not exist");
                     return;
                 }
 
-                test.getTestContext().stopped = true;
+                test.getTestContext().stop();
                 log.info("Finished calling test.stop()");
             } catch (Exception e) {
                 log.severe("Failed to execute test.stop", e);
@@ -433,10 +449,10 @@ public class Worker {
 
     abstract class CommandThread extends Thread {
 
-        private final TestCommand command;
+        private final Command command;
         private final String testId;
 
-        public CommandThread(TestCommand command,String testId) {
+        public CommandThread(Command command,String testId) {
             this.command = command;
             this.testId = testId;
         }
@@ -480,6 +496,11 @@ public class Worker {
         @Override
         public boolean isStopped() {
             return stopped;
+        }
+
+        @Override
+        public void stop() {
+            stopped = true;
         }
     }
 }

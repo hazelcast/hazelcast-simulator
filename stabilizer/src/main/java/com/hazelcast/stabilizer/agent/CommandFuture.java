@@ -1,24 +1,24 @@
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
+import com.hazelcast.stabilizer.worker.commands.Command;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class TestCommandFuture<E> implements Future<E> {
+public class CommandFuture<E> implements Future<E> {
 
     private final static Object NO_RESULT = new Object() {
         public String toString() {
             return "NO_RESULT";
         }
     };
-    private final TestCommand command;
+    private final Command command;
 
     private volatile Object result = NO_RESULT;
 
-    public TestCommandFuture(TestCommand command) {
+    public CommandFuture(Command command) {
         this.command = command;
     }
 

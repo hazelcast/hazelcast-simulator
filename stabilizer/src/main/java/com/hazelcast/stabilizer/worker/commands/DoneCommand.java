@@ -1,9 +1,9 @@
-package com.hazelcast.stabilizer.worker.testcommands;
+package com.hazelcast.stabilizer.worker.commands;
 
 /**
  * Checks if there currently is a command running.
  */
-public class DoneCommand extends TestCommand {
+public class DoneCommand extends Command {
 
     public final String testId;
 

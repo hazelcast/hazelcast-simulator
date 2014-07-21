@@ -18,13 +18,16 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 import com.hazelcast.stabilizer.NoWorkerAvailableException;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
-import com.hazelcast.stabilizer.agent.TestCommandFuture;
+import com.hazelcast.stabilizer.agent.CommandFuture;
+import com.hazelcast.stabilizer.common.messaging.Message;
+import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.worker.TerminateWorkerException;
-import com.hazelcast.stabilizer.worker.testcommands.TestCommand;
-import com.hazelcast.stabilizer.worker.testcommands.TestCommandRequest;
-import com.hazelcast.stabilizer.worker.testcommands.TestCommandResponse;
+import com.hazelcast.stabilizer.worker.commands.Command;
+import com.hazelcast.stabilizer.worker.commands.CommandRequest;
+import com.hazelcast.stabilizer.worker.commands.CommandResponse;
+import com.hazelcast.stabilizer.worker.commands.MessageCommand;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -35,12 +38,14 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -48,6 +53,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
@@ -67,11 +73,12 @@ public class WorkerJvmManager {
     private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
 
-    private final ConcurrentMap<Long, TestCommandFuture> futureMap = new ConcurrentHashMap<Long, TestCommandFuture>();
+    private final ConcurrentMap<Long, CommandFuture> futureMap = new ConcurrentHashMap<Long, CommandFuture>();
     private final AtomicLong requestIdGenerator = new AtomicLong(0);
 
     private ServerSocket serverSocket;
     private final Executor executor = Executors.newFixedThreadPool(20);
+    private Random random = new Random();
 
     public WorkerJvmManager(Agent agent) {
         this.agent = agent;
@@ -95,13 +102,14 @@ public class WorkerJvmManager {
         return workerJvms.values();
     }
 
-    public Object executeOnSingleWorker(TestCommand testCommand) throws Exception {
+    public Object
+    executeOnSingleWorker(Command command) throws Exception {
         List<WorkerJvm> workers = new ArrayList<WorkerJvm>(workerJvms.values());
         if (workers.isEmpty()) {
             throw new NoWorkerAvailableException("No worker JVM's found");
         }
         workers = Collections.singletonList(workers.get(0));
-        List results = executeOnWorkers(testCommand, workers);
+        List results = executeOnWorkers(command, workers);
         if (results.isEmpty()) {
             log.info("No results found");
             return null;
@@ -109,11 +117,46 @@ public class WorkerJvmManager {
         return results.get(0);
     }
 
-    public List executeOnAllWorkers(TestCommand testCommand) throws Exception {
-        return executeOnWorkers(testCommand, workerJvms.values());
+    public void sendMessage(Message message) throws TimeoutException, InterruptedException {
+        String workerAddress = message.getMessageAddress().getWorkerAddress();
+        if (MessageAddress.BROADCAST_PREFIX.equals(workerAddress)) {
+            sendMessageToAllWorkers(message);
+        } else  if (MessageAddress.OLDEST_MEMBER_PREFIX.equals(workerAddress)) {
+            sendMessageToAllWorkers(message); //send to all workers as they have to evaluate who is the oldest worker
+        } else if (MessageAddress.RANDOM_PREFIX.equals(workerAddress)) {
+            sendMessageToRandomWorker(message);
+        }
     }
 
-    private List executeOnWorkers(TestCommand testCommand, Collection<WorkerJvm> workers) throws Exception {
+    private void sendMessageToRandomWorker(Message message) throws TimeoutException, InterruptedException {
+        WorkerJvm randomWorker = getRandomWorkerOrNull();
+        if (randomWorker == null) {
+            log.warn("No worker is known to this agent. Is it a race-condition?");
+        } else {
+            Command command = new MessageCommand(message);
+            executeOnWorkers(command, Arrays.asList(randomWorker));
+        }
+    }
+
+    private WorkerJvm getRandomWorkerOrNull() {
+        Collection<WorkerJvm> jvmCollection = workerJvms.values();
+        if (jvmCollection.isEmpty()) {
+            return null;
+        }
+        WorkerJvm[] workers = jvmCollection.toArray(new WorkerJvm[jvmCollection.size()]);
+        return workers[random.nextInt(workers.length)];
+    }
+
+    private void sendMessageToAllWorkers(Message message) throws TimeoutException, InterruptedException {
+        Command command = new MessageCommand(message);
+        executeOnAllWorkers(command);
+    }
+
+    public List executeOnAllWorkers(Command command) throws TimeoutException, InterruptedException {
+        return executeOnWorkers(command, workerJvms.values());
+    }
+
+    private List executeOnWorkers(Command command, Collection<WorkerJvm> workers) throws TimeoutException, InterruptedException {
         Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
 
         for (WorkerJvm workerJvm : workers) {
@@ -121,12 +164,14 @@ public class WorkerJvmManager {
                 continue;
             }
 
-            TestCommandFuture future = new TestCommandFuture(testCommand);
-            TestCommandRequest request = new TestCommandRequest();
+            CommandFuture future = new CommandFuture(command);
+            CommandRequest request = new CommandRequest();
             request.id = requestIdGenerator.incrementAndGet();
-            request.task = testCommand;
-            futureMap.put(request.id, future);
-            futures.put(workerJvm, future);
+            request.task = command;
+            if (command.awaitReply()) {
+                futureMap.put(request.id, future);
+                futures.put(workerJvm, future);
+            }
             workerJvm.commandQueue.add(request);
         }
 
@@ -139,7 +184,7 @@ public class WorkerJvmManager {
                 results.add(result);
             } catch (ExecutionException e) {
                 Failure failure = new Failure();
-                failure.type = "worker exception";
+                failure.type = Failure.Type.WORKER_EXCEPTION;
                 failure.message = e.getMessage();
                 failure.agentAddress = getHostAddress();
                 failure.workerAddress = workerJvm.memberAddress;
@@ -172,13 +217,22 @@ public class WorkerJvmManager {
         log.info("Finished terminating workers");
     }
 
+    public void terminateRandomWorker() {
+        WorkerJvm randomWorker = getRandomWorkerOrNull();
+        if (randomWorker == null) {
+            log.warn("Attempt to terminating a random worker detected, but no worker is running.");
+            return;
+        }
+        terminateWorker(randomWorker);
+    }
+
     public void terminateWorker(final WorkerJvm jvm) {
         workerJvms.remove(jvm.id);
 
         Thread t = new Thread() {
             public void run() {
                 try {
-                    jvm.process.destroy();
+                    jvm.process.destroy(); //this sends SIGTERM on *nix
                     jvm.process.waitFor();
                 } catch (Throwable e) {
                     log.fatal("Failed to destroy worker process: " + jvm);
@@ -224,13 +278,13 @@ public class WorkerJvmManager {
                     } else {
                         workerJvm.lastSeen = System.currentTimeMillis();
                         if (SERVICE_POLL_WORK.equals(service)) {
-                            List<TestCommandRequest> commands = new LinkedList<TestCommandRequest>();
+                            List<CommandRequest> commands = new LinkedList<CommandRequest>();
                             workerJvm.commandQueue.drainTo(commands);
                             result = commands;
                         } else if (COMMAND_PUSH_RESPONSE.equals(service)) {
-                            TestCommandResponse response = (TestCommandResponse) in.readObject();
+                            CommandResponse response = (CommandResponse) in.readObject();
                             //log.info("Received response: " + response.commandId);
-                            TestCommandFuture f = futureMap.remove(response.commandId);
+                            CommandFuture f = futureMap.remove(response.commandId);
                             if (f != null) {
                                 f.set(response.result);
                             } else {

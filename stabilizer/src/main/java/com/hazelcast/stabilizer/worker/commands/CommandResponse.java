@@ -1,8 +1,8 @@
-package com.hazelcast.stabilizer.worker.testcommands;
+package com.hazelcast.stabilizer.worker.commands;
 
 import java.io.Serializable;
 
-public class TestCommandResponse implements Serializable {
+public class CommandResponse implements Serializable {
 
     public static final long serialVersionUID = 0l;
 
@@ -11,7 +11,7 @@ public class TestCommandResponse implements Serializable {
 
     @Override
     public String toString() {
-        return "TestCommandResponse{" +
+        return "CommandResponse{" +
                 "commandId=" + commandId +
                 ", result=" + result +
                 '}';

@@ -1,13 +1,13 @@
-package com.hazelcast.stabilizer.worker.testcommands;
+package com.hazelcast.stabilizer.worker.commands;
 
 import java.io.Serializable;
 
-public class TestCommandRequest implements Serializable {
+public class CommandRequest implements Serializable {
 
     public static final long serialVersionUID = 0l;
 
     public long id;
-    public TestCommand task;
+    public Command task;
 
     @Override
     public String toString() {
