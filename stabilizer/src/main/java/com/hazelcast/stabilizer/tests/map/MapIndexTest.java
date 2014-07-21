@@ -122,7 +122,7 @@ public class MapIndexTest {
 
                         final boolean avtive = random.nextBoolean();
                         final int age = random.nextInt(Employee.MAX_AGE);
-                        Collection<Employee> employees = map.values( new SqlPredicate( "active="+avtive+" AND age >" ) );
+                        Collection<Employee> employees = map.values( new SqlPredicate( "active="+avtive+" AND age >"+age ) );
 
                         counter.sqlStringCount++;
 
