@@ -1,8 +1,8 @@
 #!/bin/bash
 
-CHAOS_MONEKY=$1
+CHAOS_MONKEY=$1
 
-case $CHAOS_MONEKY in
+case $CHAOS_MONKEY in
     "mama")
         communicator --message-address Agent=R --message-type newMember
         ;;
