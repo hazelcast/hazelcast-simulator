@@ -91,7 +91,7 @@ public class MapIndexTest {
 
     private class Worker implements Runnable {
         private final Random random = new Random();
-        OppCounter counter = new OppCounter();
+        private OppCounter counter = new OppCounter();
 
         @Override
         public void run() {
@@ -175,14 +175,14 @@ public class MapIndexTest {
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
-        IList<OppCounter> counters = targetInstance.getList(basename + "report");
+        IList<OppCounter> counters = targetInstance.getList(basename+"report");
 
         OppCounter total = new OppCounter();
         for(OppCounter c : counters){
             total.add(c);
         }
 
-        System.out.println(basename+" "+total);
+        System.out.println(basename+" "+total+" form "+counters.size());
     }
 
     @Verify(global = false)
