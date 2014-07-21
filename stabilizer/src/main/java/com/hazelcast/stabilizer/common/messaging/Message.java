@@ -5,6 +5,7 @@ import com.hazelcast.stabilizer.common.KeyValuePair;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public abstract class Message implements Serializable {
     private MessageAddress messageAddress;
@@ -14,6 +15,10 @@ public abstract class Message implements Serializable {
             throw new IllegalArgumentException("Message address cannot be null");
         }
         this.messageAddress = messageAddress;
+    }
+
+    public static Set<String> getMessageSpecs() {
+        return MessagesFactory.getMessageSpecs();
     }
 
     public MessageAddress getMessageAddress() {
