@@ -30,8 +30,14 @@ public class MapIndexTest {
     public int threadCount = 3;
     public int keyCount = 100;
 
-    public double predicateBuilder=0.1;
-    public double sqlString=0.1;
+    public double predicateBuilder=0.2;
+    public double sqlString=0.3;
+    public double pagePred=0.3;
+    public double updateEmploye=0.1;
+
+
+    public double destroyProb = 0.0;
+
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -87,8 +93,8 @@ public class MapIndexTest {
             while (!testContext.isStopped()) {
                 try{
                     final IMap<Integer, Employee> map = targetInstance.getMap(basename);
-
                     double chance = random.nextDouble();
+
                     if ( (chance -= predicateBuilder) < 0) {
 
                         EntryObject e = new PredicateBuilder().getEntryObject();
@@ -118,18 +124,35 @@ public class MapIndexTest {
                         }
                     }
 
-                    //PAGE
-                    Predicate greaterEqual = Predicates.greaterEqual("age", 18);
-                    PagingPredicate pagingPredicate = new PagingPredicate( greaterEqual, 5 );
+                    else if ( (chance -= pagePred) < 0) {
 
-                    Collection values;
-                    //do{
-                        values = map.values( pagingPredicate );
-                        pagingPredicate.nextPage();
-                    //}while( ! values.isEmpty());
+                        final int maxAge = random.nextInt(Employee.MAX_AGE);
+                        final double maxSal = random.nextDouble() * Employee.MAX_SALARY;
 
+                        Predicate  betweenAge = Predicates.between("age", maxAge-10, maxAge);
+                        Predicate  betweenSlayer = Predicates.between("age", maxSal-100.0, maxSal);
 
+                        PagingPredicate pagingPredicate = new PagingPredicate( Predicates.or(betweenAge, betweenSlayer), 5);
 
+                        Collection<Employee> employees = map.values( pagingPredicate );
+
+                        for(Employee emp : employees){
+                            assertTrue( emp.getAge() > maxAge-10 && emp.getAge() < maxAge);
+                            assertTrue( emp.getSalary() > maxSal-100.0 && emp.getSalary() < maxSal);
+                        }
+                    }
+
+                    else if ( (chance -= updateEmploye) < 0 ){
+
+                        int key = random.nextInt(keyCount);
+                        Employee e = map.get(key);
+                        e.setInfo();
+                        map.put(key, e);
+                    }
+
+                    else if ( (chance -= destroyProb) < 0 ){
+                        map.destroy();
+                    }
                 }catch(DistributedObjectDestroyedException e){
                 }
             }

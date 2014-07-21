@@ -26,13 +26,17 @@ public class Employee implements Serializable {
 
     public Employee(int id) {
         this.id = id;
+        setInfo();
+    }
+
+    public Employee() {
+    }
+
+    public void setInfo(){
         name = names[random.nextInt(names.length)];
         age = random.nextInt(MAX_AGE);
         active = random.nextBoolean();
         salary = random.nextDouble() * MAX_SALARY;
-    }
-
-    public Employee() {
     }
 
     public String getName() {
