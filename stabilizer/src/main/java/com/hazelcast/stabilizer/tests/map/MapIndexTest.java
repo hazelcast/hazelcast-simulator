@@ -109,10 +109,10 @@ public class MapIndexTest {
                     PagingPredicate pagingPredicate = new PagingPredicate( greaterEqual, 5 );
 
                     Collection values;
-                    do{
+                    //do{
                         values = map.values( pagingPredicate );
                         pagingPredicate.nextPage();
-                    }while( ! values.isEmpty());
+                    //}while( ! values.isEmpty());
 
 
 
