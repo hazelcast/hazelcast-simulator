@@ -5,7 +5,10 @@ import java.util.Random;
 
 public class Employee implements Serializable {
 
-    public static String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
+    public static final int MAX_AGE=75;
+    public static final double MAX_SALARY=1000.0;
+
+    public static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
     public static Random random = new Random();
 
     private int id;
@@ -14,19 +17,19 @@ public class Employee implements Serializable {
     private boolean active;
     private double salary;
 
-    public Employee(String name, int age, boolean live, double price) {
+    public Employee(String name, int age, boolean live, double salary) {
         this.name = name;
         this.age = age;
         this.active = live;
-        this.salary = price;
+        this.salary = salary;
     }
 
     public Employee(int id) {
         this.id = id;
         name = names[random.nextInt(names.length)];
-        age = random.nextInt(100);
+        age = random.nextInt(MAX_AGE);
         active = random.nextBoolean();
-        salary = random.nextDouble() * 1000.0;
+        salary = random.nextDouble() * MAX_SALARY;
     }
 
     public Employee() {

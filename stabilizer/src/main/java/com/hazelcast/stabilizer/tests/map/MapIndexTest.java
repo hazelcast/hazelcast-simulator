@@ -21,11 +21,17 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import java.util.Collection;
 import java.util.Random;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+
 public class MapIndexTest {
 
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 100;
+
+    public double predicateBuilder=0.1;
+    public double sqlString=0.1;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -82,27 +88,35 @@ public class MapIndexTest {
                 try{
                     final IMap<Integer, Employee> map = targetInstance.getMap(basename);
 
+                    double chance = random.nextDouble();
+                    if ( (chance -= predicateBuilder) < 0) {
 
-                    //PRED BILDER
-                    EntryObject e = new PredicateBuilder().getEntryObject();
+                        EntryObject e = new PredicateBuilder().getEntryObject();
 
-                    int age = random.nextInt(100);
-                    String name = Employee.names[random.nextInt(Employee.names.length)];
+                        final int age = random.nextInt(Employee.MAX_AGE);
+                        final String name = Employee.names[random.nextInt(Employee.names.length)];
 
-                    Predicate agePredicate = e.get( "age" ).lessThan(age);
-                    Predicate predicate = e.get( "name" ).equal( name ).and( agePredicate );
-                    Collection<Employee> randomEmployees = map.values(predicate);
+                        Predicate agePredicate = e.get( "age" ).lessThan(age);
+                        Predicate predicate = e.get( "name" ).equal( name ).and( agePredicate );
+                        Collection<Employee> employees = map.values(predicate);
 
-                    System.out.println(predicate);
-                    for(Employee emp : randomEmployees){
-                        System.out.println(emp);
+                        for(Employee emp : employees){
+                            assertTrue( emp.getAge() < age );
+                            assertEquals( name, emp.getName());
+                        }
                     }
 
+                    else if ( (chance -= sqlString) < 0) {
 
+                        final boolean avtive = random.nextBoolean();
+                        final int age = random.nextInt(Employee.MAX_AGE);
+                        Collection<Employee> employees = map.values( new SqlPredicate( "active="+avtive+" AND age >" ) );
 
-                    //SQL
-                    Collection employees = map.values( new SqlPredicate( "active AND age < 30" ) );
-
+                        for(Employee emp : employees){
+                            assertTrue( avtive == emp.isActive());
+                            assertTrue(emp.getAge() > age);
+                        }
+                    }
 
                     //PAGE
                     Predicate greaterEqual = Predicates.greaterEqual("age", 18);
@@ -113,10 +127,6 @@ public class MapIndexTest {
                         values = map.values( pagingPredicate );
                         pagingPredicate.nextPage();
                     //}while( ! values.isEmpty());
-
-
-
-                    Collection ks = map.keySet(pagingPredicate);
 
 
 
