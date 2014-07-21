@@ -18,8 +18,8 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.Employee;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.tests.map.helpers.OppCounterIdxTest;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Random;
 
@@ -91,7 +91,7 @@ public class MapIndexTest {
 
     private class Worker implements Runnable {
         private final Random random = new Random();
-        private OppCounter counter = new OppCounter();
+        private OppCounterIdxTest counter = new OppCounterIdxTest();
 
         @Override
         public void run() {
@@ -175,10 +175,10 @@ public class MapIndexTest {
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
-        IList<OppCounter> counters = targetInstance.getList(basename+"report");
+        IList<OppCounterIdxTest> counters = targetInstance.getList(basename+"report");
 
-        OppCounter total = new OppCounter();
-        for(OppCounter c : counters){
+        OppCounterIdxTest total = new OppCounterIdxTest();
+        for(OppCounterIdxTest c : counters){
             total.add(c);
         }
 
@@ -211,32 +211,4 @@ public class MapIndexTest {
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
-
-    static class OppCounter implements Serializable{
-        public long predicateBuilderCount=0;
-        public long sqlStringCount=0;
-        public long pagePredCount=0;
-        public long updateEmployeCount=0;
-        public long destroyCount =0;
-
-        @Override
-        public String toString() {
-            return "OppCounter{" +
-                    "predicateBuilderCount=" + predicateBuilderCount +
-                    ", sqlStringCount=" + sqlStringCount +
-                    ", pagePredCount=" + pagePredCount +
-                    ", updateEmployeCount=" + updateEmployeCount +
-                    ", destroyCount=" + destroyCount +
-                    '}';
-        }
-
-        public void add(OppCounter o){
-            predicateBuilderCount += o.predicateBuilderCount;
-            sqlStringCount += o.sqlStringCount;
-            pagePredCount += o.pagePredCount;
-            updateEmployeCount += o.updateEmployeCount;
-            destroyCount += o.destroyCount;
-        }
-    }
-
 }
