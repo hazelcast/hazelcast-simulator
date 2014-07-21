@@ -6,11 +6,13 @@ case $CHAOS_MONKEY in
     "mama")
         communicator --message-address Agent=R --message-type newMember
         ;;
-    "softkill")
-        communicator --message-address Agent=R --message-type softkill
+    "softKill")
+        communicator --message-address Agent=R,Worker=R --message-type softKill
         ;;
     *)
-        echo "Unrecognized chaos-monkey $CHAOS_MONKEY"
+        echo "Unrecognized chaos-monkey $CHAOS_MONKEY". I know these monkeys:
+        echo mama - it will create a new worker on a random VM
+        echo softKill - it will kill a random worker on a random VM
         exit
         ;;
 esac
