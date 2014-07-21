@@ -32,9 +32,6 @@ import java.util.concurrent.TimeoutException;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.*;
 
-/**
- * Takes care of the remoting to the agents on the 'client' (e.g. Coordinator) side.
- */
 public class AgentsClient {
 
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentsClient.class);
@@ -275,6 +272,7 @@ public class AgentsClient {
     }
 
     public void sendMessage(final Message message) {
+        log.info("Sending message '"+message+"' to address '"+message.getMessageAddress()+"'");
         MessageAddress messageAddress = message.getMessageAddress();
         List<Future> futures;
         if (MessageAddress.BROADCAST_PREFIX.equals(messageAddress.getAgentAddress())) {

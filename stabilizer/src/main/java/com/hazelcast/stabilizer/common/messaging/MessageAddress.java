@@ -33,6 +33,22 @@ public class MessageAddress implements Serializable {
         return new MessageAddressBuilder();
     }
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder("MessageAddress{");
+        if (agentAddress != null) {
+            builder.append("agentAddress='").append(agentAddress);
+        }
+        if (workerAddress != null) {
+            builder.append("workerAddress='").append(workerAddress);
+        }
+        if (testAddress != null) {
+            builder.append("testAddress='").append(testAddress);
+        }
+        builder.append("}");
+        return builder.toString();
+    }
+
     public static class MessageAddressBuilder {
         private String agentAddress;
         private String workerAddress;

@@ -67,7 +67,7 @@ public class CommunicatorCli {
             System.exit(0);
         }
 
-        String messageTypeSpec = options.valueOf(this.messageTypeSpec);
+        String messageTypeString = options.valueOf(this.messageTypeSpec);
         KeyValuePair<String, String> attribute = null;
 
         List<String> noArgOptions = options.nonOptionArguments();
@@ -80,11 +80,9 @@ public class CommunicatorCli {
                 Utils.exitWithError(log, "You cannot use more than 1 message shortcut.");
             }
             String messageShortcut = noArgOptions.get(0);
-
-
         } else {
             if (!options.has(messageTypeSpec)) {
-                Utils.exitWithError(log, "You cannot use either --message-type or message shortcut " +
+                Utils.exitWithError(log, "You have to use either --message-type or message shortcut " +
                         "Use --help to get overview of the help options.");
             }
         }
@@ -95,10 +93,10 @@ public class CommunicatorCli {
                         "Use --help to get overview of the help options.");
             }
             MessageAddress messageAddress = MessageAddress.builder().toOldestMember().build();
-            communicator.message = Message.newBySpec(messageTypeSpec, messageAddress);
+            communicator.message = Message.newBySpec(messageTypeString, messageAddress);
         } else if (options.has(messageAddressSpec)) {
             String messageAddressString = options.valueOf(messageAddressSpec);
-            communicator.message = Message.newBySpec(messageTypeSpec, messageAddressString);
+            communicator.message = Message.newBySpec(messageTypeString, messageAddressString);
         } else {
             Utils.exitWithError(log, "You have to use either --oldest-member or --message-address to specify message address" +
                     ". Use --help to get overview of the help options.");
