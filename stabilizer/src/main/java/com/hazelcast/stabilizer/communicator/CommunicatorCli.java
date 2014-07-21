@@ -31,7 +31,7 @@ public class CommunicatorCli {
             .withRequiredArg().ofType(String.class).defaultsTo("agents.txt");
 
     private final OptionSpec<String> messageTypeSpec = parser.accepts("message-type",
-            "Message type definition. ")
+            "Message type definition. Support message types: "+Utils.join(Message.getMessageSpecs())+".")
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> messageAddressSpec = parser.accepts("message-address",

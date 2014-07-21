@@ -46,9 +46,11 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -63,6 +65,7 @@ import static java.lang.String.format;
 public final class Utils {
     private static final String USER_HOME = System.getProperty("user.home");
     private static final ILogger log = Logger.getLogger(Utils.class);
+    private static final String DEFAULT_DELIMITER = ", ";
 
     private static volatile String hostAddress;
 
@@ -509,6 +512,24 @@ public final class Utils {
             Utils.closeQuietly(in);
         }
     }
+
+    public static String join(Iterable<?> collection) {
+        return join(collection, DEFAULT_DELIMITER);
+    }
+
+    public static String join(Iterable<?> collection, String delimiter) {
+        StringBuilder builder = new StringBuilder();
+        Iterator<?> iterator = collection.iterator();
+        while (iterator.hasNext()) {
+            Object o = iterator.next();
+            builder.append(o);
+            if (iterator.hasNext()) {
+                builder.append(delimiter);
+            }
+        }
+        return builder.toString();
+    }
+
 
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));

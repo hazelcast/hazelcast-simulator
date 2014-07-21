@@ -9,6 +9,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Key;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,6 +26,12 @@ class MessagesFactory {
         attributeConstructors = new HashMap<String, Constructor<? extends Message>>();
         messageAddressParser = new MessageAddressParser();
         findAndInitMessageTypes();
+    }
+
+    static Set<String> getMessageSpecs() {
+        HashSet<String> constructors = new HashSet<String>(instance.noAttributeConstructors.keySet());
+        constructors.addAll(instance.attributeConstructors.keySet());
+        return constructors;
     }
 
     static Message bySpec(String messageTypeSpec, String messageAddressSpec) {
