@@ -33,10 +33,8 @@ public class MapIndexTest {
     public double predicateBuilder=0.2;
     public double sqlString=0.3;
     public double pagePred=0.3;
-    public double updateEmploye=0.1;
-
-
-    public double destroyProb = 0.0;
+    public double updateEmploye=0.19;
+    public double destroyProb = 0.01;
 
 
     private TestContext testContext;
@@ -52,6 +50,10 @@ public class MapIndexTest {
 
     @Warmup(global = true)
     public void globalWarmup() {
+        initMap();
+    }
+
+    private void initMap(){
         IMap map = targetInstance.getMap(basename);
 
         for(int i=0; i<keyCount; i++){
@@ -152,6 +154,7 @@ public class MapIndexTest {
 
                     else if ( (chance -= destroyProb) < 0 ){
                         map.destroy();
+                        initMap();
                     }
                 }catch(DistributedObjectDestroyedException e){
                 }
