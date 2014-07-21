@@ -156,10 +156,11 @@ public class MapIndexTest {
 
                         int key = random.nextInt(keyCount);
                         Employee e = map.get(key);
-                        e.setInfo();
-                        map.put(key, e);
-
-                        counter.updateEmployeCount++;
+                        if(e!=null){
+                            e.setInfo();
+                            map.put(key, e);
+                            counter.updateEmployeCount++;
+                        }
                     }
 
                     else if ( (chance -= destroyProb) < 0 ){

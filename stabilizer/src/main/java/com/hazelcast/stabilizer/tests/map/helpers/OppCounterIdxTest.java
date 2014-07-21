@@ -27,11 +27,11 @@ public class OppCounterIdxTest implements DataSerializable {
     }
 
     public void readData(ObjectDataInput in) throws IOException {
-        predicateBuilderCount = in.readInt();
-        sqlStringCount = in.readInt();
-        pagePredCount = in.readInt();
-        updateEmployeCount = in.readInt();
-        destroyCount = in.readInt();
+        predicateBuilderCount = in.readLong();
+        sqlStringCount = in.readLong();
+        pagePredCount = in.readLong();
+        updateEmployeCount = in.readLong();
+        destroyCount = in.readLong();
     }
 
     @Override
