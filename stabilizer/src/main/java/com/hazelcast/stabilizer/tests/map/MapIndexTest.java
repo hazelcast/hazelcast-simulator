@@ -134,13 +134,16 @@ public class MapIndexTest {
 
                     else if ( (chance -= pagePred) < 0) {
 
-                        /*
+
                         final int maxAge = random.nextInt(Employee.MAX_AGE);
                         final double maxSal = random.nextDouble() * Employee.MAX_SALARY;
 
                         Predicate  betweenAge = Predicates.between("age", maxAge-10, maxAge);
-                        Predicate  betweenSlayer = Predicates.between("age", maxSal-100.0, maxSal);
-                        PagingPredicate pagingPredicate = new PagingPredicate( Predicates.or(betweenAge, betweenSlayer), 5);
+                        Predicate  betweenSlayer = Predicates.between("salary", maxSal-100.0, maxSal);
+
+
+
+                        PagingPredicate pagingPredicate = new PagingPredicate( Predicates.and(betweenAge, betweenSlayer), 5);
                         Collection<Employee> employees = map.values( pagingPredicate );
 
                         counter.pagePredCount++;
@@ -149,7 +152,7 @@ public class MapIndexTest {
                             assertTrue( emp.getAge() > maxAge-10 && emp.getAge() < maxAge);
                             assertTrue( emp.getSalary() > maxSal-100.0 && emp.getSalary() < maxSal);
                         }
-                        */
+
                     }
 
                     else if ( (chance -= updateEmploye) < 0 ){
