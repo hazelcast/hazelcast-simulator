@@ -15,13 +15,13 @@
  */
 package com.hazelcast.stabilizer.tests;
 
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.hazelcast.stabilizer.TestCase;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Date;
@@ -84,7 +84,7 @@ public class Failure implements Serializable {
                     return type;
                 }
             }
-            throw new IllegalArgumentException("Unknown failure ID: '"+id+"'.");
+            throw new IllegalArgumentException("Unknown failure ID: '" + id + "'.");
         }
     }
 
@@ -121,7 +121,7 @@ public class Failure implements Serializable {
                 sb.append("    ").append(testString[k]).append("\n");
             }
         } else {
-            sb.append("   test=").append(testId+" unknown").append("\n");
+            sb.append("   test=").append(testId + " unknown").append("\n");
         }
 
         if (cause != null) {
