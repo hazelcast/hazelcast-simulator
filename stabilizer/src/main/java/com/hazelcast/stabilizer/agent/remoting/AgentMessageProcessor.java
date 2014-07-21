@@ -3,6 +3,7 @@ package com.hazelcast.stabilizer.agent.remoting;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
+import com.hazelcast.stabilizer.common.messaging.NewMemberMessage;
 import com.hazelcast.stabilizer.common.messaging.TerminateRandomWorker;
 import org.apache.log4j.Logger;
 
@@ -24,13 +25,17 @@ public class AgentMessageProcessor {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                MessageAddress messageAddress = message.getMessageAddress();
-                if (shouldProcess(message)) {
-                    if (messageAddress.getWorkerAddress() == null) {
-                        processLocalMessage(message);
-                    } else {
-                        processWorkerMessage(message);
+                try {
+                    MessageAddress messageAddress = message.getMessageAddress();
+                    if (shouldProcess(message)) {
+                        if (messageAddress.getWorkerAddress() == null) {
+                            processLocalMessage(message);
+                        } else {
+                            processWorkerMessage(message);
+                        }
                     }
+                } catch (Throwable t) {
+                    log.error("Failed to process message:" + message, t);
                 }
             }
         });
@@ -50,14 +55,16 @@ public class AgentMessageProcessor {
         }
     }
 
-    private void processLocalMessage(Message message) {
-        log.debug("Processing local message :"+message);
+    private void processLocalMessage(Message message) throws Exception {
+        log.debug("Processing local message :" + message);
         if (message instanceof Runnable) {
             processLocalRunnableMessage((Runnable) message);
         } else if (message instanceof TerminateRandomWorker) {
             workerJvmManager.terminateRandomWorker();
+        } else if (message instanceof NewMemberMessage) {
+            workerJvmManager.newMember();
         } else {
-            throw new UnsupportedOperationException("Unknown message type received: "+message.getClass().getName());
+            throw new UnsupportedOperationException("Unknown message type received: " + message.getClass().getName());
         }
     }
 
