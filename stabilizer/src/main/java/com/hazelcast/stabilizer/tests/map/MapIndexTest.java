@@ -1,6 +1,7 @@
 package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.EntryObject;
 import com.hazelcast.query.PagingPredicate;
@@ -18,6 +19,7 @@ import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.Employee;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Random;
 
@@ -89,6 +91,7 @@ public class MapIndexTest {
 
     private class Worker implements Runnable {
         private final Random random = new Random();
+        OppCounter counter = new OppCounter();
 
         @Override
         public void run() {
@@ -107,6 +110,8 @@ public class MapIndexTest {
                         Predicate predicate = entryObject.get( "name" ).equal( name ).and( agePredicate );
                         Collection<Employee> employees = map.values(predicate);
 
+                        counter.predicateBuilderCount++;
+
                         for(Employee emp : employees){
                             assertTrue( emp.getAge() < age );
                             assertEquals( name, emp.getName());
@@ -118,6 +123,8 @@ public class MapIndexTest {
                         final boolean avtive = random.nextBoolean();
                         final int age = random.nextInt(Employee.MAX_AGE);
                         Collection<Employee> employees = map.values( new SqlPredicate( "active="+avtive+" AND age >" ) );
+
+                        counter.sqlStringCount++;
 
                         for(Employee emp : employees){
                             assertTrue( avtive == emp.isActive());
@@ -132,10 +139,10 @@ public class MapIndexTest {
 
                         Predicate  betweenAge = Predicates.between("age", maxAge-10, maxAge);
                         Predicate  betweenSlayer = Predicates.between("age", maxSal-100.0, maxSal);
-
                         PagingPredicate pagingPredicate = new PagingPredicate( Predicates.or(betweenAge, betweenSlayer), 5);
-
                         Collection<Employee> employees = map.values( pagingPredicate );
+
+                        counter.pagePredCount++;
 
                         for(Employee emp : employees){
                             assertTrue( emp.getAge() > maxAge-10 && emp.getAge() < maxAge);
@@ -149,20 +156,33 @@ public class MapIndexTest {
                         Employee e = map.get(key);
                         e.setInfo();
                         map.put(key, e);
+
+                        counter.updateEmployeCount++;
                     }
 
                     else if ( (chance -= destroyProb) < 0 ){
                         map.destroy();
                         initMap();
+
+                        counter.destroyCount++;
                     }
                 }catch(DistributedObjectDestroyedException e){}
             }
+            targetInstance.getList(basename+"report").add(counter);
         }
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
+        IList<OppCounter> counters = targetInstance.getList(basename + "report");
+
+        OppCounter total = new OppCounter();
+        for(OppCounter c : counters){
+            total.add(c);
+        }
+
+        System.out.println(basename+" "+total);
     }
 
     @Verify(global = false)
@@ -184,7 +204,6 @@ public class MapIndexTest {
         new TestRunner(new MapIndexTest()).run();
     }
 
-
     public static String humanReadableByteCount(long bytes, boolean si) {
         int unit = si ? 1000 : 1024;
         if (bytes < unit) return bytes + " B";
@@ -192,4 +211,32 @@ public class MapIndexTest {
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
+
+    static class OppCounter implements Serializable{
+        public long predicateBuilderCount=0;
+        public long sqlStringCount=0;
+        public long pagePredCount=0;
+        public long updateEmployeCount=0;
+        public long destroyCount =0;
+
+        @Override
+        public String toString() {
+            return "OppCounter{" +
+                    "predicateBuilderCount=" + predicateBuilderCount +
+                    ", sqlStringCount=" + sqlStringCount +
+                    ", pagePredCount=" + pagePredCount +
+                    ", updateEmployeCount=" + updateEmployeCount +
+                    ", destroyCount=" + destroyCount +
+                    '}';
+        }
+
+        public void add(OppCounter o){
+            predicateBuilderCount += o.predicateBuilderCount;
+            sqlStringCount += o.sqlStringCount;
+            pagePredCount += o.pagePredCount;
+            updateEmployeCount += o.updateEmployeCount;
+            destroyCount += o.destroyCount;
+        }
+    }
+
 }
