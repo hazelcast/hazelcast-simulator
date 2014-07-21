@@ -31,10 +31,10 @@ public class MapIndexTest {
     public int keyCount = 100;
 
     public double predicateBuilder=0.2;
-    public double sqlString=0.3;
-    public double pagePred=0.3;
-    public double updateEmploye=0.19;
-    public double destroyProb = 0.01;
+    public double sqlString=0.2;
+    public double pagePred=0.2;
+    public double updateEmploye=0.3;
+    public double destroyProb = 0.1;
 
 
     private TestContext testContext;
@@ -99,13 +99,12 @@ public class MapIndexTest {
 
                     if ( (chance -= predicateBuilder) < 0) {
 
-                        EntryObject e = new PredicateBuilder().getEntryObject();
-
                         final int age = random.nextInt(Employee.MAX_AGE);
                         final String name = Employee.names[random.nextInt(Employee.names.length)];
 
-                        Predicate agePredicate = e.get( "age" ).lessThan(age);
-                        Predicate predicate = e.get( "name" ).equal( name ).and( agePredicate );
+                        EntryObject entryObject = new PredicateBuilder().getEntryObject();
+                        Predicate agePredicate = entryObject.get( "age" ).lessThan(age);
+                        Predicate predicate = entryObject.get( "name" ).equal( name ).and( agePredicate );
                         Collection<Employee> employees = map.values(predicate);
 
                         for(Employee emp : employees){
@@ -156,8 +155,7 @@ public class MapIndexTest {
                         map.destroy();
                         initMap();
                     }
-                }catch(DistributedObjectDestroyedException e){
-                }
+                }catch(DistributedObjectDestroyedException e){}
             }
         }
     }
@@ -174,8 +172,11 @@ public class MapIndexTest {
             final IMap map = targetInstance.getMap(basename);
 
             System.out.println(basename+ ": map size  =" + map.size() );
-            System.out.println(basename+ ": map local =" + map.getAll(map.localKeySet()).entrySet() );
 
+            long free = Runtime.getRuntime().freeMemory();
+            long total =  Runtime.getRuntime().totalMemory();
+            long used = total - free;
+            System.out.println("used = "+humanReadableByteCount(used, true));
         }catch(UnsupportedOperationException e){}
     }
 
