@@ -27,8 +27,8 @@ public class Communicator {
 
     public static void main(String[] args) throws IOException {
         log.info("Stabilizer Communicator");
-        log.info(format("Version: %s\n", getVersion()));
-        log.info(format("STABILIZER_HOME: %s\n", STABILIZER_HOME));
+        log.info(format("Version: %s", getVersion()));
+        log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         Communicator communicator = new Communicator();
         CommunicatorCli cli = new CommunicatorCli(communicator);
