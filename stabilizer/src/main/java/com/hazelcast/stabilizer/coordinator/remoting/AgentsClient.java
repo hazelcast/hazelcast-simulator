@@ -32,6 +32,9 @@ import java.util.concurrent.TimeoutException;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.*;
 
+/**
+ * Takes care of the remoting to the agents on the 'client' (e.g. Coordinator) side.
+ */
 public class AgentsClient {
 
     private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentsClient.class);

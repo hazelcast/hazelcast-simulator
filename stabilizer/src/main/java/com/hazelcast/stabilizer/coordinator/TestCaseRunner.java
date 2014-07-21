@@ -22,7 +22,7 @@ import static java.lang.String.format;
 
 /**
  * TestCase runner is responsible for running a single test case. Multiple test-cases can be run in parallel,
- * by having multiple testcase runners in parallel.
+ * by having multiple TestCaseRunners  in parallel.
  */
 public class TestCaseRunner {
     private final static ILogger log = Logger.getLogger(TestCaseRunner.class);
