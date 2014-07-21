@@ -37,9 +37,9 @@ public class CommunicatorCli {
     private final OptionSpec<String> messageAddressSpec = parser.accepts("message-address",
             String.format("Message address definition. %nSyntax: Agent=<mode>[,Worker=<mode>[,Test=<mode>]]. " +
                     "Mode can be either '%s' for broadcast' or '%s' for a single random destination. %n" +
-                    "Examples: %n--mesage-address 'Agent=*,Worker=R' - a message will be routed to all agents and than each agent " +
+                    "Examples: %n--message-address 'Agent=*,Worker=R' - a message will be routed to all agents and than each agent " +
                     "will pass it to a single random worker for processing. %n" +
-                    "          %n--mesage-address 'Agent=R,Worker=R,Test=*' - a message will be router to a single random " +
+                    "          %n--message-address 'Agent=R,Worker=R,Test=*' - a message will be router to a single random " +
                     "agent. The agent will pass it to a single random worker and the worker will pass the message to all " +
                     "tests.", MessageAddressParser.BROADCAST_MODE, MessageAddressParser.RANDOM_MODE))
             .withRequiredArg().ofType(String.class);
