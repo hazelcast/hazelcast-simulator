@@ -76,7 +76,6 @@ public class Provisioner {
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/log4j*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/stabilizer*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/commons-lang3*", "lib");
-        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/guava*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/tests/", "tests");
 
 //        //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
