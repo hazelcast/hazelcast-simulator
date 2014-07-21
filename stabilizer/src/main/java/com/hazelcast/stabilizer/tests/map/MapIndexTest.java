@@ -38,7 +38,6 @@ public class MapIndexTest {
     public double updateEmploye=0.3;
     public double destroyProb = 0.1;
 
-
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
@@ -134,20 +133,21 @@ public class MapIndexTest {
 
                     else if ( (chance -= pagePred) < 0) {
 
-                        final int maxAge = random.nextInt(Employee.MAX_AGE);
                         final double maxSal = random.nextDouble() * Employee.MAX_SALARY;
 
-                        Predicate  betweenSlayer = Predicates.between("salary", maxSal-100.0, maxSal);
+                        Predicate  betweenSlayer = Predicates.between("salary", maxSal-50.0, maxSal);
                         PagingPredicate pagingPredicate = new PagingPredicate( betweenSlayer , 5);
                         Collection<Employee> employees;
                         do{
                             employees = map.values( pagingPredicate );
 
                             for(Employee emp : employees){
-                                assertTrue( emp.getSalary() > maxSal-100.0 && emp.getSalary() < maxSal);
+                                assertTrue( emp.getSalary() > maxSal-50.0 && emp.getSalary() < maxSal);
                             }
 
                             pagingPredicate.nextPage();
+
+                            System.out.println(basename+" results size = "+employees.size() );
 
                         }while( ! employees.isEmpty());
 
@@ -166,14 +166,17 @@ public class MapIndexTest {
                     }
 
                     else if ( (chance -= destroyProb) < 0 ){
+
                         map.destroy();
                         initMap();
+                        System.out.println(basename+" MAP destroy");
 
                         counter.destroyCount++;
                     }
                 }catch(DistributedObjectDestroyedException e){}
             }
             targetInstance.getList(basename+"report").add(counter);
+            System.out.println(basename+"=END=" );
         }
     }
 
