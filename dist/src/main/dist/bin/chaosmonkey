@@ -1,0 +1,16 @@
+#!/bin/bash
+
+CHAOS_MONKEY=$1
+
+case $CHAOS_MONKEY in
+    "mama")
+        communicator --message-address Agent=R --message-type newMember
+        ;;
+    "softkill")
+        communicator --message-address Agent=R --message-type softkill
+        ;;
+    *)
+        echo "Unrecognized chaos-monkey $CHAOS_MONKEY"
+        exit
+        ;;
+esac

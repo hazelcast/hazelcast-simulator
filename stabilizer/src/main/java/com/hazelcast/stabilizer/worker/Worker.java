@@ -340,8 +340,9 @@ public class Worker {
 
                 final TestContainer<TestContext> test = tests.get(command.testId);
                 if (test == null) {
-                    throw new IllegalStateException("Failed to process command: " + command + " no test with " +
+                    log.warning("Failed to process command: " + command + " no test with " +
                             "testId" + command.testId + " is found");
+                    return;
                 }
 
                 new CommandThread(command, command.testId) {
@@ -370,8 +371,10 @@ public class Worker {
 
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
-                    throw new IllegalStateException("Failed to process command: " + command + " no test with " +
+                    //we log a warning: it could be that it is a newly created machine from mama-monkey.
+                    log.warning("Failed to process command: " + command + " no test with " +
                             "testId " + testId + " is found");
+                    return;
                 }
 
                 final Method method = test.getClass().getMethod(methodName);

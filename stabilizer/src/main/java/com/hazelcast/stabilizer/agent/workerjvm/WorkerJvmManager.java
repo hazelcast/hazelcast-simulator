@@ -17,8 +17,8 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 
 import com.hazelcast.stabilizer.NoWorkerAvailableException;
 import com.hazelcast.stabilizer.agent.Agent;
-import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.CommandFuture;
+import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
@@ -67,7 +67,7 @@ public class WorkerJvmManager {
     public static final int PORT = 9001;
     public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
 
-    private final static Logger log = Logger.getLogger(Coordinator.class);
+    private final static Logger log = Logger.getLogger(WorkerJvmManager.class);
     private static final int WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS = 10000;
 
     private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
@@ -79,6 +79,8 @@ public class WorkerJvmManager {
     private ServerSocket serverSocket;
     private final Executor executor = Executors.newFixedThreadPool(20);
     private Random random = new Random();
+
+    private volatile WorkerJvmSettings lastUsedWorkerJvmSettings;
 
     public WorkerJvmManager(Agent agent) {
         this.agent = agent;
@@ -102,8 +104,7 @@ public class WorkerJvmManager {
         return workerJvms.values();
     }
 
-    public Object
-    executeOnSingleWorker(Command command) throws Exception {
+    public Object executeOnSingleWorker(Command command) throws Exception {
         List<WorkerJvm> workers = new ArrayList<WorkerJvm>(workerJvms.values());
         if (workers.isEmpty()) {
             throw new NoWorkerAvailableException("No worker JVM's found");
@@ -121,7 +122,7 @@ public class WorkerJvmManager {
         String workerAddress = message.getMessageAddress().getWorkerAddress();
         if (MessageAddress.BROADCAST_PREFIX.equals(workerAddress)) {
             sendMessageToAllWorkers(message);
-        } else  if (MessageAddress.OLDEST_MEMBER_PREFIX.equals(workerAddress)) {
+        } else if (MessageAddress.OLDEST_MEMBER_PREFIX.equals(workerAddress)) {
             sendMessageToAllWorkers(message); //send to all workers as they have to evaluate who is the oldest worker
         } else if (MessageAddress.RANDOM_PREFIX.equals(workerAddress)) {
             sendMessageToRandomWorker(message);
@@ -206,6 +207,7 @@ public class WorkerJvmManager {
             terminateWorkers();
         }
 
+        this.lastUsedWorkerJvmSettings = settings;
         WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvms, settings);
         launcher.launch();
     }
@@ -263,6 +265,23 @@ public class WorkerJvmManager {
         return workers[random.nextInt(workers.length)];
     }
 
+    public void newMember() throws Exception {
+        log.info("Adding a newMember");
+
+        WorkerJvmSettings lastUsedWorkerJvmSettings = this.lastUsedWorkerJvmSettings;
+        if (lastUsedWorkerJvmSettings == null) {
+            log.warn("No lastUsedWorkerJvmSettings available");
+            return;
+        }
+
+        WorkerJvmSettings settings = new WorkerJvmSettings(lastUsedWorkerJvmSettings);
+        settings.memberWorkerCount = 1;
+        settings.clientWorkerCount = 0;
+        settings.mixedWorkerCount = 0;
+
+        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvms, settings);
+        launcher.launch();
+    }
 
     private class ClientSocketTask implements Runnable {
         private final Socket clientSocket;
