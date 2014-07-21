@@ -190,8 +190,6 @@ public class MapIndexTest {
         System.out.println(basename+" "+total+" from "+counters.size());
     }
 
-
-
     public static void main(String[] args) throws Throwable {
         new TestRunner(new MapIndexTest()).run();
     }
