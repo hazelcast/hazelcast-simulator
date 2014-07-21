@@ -133,23 +133,26 @@ public class WorkerJvmManager {
         if (randomWorker == null) {
             log.warn("No worker is known to this agent. Is it a race-condition?");
         } else {
+            List<WorkerJvm> workerJvmList = Arrays.asList(randomWorker);
+            preprocessMessage(message, workerJvmList);
             Command command = new MessageCommand(message);
-            executeOnWorkers(command, Arrays.asList(randomWorker));
+            executeOnWorkers(command, workerJvmList);
         }
     }
 
-    private WorkerJvm getRandomWorkerOrNull() {
-        Collection<WorkerJvm> jvmCollection = workerJvms.values();
-        if (jvmCollection.isEmpty()) {
-            return null;
+    private void preprocessMessage(Message message, Collection<WorkerJvm> workerJvmList) {
+        for (WorkerJvm workerJvm : workerJvmList) {
+            if (message.disableMemberFailureDetection()) {
+                workerJvm.detectFailure = false;
+            }
         }
-        WorkerJvm[] workers = jvmCollection.toArray(new WorkerJvm[jvmCollection.size()]);
-        return workers[random.nextInt(workers.length)];
     }
 
     private void sendMessageToAllWorkers(Message message) throws TimeoutException, InterruptedException {
         Command command = new MessageCommand(message);
-        executeOnAllWorkers(command);
+        Collection<WorkerJvm> workerJvmList = workerJvms.values();
+        preprocessMessage(message, workerJvmList);
+        executeOnWorkers(command, workerJvmList);
     }
 
     public List executeOnAllWorkers(Command command) throws TimeoutException, InterruptedException {
@@ -249,6 +252,15 @@ public class WorkerJvmManager {
         } catch (Exception e) {
             log.fatal(e);
         }
+    }
+
+    private WorkerJvm getRandomWorkerOrNull() {
+        Collection<WorkerJvm> jvmCollection = workerJvms.values();
+        if (jvmCollection.isEmpty()) {
+            return null;
+        }
+        WorkerJvm[] workers = jvmCollection.toArray(new WorkerJvm[jvmCollection.size()]);
+        return workers[random.nextInt(workers.length)];
     }
 
 

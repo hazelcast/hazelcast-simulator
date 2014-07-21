@@ -22,6 +22,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class WorkerJvm {
+    public volatile boolean detectFailure = true;
     public final String id;
     public volatile String memberAddress;
     public Process process;

@@ -60,20 +60,20 @@ public class WorkerJvmFailureMonitor {
         WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
 
         for (WorkerJvm jvm : workerJvmManager.getWorkerJvms()) {
-
-            List<Failure> failures = new LinkedList<Failure>();
-
-            detectOomeFailure(jvm, failures);
-
-            detectExceptions(jvm, failures);
-
-            detectInactivity(jvm, failures);
-
-            detectUnexpectedExit(jvm, failures);
-
-            for (Failure failure : failures) {
-                publish(failure);
+            if (jvm.detectFailure) {
+                detectFailuresInJvm(jvm);
             }
+        }
+    }
+
+    private void detectFailuresInJvm(WorkerJvm jvm) {
+        List<Failure> failures = new LinkedList<Failure>();
+        detectOomeFailure(jvm, failures);
+        detectExceptions(jvm, failures);
+        detectInactivity(jvm, failures);
+        detectUnexpectedExit(jvm, failures);
+        for (Failure failure : failures) {
+            publish(failure);
         }
     }
 

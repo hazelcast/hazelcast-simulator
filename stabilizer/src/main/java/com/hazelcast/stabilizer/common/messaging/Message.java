@@ -20,6 +20,10 @@ public abstract class Message implements Serializable {
         return messageAddress;
     }
 
+    public boolean disableMemberFailureDetection() {
+        return false;
+    }
+
     public static Message newBySpec(String messageTypeSpec, String messageAddressSpec) {
         return MessagesFactory.bySpec(messageTypeSpec, messageAddressSpec);
     }
