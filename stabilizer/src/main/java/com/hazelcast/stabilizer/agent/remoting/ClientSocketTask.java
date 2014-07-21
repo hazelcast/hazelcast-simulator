@@ -43,7 +43,7 @@ class ClientSocketTask implements Runnable {
                 in = new ObjectInputStream(clientSocket.getInputStream());
                 AgentRemoteService.Service service = (AgentRemoteService.Service) in.readObject();
                 result = execute(service, in);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.fatal(e);
                 result = e;
             }
