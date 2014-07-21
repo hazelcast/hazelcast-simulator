@@ -65,6 +65,18 @@
             <email>peter.veentjer@hazelcast.com</email>
             <organization>Hazelcast</organization>
         </developer>
+        <developer>
+            <id>jaromir</id>
+            <name>Jaromir Hamala</name>
+            <email>jaromir@hazelcast.com</email>
+            <organization>Hazelcast</organization>
+        </developer>
+        <developer>
+            <id>danny</id>
+            <name>Danny Conlon</name>
+            <email>danny@hazelcast.com</email>
+            <organization>Hazelcast</organization>
+        </developer>
     </developers>
 
     <distributionManagement>
