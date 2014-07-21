@@ -1,11 +1,11 @@
 package com.hazelcast.stabilizer.common.messaging;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.apache.log4j.Logger;
 
 @MessageSpec("softKill")
 public class SoftKillMessage extends RunnableMessage {
-    private static final Logger log = LoggerFactory.getLogger(SoftKillMessage.class);
+    private static final Logger log = Logger.getLogger(SoftKillMessage.class);
 
     public SoftKillMessage(MessageAddress messageAddress) {
         super(messageAddress);
