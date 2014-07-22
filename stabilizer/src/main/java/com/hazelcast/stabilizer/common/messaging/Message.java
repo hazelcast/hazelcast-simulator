@@ -1,5 +1,6 @@
 package com.hazelcast.stabilizer.common.messaging;
 
+import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.KeyValuePair;
 
 import java.io.Serializable;
@@ -17,8 +18,16 @@ public abstract class Message implements Serializable {
         this.messageAddress = messageAddress;
     }
 
-    public static Set<String> getMessageSpecs() {
-        return MessagesFactory.getMessageSpecs();
+    public static String getMessageHelp() {
+        Set<String> messageSpecs = MessagesFactory.getMessageSpecs();
+        StringBuilder builder = new StringBuilder();
+        for (String spec : messageSpecs) {
+            builder.append(spec)
+                    .append(" - ")
+                    .append(MessagesFactory.getMessageDescription(spec))
+                    .append(Utils.NEW_LINE);
+        }
+        return builder.toString();
     }
 
     public MessageAddress getMessageAddress() {

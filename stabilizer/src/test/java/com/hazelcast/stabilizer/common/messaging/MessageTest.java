@@ -17,9 +17,10 @@ public class MessageTest {
     }
 
     @Test
-    public void testGetMessageSpecs() {
-        Set<String> messageSpecs = Message.getMessageSpecs();
-        assertThat(messageSpecs, hasItem("dummyMessage"));
+    public void testGetMessageHelp() {
+        String messageSpecs = Message.getMessageHelp();
+        assertThat(messageSpecs.contains("dummyMessage"), is(true));
+        assertThat(messageSpecs.contains("Dummy Runnable Message"), is(true));
     }
 
 }

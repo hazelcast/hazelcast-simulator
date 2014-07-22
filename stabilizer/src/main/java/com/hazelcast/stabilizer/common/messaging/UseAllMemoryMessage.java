@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@MessageSpec("useHeap")
+@MessageSpec(value = "oom", description = "starts a new thread allocating memory in JVM heap indefinitely")
 public class UseAllMemoryMessage extends RunnableMessage {
     private final static Logger log = Logger.getLogger(UseAllMemoryMessage.class);
 

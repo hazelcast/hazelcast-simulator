@@ -5,9 +5,11 @@ import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
 
 import java.io.Serializable;
 
-@MessageSpec("blockHzTraffic")
+@MessageSpec(value = "blockHzTraffic", description = "configures iptables to block all incoming " +
+        "traffic to TCP port range "+BlockTrafficMessage.ports +
+        ". It requires sudo to be configured not ask for a password.")
 public class BlockTrafficMessage extends RunnableMessage {
-    private static final String ports = "5700:5800";
+    static final String ports = "5700:5800";
 
     public BlockTrafficMessage(MessageAddress messageAddress) {
         super(messageAddress);

@@ -4,7 +4,7 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.common.messaging.NewMemberMessage;
-import com.hazelcast.stabilizer.common.messaging.TerminateRandomWorker;
+import com.hazelcast.stabilizer.common.messaging.TerminateRandomWorkerMessage;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.ExecutorService;
@@ -59,7 +59,7 @@ public class AgentMessageProcessor {
         log.debug("Processing local message :" + message);
         if (message instanceof Runnable) {
             processLocalRunnableMessage((Runnable) message);
-        } else if (message instanceof TerminateRandomWorker) {
+        } else if (message instanceof TerminateRandomWorkerMessage) {
             workerJvmManager.terminateRandomWorker();
         } else if (message instanceof NewMemberMessage) {
             workerJvmManager.newMember();

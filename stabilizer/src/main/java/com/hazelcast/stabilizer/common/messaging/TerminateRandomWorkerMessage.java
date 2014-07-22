@@ -6,10 +6,10 @@ package com.hazelcast.stabilizer.common.messaging;
  * resulting in sending a SIGTERM signal when running on Linux.
  *
  */
-@MessageSpec("terminateWorker")
-public class TerminateRandomWorker extends Message {
+@MessageSpec(value = "terminateWorker", description = "indicates to an agent to terminate a random worker")
+public class TerminateRandomWorkerMessage extends Message {
 
-    public TerminateRandomWorker(MessageAddress messageAddress) {
+    public TerminateRandomWorkerMessage(MessageAddress messageAddress) {
         super(messageAddress);
     }
 }
