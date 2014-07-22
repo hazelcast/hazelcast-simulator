@@ -34,26 +34,25 @@ class ClientSocketTask implements Runnable {
 
     @Override
     public void run() {
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
         try {
-            ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-            out.flush();
-
-            ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-            AgentRemoteService.Service service = (AgentRemoteService.Service) in.readObject();
-
             Object result;
             try {
+                out = new ObjectOutputStream(clientSocket.getOutputStream());
+                in = new ObjectInputStream(clientSocket.getInputStream());
+                AgentRemoteService.Service service = (AgentRemoteService.Service) in.readObject();
                 result = execute(service, in);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.fatal(e);
                 result = e;
             }
-
             out.writeObject(result);
             out.flush();
         } catch (Throwable e) {
             log.fatal(e);
         } finally {
+            Utils.closeQuietly(in, out);
             Utils.closeQuietly(clientSocket);
         }
     }

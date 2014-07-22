@@ -428,6 +428,12 @@ public final class Utils {
         }
     }
 
+    public static void closeQuietly(Closeable...closeables) {
+        for (Closeable c : closeables) {
+            closeQuietly(c);
+        }
+    }
+
     public static void closeQuietly(Closeable c) {
         if (c == null) return;
         try {
