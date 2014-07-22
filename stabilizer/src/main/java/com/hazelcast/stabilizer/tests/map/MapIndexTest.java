@@ -138,6 +138,9 @@ public class MapIndexTest {
                         Predicate  betweenSlayer = Predicates.between("salary", maxSal-50.0, maxSal);
                         PagingPredicate pagingPredicate = new PagingPredicate( betweenSlayer , 5);
                         Collection<Employee> employees;
+
+
+                        System.out.println(basename+" Started loop");
                         do{
                             employees = map.values( pagingPredicate );
 
@@ -147,9 +150,9 @@ public class MapIndexTest {
 
                             pagingPredicate.nextPage();
 
-                            System.out.println(basename+" results size = "+employees.size() );
 
-                        }while( ! employees.isEmpty());
+                        }while( ! employees.isEmpty() );
+                        System.out.println(basename+" END loop");
 
                         counter.pagePredCount++;
                     }
