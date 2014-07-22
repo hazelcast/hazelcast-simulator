@@ -1,99 +1,132 @@
 package com.hazelcast.stabilizer.common.messaging;
 
+import org.bouncycastle.pqc.asn1.ParSet;
+
+import java.util.EnumSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class MessageAddressParser {
     /**
-     * Warning: Change user help in {@link com.hazelcast.stabilizer.communicator.CommunicatorCli} when changing
-     * input format accepted by this parser
+     * Warning: Change user help in {@link com.hazelcast.stabilizer.communicator.CommunicatorCli#messageAddressSpec}
+     * when changing input format accepted by this parser
      *
      */
     public static final String AGENT = "Agent";
     public static final String WORKER = "Worker";
     public static final String TEST = "Test";
 
-    public static final String BROADCAST_MODE = "*";
-    public static final String RANDOM_MODE = "R";
+    public static final String ALL_WORKERS = "*";
+    public static final String WORKERS_WITH_MEMBER = "*m";
+    public static final String RANDOM_WORKER = "R";
+    public static final String RANDOM_WORKER_WITH_MEMBER = "Rm";
     public static final String OLDEST_MEMBER = "O";
 
     public static final String ADDRESS_SEPARATOR = ",";
 
+    private enum ParserState {
+        START,
+        BEFORE_AGENT_ADDRESS,
+        AFTER_AGENT_ADDRESS,
+        BEFORE_WORKER_ADDRESS,
+        AFTER_WORKER_ADDRESS,
+        BEFORE_TEST_ADDRESS,
+        AFTER_TEST_ADDRESS,
+        DONE
+    }
+
     public MessageAddress parse(final String originInput) {
-        String input = originInput;
+        return parseRexexp(originInput);
+    }
+
+    private MessageAddress parseRexexp(String input) {
         if (input == null) {
             throw new IllegalArgumentException("Input string cannot be null");
         }
+        Pattern pattern = Pattern.compile("(Agent=)(\\*|R)(,Worker=)?(\\*|R|O|\\*m|Rm)?(,Test=)?(\\*|R)?");
+        Matcher matcher = pattern.matcher(input);
 
-
-        String prefix = AGENT+"=";
-        String agentAddress = getAddress(input, prefix);
-        input = input.substring(prefix.length() + 1);
-        if (input.isEmpty()) {
-            return new MessageAddress(agentAddress, null, null);
-        }
-        input = skipSeparator(input);
-
-        prefix = WORKER+"=";
-        String workerAddress = getAddress(input, prefix);
-        input = input.substring(prefix.length() + 1);
-        if (input.isEmpty()) {
-            return new MessageAddress(agentAddress, workerAddress, null);
-        }
-        input = skipSeparator(input);
-
-        prefix = TEST+"=";
-        String testAddress = getAddress(input, prefix);
-        input = input.substring(prefix.length() + 1);
-        if (input.isEmpty()) {
-            return new MessageAddress(agentAddress, workerAddress, testAddress);
-        }
-        throw new IllegalArgumentException("Address too long, found: '"+originInput+"'");
-    }
-
-    private String skipSeparator(String input) {
-        String separator = input.substring(0, 1);
-        if (!ADDRESS_SEPARATOR.equals(separator)) {
-            throw new IllegalArgumentException(
-                    String.format("Wrong address separator. %nExpected: '%s'%n Found '%s'.", ADDRESS_SEPARATOR, separator)
-            );
-        }
-        return input.substring(1);
-    }
-
-    private String getAddress(String input, String prefix) {
-        String address;
-        int index = input.indexOf(prefix);
-        if (index != 0) {
+        MessageAddress.MessageAddressBuilder builder = MessageAddress.builder();
+        ParserState state = ParserState.START;
+        if (!matcher.matches()) {
             throw wrongFormat(input);
         }
-        if (input.length() == prefix.length()) {
+        for (int i = 1; i <= matcher.groupCount(); i++) {
+            String group = matcher.group(i);
+            if (group == null) {
+                if (EnumSet.of(ParserState.AFTER_AGENT_ADDRESS, ParserState.AFTER_WORKER_ADDRESS).contains(state)) {
+                    state = ParserState.DONE;
+                    break;
+                } else {
+                    throw wrongFormat(input);
+                }
+            }
+            if (state.equals(ParserState.START)) {
+                if ("Agent=".equals(group)) {
+                    state = ParserState.BEFORE_AGENT_ADDRESS;
+                } else {
+                    throw wrongFormat(input);
+                }
+            } else if (state.equals(ParserState.BEFORE_AGENT_ADDRESS)) {
+                if (group.equals("*")) {
+                    builder.toAllAgents();
+                } else if (group.equals("R")) {
+                    builder.toRandomAgent();
+                } else {
+                    throw wrongFormat(input);
+                }
+                state = ParserState.AFTER_AGENT_ADDRESS;
+            } else if (state.equals(ParserState.AFTER_AGENT_ADDRESS)) {
+                if (group.equals(",Worker=")) {
+                    state = ParserState.BEFORE_WORKER_ADDRESS;
+                } else {
+                    throw wrongFormat(input);
+                }
+            } else if (state.equals(ParserState.BEFORE_WORKER_ADDRESS)) {
+                if (group.equals("*")) {
+                    builder.toAllWorkers();
+                } else if (group.equals("R")) {
+                    builder.toRandomWorker();
+                } else if (group.equals("O")) {
+                    builder.toOldestMember();
+                } else if (group.equals("*m")) {
+                    builder.toWorkersWithClusterMember();
+                } else if (group.equals("Rm")) {
+                    builder.toRandomWorkerWithMember();
+                } else {
+                    throw wrongFormat(input);
+                }
+                state = ParserState.AFTER_WORKER_ADDRESS;
+            } else if (state.equals(ParserState.AFTER_WORKER_ADDRESS)) {
+                if (group.equals(",Test=")) {
+                    state = ParserState.BEFORE_TEST_ADDRESS;
+                } else {
+                    throw wrongFormat(input);
+                }
+            } else if (state.equals(ParserState.BEFORE_TEST_ADDRESS)) {
+                if (group.equals("*")) {
+                    builder.toAllTests();
+                } else if (group.equals("R")) {
+                    builder.toRandomTest();
+                } else {
+                    throw wrongFormat(input);
+                }
+                state = ParserState.DONE;
+            } else {
+                throw wrongFormat(input);
+            }
+        }
+        if (!ParserState.DONE.equals(state)) {
             throw wrongFormat(input);
         }
-
-        input = input.substring(prefix.length());
-        String mode = input.substring(0, 1);
-        if (BROADCAST_MODE.equals(mode)) {
-            address = MessageAddress.BROADCAST_PREFIX;
-        } else if (RANDOM_MODE.equals(mode)) {
-            address = MessageAddress.RANDOM_PREFIX;
-        } else if (OLDEST_MEMBER.equals(mode)) {
-            address = MessageAddress.OLDEST_MEMBER_PREFIX;
-        } else {
-            throw unknownAddressMode(mode);
-        }
-        return address;
+        return builder.build();
     }
 
-    private RuntimeException unknownAddressMode(String agentMode) {
-        return new IllegalArgumentException(
-                String.format("Unknown address mode '%s', known address modes: %s, %s, %s",
-                        agentMode, BROADCAST_MODE, RANDOM_MODE, OLDEST_MEMBER)
-        );
-    }
 
     private RuntimeException wrongFormat(String address) {
         return new IllegalArgumentException(
-                String.format("Address has to be in a format Syntax: %s=<%s,%s>[,%s=<%s,%s>[,%s=<%s, %s, %s>]], found: '%s'",
-                        AGENT, BROADCAST_MODE, RANDOM_MODE, WORKER, BROADCAST_MODE, RANDOM_MODE, TEST,
-                        BROADCAST_MODE, RANDOM_MODE,OLDEST_MEMBER,
+                String.format("Address '%s' has a wrong format. Please use communicator --help to see the syntax",
                         address));
     }
+
 }

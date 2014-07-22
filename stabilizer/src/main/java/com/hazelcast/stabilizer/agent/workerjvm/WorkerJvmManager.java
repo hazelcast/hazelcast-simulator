@@ -21,7 +21,6 @@ import com.hazelcast.stabilizer.agent.CommandFuture;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
-import com.hazelcast.stabilizer.coordinator.Coordinator;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.worker.TerminateWorkerException;
 import com.hazelcast.stabilizer.worker.commands.Command;
@@ -120,13 +119,38 @@ public class WorkerJvmManager {
 
     public void sendMessage(Message message) throws TimeoutException, InterruptedException {
         String workerAddress = message.getMessageAddress().getWorkerAddress();
-        if (MessageAddress.BROADCAST_PREFIX.equals(workerAddress)) {
+        if (MessageAddress.BROADCAST.equals(workerAddress)) {
             sendMessageToAllWorkers(message);
-        } else if (MessageAddress.OLDEST_MEMBER_PREFIX.equals(workerAddress)) {
+        } else if (MessageAddress.WORKER_WITH_OLDEST_MEMBER.equals(workerAddress)) {
             sendMessageToAllWorkers(message); //send to all workers as they have to evaluate who is the oldest worker
-        } else if (MessageAddress.RANDOM_PREFIX.equals(workerAddress)) {
+        } else if (MessageAddress.RANDOM.equals(workerAddress)) {
             sendMessageToRandomWorker(message);
+        } else if (MessageAddress.ALL_WORKERS_WITH_MEMBER.equals(workerAddress)) {
+            sendMessageToAllWorkersWithClusterMember(message);
+        } else if (MessageAddress.RANDOM_WORKER_WITH_MEMBER.equals(workerAddress)) {
+            sendMessageToRandomWorkerWithClusterMember(message);
+        } else {
+            throw new UnsupportedOperationException("Unsupported addressing mode for worker '"+workerAddress+"'. " +
+                    "Full address: '"+message.getMessageAddress()+"'.");
         }
+    }
+
+    private void sendMessageToRandomWorkerWithClusterMember(Message message) throws TimeoutException, InterruptedException {
+        WorkerJvm worker = getRandomWorkerWithClusterMemberOrNull();
+        if (worker == null) {
+            log.warn("No worker is known to this agent. Is it a race-condition?");
+        } else {
+            List<WorkerJvm> workerList = Collections.singletonList(worker);
+            preprocessMessage(message, workerList);
+            Command command = new MessageCommand(message);
+            executeOnWorkers(command, workerList);
+        }
+    }
+
+    private void sendMessageToAllWorkersWithClusterMember(Message message) throws TimeoutException, InterruptedException {
+        List<WorkerJvm> workers = getAllWorkersWithClusterMembers();
+        preprocessMessage(message, workers);
+        executeOnWorkers(new MessageCommand(message), workers);
     }
 
     private void sendMessageToRandomWorker(Message message) throws TimeoutException, InterruptedException {
@@ -254,6 +278,30 @@ public class WorkerJvmManager {
         } catch (Exception e) {
             log.fatal(e);
         }
+    }
+
+    private WorkerJvm getRandomWorkerWithClusterMemberOrNull() {
+        List<WorkerJvm> jvmCollection = withoutMode(workerJvms.values(), WorkerJvm.Mode.CLIENT);
+        if (jvmCollection.isEmpty()) {
+            return null;
+        }
+        WorkerJvm[] workers = jvmCollection.toArray(new WorkerJvm[jvmCollection.size()]);
+        return workers[random.nextInt(workers.length)];
+    }
+
+    private List<WorkerJvm> getAllWorkersWithClusterMembers() {
+        List<WorkerJvm> jvmCollection = withoutMode(workerJvms.values(), WorkerJvm.Mode.CLIENT);
+        return jvmCollection;
+    }
+
+    public List<WorkerJvm> withoutMode(Iterable<WorkerJvm> source, WorkerJvm.Mode mode) {
+        List<WorkerJvm> result = new ArrayList<WorkerJvm>();
+        for (WorkerJvm workerJvm : source) {
+            if (!workerJvm.mode.equals(mode)) {
+                result.add(workerJvm);
+            }
+        }
+        return result;
     }
 
     private WorkerJvm getRandomWorkerOrNull() {

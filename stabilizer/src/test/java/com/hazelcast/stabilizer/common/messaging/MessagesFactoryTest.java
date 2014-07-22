@@ -19,7 +19,7 @@ public class MessagesFactoryTest {
         MessageAddress address = message.getMessageAddress();
 
         assertEquals(DummyRunnableMessage.class, message.getClass());
-        assertEquals(MessageAddress.BROADCAST_PREFIX, address.getAgentAddress());
+        assertEquals(MessageAddress.BROADCAST, address.getAgentAddress());
         assertNull(address.getWorkerAddress());
         assertNull(address.getTestAddress());
     }
@@ -32,7 +32,7 @@ public class MessagesFactoryTest {
 
         assertEquals(DummyRunnableMessage.class, message.getClass());
         assertThat(((DummyRunnableMessage)message).getAttribute(), is(equalTo(attribute)));
-        assertEquals(MessageAddress.BROADCAST_PREFIX, address.getAgentAddress());
+        assertEquals(MessageAddress.BROADCAST, address.getAgentAddress());
         assertNull(address.getWorkerAddress());
         assertNull(address.getTestAddress());
     }

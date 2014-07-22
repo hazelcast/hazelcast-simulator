@@ -3,9 +3,12 @@ package com.hazelcast.stabilizer.common.messaging;
 import java.io.Serializable;
 
 public class MessageAddress implements Serializable {
-    public static final String BROADCAST_PREFIX = "*";
-    public static final String RANDOM_PREFIX = "R";
-    public static final String OLDEST_MEMBER_PREFIX = "O";
+    public static final String BROADCAST = "*";
+    public static final String RANDOM = "R";
+
+    public static final String ALL_WORKERS_WITH_MEMBER = "*m";
+    public static final String RANDOM_WORKER_WITH_MEMBER = "Rm";
+    public static final String WORKER_WITH_OLDEST_MEMBER = "O";
 
     private String agentAddress;
     private String workerAddress;
@@ -55,38 +58,56 @@ public class MessageAddress implements Serializable {
         private String testAddress;
 
         public MessageAddressBuilder toAllAgents() {
-            agentAddress = BROADCAST_PREFIX;
+            agentAddress = BROADCAST;
             return this;
         }
 
         public MessageAddressBuilder toRandomAgent() {
-            agentAddress = RANDOM_PREFIX;
+            agentAddress = RANDOM;
             return this;
         }
 
         public MessageAddressBuilder toAllWorkers() {
-            workerAddress = BROADCAST_PREFIX;
+            workerAddress = BROADCAST;
             return this;
         }
 
         public MessageAddressBuilder toRandomWorker() {
-            workerAddress = RANDOM_PREFIX;
+            workerAddress = RANDOM;
             return this;
         }
 
         public MessageAddressBuilder toOldestMember() {
-            agentAddress = BROADCAST_PREFIX;
-            workerAddress = OLDEST_MEMBER_PREFIX;
+            if (agentAddress == null) {
+                agentAddress = BROADCAST;
+            }
+            workerAddress = WORKER_WITH_OLDEST_MEMBER;
+            return this;
+        }
+
+        public MessageAddressBuilder toWorkersWithClusterMember() {
+            if (agentAddress == null) {
+                agentAddress = BROADCAST;
+            }
+            workerAddress = ALL_WORKERS_WITH_MEMBER;
+            return this;
+        }
+
+        public MessageAddressBuilder toRandomWorkerWithMember() {
+            if (agentAddress == null) {
+                agentAddress = BROADCAST;
+            }
+            workerAddress = RANDOM_WORKER_WITH_MEMBER;
             return this;
         }
 
         public MessageAddressBuilder toAllTests() {
-            testAddress = BROADCAST_PREFIX;
+            testAddress = BROADCAST;
             return this;
         }
 
         public MessageAddressBuilder toRandomTest() {
-            testAddress = RANDOM_PREFIX;
+            testAddress = RANDOM;
             return this;
         }
 

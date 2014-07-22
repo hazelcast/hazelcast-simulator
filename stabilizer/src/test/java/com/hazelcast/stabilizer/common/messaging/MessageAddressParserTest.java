@@ -36,7 +36,7 @@ public class MessageAddressParserTest {
     @Test
     public void testParse_toAllAgents() throws Exception {
         MessageAddress address = parser.parse("Agent=*");
-        assertEquals(MessageAddress.BROADCAST_PREFIX, address.getAgentAddress());
+        assertEquals(MessageAddress.BROADCAST, address.getAgentAddress());
         assertNull(address.getWorkerAddress());
         assertNull(address.getTestAddress());
     }
@@ -44,7 +44,7 @@ public class MessageAddressParserTest {
     @Test
     public void testParse_toSingleRandomAgent() throws Exception {
         MessageAddress address = parser.parse("Agent=R");
-        assertEquals(MessageAddress.RANDOM_PREFIX, address.getAgentAddress());
+        assertEquals(MessageAddress.RANDOM, address.getAgentAddress());
         assertNull(address.getWorkerAddress());
         assertNull(address.getTestAddress());
     }
@@ -67,16 +67,16 @@ public class MessageAddressParserTest {
     @Test
     public void testParse_toAllWorkers() throws Exception {
         MessageAddress address = parser.parse("Agent=R,Worker=*");
-        assertEquals(MessageAddress.RANDOM_PREFIX, address.getAgentAddress());
-        assertEquals(MessageAddress.BROADCAST_PREFIX, address.getWorkerAddress());
+        assertEquals(MessageAddress.RANDOM, address.getAgentAddress());
+        assertEquals(MessageAddress.BROADCAST, address.getWorkerAddress());
         assertNull(address.getTestAddress());
     }
 
     @Test
     public void testParse_toRandomWorker() throws Exception {
         MessageAddress address = parser.parse("Agent=*,Worker=R");
-        assertEquals(MessageAddress.BROADCAST_PREFIX, address.getAgentAddress());
-        assertEquals(MessageAddress.RANDOM_PREFIX, address.getWorkerAddress());
+        assertEquals(MessageAddress.BROADCAST, address.getAgentAddress());
+        assertEquals(MessageAddress.RANDOM, address.getWorkerAddress());
         assertNull(address.getTestAddress());
     }
 
@@ -98,21 +98,37 @@ public class MessageAddressParserTest {
     @Test
     public void testParse_toAllTest() throws Exception {
         MessageAddress address = parser.parse("Agent=R,Worker=*,Test=*");
-        assertEquals(MessageAddress.RANDOM_PREFIX, address.getAgentAddress());
-        assertEquals(MessageAddress.BROADCAST_PREFIX, address.getWorkerAddress());
-        assertEquals(MessageAddress.BROADCAST_PREFIX, address.getTestAddress());
+        assertEquals(MessageAddress.RANDOM, address.getAgentAddress());
+        assertEquals(MessageAddress.BROADCAST, address.getWorkerAddress());
+        assertEquals(MessageAddress.BROADCAST, address.getTestAddress());
     }
 
     @Test
     public void testParse_toRandomTest() throws Exception {
         MessageAddress address = parser.parse("Agent=*,Worker=R,Test=R");
-        assertEquals(MessageAddress.BROADCAST_PREFIX, address.getAgentAddress());
-        assertEquals(MessageAddress.RANDOM_PREFIX, address.getWorkerAddress());
-        assertEquals(MessageAddress.RANDOM_PREFIX, address.getTestAddress());
+        assertEquals(MessageAddress.BROADCAST, address.getAgentAddress());
+        assertEquals(MessageAddress.RANDOM, address.getWorkerAddress());
+        assertEquals(MessageAddress.RANDOM, address.getTestAddress());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testParse_addressTooLong() throws Exception {
         parser.parse("Agent=*,Worker=R,Test=R,");
+    }
+
+    @Test
+    public void testParse_toAllMembersWithWorker() {
+        MessageAddress address = parser.parse("Agent=*,Worker=*m");
+        assertEquals(MessageAddress.BROADCAST, address.getAgentAddress());
+        assertEquals(MessageAddress.ALL_WORKERS_WITH_MEMBER, address.getWorkerAddress());
+        assertNull(address.getTestAddress());
+    }
+
+    @Test
+    public void testParse_toRandomMemberWithWorker() {
+        MessageAddress address = parser.parse("Agent=*,Worker=Rm");
+        assertEquals(MessageAddress.BROADCAST, address.getAgentAddress());
+        assertEquals(MessageAddress.RANDOM_WORKER_WITH_MEMBER, address.getWorkerAddress());
+        assertNull(address.getTestAddress());
     }
 }

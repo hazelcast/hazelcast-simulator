@@ -41,7 +41,7 @@ public class CommunicatorCli {
                     "will pass it to a single random worker for processing. %n" +
                     "          %n--message-address 'Agent=R,Worker=R,Test=*' - a message will be router to a single random " +
                     "agent. The agent will pass it to a single random worker and the worker will pass the message to all " +
-                    "tests.", MessageAddressParser.BROADCAST_MODE, MessageAddressParser.RANDOM_MODE))
+                    "tests.", MessageAddressParser.ALL_WORKERS, MessageAddressParser.RANDOM_WORKER))
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec oldestMemberSpec = parser.accepts("oldest-member",
