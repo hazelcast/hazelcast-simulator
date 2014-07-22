@@ -5,10 +5,6 @@ import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
 
 import java.io.Serializable;
 
-/**
- *
- *
- */
 @MessageSpec("blockHzTraffic")
 public class BlockTrafficMessage extends RunnableMessage {
     private static final String ports = "5700:5800";

@@ -35,11 +35,7 @@ public class MessageAddressParser {
         DONE
     }
 
-    public MessageAddress parse(final String originInput) {
-        return parseRexexp(originInput);
-    }
-
-    private MessageAddress parseRexexp(String input) {
+    public MessageAddress parse(String input) {
         if (input == null) {
             throw new IllegalArgumentException("Input string cannot be null");
         }
