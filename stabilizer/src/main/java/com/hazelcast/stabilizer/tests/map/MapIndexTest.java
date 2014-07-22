@@ -135,10 +135,10 @@ public class MapIndexTest {
 
                         final double maxSal = random.nextDouble() * Employee.MAX_SALARY;
 
-                        Predicate  betweenSlayer = Predicates.between("salary", maxSal-50.0, maxSal);
-                        PagingPredicate pagingPredicate = new PagingPredicate( betweenSlayer , 5);
+                        //Predicate  pred = Predicates.between("salary", maxSal-50.0, maxSal);
+                        Predicate  pred = Predicates.lessThan("salary", maxSal);
+                        PagingPredicate pagingPredicate = new PagingPredicate( pred , 5);
                         Collection<Employee> employees;
-
 
                         System.out.println(basename+" start-loop");
                         do{
