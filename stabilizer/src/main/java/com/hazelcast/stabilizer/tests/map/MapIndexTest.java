@@ -140,7 +140,7 @@ public class MapIndexTest {
                         Collection<Employee> employees;
 
 
-                        System.out.println(basename+" Started loop");
+                        System.out.println(basename+" start-loop");
                         do{
                             employees = map.values( pagingPredicate );
 
@@ -150,9 +150,12 @@ public class MapIndexTest {
 
                             pagingPredicate.nextPage();
 
+                            if(testContext.isStopped()){
+                                System.out.println(basename+"(stop) res size = "+employees.size());
+                            }
 
                         }while( ! employees.isEmpty() );
-                        System.out.println(basename+" END loop");
+                        System.out.println(basename+" end-loop");
 
                         counter.pagePredCount++;
                     }
