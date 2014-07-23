@@ -47,6 +47,12 @@ public class CommunicatorCli {
     private final OptionSpec oldestMemberSpec = parser.accepts("oldest-member",
             "Send the message to a worker with the oldest cluster member.");
 
+    private final OptionSpec randomAgentSpec = parser.accepts("random-agent",
+            "Send the message to a random agent. Cannot be used together with --message-address or any other addressing option.");
+
+    private final OptionSpec randomWorkerSpec = parser.accepts("random-worker",
+            "Send the message to a worker agent. Cannot be used together with --message-address or any other addressing option.");
+
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
 
@@ -67,41 +73,66 @@ public class CommunicatorCli {
             System.exit(0);
         }
 
-        String messageTypeString = options.valueOf(this.messageTypeSpec);
-        KeyValuePair<String, String> attribute = null;
-
+        String messageTypeString = null;
         List<String> noArgOptions = options.nonOptionArguments();
-        if (!noArgOptions.isEmpty()) {
-            if (options.has(messageTypeSpec)) {
+        if (options.has(messageTypeSpec)) {
+            if (!noArgOptions.isEmpty()) {
                 Utils.exitWithError(log, "You cannot use --message-type simultaneously with a message shortcut. " +
                         "Use --help to get overview of the help options.");
             }
+            messageTypeString = options.valueOf(this.messageTypeSpec);
+        }else if (!noArgOptions.isEmpty()) {
             if (noArgOptions.size() > 1) {
                 Utils.exitWithError(log, "You cannot use more than 1 message shortcut.");
             }
-            String messageShortcut = noArgOptions.get(0);
-        } else {
-            if (!options.has(messageTypeSpec)) {
-                Utils.exitWithError(log, "You have to use either --message-type or message shortcut " +
-                        "Use --help to get overview of the help options.");
-            }
+            messageTypeString = noArgOptions.get(0);
+        } else  {
+            Utils.exitWithError(log, "You have to use either --message-type or message shortcut " +
+                    "Use --help to get overview of the help options.");
         }
 
-        if (options.has(oldestMemberSpec)) {
-            if (options.has(messageAddressSpec)) {
-                Utils.exitWithError(log, "You cannot use --oldest-member and --message-address simultaneously. " +
-                        "Use --help to get overview of the help options.");
-            }
-            MessageAddress messageAddress = MessageAddress.builder().toOldestMember().build();
-            communicator.message = Message.newBySpec(messageTypeString, messageAddress);
+        MessageAddress messageAddress = null;
+        if (options.has(randomAgentSpec)) {
+            checkHasOnlyAddressingOption(randomAgentSpec);
+            messageAddress = MessageAddress.builder().toRandomAgent().build();
+        } else if (options.has(oldestMemberSpec)) {
+            checkHasOnlyAddressingOption(oldestMemberSpec);
+            messageAddress = MessageAddress.builder().toOldestMember().build();
         } else if (options.has(messageAddressSpec)) {
+            checkHasOnlyAddressingOption(messageAddressSpec);
+            MessageAddressParser addressParser = new MessageAddressParser();
             String messageAddressString = options.valueOf(messageAddressSpec);
-            communicator.message = Message.newBySpec(messageTypeString, messageAddressString);
+            messageAddress = addressParser.parse(messageAddressString);
+        } else if (options.has(randomWorkerSpec)) {
+            checkHasOnlyAddressingOption(randomWorkerSpec);
+            messageAddress = MessageAddress.builder().toAllAgents().toRandomWorker().build();
         } else {
             Utils.exitWithError(log, "You have to use either --oldest-member or --message-address to specify message address" +
                     ". Use --help to get overview of the help options.");
         }
-
+        communicator.message = Message.newBySpec(messageTypeString, messageAddress);
         communicator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
+    }
+
+    private void checkHasOnlyAddressingOption(OptionSpec optionSpec) {
+        if (hasOtherAddressOptionThen(optionSpec)) {
+            Utils.exitWithError(log, "You cannot use --random-agent and --message-address or any other addressing option " +
+                    "simultaneously. Use --help to get overview of the help options.");
+        }
+    }
+
+    private boolean hasOtherAddressOptionThen(OptionSpec optionSpec) {
+        OptionSpec[] addressOptionSpecs = new OptionSpec[]{
+                messageAddressSpec,
+                randomAgentSpec,
+                oldestMemberSpec,
+                randomWorkerSpec};
+
+        for (OptionSpec o : addressOptionSpecs) {
+            if (!o.equals(optionSpec) && options.has(o)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

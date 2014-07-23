@@ -40,13 +40,13 @@ public class MessageAddress implements Serializable {
     public String toString() {
         StringBuilder builder = new StringBuilder("MessageAddress{");
         if (agentAddress != null) {
-            builder.append("agentAddress='").append(agentAddress);
+            builder.append("agentAddress='").append(agentAddress).append("'");
         }
         if (workerAddress != null) {
-            builder.append("workerAddress='").append(workerAddress);
+            builder.append(",workerAddress='").append(workerAddress).append("'");
         }
         if (testAddress != null) {
-            builder.append("testAddress='").append(testAddress);
+            builder.append(",testAddress='").append(testAddress).append("'");
         }
         builder.append("}");
         return builder.toString();
