@@ -2,7 +2,7 @@ package com.hazelcast.stabilizer.common.messaging;
 
 import com.hazelcast.stabilizer.NativeUtils;
 
-@MessageSpec("unblockTraffic")
+@MessageSpec(value = "unblockTraffic", description = "unblock all traffic by calling 'sudo /sbin/iptables -F'")
 public class UnblockTrafficMessage extends RunnableMessage {
     public UnblockTrafficMessage(MessageAddress messageAddress) {
         super(messageAddress);

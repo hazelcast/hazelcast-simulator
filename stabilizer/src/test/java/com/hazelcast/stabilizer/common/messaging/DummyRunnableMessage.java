@@ -4,7 +4,7 @@ import com.hazelcast.stabilizer.common.KeyValuePair;
 
 import java.io.Serializable;
 
-@MessageSpec("dummyMessage")
+@MessageSpec(value = "dummyMessage", description = "Dummy Runnable Message")
 public class DummyRunnableMessage extends RunnableMessage {
 
     private volatile boolean executed = false;

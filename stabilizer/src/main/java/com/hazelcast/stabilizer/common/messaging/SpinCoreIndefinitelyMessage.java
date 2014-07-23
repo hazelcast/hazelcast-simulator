@@ -1,6 +1,6 @@
 package com.hazelcast.stabilizer.common.messaging;
 
-@MessageSpec("spinCore")
+@MessageSpec(value = "spinCore", description = "triggers a thread spinning indefinitely")
 public class SpinCoreIndefinitelyMessage extends RunnableMessage {
     private final int noOfThreads;
 

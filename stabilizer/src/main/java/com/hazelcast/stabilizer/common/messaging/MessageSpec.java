@@ -20,4 +20,11 @@ public @interface MessageSpec {
      * Specification of the message to be used when calling {@link com.hazelcast.stabilizer.common.messaging.Message#newBySpec(String, String)}
      */
     public String value();
+
+    /**
+     * A human-readable description of a message. It can be used to generate --help
+     *
+     * @return
+     */
+    public String description() default "No description provided";
 }

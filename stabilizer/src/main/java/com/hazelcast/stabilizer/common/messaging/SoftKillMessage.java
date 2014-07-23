@@ -3,7 +3,7 @@ package com.hazelcast.stabilizer.common.messaging;
 
 import org.apache.log4j.Logger;
 
-@MessageSpec("softKill")
+@MessageSpec(value = "softKill", description = "instructs receiving party to call System.exit(-1)")
 public class SoftKillMessage extends RunnableMessage {
     private static final Logger log = Logger.getLogger(SoftKillMessage.class);
 

@@ -63,6 +63,8 @@ import java.util.zip.ZipOutputStream;
 import static java.lang.String.format;
 
 public final class Utils {
+    public static final String NEW_LINE = System.getProperty("line.separator");
+
     private static final String USER_HOME = System.getProperty("user.home");
     private static final ILogger log = Logger.getLogger(Utils.class);
     private static final String DEFAULT_DELIMITER = ", ";

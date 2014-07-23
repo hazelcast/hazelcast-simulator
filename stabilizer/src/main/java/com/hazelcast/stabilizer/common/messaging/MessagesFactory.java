@@ -19,12 +19,14 @@ class MessagesFactory {
 
     private final Map<String, Constructor<? extends Message>> noAttributeConstructors;
     private final Map<String, Constructor<? extends Message>> attributeConstructors;
+    private final Map<String, String> messageDesription;
     private final MessageAddressParser messageAddressParser;
 
     private MessagesFactory() {
         noAttributeConstructors = new HashMap<String, Constructor<? extends Message>>();
         attributeConstructors = new HashMap<String, Constructor<? extends Message>>();
         messageAddressParser = new MessageAddressParser();
+        messageDesription= new HashMap<String, String>();
         findAndInitMessageTypes();
     }
 
@@ -32,6 +34,14 @@ class MessagesFactory {
         HashSet<String> constructors = new HashSet<String>(instance.noAttributeConstructors.keySet());
         constructors.addAll(instance.attributeConstructors.keySet());
         return constructors;
+    }
+
+    static String getMessageDescription(String messageSpec) {
+        String description = instance.messageDesription.get(messageSpec);
+        if (description == null) {
+            throw new IllegalArgumentException("Unknown message type '"+messageSpec+"'.");
+        }
+        return description;
     }
 
     static Message bySpec(String messageTypeSpec, String messageAddressSpec) {
@@ -92,25 +102,51 @@ class MessagesFactory {
     }
 
     private void registerMessage(Class<? extends Message> clazz) {
+        boolean registered = registerMessageTryBasicConstructor(clazz);
+        if (registerMessageTryConstructorWithKeyValue(clazz) || registered) {
+            registerDescription(clazz);
+        }
+
+    }
+
+    private void registerDescription(Class<? extends Message> clazz) {
+        String specString = getSpecString(clazz);
+        String description = getDescription(clazz);
+        messageDesription.put(specString, description);
+    }
+
+    private Boolean registerMessageTryConstructorWithKeyValue(Class<? extends Message> clazz) {
+        String spec = getSpecString(clazz);
+        try {
+            Constructor<? extends Message> constructor = clazz.getConstructor(MessageAddress.class, KeyValuePair.class);
+            attributeConstructors.put(spec, constructor);
+            return true;
+        } catch (NoSuchMethodException e) {
+            log.debug("Class "+clazz.getName()+" does not have a constructor accepting "+KeyValuePair.class.getName()+"+.");
+            return false;
+        }
+    }
+
+    private boolean registerMessageTryBasicConstructor(Class<? extends Message> clazz) {
         String spec = getSpecString(clazz);
         try {
             Constructor<? extends Message> constructor = clazz.getConstructor(MessageAddress.class);
             noAttributeConstructors.put(spec, constructor);
+            return true;
         } catch (NoSuchMethodException e) {
             log.error("Error while searching for message types. Does the "
                     +clazz.getName()+" have a constructor with "+MessageAddress.class.getName()+" as an argument?", e);
+            return false;
         }
-        try {
-            Constructor<? extends Message> constructor = clazz.getConstructor(MessageAddress.class, KeyValuePair.class);
-            attributeConstructors.put(spec, constructor);
-        } catch (NoSuchMethodException e) {
-            log.debug("Class "+clazz.getName()+" does not have a constructor accepting "+KeyValuePair.class.getName()+"+.");
-        }
-
     }
 
     private String getSpecString(Class<? extends Message> messageClass) {
         MessageSpec messageSpec = messageClass.getAnnotation(MessageSpec.class);
         return messageSpec.value();
+    }
+
+    private String getDescription(Class<? extends Message> messageClass) {
+        MessageSpec messageSpec = messageClass.getAnnotation(MessageSpec.class);
+        return messageSpec.description();
     }
 }
