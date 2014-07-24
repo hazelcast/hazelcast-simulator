@@ -98,7 +98,7 @@ public class TxnQueueWithLockTest {
             total.add(counter);
         }
 
-        System.out.println(basename +": "+ total);
+        System.out.println(basename +": "+ total+" from "+results.size());
         assertFalse(firstLock.isLocked());
         assertFalse(secondLock.isLocked());
         assertEquals(total.committed - total.rolled, queue.size());
