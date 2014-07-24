@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -166,8 +167,10 @@ public class WorkerJvmManager {
     }
 
     private void preprocessMessage(Message message, Collection<WorkerJvm> workerJvmList) {
-        for (WorkerJvm workerJvm : workerJvmList) {
-            if (message.disableMemberFailureDetection()) {
+        for (WorkerJvm workerJvm : new ArrayList<WorkerJvm>(workerJvmList)) {
+            if (message.removeFromAgentList()) {
+                while (workerJvms.values().remove(workerJvm)); //remove worker
+            } else if (message.disableMemberFailureDetection()) {
                 workerJvm.detectFailure = false;
             }
         }

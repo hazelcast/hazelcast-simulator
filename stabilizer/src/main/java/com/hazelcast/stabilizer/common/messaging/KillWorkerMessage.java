@@ -19,4 +19,14 @@ public class KillWorkerMessage extends RunnableMessage {
             NativeUtils.kill(pid);
         }
     }
+
+    @Override
+    public boolean removeFromAgentList() {
+        return true;
+    }
+
+    @Override
+    public boolean disableMemberFailureDetection() {
+        return true;
+    }
 }

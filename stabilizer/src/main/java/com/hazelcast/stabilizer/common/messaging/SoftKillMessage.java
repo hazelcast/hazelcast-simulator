@@ -18,6 +18,11 @@ public class SoftKillMessage extends RunnableMessage {
     }
 
     @Override
+    public boolean removeFromAgentList() {
+        return true;
+    }
+
+    @Override
     public boolean disableMemberFailureDetection() {
         return true;
     }

@@ -38,6 +38,10 @@ public abstract class Message implements Serializable {
         return false;
     }
 
+    public boolean removeFromAgentList() {
+        return false;
+    }
+
     public static Message newBySpec(String messageTypeSpec, String messageAddressSpec) {
         return MessagesFactory.bySpec(messageTypeSpec, messageAddressSpec);
     }

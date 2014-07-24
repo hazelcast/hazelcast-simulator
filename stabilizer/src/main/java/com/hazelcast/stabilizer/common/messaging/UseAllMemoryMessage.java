@@ -20,6 +20,16 @@ public class UseAllMemoryMessage extends RunnableMessage {
         this.delay = delay;
     }
 
+    @Override
+    public boolean disableMemberFailureDetection() {
+        return super.disableMemberFailureDetection();
+    }
+
+    @Override
+    public boolean removeFromAgentList() {
+        return super.removeFromAgentList();
+    }
+
     public UseAllMemoryMessage(MessageAddress messageAddress) {
         this(messageAddress, 0);
     }

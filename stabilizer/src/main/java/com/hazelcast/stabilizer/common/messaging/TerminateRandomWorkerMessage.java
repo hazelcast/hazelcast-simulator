@@ -12,4 +12,14 @@ public class TerminateRandomWorkerMessage extends Message {
     public TerminateRandomWorkerMessage(MessageAddress messageAddress) {
         super(messageAddress);
     }
+
+    @Override
+    public boolean disableMemberFailureDetection() {
+        return super.disableMemberFailureDetection();
+    }
+
+    @Override
+    public boolean removeFromAgentList() {
+        return super.removeFromAgentList();
+    }
 }
