@@ -23,7 +23,7 @@ import static org.junit.Assert.assertFalse;
  */
 public class TxnQueueWithLockTest {
 
-    public String baseName = this.getClass().getName();
+    public String basename = this.getClass().getName();
     public int threadCount = 5;
 
     private HazelcastInstance instance=null;
@@ -36,10 +36,10 @@ public class TxnQueueWithLockTest {
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        firstLock = instance.getLock(baseName+"lock1");
-        secondLock = instance.getLock(baseName+"lock2");
-        queue = instance.getQueue(baseName+"q");
-        results =  instance.getList(baseName+"results");
+        firstLock = instance.getLock(basename +"lock1");
+        secondLock = instance.getLock(basename +"lock2");
+        queue = instance.getQueue(basename +"q");
+        results =  instance.getList(basename +"results");
     }
 
     @Teardown
@@ -69,7 +69,7 @@ public class TxnQueueWithLockTest {
                 TransactionContext ctx = instance.newTransactionContext();
                 ctx.beginTransaction();
                 try {
-                    TransactionalQueue<Integer> queue = ctx.getQueue(baseName+"q");
+                    TransactionalQueue<Integer> queue = ctx.getQueue(basename +"q");
 
                     queue.offer(1);
                     secondLock.lock();
@@ -96,7 +96,7 @@ public class TxnQueueWithLockTest {
             total.add(counter);
         }
 
-        System.out.println(baseName+":"+ total);
+        System.out.println(basename +":"+ total);
         assertFalse(firstLock.isLocked());
         assertFalse(secondLock.isLocked());
         assertEquals(total.committed - total.rolled, queue.size());
