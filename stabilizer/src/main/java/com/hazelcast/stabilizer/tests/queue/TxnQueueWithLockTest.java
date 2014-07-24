@@ -5,6 +5,7 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.core.TransactionalQueue;
+import com.hazelcast.spi.exception.TargetDisconnectedException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
@@ -67,24 +68,28 @@ public class TxnQueueWithLockTest {
         public void run() {
             while (!testContext.isStopped()) {
 
-                firstLock.lock();
-                TransactionContext ctx = instance.newTransactionContext();
-                ctx.beginTransaction();
-                try {
-                    TransactionalQueue<Integer> queue = ctx.getQueue(basename +"q");
+                try{
+                    firstLock.lock();
+                    TransactionContext ctx = instance.newTransactionContext();
+                    ctx.beginTransaction();
+                    try {
+                        TransactionalQueue<Integer> queue = ctx.getQueue(basename +"q");
 
-                    queue.offer(1);
-                    secondLock.lock();
-                    secondLock.unlock();
+                        queue.offer(1);
+                        secondLock.lock();
+                        secondLock.unlock();
 
-                    ctx.commitTransaction();
-                    counter.committed++;
+                        ctx.commitTransaction();
+                        counter.committed++;
 
-                } catch (Exception e) {
-                    ctx.rollbackTransaction();
-                    counter.rolled++;
-                } finally {
-                    firstLock.unlock();
+                    } catch (Exception e) {
+                        ctx.rollbackTransaction();
+                        counter.rolled++;
+                    } finally {
+                        firstLock.unlock();
+                    }
+                }catch(TargetDisconnectedException e){
+                    System.out.println(e);
                 }
             }
             results.add(counter);
