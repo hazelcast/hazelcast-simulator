@@ -85,6 +85,10 @@ public class TxnQueueWithLockTest {
                     } catch (Exception e) {
                         ctx.rollbackTransaction();
                         counter.rolled++;
+
+                        System.out.println(basename+": local txn No. "+ counter.committed+1+" roles all reday="+counter.rolled);
+                        System.out.println(basename+":"+e);
+
                     } finally {
                         firstLock.unlock();
                     }
