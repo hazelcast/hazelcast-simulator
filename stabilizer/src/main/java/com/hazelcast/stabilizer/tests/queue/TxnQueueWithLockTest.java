@@ -36,6 +36,8 @@ public class TxnQueueWithLockTest {
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
+        this.instance = testContext.getTargetInstance();
+
         firstLock = instance.getLock(basename +"lock1");
         secondLock = instance.getLock(basename +"lock2");
         queue = instance.getQueue(basename +"q");
