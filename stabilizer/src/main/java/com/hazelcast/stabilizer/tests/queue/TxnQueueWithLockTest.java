@@ -35,8 +35,6 @@ public class TxnQueueWithLockTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         this.instance = testContext.getTargetInstance();
-
-
     }
 
     @Run
@@ -54,7 +52,6 @@ public class TxnQueueWithLockTest {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-
                 try{
                     ILock firstLock = instance.getLock(basename +"l1");
                     firstLock.lock();
