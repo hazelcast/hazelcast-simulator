@@ -112,8 +112,7 @@ public class MapIndexTest {
                         counter.predicateBuilderCount++;
 
                         for(Employee emp : employees){
-                            assertTrue( emp.getAge() < age );
-                            assertEquals( name, emp.getName());
+                            assertTrue(emp+" not matching predicate "+predicate, emp.getAge() < age && name.equals(emp.getName()) );
                         }
                     }
 
@@ -126,8 +125,7 @@ public class MapIndexTest {
                         counter.sqlStringCount++;
 
                         for(Employee emp : employees){
-                            assertTrue( active == emp.isActive());
-                            assertTrue(emp.getAge() > age);
+                            assertTrue(emp+" not matching predicate "+"active="+active+" AND age >"+age, active == emp.isActive() && emp.getAge() > age);
                         }
                     }
 
@@ -175,14 +173,12 @@ public class MapIndexTest {
 
                         map.destroy();
                         initMap();
-                        System.out.println(basename+" MAP destroy");
 
                         counter.destroyCount++;
                     }
                 }catch(DistributedObjectDestroyedException e){}
             }
             targetInstance.getList(basename+"report").add(counter);
-            System.out.println(basename+"=END=" );
         }
     }
 
