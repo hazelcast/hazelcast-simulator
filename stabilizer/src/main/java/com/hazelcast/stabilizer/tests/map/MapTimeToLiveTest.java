@@ -87,7 +87,7 @@ public class MapTimeToLiveTest {
                         map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
                         count.putTTLCount.incrementAndGet();
                     }
-                    if ( (chance -= putAsyncTTLProb) < 0 ) {
+                    else if ( (chance -= putAsyncTTLProb) < 0 ) {
                         final Object value = random.nextInt();
                         int delayMs =  minTTLExpireyMs + random.nextInt(maxTTLExpireyMs);
                         map.putAsync(key, value, delayMs, TimeUnit.MILLISECONDS);
