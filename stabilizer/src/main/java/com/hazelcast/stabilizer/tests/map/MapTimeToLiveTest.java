@@ -115,7 +115,7 @@ public class MapTimeToLiveTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        Thread.sleep(maxTTLExpireyMs * 3);
+        Thread.sleep(maxTTLExpireyMs * 10);
 
         IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
         MapOpperationsCount total = new MapOpperationsCount();
