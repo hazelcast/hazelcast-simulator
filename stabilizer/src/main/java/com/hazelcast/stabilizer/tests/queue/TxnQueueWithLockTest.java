@@ -1,6 +1,7 @@
 package com.hazelcast.stabilizer.tests.queue;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.HazelcastInstanceNotActiveException;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.IQueue;
@@ -29,27 +30,13 @@ public class TxnQueueWithLockTest {
 
     private HazelcastInstance instance=null;
     private TestContext testContext = null;
-    private ILock firstLock = null;
-    private ILock secondLock = null;
-    private IQueue queue = null;
-    private IList<TxnCounter> results = null;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         this.instance = testContext.getTargetInstance();
 
-        firstLock = instance.getLock(basename +"lock1");
-        secondLock = instance.getLock(basename +"lock2");
-        queue = instance.getQueue(basename +"q");
-        results =  instance.getList(basename +"results");
-    }
 
-    @Teardown
-    public void teardown() throws Exception {
-        firstLock.destroy();
-        secondLock.destroy();
-        queue.destroy();
     }
 
     @Run
@@ -69,13 +56,18 @@ public class TxnQueueWithLockTest {
             while (!testContext.isStopped()) {
 
                 try{
+                    ILock firstLock = instance.getLock(basename +"l1");
                     firstLock.lock();
+
                     TransactionContext ctx = instance.newTransactionContext();
                     ctx.beginTransaction();
+
                     try {
                         TransactionalQueue<Integer> queue = ctx.getQueue(basename +"q");
 
                         queue.offer(1);
+
+                        ILock secondLock = instance.getLock(basename +"l2");
                         secondLock.lock();
                         secondLock.unlock();
 
@@ -94,14 +86,25 @@ public class TxnQueueWithLockTest {
                     }
                 }catch(TargetDisconnectedException e){
                     System.out.println(e);
+                }catch(HazelcastInstanceNotActiveException e){
+                    System.out.println(e);
                 }
             }
+            IList<TxnCounter> results =  instance.getList(basename +"results");
             results.add(counter);
         }
     }
 
     @Verify(global = true)
     public void verify() {
+
+        IQueue queue = instance.getQueue(basename +"q");
+        ILock firstLock = instance.getLock(basename +"l1");
+        ILock secondLock = instance.getLock(basename +"l2");
+
+
+        IList<TxnCounter> results =  instance.getList(basename +"results");
+
         TxnCounter  total = new TxnCounter();
         for(TxnCounter counter : results){
             total.add(counter);
