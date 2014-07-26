@@ -125,6 +125,14 @@ public class MapTimeToLiveTest {
         System.out.println(basename+": "+total+" total of "+results.size());
 
         final IMap map = targetInstance.getMap(basename);
+
+        for(int i=0; i<5; i++){
+            if(map.size()!=0){
+                System.out.println(basename+": map size="+map.size());
+                Thread.sleep(5000);
+            }
+        }
+
         assertEquals("Map Size not 0, some TTL events not processed", 0, map.size());
     }
 
