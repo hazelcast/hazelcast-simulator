@@ -126,10 +126,10 @@ public class MapTimeToLiveTest {
 
         final IMap map = targetInstance.getMap(basename);
 
-        for(int i=0; i<5; i++){
+        for(int i=0; i<10; i++){
             if(map.size()!=0){
                 System.out.println(basename+": map size="+map.size());
-                Thread.sleep(5000);
+                Thread.sleep(9000);
             }
         }
 

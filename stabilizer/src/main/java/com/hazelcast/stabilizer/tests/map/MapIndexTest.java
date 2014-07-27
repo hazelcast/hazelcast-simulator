@@ -112,7 +112,12 @@ public class MapIndexTest {
                         counter.predicateBuilderCount++;
 
                         for(Employee emp : employees){
-                            assertTrue(emp+" not matching predicate "+predicate, emp.getAge() < age && name.equals(emp.getName()) );
+                            //assertTrue(emp+" not matching predicate "+predicate, emp.getAge() < age && name.equals(emp.getName()) );
+
+                            if( !( emp.getAge() < age && name.equals(emp.getName()) ) ){
+
+                                System.out.println(basename+" ERROR: "+emp+" not matching predicate "+predicate);
+                            }
                         }
                     }
 
@@ -120,12 +125,19 @@ public class MapIndexTest {
 
                         final boolean active = random.nextBoolean();
                         final int age = random.nextInt(Employee.MAX_AGE);
-                        Collection<Employee> employees = map.values( new SqlPredicate( "active="+active+" AND age >"+age ) );
+
+                        final SqlPredicate predicate = new SqlPredicate( "active="+active+" AND age >"+age );
+                        Collection<Employee> employees = map.values( predicate );
 
                         counter.sqlStringCount++;
 
                         for(Employee emp : employees){
-                            assertTrue(emp+" not matching predicate "+"active="+active+" AND age >"+age, active == emp.isActive() && emp.getAge() > age);
+                            //assertTrue(emp+" not matching predicate "+"active="+active+" AND age >"+age, active == emp.isActive() && emp.getAge() > age);
+
+                            if( !(active == emp.isActive() && emp.getAge() > age) ){
+
+                                System.out.println(basename+" ERROR: "+emp+" not matching predicate "+predicate);
+                            }
                         }
                     }
 
