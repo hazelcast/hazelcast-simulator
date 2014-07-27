@@ -60,6 +60,9 @@ class ClientSocketTask implements Runnable {
     private Object execute(AgentRemoteService.Service service, ObjectInputStream in) throws Exception {
         Object result = null;
         switch (service) {
+            case SERVICE_POKE:
+                poke();
+                break;
             case SERVICE_SPAWN_WORKERS:
                 WorkerJvmSettings settings = (WorkerJvmSettings) in.readObject();
                 spawnWorkers(settings);
@@ -103,6 +106,10 @@ class ClientSocketTask implements Runnable {
                 throw new RuntimeException("Unknown service:" + service);
         }
         return result;
+    }
+
+    private void poke() {
+        log.info("Poked by coordinator");
     }
 
     private ArrayList<Failure> getFailures() {

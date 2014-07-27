@@ -59,6 +59,10 @@ public class Agent {
         return testSuite;
     }
 
+    public void signalUsed() {
+        lastUsed = System.currentTimeMillis();
+    }
+
     public File getTestSuiteDir() {
         TestSuite testSuite = this.testSuite;
         if (testSuite == null) {
@@ -152,7 +156,4 @@ public class Agent {
         System.exit(1);
     }
 
-    public void signalUsed() {
-        lastUsed = System.currentTimeMillis();
-    }
 }

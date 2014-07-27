@@ -55,7 +55,6 @@ public class CommunicatorCli {
 
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
-
     public CommunicatorCli(Communicator communicator) {
         this.communicator = communicator;
     }

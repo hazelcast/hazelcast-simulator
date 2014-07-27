@@ -36,7 +36,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -108,7 +107,7 @@ public class Coordinator {
     private void initAgents() throws Exception {
         List<AgentAddress> agentAddresses = AgentsFile.load(agentsFile);
         agentsClient = new AgentsClient(agentAddresses);
-        agentsClient.awaitAgentsReachable();
+        agentsClient.start();
 
         initMemberWorkerCount(workerJvmSettings);
         initHzConfig(workerJvmSettings);
