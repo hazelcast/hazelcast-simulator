@@ -11,8 +11,8 @@ import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
-import com.hazelcast.stabilizer.worker.commands.DoneCommand;
 import com.hazelcast.stabilizer.worker.commands.Command;
+import com.hazelcast.stabilizer.worker.commands.DoneCommand;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +30,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
-import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.*;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_ECHO;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_EXECUTE_ALL_WORKERS;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_EXECUTE_SINGLE_WORKER;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_GET_ALL_WORKERS;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_GET_FAILURES;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_INIT_TESTSUITE;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_POKE;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_PROCESS_MESSAGE;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_SPAWN_WORKERS;
+import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_TERMINATE_WORKERS;
 
 public class AgentsClient {
 
@@ -47,13 +56,30 @@ public class AgentsClient {
         }
     }
 
-    public void awaitAgentsReachable() {
-        List<AgentClient> unchecked = new LinkedList<AgentClient>(agents);
+    public void start() {
+        awaitAgentsReachable();
 
+        // Starts a poke thread; this will repeatedly poke the agents to make sure they
+        // are not going to terminate themselves.
+        new Thread() {
+            public void run() {
+                for (; ; ) {
+                    try {
+                        Thread.sleep(60 * 1000);
+                    } catch (InterruptedException e) {
+                    }
+                    poke();
+                }
+            }
+        }.start();
+    }
+
+    private void awaitAgentsReachable() {
         log.info("--------------------------------------------------------------");
         log.info("Waiting for agents to start");
         log.info("--------------------------------------------------------------");
 
+        List<AgentClient> unchecked = new LinkedList<AgentClient>(agents);
         for (int k = 0; k < 12; k++) {
             Iterator<AgentClient> it = unchecked.iterator();
             while (it.hasNext()) {
@@ -148,7 +174,7 @@ public class AgentsClient {
         return result;
     }
 
-    public void waitDone(String prefix,String testId) {
+    public void waitDone(String prefix, String testId) {
         long startTimeMs = System.currentTimeMillis();
         for (; ; ) {
             List<List<Boolean>> result = executeOnAllWorkers(new DoneCommand(testId));
@@ -167,7 +193,7 @@ public class AgentsClient {
             }
 
             long durationMs = System.currentTimeMillis() - startTimeMs;
-            log.info(prefix+"Waiting for completion: " + Utils.secondsToHuman(durationMs / 1000));
+            log.info(prefix + "Waiting for completion: " + Utils.secondsToHuman(durationMs / 1000));
             Utils.sleepSeconds(5);
         }
     }
@@ -216,6 +242,18 @@ public class AgentsClient {
         }
 
         return result;
+    }
+
+    private void poke() {
+        for (final AgentClient agentClient : agents) {
+            agentExecutor.submit(new Callable<Object>() {
+                @Override
+                public Object call() throws Exception {
+                    agentClient.execute(SERVICE_POKE);
+                    return null;
+                }
+            });
+        }
     }
 
     public void initTestSuite(final TestSuite testSuite) {
@@ -272,7 +310,7 @@ public class AgentsClient {
     }
 
     public void sendMessage(final Message message) {
-        log.info("Sending message '"+message+"' to address '"+message.getMessageAddress()+"'");
+        log.info("Sending message '" + message + "' to address '" + message.getMessageAddress() + "'");
         MessageAddress messageAddress = message.getMessageAddress();
         List<Future> futures;
         if (MessageAddress.BROADCAST_PREFIX.equals(messageAddress.getAgentAddress())) {

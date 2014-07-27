@@ -22,6 +22,7 @@ public class AgentRemoteService {
         SERVICE_EXECUTE_ALL_WORKERS,
         SERVICE_EXECUTE_SINGLE_WORKER,
         SERVICE_ECHO,
+        SERVICE_POKE,
         SERVICE_GET_FAILURES,
         SERVICE_GET_ALL_WORKERS,
         SERVICE_PROCESS_MESSAGE
@@ -70,6 +71,7 @@ public class AgentRemoteService {
                     if (log.isDebugEnabled()) {
                         log.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
                     }
+                    agent.signalUsed();
                     executor.execute(new ClientSocketTask(clientSocket, agent, agentMessageProcessor));
                 } catch (IOException e) {
                     log.fatal(e);
