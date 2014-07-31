@@ -99,7 +99,6 @@ public class TxnQueueWithLockTest {
         ILock firstLock = instance.getLock(basename +"l1");
         ILock secondLock = instance.getLock(basename +"l2");
 
-
         IList<TxnCounter> results =  instance.getList(basename +"results");
 
         TxnCounter  total = new TxnCounter();
