@@ -9,6 +9,7 @@ do
 coordinator --memberWorkerCount 2 \
 	--clientWorkerCount 2 \
 	--duration 1m \
+	--workerVmOptions "-XX:+HeapDumpOnOutOfMemoryError" \
 	--parallel \
 	sandBoxTest.properties
 done
