@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.tests.map;
 
-import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.config.MaxSizeConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
@@ -114,17 +113,11 @@ public class MapMaxSizeTest {
         IMap map = targetInstance.getMap(basename);
 
         System.out.println(basename+": Map size = "+map.size());
-        Thread.sleep(10000);
-        System.out.println(basename+": Map size = "+map.size());
-        Thread.sleep(10000);
-        System.out.println(basename+": Map size = "+map.size());
-
     }
 
     @Verify(global = false)
     public void verify() throws Exception {
         try{
-
             MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
             IMap map = targetInstance.getMap(basename);
 
