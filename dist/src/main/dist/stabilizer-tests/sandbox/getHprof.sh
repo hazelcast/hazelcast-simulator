@@ -11,6 +11,7 @@ s3cp=$(find ~ -name "s3c*.jar")
 
 for item in $list
 do
-    scp $s3cp stabilizer@${item}":."
+    scp $s3cp stabilizer@${item}:~
+    scp -r ~/.s3cp stabilizer@${item}:~
 	ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${item} 'find . -name "*.hprof" | xargs -L 1  java -jar s3cp-cmdline-0.1.11.jar $1 s3://stabilizer/'${issue}'/'
 done
