@@ -111,9 +111,9 @@ public class MapMaxSizeTest {
         System.out.println(basename+": "+total+" total of "+results.size());
 
         final IMap map = targetInstance.getMap(basename);
-        MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
+        //MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
 
-        System.out.println(basename+": Map size = "+map.size()+" Max size="+maxSizeConfig.getSize());
+        //System.out.println(basename+": Map size = "+map.size()+" Max size="+maxSizeConfig.getSize());
     }
 
     @Verify(global = false)
