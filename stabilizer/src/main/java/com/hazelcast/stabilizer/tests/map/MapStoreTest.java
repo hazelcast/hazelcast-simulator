@@ -185,7 +185,4 @@ public class MapStoreTest {
         }catch(UnsupportedOperationException e){}
     }
 
-    public static void main(String[] args) throws Throwable {
-        new TestRunner(new MapStoreTest()).run();
-    }
 }
