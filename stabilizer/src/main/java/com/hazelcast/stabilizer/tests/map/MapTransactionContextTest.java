@@ -54,7 +54,7 @@ public class MapTransactionContextTest {
 
     private class Worker implements Runnable {
         private final Random random = new Random();
-        private final Long[] localIncrements = new Long[keyCount];
+        private final long[] localIncrements = new long[keyCount];
         private int localRoleBackCount=0;
 
         @Override
