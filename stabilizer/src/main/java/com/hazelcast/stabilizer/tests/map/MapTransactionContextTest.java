@@ -103,19 +103,18 @@ public class MapTransactionContextTest {
         for(TxnCounter c : counts){
             total.add(c);
         }
-        System.out.println(basename + ": " + total + "from " + counts.size());
+        System.out.println(basename + ": "+total +" from "+counts.size()+" workers");
 
 
         IList<long[]> allIncrements = targetInstance.getList(basename+"res");
-
-        System.out.println(basename+": received increments from "+allIncrements.size()+" workers" );
-
         long expected[] = new long[keyCount];
         for (long[] incs : allIncrements) {
             for (int i=0; i < incs.length; i++) {
                 expected[i] += incs[i];
             }
         }
+        System.out.println(basename+": received increments from "+allIncrements.size()+" workers" );
+
 
         IMap<Integer, Long> map = targetInstance.getMap(basename);
 
@@ -123,11 +122,10 @@ public class MapTransactionContextTest {
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != map.get(k)) {
                 failures++;
-                System.out.println(basename+": key "+k+" expected "+expected[k]+" but value was "+map.get(k)+" transaction failed to keep value as expected");
             }
         }
 
-        assertEquals("failures detected see worker out.log"+basename+":", 0, failures);
+        assertEquals(basename+": "+failures+" key=>values have been incremented unExpected", 0, failures);
     }
 
 }
