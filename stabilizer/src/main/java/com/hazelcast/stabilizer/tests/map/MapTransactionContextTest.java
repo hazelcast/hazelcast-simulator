@@ -23,8 +23,8 @@ import static org.junit.Assert.assertEquals;
 public class MapTransactionContextTest {
 
     public String basename = this.getClass().getName();
-    public int threadCount = 10;
-    public int keyCount = 1000;
+    public int threadCount = 3;
+    public int keyCount = 10;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
