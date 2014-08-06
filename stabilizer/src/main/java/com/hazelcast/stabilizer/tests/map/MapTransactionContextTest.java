@@ -55,6 +55,7 @@ public class MapTransactionContextTest {
     private class Worker implements Runnable {
         private final Random random = new Random();
         private final Long[] localIncrements = new Long[keyCount];
+        private int localRoleBackCount=0;
 
         @Override
         public void run() {
@@ -78,6 +79,7 @@ public class MapTransactionContextTest {
 
                     }catch(TransactionException e){
                         context.rollbackTransaction();
+                        localRoleBackCount++;
                         System.out.println(basename+": "+e);
                     }
                 }catch(TargetDisconnectedException e){
@@ -87,12 +89,21 @@ public class MapTransactionContextTest {
                 }
             }
             targetInstance.getList(basename+"res").add(localIncrements);
+            targetInstance.getList(basename+"roles").add(localRoleBackCount);
         }
     }
 
 
-    @Verify
+    @Verify(global = true)
     public void verify() throws Exception {
+
+        IList<Integer> roles = targetInstance.getList(basename+"roles");
+        int totalRoles=0;
+        for(int role : roles){
+            totalRoles+=role;
+        }
+        System.out.println(basename+": total roleBack Count "+ roles +" from "+roles.size() );
+
 
         IList<long[]> allIncrements = targetInstance.getList(basename+"res");
 
