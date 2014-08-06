@@ -124,11 +124,11 @@ public class MapTransactionTest {
                         Long current = map.getForUpdate(key);
                         Long update = current + increment;
                         map.put(key, update);
+                        increment(key, increment);
                         return null;
                     }
                 });
 
-                increment(key, increment);
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
