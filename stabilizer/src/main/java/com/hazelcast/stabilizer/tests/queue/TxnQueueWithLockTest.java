@@ -52,7 +52,7 @@ public class TxnQueueWithLockTest {
         public void run() {
             while (!testContext.isStopped()) {
                 try{
-                    ILock firstLock = instance.getLock(basename + "l1");
+                    ILock firstLock = instance.getLock(basename +"l1");
                     firstLock.lock();
 
                     TransactionContext ctx = instance.newTransactionContext();
