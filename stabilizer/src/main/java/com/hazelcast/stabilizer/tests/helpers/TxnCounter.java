@@ -1,7 +1,6 @@
-package com.hazelcast.stabilizer.tests.queue.helpers;
+package com.hazelcast.stabilizer.tests.helpers;
 
 import java.io.Serializable;
-import java.util.Random;
 
 public class TxnCounter implements Serializable {
 

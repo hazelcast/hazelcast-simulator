@@ -11,6 +11,7 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.helpers.TxnCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
 import com.hazelcast.transaction.TransactionException;
@@ -55,7 +56,7 @@ public class MapTransactionContextTest {
     private class Worker implements Runnable {
         private final Random random = new Random();
         private final long[] localIncrements = new long[keyCount];
-        private int localRoleBackCount=0;
+        private TxnCounter count = new TxnCounter();
 
         @Override
         public void run() {
@@ -74,12 +75,12 @@ public class MapTransactionContextTest {
                         map.put(key, update);
 
                         context.commitTransaction();
-
                         localIncrements[key]+=increment;
+                        count.committed++;
 
                     }catch(TransactionException e){
                         context.rollbackTransaction();
-                        localRoleBackCount++;
+                        count.rolled++;
                         System.out.println(basename+": "+e);
                     }
                 }catch(TargetDisconnectedException e){
@@ -89,7 +90,7 @@ public class MapTransactionContextTest {
                 }
             }
             targetInstance.getList(basename+"res").add(localIncrements);
-            targetInstance.getList(basename+"roles").add(localRoleBackCount);
+            targetInstance.getList(basename+"report").add(count);
         }
     }
 
@@ -97,12 +98,12 @@ public class MapTransactionContextTest {
     @Verify(global = true)
     public void verify() throws Exception {
 
-        IList<Integer> roles = targetInstance.getList(basename+"roles");
-        int totalRoles=0;
-        for(int role : roles){
-            totalRoles+=role;
+        IList<TxnCounter> counts = targetInstance.getList(basename+"report");
+        TxnCounter total = new TxnCounter();
+        for(TxnCounter c : counts){
+            total.add(c);
         }
-        System.out.println(basename+": total roleBack Count "+ roles +" from "+roles.size() );
+        System.out.println(basename + ": " + total + "from " + counts.size());
 
 
         IList<long[]> allIncrements = targetInstance.getList(basename+"res");
