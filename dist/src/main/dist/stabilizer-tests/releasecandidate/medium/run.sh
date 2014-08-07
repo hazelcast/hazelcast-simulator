@@ -1,4 +1,19 @@
 #!/bin/sh
 
-sh ../../run.sh 6 6 24 12h
+boxCount=6
+members=6
+workers=24
+duration=12h
 
+provisioner --scale $boxCount
+
+coordinator --memberWorkerCount $members \
+	--clientWorkerCount $workers \
+	--duration $duration \
+	--workerVmOptions "-XX:+HeapDumpOnOutOfMemoryError" \
+	--parallel \
+	../../test.properties
+
+provisioner --download
+
+provisioner --terminate
