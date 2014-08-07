@@ -4,10 +4,11 @@
 
     <groupId>com.hazelcast.stabilizer</groupId>
     <artifactId>stabilizer-root</artifactId>
-    <version>0.4-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Hazelcast Stabilizer Root</name>
     <url>http://github.com/hazelcast/hazelcast-stabilizer</url>
+    <description>Hazelcast Stabilizer: Stress/Performance Testing Environment for Hazelcast</description>
 
     <repositories>
         <repository>
