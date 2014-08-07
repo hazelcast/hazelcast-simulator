@@ -1,3 +1,3 @@
 #!/bin/sh
 
-sh ../../run.sh 1 1 1 1m
+sh ../../run.sh 2 2 2 1m

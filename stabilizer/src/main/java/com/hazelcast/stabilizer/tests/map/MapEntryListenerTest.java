@@ -250,7 +250,9 @@ public class MapEntryListenerTest {
         System.out.println(basename+": evict = " + total.localEvictCount.get() + " " + e.evictCount.get());
         System.out.println(basename+": mapSZ = " + map.size() + " " + expectedMapSz);
 
-        assertEquals(" Add Events ",      total.localAddCount.get(),      e.addCount.get());
+        Thread.sleep(9000);
+
+        assertEquals(" Add Events ", total.localAddCount.get(), e.addCount.get());
         assertEquals(" Update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
         assertEquals(" Remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
         assertEquals(" Evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
