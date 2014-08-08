@@ -1,11 +1,9 @@
 package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.HazelcastInstanceNotActiveException;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.spi.exception.TargetDisconnectedException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
@@ -14,7 +12,6 @@ import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.helpers.TxnCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
-import com.hazelcast.transaction.TransactionException;
 
 import java.util.Random;
 
@@ -34,7 +31,6 @@ public class MapTransactionContextTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
     }
-
 
     @Warmup(global = true)
     public void warmup() throws Exception {
@@ -87,7 +83,6 @@ public class MapTransactionContextTest {
         }
     }
 
-
     @Verify(global = true)
     public void verify() throws Exception {
 
@@ -98,7 +93,6 @@ public class MapTransactionContextTest {
         }
         System.out.println(basename + ": "+total +" from "+counts.size()+" workers");
 
-
         IList<long[]> allIncrements = targetInstance.getList(basename+"res");
         long expected[] = new long[keyCount];
         for (long[] incs : allIncrements) {
@@ -107,7 +101,6 @@ public class MapTransactionContextTest {
             }
         }
         System.out.println(basename+": received increments from "+allIncrements.size()+" workers" );
-
 
         IMap<Integer, Long> map = targetInstance.getMap(basename);
 
