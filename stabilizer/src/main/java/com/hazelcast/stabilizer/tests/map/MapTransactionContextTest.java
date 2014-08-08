@@ -93,7 +93,7 @@ public class MapTransactionContextTest {
         }
     }
 
-    @Verify(global = true)
+    @Verify(global = false)
     public void verify() throws Exception {
 
         IList<TxnCounter> counts = targetInstance.getList(basename+"report");
