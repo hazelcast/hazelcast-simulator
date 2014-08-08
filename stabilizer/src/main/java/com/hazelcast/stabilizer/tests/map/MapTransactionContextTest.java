@@ -58,24 +58,34 @@ public class MapTransactionContextTest {
         public void run() {
             while (!testContext.isStopped()) {
                 TransactionContext context = targetInstance.newTransactionContext();
+
+                final int key = random.nextInt(keyCount);
+                final long increment = random.nextInt(100);
                 try{
                     context.beginTransaction();
                     final TransactionalMap<Integer, Long> map = context.getMap(basename);
-                    final int key = random.nextInt(keyCount);
-                    final long increment = random.nextInt(100);
 
                     Long current = map.getForUpdate(key);
                     Long update = current + increment;
                     map.put(key, update);
 
-                    context.commitTransaction();
                     localIncrements[key]+=increment;
                     count.committed++;
 
+                    context.commitTransaction();
+
                 }catch(Exception e){
-                    context.rollbackTransaction();
-                    count.rolled++;
-                    System.out.println(basename+": "+e);
+                    try{
+                        context.rollbackTransaction();
+                        count.rolled++;
+                        count.committed--;
+                        localIncrements[key]-=increment;
+                        System.out.println(basename+": "+e);
+
+                    }catch(Exception e2){
+                        count.failedRoles++;
+                        System.out.println(basename+": "+e2);
+                    }
                 }
             }
             targetInstance.getList(basename+"res").add(localIncrements);

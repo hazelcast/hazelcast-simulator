@@ -6,6 +6,7 @@ public class TxnCounter implements Serializable {
 
     public long committed=0;
     public long rolled=0;
+    public long failedRoles=0;
 
     public TxnCounter() {
     }
@@ -13,6 +14,7 @@ public class TxnCounter implements Serializable {
     public void add(TxnCounter c){
         committed += c.committed;
         rolled += c.rolled;
+        failedRoles += c.failedRoles;
     }
 
     @Override
@@ -20,6 +22,7 @@ public class TxnCounter implements Serializable {
         return "TxnCounter{" +
                 "committed=" + committed +
                 ", rolled=" + rolled +
+                ", failedRoles=" + failedRoles +
                 '}';
     }
 }
