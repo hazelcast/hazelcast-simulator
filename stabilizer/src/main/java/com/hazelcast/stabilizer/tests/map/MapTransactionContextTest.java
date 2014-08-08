@@ -13,6 +13,10 @@ import com.hazelcast.stabilizer.tests.helpers.TxnCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
@@ -80,11 +84,11 @@ public class MapTransactionContextTest {
                         count.rolled++;
                         count.committed--;
                         localIncrements[key]-=increment;
-                        System.out.println(basename+": "+e);
+                        System.out.println(basename+": txn  fail key="+key+" inc="+increment+" "+e);
 
                     }catch(Exception e2){
                         count.failedRoles++;
-                        System.out.println(basename+": "+e2);
+                        System.out.println(basename+": roll fail key="+key+" inc="+increment+" "+e2);
                     }
                 }
             }
@@ -114,14 +118,21 @@ public class MapTransactionContextTest {
 
         IMap<Integer, Long> map = targetInstance.getMap(basename);
 
+        List<String> fails = new ArrayList();
+
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != map.get(k)) {
                 failures++;
+
+                fails.add("key=" + k + " expected " + expected[k] + "!=" + " actual " + map.get(k));
             }
         }
 
         assertEquals(basename+": "+failures+" key=>values have been incremented unExpected", 0, failures);
+        for(String s : fails){
+            System.out.println(basename+": "+s);
+        }
     }
 
 }
