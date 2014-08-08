@@ -60,32 +60,25 @@ public class MapTransactionContextTest {
 
         @Override
         public void run() {
-
             while (!testContext.isStopped()) {
+                TransactionContext context = targetInstance.newTransactionContext();
                 try{
-                    TransactionContext context = targetInstance.newTransactionContext();
-                    try{
-                        context.beginTransaction();
-                        final TransactionalMap<Integer, Long> map = context.getMap(basename);
-                        final int key = random.nextInt(keyCount);
-                        final long increment = random.nextInt(100);
+                    context.beginTransaction();
+                    final TransactionalMap<Integer, Long> map = context.getMap(basename);
+                    final int key = random.nextInt(keyCount);
+                    final long increment = random.nextInt(100);
 
-                        Long current = map.getForUpdate(key);
-                        Long update = current + increment;
-                        map.put(key, update);
+                    Long current = map.getForUpdate(key);
+                    Long update = current + increment;
+                    map.put(key, update);
 
-                        context.commitTransaction();
-                        localIncrements[key]+=increment;
-                        count.committed++;
+                    context.commitTransaction();
+                    localIncrements[key]+=increment;
+                    count.committed++;
 
-                    }catch(TransactionException e){
-                        context.rollbackTransaction();
-                        count.rolled++;
-                        System.out.println(basename+": "+e);
-                    }
-                }catch(TargetDisconnectedException e){
-                    System.out.println(basename+": "+e);
-                }catch(HazelcastInstanceNotActiveException e){
+                }catch(Exception e){
+                    context.rollbackTransaction();
+                    count.rolled++;
                     System.out.println(basename+": "+e);
                 }
             }
