@@ -118,21 +118,18 @@ public class MapTransactionContextTest {
 
         IMap<Integer, Long> map = targetInstance.getMap(basename);
 
-        List<String> fails = new ArrayList();
 
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != map.get(k)) {
                 failures++;
 
-                fails.add("key=" + k + " expected " + expected[k] + "!=" + " actual " + map.get(k));
+                System.out.println(basename + ": key=" + k + " expected " + expected[k] + "!=" + " actual " + map.get(k));
             }
         }
 
         assertEquals(basename+": "+failures+" key=>values have been incremented unExpected", 0, failures);
-        for(String s : fails){
-            System.out.println(basename+": "+s);
-        }
+
     }
 
 }
