@@ -1,11 +1,9 @@
 package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.HazelcastInstanceNotActiveException;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.spi.exception.TargetDisconnectedException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
@@ -14,8 +12,11 @@ import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.helpers.TxnCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
-import com.hazelcast.transaction.TransactionException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +35,6 @@ public class MapTransactionContextTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
     }
-
 
     @Warmup(global = true)
     public void warmup() throws Exception {
@@ -60,33 +60,36 @@ public class MapTransactionContextTest {
 
         @Override
         public void run() {
-
             while (!testContext.isStopped()) {
+                TransactionContext context = targetInstance.newTransactionContext();
+
+                final int key = random.nextInt(keyCount);
+                final long increment = random.nextInt(100);
                 try{
-                    TransactionContext context = targetInstance.newTransactionContext();
+                    context.beginTransaction();
+                    final TransactionalMap<Integer, Long> map = context.getMap(basename);
+
+                    Long current = map.getForUpdate(key);
+                    Long update = current + increment;
+                    map.put(key, update);
+
+                    localIncrements[key]+=increment;
+                    count.committed++;
+
+                    context.commitTransaction();
+
+                }catch(Exception e){
                     try{
-                        context.beginTransaction();
-                        final TransactionalMap<Integer, Long> map = context.getMap(basename);
-                        final int key = random.nextInt(keyCount);
-                        final long increment = random.nextInt(100);
-
-                        Long current = map.getForUpdate(key);
-                        Long update = current + increment;
-                        map.put(key, update);
-
-                        context.commitTransaction();
-                        localIncrements[key]+=increment;
-                        count.committed++;
-
-                    }catch(TransactionException e){
                         context.rollbackTransaction();
                         count.rolled++;
-                        System.out.println(basename+": "+e);
+                        count.committed--;
+                        localIncrements[key]-=increment;
+                        System.out.println(basename+": txn  fail key="+key+" inc="+increment+" "+e);
+
+                    }catch(Exception e2){
+                        count.failedRoles++;
+                        System.out.println(basename+": roll fail key="+key+" inc="+increment+" "+e2);
                     }
-                }catch(TargetDisconnectedException e){
-                    System.out.println(basename+": "+e);
-                }catch(HazelcastInstanceNotActiveException e){
-                    System.out.println(basename+": "+e);
                 }
             }
             targetInstance.getList(basename+"res").add(localIncrements);
@@ -94,8 +97,7 @@ public class MapTransactionContextTest {
         }
     }
 
-
-    @Verify(global = true)
+    @Verify(global = false)
     public void verify() throws Exception {
 
         IList<TxnCounter> counts = targetInstance.getList(basename+"report");
@@ -104,7 +106,6 @@ public class MapTransactionContextTest {
             total.add(c);
         }
         System.out.println(basename + ": "+total +" from "+counts.size()+" workers");
-
 
         IList<long[]> allIncrements = targetInstance.getList(basename+"res");
         long expected[] = new long[keyCount];
@@ -115,17 +116,20 @@ public class MapTransactionContextTest {
         }
         System.out.println(basename+": received increments from "+allIncrements.size()+" workers" );
 
-
         IMap<Integer, Long> map = targetInstance.getMap(basename);
+
 
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != map.get(k)) {
                 failures++;
+
+                System.out.println(basename + ": key=" + k + " expected " + expected[k] + "!=" + " actual " + map.get(k));
             }
         }
 
         assertEquals(basename+": "+failures+" key=>values have been incremented unExpected", 0, failures);
+
     }
 
 }
