@@ -85,11 +85,11 @@ public class MapTransactionContextTest {
                         count.committed--;
                         localIncrements[key]-=increment;
 
-                        System.out.println(basename+": commit fail key="+key+" inc="+increment+" "+e+" context id="+context.getTxnId());
+                        System.out.println(basename+": commit   fail key="+key+" inc="+increment+" "+e);
 
                     }catch(Exception e2){
                         count.failedRoles++;
-                        System.out.println(basename+": rollback fail key="+key+" inc="+increment+" "+e2+" context id="+context.getTxnId());
+                        System.out.println(basename+": rollback fail key="+key+" inc="+increment+" "+e2);
                     }
                 }
             }
