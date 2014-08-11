@@ -84,11 +84,12 @@ public class MapTransactionContextTest {
                         count.rolled++;
                         count.committed--;
                         localIncrements[key]-=increment;
-                        System.out.println(basename+": txn  fail key="+key+" inc="+increment+" "+e);
+
+                        System.out.println(basename+": commit fail key="+key+" inc="+increment+" "+e+" context id="+context.getTxnId());
 
                     }catch(Exception e2){
                         count.failedRoles++;
-                        System.out.println(basename+": roll fail key="+key+" inc="+increment+" "+e2);
+                        System.out.println(basename+": rollback fail key="+key+" inc="+increment+" "+e2+" context id="+context.getTxnId());
                     }
                 }
             }
@@ -114,10 +115,8 @@ public class MapTransactionContextTest {
                 expected[i] += incs[i];
             }
         }
-        System.out.println(basename+": received increments from "+allIncrements.size()+" workers" );
 
         IMap<Integer, Long> map = targetInstance.getMap(basename);
-
 
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
@@ -129,7 +128,6 @@ public class MapTransactionContextTest {
         }
 
         assertEquals(basename+": "+failures+" key=>values have been incremented unExpected", 0, failures);
-
     }
 
 }
