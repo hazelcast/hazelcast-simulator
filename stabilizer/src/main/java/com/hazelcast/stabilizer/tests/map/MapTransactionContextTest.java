@@ -78,18 +78,19 @@ public class MapTransactionContextTest {
 
                     context.commitTransaction();
 
-                }catch(Exception e){
+                }catch(Exception commitFailed){
                     try{
                         context.rollbackTransaction();
                         count.rolled++;
                         count.committed--;
                         localIncrements[key]-=increment;
 
-                        System.out.println(basename+": commit   fail key="+key+" inc="+increment+" "+e);
-
-                    }catch(Exception e2){
+                        System.out.println(basename+": commit   fail key="+key+" inc="+increment+" "+commitFailed);
+                        commitFailed.printStackTrace();
+                    }catch(Exception rollBackFailed){
                         count.failedRoles++;
-                        System.out.println(basename+": rollback fail key="+key+" inc="+increment+" "+e2);
+                        System.out.println(basename+": rollback fail key="+key+" inc="+increment+" "+rollBackFailed);
+                        rollBackFailed.printStackTrace();
                     }
                 }
             }
@@ -123,7 +124,7 @@ public class MapTransactionContextTest {
             if (expected[k] != map.get(k)) {
                 failures++;
 
-                System.out.println(basename + ": key=" + k + " expected " + expected[k] + "!=" + " actual " + map.get(k));
+                System.out.println(basename+": key="+k+" expected "+expected[k]+" != " +"actual "+map.get(k));
             }
         }
 
