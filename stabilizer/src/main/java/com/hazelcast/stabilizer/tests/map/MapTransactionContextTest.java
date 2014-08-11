@@ -78,17 +78,19 @@ public class MapTransactionContextTest {
 
                     context.commitTransaction();
 
-                }catch(Exception e){
+                }catch(Exception commitFailed){
                     try{
                         context.rollbackTransaction();
                         count.rolled++;
                         count.committed--;
                         localIncrements[key]-=increment;
-                        System.out.println(basename+": txn  fail key="+key+" inc="+increment+" "+e);
 
-                    }catch(Exception e2){
+                        System.out.println(basename+": commit   fail key="+key+" inc="+increment+" "+commitFailed);
+                        commitFailed.printStackTrace();
+                    }catch(Exception rollBackFailed){
                         count.failedRoles++;
-                        System.out.println(basename+": roll fail key="+key+" inc="+increment+" "+e2);
+                        System.out.println(basename+": rollback fail key="+key+" inc="+increment+" "+rollBackFailed);
+                        rollBackFailed.printStackTrace();
                     }
                 }
             }
@@ -114,22 +116,19 @@ public class MapTransactionContextTest {
                 expected[i] += incs[i];
             }
         }
-        System.out.println(basename+": received increments from "+allIncrements.size()+" workers" );
 
         IMap<Integer, Long> map = targetInstance.getMap(basename);
-
 
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != map.get(k)) {
                 failures++;
 
-                System.out.println(basename + ": key=" + k + " expected " + expected[k] + "!=" + " actual " + map.get(k));
+                System.out.println(basename+": key="+k+" expected "+expected[k]+" != " +"actual "+map.get(k));
             }
         }
 
         assertEquals(basename+": "+failures+" key=>values have been incremented unExpected", 0, failures);
-
     }
 
 }
