@@ -39,9 +39,9 @@ public class MapTransactionContextConflictTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        IMap<Integer, Double> map = targetInstance.getMap(basename);
+        IMap<Integer, Long> map = targetInstance.getMap(basename);
         for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0.0);
+            map.put(k, 0l);
         }
     }
 
@@ -56,7 +56,7 @@ public class MapTransactionContextConflictTest {
 
     private class Worker implements Runnable {
         private final Random random = new Random();
-        private final double[] localIncrements = new double[keyCount];
+        private final long[] localIncrements = new long[keyCount];
         private TxnCounter count = new TxnCounter();
 
 
@@ -69,7 +69,7 @@ public class MapTransactionContextConflictTest {
                 for(int i=0; i< maxKeysPerTxn; i++){
                     KeyInc p = new KeyInc();
                     p.key = random.nextInt(keyCount);
-                    p.inc = random.nextDouble();
+                    p.inc = random.nextInt(999);
                     taxParticipants.add(p);
                 }
 
@@ -78,9 +78,9 @@ public class MapTransactionContextConflictTest {
                     context.beginTransaction();
 
                     for(KeyInc p : taxParticipants){
-                        final TransactionalMap<Integer, Double> map = context.getMap(basename);
+                        final TransactionalMap<Integer, Long> map = context.getMap(basename);
 
-                        double current = map.getForUpdate(p.key);
+                        long current = map.getForUpdate(p.key);
                         map.put(p.key, current + p.inc);
 
                         localIncrements[p.key]+=p.inc;
@@ -122,15 +122,15 @@ public class MapTransactionContextConflictTest {
         }
         System.out.println(basename + ": "+total +" from "+counts.size()+" workers");
 
-        IList<double[]> allIncrements = targetInstance.getList(basename+"res");
-        double expected[] = new double[keyCount];
-        for (double[] incs : allIncrements) {
+        IList<long[]> allIncrements = targetInstance.getList(basename+"res");
+        long expected[] = new long[keyCount];
+        for (long[] incs : allIncrements) {
             for (int i=0; i < incs.length; i++) {
                 expected[i] += incs[i];
             }
         }
 
-        IMap<Integer, Double> map = targetInstance.getMap(basename);
+        IMap<Integer, Long> map = targetInstance.getMap(basename);
 
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
