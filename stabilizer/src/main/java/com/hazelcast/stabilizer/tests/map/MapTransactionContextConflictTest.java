@@ -64,26 +64,29 @@ public class MapTransactionContextConflictTest {
         public void run() {
             while (!testContext.isStopped()) {
 
-                List<KeyInc> taxParticipants = new ArrayList();
+                List<KeyInc> potentialIncs = new ArrayList();
 
                 for(int i=0; i< maxKeysPerTxn; i++){
                     KeyInc p = new KeyInc();
                     p.key = random.nextInt(keyCount);
                     p.inc = random.nextInt(999);
-                    taxParticipants.add(p);
+                    potentialIncs.add(p);
                 }
+
+                List<KeyInc> doneIncs = new ArrayList();
 
                 TransactionContext context = targetInstance.newTransactionContext();
                 try{
                     context.beginTransaction();
 
-                    for(KeyInc p : taxParticipants){
+                    for(KeyInc p : potentialIncs){
                         final TransactionalMap<Integer, Long> map = context.getMap(basename);
 
                         long current = map.getForUpdate(p.key);
                         map.put(p.key, current + p.inc);
 
                         localIncrements[p.key]+=p.inc;
+                        doneIncs.add(p);
                     }
                     count.committed++;
                     context.commitTransaction();
@@ -93,16 +96,16 @@ public class MapTransactionContextConflictTest {
                         context.rollbackTransaction();
                         count.rolled++;
                         count.committed--;
-                        for(KeyInc p : taxParticipants){
+                        for(KeyInc p : doneIncs){
                             localIncrements[p.key]-=p.inc;
                         }
 
-                        System.out.println(basename+": commit   fail partisipents="+taxParticipants+" "+commitFailed);
+                        System.out.println(basename+": commit   fail partisipents="+potentialIncs+" "+commitFailed);
                         commitFailed.printStackTrace();
 
                     }catch(Exception rollBackFailed){
                         count.failedRoles++;
-                        System.out.println(basename+": rollback fail partisipents="+taxParticipants+" "+rollBackFailed);
+                        System.out.println(basename+": rollback fail partisipents="+potentialIncs+" "+rollBackFailed);
                         rollBackFailed.printStackTrace();
                     }
                 }
