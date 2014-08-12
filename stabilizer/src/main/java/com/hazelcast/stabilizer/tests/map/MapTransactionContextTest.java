@@ -13,10 +13,6 @@ import com.hazelcast.stabilizer.tests.helpers.TxnCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
@@ -87,6 +83,7 @@ public class MapTransactionContextTest {
 
                         System.out.println(basename+": commit   fail key="+key+" inc="+increment+" "+commitFailed);
                         commitFailed.printStackTrace();
+
                     }catch(Exception rollBackFailed){
                         count.failedRoles++;
                         System.out.println(basename+": rollback fail key="+key+" inc="+increment+" "+rollBackFailed);
