@@ -10,4 +10,12 @@ public class KeyInc implements Serializable {
     public KeyInc() {
     }
 
+
+    @Override
+    public String toString() {
+        return "KeyInc{" +
+                "key=" + key +
+                ", inc=" + inc +
+                '}';
+    }
 }
