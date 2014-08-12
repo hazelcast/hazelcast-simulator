@@ -13,7 +13,7 @@ public class KeyInc implements Serializable {
 
     @Override
     public String toString() {
-        return "KeyInc{" +
+        return "{" +
                 "key=" + key +
                 ", inc=" + inc +
                 '}';

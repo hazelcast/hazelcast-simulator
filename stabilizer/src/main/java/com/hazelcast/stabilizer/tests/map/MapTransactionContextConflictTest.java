@@ -100,12 +100,12 @@ public class MapTransactionContextConflictTest {
                             localIncrements[p.key]-=p.inc;
                         }
 
-                        System.out.println(basename+": commit   fail partisipents="+potentialIncs+" "+commitFailed);
+                        System.out.println(basename+": commit   fail done="+doneIncs+" "+commitFailed);
                         commitFailed.printStackTrace();
 
                     }catch(Exception rollBackFailed){
                         count.failedRoles++;
-                        System.out.println(basename+": rollback fail partisipents="+potentialIncs+" "+rollBackFailed);
+                        System.out.println(basename+": rollback fail done="+doneIncs+" "+rollBackFailed);
                         rollBackFailed.printStackTrace();
                     }
                 }
