@@ -7,4 +7,4 @@ fi
 
 target=$1
 
-find ${target} -name "nohup.out" | xargs -I % sh -c 'echo %; cat % | grep -i "Provisioning\|provisioned\|Finished terminating\|Failure #1\|failures have been detected"; echo"" '
+find ${target} -name "nohup.out" | xargs -I % sh -c 'echo %; cat % | grep -i "Provisioning\|provisioned\|Finished terminating\|Failure #1 \|failures have been detected"; echo"" '
