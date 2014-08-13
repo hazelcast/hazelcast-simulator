@@ -238,28 +238,16 @@ public class MapEntryListenerTest {
         for(EventCount c : eventCounts){
             total.add(c);
         }
+        total.waiteWhileListenerEventsIncrease(listener, 10);
+
+        System.out.println(basename+": add = "    + total.localAddCount.get()    +" "+ listener.addCount.get());
+        System.out.println(basename+": update = " + total.localUpdateCount.get() +" "+ listener.updateCount.get());
+        System.out.println(basename+": remove = " + total.localRemoveCount.get() +" "+ listener.removeCount.get());
+        System.out.println(basename+": evict = "  + total.localEvictCount.get()  +" "+ listener.evictCount.get());
 
         IMap map = targetInstance.getMap(basename);
-        EntryListenerImpl e = listener;
+        System.out.println(basename+": mapSZ = "  + map.size() + " " + total.calculateMapSize() + " " + total.calculateMapSize(listener));
 
-        long expectedMapSz = e.addCount.get()  - (e.evictCount.get() + e.removeCount.get());
-
-        System.out.println(basename+": add = "+ total.localAddCount.get() +" "+ e.addCount.get());
-        System.out.println(basename+": update = "+total.localUpdateCount.get() +" "+ e.updateCount.get());
-        System.out.println(basename+": remove = " + total.localRemoveCount.get() + " " + e.removeCount.get());
-        System.out.println(basename+": evict = " + total.localEvictCount.get() + " " + e.evictCount.get());
-        System.out.println(basename+": mapSZ = " + map.size() + " " + expectedMapSz);
-
-        Thread.sleep(9000);
-
-        assertEquals(" Add Events ", total.localAddCount.get(), e.addCount.get());
-        assertEquals(" Update Events ",   total.localUpdateCount.get(),   e.updateCount.get());
-        assertEquals(" Remove Events ",   total.localRemoveCount.get(),   e.removeCount.get());
-        assertEquals(" Evict Events ",    total.localEvictCount.get(),    e.evictCount.get());
-        assertEquals(" MapSZ ", expectedMapSz, map.size());
-    }
-
-    public static void main(String[] args) throws Throwable {
-        new TestRunner(new MapEntryListenerTest()).run();
+        total.assertEventsEquals(listener);
     }
 }

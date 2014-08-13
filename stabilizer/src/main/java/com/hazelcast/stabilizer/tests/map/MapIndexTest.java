@@ -99,7 +99,7 @@ public class MapIndexTest {
 
                             QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
 
-                            if(!  predicate.apply(qe) ){
+                            if( !predicate.apply(qe) ){
                                 System.out.println(basename+" ERROR 1: "+emp+" not matching predicate "+predicate);
                             }
 
@@ -122,7 +122,7 @@ public class MapIndexTest {
                         for(Employee emp : employees){
 
                             QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                            if(!  predicate.apply(qe) ){
+                            if( !predicate.apply(qe) ){
                                 System.out.println(basename+" ERROR 1: "+emp+" not matching predicate "+predicate);
                             }
 
@@ -177,7 +177,6 @@ public class MapIndexTest {
 
                         map.destroy();
                         initMap();
-
                         counter.destroyCount++;
                     }
 

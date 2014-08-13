@@ -7,12 +7,13 @@ import com.hazelcast.nio.serialization.DataSerializable;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static org.junit.Assert.assertEquals;
+
 public class EventCount implements DataSerializable {
     public AtomicLong localAddCount = new AtomicLong(0);
     public  AtomicLong localRemoveCount = new AtomicLong(0);
     public  AtomicLong localUpdateCount = new AtomicLong(0);
     public  AtomicLong localEvictCount = new AtomicLong(0);
-    public  AtomicLong localReplaceCount = new AtomicLong(0);
 
     public EventCount(){
     }
@@ -22,7 +23,6 @@ public class EventCount implements DataSerializable {
         localRemoveCount.addAndGet(c.localRemoveCount.get());
         localUpdateCount.addAndGet(c.localUpdateCount.get());
         localEvictCount.addAndGet(c.localEvictCount.get());
-        localReplaceCount.addAndGet(c.localReplaceCount.get());
     }
 
     public void writeData(ObjectDataOutput out) throws IOException {
@@ -30,7 +30,6 @@ public class EventCount implements DataSerializable {
         out.writeObject(localRemoveCount);
         out.writeObject(localUpdateCount);
         out.writeObject(localEvictCount);
-        out.writeObject(localReplaceCount);
     }
 
     public void readData(ObjectDataInput in) throws IOException {
@@ -38,16 +37,68 @@ public class EventCount implements DataSerializable {
         localRemoveCount = in.readObject();
         localUpdateCount = in.readObject();
         localEvictCount = in.readObject();
-        localReplaceCount = in.readObject();
     }
 
     public long total(){
         return  localAddCount.get() +
                 localRemoveCount.get() +
                 localUpdateCount.get() +
-                localEvictCount.get() +
-                localReplaceCount.get();
+                localEvictCount.get() ;
     }
+
+    public long absDiffrence(EntryListenerImpl e){
+
+        long countTotal = total();
+
+        Long listenerTotal = e.addCount.get() +
+                             e.updateCount.get() +
+                             e.removeCount.get() +
+                             e.evictCount.get() ;
+
+        return Math.abs( countTotal - listenerTotal );
+    }
+
+    public boolean sameEventCount(EntryListenerImpl listener){
+        return absDiffrence(listener)==0;
+    }
+
+
+    public void waiteWhileListenerEventsIncrease(EntryListenerImpl listener, int maxItterationNoChange) throws InterruptedException{
+
+        int noChange=0;
+        long prev=0;
+        do{
+            long diff = absDiffrence(listener);
+
+            if(diff >= prev){
+                noChange++;
+            }else{
+                noChange=0;
+            }
+            prev = diff;
+
+            Thread.sleep(2000);
+
+        }while(!sameEventCount(listener) && noChange < maxItterationNoChange);
+
+    }
+
+    public long calculateMapSize(){
+        return localAddCount.get()  - (localEvictCount.get() + localRemoveCount.get());
+    }
+    public long calculateMapSize(EntryListenerImpl listener){
+        return listener.addCount.get()  - (listener.evictCount.get() + listener.removeCount.get());
+    }
+
+
+    public void assertEventsEquals(EntryListenerImpl listener){
+        assertEquals(" Add Events ",      localAddCount.get(),      listener.addCount.get());
+        assertEquals(" Update Events ",   localUpdateCount.get(),   listener.updateCount.get());
+        assertEquals(" Remove Events ",   localRemoveCount.get(),   listener.removeCount.get());
+        assertEquals(" Evict Events ",    localEvictCount.get(),    listener.evictCount.get());
+        assertEquals(" calculated Map size", calculateMapSize(), calculateMapSize(listener));
+    }
+
 
     @Override
     public String toString() {
@@ -56,7 +107,6 @@ public class EventCount implements DataSerializable {
                 ", putTransientCount=" + localRemoveCount +
                 ", putIfAbsentCount=" + localUpdateCount +
                 ", replaceCount=" + localEvictCount +
-                ", getCount=" + localReplaceCount +
                 '}';
     }
 }
