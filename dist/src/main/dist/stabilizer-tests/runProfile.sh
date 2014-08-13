@@ -21,4 +21,6 @@ do
 	rm -f nohup.out
 	nohup ./run.sh &
 	cd ${home}
+
+	sleep 15
 done
