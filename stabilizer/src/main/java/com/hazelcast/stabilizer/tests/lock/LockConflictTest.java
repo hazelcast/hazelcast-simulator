@@ -33,7 +33,6 @@ public class LockConflictTest {
     public int keyCount = 50;
     public int maxKeysPerTxn =5;
 
-
     private HazelcastInstance targetInstance;
     private TestContext testContext;
 
