@@ -7,7 +7,7 @@ will generate a project for you.
 mvn archetype:generate -DarchetypeRepository=https://oss.sonatype.org/content/repositories/snapshots \
     -DarchetypeGroupId=com.hazelcast.stabilizer \
     -DarchetypeArtifactId=archetype \
-    -DarchetypeVersion=0.3-SNAPSHOT \
+    -DarchetypeVersion=0.3 \
     -DgroupId=yourgroupid  \
     -DartifactId=yourproject
 ```
@@ -58,8 +58,8 @@ The output will look something like this:
 
 ```
 INFO  08:40:10 Hazelcast Stabilizer Provisioner
-INFO  08:40:10 Version: 0.3-SNAPSHOT, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
-INFO  08:40:10 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3-SNAPSHOT
+INFO  08:40:10 Version: 0.3, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
+INFO  08:40:10 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3
 INFO  08:40:10 Loading stabilizer.properties: /tmp/yourproject/workdir/stabilizer.properties
 INFO  08:40:10 ==============================================================
 INFO  08:40:10 Provisioning 4 aws-ec2 machines
@@ -97,8 +97,8 @@ INFO  08:43:25 Successfully provisioned 4 aws-ec2 machines
 INFO  08:43:25 ==============================================================
 INFO  08:43:25 Pausing for Machine Warm up... (10 sec)
 INFO  08:43:36 Hazelcast Stabilizer Coordinator
-INFO  08:43:36 Version: 0.3-SNAPSHOT, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
-INFO  08:43:36 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3-SNAPSHOT
+INFO  08:43:36 Version: 0.3, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
+INFO  08:43:36 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3
 INFO  08:43:36 Loading stabilizer.properties: /tmp/yourproject/workdir/stabilizer.properties
 INFO  08:43:36 Loading testsuite file: /tmp/yourproject/workdir/../conf/test.properties
 INFO  08:43:36 Loading Hazelcast configuration: /tmp/yourproject/workdir/../conf/hazelcast.xml
@@ -179,8 +179,8 @@ INFO  08:49:45 -----------------------------------------------------------------
 INFO  08:49:45 No failures have been detected!
 INFO  08:49:45 -----------------------------------------------------------------------------
 INFO  08:49:46 Hazelcast Stabilizer Provisioner
-INFO  08:49:46 Version: 0.3-SNAPSHOT, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
-INFO  08:49:46 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3-SNAPSHOT
+INFO  08:49:46 Version: 0.3, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
+INFO  08:49:46 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3
 INFO  08:49:46 Loading stabilizer.properties: /tmp/yourproject/workdir/stabilizer.properties
 INFO  08:49:46 ==============================================================
 INFO  08:49:46 Download artifacts of 4 machines
@@ -193,8 +193,8 @@ INFO  08:49:56 ==============================================================
 INFO  08:49:56 Finished Downloading Artifacts of 4 machines
 INFO  08:49:56 ==============================================================
 INFO  08:49:56 Hazelcast Stabilizer Provisioner
-INFO  08:49:56 Version: 0.3-SNAPSHOT, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
-INFO  08:49:56 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3-SNAPSHOT
+INFO  08:49:56 Version: 0.3, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
+INFO  08:49:56 STABILIZER_HOME: /home/alarmnummer/hazelcast-stabilizer-0.3
 INFO  08:49:56 Loading stabilizer.properties: /tmp/yourproject/workdir/stabilizer.properties
 INFO  08:49:56 ==============================================================
 INFO  08:49:56 Terminating 4 aws-ec2 machines (can take some time)
