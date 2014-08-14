@@ -1,6 +1,7 @@
 #!/bin/bash
 
 targetFile=$1
+actionTriger=$2
 
 fifo=tempNotifyFifo
 mkfifo "${fifo}" || exit 1
@@ -15,7 +16,7 @@ mkfifo "${fifo}" || exit 1
     # grep has exited, time to go
     kill "${tailpid}"
 } | {
-    grep -m 1 "Running 00d 00h 01m 00s"
+    grep -m 1 "${actionTriger}"
 
     sh ./monkeyAction.sh &
 
