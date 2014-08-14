@@ -11,6 +11,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.helpers.TxnCounter;
+import com.hazelcast.stabilizer.tests.lock.helpers.LockCounter;
 import com.hazelcast.stabilizer.tests.map.helpers.KeyInc;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
@@ -63,6 +64,8 @@ public class LockConflictTest {
         private final Random random = new Random();
         private final long[] localIncrements = new long[keyCount];
 
+        private final LockCounter counter = new LockCounter();
+
         @Override
         public void run() {
             while (!testContext.isStopped()) {
@@ -82,6 +85,7 @@ public class LockConflictTest {
                         try{
                             if( lock.tryLock(10, TimeUnit.MILLISECONDS) ){
                                 locked.add(i);
+                                counter.locked++;
                             }
                         }catch(Exception e){
                             System.out.println(basename+": trying lock="+i.key+" "+e);
@@ -97,6 +101,7 @@ public class LockConflictTest {
                         long value = acounts.get(i.key);
                         acounts.set(i.key, value + i.inc);
                         localIncrements[i.key]+=i.inc;
+                        counter.inced++;
                     }catch(Exception e){
                         System.out.println(basename+": updating acount="+i+" "+e);
                     }
@@ -111,6 +116,7 @@ public class LockConflictTest {
                             ILock lock = targetInstance.getLock(basename + "l" + i.key);
                             try{
                                 lock.unlock();
+                                counter.unlocked++;
                                 ittr.remove();
                             }catch(Exception e){
                                 System.out.println(basename+": unlocking lock ="+i.key+" "+e);
@@ -132,11 +138,22 @@ public class LockConflictTest {
 
             }
             targetInstance.getList(basename+"res").add(localIncrements);
+            targetInstance.getList(basename+"report").add(counter);
         }
     }
 
     @Verify(global = false)
     public void verify() throws Exception {
+
+
+        IList<LockCounter> results = targetInstance.getList(basename+"report");
+        LockCounter total = new LockCounter();
+        for(LockCounter i : results){
+            total.add(i);
+        }
+        System.out.println(basename+": "+total+" from "+results.size()+" worker threads");
+
+
 
         IList<long[]> allIncrements = targetInstance.getList(basename+"res");
         long expected[] = new long[keyCount];
@@ -145,14 +162,12 @@ public class LockConflictTest {
                 expected[i] += incs[i];
             }
         }
-        System.out.println(basename+": results from "+allIncrements.size()+" worker Threads");
 
         IList<Long> acounts = targetInstance.getList(basename);
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != acounts.get(k)) {
                 failures++;
-
                 System.out.println(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + acounts.get(k));
             }
         }
