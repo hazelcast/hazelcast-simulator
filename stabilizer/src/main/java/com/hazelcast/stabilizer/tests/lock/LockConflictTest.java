@@ -145,9 +145,9 @@ public class LockConflictTest {
                 expected[i] += incs[i];
             }
         }
+        System.out.println(basename+": results from "+allIncrements.size()+" worker Threads");
 
         IList<Long> acounts = targetInstance.getList(basename);
-
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != acounts.get(k)) {
