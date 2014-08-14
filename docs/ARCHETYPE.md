@@ -4,7 +4,7 @@ Probably you want to write your own test. The easiest way to do that is to make 
 will generate a project for you.
 
 ```
-mvn archetype:generate -DarchetypeRepository=https://oss.sonatype.org/content/repositories/snapshots \
+mvn archetype:generate  \
     -DarchetypeGroupId=com.hazelcast.stabilizer \
     -DarchetypeArtifactId=archetype \
     -DarchetypeVersion=0.3 \
