@@ -2,19 +2,15 @@ package com.hazelcast.stabilizer.tests.lock;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.core.ILock;
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.TransactionalMap;
+import com.hazelcast.core.ILock;\
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
-import com.hazelcast.stabilizer.tests.helpers.TxnCounter;
 import com.hazelcast.stabilizer.tests.lock.helpers.LockCounter;
 import com.hazelcast.stabilizer.tests.map.helpers.KeyInc;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
-import com.hazelcast.transaction.TransactionContext;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -145,15 +141,12 @@ public class LockConflictTest {
     @Verify(global = false)
     public void verify() throws Exception {
 
-
         IList<LockCounter> results = targetInstance.getList(basename+"report");
         LockCounter total = new LockCounter();
         for(LockCounter i : results){
             total.add(i);
         }
         System.out.println(basename+": "+total+" from "+results.size()+" worker threads");
-
-
 
         IList<long[]> allIncrements = targetInstance.getList(basename+"res");
         long expected[] = new long[keyCount];
