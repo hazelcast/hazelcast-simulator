@@ -2,7 +2,7 @@ package com.hazelcast.stabilizer.tests.lock;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.core.ILock;\
+import com.hazelcast.core.ILock;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
