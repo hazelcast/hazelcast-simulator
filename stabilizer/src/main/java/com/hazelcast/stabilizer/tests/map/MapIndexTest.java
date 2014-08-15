@@ -3,15 +3,17 @@ package com.hazelcast.stabilizer.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.hazelcast.nio.serialization.SerializationService;
+import com.hazelcast.nio.serialization.SerializationServiceBuilder;
 import com.hazelcast.query.EntryObject;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.query.SqlPredicate;
+import com.hazelcast.query.impl.QueryEntry;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
@@ -22,9 +24,6 @@ import com.hazelcast.stabilizer.tests.map.helpers.OppCounterIdxTest;
 
 import java.util.Collection;
 import java.util.Random;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 
 public class MapIndexTest {
 
@@ -58,24 +57,9 @@ public class MapIndexTest {
         IMap map = targetInstance.getMap(basename);
 
         for(int i=0; i<keyCount; i++){
-            map.put(i, new Employee(i));
+            Employee e = new Employee(i);
+            map.put(e.getId(), e);
         }
-
-        long free = Runtime.getRuntime().freeMemory();
-        long total =  Runtime.getRuntime().totalMemory();
-        long used = total - free;
-        //System.out.println("used = "+humanReadableByteCount(used, true));
-
-        map.addIndex( "id", true );
-        map.addIndex( "name", true );
-        map.addIndex( "age", true );
-        map.addIndex( "salary", true );
-        map.addIndex( "active", false );
-
-        free = Runtime.getRuntime().freeMemory();
-        total =  Runtime.getRuntime().totalMemory();
-        used = total - free;
-        //System.out.println("used = "+humanReadableByteCount(used, true));
     }
 
     @Run
@@ -89,6 +73,8 @@ public class MapIndexTest {
 
 
     private class Worker implements Runnable {
+        final private SerializationService ss = new SerializationServiceBuilder().build();
+
         private final Random random = new Random();
         private OppCounterIdxTest counter = new OppCounterIdxTest();
 
@@ -105,20 +91,23 @@ public class MapIndexTest {
                         final String name = Employee.names[random.nextInt(Employee.names.length)];
 
                         EntryObject entryObject = new PredicateBuilder().getEntryObject();
-                        Predicate agePredicate = entryObject.get( "age" ).lessThan(age);
-                        Predicate predicate = entryObject.get( "name" ).equal( name ).and( agePredicate );
+                        Predicate predicate1 = entryObject.get( "age" ).lessThan(age);
+                        Predicate predicate  = entryObject.get( "name" ).equal( name ).and( predicate1 );
+
                         Collection<Employee> employees = map.values(predicate);
-
-                        counter.predicateBuilderCount++;
-
                         for(Employee emp : employees){
-                            //assertTrue(emp+" not matching predicate "+predicate, emp.getAge() < age && name.equals(emp.getName()) );
+
+                            QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
+
+                            if( !predicate.apply(qe) ){
+                                System.out.println(basename+" ERROR 1: "+emp+" not matching predicate "+predicate);
+                            }
 
                             if( !( emp.getAge() < age && name.equals(emp.getName()) ) ){
-
-                                System.out.println(basename+" ERROR: "+emp+" not matching predicate "+predicate);
+                                System.out.println(basename+" ERROR 2: "+emp+" not matching predicate "+predicate);
                             }
                         }
+                        counter.predicateBuilderCount++;
                     }
 
                     else if ( (chance -= sqlString) < 0) {
@@ -129,23 +118,26 @@ public class MapIndexTest {
                         final SqlPredicate predicate = new SqlPredicate( "active="+active+" AND age >"+age );
                         Collection<Employee> employees = map.values( predicate );
 
-                        counter.sqlStringCount++;
 
                         for(Employee emp : employees){
-                            //assertTrue(emp+" not matching predicate "+"active="+active+" AND age >"+age, active == emp.isActive() && emp.getAge() > age);
+
+                            QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
+                            if( !predicate.apply(qe) ){
+                                System.out.println(basename+" ERROR 1: "+emp+" not matching predicate "+predicate);
+                            }
 
                             if( !(active == emp.isActive() && emp.getAge() > age) ){
 
-                                System.out.println(basename+" ERROR: "+emp+" not matching predicate "+predicate);
+                                System.out.println(basename+" ERROR 2: "+emp+" not matching predicate "+predicate);
                             }
                         }
+                        counter.sqlStringCount++;
                     }
 
                     else if ( (chance -= pagePred) < 0) {
 
                         final double maxSal = random.nextDouble() * Employee.MAX_SALARY;
 
-                        //Predicate  pred = Predicates.between("salary", maxSal-50.0, maxSal);
                         Predicate  pred = Predicates.lessThan("salary", maxSal);
                         PagingPredicate pagingPredicate = new PagingPredicate( pred , 5);
                         Collection<Employee> employees;
@@ -185,9 +177,9 @@ public class MapIndexTest {
 
                         map.destroy();
                         initMap();
-
                         counter.destroyCount++;
                     }
+
                 }catch(DistributedObjectDestroyedException e){}
             }
             targetInstance.getList(basename+"report").add(counter);
@@ -207,15 +199,4 @@ public class MapIndexTest {
         System.out.println(basename+" "+total+" from "+counters.size());
     }
 
-    public static void main(String[] args) throws Throwable {
-        new TestRunner(new MapIndexTest()).run();
-    }
-
-    public static String humanReadableByteCount(long bytes, boolean si) {
-        int unit = si ? 1000 : 1024;
-        if (bytes < unit) return bytes + " B";
-        int exp = (int) (Math.log(bytes) / Math.log(unit));
-        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
-        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
-    }
 }

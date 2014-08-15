@@ -39,6 +39,8 @@ public class Employee implements Serializable {
         salary = random.nextDouble() * MAX_SALARY;
     }
 
+    public int getId() {return id;}
+
     public String getName() {
         return name;
     }
