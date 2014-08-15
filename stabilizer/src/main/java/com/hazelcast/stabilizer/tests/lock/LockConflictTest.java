@@ -29,6 +29,7 @@ public class LockConflictTest {
     public int threadCount = 3;
     public int keyCount = 50;
     public int maxKeysPerTxn =5;
+    public int tryLockTimeOutMs=10;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
@@ -79,15 +80,17 @@ public class LockConflictTest {
                     try{
                         ILock lock = targetInstance.getLock(basename + "l" + i.key);
                         try{
-                            if( lock.tryLock(10, TimeUnit.MILLISECONDS) ){
+                            if( lock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS) ){
                                 locked.add(i);
                                 counter.locked++;
                             }
                         }catch(Exception e){
                             System.out.println(basename+": trying lock="+i.key+" "+e);
+                            e.printStackTrace();
                         }
                     }catch(Exception e){
                         System.out.println(basename+": getting lock for locking="+i.key+" "+e);
+                        e.printStackTrace();
                     }
                 }
 
@@ -100,6 +103,7 @@ public class LockConflictTest {
                         counter.inced++;
                     }catch(Exception e){
                         System.out.println(basename+": updating acount="+i+" "+e);
+                        e.printStackTrace();
                     }
                 }
 
@@ -116,9 +120,11 @@ public class LockConflictTest {
                                 ittr.remove();
                             }catch(Exception e){
                                 System.out.println(basename+": unlocking lock ="+i.key+" "+e);
+                                e.printStackTrace();
                             }
                         }catch(Exception e){
                             System.out.println(basename+": getting lock for unlocking="+i.key+" "+e);
+                            e.printStackTrace();
                         }
                     }
 
