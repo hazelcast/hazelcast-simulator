@@ -28,9 +28,9 @@ public class MapMaxSizeTest {
     //
 
     //check these add up to 1   (writeProb is split up into sub styles)
-    public double writeUsingPutProb = 0.6;
+    public double writeUsingPutProb = 0.8;
     public double writeUsingPutAsyncProb = 0.2;
-    public double writeUsingPutTTLProb = 0.2;
+    public double writeUsingPutTTLProb = 0;
     //
 
     public int maxTTLExpireyMs = 3000;
@@ -108,10 +108,9 @@ public class MapMaxSizeTest {
         for(MapOpperationsCount i : results){
             total.add(i);
         }
-        System.out.println(basename+": "+total+" total of "+results.size());
+        System.out.println(basename+": "+total+" from "+results.size()+" workers");
 
         IMap map = targetInstance.getMap(basename);
-
         System.out.println(basename+": Map size = "+map.size());
     }
 
@@ -119,6 +118,7 @@ public class MapMaxSizeTest {
     public void verify() throws Exception {
         try{
             MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
+
             IMap map = targetInstance.getMap(basename);
 
             System.out.println(maxSizeConfig);
