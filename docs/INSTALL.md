@@ -4,7 +4,7 @@ Installation
 The zip/tar.gz file containing the stabilizer artifacts can be downloaded here:
 
 ```
-https://oss.sonatype.org/content/repositories/snapshots/com/hazelcast/stabilizer/hazelcast-stabilizer-dist/0.3-SNAPSHOT/
+http://search.maven.org/remotecontent?filepath=com/hazelcast/stabilizer/hazelcast-stabilizer-dist/0.3/hazelcast-stabilizer-dist-0.3-dist.zip
 ```
 
 Download and unpack the tar.gz or zip file to e.g. the home directory.
@@ -12,7 +12,7 @@ Download and unpack the tar.gz or zip file to e.g. the home directory.
 add to ~/.bashr when using Linux or ~/.profile when using OSX:
 
 ```
-export STABILIZER_HOME=~/hazelcast-stabilizer-0.3-SNAPSHOT
+export STABILIZER_HOME=~/hazelcast-stabilizer-0.3
 PATH=$STABILIZER_HOME/bin:$PATH
 ```
 

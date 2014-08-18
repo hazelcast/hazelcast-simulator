@@ -7,6 +7,7 @@ import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 import org.jclouds.aws.ec2.AWSEC2Api;
+import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
@@ -44,7 +45,9 @@ public class TemplateBuilder {
 
         initSecurityGroup();
 
+
         Template template = buildTemplate();
+
 
         log.info("Created template");
 
@@ -63,9 +66,15 @@ public class TemplateBuilder {
 
     private Template buildTemplate() {
         try {
-            return compute.templateBuilder()
+            Template template = compute.templateBuilder()
                     .from(spec)
                     .build();
+            if(isEc2()) {
+                String groupName = props.get("GROUP_NAME", "stabilizer-agent");
+                String username = System.getProperty("user.name");
+                template.getOptions().as(AWSEC2TemplateOptions.class).userMetadata("Name",groupName+"-"+username);
+            }
+            return template;
         } catch (IllegalArgumentException e) {
             log.finest(e);
             Utils.exitWithError(log, e.getMessage());
@@ -90,7 +99,7 @@ public class TemplateBuilder {
     }
 
     private void initSecurityGroup() {
-        if (!"aws-ec2".equals(props.get("CLOUD_PROVIDER"))) {
+        if (!isEc2()) {
             return;
         }
 
@@ -118,7 +127,9 @@ public class TemplateBuilder {
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 22, 22, "0.0.0.0/0");
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 9000, 9001, "0.0.0.0/0");
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
+    }
 
-
+    private boolean isEc2() {
+        return "aws-ec2".equals(props.get("CLOUD_PROVIDER"));
     }
 }
