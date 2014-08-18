@@ -152,7 +152,7 @@ public class MapStoreTest {
         for(MapOpperationsCount i : results){
             total.add(i);
         }
-        System.out.println(basename+": "+total+" total of "+results.size());
+        System.out.println(basename+": "+total+" from "+results.size()+" worker Threads");
     }
 
     @Verify(global = false)
@@ -168,8 +168,8 @@ public class MapStoreTest {
             final IMap map = targetInstance.getMap(basename);
 
             System.out.println(basename+ ": map size  =" + map.size() );
-            System.out.println(basename+ ": map local =" + map.getAll(map.localKeySet()).entrySet() );
-            System.out.println(basename+ ": map Store =" + mapStore.store.entrySet() );
+            //System.out.println(basename+ ": map local =" + map.getAll(map.localKeySet()).entrySet() );
+            //System.out.println(basename+ ": map Store =" + mapStore.store.entrySet() );
 
             System.out.println(basename+ ": "+ mapStore);
 
