@@ -91,7 +91,8 @@ public class MapMaxSizeTest {
                     }
                     else if( (chance -= checkSizeProb) <0){
                         int clusterSize = targetInstance.getCluster().getMembers().size();
-                        assertTrue("Map Over max Size",  map.size() < clusterSize * 1000 );
+                        int size = map.size();
+                        assertTrue("Map Over max Size "+size+" not less than "+clusterSize+"*"+1000, size < clusterSize * 1000 );
                         count.verified++;
                     }
 
@@ -118,7 +119,8 @@ public class MapMaxSizeTest {
         System.out.println(basename+": Map size = "+map.size());
 
         int clusterSize = targetInstance.getCluster().getMembers().size();
-        assertTrue("Map Over max Size",  map.size() < clusterSize * 1000 );
+        int size = map.size();
+        assertTrue("Map Over max Size "+size+" not less than "+clusterSize+"*"+1000, size < clusterSize * 1000 );
     }
 
     @Verify(global = false)
