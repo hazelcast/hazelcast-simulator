@@ -114,15 +114,19 @@ public class MapMaxSizeTest {
         }
         System.out.println(basename+": "+total+" from "+results.size()+" workers");
 
-
-        MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
-        System.out.println(maxSizeConfig);
-
         IMap map = targetInstance.getMap(basename);
         System.out.println(basename+": Map size = "+map.size());
 
         int clusterSize = targetInstance.getCluster().getMembers().size();
         assertTrue("Map Over max Size",  map.size() < clusterSize * 1000 );
+    }
+
+    @Verify(global = false)
+    public void verify() throws Exception {
+        try{
+            MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
+            System.out.println(basename+": "+maxSizeConfig);
+        }catch (Exception e){}
     }
 
 }
