@@ -10,10 +10,14 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOpperationsCount;
+import com.hazelcast.stabilizer.tests.map.helpers.OppCounterMapMaxSizeTest;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 
 
 public class MapMaxSizeTest {
@@ -24,17 +28,15 @@ public class MapMaxSizeTest {
 
     //check these add up to 1
     public double writeProb = 0.5;
-    public double getProb = 0.5;
+    public double getProb = 0.4;
+    public double checkSizeProb = 0.1;
     //
 
     //check these add up to 1   (writeProb is split up into sub styles)
     public double writeUsingPutProb = 0.8;
     public double writeUsingPutAsyncProb = 0.2;
-    public double writeUsingPutTTLProb = 0;
     //
 
-    public int maxTTLExpireyMs = 3000;
-    public int minTTLExpireyMs = 100;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -58,7 +60,7 @@ public class MapMaxSizeTest {
 
 
     private class Worker implements Runnable {
-        private MapOpperationsCount count = new MapOpperationsCount();
+        private OppCounterMapMaxSizeTest count = new OppCounterMapMaxSizeTest();
         private final Random random = new Random();
 
         @Override
@@ -76,55 +78,51 @@ public class MapMaxSizeTest {
                         chance = random.nextDouble();
                         if ( (chance -= writeUsingPutProb) < 0) {
                             map.put(key, value);
-                            count.putCount.incrementAndGet();
+                            count.put++;
                         }
                         else if ( (chance -= writeUsingPutAsyncProb) < 0 ) {
                             map.putAsync(key, value);
-                            count.putAsyncCount.incrementAndGet();
-                        }
-                        else if ( (chance -= writeUsingPutTTLProb ) < 0 ) {
-                            long delayMs = minTTLExpireyMs + random.nextInt(maxTTLExpireyMs);
-                            map.put(key, delayMs, delayMs, TimeUnit.MILLISECONDS);
-                            count.putTTLCount.incrementAndGet();
+                            count.putAsync++;
                         }
 
                     }else if( (chance -= getProb) < 0 ){
                         map.get(key);
-                        count.getCount.incrementAndGet();
+                        count.get++;
+                    }
+                    else if( (chance -= checkSizeProb) <0){
+                        int clusterSize = targetInstance.getCluster().getMembers().size();
+                        assertTrue("Map Over max Size",  map.size() < clusterSize * 1000 );
+                        count.verified++;
                     }
 
-                }catch(DistributedObjectDestroyedException e){}
+                }catch(Exception e){
+                    System.out.println(basename+": "+e);
+                    e.printStackTrace();
+                }
             }
-            IList results = targetInstance.getList(basename+"report");
-            results.add(count);
+            targetInstance.getList(basename+"report").add(count);
         }
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
-        IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
-        MapOpperationsCount total = new MapOpperationsCount();
-        for(MapOpperationsCount i : results){
+        IList<OppCounterMapMaxSizeTest> results = targetInstance.getList(basename+"report");
+        OppCounterMapMaxSizeTest total = new OppCounterMapMaxSizeTest();
+        for(OppCounterMapMaxSizeTest i : results){
             total.add(i);
         }
         System.out.println(basename+": "+total+" from "+results.size()+" workers");
 
+
+        MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
+        System.out.println(maxSizeConfig);
+
         IMap map = targetInstance.getMap(basename);
         System.out.println(basename+": Map size = "+map.size());
-    }
 
-    @Verify(global = false)
-    public void verify() throws Exception {
-        try{
-            MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
-
-            IMap map = targetInstance.getMap(basename);
-
-            System.out.println(maxSizeConfig);
-            System.out.println(basename+": Map size = "+map.size());
-
-        }catch(UnsupportedOperationException e){}
+        int clusterSize = targetInstance.getCluster().getMembers().size();
+        assertTrue("Map Over max Size",  map.size() < clusterSize * 1000 );
     }
 
 }
