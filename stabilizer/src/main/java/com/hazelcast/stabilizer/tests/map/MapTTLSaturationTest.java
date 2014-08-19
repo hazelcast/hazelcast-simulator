@@ -44,6 +44,7 @@ public class MapTTLSaturationTest {
     private IMap map;
 
     private long baseLineUsed;
+    private long maxLocalEntries;
 
     public MapTTLSaturationTest(){
     }
@@ -76,7 +77,7 @@ public class MapTTLSaturationTest {
             System.out.println(basename+" usedOfMax = "+usedOfMax+"%");
 
 
-            long maxLocalEntries = (long) ( (maxBytes / aproxEntryBytesSize) * aproxHeapUsageFactor) ;
+            maxLocalEntries = (long) ( (maxBytes / aproxEntryBytesSize) * aproxHeapUsageFactor) ;
 
             long key=0;
             for(long i=0; i <  maxLocalEntries ; i++){
@@ -94,7 +95,7 @@ public class MapTTLSaturationTest {
             System.out.println();
             System.out.println(basename+" After Init");
             System.out.println(basename+" map = "+ map.size());
-            System.out.println(basename+" Local map = "+ map.localKeySet().size()+" == "+maxLocalEntries +"(maxLocalEntries)");
+            System.out.println(basename+" maxLocalEntries= "+maxLocalEntries);
             System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
             System.out.println(basename+" used = "+humanReadableByteCount(nowUsed, true)+" = "+nowUsed);
             System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
@@ -144,14 +145,14 @@ public class MapTTLSaturationTest {
 
 
         System.out.println(basename+" map = "+ map.size());
-        System.out.println(basename+" Local map = "+ map.localKeySet().size());
+        System.out.println(basename+" maxLocalEntries= "+maxLocalEntries);
         System.out.println(basename+ "free = "+humanReadableByteCount(free, true)+" = "+free);
         System.out.println(basename+ "used = "+humanReadableByteCount(used, true)+" = "+used);
         System.out.println(basename+ "max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
         System.out.println(basename+ "usedOfMax = "+usedOfMax+"%");
 
 
-        long avgLocalEntryBytes = (used - baseLineUsed) / map.localKeySet().size();
+        long avgLocalEntryBytes = (used - baseLineUsed) / maxLocalEntries;
         System.out.println(basename+" avgLocalEntryBytes (after Verify and gc ? )= "+avgLocalEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
     }
 
