@@ -77,10 +77,10 @@ public class MapTTLSaturationTest {
             System.out.println(basename+" usedOfMax = "+usedOfMax+"%");
 
 
-            long maxEntries = (long) ( (maxBytes / aproxEntryBytesSize) * aproxHeapUsageFactor) ;
+            long maxLocalEntries = (long) ( (maxBytes / aproxEntryBytesSize) * aproxHeapUsageFactor) ;
 
             long key=0;
-            for(long i=0; i <  maxEntries ; i++){
+            for(long i=0; i <  maxLocalEntries ; i++){
                 key = nextKeyOwnedby(key, targetInstance);
                 map.put(key, key, 24, TimeUnit.HOURS);
                 key++;
@@ -95,12 +95,13 @@ public class MapTTLSaturationTest {
             System.out.println();
             System.out.println(basename+" After Init");
             System.out.println(basename+" map = "+ map.size());
+            System.out.println(basename+" Local map = "+ map.localKeySet().size()+" == "+maxLocalEntries +"(maxLocalEntries)");
             System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
             System.out.println(basename+" used = "+humanReadableByteCount(nowUsed, true)+" = "+nowUsed);
             System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
             System.out.println(basename+" usedOfMax = "+usedOfMax+"%");
 
-            long avgEntryBytes = (nowUsed - baseLineUsed) / maxEntries;
+            long avgEntryBytes = (nowUsed - baseLineUsed) / maxLocalEntries;
 
             System.out.println(basename+" avgEntryBytes = "+avgEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
 
@@ -144,14 +145,15 @@ public class MapTTLSaturationTest {
 
 
         System.out.println(basename+" map = "+ map.size());
+        System.out.println(basename+" Local map = "+ map.localKeySet().size());
         System.out.println(basename+ "free = "+humanReadableByteCount(free, true)+" = "+free);
         System.out.println(basename+ "used = "+humanReadableByteCount(used, true)+" = "+used);
         System.out.println(basename+ "max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
         System.out.println(basename+ "usedOfMax = "+usedOfMax+"%");
 
 
-        long avgEntryBytes = (used - baseLineUsed) / map.size();
-        System.out.println(basename+" avgEntryBytes (after Verify and gc ? )= "+avgEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
+        long avgLocalEntryBytes = (used - baseLineUsed) / map.localKeySet().size();
+        System.out.println(basename+" avgLocalEntryBytes (after Verify and gc ? )= "+avgLocalEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
     }
 
     public static String humanReadableByteCount(long bytes, boolean si) {
