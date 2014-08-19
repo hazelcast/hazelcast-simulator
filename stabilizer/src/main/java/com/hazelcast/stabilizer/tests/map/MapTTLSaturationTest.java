@@ -42,8 +42,10 @@ public class MapTTLSaturationTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    public double heapUsageFactor = 0.9;
+    public double heapUsageFactor = 0.1;
     private long aproxEntryBytesSize = 239;
+
+    private IMap map;
 
     public MapTTLSaturationTest(){
     }
@@ -52,12 +54,13 @@ public class MapTTLSaturationTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+
+        map = targetInstance.getMap(basename);
     }
 
     @Warmup(global = true)
     public void warmup() {
 
-        final IMap map = targetInstance.getMap(basename);
 
         long free = Runtime.getRuntime().freeMemory();
         long total =  Runtime.getRuntime().totalMemory();
@@ -116,8 +119,6 @@ public class MapTTLSaturationTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-
-        final IMap map = targetInstance.getMap(basename);
 
         long free = Runtime.getRuntime().freeMemory();
         long total =  Runtime.getRuntime().totalMemory();
