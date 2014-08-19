@@ -21,7 +21,6 @@ import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
@@ -133,7 +132,7 @@ public class MapTTLSaturationTest {
     }
 
     @Verify(global = false)
-    public void globalVerify() throws Exception {
+    public void loaclVerify() throws Exception {
         System.out.println();
         System.out.println(basename+" Verify");
 
@@ -175,9 +174,5 @@ public class MapTTLSaturationTest {
             }
             key++;
         }
-    }
-
-    public static void main(String[] args) throws Throwable {
-        new TestRunner(new MapTTLSaturationTest()).run();
     }
 }
