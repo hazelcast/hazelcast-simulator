@@ -38,7 +38,7 @@ public class MapTTLSaturationTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    public double aproxHeapUsageFactor = 0.1;
+    public double aproxHeapUsageFactor = 0.9;
     private long aproxEntryBytesSize = 239;
 
     private IMap map;
@@ -72,7 +72,7 @@ public class MapTTLSaturationTest {
             System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
             System.out.println(basename+" used = "+humanReadableByteCount(baseLineUsed, true)+" = "+baseLineUsed);
             System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
-            System.out.println(basename+" usedOfMax = "+usedOfMax);
+            System.out.println(basename+" usedOfMax = "+usedOfMax+"%");
 
 
             long maxEntries = (long) ( (maxBytes / aproxEntryBytesSize) * aproxHeapUsageFactor) ;
@@ -85,13 +85,14 @@ public class MapTTLSaturationTest {
             total =  Runtime.getRuntime().totalMemory();
             long nowUsed = total - free;
             maxBytes =  Runtime.getRuntime().maxMemory();
-            usedOfMax = 100.0 * ( (double) nowUsed  / (double) maxBytes);
+            usedOfMax =  100.0 * ( (double) nowUsed  / (double) maxBytes);
 
+            System.out.println();
             System.out.println(basename+" map = "+ map.size());
             System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
             System.out.println(basename+" used = "+humanReadableByteCount(nowUsed, true)+" = "+nowUsed);
             System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
-            System.out.println(basename+" usedOfMax = "+usedOfMax);
+            System.out.println(basename+" usedOfMax = "+usedOfMax+"%");
 
             long avgEntryBytes = (nowUsed - baseLineUsed) / maxEntries;
 
@@ -111,22 +112,22 @@ public class MapTTLSaturationTest {
     }
 
     private class Worker implements Runnable {
-        //private MapOpperationsCount count = new MapOpperationsCount();
-        //private final Random random = new Random();
         @Override
         public void run() {
             while (!testContext.isStopped()) {
 
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-            //IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
-            //results.add(count);
         }
     }
 
     @Verify(global = false)
     public void globalVerify() throws Exception {
-
-
+        System.out.println();
         System.out.println(basename+" Verify");
 
         long free = Runtime.getRuntime().freeMemory();
@@ -140,12 +141,11 @@ public class MapTTLSaturationTest {
         System.out.println(basename+ "free = "+humanReadableByteCount(free, true)+" = "+free);
         System.out.println(basename+ "used = "+humanReadableByteCount(used, true)+" = "+used);
         System.out.println(basename+ "max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
-        System.out.println(basename+ "usedOfMax = "+usedOfMax);
+        System.out.println(basename+ "usedOfMax = "+usedOfMax+"%");
 
 
         long avgEntryBytes = (used - baseLineUsed) / map.size();
         System.out.println(basename+" avgEntryBytes (after Verify and gc ? )= "+avgEntryBytes+" vs "+aproxEntryBytesSize);
-
     }
 
     public static String humanReadableByteCount(long bytes, boolean si) {
