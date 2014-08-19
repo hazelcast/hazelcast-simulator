@@ -62,7 +62,7 @@ public class MapTTLSaturationTest {
 
         final IMap map = targetInstance.getMap(basename);
 
-        for(long i=0; i <  1000 ; i++){
+        for(long i=0; i <  1000000 ; i++){
             map.put(i, i, 24, TimeUnit.HOURS);
         }
 
