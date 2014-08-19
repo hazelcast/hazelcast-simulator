@@ -15,9 +15,11 @@
  */
 package com.hazelcast.stabilizer.tests.map;
 
-import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
+import com.hazelcast.core.Member;
+import com.hazelcast.core.Partition;
+import com.hazelcast.core.PartitionService;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
@@ -28,7 +30,6 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
 
 public class MapTTLSaturationTest {
 
@@ -78,8 +79,11 @@ public class MapTTLSaturationTest {
 
             long maxEntries = (long) ( (maxBytes / aproxEntryBytesSize) * aproxHeapUsageFactor) ;
 
+            long key=0;
             for(long i=0; i <  maxEntries ; i++){
-                map.put(i, i, 24, TimeUnit.HOURS);
+                key = nextKeyOwnedby(key, targetInstance);
+                map.put(key, key, 24, TimeUnit.HOURS);
+                key++;
             }
 
             free = Runtime.getRuntime().freeMemory();
@@ -156,6 +160,19 @@ public class MapTTLSaturationTest {
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+    }
+
+    public static long nextKeyOwnedby(long key, HazelcastInstance instance) {
+        final Member localMember = instance.getCluster().getLocalMember();
+        final PartitionService partitionService = instance.getPartitionService();
+        for ( ; ; ) {
+
+            Partition partition = partitionService.getPartition(key);
+            if (localMember.equals(partition.getOwner())) {
+                return key;
+            }
+            key++;
+        }
     }
 
     public static void main(String[] args) throws Throwable {
