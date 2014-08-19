@@ -39,7 +39,7 @@ public class MapTTLSaturationTest {
     private HazelcastInstance targetInstance;
 
     public double aproxHeapUsageFactor = 0.9;
-    private long aproxEntryBytesSize = 239;
+    private long aproxEntryBytesSize = 238;
 
     private IMap map;
 
@@ -69,6 +69,7 @@ public class MapTTLSaturationTest {
             double usedOfMax = 100.0 * ( (double) baseLineUsed  / (double) maxBytes);
 
 
+            System.out.println(basename+" before Init");
             System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
             System.out.println(basename+" used = "+humanReadableByteCount(baseLineUsed, true)+" = "+baseLineUsed);
             System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
@@ -88,6 +89,7 @@ public class MapTTLSaturationTest {
             usedOfMax =  100.0 * ( (double) nowUsed  / (double) maxBytes);
 
             System.out.println();
+            System.out.println(basename+" After Init");
             System.out.println(basename+" map = "+ map.size());
             System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
             System.out.println(basename+" used = "+humanReadableByteCount(nowUsed, true)+" = "+nowUsed);
@@ -96,7 +98,7 @@ public class MapTTLSaturationTest {
 
             long avgEntryBytes = (nowUsed - baseLineUsed) / maxEntries;
 
-            System.out.println(basename+" avgEntryBytes = "+avgEntryBytes+" vs "+aproxEntryBytesSize);
+            System.out.println(basename+" avgEntryBytes = "+avgEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
 
 
         }catch(UnsupportedOperationException e){}
@@ -145,7 +147,7 @@ public class MapTTLSaturationTest {
 
 
         long avgEntryBytes = (used - baseLineUsed) / map.size();
-        System.out.println(basename+" avgEntryBytes (after Verify and gc ? )= "+avgEntryBytes+" vs "+aproxEntryBytesSize);
+        System.out.println(basename+" avgEntryBytes (after Verify and gc ? )= "+avgEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
     }
 
     public static String humanReadableByteCount(long bytes, boolean si) {
