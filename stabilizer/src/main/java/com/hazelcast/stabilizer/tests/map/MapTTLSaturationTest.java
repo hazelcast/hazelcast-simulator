@@ -43,6 +43,8 @@ public class MapTTLSaturationTest {
 
     private IMap map;
 
+    private long baseLineUsed;
+
     public MapTTLSaturationTest(){
     }
 
@@ -62,14 +64,15 @@ public class MapTTLSaturationTest {
 
             long free = Runtime.getRuntime().freeMemory();
             long total =  Runtime.getRuntime().totalMemory();
-            long used = total - free;
+            baseLineUsed = total - free;
             long maxBytes =  Runtime.getRuntime().maxMemory();
-            double Usedpercentage = 100.0 * (used / maxBytes);
+            double usedOfMax = 100.0 * ( (double) baseLineUsed  / (double) maxBytes);
 
-            System.out.println("free = "+humanReadableByteCount(free, true)+" = "+free);
-            System.out.println("used = "+humanReadableByteCount(used, true)+" = "+used);
-            System.out.println("max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
-            System.out.println("Usedpercentage = "+Usedpercentage);
+
+            System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
+            System.out.println(basename+" used = "+humanReadableByteCount(baseLineUsed, true)+" = "+baseLineUsed);
+            System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
+            System.out.println(basename+" usedOfMax = "+usedOfMax);
 
 
             long maxEntries = (long) ( (maxBytes / aproxEntryBytesSize) * aproxHeapUsageFactor) ;
@@ -80,17 +83,20 @@ public class MapTTLSaturationTest {
 
             free = Runtime.getRuntime().freeMemory();
             total =  Runtime.getRuntime().totalMemory();
-            used = total - free;
+            long nowUsed = total - free;
             maxBytes =  Runtime.getRuntime().maxMemory();
-            Usedpercentage = 100.0 * (used / maxBytes);
+            usedOfMax = 100.0 * ( (double) nowUsed  / (double) maxBytes);
 
+            System.out.println(basename+" map = "+ map.size());
+            System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
+            System.out.println(basename+" used = "+humanReadableByteCount(nowUsed, true)+" = "+nowUsed);
+            System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
+            System.out.println(basename+" usedOfMax = "+usedOfMax);
 
-            System.out.println("map = "+ map.size());
+            long avgEntryBytes = (nowUsed - baseLineUsed) / maxEntries;
 
-            System.out.println("free = "+humanReadableByteCount(free, true)+" = "+free);
-            System.out.println("used = "+humanReadableByteCount(used, true)+" = "+used);
-            System.out.println("max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
-            System.out.println("Usedpercentage = "+Usedpercentage);
+            System.out.println(basename+" avgEntryBytes = "+avgEntryBytes+" vs "+aproxEntryBytesSize);
+
 
         }catch(UnsupportedOperationException e){}
     }
@@ -121,18 +127,25 @@ public class MapTTLSaturationTest {
     public void globalVerify() throws Exception {
 
 
-        System.out.println("verrify map = "+ map.size());
+        System.out.println(basename+" Verify");
 
         long free = Runtime.getRuntime().freeMemory();
         long total =  Runtime.getRuntime().totalMemory();
         long used = total - free;
         long maxBytes =  Runtime.getRuntime().maxMemory();
-        double Usedpercentage = 100.0 * (used / maxBytes);
+        double usedOfMax = 100.0 * ( (double) used  / (double) maxBytes);
 
-        System.out.println("free = "+humanReadableByteCount(free, true)+" = "+free);
-        System.out.println("used = "+humanReadableByteCount(used, true)+" = "+used);
-        System.out.println("max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
-        System.out.println("Usedpercentage = "+Usedpercentage);
+
+        System.out.println(basename+" map = "+ map.size());
+        System.out.println(basename+ "free = "+humanReadableByteCount(free, true)+" = "+free);
+        System.out.println(basename+ "used = "+humanReadableByteCount(used, true)+" = "+used);
+        System.out.println(basename+ "max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
+        System.out.println(basename+ "usedOfMax = "+usedOfMax);
+
+
+        long avgEntryBytes = (used - baseLineUsed) / map.size();
+        System.out.println(basename+" avgEntryBytes (after Verify and gc ? )= "+avgEntryBytes+" vs "+aproxEntryBytesSize);
+
     }
 
     public static String humanReadableByteCount(long bytes, boolean si) {
