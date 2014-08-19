@@ -24,6 +24,7 @@ import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOpperationsCount;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.sun.jna.Structure;
@@ -41,6 +42,9 @@ public class MapTTLSaturationTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
+    public double heapUsageFactor = 0.9;
+    private long aproxEntryBytesSize = 239;
+
     public MapTTLSaturationTest(){
     }
 
@@ -48,35 +52,38 @@ public class MapTTLSaturationTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+    }
+
+    @Warmup(global = true)
+    public void warmup() {
+
+        final IMap map = targetInstance.getMap(basename);
 
         long free = Runtime.getRuntime().freeMemory();
         long total =  Runtime.getRuntime().totalMemory();
         long used = total - free;
-        long max =  Runtime.getRuntime().maxMemory();
+        long maxBytes =  Runtime.getRuntime().maxMemory();
 
         System.out.println("free = "+humanReadableByteCount(free, true)+" = "+free);
         System.out.println("used = "+humanReadableByteCount(used, true)+" = "+used);
-        System.out.println("max = "+humanReadableByteCount(max, true)+" = "+max);
+        System.out.println("max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
 
+        long maxEntries = (long) ( (maxBytes / aproxEntryBytesSize) * heapUsageFactor ) ;
 
-
-        final IMap map = targetInstance.getMap(basename);
-
-        for(long i=0; i <  1000000 ; i++){
+        for(long i=0; i <  maxEntries ; i++){
             map.put(i, i, 24, TimeUnit.HOURS);
         }
 
         free = Runtime.getRuntime().freeMemory();
         total =  Runtime.getRuntime().totalMemory();
         used = total - free;
-        max =  Runtime.getRuntime().maxMemory();
+        maxBytes =  Runtime.getRuntime().maxMemory();
 
-
-        System.out.println("map = "+ map.size());
         System.out.println("free = "+humanReadableByteCount(free, true)+" = "+free);
         System.out.println("used = "+humanReadableByteCount(used, true)+" = "+used);
-        System.out.println("max = "+humanReadableByteCount(max, true)+" = "+max);
+        System.out.println("max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
 
+        System.out.println("map = "+ map.size());
     }
 
     @Run
