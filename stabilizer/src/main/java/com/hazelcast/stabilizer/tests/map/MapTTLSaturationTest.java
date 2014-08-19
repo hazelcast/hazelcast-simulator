@@ -152,8 +152,11 @@ public class MapTTLSaturationTest {
         System.out.println(basename+ "usedOfMax = "+usedOfMax+"%");
 
 
-        long avgLocalEntryBytes = (used - baseLineUsed) / maxLocalEntries;
-        System.out.println(basename+" avgLocalEntryBytes (after Verify and gc ? )= "+avgLocalEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
+        //if not on a client
+        if(maxLocalEntries!=0){
+            long avgLocalEntryBytes = (used - baseLineUsed) / maxLocalEntries;
+            System.out.println(basename+" avgLocalEntryBytes (after Verify and gc ? )= "+avgLocalEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
+        }
     }
 
     public static String humanReadableByteCount(long bytes, boolean si) {
