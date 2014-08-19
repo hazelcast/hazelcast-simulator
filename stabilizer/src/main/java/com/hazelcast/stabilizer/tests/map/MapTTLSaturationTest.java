@@ -96,28 +96,45 @@ public class MapTTLSaturationTest {
     }
 
     private class Worker implements Runnable {
-        private MapOpperationsCount count = new MapOpperationsCount();
-        private final Random random = new Random();
+        //private MapOpperationsCount count = new MapOpperationsCount();
+        //private final Random random = new Random();
         @Override
         public void run() {
             while (!testContext.isStopped()) {
 
 
 
-                final IMap map = targetInstance.getMap(basename);
 
 
 
 
             }
-            IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
-            results.add(count);
+            //IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
+            //results.add(count);
         }
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
+        final IMap map = targetInstance.getMap(basename);
+
+        long free = Runtime.getRuntime().freeMemory();
+        long total =  Runtime.getRuntime().totalMemory();
+        long used = total - free;
+        long maxBytes =  Runtime.getRuntime().maxMemory();
+
+        System.out.println("free = "+humanReadableByteCount(free, true)+" = "+free);
+        System.out.println("used = "+humanReadableByteCount(used, true)+" = "+used);
+        System.out.println("max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
+
+
+        System.out.println("map = "+ map.size());
+
+
+
+
+        /*
         IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
         MapOpperationsCount total = new MapOpperationsCount();
         for(MapOpperationsCount i : results){
@@ -126,7 +143,7 @@ public class MapTTLSaturationTest {
         System.out.println(basename+": "+total+" total of "+results.size());
 
         final IMap map = targetInstance.getMap(basename);
-
+        */
 
 
         assertEquals("Map Size not 0, some TTL events not processed", 0, map.size());
