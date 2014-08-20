@@ -15,7 +15,6 @@
  */
 package com.hazelcast.stabilizer.tests.map;
 
-import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.Member;
@@ -23,7 +22,6 @@ import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
@@ -42,8 +40,8 @@ public class MapTTLSaturationTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    public double aproxHeapUsageFactor = 0.9;
-    //private long aproxEntryBytesSize = 238;
+    public double approxHeapUsageFactor = 0.9;
+    private long approxEntryBytesSize = 238;
 
     private IMap map;
 
@@ -65,20 +63,20 @@ public class MapTTLSaturationTest {
         if(isMemberNode()){
             printMemStats();
 
-            //long maxLocalEntries = (long) ( (maxBytes / aproxEntryBytesSize) * aproxHeapUsageFactor) ;
+            //long maxLocalEntries = (long) ( (maxs / approxEntryBytesSize) * approxHeapUsageFactor) ;
 
             long key=0;
             long putCount=0;
-            while(heapUsedFactor() < aproxHeapUsageFactor){
+            while(heapUsedFactor() < approxHeapUsageFactor){
                 key = nextKeyOwnedby(key);
                 map.put(key, key, ttlHours, TimeUnit.HOURS);
                 key++;
                 putCount++;
             }
+            System.out.println(basename+" map size = "+map.size());
             System.out.println(basename+" putCount = "+putCount);
 
             printMemStats();
-            //System.out.println(basename+" avgEntryBytes = "+avgEntryBytes+" vs "+putCount+" estimate used");
         }
     }
 
