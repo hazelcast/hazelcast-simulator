@@ -4,6 +4,10 @@ import com.hazelcast.config.MaxSizeConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.hazelcast.core.Member;
+import com.hazelcast.core.Partition;
+import com.hazelcast.core.PartitionService;
+import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
@@ -67,9 +71,17 @@ public class MapMaxSizeTest {
         public void run() {
             while (!testContext.isStopped()) {
                 try{
-                    final int key = random.nextInt(keyCount);
                     final IMap map = targetInstance.getMap(basename);
+                    final int key;
 
+                    if(isMemberNode(targetInstance)){
+                        System.out.println(basename+": member node run");
+                        int startKey = random.nextInt(keyCount);
+                        key = nextKeyOwnedby(startKey, keyCount, targetInstance);
+                    }
+                    else{
+                         key = random.nextInt(keyCount);
+                    }
                     double chance = random.nextDouble();
                     if ( (chance -= writeProb) < 0 ) {
 
@@ -92,7 +104,10 @@ public class MapMaxSizeTest {
                     else if( (chance -= checkSizeProb) <0){
                         int clusterSize = targetInstance.getCluster().getMembers().size();
                         int size = map.size();
-                        assertTrue("Map Over max Size "+size+" not less than "+clusterSize+"*"+1000, size < clusterSize * 1000 );
+                        //assertTrue("Map Over max Size "+size+" not less than "+clusterSize+"*"+1000, size < clusterSize * 1000 );
+                        if( size > clusterSize * 1000 ){
+                            System.out.println(basename+": Map Over max Size "+size+" not less than "+clusterSize+"*"+1000);
+                        }
                         count.verified++;
                     }
 
@@ -120,7 +135,7 @@ public class MapMaxSizeTest {
 
         int clusterSize = targetInstance.getCluster().getMembers().size();
         int size = map.size();
-        assertTrue("Map Over max Size "+size+" not less than "+clusterSize+"*"+1000, size < clusterSize * 1000 );
+        assertTrue("Map Over max Size " + size + " not less than " + clusterSize + "*" + 1000, size < clusterSize * 1000);
     }
 
     @Verify(global = false)
@@ -129,6 +144,24 @@ public class MapMaxSizeTest {
             MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
             System.out.println(basename+": "+maxSizeConfig);
         }catch (Exception e){}
+    }
+
+
+    public static int nextKeyOwnedby(int key, int max, HazelcastInstance instance) {
+        final Member localMember = instance.getCluster().getLocalMember();
+        final PartitionService partitionService = instance.getPartitionService();
+        for ( ; ; ) {
+
+            Partition partition = partitionService.getPartition(key);
+            if (localMember.equals(partition.getOwner())) {
+                return key;
+            }
+            key = ++key % max;
+        }
+    }
+
+    public static boolean isMemberNode(HazelcastInstance instance){
+        return instance instanceof HazelcastInstanceProxy;
     }
 
 }
