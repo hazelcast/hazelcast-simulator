@@ -20,5 +20,5 @@ do
     scp $s3cp stabilizer@${box}:~
     scp -r ~/.s3cp stabilizer@${box}:~
 
-    ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${item} "find . -name "*.hprof" | xargs -I % sh -c 'echo %; java -jar s3cp-cmdline-0.1.11.jar % s3://stabilizer/tmp/' "
+    ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${box} "find . -name "*.hprof" | xargs -I % sh -c 'echo %; java -jar s3cp-cmdline-0.1.11.jar % s3://stabilizer/tmp/' "
 done
