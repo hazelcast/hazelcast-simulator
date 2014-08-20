@@ -1,13 +1,5 @@
 #!/bin/sh
 
-
-if [ $# -eq 0 ]; then
-    echo "No s3 upload dir provided"
-    exit 1
-fi
-
-dir=$1
-
 ips=$(cat agents.txt | cut -d',' -f1)
 
 #Set the field separator to new line
