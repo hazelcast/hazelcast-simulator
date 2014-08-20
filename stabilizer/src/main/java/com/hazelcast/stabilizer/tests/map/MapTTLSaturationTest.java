@@ -35,16 +35,15 @@ public class MapTTLSaturationTest {
 
     public String basename = this.getClass().getName();
     public int threadCount = 3;
+    public int ttlHours = 24;
+    public double aproxHeapUsageFactor = 0.9;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    public double aproxHeapUsageFactor = 0.9;
-    private long aproxEntryBytesSize = 238;
-
     private IMap map;
-
-    private long baseLineUsed;
+    private long aproxEntryBytesSize = 238;
+    private long baseLineUsedbytes;
     private long maxLocalEntries;
 
     public MapTTLSaturationTest(){
@@ -66,14 +65,14 @@ public class MapTTLSaturationTest {
 
             long free = Runtime.getRuntime().freeMemory();
             long total =  Runtime.getRuntime().totalMemory();
-            baseLineUsed = total - free;
+            baseLineUsedbytes = total - free;
             long maxBytes =  Runtime.getRuntime().maxMemory();
-            double usedOfMax = 100.0 * ( (double) baseLineUsed  / (double) maxBytes);
+            double usedOfMax = 100.0 * ( (double) baseLineUsedbytes / (double) maxBytes);
 
 
             System.out.println(basename+" before Init");
             System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
-            System.out.println(basename+" used = "+humanReadableByteCount(baseLineUsed, true)+" = "+baseLineUsed);
+            System.out.println(basename+" used = "+humanReadableByteCount(baseLineUsedbytes, true)+" = "+ baseLineUsedbytes);
             System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
             System.out.println(basename+" usedOfMax = "+usedOfMax+"%");
 
@@ -83,7 +82,7 @@ public class MapTTLSaturationTest {
             long key=0;
             for(long i=0; i <  maxLocalEntries ; i++){
                 key = nextKeyOwnedby(key);
-                map.put(key, key, 24, TimeUnit.HOURS);
+                map.put(key, key, ttlHours, TimeUnit.HOURS);
                 key++;
             }
 
@@ -102,7 +101,7 @@ public class MapTTLSaturationTest {
             System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
             System.out.println(basename+" usedOfMax = "+usedOfMax+"%");
 
-            long avgEntryBytes = (nowUsed - baseLineUsed) / maxLocalEntries;
+            long avgEntryBytes = (nowUsed - baseLineUsedbytes) / maxLocalEntries;
 
             System.out.println(basename+" avgEntryBytes = "+avgEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
         }
@@ -152,7 +151,7 @@ public class MapTTLSaturationTest {
             System.out.println(basename+ "max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
             System.out.println(basename+ "usedOfMax = "+usedOfMax+"%");
 
-            long avgLocalEntryBytes = (used - baseLineUsed) / maxLocalEntries;
+            long avgLocalEntryBytes = (used - baseLineUsedbytes) / maxLocalEntries;
             System.out.println(basename+" avgLocalEntryBytes (after Verify and gc ? )= "+avgLocalEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
         }
     }
@@ -165,7 +164,7 @@ public class MapTTLSaturationTest {
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
-    public  long nextKeyOwnedby(long key,  ) {
+    public  long nextKeyOwnedby(long key) {
         final Member localMember = targetInstance.getCluster().getLocalMember();
         final PartitionService partitionService = targetInstance.getPartitionService();
         for ( ; ; ) {
