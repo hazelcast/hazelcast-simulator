@@ -63,18 +63,22 @@ public class MapTTLSaturationTest {
         if(isMemberNode()){
             printMemStats();
 
-            //long maxLocalEntries = (long) ( (maxs / approxEntryBytesSize) * approxHeapUsageFactor) ;
+            long free = Runtime.getRuntime().freeMemory();
+            long total =  Runtime.getRuntime().totalMemory();
+            long used = total - free;
+            long max =  Runtime.getRuntime().maxMemory();
+            long totalFree = max - used;
+
+            long maxLocalEntries = (long) ( (totalFree / approxEntryBytesSize) * approxHeapUsageFactor) ;
 
             long key=0;
-            long putCount=0;
-            while(heapUsedFactor() < approxHeapUsageFactor){
+            for(int i=0; i<maxLocalEntries; i++){
                 key = nextKeyOwnedby(key);
                 map.put(key, key, ttlHours, TimeUnit.HOURS);
                 key++;
-                putCount++;
             }
             System.out.println(basename+" map size = "+map.size());
-            System.out.println(basename+" putCount = "+putCount);
+            System.out.println(basename+" putCount = "+maxLocalEntries);
 
             printMemStats();
         }
@@ -124,15 +128,17 @@ public class MapTTLSaturationTest {
         long free = Runtime.getRuntime().freeMemory();
         long total =  Runtime.getRuntime().totalMemory();
         long used = total - free;
-        long maxBytes =  Runtime.getRuntime().maxMemory();
-        double usedOfMax = 100.0 * ( (double) used / (double) maxBytes);
+        long max =  Runtime.getRuntime().maxMemory();
+        double usedOfMax = 100.0 * ( (double) used / (double) max);
 
-        System.out.println(basename+" before Init");
+        long totalFree =  max - used;
+
         System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
+        System.out.println(basename+" total free = "+humanReadableByteCount(totalFree, true)+" = "+totalFree);
         System.out.println(basename+" used = "+humanReadableByteCount(used, true)+" = "+ used);
-        System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
+        System.out.println(basename+" max = "+humanReadableByteCount(max, true)+" = "+max);
         System.out.println(basename+" usedOfMax = "+usedOfMax+"%");
-
+        System.out.println();
     }
 
     public static String humanReadableByteCount(long bytes, boolean si) {
