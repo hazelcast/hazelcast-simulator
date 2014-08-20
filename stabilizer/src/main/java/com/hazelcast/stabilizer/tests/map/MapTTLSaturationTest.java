@@ -20,6 +20,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
+import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
@@ -60,7 +61,7 @@ public class MapTTLSaturationTest {
     @Warmup(global = false)
     public void warmup() {
 
-        try{
+        if(isMemberNode()){
             targetInstance.getConfig().getMapConfig(basename);
 
             long free = Runtime.getRuntime().freeMemory();
@@ -81,7 +82,7 @@ public class MapTTLSaturationTest {
 
             long key=0;
             for(long i=0; i <  maxLocalEntries ; i++){
-                key = nextKeyOwnedby(key, targetInstance);
+                key = nextKeyOwnedby(key);
                 map.put(key, key, 24, TimeUnit.HOURS);
                 key++;
             }
@@ -104,9 +105,8 @@ public class MapTTLSaturationTest {
             long avgEntryBytes = (nowUsed - baseLineUsed) / maxLocalEntries;
 
             System.out.println(basename+" avgEntryBytes = "+avgEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
+        }
 
-
-        }catch(UnsupportedOperationException e){}
     }
 
     @Run
@@ -134,26 +134,24 @@ public class MapTTLSaturationTest {
 
     @Verify(global = false)
     public void loaclVerify() throws Exception {
-        System.out.println();
-        System.out.println(basename+" Verify");
+        if(isMemberNode()){
+            System.out.println();
+            System.out.println(basename+" Verify");
 
-        long free = Runtime.getRuntime().freeMemory();
-        long total =  Runtime.getRuntime().totalMemory();
-        long used = total - free;
-        long maxBytes =  Runtime.getRuntime().maxMemory();
-        double usedOfMax = 100.0 * ( (double) used  / (double) maxBytes);
-
-
-        System.out.println(basename+" map = "+ map.size());
-        System.out.println(basename+" maxLocalEntries= "+maxLocalEntries);
-        System.out.println(basename+ "free = "+humanReadableByteCount(free, true)+" = "+free);
-        System.out.println(basename+ "used = "+humanReadableByteCount(used, true)+" = "+used);
-        System.out.println(basename+ "max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
-        System.out.println(basename+ "usedOfMax = "+usedOfMax+"%");
+            long free = Runtime.getRuntime().freeMemory();
+            long total =  Runtime.getRuntime().totalMemory();
+            long used = total - free;
+            long maxBytes =  Runtime.getRuntime().maxMemory();
+            double usedOfMax = 100.0 * ( (double) used  / (double) maxBytes);
 
 
-        //if not on a client
-        if(maxLocalEntries!=0){
+            System.out.println(basename+" map = "+ map.size());
+            System.out.println(basename+" maxLocalEntries= "+maxLocalEntries);
+            System.out.println(basename+ "free = "+humanReadableByteCount(free, true)+" = "+free);
+            System.out.println(basename+ "used = "+humanReadableByteCount(used, true)+" = "+used);
+            System.out.println(basename+ "max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
+            System.out.println(basename+ "usedOfMax = "+usedOfMax+"%");
+
             long avgLocalEntryBytes = (used - baseLineUsed) / maxLocalEntries;
             System.out.println(basename+" avgLocalEntryBytes (after Verify and gc ? )= "+avgLocalEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
         }
@@ -167,9 +165,9 @@ public class MapTTLSaturationTest {
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
-    public static long nextKeyOwnedby(long key, HazelcastInstance instance) {
-        final Member localMember = instance.getCluster().getLocalMember();
-        final PartitionService partitionService = instance.getPartitionService();
+    public  long nextKeyOwnedby(long key,  ) {
+        final Member localMember = targetInstance.getCluster().getLocalMember();
+        final PartitionService partitionService = targetInstance.getPartitionService();
         for ( ; ; ) {
 
             Partition partition = partitionService.getPartition(key);
@@ -178,5 +176,9 @@ public class MapTTLSaturationTest {
             }
             key++;
         }
+    }
+
+    public boolean isMemberNode(){
+        return targetInstance instanceof HazelcastInstanceProxy ;
     }
 }
