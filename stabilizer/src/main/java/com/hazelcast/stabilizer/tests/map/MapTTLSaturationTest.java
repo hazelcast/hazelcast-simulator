@@ -15,13 +15,11 @@
  */
 package com.hazelcast.stabilizer.tests.map;
 
+import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.core.Member;
-import com.hazelcast.core.Partition;
-import com.hazelcast.core.PartitionService;
-import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
@@ -41,10 +39,12 @@ public class MapTTLSaturationTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    private IMap map;
+    public double aproxHeapUsageFactor = 0.9;
     private long aproxEntryBytesSize = 238;
-    private long baseLineUsedbytes;
-    private long maxLocalEntries;
+
+    private IMap map;
+
+    private long baseLineUsed;
 
     public MapTTLSaturationTest(){
     }
@@ -60,6 +60,10 @@ public class MapTTLSaturationTest {
     @Warmup(global = false)
     public void warmup() {
 
+    private double heapUsedPercentage() {
+        long total = Runtime.getRuntime().totalMemory();
+        long max = Runtime.getRuntime().maxMemory();
+        return (100d * total) / max;
         if(isMemberNode()){
 
             long free = Runtime.getRuntime().freeMemory();
@@ -120,11 +124,24 @@ public class MapTTLSaturationTest {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
+                double usedPercentage = heapUsedPercentage();
+                if (usedPercentage >= maxHeapUsagePercentage) {
+                    System.out.println("heap used: " + usedPercentage + " % map.size:" + map.size());
 
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    for (int k = 0; k < 1000; k++) {
+                        counter++;
+                        if (counter % 100000 == 0) {
+                            System.out.println("at:" + counter + " heap used: " + usedPercentage + " % map.size:" + map.size());
+                        }
+                        long key = random.nextLong();
+                        map.put(key, 0, 24, TimeUnit.HOURS);
+                    }
                 }
             }
         }
