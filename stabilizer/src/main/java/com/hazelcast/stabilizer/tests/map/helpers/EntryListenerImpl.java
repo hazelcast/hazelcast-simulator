@@ -2,7 +2,6 @@ package com.hazelcast.stabilizer.tests.map.helpers;
 
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
-import com.hazelcast.core.MapEvent;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
@@ -25,14 +24,6 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
 
     //Default Needed
     public EntryListenerImpl(){
-
-    }
-
-    public void mapEvicted(MapEvent event) {
-
-    }
-
-    public void mapCleared(MapEvent event) {
 
     }
 
