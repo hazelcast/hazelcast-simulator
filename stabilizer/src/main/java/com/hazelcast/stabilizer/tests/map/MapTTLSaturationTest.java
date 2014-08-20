@@ -36,16 +36,15 @@ public class MapTTLSaturationTest {
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int ttlHours = 24;
+    public double approxHeapUsageFactor = 0.9;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    public double approxHeapUsageFactor = 0.9;
     private long approxEntryBytesSize = 238;
 
     private IMap map;
 
-    private long baseLineUsed;
 
     public MapTTLSaturationTest(){
     }
@@ -60,7 +59,7 @@ public class MapTTLSaturationTest {
 
     @Warmup(global = false)
     public void warmup() {
-        if(isMemberNode()){
+        if(isMemberNode(targetInstance)){
             printMemStats();
 
             long free = Runtime.getRuntime().freeMemory();
@@ -73,7 +72,7 @@ public class MapTTLSaturationTest {
 
             long key=0;
             for(int i=0; i<maxLocalEntries; i++){
-                key = nextKeyOwnedby(key);
+                key = nextKeyOwnedby(key, targetInstance);
                 map.put(key, key, ttlHours, TimeUnit.HOURS);
                 key++;
             }
@@ -109,7 +108,7 @@ public class MapTTLSaturationTest {
     @Verify(global = false)
     public void loaclVerify() throws Exception {
 
-        if(isMemberNode()){
+        if(isMemberNode(targetInstance)){
             printMemStats();
         }
 
@@ -149,9 +148,9 @@ public class MapTTLSaturationTest {
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
-    public  long nextKeyOwnedby(long key) {
-        final Member localMember = targetInstance.getCluster().getLocalMember();
-        final PartitionService partitionService = targetInstance.getPartitionService();
+    public static long nextKeyOwnedby(long key, HazelcastInstance instance) {
+        final Member localMember = instance.getCluster().getLocalMember();
+        final PartitionService partitionService = instance.getPartitionService();
         for ( ; ; ) {
 
             Partition partition = partitionService.getPartition(key);
@@ -162,7 +161,9 @@ public class MapTTLSaturationTest {
         }
     }
 
-    public boolean isMemberNode(){
-        return targetInstance instanceof HazelcastInstanceProxy;
+    public static boolean isMemberNode(HazelcastInstance instance){
+        return instance instanceof HazelcastInstanceProxy;
     }
+
+
 }
