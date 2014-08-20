@@ -61,7 +61,6 @@ public class MapTTLSaturationTest {
     public void warmup() {
 
         if(isMemberNode()){
-            targetInstance.getConfig().getMapConfig(basename);
 
             long free = Runtime.getRuntime().freeMemory();
             long total =  Runtime.getRuntime().totalMemory();
@@ -133,6 +132,7 @@ public class MapTTLSaturationTest {
 
     @Verify(global = false)
     public void loaclVerify() throws Exception {
+
         if(isMemberNode()){
             System.out.println();
             System.out.println(basename+" Verify");
@@ -146,14 +146,15 @@ public class MapTTLSaturationTest {
 
             System.out.println(basename+" map = "+ map.size());
             System.out.println(basename+" maxLocalEntries= "+maxLocalEntries);
-            System.out.println(basename+ "free = "+humanReadableByteCount(free, true)+" = "+free);
-            System.out.println(basename+ "used = "+humanReadableByteCount(used, true)+" = "+used);
-            System.out.println(basename+ "max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
-            System.out.println(basename+ "usedOfMax = "+usedOfMax+"%");
+            System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
+            System.out.println(basename+" used = "+humanReadableByteCount(used, true)+" = "+used);
+            System.out.println(basename+" max = "+humanReadableByteCount(maxBytes, true)+" = "+maxBytes);
+            System.out.println(basename+" usedOfMax = "+usedOfMax+"%");
 
             long avgLocalEntryBytes = (used - baseLineUsedbytes) / maxLocalEntries;
             System.out.println(basename+" avgLocalEntryBytes (after Verify and gc ? )= "+avgLocalEntryBytes+" vs "+aproxEntryBytesSize+" estimate used");
         }
+
     }
 
     public static String humanReadableByteCount(long bytes, boolean si) {
