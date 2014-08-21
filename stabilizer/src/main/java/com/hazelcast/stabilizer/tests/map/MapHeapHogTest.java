@@ -79,8 +79,8 @@ public class MapHeapHogTest {
             while (!testContext.isStopped()) {
                 try {
                     Thread.sleep(30000);
-                    System.out.println(basename+"During run map size = "+map.size());
-                    printMemStats();
+                    //System.out.println(basename+"During run map size = "+map.size());
+                    //printMemStats();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
