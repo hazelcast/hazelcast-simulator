@@ -7,7 +7,10 @@ import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.HazelcastInstanceProxy;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
@@ -17,6 +20,9 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import java.util.concurrent.TimeUnit;
 
 public class MapHeapHogTest {
+
+    private final static ILogger log = Logger.getLogger(MapHeapHogTest.class);
+
 
     public String basename = this.getClass().getName();
     public int threadCount = 3;
@@ -29,6 +35,8 @@ public class MapHeapHogTest {
     private long approxEntryBytesSize = 238;
 
     private IMap map;
+
+    private long flag=0;
 
     public MapHeapHogTest(){ }
 
@@ -55,48 +63,48 @@ public class MapHeapHogTest {
                     Thread.sleep(1000);
                 }
             }
-
-
-            long free = Runtime.getRuntime().freeMemory();
-            long total =  Runtime.getRuntime().totalMemory();
-            long used = total - free;
-            long max =  Runtime.getRuntime().maxMemory();
-            long totalFree = max - used;
-
-            long maxLocalEntries = (long) ( (totalFree / approxEntryBytesSize) * approxHeapUsageFactor) ;
-
-            long key=0;
-            for(int i=0; i<maxLocalEntries; i++){
-                key = nextKeyOwnedby(key, targetInstance);
-                map.put(key, key, ttlHours, TimeUnit.HOURS);
-                key++;
-            }
-            System.out.println(basename+" after warmUp map size = "+map.size());
-            System.out.println(basename+" putCount = "+maxLocalEntries);
-            printMemStats();
         }
     }
 
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        //for (int k = 0; k < threadCount; k++) {
             spawner.spawn(new Worker());
-        }
+        //}
         spawner.awaitCompletion();
+    }
+
+    @Performance
+    public long getOperationCount() {
+        return flag;
     }
 
     private class Worker implements Runnable {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-                try {
-                    Thread.sleep(30000);
-                    //System.out.println(basename+"During run map size = "+map.size());
-                    //printMemStats();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+
+                long free = Runtime.getRuntime().freeMemory();
+                long total =  Runtime.getRuntime().totalMemory();
+                long used = total - free;
+                long max =  Runtime.getRuntime().maxMemory();
+                long totalFree = max - used;
+
+                long maxLocalEntries = (long) ( (totalFree / approxEntryBytesSize) * approxHeapUsageFactor) ;
+
+                long key=0;
+                for(int i=0; i<maxLocalEntries; i++){
+                    key = nextKeyOwnedby(key, targetInstance);
+                    map.put(key, key, ttlHours, TimeUnit.HOURS);
+                    key++;
                 }
+                System.out.println(basename+" after warmUp map size = "+map.size());
+                System.out.println(basename+" putCount = "+maxLocalEntries);
+                printMemStats();
+
+                log.info("added All");
+                flag=1;
             }
         }
     }
