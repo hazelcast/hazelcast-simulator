@@ -1,6 +1,6 @@
 #!/bin/bash
 
-list=$(find . -name "failures-*.txt")
+list=$(find . -name "nohup-[0-9]*.out" -o -name "failures-[0-9]*.txt")
 
 IFS=$'\n'
 
