@@ -43,7 +43,6 @@ public class MapHeapHogTest {
     @Warmup(global = false)
     public void warmup() {
         if(isMemberNode(targetInstance)){
-            printMemStats();
 
             long free = Runtime.getRuntime().freeMemory();
             long total =  Runtime.getRuntime().totalMemory();
@@ -59,9 +58,8 @@ public class MapHeapHogTest {
                 map.put(key, key, ttlHours, TimeUnit.HOURS);
                 key++;
             }
-            System.out.println(basename+" map size = "+map.size());
+            System.out.println(basename+" after warmUp map size = "+map.size());
             System.out.println(basename+" putCount = "+maxLocalEntries);
-
             printMemStats();
         }
     }
@@ -80,7 +78,9 @@ public class MapHeapHogTest {
         public void run() {
             while (!testContext.isStopped()) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(30000);
+                    System.out.println(basename+"During run map size = "+map.size());
+                    printMemStats();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -92,9 +92,9 @@ public class MapHeapHogTest {
     public void loaclVerify() throws Exception {
 
         if(isMemberNode(targetInstance)){
+            System.out.println(basename+" verify map size = "+map.size());
             printMemStats();
         }
-
     }
 
     private double heapUsedFactor() {
