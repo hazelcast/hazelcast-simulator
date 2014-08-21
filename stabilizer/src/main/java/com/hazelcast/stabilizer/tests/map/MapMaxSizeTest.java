@@ -88,11 +88,11 @@ public class MapMaxSizeTest {
                     else if( (chance -= checkSizeProb) <0){
                         int clusterSize = targetInstance.getCluster().getMembers().size();
                         int size = map.size();
-                        try{
+                        //try{
                             assertTrue("Map Over max Size "+size+" not less than "+clusterSize+"*"+1000, size < clusterSize * 1000 );
-                        }catch(Throwable t){
-                            System.out.println(basename+": "+t);
-                        }
+                        //}catch(Throwable t){
+                        //    System.out.println(basename+": "+t);
+                        //}
                         count.verified++;
                     }
 
