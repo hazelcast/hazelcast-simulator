@@ -41,8 +41,21 @@ public class MapHeapHogTest {
     }
 
     @Warmup(global = false)
-    public void warmup() {
+    public void warmup() throws InterruptedException {
         if(isMemberNode(targetInstance)){
+
+            while (targetInstance.getCluster().getMembers().size() != 3){
+                System.out.println(basename+" waiting cluster == 3");
+                Thread.sleep(1000);
+            }
+            final PartitionService ps = targetInstance.getPartitionService();
+            for (Partition partition : ps.getPartitions()) {
+                while (partition.getOwner() == null) {
+                    System.out.println(basename+" partition owner ?");
+                    Thread.sleep(1000);
+                }
+            }
+
 
             long free = Runtime.getRuntime().freeMemory();
             long total =  Runtime.getRuntime().totalMemory();
