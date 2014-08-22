@@ -2,7 +2,6 @@ package com.hazelcast.stabilizer.tests.map.helpers;
 
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
-import com.hazelcast.core.MapEvent;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
@@ -24,15 +23,7 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
     public int maxDelayMs;
 
     //Default Needed
-    public EntryListenerImpl(){
-
-    }
-
-    public void mapEvicted(MapEvent event) {
-
-    }
-
-    public void mapCleared(MapEvent event) {
+    public EntryListenerImpl() {
 
     }
 
@@ -65,9 +56,9 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
         evictCount.incrementAndGet();
     }
 
-    private void delay(){
-        if(maxDelayMs!=0){
-            int delayMs =  minDelayMs + random.nextInt(maxDelayMs);
+    private void delay() {
+        if (maxDelayMs != 0) {
+            int delayMs = minDelayMs + random.nextInt(maxDelayMs);
             try {
                 Thread.sleep(delayMs);
             } catch (InterruptedException e) {
@@ -114,9 +105,9 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
         EntryListenerImpl that = (EntryListenerImpl) o;
 
         if (addCount.get() == that.addCount.get() &&
-            evictCount.get() == that.evictCount.get() &&
-            removeCount.get() == that.removeCount.get() &&
-            updateCount.get() == that.updateCount.get()){
+                evictCount.get() == that.evictCount.get() &&
+                removeCount.get() == that.removeCount.get() &&
+                updateCount.get() == that.updateCount.get()) {
 
             return true;
         }
