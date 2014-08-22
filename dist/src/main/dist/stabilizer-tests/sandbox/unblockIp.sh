@@ -2,11 +2,10 @@
 
 list=$(cat agents.txt | cut -d',' -f1)
 
-#Set the field separator to new line
-IFS=$'\n'
+readarray -t array <<<"$list"
 
-for item in $list
-do
-	ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${item} "sudo /sbin/iptables -F"
-	break
-done
+box=${array[2]}
+
+echo "${box}"
+
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${box} "sudo /sbin/iptables -F"
