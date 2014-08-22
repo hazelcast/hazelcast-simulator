@@ -64,6 +64,7 @@ public class DataTeg {
         }
 
 
+        /*
         try {
             final PartitionServiceProxy partitionService = (PartitionServiceProxy) targetInstance.getPartitionService();
             final Field field = PartitionServiceProxy.class.getDeclaredField("partitionService");
@@ -77,10 +78,9 @@ public class DataTeg {
 
                 if(partition.getOwner().getHost().equals(partition.getReplicaAddress(1).getHost())){
 
-
                     System.out.println(basename+"----------------ERROR---------------------------------");
-                    System.out.println(basename+"owner: " + partition.getOwner().getPort());
-                    System.out.println(basename+"back : " + partition.getReplicaAddress(1).getPort());
+                    System.out.println(basename+"owner: " + partition.getOwner().getHost());
+                    System.out.println(basename+"back : " + partition.getReplicaAddress(1).getHost());
                 }
             }
         } catch (NoSuchFieldException e) {
@@ -88,6 +88,7 @@ public class DataTeg {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+        */
 
 
     }
