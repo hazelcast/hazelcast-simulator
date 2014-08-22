@@ -135,22 +135,30 @@ public class DataTeg {
     public void verify() throws Exception {
         IMap map = targetInstance.getMap(basename);
 
-        int max=0;
-        while(map.size() != maxItems){
 
-            Thread.sleep(1000);
-
-            if(max++==60){
-                break;
-            }
+        if(targetInstance.getCluster().getMembers().size() == nodeKillCount){
+            System.out.println(basename+": cluster size ="+ targetInstance.getCluster().getMembers().size() );
+            System.out.println(basename+": map size ="+ map.size());
         }
+        else{
 
-        System.out.println(basename+": cluster size ="+ targetInstance.getCluster().getMembers().size() );
-        System.out.println(basename+": map size ="+ map.size());
+            int max=0;
+            while(map.size() != maxItems){
 
-        assertEquals("data loss ", map.size(), maxItems);
+                Thread.sleep(1000);
 
-        System.out.println(basename+"verify OK ");
+                if(max++==60){
+                    break;
+                }
+            }
+
+            System.out.println(basename+": cluster size ="+ targetInstance.getCluster().getMembers().size() );
+            System.out.println(basename+": map size ="+ map.size());
+
+            assertEquals("data loss ", map.size(), maxItems);
+
+            System.out.println(basename+"verify OK ");
+        }
     }
 
     public static long nextKeyOwnedby(long key, HazelcastInstance instance) {
