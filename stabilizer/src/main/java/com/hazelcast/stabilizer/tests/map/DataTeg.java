@@ -132,7 +132,9 @@ public class DataTeg {
             }
         }
 
+
         assertEquals("data loss", map.size(), maxItems);
+
         System.out.println(basename+"verify OK "+map.size()+"=="+maxItems);
     }
 

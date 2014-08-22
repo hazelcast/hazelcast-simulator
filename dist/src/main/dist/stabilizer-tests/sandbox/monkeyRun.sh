@@ -10,4 +10,6 @@ do
 
    ./monkeyListener.sh ${name} "Running 00d 00h 01m 00s"
 
+   ./unblockIp.sh
+
 done
