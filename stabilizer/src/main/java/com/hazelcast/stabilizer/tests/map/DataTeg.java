@@ -39,10 +39,6 @@ public class DataTeg {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-    }
-
-    @Warmup(global = false)
-    public void warmup() throws InterruptedException {
 
         while ( targetInstance.getCluster().getMembers().size() != clusterSize ){
             System.out.println(basename+" waiting cluster == "+clusterSize);
@@ -55,6 +51,11 @@ public class DataTeg {
                 Thread.sleep(1000);
             }
         }
+
+    }
+
+    @Warmup(global = true)
+    public void warmup() throws InterruptedException {
 
         IMap map = targetInstance.getMap(basename);
 
