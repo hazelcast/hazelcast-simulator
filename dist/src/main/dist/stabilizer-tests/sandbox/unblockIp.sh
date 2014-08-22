@@ -7,6 +7,6 @@ IFS=$'\n'
 
 for item in $list
 do
-	ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${item} "sudo iptables -F"
+	ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${item} "sudo /sbin/iptables -F"
 	break
 done
