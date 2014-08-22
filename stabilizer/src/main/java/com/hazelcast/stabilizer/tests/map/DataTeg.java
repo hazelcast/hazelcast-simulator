@@ -56,7 +56,20 @@ public class DataTeg {
     }
 
     @Warmup(global = true)
-    public void warmup(){
+    public void warmup() throws Exception{
+
+
+        while ( targetInstance.getCluster().getMembers().size() != clusterSize ){
+            System.out.println(basename+" waiting cluster == "+clusterSize);
+            Thread.sleep(1000);
+        }
+        final PartitionService ps = targetInstance.getPartitionService();
+        for (Partition partition : ps.getPartitions()) {
+            while (partition.getOwner() == null) {
+                System.out.println(basename+" partition owner ?");
+                Thread.sleep(1000);
+            }
+        }
 
         IMap map = targetInstance.getMap(basename);
 
