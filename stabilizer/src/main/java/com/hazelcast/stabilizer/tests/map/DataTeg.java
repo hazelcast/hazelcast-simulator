@@ -135,10 +135,11 @@ public class DataTeg {
     public void verify() throws Exception {
         IMap map = targetInstance.getMap(basename);
 
+        System.out.println(basename+": cluster size ="+ targetInstance.getCluster().getMembers().size() );
+        System.out.println(basename+": map size ="+ map.size());
 
         if(targetInstance.getCluster().getMembers().size() == nodeKillCount){
-            System.out.println(basename+": cluster size ="+ targetInstance.getCluster().getMembers().size() );
-            System.out.println(basename+": map size ="+ map.size());
+
         }
         else{
 
