@@ -1,6 +1,7 @@
 package com.hazelcast.stabilizer.tests.map;
 
 
+import com.hazelcast.client.proxy.PartitionServiceProxy;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.Member;
@@ -9,6 +10,8 @@ import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.partition.InternalPartition;
+import com.hazelcast.partition.impl.InternalPartitionServiceImpl;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
@@ -17,6 +20,7 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 
 public class DataTeg {
@@ -40,26 +44,53 @@ public class DataTeg {
 
     }
 
-    @Warmup(global = true)
+    @Warmup(global = false)
     public void warmup() throws InterruptedException {
 
-            while ( targetInstance.getCluster().getMembers().size() != clusterSize ){
-                System.out.println(basename+" waiting cluster == 3");
+        while ( targetInstance.getCluster().getMembers().size() != clusterSize ){
+            System.out.println(basename+" waiting cluster == "+clusterSize);
+            Thread.sleep(1000);
+        }
+        final PartitionService ps = targetInstance.getPartitionService();
+        for (Partition partition : ps.getPartitions()) {
+            while (partition.getOwner() == null) {
+                System.out.println(basename+" partition owner ?");
                 Thread.sleep(1000);
             }
-            final PartitionService ps = targetInstance.getPartitionService();
-            for (Partition partition : ps.getPartitions()) {
-                while (partition.getOwner() == null) {
-                    System.out.println(basename+" partition owner ?");
-                    Thread.sleep(1000);
-                }
-            }
+        }
 
         IMap map = targetInstance.getMap(basename);
 
         for(int i=0; i<maxItems; i++){
             map.put(i, i);
         }
+
+
+        try {
+            final PartitionServiceProxy partitionService = (PartitionServiceProxy) targetInstance.getPartitionService();
+            final Field field = PartitionServiceProxy.class.getDeclaredField("partitionService");
+            field.setAccessible(true);
+            final InternalPartitionServiceImpl internalPartitionService = (InternalPartitionServiceImpl) field.get(partitionService);
+            final Field partitionsField = InternalPartitionServiceImpl.class.getDeclaredField("partitions");
+            partitionsField.setAccessible(true);
+            final InternalPartition[] partitions = (InternalPartition[]) partitionsField.get(internalPartitionService);
+
+            for (InternalPartition partition : partitions) {
+
+                if(partition.getOwner().getHost().equals(partition.getReplicaAddress(1).getHost())){
+
+
+                    System.out.println(basename+"----------------ERROR---------------------------------");
+                    System.out.println(basename+"owner: " + partition.getOwner().getPort());
+                    System.out.println(basename+"back : " + partition.getReplicaAddress(1).getPort());
+                }
+            }
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
 
     }
 
@@ -88,10 +119,14 @@ public class DataTeg {
     }
 
     @Verify(global = false)
-    public void loaclVerify() throws Exception {
+    public void verify() throws Exception {
 
         IMap map = targetInstance.getMap(basename);
-        System.out.println(basename+": map size ="+ map.size() +" target = "+maxItems );
+
+        for(int i=0; i<3; i++){
+            System.out.println(basename+": map size ="+ map.size() +" target = "+maxItems );
+            Thread.sleep(3000);
+        }
     }
 
 
