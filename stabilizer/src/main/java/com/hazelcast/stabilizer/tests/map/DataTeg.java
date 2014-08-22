@@ -21,13 +21,13 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.lang.reflect.Field;
 
+import static org.junit.Assert.assertEquals;
+
 public class DataTeg {
 
-    private final static ILogger log = Logger.getLogger(DataTeg.class);
 
     public String basename = this.getClass().getName();
     public int maxItems=10000;
-
     public int clusterSize=6;
 
     private TestContext testContext;
@@ -39,7 +39,6 @@ public class DataTeg {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-
     }
 
     @Warmup(global = false)
@@ -119,42 +118,23 @@ public class DataTeg {
 
     @Verify(global = false)
     public void verify() throws Exception {
-
         IMap map = targetInstance.getMap(basename);
 
-        for(int i=0; i<3; i++){
-            System.out.println(basename+": map size ="+ map.size() +" target = "+maxItems );
-            Thread.sleep(3000);
+        int max=0;
+        while(map.size() != maxItems){
+
+            System.out.println(basename+": verify map size ="+ map.size() +" target = "+maxItems );
+            Thread.sleep(10000);
+
+            if(max++==5){
+                break;
+            }
         }
+
+        assertEquals("data loss", map.size(), maxItems);
     }
 
 
-
-    public void printMemStats(){
-
-        long free = Runtime.getRuntime().freeMemory();
-        long total =  Runtime.getRuntime().totalMemory();
-        long used = total - free;
-        long max =  Runtime.getRuntime().maxMemory();
-        double usedOfMax = 100.0 * ( (double) used / (double) max);
-
-        long totalFree =  max - used;
-
-        System.out.println(basename+" free = "+humanReadableByteCount(free, true)+" = "+free);
-        System.out.println(basename+" total free = "+humanReadableByteCount(totalFree, true)+" = "+totalFree);
-        System.out.println(basename+" used = "+humanReadableByteCount(used, true)+" = "+ used);
-        System.out.println(basename+" max = "+humanReadableByteCount(max, true)+" = "+max);
-        System.out.println(basename+" usedOfMax = "+usedOfMax+"%");
-        System.out.println();
-    }
-
-    public static String humanReadableByteCount(long bytes, boolean si) {
-        int unit = si ? 1000 : 1024;
-        if (bytes < unit) return bytes + " B";
-        int exp = (int) (Math.log(bytes) / Math.log(unit));
-        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
-        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
-    }
 
     public static long nextKeyOwnedby(long key, HazelcastInstance instance) {
         final Member localMember = instance.getCluster().getLocalMember();
@@ -167,10 +147,6 @@ public class DataTeg {
             }
             key++;
         }
-    }
-
-    public static boolean isMemberNode(HazelcastInstance instance){
-        return instance instanceof HazelcastInstanceProxy;
     }
 
 }
