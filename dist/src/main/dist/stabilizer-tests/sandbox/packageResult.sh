@@ -13,4 +13,4 @@ done
 
 cp *.properties workers/
 
-zip -r results.zip workers/*
+zip -r results.zip workers/* -x *.hprof
