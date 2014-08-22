@@ -139,9 +139,10 @@ public class DataTeg {
         System.out.println(basename+": map size ="+ map.size());
 
         if(targetInstance.getCluster().getMembers().size() == nodeKillCount){
-
+            System.out.println(basename+": check again cluster ="+ targetInstance.getCluster().getMembers().size() );
         }
         else{
+            System.out.println(basename+": check again cluster ="+ targetInstance.getCluster().getMembers().size() );
 
             int max=0;
             while(map.size() != maxItems){
@@ -152,9 +153,6 @@ public class DataTeg {
                     break;
                 }
             }
-
-            System.out.println(basename+": cluster size ="+ targetInstance.getCluster().getMembers().size() );
-            System.out.println(basename+": map size ="+ map.size());
 
             assertEquals("data loss ", map.size(), maxItems);
 
