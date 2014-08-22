@@ -23,10 +23,11 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
     public int maxDelayMs;
 
     //Default Needed
-    public EntryListenerImpl(){
+    public EntryListenerImpl() {
 
     }
 
+   
     public EntryListenerImpl(int minDelayMs, int maxDelayMs) {
         this.minDelayMs = minDelayMs;
         this.maxDelayMs = maxDelayMs;
@@ -56,9 +57,9 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
         evictCount.incrementAndGet();
     }
 
-    private void delay(){
-        if(maxDelayMs!=0){
-            int delayMs =  minDelayMs + random.nextInt(maxDelayMs);
+    private void delay() {
+        if (maxDelayMs != 0) {
+            int delayMs = minDelayMs + random.nextInt(maxDelayMs);
             try {
                 Thread.sleep(delayMs);
             } catch (InterruptedException e) {
@@ -105,9 +106,9 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
         EntryListenerImpl that = (EntryListenerImpl) o;
 
         if (addCount.get() == that.addCount.get() &&
-            evictCount.get() == that.evictCount.get() &&
-            removeCount.get() == that.removeCount.get() &&
-            updateCount.get() == that.updateCount.get()){
+                evictCount.get() == that.evictCount.get() &&
+                removeCount.get() == that.removeCount.get() &&
+                updateCount.get() == that.updateCount.get()) {
 
             return true;
         }
