@@ -1,7 +1,6 @@
 package com.hazelcast.stabilizer.tests.map;
 
 
-import com.hazelcast.client.proxy.PartitionServiceProxy;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.Member;
@@ -11,9 +10,9 @@ import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.partition.InternalPartition;
+import com.hazelcast.partition.PartitionServiceProxy;
 import com.hazelcast.partition.impl.InternalPartitionServiceImpl;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
@@ -21,7 +20,6 @@ import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.lang.reflect.Field;
-import java.util.concurrent.TimeUnit;
 
 public class DataTeg {
 
