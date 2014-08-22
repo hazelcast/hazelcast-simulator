@@ -29,6 +29,7 @@ public class DataTeg {
     public String basename = this.getClass().getName();
     public int maxItems=10000;
     public int clusterSize=6;
+    public int nodeKillCount=1;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -55,7 +56,7 @@ public class DataTeg {
     }
 
     @Warmup(global = true)
-    public void warmup() throws InterruptedException {
+    public void warmup(){
 
         IMap map = targetInstance.getMap(basename);
 
@@ -121,21 +122,21 @@ public class DataTeg {
     public void verify() throws Exception {
         IMap map = targetInstance.getMap(basename);
 
-        int max=0;
-        while(map.size() != maxItems){
+        if ( targetInstance.getCluster().getMembers().size() == clusterSize-nodeKillCount ){
+            int max=0;
+            while(map.size() != maxItems){
 
-            System.out.println(basename+": verify map size ="+ map.size() +" target = "+maxItems );
-            Thread.sleep(10000);
+                System.out.println(basename+": verify map size ="+ map.size() +" target = "+maxItems );
+                Thread.sleep(10000);
 
-            if(max++==5){
-                break;
+                if(max++==5){
+                    break;
+                }
             }
+            assertEquals("data loss", map.size(), maxItems);
+            System.out.println(basename+"verify OK "+map.size()+"=="+maxItems);
         }
 
-
-        assertEquals("data loss", map.size(), maxItems);
-
-        System.out.println(basename+"verify OK "+map.size()+"=="+maxItems);
     }
 
 
