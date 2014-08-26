@@ -61,7 +61,7 @@ public class MapTransactionContextTest {
 
                 final int key = random.nextInt(keyCount);
                 final long increment = random.nextInt(100);
-                try{
+                try {
                     context.beginTransaction();
                     final TransactionalMap<Integer, Long> map = context.getMap(basename);
 
@@ -69,23 +69,21 @@ public class MapTransactionContextTest {
                     Long update = current + increment;
                     map.put(key, update);
 
-                    localIncrements[key]+=increment;
-                    count.committed++;
-
                     context.commitTransaction();
 
-                }catch(Exception commitFailed){
-                    try{
+                    // Do local increments if commit is successful, so there is no needed decrement operation
+                    localIncrements[key]+=increment;
+                    count.committed++;
+                } catch(Exception commitFailed) {
+                    try {
                         context.rollbackTransaction();
                         count.rolled++;
-                        count.committed--;
-                        localIncrements[key]-=increment;
 
                         System.out.println(basename+": commit   fail key="+key+" inc="+increment+" "+commitFailed);
                         commitFailed.printStackTrace();
-
-                    }catch(Exception rollBackFailed){
+                    } catch(Exception rollBackFailed) {
                         count.failedRoles++;
+
                         System.out.println(basename+": rollback fail key="+key+" inc="+increment+" "+rollBackFailed);
                         rollBackFailed.printStackTrace();
                     }
