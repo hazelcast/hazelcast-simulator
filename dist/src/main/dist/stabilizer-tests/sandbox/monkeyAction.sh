@@ -4,4 +4,6 @@
 #sleep 1
 #chaosmonkey mama
 
-./blockIp.sh
+#./blockIp.sh
+
+./killall.sh
