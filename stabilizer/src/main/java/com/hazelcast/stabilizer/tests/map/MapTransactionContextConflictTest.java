@@ -91,20 +91,19 @@ public class MapTransactionContextConflictTest {
                         long current = map.getForUpdate(p.key);
                         map.put(p.key, current + p.inc);
 
-                        localIncrements[p.key]+=p.inc;
                         doneIncs.add(p);
                     }
-                    count.committed++;
                     context.commitTransaction();
+
+                    count.committed++;
+                    for(KeyInc p : doneIncs){
+                        localIncrements[p.key]+=p.inc;
+                    }
 
                 }catch(Exception commitFailed){
                     try{
                         context.rollbackTransaction();
                         count.rolled++;
-                        count.committed--;
-                        for(KeyInc p : doneIncs){
-                            localIncrements[p.key]-=p.inc;
-                        }
 
                         System.out.println(basename+": commit fail done="+doneIncs+" "+commitFailed);
                         commitFailed.printStackTrace();
