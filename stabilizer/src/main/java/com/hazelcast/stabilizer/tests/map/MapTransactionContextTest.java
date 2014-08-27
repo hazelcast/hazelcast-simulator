@@ -85,8 +85,9 @@ public class MapTransactionContextTest {
                         count.failedRoles++;
 
                         // Do local increments if roll back fails  is successful
-                        localIncrements[key]+=increment;
-                        count.committed++;
+                        //but this dont seem to work ?
+                        //localIncrements[key]+=increment;
+                        //count.committed++;
 
                         System.out.println(basename+": rollback fail key="+key+" inc="+increment+" "+rollBackFailed);
                         rollBackFailed.printStackTrace();
