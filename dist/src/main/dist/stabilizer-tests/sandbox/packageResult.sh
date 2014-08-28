@@ -17,5 +17,5 @@ dir=$(pwd)
 base=$(basename ${dir})
 cd ..
 
-zip results.zip ${base} -r -x agents.txt
+zip results.zip ${base} -r -x agents.txt *.hprof
 mv results.zip ${base}/
