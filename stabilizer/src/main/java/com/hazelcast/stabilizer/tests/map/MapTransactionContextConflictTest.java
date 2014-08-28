@@ -34,7 +34,7 @@ public class MapTransactionContextConflictTest {
     public int maxKeysPerTxn = 5;
 
     private HazelcastInstance targetInstance;
-    private volatile TestContext testContext;
+    private TestContext testContext;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -68,9 +68,10 @@ public class MapTransactionContextConflictTest {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
+
                 List<KeyInc> potentialIncs = new ArrayList();
 
-                for (int i=0; i< maxKeysPerTxn; i++) {
+                for(int i=0; i< maxKeysPerTxn; i++){
                     KeyInc p = new KeyInc();
                     p.key = random.nextInt(keyCount);
                     p.inc = random.nextInt(999);
@@ -79,47 +80,39 @@ public class MapTransactionContextConflictTest {
 
                 List<KeyInc> doneIncs = new ArrayList();
 
-                TransactionContext context = null;
-                try {
-                    context = targetInstance.newTransactionContext();
-
+                TransactionContext context = targetInstance.newTransactionContext();
+                try{
                     context.beginTransaction();
 
-                    final TransactionalMap<Integer, Long> map = context.getMap(basename);
+                    for(KeyInc p : potentialIncs){
+                        final TransactionalMap<Integer, Long> map = context.getMap(basename);
 
-                    for (KeyInc p : potentialIncs) {
-                        Long current = map.getForUpdate(p.key);
-                        if (current == null) {
-                            current = 0L;
-                        }
+                        long current = map.getForUpdate(p.key);
                         map.put(p.key, current + p.inc);
+
                         doneIncs.add(p);
                     }
-
                     context.commitTransaction();
 
-                    // Increase committed count if commit is successful, so there is no needed decrement operation
                     count.committed++;
-
-                    // Do local key increments if commit is successful, so there is no needed decrement operation
-                    for (KeyInc p : doneIncs) {
-                        localIncrements[p.key] += p.inc;
+                    // Do local key increments if commit is successful
+                    for(KeyInc p : doneIncs){
+                        localIncrements[p.key]+=p.inc;
                     }
-                } catch (Exception commitFailed) {
-                    if (context != null) {
-                        try {
-                            context.rollbackTransaction();
-                            count.rolled++;
 
-                            System.out.println(basename + ": commit fail done=" + doneIncs + " " + commitFailed);
-                            commitFailed.printStackTrace();
+                }catch(Exception commitFailed){
+                    try{
+                        context.rollbackTransaction();
+                        count.rolled++;
 
-                        } catch (Exception rollBackFailed) {
-                            count.failedRoles++;
+                        System.out.println(basename+": commit fail done="+doneIncs+" "+commitFailed);
+                        commitFailed.printStackTrace();
 
-                            System.out.println(basename + ": rollback fail done=" + doneIncs + " " + rollBackFailed);
-                            rollBackFailed.printStackTrace();
-                        }
+                    }catch(Exception rollBackFailed){
+                        count.failedRoles++;
+
+                        System.out.println(basename+": rollback fail done="+doneIncs+" "+rollBackFailed);
+                        rollBackFailed.printStackTrace();
                     }
                 }
             }
@@ -130,6 +123,7 @@ public class MapTransactionContextConflictTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
+
         IList<TxnCounter> counts = targetInstance.getList(basename+"report");
         TxnCounter total = new TxnCounter();
         for(TxnCounter c : counts){
@@ -146,18 +140,10 @@ public class MapTransactionContextConflictTest {
         }
 
         IMap<Integer, Long> map = targetInstance.getMap(basename);
-
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
-            // If map.get(k) is null, expected[k] == map.get(k) (0 == null) throws NPE.
-            // So, if value is null, it should be converted to 0.
-            Long value = map.get(k);
-            if (value == null) {
-                value = 0L;
-            }
-            if (expected[k] != value) {
+            if (expected[k] != map.get(k)) {
                 failures++;
-
                 System.out.println(basename+": key="+k+" expected "+expected[k]+" != " +"actual "+map.get(k));
             }
         }
@@ -166,4 +152,3 @@ public class MapTransactionContextConflictTest {
     }
 
 }
-
