@@ -11,6 +11,11 @@ do
 	mv ${item} workers/${dir}/
 done
 
-cp *.properties workers/
+rm -f logs/*
 
-zip -r results.zip workers/* -x *.hprof
+dir=$(pwd)
+base=$(basename ${dir})
+cd ..
+
+zip results.zip ${base} -r -x agents.txt *.hprof
+mv results.zip ${base}/

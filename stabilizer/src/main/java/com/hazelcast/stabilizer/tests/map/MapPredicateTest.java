@@ -25,7 +25,9 @@ import com.hazelcast.stabilizer.tests.map.helpers.OppCounterIdxTest;
 import java.util.Collection;
 import java.util.Random;
 
-public class MapIndexTest {
+import static org.junit.Assert.assertTrue;
+
+public class MapPredicateTest {
 
     public String basename = this.getClass().getName();
     public int threadCount = 3;
@@ -40,7 +42,7 @@ public class MapIndexTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    public MapIndexTest(){}
+    public MapPredicateTest(){}
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -147,7 +149,7 @@ public class MapIndexTest {
                             employees = map.values( pagingPredicate );
 
                             for(Employee emp : employees){
-                                //assertTrue( emp.getSalary() > maxSal-50.0 && emp.getSalary() < maxSal);
+                                assertTrue(emp+" not matching predicate "+pred, emp.getSalary() < maxSal);
                             }
 
                             pagingPredicate.nextPage();
