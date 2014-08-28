@@ -98,20 +98,12 @@ public class MapPredicateTest {
 
                         Collection<Employee> employees = map.values(predicate);
                         for(Employee emp : employees){
-
                             QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-
-                            if( !predicate.apply(qe) ){
-                                System.out.println(basename+" ERROR 1: "+emp+" not matching predicate "+predicate);
-                            }
-
-                            if( !( emp.getAge() < age && name.equals(emp.getName()) ) ){
-                                System.out.println(basename+" ERROR 2: "+emp+" not matching predicate "+predicate);
-                            }
+                            assertTrue(emp+" NO Match "+predicate, predicate.apply(qe));
                         }
                         counter.predicateBuilderCount++;
-                    }
 
+                    }
                     else if ( (chance -= sqlString) < 0) {
 
                         final boolean active = random.nextBoolean();
@@ -120,50 +112,33 @@ public class MapPredicateTest {
                         final SqlPredicate predicate = new SqlPredicate( "active="+active+" AND age >"+age );
                         Collection<Employee> employees = map.values( predicate );
 
-
                         for(Employee emp : employees){
-
                             QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                            if( !predicate.apply(qe) ){
-                                System.out.println(basename+" ERROR 1: "+emp+" not matching predicate "+predicate);
-                            }
-
-                            if( !(active == emp.isActive() && emp.getAge() > age) ){
-
-                                System.out.println(basename+" ERROR 2: "+emp+" not matching predicate "+predicate);
-                            }
+                            assertTrue(emp+" NO Match "+predicate, predicate.apply(qe));
                         }
                         counter.sqlStringCount++;
-                    }
 
+                    }
                     else if ( (chance -= pagePred) < 0) {
 
                         final double maxSal = random.nextDouble() * Employee.MAX_SALARY;
 
-                        Predicate  pred = Predicates.lessThan("salary", maxSal);
-                        PagingPredicate pagingPredicate = new PagingPredicate( pred , 5);
+                        Predicate  predicate = Predicates.lessThan("salary", maxSal);
+                        PagingPredicate pagingPredicate = new PagingPredicate( predicate , 5);
                         Collection<Employee> employees;
 
-                        System.out.println(basename+" start-loop");
                         do{
-                            employees = map.values( pagingPredicate );
-
+                            employees = map.values(pagingPredicate);
                             for(Employee emp : employees){
-                                assertTrue(emp+" not matching predicate "+pred, emp.getSalary() < maxSal);
+                                QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
+                                assertTrue(emp+" NO Match "+predicate, predicate.apply(qe));
                             }
-
                             pagingPredicate.nextPage();
-
-                            if(testContext.isStopped()){
-                                System.out.println(basename+"(stop) res size = "+employees.size());
-                            }
-
                         }while( ! employees.isEmpty() );
-                        System.out.println(basename+" end-loop");
 
                         counter.pagePredCount++;
-                    }
 
+                    }
                     else if ( (chance -= updateEmploye) < 0 ){
 
                         int key = random.nextInt(keyCount);
@@ -173,10 +148,9 @@ public class MapPredicateTest {
                             map.put(key, e);
                             counter.updateEmployeCount++;
                         }
+
                     }
-
                     else if ( (chance -= destroyProb) < 0 ){
-
                         map.destroy();
                         initMap();
                         counter.destroyCount++;
@@ -190,7 +164,6 @@ public class MapPredicateTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-
         IList<OppCounterIdxTest> counters = targetInstance.getList(basename+"report");
 
         OppCounterIdxTest total = new OppCounterIdxTest();
@@ -200,5 +173,4 @@ public class MapPredicateTest {
 
         System.out.println(basename+" "+total+" from "+counters.size());
     }
-
 }
