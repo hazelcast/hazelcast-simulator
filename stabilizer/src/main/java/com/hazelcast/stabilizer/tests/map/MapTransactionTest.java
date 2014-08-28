@@ -117,18 +117,24 @@ public class MapTransactionTest {
                 final Integer key = random.nextInt(keyCount);
                 final long increment = random.nextInt(100);
 
-                targetInstance.executeTransaction(new TransactionalTask<Object>() {
-                    @Override
-                    public Object execute(TransactionalTaskContext txContext) throws TransactionException {
-                        TransactionalMap<Integer, Long> map = txContext.getMap(mapName);
-                        Long current = map.getForUpdate(key);
-                        Long update = current + increment;
-                        map.put(key, update);
-                        return null;
-                    }
-                });
+                try{
+                    targetInstance.executeTransaction(new TransactionalTask<Object>() {
+                        @Override
+                        public Object execute(TransactionalTaskContext txContext) throws TransactionException {
+                            TransactionalMap<Integer, Long> map = txContext.getMap(mapName);
+                            Long current = map.getForUpdate(key);
+                            Long update = current + increment;
+                            map.put(key, update);
+                            return null;
+                        }
+                    });
 
-                increment(key, increment);
+                    increment(key, increment);
+
+                }catch(TransactionException e){
+                    System.out.println(basename+": "+e);
+                }
+
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);

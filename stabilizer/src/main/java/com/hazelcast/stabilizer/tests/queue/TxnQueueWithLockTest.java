@@ -71,11 +71,13 @@ public class TxnQueueWithLockTest {
                         counter.committed++;
 
                     } catch (Exception txnException) {
-                        System.out.println(basename+": Exception in txn "+counter+" "+txnException);
-                        txnException.printStackTrace();
                         try{
                             ctx.rollbackTransaction();
                             counter.rolled++;
+
+                            System.out.println(basename+": Exception in txn "+counter+" "+txnException);
+                            txnException.printStackTrace();
+
                         }catch(Exception rollException){
                             counter.failedRoles++;
                             System.out.println(basename+": Exception in roll "+counter+" "+rollException);
