@@ -31,8 +31,7 @@ public class MapTransactionContextConflictTest {
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 50;
-    public int maxKeysPerTxn =5;
-
+    public int maxKeysPerTxn = 5;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
@@ -61,10 +60,10 @@ public class MapTransactionContextConflictTest {
     }
 
     private class Worker implements Runnable {
+
         private final Random random = new Random();
         private final long[] localIncrements = new long[keyCount];
         private TxnCounter count = new TxnCounter();
-
 
         @Override
         public void run() {
@@ -96,6 +95,7 @@ public class MapTransactionContextConflictTest {
                     context.commitTransaction();
 
                     count.committed++;
+                    // Do local key increments if commit is successful
                     for(KeyInc p : doneIncs){
                         localIncrements[p.key]+=p.inc;
                     }
@@ -110,6 +110,7 @@ public class MapTransactionContextConflictTest {
 
                     }catch(Exception rollBackFailed){
                         count.failedRoles++;
+
                         System.out.println(basename+": rollback fail done="+doneIncs+" "+rollBackFailed);
                         rollBackFailed.printStackTrace();
                     }
@@ -139,12 +140,10 @@ public class MapTransactionContextConflictTest {
         }
 
         IMap<Integer, Long> map = targetInstance.getMap(basename);
-
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != map.get(k)) {
                 failures++;
-
                 System.out.println(basename+": key="+k+" expected "+expected[k]+" != " +"actual "+map.get(k));
             }
         }
