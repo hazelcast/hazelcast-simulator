@@ -35,6 +35,8 @@ public class MapTransactionContextTest {
         for (int k = 0; k < keyCount; k++) {
             map.put(k, 0l);
         }
+
+        /*
         try {
             PartitionService ps = targetInstance.getPartitionService();
             // At most wait about 5 minutes, possibly a little bit more :)
@@ -46,9 +48,9 @@ public class MapTransactionContextTest {
                 }
                 Thread.sleep(1000);
             }
-        } catch (Throwable t) {
+        } catch (Throwable t) {}
+        */
 
-        }
     }
 
     @Run
