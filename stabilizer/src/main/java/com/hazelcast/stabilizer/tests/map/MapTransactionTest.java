@@ -133,6 +133,7 @@ public class MapTransactionTest {
 
                 }catch(TransactionException e){
                     System.out.println(basename+": "+e);
+                    e.printStackTrace();
                 }
 
 
