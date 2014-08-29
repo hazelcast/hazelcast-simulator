@@ -1,9 +1,6 @@
 package com.hazelcast.stabilizer.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IList;
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.TransactionalMap;
+import com.hazelcast.core.*;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
@@ -38,6 +35,20 @@ public class MapTransactionContextTest {
         for (int k = 0; k < keyCount; k++) {
             map.put(k, 0l);
         }
+        try {
+            PartitionService ps = targetInstance.getPartitionService();
+            // At most wait about 5 minutes, possibly a little bit more :)
+            // since execution time of "isClusterSafe()" is not zero
+            // but who cares :)
+            for (int i = 0; i < 5 * 60; i++) {
+                if (ps.isClusterSafe()) {
+                    break;
+                }
+                Thread.sleep(1000);
+            }
+        } catch (Throwable t) {
+
+        }
     }
 
     @Run
@@ -50,6 +61,7 @@ public class MapTransactionContextTest {
     }
 
     private class Worker implements Runnable {
+
         private final Random random = new Random();
         private final long[] localIncrements = new long[keyCount];
         private TxnCounter count = new TxnCounter();
@@ -57,12 +69,15 @@ public class MapTransactionContextTest {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-                TransactionContext context = targetInstance.newTransactionContext();
+                TransactionContext context = null;
 
                 final int key = random.nextInt(keyCount);
                 final long increment = random.nextInt(100);
                 try {
+                    context = targetInstance.newTransactionContext();
+
                     context.beginTransaction();
+
                     final TransactionalMap<Integer, Long> map = context.getMap(basename);
 
                     Long current = map.getForUpdate(key);
@@ -74,18 +89,20 @@ public class MapTransactionContextTest {
                     // Do local increments if commit is successful, so there is no needed decrement operation
                     localIncrements[key]+=increment;
                     count.committed++;
-                } catch(Exception commitFailed) {
-                    try {
-                        context.rollbackTransaction();
-                        count.rolled++;
+                } catch (Exception commitFailed) {
+                    if (context != null) {
+                        try {
+                            context.rollbackTransaction();
+                            count.rolled++;
 
-                        System.out.println(basename+": commit   fail key="+key+" inc="+increment+" "+commitFailed);
-                        commitFailed.printStackTrace();
-                    } catch(Exception rollBackFailed) {
-                        count.failedRoles++;
+                            System.out.println(basename + ": commit   fail key=" + key + " inc=" + increment + " " + commitFailed);
+                            commitFailed.printStackTrace();
+                        } catch (Exception rollBackFailed) {
+                            count.failedRoles++;
 
-                        System.out.println(basename+": rollback fail key="+key+" inc="+increment+" "+rollBackFailed);
-                        rollBackFailed.printStackTrace();
+                            System.out.println(basename + ": rollback fail key=" + key + " inc=" + increment + " " + rollBackFailed);
+                            rollBackFailed.printStackTrace();
+                        }
                     }
                 }
             }
@@ -96,7 +113,6 @@ public class MapTransactionContextTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
-
         IList<TxnCounter> counts = targetInstance.getList(basename+"report");
         TxnCounter total = new TxnCounter();
         for(TxnCounter c : counts){
@@ -127,4 +143,3 @@ public class MapTransactionContextTest {
     }
 
 }
-
