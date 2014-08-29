@@ -38,6 +38,7 @@ public class MapPredicateTest {
     public double pagePred=0.2;
     public double updateEmploye=0.3;
     public double destroyProb = 0.1;
+    public int pageSize=5;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -124,7 +125,7 @@ public class MapPredicateTest {
                         final double maxSal = random.nextDouble() * Employee.MAX_SALARY;
 
                         Predicate  predicate = Predicates.lessThan("salary", maxSal);
-                        PagingPredicate pagingPredicate = new PagingPredicate( predicate , 5);
+                        PagingPredicate pagingPredicate = new PagingPredicate( predicate , pageSize);
                         Collection<Employee> employees;
 
                         do{
