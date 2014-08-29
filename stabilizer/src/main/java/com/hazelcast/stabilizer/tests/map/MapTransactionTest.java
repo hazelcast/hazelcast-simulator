@@ -1,6 +1,7 @@
 package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
@@ -28,39 +29,23 @@ import static org.junit.Assert.assertEquals;
 
 public class MapTransactionTest {
 
-    private final static ILogger log = Logger.getLogger(MapTransactionTest.class);
-
-    //props
-    public int threadCount = 10;
+    public String basename = this.getClass().getName();
+    public int threadCount = 5;
     public int keyCount = 1000;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 10000;
-    public String basename = "txmap";
 
-    private IMap<Integer, Long> map;
-    private final AtomicLong operations = new AtomicLong();
-    private IMap<String, Map<Integer, Long>> resultsPerWorker;
     private HazelcastInstance targetInstance;
-    private String mapName;
     private TestContext testContext;
+    private int maxInc=100;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-        mapName = basename + "-" + testContext.getTestId();
-        map = targetInstance.getMap(mapName);
-        resultsPerWorker = targetInstance.getMap(basename+"ResultMap" + testContext.getTestId());
-    }
-
-    @Teardown
-    public void teardown() throws Exception {
-        map.destroy();
-        resultsPerWorker.destroy();
     }
 
     @Warmup(global = true)
     public void warmup() throws Exception {
+        IMap map = targetInstance.getMap(basename);
         for (int k = 0; k < keyCount; k++) {
             map.put(k, 0l);
         }
@@ -75,90 +60,63 @@ public class MapTransactionTest {
         spawner.awaitCompletion();
     }
 
-    @Verify
-    public void verify() throws Exception {
-        long[] amount = new long[keyCount];
-
-        for (Map<Integer, Long> map : resultsPerWorker.values()) {
-            for (Map.Entry<Integer, Long> entry : map.entrySet()) {
-                amount[entry.getKey()] += entry.getValue();
-            }
-        }
-
-        int failures = 0;
-        for (int k = 0; k < keyCount; k++) {
-            long expected = amount[k];
-            long found = map.get(k);
-            if (expected != found) {
-                failures++;
-            }
-        }
-
-        assertEquals("There should not be any data races", 0, failures);
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
-    }
-
     private class Worker implements Runnable {
         private final Random random = new Random();
-        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
+        private final long[] increments = new long[keyCount];
 
         @Override
         public void run() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
-            }
-
-            long iteration = 0;
             while (!testContext.isStopped()) {
-                final Integer key = random.nextInt(keyCount);
-                final long increment = random.nextInt(100);
+                final int key = random.nextInt(keyCount);
+                final int increment = random.nextInt(maxInc);
 
                 try{
                     targetInstance.executeTransaction(new TransactionalTask<Object>() {
                         @Override
                         public Object execute(TransactionalTaskContext txContext) throws TransactionException {
-                            TransactionalMap<Integer, Long> map = txContext.getMap(mapName);
+                            TransactionalMap<Integer, Long> map = txContext.getMap(basename);
                             Long current = map.getForUpdate(key);
-                            Long update = current + increment;
-                            map.put(key, update);
+                            map.put(key, current + increment);
                             return null;
                         }
                     });
-
-                    increment(key, increment);
+                    increments[key]+=increment;
 
                 }catch(TransactionException e){
-                    System.out.println(basename+": "+e);
+                    System.out.println(basename+": executing Trans "+e);
                     e.printStackTrace();
                 }
-
-
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
-
-                iteration++;
             }
-
-            resultsPerWorker.put(UUID.randomUUID().toString(), result);
-        }
-
-        private void increment(int key, long increment) {
-            result.put(key, result.get(key) + increment);
+            IList<long[]> results = targetInstance.getList(basename + "results");
+            results.add(increments);
         }
     }
 
-    public static void main(String[] args) throws Throwable {
-        MapTransactionTest test = new MapTransactionTest();
-        new TestRunner(test).run();
+    @Verify(global = true)
+    public void verify() throws Exception {
+
+        IList<long[]> allIncrements = targetInstance.getList(basename + "results");
+        long[] total = new long[keyCount];
+
+        System.out.println(basename+": collected increments from "+allIncrements.size()+" worker threads");
+
+        for (long[] increments : allIncrements) {
+            for(int i=0; i<increments.length; i++){
+                total[i]+=increments[i];
+            }
+        }
+
+        int failures = 0;
+        for (int i=0; i<keyCount; i++) {
+            IMap<Integer, Long> map = targetInstance.getMap(basename);
+            if ( total[i] != map.get(i)) {
+                failures++;
+                System.out.println(basename+": key="+i+" expected val "+total[i]+" !=  map val"+map.get(i));
+            }
+        }
+
+        assertEquals(failures+" keys have been incremented unexpectedly", 0, failures);
     }
+
 }
 

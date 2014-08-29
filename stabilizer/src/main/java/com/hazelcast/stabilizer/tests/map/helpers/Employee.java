@@ -3,7 +3,7 @@ package com.hazelcast.stabilizer.tests.map.helpers;
 import java.io.Serializable;
 import java.util.Random;
 
-public class Employee implements Serializable {
+public class Employee implements Serializable, Comparable<Employee>{
 
     public static final int MAX_AGE=75;
     public static final double MAX_SALARY=1000.0;
@@ -66,5 +66,10 @@ public class Employee implements Serializable {
                 ", active=" + active +
                 ", salary=" + salary +
                 '}';
+    }
+
+    @Override
+    public int compareTo(Employee employee) {
+        return id - employee.id;
     }
 }
