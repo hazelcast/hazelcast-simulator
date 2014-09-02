@@ -3,7 +3,6 @@ package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -14,6 +13,7 @@ import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import static com.hazelcast.stabilizer.tests.map.helpers.Utils.nextKeyOwnedby;
+import static com.hazelcast.stabilizer.tests.map.helpers.Utils.isMemberNode;
 
 import java.util.concurrent.TimeUnit;
 
@@ -114,10 +114,4 @@ public class MapHeapHogTest {
         log.info(basename + " max = " + TestUtils.humanReadableByteCount(max, true) + " = " + max);
         log.info(basename + " usedOfMax = " + usedOfMax + "%");
     }
-
-
-    public static boolean isMemberNode(HazelcastInstance instance) {
-        return instance instanceof HazelcastInstanceProxy;
-    }
-
 }

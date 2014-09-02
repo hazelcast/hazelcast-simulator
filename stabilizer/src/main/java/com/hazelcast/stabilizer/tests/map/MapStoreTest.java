@@ -14,6 +14,7 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import static com.hazelcast.stabilizer.tests.map.helpers.Utils.isMemberNode;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -152,7 +153,7 @@ public class MapStoreTest {
     @Verify(global = false)
     public void verify() throws Exception {
 
-        try {
+        if ( isMemberNode(targetInstance) ) {
             MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
             final int writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
 
@@ -174,9 +175,6 @@ public class MapStoreTest {
             for (int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++) {
                 assertNull("TTL key should not be in the map", map.get(k));
             }
-        } catch (UnsupportedOperationException e) {
-            //clients don't support getMapStoreConfig();
-            //TODO replace try catch with if ( isMember (targetInstance) )
         }
     }
 
