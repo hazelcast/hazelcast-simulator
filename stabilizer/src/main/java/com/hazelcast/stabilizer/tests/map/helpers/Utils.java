@@ -17,6 +17,11 @@
 
 package com.hazelcast.stabilizer.tests.map.helpers;
 
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.Member;
+import com.hazelcast.core.Partition;
+import com.hazelcast.core.PartitionService;
+
 import java.util.Random;
 
 /**
@@ -107,4 +112,17 @@ public class Utils {
         }
         return Math.abs(hashval);
     }
+
+    public static long nextKeyOwnedby(long key, HazelcastInstance instance) {
+        final Member localMember = instance.getCluster().getLocalMember();
+        final PartitionService partitionService = instance.getPartitionService();
+        for (; ; ) {
+            Partition partition = partitionService.getPartition(key);
+            if (localMember.equals(partition.getOwner())) {
+                return key;
+            }
+            key++;
+        }
+    }
+
 }

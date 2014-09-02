@@ -3,20 +3,17 @@ package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.core.Member;
-import com.hazelcast.core.Partition;
-import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import static com.hazelcast.stabilizer.tests.map.helpers.Utils.nextKeyOwnedby;
 
 import java.util.concurrent.TimeUnit;
 
@@ -81,7 +78,7 @@ public class MapHeapHogTest {
 
                 long key = 0;
                 for (int i = 0; i < maxLocalEntries; i++) {
-                    key = nextKeyOwnedBy(key, targetInstance);
+                    key = nextKeyOwnedby(key, targetInstance);
                     map.put(key, key, ttlHours, TimeUnit.HOURS);
                     key++;
                 }
@@ -118,17 +115,6 @@ public class MapHeapHogTest {
         log.info(basename + " usedOfMax = " + usedOfMax + "%");
     }
 
-    public static long nextKeyOwnedBy(long key, HazelcastInstance instance) {
-        final Member localMember = instance.getCluster().getLocalMember();
-        final PartitionService partitionService = instance.getPartitionService();
-        for (; ; ) {
-            Partition partition = partitionService.getPartition(key);
-            if (localMember.equals(partition.getOwner())) {
-                return key;
-            }
-            key++;
-        }
-    }
 
     public static boolean isMemberNode(HazelcastInstance instance) {
         return instance instanceof HazelcastInstanceProxy;
