@@ -33,7 +33,7 @@
         <hazelcast.version>3.3-RC3</hazelcast.version>
         <jopt.version>4.4</jopt.version>
         <log4j.version>1.2.17</log4j.version>
-        <jclouds.version>1.7.3</jclouds.version>
+        <jclouds.version>1.8.0</jclouds.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.gpg.plugin.version>1.4</maven.gpg.plugin.version>
     </properties>
