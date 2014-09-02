@@ -75,12 +75,12 @@ public class StabilizerProperties {
         String value = (String) properties.get(name);
 
         if ("CLOUD_IDENTITY".equals(name)) {
-            value = load("CLOUD_IDENTITY",value);
-        }else if("CLOUD_CREDENTIAL".equals(name)){
-            value = load("CLOUD_CREDENTIAL",value);
+            value = load("CLOUD_IDENTITY", value);
+        } else if ("CLOUD_CREDENTIAL".equals(name)) {
+            value = load("CLOUD_CREDENTIAL", value);
         }
 
-        return value;
+        return fixValue(name, value);
     }
 
     public String get(String name, String defaultValue) {
@@ -93,6 +93,30 @@ public class StabilizerProperties {
         if (value == null) {
             value = defaultValue;
         }
+
+        return fixValue(name, value);
+    }
+
+    private String fixValue(String name, String value) {
+        if (value == null) {
+            return null;
+        }
+
+        if ("GROUP_NAME".equals(name)) {
+            String username = System.getProperty("user.name").toLowerCase();
+
+            StringBuffer sb = new StringBuffer();
+            for(char c: username.toCharArray()){
+                if(Character.isLetter(c)){
+                    sb.append(c);
+                }else if(Character.isDigit(c)){
+                    sb.append(c);
+                }
+            }
+
+            value = value.replace("${username}", username);
+        }
+
         return value;
     }
 
