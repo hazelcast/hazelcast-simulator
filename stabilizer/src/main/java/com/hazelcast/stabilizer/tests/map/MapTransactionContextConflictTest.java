@@ -103,7 +103,6 @@ public class MapTransactionContextConflictTest {
                     for (KeyInc p : doneIncs) {
                         localIncrements[p.key] += p.inc;
                     }
-
                 } catch (Exception commitFailed) {
                     try {
                         context.rollbackTransaction();
@@ -122,7 +121,6 @@ public class MapTransactionContextConflictTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
-
         IList<TxnCounter> counts = targetInstance.getList(basename + "report");
         TxnCounter total = new TxnCounter();
         for (TxnCounter c : counts) {
@@ -149,5 +147,4 @@ public class MapTransactionContextConflictTest {
 
         assertEquals(basename + ": " + failures + " key=>values have been incremented unExpected", 0, failures);
     }
-
 }

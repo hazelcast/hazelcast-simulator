@@ -71,12 +71,14 @@ public class TxnQueueWithLockTest {
                         counter.committed++;
 
                     } catch (Exception txnException) {
+                        // TODO: Bad exception handling
                         try {
                             ctx.rollbackTransaction();
                             counter.rolled++;
 
                             log.severe(basename + ": Exception in txn " + counter, txnException);
                         } catch (Exception rollException) {
+                            // TODO: Bad exception handling
                             counter.failedRoles++;
                             log.severe(basename + ": Exception in roll " + counter,rollException);
                         }
@@ -84,6 +86,7 @@ public class TxnQueueWithLockTest {
                         firstLock.unlock();
                     }
                 } catch (Exception e) {
+                    // TODO: Bad exception handling
                     log.warning(e.getMessage(), e);
                 }
             }

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepMs;
 import static org.junit.Assert.assertEquals;
 
 // TODO: We need to deal with exception logging; they are logged but not visible to stabilizer.
@@ -87,10 +88,12 @@ public class LockConflictTest {
                                 counter.locked++;
                             }
                         } catch (Exception e) {
-                            log.severe(basename + ": trying lock=" + i.key,e);
+                            // TODO: Bad exception handling
+                            log.severe(basename + ": trying lock=" + i.key, e);
                         }
                     } catch (Exception e) {
-                        log.severe(basename + ": getting lock for locking=" + i.key,e);
+                        // TODO: Bad exception handling.
+                        log.severe(basename + ": getting lock for locking=" + i.key, e);
                     }
                 }
 
@@ -102,7 +105,8 @@ public class LockConflictTest {
                         localIncrements[i.key] += i.inc;
                         counter.inced++;
                     } catch (Exception e) {
-                        log.severe(basename + ": updating acount=" + i,e);
+                        // TODO : Bad exception handling
+                        log.severe(basename + ": updating account=" + i, e);
                     }
                 }
 
@@ -118,24 +122,22 @@ public class LockConflictTest {
                                 counter.unlocked++;
                                 it.remove();
                             } catch (Exception e) {
-                                log.severe(basename + ": unlocking lock =" + i.key,e);
+                                // TODO : Bad exception handling
+                                log.severe(basename + ": unlocking lock =" + i.key, e);
                             }
                         } catch (Exception e) {
-                            log.severe(basename + ": getting lock for unlocking=" + i.key ,e);
+                            // TODO: Bad exception handling
+                            log.severe(basename + ": getting lock for unlocking=" + i.key, e);
                         }
                     }
 
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                    }
+                    sleepMs(1000);
 
                     if (++unlockAttempts > 5) {
-                        log.info(basename + ": Cant unlonck=" + locked + " unlockAttempts=" + unlockAttempts);
+                        log.info(basename + ": Cant unlock=" + locked + " unlockAttempts=" + unlockAttempts);
                         break;
                     }
                 }
-
             }
             targetInstance.getList(basename + "res").add(localIncrements);
             targetInstance.getList(basename + "report").add(counter);
@@ -170,5 +172,4 @@ public class LockConflictTest {
 
         assertEquals(basename + ": " + failures + " key=>values have been incremented unExpected", 0, failures);
     }
-
 }

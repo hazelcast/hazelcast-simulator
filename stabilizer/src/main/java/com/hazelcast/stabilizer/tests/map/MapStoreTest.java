@@ -177,6 +177,7 @@ public class MapStoreTest {
                 assertNull("TTL key should not be in the map", map.get(k));
             }
         } catch (UnsupportedOperationException e) {
+            //TODO: Why are we catching this one
         }
     }
 

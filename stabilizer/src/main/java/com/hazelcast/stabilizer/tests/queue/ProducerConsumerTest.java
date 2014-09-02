@@ -85,9 +85,8 @@ public class ProducerConsumerTest {
     }
 
     private class Producer implements Runnable {
-        Random rand = new Random(System.currentTimeMillis());
-
-        int id;
+        final Random rand = new Random(System.currentTimeMillis());
+        final int id;
 
         public Producer(int id) {
             this.id = id;
@@ -95,16 +94,16 @@ public class ProducerConsumerTest {
 
         @Override
         public void run() {
-            long iter = 0;
+            long iteration = 0;
             while (!testContext.isStopped()) {
                 try {
                     Thread.sleep(rand.nextInt(maxIntervalMillis) * consumerCount);
                     produced.incrementAndGet();
                     workQueue.offer(new Work());
-                    iter++;
-                    if (iter % 10 == 0) {
+                    iteration++;
+                    if (iteration % 10 == 0) {
                         log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: "
-                                + iter + " prodoced:" + produced.get() + " workqueue:" + workQueue.size() + " consumed:" + consumed.get());
+                                + iteration + " produced:" + produced.get() + " workqueue:" + workQueue.size() + " consumed:" + consumed.get());
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -123,17 +122,16 @@ public class ProducerConsumerTest {
 
         @Override
         public void run() {
-            long iter = 0;
+            long iteration = 0;
             while (!testContext.isStopped()) {
                 try {
                     workQueue.take();
                     consumed.incrementAndGet();
                     Thread.sleep(rand.nextInt(maxIntervalMillis) * producerCount);
-                    iter++;
-                    if (iter % 20 == 0) {
-                        logState(iter);
+                    iteration++;
+                    if (iteration % 20 == 0) {
+                        logState(iteration);
                     }
-
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

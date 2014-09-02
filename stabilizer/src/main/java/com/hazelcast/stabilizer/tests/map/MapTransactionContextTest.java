@@ -84,6 +84,7 @@ public class MapTransactionContextTest {
                     localIncrements[key] += increment;
                     count.committed++;
                 } catch (Exception commitFailedException) {
+                    // TODO: Bad exception handling
                     if (context != null) {
                         try {
                             context.rollbackTransaction();
@@ -124,7 +125,6 @@ public class MapTransactionContextTest {
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != map.get(k)) {
                 failures++;
-
                 log.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + map.get(k));
             }
         }

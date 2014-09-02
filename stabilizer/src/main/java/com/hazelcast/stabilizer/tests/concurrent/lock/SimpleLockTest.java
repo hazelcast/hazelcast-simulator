@@ -95,7 +95,6 @@ public class SimpleLockTest {
                                     account1.set(account1.get() - delta);
                                     account2.set(account2.get() + delta);
                                 }
-
                             } finally {
                                 lock2.unlock();
                             }

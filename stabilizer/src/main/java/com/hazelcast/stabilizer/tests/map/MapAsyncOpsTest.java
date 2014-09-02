@@ -119,6 +119,7 @@ public class MapAsyncOpsTest {
             log.info(basename + ": map size  =" + map.size());
 
         } catch (UnsupportedOperationException e) {
+            // TODO: Why is this exception caught??
         }
     }
 

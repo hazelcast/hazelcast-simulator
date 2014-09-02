@@ -77,7 +77,6 @@ public class MapHeapHogTest {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-
                 long free = Runtime.getRuntime().freeMemory();
                 long total = Runtime.getRuntime().totalMemory();
                 long used = total - free;

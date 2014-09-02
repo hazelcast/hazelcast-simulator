@@ -76,7 +76,6 @@ public class MapPredicateTest {
         spawner.awaitCompletion();
     }
 
-
     private class Worker implements Runnable {
         final private SerializationService ss = new SerializationServiceBuilder().build();
 
@@ -105,7 +104,6 @@ public class MapPredicateTest {
                             assertTrue(emp + " NO Match " + predicate, predicate.apply(qe));
                         }
                         counter.predicateBuilderCount++;
-
                     } else if ((chance -= sqlString) < 0) {
 
                         final boolean active = random.nextBoolean();
@@ -119,9 +117,7 @@ public class MapPredicateTest {
                             assertTrue(emp + " NO Match " + predicate, predicate.apply(qe));
                         }
                         counter.sqlStringCount++;
-
                     } else if ((chance -= pagePred) < 0) {
-
                         final double maxSal = random.nextDouble() * Employee.MAX_SALARY;
 
                         Predicate predicate = Predicates.lessThan("salary", maxSal);

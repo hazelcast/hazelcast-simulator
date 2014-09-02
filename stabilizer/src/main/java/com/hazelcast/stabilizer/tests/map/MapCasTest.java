@@ -51,7 +51,6 @@ public class MapCasTest {
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
         resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());

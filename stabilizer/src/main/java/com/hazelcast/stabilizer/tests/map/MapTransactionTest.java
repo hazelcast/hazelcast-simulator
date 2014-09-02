@@ -77,8 +77,8 @@ public class MapTransactionTest {
                         }
                     });
                     increments[key] += increment;
-
                 } catch (TransactionException e) {
+                    // TODO: Bad exception handling; when is this exception thrown??
                     log.warning(basename + ": executing Trans ", e);
                 }
             }

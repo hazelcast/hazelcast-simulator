@@ -114,13 +114,13 @@ public class QueueTest {
                     long item = fromQueue.take();
                     toQueue.put(item + 1);
                     if (iteration % 200 == 0) {
-                        log.info(Thread.currentThread().getName() + " At iteration: " + iteration + " fromQueue size=" + fromQueue.size() + ", toQueue size=" + toQueue.size());
+                        log.info(Thread.currentThread().getName() + " At iteration: " + iteration + " fromQueue size="
+                                + fromQueue.size() + ", toQueue size=" + toQueue.size());
                     }
                     iteration++;
                 }
 
                 toQueue.put(0L);
-
                 totalCounter.addAndGet(iteration);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);

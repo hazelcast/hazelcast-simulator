@@ -135,7 +135,6 @@ public class MapEntryListenerTest {
 
                 double chance = random.nextDouble();
                 if (chance < writeProb) {
-
                     final Object value = values[random.nextInt(values.length)];
 
                     chance = random.nextDouble();
