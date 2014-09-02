@@ -337,6 +337,8 @@ public class Worker {
         private void process(final RunCommand command) throws Exception {
             try {
                 final String testId = command.testId;
+                final String testName = "".equals(testId) ? "test" : testId;
+
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
                     log.warning("Failed to process command: " + command + " no test with " +
@@ -352,7 +354,7 @@ public class Worker {
                         if (passive) {
                             log.info(format("--------------------------- Skipping %s.run(); " +
                                             "member is passive ------------------------------------",
-                                    testId));
+                                    testName));
                         } else {
                             log.info(format("--------------------------- Starting %s.run() " +
                                             "------------------------------------",
@@ -362,11 +364,11 @@ public class Worker {
                                 test.run();
                                 log.info(format("--------------------------- Completed %s.run() " +
                                                 "------------------------------------",
-                                        testId));
+                                        testName));
                             }catch(Throwable t){
                                 String msg = format("--------------------------- Failed to execute %s.run() " +
                                                 "------------------------------------",
-                                        testId);
+                                        testName);
                                 log.severe(msg,t);
                             }
                         }
@@ -396,12 +398,12 @@ public class Worker {
                 new CommandThread(command, command.testId) {
                     @Override
                     public void doRun() throws Throwable {
-                        log.info(format("--------------------------- %s.%s() ------------------------------------",
+                        log.info(format("--------------------------- Starting %s.%s() ------------------------------------",
                                 testName, methodName));
 
                         try {
                             method.invoke(test);
-                            log.finest(format("--------------------------- Finished %s.%s() " +
+                            log.info(format("--------------------------- Finished %s.%s() " +
                                     "---------------------------", testName, methodName));
                         } catch (InvocationTargetException e) {
                             log.severe(format("--------------------------- Failed %s.%s() ---------------------------",
@@ -452,13 +454,14 @@ public class Worker {
         public void process(StopCommand command) throws Exception {
             try {
                 String testId = command.testId;
+                final String testName = "".equals(testId) ? "test" : testId;
                 TestContainer<TestContext> test = tests.get(command.testId);
                 if (test == null) {
                     log.warning("Can't stop test, test with id " + command.testId + " does not exist");
                     return;
                 }
 
-                log.info(format("--------------------------- %s.stop() ------------------------------------", testId));
+                log.info(format("--------------------------- %s.stop() ------------------------------------", testName));
                 test.getTestContext().stop();
             } catch (Exception e) {
                 log.severe("Failed to execute test.stop", e);
@@ -483,6 +486,7 @@ public class Worker {
 
         public abstract void doRun() throws Throwable;
 
+        @Override
         public final void run() {
             try {
                 commands.put(testId, command);

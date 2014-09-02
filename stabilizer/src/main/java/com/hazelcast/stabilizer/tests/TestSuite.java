@@ -19,7 +19,10 @@ import com.hazelcast.stabilizer.TestCase;
 
 import java.io.File;
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -83,7 +86,7 @@ public class TestSuite implements Serializable {
         return testSuite;
     }
 
-    public final String id = "" + System.currentTimeMillis();
+    public final String id = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
     public List<TestCase> testCaseList = new LinkedList<TestCase>();
     public int duration;
     public boolean failFast;
