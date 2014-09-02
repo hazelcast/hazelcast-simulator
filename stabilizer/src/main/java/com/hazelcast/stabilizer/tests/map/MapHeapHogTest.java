@@ -33,8 +33,6 @@ public class MapHeapHogTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    // TODO: What is flag????
-    private long flag = 0;
     private long approxEntryBytesSize = 238;
 
     private IMap map;
@@ -68,10 +66,6 @@ public class MapHeapHogTest {
         spawner.awaitCompletion();
     }
 
-    @Performance
-    public long getOperationCount() {
-        return flag;
-    }
 
     private class Worker implements Runnable {
         @Override
@@ -96,7 +90,6 @@ public class MapHeapHogTest {
                 printMemStats();
 
                 log.info("added All");
-                flag = 1;
             }
         }
     }

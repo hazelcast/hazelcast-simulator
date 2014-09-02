@@ -98,8 +98,8 @@ public class MapTransactionContextConflictTest {
                     }
                     context.commitTransaction();
 
-                    count.committed++;
                     // Do local key increments if commit is successful
+                    count.committed++;
                     for (KeyInc p : doneIncs) {
                         localIncrements[p.key] += p.inc;
                     }
@@ -126,7 +126,7 @@ public class MapTransactionContextConflictTest {
         for (TxnCounter c : counts) {
             total.add(c);
         }
-        log.info(basename + ": " + total + " from " + counts.size() + " workers");
+        log.info(basename + ": " + total + " from " + counts.size() + " worker threads");
 
         IList<long[]> allIncrements = targetInstance.getList(basename + "res");
         long expected[] = new long[keyCount];

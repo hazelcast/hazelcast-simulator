@@ -166,7 +166,6 @@ public class MapPredicateTest {
         for (OppCounterIdxTest c : counters) {
             total.add(c);
         }
-
-        log.info(basename + " " + total + " from " + counters.size());
+        log.info(basename + " " + total + " from " + counters.size()+" worker threads");
     }
 }
