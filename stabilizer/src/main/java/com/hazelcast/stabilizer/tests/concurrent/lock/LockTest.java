@@ -24,6 +24,8 @@ public class LockTest {
 
     private final static ILogger log = Logger.getLogger(LockTest.class);
 
+    // properties
+    public String basename = "lock";
     public int lockCount = 500;
     public int threadCount = 10;
     public int initialAmount = 1000;
@@ -33,7 +35,6 @@ public class LockTest {
     private IAtomicLong lockCounter;
     private IAtomicLong totalMoney;
     private HazelcastInstance targetInstance;
-    public String basename = "lock";
     private TestContext testContext;
 
     @Setup

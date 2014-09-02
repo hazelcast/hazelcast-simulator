@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepMs;
+
 public class EntryListenerImpl implements DataSerializable, EntryListener<Object, Object> {
 
     private Random random = new Random();
@@ -69,12 +71,7 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
 
     private void delay() {
         if (maxDelayMs != 0) {
-            int delayMs = minDelayMs + random.nextInt(maxDelayMs);
-            try {
-                Thread.sleep(delayMs);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            sleepMs(minDelayMs + random.nextInt(maxDelayMs));
         }
     }
 

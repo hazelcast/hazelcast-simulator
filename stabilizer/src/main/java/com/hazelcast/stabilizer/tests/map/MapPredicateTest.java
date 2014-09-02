@@ -3,6 +3,8 @@ package com.hazelcast.stabilizer.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.serialization.SerializationService;
 import com.hazelcast.nio.serialization.SerializationServiceBuilder;
 import com.hazelcast.query.EntryObject;
@@ -19,8 +21,8 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.Employee;
-import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.map.helpers.OppCounterIdxTest;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Collection;
 import java.util.Random;
@@ -29,21 +31,21 @@ import static org.junit.Assert.assertTrue;
 
 public class MapPredicateTest {
 
+    private final static ILogger log = Logger.getLogger(MapEntryProcessorTest.class);
+
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 100;
 
-    public double predicateBuilder=0.2;
-    public double sqlString=0.2;
-    public double pagePred=0.2;
-    public double updateEmploye=0.3;
+    public double predicateBuilder = 0.2;
+    public double sqlString = 0.2;
+    public double pagePred = 0.2;
+    public double updateEmployee = 0.3;
     public double destroyProb = 0.1;
-    public int pageSize=5;
+    public int pageSize = 5;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-
-    public MapPredicateTest(){}
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -56,10 +58,10 @@ public class MapPredicateTest {
         initMap();
     }
 
-    private void initMap(){
+    private void initMap() {
         IMap map = targetInstance.getMap(basename);
 
-        for(int i=0; i<keyCount; i++){
+        for (int i = 0; i < keyCount; i++) {
             Employee e = new Employee(i);
             map.put(e.getId(), e);
         }
@@ -74,7 +76,6 @@ public class MapPredicateTest {
         spawner.awaitCompletion();
     }
 
-
     private class Worker implements Runnable {
         final private SerializationService ss = new SerializationServiceBuilder().build();
 
@@ -84,94 +85,88 @@ public class MapPredicateTest {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-                try{
+                try {
                     final IMap<Integer, Employee> map = targetInstance.getMap(basename);
                     double chance = random.nextDouble();
 
-                    if ( (chance -= predicateBuilder) < 0) {
+                    if ((chance -= predicateBuilder) < 0) {
 
                         final int age = random.nextInt(Employee.MAX_AGE);
                         final String name = Employee.names[random.nextInt(Employee.names.length)];
 
                         EntryObject entryObject = new PredicateBuilder().getEntryObject();
-                        Predicate predicate1 = entryObject.get( "age" ).lessThan(age);
-                        Predicate predicate  = entryObject.get( "name" ).equal( name ).and( predicate1 );
+                        Predicate predicate1 = entryObject.get("age").lessThan(age);
+                        Predicate predicate = entryObject.get("name").equal(name).and(predicate1);
 
                         Collection<Employee> employees = map.values(predicate);
-                        for(Employee emp : employees){
+                        for (Employee emp : employees) {
                             QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                            assertTrue(emp+" NO Match "+predicate, predicate.apply(qe));
+                            assertTrue(emp + " NO Match " + predicate, predicate.apply(qe));
                         }
                         counter.predicateBuilderCount++;
-
-                    }
-                    else if ( (chance -= sqlString) < 0) {
+                    } else if ((chance -= sqlString) < 0) {
 
                         final boolean active = random.nextBoolean();
                         final int age = random.nextInt(Employee.MAX_AGE);
 
-                        final SqlPredicate predicate = new SqlPredicate( "active="+active+" AND age >"+age );
-                        Collection<Employee> employees = map.values( predicate );
+                        final SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age >" + age);
+                        Collection<Employee> employees = map.values(predicate);
 
-                        for(Employee emp : employees){
+                        for (Employee emp : employees) {
                             QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                            assertTrue(emp+" NO Match "+predicate, predicate.apply(qe));
+                            assertTrue(emp + " NO Match " + predicate, predicate.apply(qe));
                         }
                         counter.sqlStringCount++;
-
-                    }
-                    else if ( (chance -= pagePred) < 0) {
-
+                    } else if ((chance -= pagePred) < 0) {
                         final double maxSal = random.nextDouble() * Employee.MAX_SALARY;
 
-                        Predicate  predicate = Predicates.lessThan("salary", maxSal);
-                        PagingPredicate pagingPredicate = new PagingPredicate( predicate , pageSize);
+                        Predicate predicate = Predicates.lessThan("salary", maxSal);
+                        PagingPredicate pagingPredicate = new PagingPredicate(predicate, pageSize);
                         Collection<Employee> employees;
 
-                        do{
+                        do {
                             employees = map.values(pagingPredicate);
-                            for(Employee emp : employees){
+                            for (Employee emp : employees) {
                                 QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                                assertTrue(emp+" NO Match "+predicate, predicate.apply(qe));
+                                assertTrue(emp + " NO Match " + predicate, predicate.apply(qe));
                             }
                             pagingPredicate.nextPage();
-                        }while( ! employees.isEmpty() );
+                        } while (!employees.isEmpty());
 
                         counter.pagePredCount++;
 
-                    }
-                    else if ( (chance -= updateEmploye) < 0 ){
+                    } else if ((chance -= updateEmployee) < 0) {
 
                         int key = random.nextInt(keyCount);
                         Employee e = map.get(key);
-                        if(e!=null){
+                        if (e != null) {
                             e.setInfo();
                             map.put(key, e);
                             counter.updateEmployeCount++;
                         }
 
-                    }
-                    else if ( (chance -= destroyProb) < 0 ){
+                    } else if ((chance -= destroyProb) < 0) {
                         map.destroy();
                         initMap();
                         counter.destroyCount++;
                     }
 
-                }catch(DistributedObjectDestroyedException e){}
+                } catch (DistributedObjectDestroyedException e) {
+                }
             }
-            targetInstance.getList(basename+"report").add(counter);
+            targetInstance.getList(basename + "report").add(counter);
         }
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        IList<OppCounterIdxTest> counters = targetInstance.getList(basename+"report");
+        IList<OppCounterIdxTest> counters = targetInstance.getList(basename + "report");
 
         OppCounterIdxTest total = new OppCounterIdxTest();
-        for(OppCounterIdxTest c : counters){
+        for (OppCounterIdxTest c : counters) {
             total.add(c);
         }
 
-        System.out.println(basename+" "+total+" from "+counters.size());
+        log.info(basename + " " + total + " from " + counters.size());
     }
 }

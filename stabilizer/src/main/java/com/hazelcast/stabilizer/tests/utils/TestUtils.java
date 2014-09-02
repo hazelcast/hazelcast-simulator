@@ -16,9 +16,12 @@
 package com.hazelcast.stabilizer.tests.utils;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.Partition;
+import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.HazelcastInstanceImpl;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
+import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.tests.BindException;
 
@@ -32,13 +35,34 @@ public class TestUtils {
 
     public static final String TEST_INSTANCE = "testInstance";
 
+    public static void warmupPartitions(ILogger logger, HazelcastInstance hz) {
+        PartitionService partitionService = hz.getPartitionService();
+        for (Partition partition : partitionService.getPartitions()) {
+            while (partition.getOwner() == null) {
+                logger.info("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+    public static void waitClusterSize(ILogger logger, HazelcastInstance hz, int clusterSize) throws InterruptedException {
+        for (; ; ) {
+            if (hz.getCluster().getMembers().size() >= clusterSize) {
+                return;
+            }
+
+            logger.info("waiting cluster == " + clusterSize);
+            Thread.sleep(1000);
+        }
+    }
+
     public static Node getNode(HazelcastInstance hz) {
         HazelcastInstanceImpl impl = getHazelcastInstanceImpl(hz);
         return impl != null ? impl.node : null;
-    }
-
-    public static long secondsToMillis(int seconds) {
-        return seconds * 1000;
     }
 
     public static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
@@ -219,5 +243,23 @@ public class TestUtils {
     }
 
     private TestUtils() {
+    }
+
+    public static String humanReadableByteCount(long bytes, boolean si) {
+        int unit = si ? 1000 : 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
+        return format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+    }
+
+    public static void sleepMs(long delayMs) {
+        if (delayMs < 0) {
+            return;
+        }
+        try {
+            Thread.sleep(delayMs);
+        } catch (InterruptedException e) {
+        }
     }
 }

@@ -15,7 +15,10 @@
  */
 package com.hazelcast.stabilizer.tests.map;
 
-import com.hazelcast.core.*;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IMap;
+import com.hazelcast.core.Partition;
+import com.hazelcast.core.PartitionService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -26,6 +29,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
+import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
@@ -34,7 +38,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public class StringMapTest {
 
     private final static ILogger log = Logger.getLogger(StringMapTest.class);
-
 
     //props
     public int writePercentage = 10;
@@ -50,12 +53,12 @@ public class StringMapTest {
     public boolean preventLocalCalls = false;
     public int minNumberOfMembers = 0;
 
-
     private IMap<Object, Object> map;
     private String[] keys;
     private String[] values;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
+    private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -68,7 +71,7 @@ public class StringMapTest {
         }
 
         this.testContext = testContext;
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+        targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
     }
 
@@ -79,9 +82,7 @@ public class StringMapTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitForCluser();
-
-        log.info("Warmup has run");
+        TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
         warmUpPartitions(testContext.getTargetInstance());
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
@@ -95,26 +96,12 @@ public class StringMapTest {
 
         Random random = new Random();
 
-
         for (int k = 0; k < keys.length; k++) {
             String key = keys[random.nextInt(keyCount)];
             String value = values[random.nextInt(valueCount)];
             map.put(key, value);
         }
     }
-
-    private void waitForCluser() {
-        while (testContext.getTargetInstance().getCluster().getMembers().size() < minNumberOfMembers) {
-            try {
-                Thread.sleep(1000);
-                System.out.println("Waiting for other cluster member. Minimum no. of member: "+minNumberOfMembers +
-                        ", current no. members: " + testContext.getTargetInstance().getCluster().getMembers().size());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
 
     @Run
     public void run() {
@@ -125,7 +112,7 @@ public class StringMapTest {
         spawner.awaitCompletion();
     }
 
-    public void warmUpPartitions(HazelcastInstance...instances) throws InterruptedException {
+    public void warmUpPartitions(HazelcastInstance... instances) throws InterruptedException {
         for (HazelcastInstance instance : instances) {
             final PartitionService ps = instance.getPartitionService();
             for (Partition partition : ps.getPartitions()) {
@@ -166,7 +153,7 @@ public class StringMapTest {
                 }
 
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration );
+                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
                 if (iteration % performanceUpdateFrequency == 0) {

@@ -24,7 +24,6 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * This test verifies that there are race problems if the IMap is not used correctly.
- *
  */
 public class MapRaceTest {
 
@@ -48,7 +47,7 @@ public class MapRaceTest {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
-        resultsPerWorker = targetInstance.getMap(basename+"ResultMap" + testContext.getTestId());
+        resultsPerWorker = targetInstance.getMap(basename + "ResultMap" + testContext.getTestId());
     }
 
     @Teardown

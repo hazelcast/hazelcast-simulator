@@ -27,7 +27,6 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.tests.map.MapCasTest;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -90,7 +89,6 @@ public class ExecutorTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-
         for (int k = 0; k < threadCount; k++) {
             spawner.spawn(new Worker());
         }
@@ -136,7 +134,6 @@ public class ExecutorTest {
                 if (iteration % 10000 == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
-
             }
 
             expectedExecutedCounter.addAndGet(iteration);

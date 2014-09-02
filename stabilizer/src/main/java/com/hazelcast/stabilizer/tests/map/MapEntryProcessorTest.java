@@ -8,7 +8,6 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
-import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
@@ -19,9 +18,8 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepMs;
 import static org.junit.Assert.assertEquals;
 
 public class MapEntryProcessorTest {
@@ -33,7 +31,7 @@ public class MapEntryProcessorTest {
     public int threadCount = 10;
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
-    public int maxProcessorDealyMs = 0;
+    public int maxProcessorDelayMs = 0;
 
     private IMap<Integer, Long> map;
     private IList<Map<Integer, Long>> resultsPerWorker;
@@ -45,7 +43,7 @@ public class MapEntryProcessorTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
-        resultsPerWorker = targetInstance.getList(basename+"ResultMap" + testContext.getTestId());
+        resultsPerWorker = targetInstance.getList(basename + "ResultMap" + testContext.getTestId());
     }
 
     @Teardown
@@ -59,7 +57,7 @@ public class MapEntryProcessorTest {
         for (int k = 0; k < keyCount; k++) {
             map.put(k, 0l);
         }
-        System.out.println(basename+" map size ==>"+map.size());
+        log.info(basename + " map size ==>" + map.size());
     }
 
     @Run
@@ -97,7 +95,7 @@ public class MapEntryProcessorTest {
         private final Random random = new Random();
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
-        public Worker(){
+        public Worker() {
             for (int k = 0; k < keyCount; k++) {
                 result.put(k, 0L);
             }
@@ -110,9 +108,9 @@ public class MapEntryProcessorTest {
                 int key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
 
-                int delayMs=0;
-                if(maxProcessorDealyMs!=0){
-                    delayMs =  minProcessorDelayMs + random.nextInt(maxProcessorDealyMs);
+                int delayMs = 0;
+                if (maxProcessorDelayMs != 0) {
+                    delayMs = minProcessorDelayMs + random.nextInt(maxProcessorDelayMs);
                 }
 
                 map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
@@ -120,11 +118,7 @@ public class MapEntryProcessorTest {
             }
 
             //sleep to give time for the last EntryProcessor tasks to complete.
-            try {
-                Thread.sleep(maxProcessorDealyMs * 2);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            sleepMs(maxProcessorDelayMs * 2);
             resultsPerWorker.add(result);
         }
 
@@ -144,20 +138,10 @@ public class MapEntryProcessorTest {
 
         @Override
         public Object process(Map.Entry<Integer, Long> entry) {
-            delay();
+            sleepMs(delayMs);
             long newValue = entry.getValue() + increment;
             entry.setValue(newValue);
             return null;
-        }
-
-        private void delay(){
-            if(delayMs!=0){
-                try {
-                    Thread.sleep(delayMs);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 

@@ -7,7 +7,7 @@ import com.hazelcast.nio.serialization.DataSerializable;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MapOpperationsCount implements DataSerializable {
+public class MapOperationsCount implements DataSerializable {
 
     public AtomicLong putCount = new AtomicLong(0);
     public AtomicLong putAsyncCount = new AtomicLong(0);
@@ -29,9 +29,10 @@ public class MapOpperationsCount implements DataSerializable {
     public AtomicLong deleteCount = new AtomicLong(0);
     public AtomicLong destroyCount = new AtomicLong(0);
 
-    public MapOpperationsCount(){}
+    public MapOperationsCount() {
+    }
 
-    public void add(MapOpperationsCount c){
+    public void add(MapOperationsCount c) {
         putCount.addAndGet(c.putCount.get());
         putAsyncCount.addAndGet(c.putAsyncCount.get());
 

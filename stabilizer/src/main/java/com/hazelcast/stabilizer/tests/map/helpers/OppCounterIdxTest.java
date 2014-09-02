@@ -8,13 +8,13 @@ import java.io.IOException;
 
 
 public class OppCounterIdxTest implements DataSerializable {
-    public long predicateBuilderCount=0;
-    public long sqlStringCount=0;
-    public long pagePredCount=0;
-    public long updateEmployeCount=0;
-    public long destroyCount =0;
+    public long predicateBuilderCount = 0;
+    public long sqlStringCount = 0;
+    public long pagePredCount = 0;
+    public long updateEmployeCount = 0;
+    public long destroyCount = 0;
 
-    public OppCounterIdxTest(){
+    public OppCounterIdxTest() {
 
     }
 
@@ -45,7 +45,7 @@ public class OppCounterIdxTest implements DataSerializable {
                 '}';
     }
 
-    public void add(OppCounterIdxTest o){
+    public void add(OppCounterIdxTest o) {
         predicateBuilderCount += o.predicateBuilderCount;
         sqlStringCount += o.sqlStringCount;
         pagePredCount += o.pagePredCount;

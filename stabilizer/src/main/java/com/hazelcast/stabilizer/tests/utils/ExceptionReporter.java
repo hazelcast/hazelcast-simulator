@@ -23,9 +23,9 @@ public class ExceptionReporter {
      *
      * @param testId the id of the test that caused the exception. Is allowed to be null if it is not known
      *               which test caused the problem.
-     * @param cause the Throwable that should be reported.
+     * @param cause  the Throwable that should be reported.
      */
-    public static void report(String testId,Throwable cause) {
+    public static void report(String testId, Throwable cause) {
         if (cause == null) {
             log.severe("Can't call report with a null exception");
             return;

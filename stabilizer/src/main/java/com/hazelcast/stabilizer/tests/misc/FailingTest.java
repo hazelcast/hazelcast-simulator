@@ -19,7 +19,7 @@ public class FailingTest {
     public String failure = "Exception";
 
     @Setup
-    public void setup(TestContext testContext){
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
     }
 
