@@ -1,14 +1,15 @@
-package com.hazelcast.stabilizer.tests.lock;
+package com.hazelcast.stabilizer.tests.concurrent.lock;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
-import com.hazelcast.stabilizer.tests.lock.helpers.LockCounter;
 import com.hazelcast.stabilizer.tests.map.helpers.KeyInc;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -20,16 +21,17 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
-/*
-*
-* */
+// TODO: We need to deal with exception logging; they are logged but not visible to stabilizer.
 public class LockConflictTest {
 
+    private final static ILogger log = Logger.getLogger(LockConflictTest.class);
+
+    // properties.
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 50;
-    public int maxKeysPerTxn =5;
-    public int tryLockTimeOutMs=10;
+    public int maxKeysPerTxn = 5;
+    public int tryLockTimeOutMs = 10;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
@@ -42,9 +44,9 @@ public class LockConflictTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        IList<Long> acounts = targetInstance.getList(basename);
+        IList<Long> accounts = targetInstance.getList(basename);
         for (int k = 0; k < keyCount; k++) {
-            acounts.add(0l);
+            accounts.add(0l);
         }
     }
 
@@ -68,7 +70,7 @@ public class LockConflictTest {
             while (!testContext.isStopped()) {
 
                 List<KeyInc> potentialLocks = new ArrayList();
-                for(int i=0; i< maxKeysPerTxn; i++){
+                for (int i = 0; i < maxKeysPerTxn; i++) {
                     KeyInc p = new KeyInc();
                     p.key = random.nextInt(keyCount);
                     p.inc = random.nextInt(999);
@@ -76,102 +78,102 @@ public class LockConflictTest {
                 }
 
                 List<KeyInc> locked = new ArrayList();
-                for(KeyInc i : potentialLocks){
-                    try{
+                for (KeyInc i : potentialLocks) {
+                    try {
                         ILock lock = targetInstance.getLock(basename + "l" + i.key);
-                        try{
-                            if( lock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS) ){
+                        try {
+                            if (lock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
                                 locked.add(i);
                                 counter.locked++;
                             }
-                        }catch(Exception e){
-                            System.out.println(basename+": trying lock="+i.key+" "+e);
+                        } catch (Exception e) {
+                            log.info(basename + ": trying lock=" + i.key + " " + e);
                             e.printStackTrace();
                         }
-                    }catch(Exception e){
-                        System.out.println(basename+": getting lock for locking="+i.key+" "+e);
+                    } catch (Exception e) {
+                        log.info(basename + ": getting lock for locking=" + i.key + " " + e);
                         e.printStackTrace();
                     }
                 }
 
-                for(KeyInc i : locked){
+                for (KeyInc i : locked) {
                     try {
-                        IList<Long> acounts = targetInstance.getList(basename);
-                        long value = acounts.get(i.key);
-                        acounts.set(i.key, value + i.inc);
-                        localIncrements[i.key]+=i.inc;
+                        IList<Long> accounts = targetInstance.getList(basename);
+                        long value = accounts.get(i.key);
+                        accounts.set(i.key, value + i.inc);
+                        localIncrements[i.key] += i.inc;
                         counter.inced++;
-                    }catch(Exception e){
-                        System.out.println(basename+": updating acount="+i+" "+e);
+                    } catch (Exception e) {
+                        log.info(basename + ": updating acount=" + i + " " + e);
                         e.printStackTrace();
                     }
                 }
 
-                int unlockAttempts=0;
-                while(!locked.isEmpty()){
-                    Iterator<KeyInc> ittr = locked.iterator();
-                    while(ittr.hasNext()){
-                        KeyInc i = ittr.next();
-                        try{
+                int unlockAttempts = 0;
+                while (!locked.isEmpty()) {
+                    Iterator<KeyInc> it = locked.iterator();
+                    while (it.hasNext()) {
+                        KeyInc i = it.next();
+                        try {
                             ILock lock = targetInstance.getLock(basename + "l" + i.key);
-                            try{
+                            try {
                                 lock.unlock();
                                 counter.unlocked++;
-                                ittr.remove();
-                            }catch(Exception e){
-                                System.out.println(basename+": unlocking lock ="+i.key+" "+e);
+                                it.remove();
+                            } catch (Exception e) {
+                                log.info(basename + ": unlocking lock =" + i.key + " " + e);
                                 e.printStackTrace();
                             }
-                        }catch(Exception e){
-                            System.out.println(basename+": getting lock for unlocking="+i.key+" "+e);
+                        } catch (Exception e) {
+                            log.info(basename + ": getting lock for unlocking=" + i.key + " " + e);
                             e.printStackTrace();
                         }
                     }
 
                     try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException e){}
+                    } catch (InterruptedException e) {
+                    }
 
-                    if(++unlockAttempts > 5){
-                        System.out.println(basename+": Cant unlonck="+locked+" unlockAttempts="+unlockAttempts);
+                    if (++unlockAttempts > 5) {
+                        log.info(basename + ": Cant unlonck=" + locked + " unlockAttempts=" + unlockAttempts);
                         break;
                     }
                 }
 
             }
-            targetInstance.getList(basename+"res").add(localIncrements);
-            targetInstance.getList(basename+"report").add(counter);
+            targetInstance.getList(basename + "res").add(localIncrements);
+            targetInstance.getList(basename + "report").add(counter);
         }
     }
 
     @Verify(global = false)
     public void verify() throws Exception {
-
-        IList<LockCounter> results = targetInstance.getList(basename+"report");
+        IList<LockCounter> results = targetInstance.getList(basename + "report");
         LockCounter total = new LockCounter();
-        for(LockCounter i : results){
+        for (LockCounter i : results) {
             total.add(i);
         }
-        System.out.println(basename+": "+total+" from "+results.size()+" worker threads");
+        log.info(basename + ": " + total + " from " + results.size() + " worker threads");
 
-        IList<long[]> allIncrements = targetInstance.getList(basename+"res");
+        IList<long[]> allIncrements = targetInstance.getList(basename + "res");
         long expected[] = new long[keyCount];
         for (long[] incs : allIncrements) {
-            for (int i=0; i < incs.length; i++) {
+            for (int i = 0; i < incs.length; i++) {
                 expected[i] += incs[i];
             }
         }
 
-        IList<Long> acounts = targetInstance.getList(basename);
+        IList<Long> accounts = targetInstance.getList(basename);
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
-            if (expected[k] != acounts.get(k)) {
+            if (expected[k] != accounts.get(k)) {
                 failures++;
-                System.out.println(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + acounts.get(k));
+                log.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + accounts.get(k));
             }
         }
 
-        assertEquals(basename+": "+failures+" key=>values have been incremented unExpected", 0, failures);
+        assertEquals(basename + ": " + failures + " key=>values have been incremented unExpected", 0, failures);
     }
 
 }

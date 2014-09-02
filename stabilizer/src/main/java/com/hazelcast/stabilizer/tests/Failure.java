@@ -19,11 +19,9 @@ package com.hazelcast.stabilizer.tests;
 import com.hazelcast.stabilizer.TestCase;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
 

@@ -7,11 +7,8 @@ import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestRunner;
-import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
-import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
@@ -19,23 +16,22 @@ import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
 public class MapTransactionTest {
 
+    private final static ILogger log = Logger.getLogger(MapTransactionTest.class);
+
+    // properties
     public String basename = this.getClass().getName();
     public int threadCount = 5;
     public int keyCount = 1000;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
-    private int maxInc=100;
+    private int maxInc = 100;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -70,7 +66,7 @@ public class MapTransactionTest {
                 final int key = random.nextInt(keyCount);
                 final int increment = random.nextInt(maxInc);
 
-                try{
+                try {
                     targetInstance.executeTransaction(new TransactionalTask<Object>() {
                         @Override
                         public Object execute(TransactionalTaskContext txContext) throws TransactionException {
@@ -80,11 +76,10 @@ public class MapTransactionTest {
                             return null;
                         }
                     });
-                    increments[key]+=increment;
+                    increments[key] += increment;
 
-                }catch(TransactionException e){
-                    System.out.println(basename+": executing Trans "+e);
-                    e.printStackTrace();
+                } catch (TransactionException e) {
+                    log.warning(basename + ": executing Trans ", e);
                 }
             }
             IList<long[]> results = targetInstance.getList(basename + "results");
@@ -94,28 +89,27 @@ public class MapTransactionTest {
 
     @Verify(global = true)
     public void verify() throws Exception {
-
         IList<long[]> allIncrements = targetInstance.getList(basename + "results");
         long[] total = new long[keyCount];
 
-        System.out.println(basename+": collected increments from "+allIncrements.size()+" worker threads");
+        log.info(basename + ": collected increments from " + allIncrements.size() + " worker threads");
 
         for (long[] increments : allIncrements) {
-            for(int i=0; i<increments.length; i++){
-                total[i]+=increments[i];
+            for (int i = 0; i < increments.length; i++) {
+                total[i] += increments[i];
             }
         }
 
         int failures = 0;
-        for (int i=0; i<keyCount; i++) {
+        for (int i = 0; i < keyCount; i++) {
             IMap<Integer, Long> map = targetInstance.getMap(basename);
-            if ( total[i] != map.get(i)) {
+            if (total[i] != map.get(i)) {
                 failures++;
-                System.out.println(basename+": key="+i+" expected val "+total[i]+" !=  map val"+map.get(i));
+                log.info(basename + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
             }
         }
 
-        assertEquals(failures+" keys have been incremented unexpectedly", 0, failures);
+        assertEquals(failures + " keys have been incremented unexpectedly", 0, failures);
     }
 
 }

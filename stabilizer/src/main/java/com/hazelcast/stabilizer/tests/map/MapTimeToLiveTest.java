@@ -18,13 +18,15 @@ package com.hazelcast.stabilizer.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.tests.map.helpers.MapOpperationsCount;
+import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
@@ -34,26 +36,23 @@ import static org.junit.Assert.assertEquals;
 
 public class MapTimeToLiveTest {
 
+    private final static ILogger log = Logger.getLogger(MapTimeToLiveTest.class);
+
+    // properties
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 10;
-
     //check these add up to 1
     public double putTTLProb = 0.4;
     public double putAsyncTTLProb = 0.3;
     public double getProb = 0.2;
     public double getAsyncProb = 0.1;
     public double destroyProb = 0.0;
-    //
     public int maxTTLExpireyMs = 3000;
     public int minTTLExpireyMs = 1;
 
-
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-
-    public MapTimeToLiveTest(){
-    }
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -71,44 +70,42 @@ public class MapTimeToLiveTest {
     }
 
     private class Worker implements Runnable {
-        private MapOpperationsCount count = new MapOpperationsCount();
+        private MapOperationsCount count = new MapOperationsCount();
         private final Random random = new Random();
+
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-                try{
+                try {
                     final int key = random.nextInt(keyCount);
                     final IMap map = targetInstance.getMap(basename);
 
                     double chance = random.nextDouble();
-                    if ( (chance -= putTTLProb) < 0 ) {
+                    if ((chance -= putTTLProb) < 0) {
                         final Object value = random.nextInt();
                         int delayMs = minTTLExpireyMs + random.nextInt(maxTTLExpireyMs);
                         map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
                         count.putTTLCount.incrementAndGet();
-                    }
-                    else if ( (chance -= putAsyncTTLProb) < 0 ) {
+                    } else if ((chance -= putAsyncTTLProb) < 0) {
                         final Object value = random.nextInt();
-                        int delayMs =  minTTLExpireyMs + random.nextInt(maxTTLExpireyMs);
+                        int delayMs = minTTLExpireyMs + random.nextInt(maxTTLExpireyMs);
                         map.putAsync(key, value, delayMs, TimeUnit.MILLISECONDS);
                         count.putAsyncTTLCount.incrementAndGet();
-                    }
-                    else if( (chance -= getProb) < 0  ){
+                    } else if ((chance -= getProb) < 0) {
                         map.get(key);
                         count.getCount.incrementAndGet();
-                    }
-                    else if( (chance -= getAsyncProb) < 0 ){
+                    } else if ((chance -= getAsyncProb) < 0) {
                         map.getAsync(key);
                         count.getAsyncCount.incrementAndGet();
-                    }
-                    else if ( (chance -= destroyProb) <= 0 ){
+                    } else if ((chance -= destroyProb) <= 0) {
                         map.destroy();
                         count.destroyCount.incrementAndGet();
                     }
 
-                }catch(DistributedObjectDestroyedException e){}
+                } catch (DistributedObjectDestroyedException e) {
+                }
             }
-            IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
+            IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
             results.add(count);
         }
     }
@@ -117,18 +114,19 @@ public class MapTimeToLiveTest {
     public void globalVerify() throws Exception {
         Thread.sleep(maxTTLExpireyMs * 10);
 
-        IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
-        MapOpperationsCount total = new MapOpperationsCount();
-        for(MapOpperationsCount i : results){
+        IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
+        MapOperationsCount total = new MapOperationsCount();
+        for (MapOperationsCount i : results) {
             total.add(i);
         }
-        System.out.println(basename+": "+total+" total of "+results.size());
+        log.info(basename + ": " + total + " total of " + results.size());
 
         final IMap map = targetInstance.getMap(basename);
 
-        for(int i=0; i<10; i++){
-            if(map.size()!=0){
-                System.out.println(basename+": map size="+map.size());
+        for (int i = 0; i < 10; i++) {
+            if (map.size() != 0) {
+                log.info(basename + ": map size=" + map.size());
+                // todo: why this huge sleep
                 Thread.sleep(9000);
             }
         }

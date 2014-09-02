@@ -7,25 +7,30 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
-import com.hazelcast.stabilizer.tests.annotations.*;
+import com.hazelcast.stabilizer.tests.annotations.Run;
+import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class SimpleLockTest {
 
     private final static ILogger log = Logger.getLogger(SimpleLockTest.class);
 
+    public String basename = this.getClass().getName();
     public int maxAccounts = 7;
     public int threadCount = 10;
     public int logFrequency = 10000;
 
-    private String basename = this.getClass().getName();
-    private int initialValue=1000;
+    private int initialValue = 1000;
     private int totalValue = 0;
-
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
@@ -38,7 +43,7 @@ public class SimpleLockTest {
     @Warmup(global = true)
     public void warmup() throws Exception {
         for (int k = 0; k < maxAccounts; k++) {
-            IAtomicLong account = targetInstance.getAtomicLong(basename+k);
+            IAtomicLong account = targetInstance.getAtomicLong(basename + k);
             account.set(initialValue);
         }
         totalValue = initialValue * maxAccounts;
@@ -46,13 +51,12 @@ public class SimpleLockTest {
 
     @Verify
     public void verify() {
-
         int value = 0;
         for (int k = 0; k < maxAccounts; k++) {
-            ILock lock = targetInstance.getLock(basename+k);
-            IAtomicLong account = targetInstance.getAtomicLong(basename+k);
+            ILock lock = targetInstance.getLock(basename + k);
+            IAtomicLong account = targetInstance.getAtomicLong(basename + k);
 
-            System.out.println(account+" "+account.get());
+            log.info(account + " " + account.get());
 
             assertFalse("Lock should be unlocked", lock.isLocked());
             assertTrue("Amount is < 0 ", account.get() >= 0);
@@ -60,9 +64,6 @@ public class SimpleLockTest {
         }
         assertEquals(totalValue, value);
     }
-
-    @Teardown
-    public void teardown() throws Exception { }
 
     private class Worker implements Runnable {
         private final Random random = new Random();
@@ -75,22 +76,22 @@ public class SimpleLockTest {
             while (!testContext.isStopped()) {
 
                 key1 = random.nextInt(maxAccounts);
-                do{
+                do {
                     key2 = random.nextInt(maxAccounts);
-                }while(key1 == key2);
+                } while (key1 == key2);
 
 
-                ILock lock1 = targetInstance.getLock(basename+key1);
+                ILock lock1 = targetInstance.getLock(basename + key1);
                 if (lock1.tryLock()) {
                     try {
-                        ILock lock2 = targetInstance.getLock(basename+key2);
+                        ILock lock2 = targetInstance.getLock(basename + key2);
                         if (lock2.tryLock()) {
                             try {
-                                IAtomicLong account1 = targetInstance.getAtomicLong(basename+key1);
-                                IAtomicLong account2 = targetInstance.getAtomicLong(basename+key2);
+                                IAtomicLong account1 = targetInstance.getAtomicLong(basename + key1);
+                                IAtomicLong account2 = targetInstance.getAtomicLong(basename + key2);
 
                                 int delta = random.nextInt(100);
-                                if(account1.get() >= delta){
+                                if (account1.get() >= delta) {
                                     account1.set(account1.get() - delta);
                                     account2.set(account2.get() + delta);
                                 }
@@ -113,7 +114,6 @@ public class SimpleLockTest {
         }
     }
 
-
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
@@ -122,7 +122,6 @@ public class SimpleLockTest {
         }
         spawner.awaitCompletion();
     }
-
 
     public static void main(String[] args) throws Throwable {
         SimpleLockTest test = new SimpleLockTest();

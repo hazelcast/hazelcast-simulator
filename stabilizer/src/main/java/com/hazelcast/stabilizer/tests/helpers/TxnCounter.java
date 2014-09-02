@@ -4,14 +4,14 @@ import java.io.Serializable;
 
 public class TxnCounter implements Serializable {
 
-    public long committed=0;
-    public long rolled=0;
-    public long failedRoles=0;
+    public long committed = 0;
+    public long rolled = 0;
+    public long failedRoles = 0;
 
     public TxnCounter() {
     }
 
-    public void add(TxnCounter c){
+    public void add(TxnCounter c) {
         committed += c.committed;
         rolled += c.rolled;
         failedRoles += c.failedRoles;

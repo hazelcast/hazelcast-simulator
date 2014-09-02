@@ -18,7 +18,7 @@ public class StringUtils {
         if (!preventLocalCalls) {
             return makeString(keyLength);
         }
-        for ( ;; ) {
+        for (; ; ) {
             String key = makeString(keyLength);
             if (!isLocalKey(instance, key)) {
                 return key;
@@ -30,9 +30,9 @@ public class StringUtils {
     private static boolean isLocalKey(HazelcastInstance instance, String key) {
         PartitionService partitionService = instance.getPartitionService();
         Partition partition = partitionService.getPartition(key);
-        for(;;) {
+        for (; ; ) {
             Member owner = partition.getOwner();
-            if(owner == null){
+            if (owner == null) {
                 sleepSeconds(1);
                 continue;
             }

@@ -1,17 +1,17 @@
-package com.hazelcast.stabilizer.tests.lock.helpers;
+package com.hazelcast.stabilizer.tests.concurrent.lock;
 
 import java.io.Serializable;
 
 public class LockCounter implements Serializable {
 
-    public long locked=0;
-    public long inced=0;
-    public long unlocked=0;
+    public long locked = 0;
+    public long inced = 0;
+    public long unlocked = 0;
 
     public LockCounter() {
     }
 
-    public void add(LockCounter c){
+    public void add(LockCounter c) {
         locked += c.locked;
         inced += c.inced;
         unlocked += c.unlocked;

@@ -20,42 +20,40 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.humanReadableByteCount;
+
 public class MapTTLSaturationTest {
 
+    private final static ILogger log = Logger.getLogger(MapTTLSaturationTest.class);
+
+    // properties
     public String basename = "mapttlsaturation";
     public int threadCount = 3;
     public double maxHeapUsagePercentage = 80;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-
-
     private IMap map;
-
     private long baseLineUsed;
-
-    public MapTTLSaturationTest() {
-    }
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-
         map = targetInstance.getMap(basename);
     }
-
 
     private double heapUsedPercentage() {
         long total = Runtime.getRuntime().totalMemory();
@@ -81,11 +79,11 @@ public class MapTTLSaturationTest {
             long maxBytes = Runtime.getRuntime().maxMemory();
             double usedOfMax = 100.0 * ((double) baseLineUsed / (double) maxBytes);
 
-            System.out.println(basename + " before Init");
-            System.out.println(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
-            System.out.println(basename + " used = " + humanReadableByteCount(baseLineUsed, true) + " = " + baseLineUsed);
-            System.out.println(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-            System.out.println(basename + " usedOfMax = " + usedOfMax + "%");
+            log.info(basename + " before Init");
+            log.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
+            log.info(basename + " used = " + humanReadableByteCount(baseLineUsed, true) + " = " + baseLineUsed);
+            log.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
+            log.info(basename + " usedOfMax = " + usedOfMax + "%");
 
             int counter = 1;
             Random random = new Random();
@@ -93,7 +91,7 @@ public class MapTTLSaturationTest {
             while (!testContext.isStopped()) {
                 double usedPercentage = heapUsedPercentage();
                 if (usedPercentage >= maxHeapUsagePercentage) {
-                    System.out.println("heap used: " + usedPercentage + " % map.size:" + map.size());
+                    log.info("heap used: " + usedPercentage + " % map.size:" + map.size());
 
                     try {
                         Thread.sleep(10000);
@@ -104,7 +102,7 @@ public class MapTTLSaturationTest {
                     for (int k = 0; k < 1000; k++) {
                         counter++;
                         if (counter % 100000 == 0) {
-                            System.out.println("at:" + counter + " heap used: " + usedPercentage + " % map.size:" + map.size());
+                            log.info("at:" + counter + " heap used: " + usedPercentage + " % map.size:" + map.size());
                         }
                         long key = random.nextLong();
                         map.put(key, 0, 24, TimeUnit.HOURS);
@@ -118,49 +116,35 @@ public class MapTTLSaturationTest {
             maxBytes = Runtime.getRuntime().maxMemory();
             usedOfMax = 100.0 * ((double) nowUsed / (double) maxBytes);
 
-            System.out.println();
-            System.out.println(basename + " After Init");
-            System.out.println(basename + " map = " + map.size());
-            System.out.println(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
-            System.out.println(basename + " used = " + humanReadableByteCount(nowUsed, true) + " = " + nowUsed);
-            System.out.println(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-            System.out.println(basename + " usedOfMax = " + usedOfMax + "%");
-
-            System.out.println(basename + " map size:" + map.size());
+            log.info(basename + " After Init");
+            log.info(basename + " map = " + map.size());
+            log.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
+            log.info(basename + " used = " + humanReadableByteCount(nowUsed, true) + " = " + nowUsed);
+            log.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
+            log.info(basename + " usedOfMax = " + usedOfMax + "%");
+            log.info(basename + " map size:" + map.size());
         }
     }
 
     @Verify(global = false)
     public void globalVerify() throws Exception {
-        System.out.println();
-        System.out.println(basename + " Verify");
-
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
         long used = total - free;
         long maxBytes = Runtime.getRuntime().maxMemory();
         double usedOfMax = 100.0 * ((double) used / (double) maxBytes);
 
-
-        System.out.println(basename + " map = " + map.size());
-        System.out.println(basename + "free = " + humanReadableByteCount(free, true) + " = " + free);
-        System.out.println(basename + "used = " + humanReadableByteCount(used, true) + " = " + used);
-        System.out.println(basename + "max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-        System.out.println(basename + "usedOfMax = " + usedOfMax + "%");
-    }
-
-    public static String humanReadableByteCount(long bytes, boolean si) {
-        int unit = si ? 1000 : 1024;
-        if (bytes < unit) return bytes + " B";
-        int exp = (int) (Math.log(bytes) / Math.log(unit));
-        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
-        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+        log.info(basename + " map = " + map.size());
+        log.info(basename + "free = " + humanReadableByteCount(free, true) + " = " + free);
+        log.info(basename + "used = " + humanReadableByteCount(used, true) + " = " + used);
+        log.info(basename + "max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
+        log.info(basename + "usedOfMax = " + usedOfMax + "%");
     }
 
     public static void main(String[] args) throws Throwable {
         Config config = new Config();
         config.addMapConfig(new MapConfig("mapttlsaturation*").setBackupCount(0).setStatisticsEnabled(false));
-        HazelcastInstance hz = Hazelcast.newHazelcastInstance();
+        HazelcastInstance hz = Hazelcast.newHazelcastInstance(config);
         new TestRunner(new MapTTLSaturationTest()).withHazelcastInstance(hz).withDuration(6000).run();
     }
 }

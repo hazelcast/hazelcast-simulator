@@ -3,10 +3,10 @@ package com.hazelcast.stabilizer.tests.map.helpers;
 import java.io.Serializable;
 import java.util.Random;
 
-public class Employee implements Serializable, Comparable<Employee>{
+public class Employee implements Serializable, Comparable<Employee> {
 
-    public static final int MAX_AGE=75;
-    public static final double MAX_SALARY=1000.0;
+    public static final int MAX_AGE = 75;
+    public static final double MAX_SALARY = 1000.0;
 
     public static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
     public static Random random = new Random();
@@ -32,14 +32,16 @@ public class Employee implements Serializable, Comparable<Employee>{
     public Employee() {
     }
 
-    public void setInfo(){
+    public void setInfo() {
         name = names[random.nextInt(names.length)];
         age = random.nextInt(MAX_AGE);
         active = random.nextBoolean();
         salary = random.nextDouble() * MAX_SALARY;
     }
 
-    public int getId() {return id;}
+    public int getId() {
+        return id;
+    }
 
     public String getName() {
         return name;

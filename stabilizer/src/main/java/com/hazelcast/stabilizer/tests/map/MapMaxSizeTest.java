@@ -4,6 +4,8 @@ import com.hazelcast.config.MaxSizeConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
@@ -18,31 +20,29 @@ import static junit.framework.Assert.assertTrue;
 
 public class MapMaxSizeTest {
 
+    private final static ILogger log = Logger.getLogger(MapMaxSizeTest.class);
+
+    // properties
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = Integer.MAX_VALUE;
-
     //check these add up to 1
     public double writeProb = 0.5;
     public double getProb = 0.4;
     public double checkSizeProb = 0.1;
-    //
-
     //check these add up to 1   (writeProb is split up into sub styles)
     public double writeUsingPutProb = 0.8;
     public double writeUsingPutAsyncProb = 0.2;
-    //
-
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-
-    public MapMaxSizeTest(){}
+    private IMap<Object, Object> map;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+        map = targetInstance.getMap(basename);
     }
 
     @Run
@@ -62,73 +62,59 @@ public class MapMaxSizeTest {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-                try{
-                    final int key = random.nextInt(keyCount);
-                    final IMap map = targetInstance.getMap(basename);
+                final int key = random.nextInt(keyCount);
 
-                    double chance = random.nextDouble();
-                    if ( (chance -= writeProb) < 0 ) {
+                double chance = random.nextDouble();
+                if ((chance -= writeProb) < 0) {
 
-                        final Object value = random.nextInt();
+                    final Object value = random.nextInt();
 
-                        chance = random.nextDouble();
-                        if ( (chance -= writeUsingPutProb) < 0) {
-                            map.put(key, value);
-                            count.put++;
-                        }
-                        else if ( (chance -= writeUsingPutAsyncProb) < 0 ) {
-                            map.putAsync(key, value);
-                            count.putAsync++;
-                        }
-
-                    }else if( (chance -= getProb) < 0 ){
-                        map.get(key);
-                        count.get++;
-                    }
-                    else if( (chance -= checkSizeProb) <0){
-                        int clusterSize = targetInstance.getCluster().getMembers().size();
-                        int size = map.size();
-                        //try{
-                            assertTrue("Map Over max Size "+size+" not less than "+clusterSize+"*"+1000, size < clusterSize * 1000 );
-                        //}catch(Throwable t){
-                        //    System.out.println(basename+": "+t);
-                        //}
-                        count.verified++;
+                    chance = random.nextDouble();
+                    if ((chance -= writeUsingPutProb) < 0) {
+                        map.put(key, value);
+                        count.put++;
+                    } else if ((chance -= writeUsingPutAsyncProb) < 0) {
+                        map.putAsync(key, value);
+                        count.putAsync++;
                     }
 
-                }catch(Exception e){
-                    System.out.println(basename+": "+e);
-                    e.printStackTrace();
+                } else if ((chance -= getProb) < 0) {
+                    map.get(key);
+                    count.get++;
+                } else if ((chance -= checkSizeProb) < 0) {
+                    int clusterSize = targetInstance.getCluster().getMembers().size();
+                    int size = map.size();
+                    assertTrue("Map Over max Size " + size + " not less than " + clusterSize + "*" + 1000, size < clusterSize * 1000);
+                    count.verified++;
                 }
             }
-            targetInstance.getList(basename+"report").add(count);
+            targetInstance.getList(basename + "report").add(count);
         }
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-
-        IList<OppCounterMapMaxSizeTest> results = targetInstance.getList(basename+"report");
+        IList<OppCounterMapMaxSizeTest> results = targetInstance.getList(basename + "report");
         OppCounterMapMaxSizeTest total = new OppCounterMapMaxSizeTest();
-        for(OppCounterMapMaxSizeTest i : results){
+        for (OppCounterMapMaxSizeTest i : results) {
             total.add(i);
         }
-        System.out.println(basename+": "+total+" from "+results.size()+" workers");
+        log.info(basename + ": " + total + " from " + results.size() + " workers");
 
-        IMap map = targetInstance.getMap(basename);
-        System.out.println(basename+": Map size = "+map.size());
+        log.info(basename + ": Map size = " + map.size());
 
         int clusterSize = targetInstance.getCluster().getMembers().size();
         int size = map.size();
-        assertTrue("Map Over max Size "+size+" not less than "+clusterSize+"*"+1000, size < clusterSize * 1000 );
+        assertTrue("Map Over max Size " + size + " not less than " + clusterSize + "*" + 1000, size < clusterSize * 1000);
     }
 
     @Verify(global = false)
     public void verify() throws Exception {
-        try{
+        try {
             MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
-            System.out.println(basename+": "+maxSizeConfig);
-        }catch (Exception e){}
+            log.info(basename + ": " + maxSizeConfig);
+        } catch (Exception e) {
+        }
     }
 
 }

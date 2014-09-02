@@ -15,7 +15,10 @@
  */
 package com.hazelcast.stabilizer.tests.map;
 
-import com.hazelcast.core.*;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IMap;
+import com.hazelcast.core.Partition;
+import com.hazelcast.core.PartitionService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -35,7 +38,6 @@ public class StringMapTest {
 
     private final static ILogger log = Logger.getLogger(StringMapTest.class);
 
-
     //props
     public int writePercentage = 10;
     public int threadCount = 10;
@@ -49,7 +51,6 @@ public class StringMapTest {
     public String basename = "stringmap";
     public boolean preventLocalCalls = false;
     public int minNumberOfMembers = 0;
-
 
     private IMap<Object, Object> map;
     private String[] keys;
@@ -103,18 +104,18 @@ public class StringMapTest {
         }
     }
 
+    // TODO: needs to be moved to util method.
     private void waitForCluser() {
         while (testContext.getTargetInstance().getCluster().getMembers().size() < minNumberOfMembers) {
             try {
                 Thread.sleep(1000);
-                System.out.println("Waiting for other cluster member. Minimum no. of member: "+minNumberOfMembers +
+                log.info("Waiting for other cluster member. Minimum no. of member: " + minNumberOfMembers +
                         ", current no. members: " + testContext.getTargetInstance().getCluster().getMembers().size());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
     }
-
 
     @Run
     public void run() {
@@ -125,7 +126,7 @@ public class StringMapTest {
         spawner.awaitCompletion();
     }
 
-    public void warmUpPartitions(HazelcastInstance...instances) throws InterruptedException {
+    public void warmUpPartitions(HazelcastInstance... instances) throws InterruptedException {
         for (HazelcastInstance instance : instances) {
             final PartitionService ps = instance.getPartitionService();
             for (Partition partition : ps.getPartitions()) {
@@ -166,7 +167,7 @@ public class StringMapTest {
                 }
 
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration );
+                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
                 if (iteration % performanceUpdateFrequency == 0) {

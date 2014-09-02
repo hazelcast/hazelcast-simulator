@@ -11,14 +11,14 @@ import static org.junit.Assert.assertEquals;
 
 public class EventCount implements DataSerializable {
     public AtomicLong localAddCount = new AtomicLong(0);
-    public  AtomicLong localRemoveCount = new AtomicLong(0);
-    public  AtomicLong localUpdateCount = new AtomicLong(0);
-    public  AtomicLong localEvictCount = new AtomicLong(0);
+    public AtomicLong localRemoveCount = new AtomicLong(0);
+    public AtomicLong localUpdateCount = new AtomicLong(0);
+    public AtomicLong localEvictCount = new AtomicLong(0);
 
-    public EventCount(){
+    public EventCount() {
     }
 
-    public void add(EventCount c){
+    public void add(EventCount c) {
         localAddCount.addAndGet(c.localAddCount.get());
         localRemoveCount.addAndGet(c.localRemoveCount.get());
         localUpdateCount.addAndGet(c.localUpdateCount.get());
@@ -39,63 +39,64 @@ public class EventCount implements DataSerializable {
         localEvictCount = in.readObject();
     }
 
-    public long total(){
-        return  localAddCount.get() +
+    public long total() {
+        return localAddCount.get() +
                 localRemoveCount.get() +
                 localUpdateCount.get() +
-                localEvictCount.get() ;
+                localEvictCount.get();
     }
 
-    public long absDiffrence(EntryListenerImpl e){
+    public long absDiffrence(EntryListenerImpl e) {
 
         long countTotal = total();
 
         Long listenerTotal = e.addCount.get() +
-                             e.updateCount.get() +
-                             e.removeCount.get() +
-                             e.evictCount.get() ;
+                e.updateCount.get() +
+                e.removeCount.get() +
+                e.evictCount.get();
 
-        return Math.abs( countTotal - listenerTotal );
+        return Math.abs(countTotal - listenerTotal);
     }
 
-    public boolean sameEventCount(EntryListenerImpl listener){
-        return absDiffrence(listener)==0;
+    public boolean sameEventCount(EntryListenerImpl listener) {
+        return absDiffrence(listener) == 0;
     }
 
 
-    public void waiteWhileListenerEventsIncrease(EntryListenerImpl listener, int maxItterationNoChange) throws InterruptedException{
+    public void waiteWhileListenerEventsIncrease(EntryListenerImpl listener, int maxItterationNoChange) throws InterruptedException {
 
-        int noChange=0;
-        long prev=0;
-        do{
+        int noChange = 0;
+        long prev = 0;
+        do {
             long diff = absDiffrence(listener);
 
-            if(diff >= prev){
+            if (diff >= prev) {
                 noChange++;
-            }else{
-                noChange=0;
+            } else {
+                noChange = 0;
             }
             prev = diff;
 
             Thread.sleep(2000);
 
-        }while(!sameEventCount(listener) && noChange < maxItterationNoChange);
+        } while (!sameEventCount(listener) && noChange < maxItterationNoChange);
 
     }
 
-    public long calculateMapSize(){
-        return localAddCount.get()  - (localEvictCount.get() + localRemoveCount.get());
+    public long calculateMapSize() {
+        return localAddCount.get() - (localEvictCount.get() + localRemoveCount.get());
     }
-    public long calculateMapSize(EntryListenerImpl listener){
-        return listener.addCount.get()  - (listener.evictCount.get() + listener.removeCount.get());
+
+    public long calculateMapSize(EntryListenerImpl listener) {
+        return listener.addCount.get() - (listener.evictCount.get() + listener.removeCount.get());
     }
 
 
-    public void assertEventsEquals(EntryListenerImpl listener){
-        assertEquals(" Add Events ",      localAddCount.get(),      listener.addCount.get());
-        assertEquals(" Update Events ",   localUpdateCount.get(),   listener.updateCount.get());
-        assertEquals(" Remove Events ",   localRemoveCount.get(),   listener.removeCount.get());
-        assertEquals(" Evict Events ",    localEvictCount.get(),    listener.evictCount.get());
+    public void assertEventsEquals(EntryListenerImpl listener) {
+        assertEquals(" Add Events ", localAddCount.get(), listener.addCount.get());
+        assertEquals(" Update Events ", localUpdateCount.get(), listener.updateCount.get());
+        assertEquals(" Remove Events ", localRemoveCount.get(), listener.removeCount.get());
+        assertEquals(" Evict Events ", localEvictCount.get(), listener.evictCount.get());
         assertEquals(" calculated Map size", calculateMapSize(), calculateMapSize(listener));
     }
 

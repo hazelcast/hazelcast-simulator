@@ -109,7 +109,6 @@ public class MapLongPerformanceTest {
             }
         }
 
-
         private boolean shouldWrite(long iteration) {
             if (writePercentage == 0) {
                 return false;

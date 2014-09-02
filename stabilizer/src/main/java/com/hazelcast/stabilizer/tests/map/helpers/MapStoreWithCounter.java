@@ -13,15 +13,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MapStoreWithCounter implements MapStore<Object, Object> {
     private Random random = new Random();
 
-    public static int minDelayMs =0;
-    public static int maxDelayMs =0;
+    public static int minDelayMs = 0;
+    public static int maxDelayMs = 0;
 
     public final Map store = new ConcurrentHashMap();
     public AtomicInteger storeCount = new AtomicInteger(0);
     public AtomicInteger deleteCount = new AtomicInteger(0);
     public AtomicInteger countLoad = new AtomicInteger(0);
 
-    public MapStoreWithCounter(){}
+    public MapStoreWithCounter() {
+    }
 
     @Override
     public void store(Object key, Object value) {
@@ -76,10 +77,10 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
         return store.keySet();
     }
 
-    private void delay(){
-        if(maxDelayMs !=0){
+    private void delay() {
+        if (maxDelayMs != 0) {
             try {
-                int delay =  minDelayMs + random.nextInt(maxDelayMs);
+                int delay = minDelayMs + random.nextInt(maxDelayMs);
                 Thread.sleep(delay);
             } catch (InterruptedException e) {
                 e.printStackTrace();

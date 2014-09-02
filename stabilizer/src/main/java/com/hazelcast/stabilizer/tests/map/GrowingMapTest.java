@@ -57,13 +57,12 @@ public class GrowingMapTest {
 
     @Teardown
     public void teardown() throws Exception {
-        //map.destroy();
+        map.destroy();
     }
 
     @Verify
     public void verify() throws Exception {
-
-        if(removeOnStop){
+        if (removeOnStop) {
             assertEquals("Map should be empty, but has size:", 0, map.size());
             assertTrue("Map should be empty, but has size:", map.isEmpty());
         }

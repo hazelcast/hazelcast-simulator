@@ -4,13 +4,14 @@ import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.tests.map.helpers.MapOpperationsCount;
+import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -21,6 +22,8 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
 
 public class MapStoreTest {
+
+    private final static ILogger log = Logger.getLogger(MapStoreTest.class);
 
     public String basename = this.getClass().getName();
     public int threadCount = 3;
@@ -54,7 +57,8 @@ public class MapStoreTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    public MapStoreTest(){}
+    public MapStoreTest() {
+    }
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -78,111 +82,102 @@ public class MapStoreTest {
 
 
     private class Worker implements Runnable {
-        private MapOpperationsCount count = new MapOpperationsCount();
+        private MapOperationsCount count = new MapOperationsCount();
         private final Random random = new Random();
 
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-                try{
+                try {
                     final int key = random.nextInt(keyCount);
                     final IMap map = targetInstance.getMap(basename);
 
                     double chance = random.nextDouble();
-                    if ( (chance -= writeProb) < 0 ) {
+                    if ((chance -= writeProb) < 0) {
 
                         final Object value = random.nextInt();
 
                         chance = random.nextDouble();
-                        if ( (chance -= writeUsingPutProb) < 0) {
+                        if ((chance -= writeUsingPutProb) < 0) {
                             map.put(key, value);
                             count.putCount.incrementAndGet();
-                        }
-                        else if ( (chance -= writeUsingPutAsyncProb) < 0 ) {
+                        } else if ((chance -= writeUsingPutAsyncProb) < 0) {
                             map.putAsync(key, value);
                             count.putAsyncCount.incrementAndGet();
-                        }
-                        else if ( (chance -= writeUsingPutTTLProb ) < 0 ) {
+                        } else if ((chance -= writeUsingPutTTLProb) < 0) {
                             long delayMs = minTTLExpireyMs + random.nextInt(maxTTLExpireyMs);
-                            int k =  putTTlKeyDomain + random.nextInt(putTTlKeyRange);
+                            int k = putTTlKeyDomain + random.nextInt(putTTlKeyRange);
                             map.putTransient(k, delayMs, delayMs, TimeUnit.MILLISECONDS);
                             count.putTransientCount.incrementAndGet();
-                        }
-                        else if( (chance -= writeUsingPutIfAbsent) < 0 ){
+                        } else if ((chance -= writeUsingPutIfAbsent) < 0) {
                             map.putIfAbsent(key, value);
                             count.putIfAbsentCount.incrementAndGet();
-                        }
-                        else if( (chance -= writeUsingReplaceProb ) <= 0 ){
+                        } else if ((chance -= writeUsingReplaceProb) <= 0) {
                             Object orig = map.get(key);
-                            if ( orig !=null ){
+                            if (orig != null) {
                                 map.replace(key, orig, value);
                                 count.replaceCount.incrementAndGet();
                             }
                         }
 
-                    }else if( (chance -= getProb) < 0 ){
+                    } else if ((chance -= getProb) < 0) {
                         map.get(key);
                         count.getCount.incrementAndGet();
-                    }
-                    else if( (chance -=  getAsyncProb) < 0 ){
+                    } else if ((chance -= getAsyncProb) < 0) {
                         map.getAsync(key);
                         count.getAsyncCount.incrementAndGet();
-                    }
-                    else if ( (chance -= deleteProb) < 0 ){
+                    } else if ((chance -= deleteProb) < 0) {
                         map.delete(key);
                         count.deleteCount.incrementAndGet();
-                    }
-                    else if ( (chance -= destroyProb) <= 0 ){
+                    } else if ((chance -= destroyProb) <= 0) {
                         map.destroy();
                         count.destroyCount.incrementAndGet();
                     }
-                }catch(DistributedObjectDestroyedException e){
+                } catch (DistributedObjectDestroyedException e) {
                 }
             }
-            IList results = targetInstance.getList(basename+"report");
+            IList results = targetInstance.getList(basename + "report");
             results.add(count);
         }
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-
-        IList<MapOpperationsCount> results = targetInstance.getList(basename+"report");
-        MapOpperationsCount total = new MapOpperationsCount();
-        for(MapOpperationsCount i : results){
+        IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
+        MapOperationsCount total = new MapOperationsCount();
+        for (MapOperationsCount i : results) {
             total.add(i);
         }
-        System.out.println(basename+": "+total+" from "+results.size()+" worker Threads");
+        log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
     }
 
     @Verify(global = false)
     public void verify() throws Exception {
 
-        try{
+        try {
             MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
             final int writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
 
-            Thread.sleep(mapStoreMaxDelayMs*2 + maxTTLExpireyMs*2 + ((writeDelaySeconds*2)*1000));
+            Thread.sleep(mapStoreMaxDelayMs * 2 + maxTTLExpireyMs * 2 + ((writeDelaySeconds * 2) * 1000));
 
             final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
             final IMap map = targetInstance.getMap(basename);
 
-            System.out.println(basename+ ": map size  =" + map.size() );
-            //System.out.println(basename+ ": map local =" + map.getAll(map.localKeySet()).entrySet() );
-            //System.out.println(basename+ ": map Store =" + mapStore.store.entrySet() );
+            log.info(basename + ": map size  =" + map.size());
 
-            System.out.println(basename+ ": "+ mapStore);
+            log.info(basename + ": " + mapStore);
 
-            for(Object k: map.localKeySet()){
-                assertEquals( map.get(k), mapStore.store.get(k) );
+            for (Object k : map.localKeySet()) {
+                assertEquals(map.get(k), mapStore.store.get(k));
             }
 
             assertEquals("sets should be equals", map.getAll(map.localKeySet()).entrySet(), mapStore.store.entrySet());
 
-            for(int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++){
-                assertNull("TTL key should not be in the map", map.get(k) );
+            for (int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++) {
+                assertNull("TTL key should not be in the map", map.get(k));
             }
-        }catch(UnsupportedOperationException e){}
+        } catch (UnsupportedOperationException e) {
+        }
     }
 
 }

@@ -19,7 +19,6 @@ import com.hazelcast.stabilizer.TestCase;
 
 import java.io.File;
 import java.io.Serializable;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -71,12 +70,12 @@ public class TestSuite implements Serializable {
             if (testcase.getClassname() == null) {
                 if ("".equals(testcaseId)) {
                     throw new RuntimeException(format("There is no class set for the in property file [%s]." +
-                            "Add class=YourTestClass",
+                                    "Add class=YourTestClass",
                             file.getAbsolutePath()
                     ));
                 } else {
                     throw new RuntimeException(format("There is no class set for test [%s] in property file [%s]." +
-                            "Add %s.class=YourTestClass",
+                                    "Add %s.class=YourTestClass",
                             testcaseId, file.getAbsolutePath(), testcaseId
                     ));
                 }
@@ -92,13 +91,13 @@ public class TestSuite implements Serializable {
     public boolean failFast;
     public Set<Failure.Type> tolerableFailures = Collections.EMPTY_SET;
 
-    public TestCase getTestCase(String testCaseId){
-        if(testCaseId == null){
+    public TestCase getTestCase(String testCaseId) {
+        if (testCaseId == null) {
             return null;
         }
 
-        for(TestCase testCase: testCaseList){
-            if(testCaseId.equals(testCase.getId())){
+        for (TestCase testCase : testCaseList) {
+            if (testCaseId.equals(testCase.getId())) {
                 return testCase;
             }
         }

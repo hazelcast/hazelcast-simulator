@@ -1,12 +1,12 @@
 package com.hazelcast.stabilizer.tests.queue;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.HazelcastInstanceNotActiveException;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.core.TransactionalQueue;
-import com.hazelcast.spi.exception.TargetDisconnectedException;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
@@ -15,9 +15,7 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.helpers.TxnCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
-import com.hazelcast.transaction.TransactionException;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 /**
@@ -25,10 +23,12 @@ import static org.junit.Assert.assertFalse;
  */
 public class TxnQueueWithLockTest {
 
+    private final static ILogger log = Logger.getLogger(TxnQueueWithLockTest.class);
+
     public String basename = this.getClass().getName();
     public int threadCount = 5;
 
-    private HazelcastInstance instance=null;
+    private HazelcastInstance instance = null;
     private TestContext testContext = null;
 
     @Setup
@@ -47,23 +47,23 @@ public class TxnQueueWithLockTest {
     }
 
     private class Worker implements Runnable {
-        private TxnCounter  counter = new TxnCounter();
+        private TxnCounter counter = new TxnCounter();
 
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-                try{
-                    ILock firstLock = instance.getLock(basename +"l1");
+                try {
+                    ILock firstLock = instance.getLock(basename + "l1");
                     firstLock.lock();
 
                     TransactionContext ctx = instance.newTransactionContext();
                     try {
                         ctx.beginTransaction();
 
-                        TransactionalQueue<Integer> queue = ctx.getQueue(basename +"q");
+                        TransactionalQueue<Integer> queue = ctx.getQueue(basename + "q");
                         queue.offer(1);
 
-                        ILock secondLock = instance.getLock(basename +"l2");
+                        ILock secondLock = instance.getLock(basename + "l2");
                         secondLock.lock();
                         secondLock.unlock();
 
@@ -71,45 +71,44 @@ public class TxnQueueWithLockTest {
                         counter.committed++;
 
                     } catch (Exception txnException) {
-                        try{
+                        try {
                             ctx.rollbackTransaction();
                             counter.rolled++;
 
-                            System.out.println(basename+": Exception in txn "+counter+" "+txnException);
+                            log.info(basename + ": Exception in txn " + counter + " " + txnException);
                             txnException.printStackTrace();
 
-                        }catch(Exception rollException){
+                        } catch (Exception rollException) {
                             counter.failedRoles++;
-                            System.out.println(basename+": Exception in roll "+counter+" "+rollException);
+                            log.info(basename + ": Exception in roll " + counter + " " + rollException);
                             rollException.printStackTrace();
                         }
                     } finally {
                         firstLock.unlock();
                     }
-                }catch(Exception e){
-                    System.out.println(e);
+                } catch (Exception e) {
+                    log.warning(e.getMessage(), e);
                 }
             }
-            IList<TxnCounter> results =  instance.getList(basename +"results");
+            IList<TxnCounter> results = instance.getList(basename + "results");
             results.add(counter);
         }
     }
 
     @Verify(global = true)
     public void verify() {
+        IQueue queue = instance.getQueue(basename + "q");
+        ILock firstLock = instance.getLock(basename + "l1");
+        ILock secondLock = instance.getLock(basename + "l2");
 
-        IQueue queue = instance.getQueue(basename +"q");
-        ILock firstLock = instance.getLock(basename +"l1");
-        ILock secondLock = instance.getLock(basename +"l2");
+        IList<TxnCounter> results = instance.getList(basename + "results");
 
-        IList<TxnCounter> results =  instance.getList(basename +"results");
-
-        TxnCounter  total = new TxnCounter();
-        for(TxnCounter counter : results){
+        TxnCounter total = new TxnCounter();
+        for (TxnCounter counter : results) {
             total.add(counter);
         }
 
-        System.out.println(basename +": "+ total+" from "+results.size()+" worker Threads  Queue size="+queue.size());
+        log.info(basename + ": " + total + " from " + results.size() + " worker Threads  Queue size=" + queue.size());
         assertFalse(firstLock.isLocked());
         assertFalse(secondLock.isLocked());
         //assertEquals(total.committed - total.rolled, queue.size());
