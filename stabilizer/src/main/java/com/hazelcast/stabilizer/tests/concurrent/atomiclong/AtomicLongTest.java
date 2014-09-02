@@ -108,7 +108,7 @@ public class AtomicLongTest {
             long iteration = 0;
             while (!context.isStopped()) {
                 IAtomicLong counter = getRandomCounter();
-                counter.get();
+                counter.incrementAndGet();
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -131,7 +131,7 @@ public class AtomicLongTest {
 
     public static void main(String[] args) throws Throwable {
         AtomicLongTest test = new AtomicLongTest();
-        new TestRunner(test).withDuration(60).run();
+        new TestRunner(test).withDuration(10).run();
     }
 }
 

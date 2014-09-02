@@ -32,6 +32,8 @@ import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.worker.commands.Command;
+import com.hazelcast.stabilizer.worker.commands.CommandRequest;
+import com.hazelcast.stabilizer.worker.commands.CommandResponse;
 import com.hazelcast.stabilizer.worker.commands.DoneCommand;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
@@ -39,8 +41,6 @@ import com.hazelcast.stabilizer.worker.commands.InitCommand;
 import com.hazelcast.stabilizer.worker.commands.MessageCommand;
 import com.hazelcast.stabilizer.worker.commands.RunCommand;
 import com.hazelcast.stabilizer.worker.commands.StopCommand;
-import com.hazelcast.stabilizer.worker.commands.CommandRequest;
-import com.hazelcast.stabilizer.worker.commands.CommandResponse;
 
 import java.io.File;
 import java.io.ObjectInputStream;
@@ -82,7 +82,7 @@ public class Worker {
     private final ConcurrentMap<String, TestContainer<TestContext>> tests
             = new ConcurrentHashMap<String, TestContainer<TestContext>>();
 
-    private final ConcurrentMap<String,Command> commands
+    private final ConcurrentMap<String, Command> commands
             = new ConcurrentHashMap<String, Command>();
 
     private WorkerMessageProcessor workerMessageProcessor = new WorkerMessageProcessor(tests);
@@ -327,8 +327,8 @@ public class Worker {
         private Long process(GetOperationCountCommand command) throws Throwable {
             long result = 0;
 
-            for(TestContainer testContainer: tests.values()){
-                result+=testContainer.getOperationCount();
+            for (TestContainer testContainer : tests.values()) {
+                result += testContainer.getOperationCount();
             }
 
             return result;
@@ -336,22 +336,39 @@ public class Worker {
 
         private void process(final RunCommand command) throws Exception {
             try {
-                log.info("Starting test");
-
-                final TestContainer<TestContext> test = tests.get(command.testId);
+                final String testId = command.testId;
+                final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
                     log.warning("Failed to process command: " + command + " no test with " +
-                            "testId" + command.testId + " is found");
+                            "testId" + testId + " is found");
                     return;
                 }
 
-                new CommandThread(command, command.testId) {
+                new CommandThread(command, testId) {
                     @Override
                     public void doRun() throws Throwable {
                         boolean passive = command.clientOnly && clientInstance == null;
 
-                        if (!passive) {
-                            test.run();
+                        if (passive) {
+                            log.info(format("--------------------------- Skipping %s.run(); " +
+                                            "member is passive ------------------------------------",
+                                    testId));
+                        } else {
+                            log.info(format("--------------------------- Starting %s.run() " +
+                                            "------------------------------------",
+                                    testId));
+
+                            try {
+                                test.run();
+                                log.info(format("--------------------------- Completed %s.run() " +
+                                                "------------------------------------",
+                                        testId));
+                            }catch(Throwable t){
+                                String msg = format("--------------------------- Failed to execute %s.run() " +
+                                                "------------------------------------",
+                                        testId);
+                                log.severe(msg,t);
+                            }
                         }
                     }
                 }.start();
@@ -364,11 +381,9 @@ public class Worker {
         public void process(final GenericCommand command) throws Throwable {
             final String methodName = command.methodName;
             final String testId = command.testId;
-            final String testName = "".equals(testId)?"test":testId;
+            final String testName = "".equals(testId) ? "test" : testId;
 
             try {
-                log.info(format("Calling %s.%s()",testName,methodName));
-
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
                     //we log a warning: it could be that it is a newly created machine from mama-monkey.
@@ -381,11 +396,16 @@ public class Worker {
                 new CommandThread(command, command.testId) {
                     @Override
                     public void doRun() throws Throwable {
+                        log.info(format("--------------------------- %s.%s() ------------------------------------",
+                                testName, methodName));
+
                         try {
                             method.invoke(test);
-                            log.info(format("Finished %s.%s()",testName,methodName));
+                            log.finest(format("--------------------------- Finished %s.%s() " +
+                                    "---------------------------", testName, methodName));
                         } catch (InvocationTargetException e) {
-                            log.severe(format("Failed %s.%s()", testName, methodName));
+                            log.severe(format("--------------------------- Failed %s.%s() ---------------------------",
+                                    testName, methodName));
                             throw e.getCause();
                         } finally {
                             if ("localTeardown".equals(methodName)) {
@@ -403,12 +423,14 @@ public class Worker {
         private void process(InitCommand command) throws Throwable {
             try {
                 TestCase testCase = command.testCase;
-
-                log.info("Init Test:\n" + testCase);
-                if (tests.containsKey(testCase.getId())) {
-                    throw new IllegalStateException("Can't init testcase: " + command + ", another test with [" + testCase.id +
+                String testId = testCase.getId();
+                if (tests.containsKey(testId)) {
+                    throw new IllegalStateException("Can't init testcase: " + command + ", another test with [" + testId +
                             "] testId already exists");
                 }
+
+                log.info(format("--------------------------- Initializing test %s ---------------------------\n%s",
+                        testId, testCase));
 
                 String clazzName = testCase.getClassname();
                 Object testObject = InitCommand.class.getClassLoader().loadClass(clazzName).newInstance();
@@ -419,7 +441,7 @@ public class Worker {
                 tests.put(testContext.getTestId(), testContainer);
 
                 if (serverInstance != null) {
-                    serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE+":"+testCase.id, testObject);
+                    serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE + ":" + testCase.id, testObject);
                 }
             } catch (Throwable e) {
                 log.severe("Failed to init Test", e);
@@ -429,16 +451,15 @@ public class Worker {
 
         public void process(StopCommand command) throws Exception {
             try {
-                log.info("Calling test.stop");
-
+                String testId = command.testId;
                 TestContainer<TestContext> test = tests.get(command.testId);
                 if (test == null) {
                     log.warning("Can't stop test, test with id " + command.testId + " does not exist");
                     return;
                 }
 
+                log.info(format("--------------------------- %s.stop() ------------------------------------", testId));
                 test.getTestContext().stop();
-                log.info("Finished calling test.stop()");
             } catch (Exception e) {
                 log.severe("Failed to execute test.stop", e);
                 throw e;
@@ -455,7 +476,7 @@ public class Worker {
         private final Command command;
         private final String testId;
 
-        public CommandThread(Command command,String testId) {
+        public CommandThread(Command command, String testId) {
             this.command = command;
             this.testId = testId;
         }
@@ -464,7 +485,7 @@ public class Worker {
 
         public final void run() {
             try {
-                commands.put(testId,command);
+                commands.put(testId, command);
                 doRun();
             } catch (Throwable t) {
                 ExceptionReporter.report(null, t);
