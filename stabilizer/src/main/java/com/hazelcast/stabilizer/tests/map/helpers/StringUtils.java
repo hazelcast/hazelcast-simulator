@@ -8,6 +8,8 @@ import com.hazelcast.core.PartitionService;
 
 import java.util.Random;
 
+import static com.hazelcast.stabilizer.Utils.sleepSeconds;
+
 public class StringUtils {
     private final static String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
     private final static Random random = new Random();
@@ -28,8 +30,14 @@ public class StringUtils {
     private static boolean isLocalKey(HazelcastInstance instance, String key) {
         PartitionService partitionService = instance.getPartitionService();
         Partition partition = partitionService.getPartition(key);
-        Member owner = partition.getOwner();
-        return owner.equals(instance.getLocalEndpoint());
+        for(;;) {
+            Member owner = partition.getOwner();
+            if(owner == null){
+                sleepSeconds(1);
+                continue;
+            }
+            return owner.equals(instance.getLocalEndpoint());
+        }
     }
 
     public static String makeString(int length) {

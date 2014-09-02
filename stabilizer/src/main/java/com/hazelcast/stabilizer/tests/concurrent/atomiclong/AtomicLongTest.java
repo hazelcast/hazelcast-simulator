@@ -27,6 +27,7 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
@@ -40,10 +41,11 @@ public class AtomicLongTest {
 
     //props
     public int countersLength = 1000;
-    public int threadCount = 1;
+    public int threadCount = 10;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
     public String basename = "atomiclong";
+    public boolean preventLocalCalls = false;
 
     private IAtomicLong totalCounter;
     private IAtomicLong[] counters;
@@ -60,7 +62,8 @@ public class AtomicLongTest {
         totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            counters[k] = targetInstance.getAtomicLong(basename + "-" + context.getTestId() + "r-" + k);
+            String key = StringUtils.generateKey(4, preventLocalCalls, targetInstance);
+            counters[k] = targetInstance.getAtomicLong(key);
         }
     }
 
@@ -105,7 +108,7 @@ public class AtomicLongTest {
             long iteration = 0;
             while (!context.isStopped()) {
                 IAtomicLong counter = getRandomCounter();
-                counter.incrementAndGet();
+                counter.get();
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -128,7 +131,7 @@ public class AtomicLongTest {
 
     public static void main(String[] args) throws Throwable {
         AtomicLongTest test = new AtomicLongTest();
-        new TestRunner(test).run();
+        new TestRunner(test).withDuration(60).run();
     }
 }
 
