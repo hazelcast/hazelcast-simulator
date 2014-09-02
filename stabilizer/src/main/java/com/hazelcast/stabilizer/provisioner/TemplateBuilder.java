@@ -66,15 +66,9 @@ public class TemplateBuilder {
 
     private Template buildTemplate() {
         try {
-            Template template = compute.templateBuilder()
+            return compute.templateBuilder()
                     .from(spec)
                     .build();
-            if(isEc2()) {
-                String groupName = props.get("GROUP_NAME", "stabilizer-agent");
-                String username = System.getProperty("user.name");
-                template.getOptions().as(AWSEC2TemplateOptions.class).userMetadata("Name",groupName+"-"+username);
-            }
-            return template;
         } catch (IllegalArgumentException e) {
             log.finest(e);
             Utils.exitWithError(log, e.getMessage());
