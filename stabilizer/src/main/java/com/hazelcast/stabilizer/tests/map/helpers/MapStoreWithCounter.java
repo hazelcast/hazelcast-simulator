@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepMs;
+
 public class MapStoreWithCounter implements MapStore<Object, Object> {
     private Random random = new Random();
 
@@ -79,12 +81,7 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
 
     private void delay() {
         if (maxDelayMs != 0) {
-            try {
-                int delay = minDelayMs + random.nextInt(maxDelayMs);
-                Thread.sleep(delay);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            sleepMs(minDelayMs + random.nextInt(maxDelayMs));
         }
     }
 

@@ -51,7 +51,7 @@ public class TestUtils {
 
     public static void waitClusterSize(ILogger logger, HazelcastInstance hz, int clusterSize) throws InterruptedException {
         for (; ; ) {
-            if (hz.getCluster().getMembers().size() == clusterSize) {
+            if (hz.getCluster().getMembers().size() >= clusterSize) {
                 return;
             }
 
@@ -63,10 +63,6 @@ public class TestUtils {
     public static Node getNode(HazelcastInstance hz) {
         HazelcastInstanceImpl impl = getHazelcastInstanceImpl(hz);
         return impl != null ? impl.node : null;
-    }
-
-    public static long secondsToMillis(int seconds) {
-        return seconds * 1000;
     }
 
     public static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
@@ -255,5 +251,15 @@ public class TestUtils {
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
         return format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+    }
+
+    public static void sleepMs(long delayMs) {
+        if (delayMs < 0) {
+            return;
+        }
+        try {
+            Thread.sleep(delayMs);
+        } catch (InterruptedException e) {
+        }
     }
 }

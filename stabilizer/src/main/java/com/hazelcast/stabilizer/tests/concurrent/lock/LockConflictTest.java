@@ -87,12 +87,10 @@ public class LockConflictTest {
                                 counter.locked++;
                             }
                         } catch (Exception e) {
-                            log.info(basename + ": trying lock=" + i.key + " " + e);
-                            e.printStackTrace();
+                            log.severe(basename + ": trying lock=" + i.key,e);
                         }
                     } catch (Exception e) {
-                        log.info(basename + ": getting lock for locking=" + i.key + " " + e);
-                        e.printStackTrace();
+                        log.severe(basename + ": getting lock for locking=" + i.key,e);
                     }
                 }
 
@@ -104,8 +102,7 @@ public class LockConflictTest {
                         localIncrements[i.key] += i.inc;
                         counter.inced++;
                     } catch (Exception e) {
-                        log.info(basename + ": updating acount=" + i + " " + e);
-                        e.printStackTrace();
+                        log.severe(basename + ": updating acount=" + i,e);
                     }
                 }
 
@@ -121,12 +118,10 @@ public class LockConflictTest {
                                 counter.unlocked++;
                                 it.remove();
                             } catch (Exception e) {
-                                log.info(basename + ": unlocking lock =" + i.key + " " + e);
-                                e.printStackTrace();
+                                log.severe(basename + ": unlocking lock =" + i.key,e);
                             }
                         } catch (Exception e) {
-                            log.info(basename + ": getting lock for unlocking=" + i.key + " " + e);
-                            e.printStackTrace();
+                            log.severe(basename + ": getting lock for unlocking=" + i.key ,e);
                         }
                     }
 

@@ -29,6 +29,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
+import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
@@ -57,6 +58,7 @@ public class StringMapTest {
     private String[] values;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
+    private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -69,7 +71,7 @@ public class StringMapTest {
         }
 
         this.testContext = testContext;
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+        targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
     }
 
@@ -80,9 +82,7 @@ public class StringMapTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitForCluser();
-
-        log.info("Warmup has run");
+        TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
         warmUpPartitions(testContext.getTargetInstance());
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
@@ -96,24 +96,10 @@ public class StringMapTest {
 
         Random random = new Random();
 
-
         for (int k = 0; k < keys.length; k++) {
             String key = keys[random.nextInt(keyCount)];
             String value = values[random.nextInt(valueCount)];
             map.put(key, value);
-        }
-    }
-
-    // TODO: needs to be moved to util method.
-    private void waitForCluser() {
-        while (testContext.getTargetInstance().getCluster().getMembers().size() < minNumberOfMembers) {
-            try {
-                Thread.sleep(1000);
-                log.info("Waiting for other cluster member. Minimum no. of member: " + minNumberOfMembers +
-                        ", current no. members: " + testContext.getTargetInstance().getCluster().getMembers().size());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 

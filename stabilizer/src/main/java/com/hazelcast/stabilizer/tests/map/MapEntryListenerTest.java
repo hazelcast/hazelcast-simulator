@@ -35,6 +35,7 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
 
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepMs;
 import static org.junit.Assert.assertEquals;
 
 public class MapEntryListenerTest {
@@ -105,12 +106,8 @@ public class MapEntryListenerTest {
         }
         spawner.awaitCompletion();
 
-        // todo: why do we need this??
-        try {
-            Thread.sleep(sleepMs_CatchEvents);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        // todo: why do we need this?
+        sleepMs(sleepMs_CatchEvents);
 
         IList listeners = targetInstance.getList(basename + "listeners");
         listeners.add(listener);

@@ -75,13 +75,10 @@ public class TxnQueueWithLockTest {
                             ctx.rollbackTransaction();
                             counter.rolled++;
 
-                            log.info(basename + ": Exception in txn " + counter + " " + txnException);
-                            txnException.printStackTrace();
-
+                            log.severe(basename + ": Exception in txn " + counter, txnException);
                         } catch (Exception rollException) {
                             counter.failedRoles++;
-                            log.info(basename + ": Exception in roll " + counter + " " + rollException);
-                            rollException.printStackTrace();
+                            log.severe(basename + ": Exception in roll " + counter,rollException);
                         }
                     } finally {
                         firstLock.unlock();

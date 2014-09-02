@@ -61,13 +61,11 @@ public class DataTeg {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
 
+                }
             }
         }
     }
