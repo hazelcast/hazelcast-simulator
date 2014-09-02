@@ -35,7 +35,7 @@ public class SplitClusterDataTest {
         map = targetInstance.getMap(basename);
 
         if (clusterSize == -1 || splitClusterSize == -1) {
-            throw new IllegalStateException("Polities, clusterSize == -1 Or splitClusterSize == -1");
+            throw new IllegalStateException("priorities: clusterSize == -1 Or splitClusterSize == -1");
         }
     }
 
