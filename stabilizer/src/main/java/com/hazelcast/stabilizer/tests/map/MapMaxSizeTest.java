@@ -4,19 +4,15 @@ import com.hazelcast.config.MaxSizeConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.tests.map.helpers.MapOpperationsCount;
 import com.hazelcast.stabilizer.tests.map.helpers.OppCounterMapMaxSizeTest;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
-import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
 
@@ -92,7 +88,11 @@ public class MapMaxSizeTest {
                     else if( (chance -= checkSizeProb) <0){
                         int clusterSize = targetInstance.getCluster().getMembers().size();
                         int size = map.size();
-                        assertTrue("Map Over max Size "+size+" not less than "+clusterSize+"*"+1000, size < clusterSize * 1000 );
+                        //try{
+                            assertTrue("Map Over max Size "+size+" not less than "+clusterSize+"*"+1000, size < clusterSize * 1000 );
+                        //}catch(Throwable t){
+                        //    System.out.println(basename+": "+t);
+                        //}
                         count.verified++;
                     }
 

@@ -28,16 +28,6 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
 
     }
 
-    @Override
-    public void mapEvicted(MapEvent mapEvent) {
-
-    }
-
-    @Override
-    public void mapCleared(MapEvent mapEvent) {
-
-    }
-
     public EntryListenerImpl(int minDelayMs, int maxDelayMs) {
         this.minDelayMs = minDelayMs;
         this.maxDelayMs = maxDelayMs;
@@ -65,6 +55,16 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
     public void entryEvicted(EntryEvent<Object, Object> objectObjectEntryEvent) {
         delay();
         evictCount.incrementAndGet();
+    }
+
+    @Override
+    public void mapEvicted(MapEvent mapEvent) {
+
+    }
+
+    @Override
+    public void mapCleared(MapEvent mapEvent) {
+
     }
 
     private void delay() {

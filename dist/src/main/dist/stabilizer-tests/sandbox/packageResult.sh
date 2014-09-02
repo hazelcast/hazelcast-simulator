@@ -1,6 +1,6 @@
 #!/bin/bash
 
-list=$(find . -name "failures-*.txt")
+list=$(find . -name "nohup-[0-9]*.out" -o -name "failures-[0-9]*.txt")
 
 IFS=$'\n'
 
@@ -11,6 +11,11 @@ do
 	mv ${item} workers/${dir}/
 done
 
-cp *.properties workers/
+rm -f logs/*
 
-zip -r results.zip workers/*
+dir=$(pwd)
+base=$(basename ${dir})
+cd ..
+
+zip results.zip ${base} -r -x agents.txt *.hprof
+mv results.zip ${base}/

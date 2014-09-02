@@ -17,6 +17,9 @@
         </join>
     </network>
 
+    <partition-group enabled="true" group-type="HOST_AWARE">
+    </partition-group>
+
     <map name="MapStore*">
         <map-store enabled="true">
             <class-name>com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter</class-name>
@@ -25,7 +28,6 @@
     </map>
 
     <map name="MaxSizeMap*">
-        <max-size>1000</max-size>
         <eviction-policy>LRU</eviction-policy>
         <max-size policy="PER_NODE">1000</max-size>
         <eviction-percentage>25</eviction-percentage>

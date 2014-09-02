@@ -22,5 +22,5 @@ do
 	nohup ./run.sh &
 	cd ${home}
 
-	sleep 15
+	sleep 30
 done

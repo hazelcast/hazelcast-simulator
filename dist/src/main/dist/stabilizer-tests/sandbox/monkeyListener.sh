@@ -12,10 +12,15 @@ mkfifo "${fifo}" || exit 1
     # remember tail's PID
     tailpid=$!
     # wait for notification that grep has exited
-    read foo <${fifo}
+    read runid <${fifo}
     # grep has exited, time to go
     kill "${tailpid}"
+
+    mv ${targetFile} nohup-${runid}.out
+
 } | {
+
+    id=$(grep -oh -m 1 "Starting testsuite: [0-9].*" | cut -d ' ' -f3)
     grep -m 1 "${actionTriger}"
 
     sh ./monkeyAction.sh &
@@ -23,7 +28,8 @@ mkfifo "${fifo}" || exit 1
     grep -m 1 "The End"
 
     # notify the first pipeline stage that grep is done
-    echo >${fifo}
+    echo "${id}">${fifo}
 }
 # clean up
 rm "${fifo}"
+
