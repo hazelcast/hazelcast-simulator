@@ -2,9 +2,6 @@ package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.core.Member;
-import com.hazelcast.core.Partition;
-import com.hazelcast.core.PartitionService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -18,15 +15,14 @@ import static com.hazelcast.stabilizer.tests.utils.TestUtils.waitClusterSize;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.warmupPartitions;
 import static org.junit.Assert.assertEquals;
 
-public class DataTeg {
+public class SplitClusterDataTest {
 
-    private final static ILogger log = Logger.getLogger(DataTeg.class);
+    private final static ILogger log = Logger.getLogger(SplitClusterDataTest.class);
 
     public String basename = this.getClass().getName();
     public int maxItems = 10000;
-    //TODO: This is super dangerous because we have no idea how many members there are going to be
-    public int clusterSize = 6;
-    public int nodeKillCount = 2;
+    public int clusterSize = -1;
+    public int splitClusterSize = -1;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -37,11 +33,15 @@ public class DataTeg {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
+
+        if (clusterSize == -1 || splitClusterSize == -1) {
+            throw new IllegalStateException("priorities: clusterSize == -1 Or splitClusterSize == -1");
+        }
     }
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        waitClusterSize(log,targetInstance,clusterSize);
+        waitClusterSize(log,targetInstance, clusterSize);
         warmupPartitions(log, targetInstance);
 
         for (int i = 0; i < maxItems; i++) {
@@ -75,7 +75,7 @@ public class DataTeg {
         log.info(basename + ": cluster size =" + targetInstance.getCluster().getMembers().size());
         log.info(basename + ": map size =" + map.size());
 
-        if (targetInstance.getCluster().getMembers().size() == nodeKillCount) {
+        if (targetInstance.getCluster().getMembers().size() == splitClusterSize) {
             log.info(basename + ": check again cluster =" + targetInstance.getCluster().getMembers().size());
         } else {
             log.info(basename + ": check again cluster =" + targetInstance.getCluster().getMembers().size());
@@ -92,19 +92,6 @@ public class DataTeg {
 
             assertEquals("data loss ", map.size(), maxItems);
             log.info(basename + "verify OK ");
-        }
-    }
-
-    public static long nextKeyOwnedby(long key, HazelcastInstance instance) {
-        final Member localMember = instance.getCluster().getLocalMember();
-        final PartitionService partitionService = instance.getPartitionService();
-        for (; ; ) {
-
-            Partition partition = partitionService.getPartition(key);
-            if (localMember.equals(partition.getOwner())) {
-                return key;
-            }
-            key++;
         }
     }
 }

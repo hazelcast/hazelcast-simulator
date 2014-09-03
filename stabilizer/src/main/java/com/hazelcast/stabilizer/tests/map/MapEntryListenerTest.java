@@ -49,11 +49,13 @@ public class MapEntryListenerTest {
     public boolean randomDistributionUniform = false;
     public int maxEntryListenerDelayMs = 0;
     public int minEntryListenerDelayMs = 0;
+
     //check these add up to 1
     public double writeProb = 0.4;
     public double evictProb = 0.2;
     public double removeProb = 0.2;
     public double deleteProb = 0.2;
+
     //check these add up to 1   (writeProb is split up into sub styles)
     public double writeUsingPutProb = 0.5;
     public double writeUsingPutIfAbsent = 0.25;
@@ -106,7 +108,8 @@ public class MapEntryListenerTest {
         }
         spawner.awaitCompletion();
 
-        // todo: why do we need this?
+        //Wait, so that our entery listenter implementation can catch the last
+        //incoming events from other members / clients
         sleepMs(sleepMs_CatchEvents);
 
         IList listeners = targetInstance.getList(basename + "listeners");

@@ -26,10 +26,12 @@ public class MapMaxSizeTest {
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = Integer.MAX_VALUE;
+
     //check these add up to 1
     public double writeProb = 0.5;
     public double getProb = 0.4;
     public double checkSizeProb = 0.1;
+
     //check these add up to 1   (writeProb is split up into sub styles)
     public double writeUsingPutProb = 0.8;
     public double writeUsingPutAsyncProb = 0.2;
@@ -53,7 +55,6 @@ public class MapMaxSizeTest {
         }
         spawner.awaitCompletion();
     }
-
 
     private class Worker implements Runnable {
         private OppCounterMapMaxSizeTest count = new OppCounterMapMaxSizeTest();

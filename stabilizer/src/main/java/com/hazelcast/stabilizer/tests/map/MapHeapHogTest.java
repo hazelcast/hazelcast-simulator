@@ -3,20 +3,17 @@ package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.core.Member;
-import com.hazelcast.core.Partition;
-import com.hazelcast.core.PartitionService;
-import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import static com.hazelcast.stabilizer.tests.map.helpers.HazelcastUtils.nextKeyOwnedby;
+import static com.hazelcast.stabilizer.tests.map.helpers.HazelcastUtils.isMemberNode;
 
 import java.util.concurrent.TimeUnit;
 
@@ -33,8 +30,6 @@ public class MapHeapHogTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    // TODO: What is flag????
-    private long flag = 0;
     private long approxEntryBytesSize = 238;
 
     private IMap map;
@@ -68,10 +63,6 @@ public class MapHeapHogTest {
         spawner.awaitCompletion();
     }
 
-    @Performance
-    public long getOperationCount() {
-        return flag;
-    }
 
     private class Worker implements Runnable {
         @Override
@@ -87,7 +78,7 @@ public class MapHeapHogTest {
 
                 long key = 0;
                 for (int i = 0; i < maxLocalEntries; i++) {
-                    key = nextKeyOwnedBy(key, targetInstance);
+                    key = nextKeyOwnedby(key, targetInstance);
                     map.put(key, key, ttlHours, TimeUnit.HOURS);
                     key++;
                 }
@@ -96,7 +87,6 @@ public class MapHeapHogTest {
                 printMemStats();
 
                 log.info("added All");
-                flag = 1;
             }
         }
     }
@@ -124,21 +114,4 @@ public class MapHeapHogTest {
         log.info(basename + " max = " + TestUtils.humanReadableByteCount(max, true) + " = " + max);
         log.info(basename + " usedOfMax = " + usedOfMax + "%");
     }
-
-    public static long nextKeyOwnedBy(long key, HazelcastInstance instance) {
-        final Member localMember = instance.getCluster().getLocalMember();
-        final PartitionService partitionService = instance.getPartitionService();
-        for (; ; ) {
-            Partition partition = partitionService.getPartition(key);
-            if (localMember.equals(partition.getOwner())) {
-                return key;
-            }
-            key++;
-        }
-    }
-
-    public static boolean isMemberNode(HazelcastInstance instance) {
-        return instance instanceof HazelcastInstanceProxy;
-    }
-
 }

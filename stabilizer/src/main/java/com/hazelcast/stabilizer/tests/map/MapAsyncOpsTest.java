@@ -111,16 +111,10 @@ public class MapAsyncOpsTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
-        try {
-            Thread.sleep(maxTTLExpireySeconds * 2);
+        Thread.sleep(maxTTLExpireySeconds * 2);
 
-            final IMap map = targetInstance.getMap(basename);
-
-            log.info(basename + ": map size  =" + map.size());
-
-        } catch (UnsupportedOperationException e) {
-            // TODO: Why is this exception caught??
-        }
+        final IMap map = targetInstance.getMap(basename);
+        log.info(basename + ": map size  =" + map.size());
     }
 
     public static void main(String[] args) throws Throwable {

@@ -42,12 +42,14 @@ public class MapTimeToLiveTest {
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 10;
+
     //check these add up to 1
     public double putTTLProb = 0.4;
     public double putAsyncTTLProb = 0.3;
     public double getProb = 0.2;
     public double getAsyncProb = 0.1;
     public double destroyProb = 0.0;
+
     public int maxTTLExpireyMs = 3000;
     public int minTTLExpireyMs = 1;
 

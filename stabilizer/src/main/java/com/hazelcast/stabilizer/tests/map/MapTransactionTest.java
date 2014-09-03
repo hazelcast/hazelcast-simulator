@@ -109,7 +109,7 @@ public class MapTransactionTest {
             }
         }
 
-        assertEquals(failures + " keys have been incremented unexpectedly", 0, failures);
+        assertEquals(failures + " keys have been incremented unexpectedly out of " + keyCount + " keys", 0, failures);
     }
 
 }

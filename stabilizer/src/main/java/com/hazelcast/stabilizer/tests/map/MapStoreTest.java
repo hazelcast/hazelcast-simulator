@@ -14,6 +14,7 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import static com.hazelcast.stabilizer.tests.map.helpers.HazelcastUtils.isMemberNode;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +36,6 @@ public class MapStoreTest {
     public double getAsyncProb = 0.15;
     public double deleteProb = 0.2;
     public double destroyProb = 0.0;
-    //
 
     //check these add up to 1   (writeProb is split up into sub styles)
     public double writeUsingPutProb = 0.4;
@@ -43,7 +43,6 @@ public class MapStoreTest {
     public double writeUsingPutTTLProb = 0.3;
     public double writeUsingPutIfAbsent = 0.15;
     public double writeUsingReplaceProb = 0.15;
-    //
 
     public int mapStoreMaxDelayMs = 0;
     public int mapStoreMinDelayMs = 0;
@@ -154,7 +153,7 @@ public class MapStoreTest {
     @Verify(global = false)
     public void verify() throws Exception {
 
-        try {
+        if ( isMemberNode(targetInstance) ) {
             MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
             final int writeDelaySeconds = mapStoreConfig.getWriteDelaySeconds();
 
@@ -176,8 +175,6 @@ public class MapStoreTest {
             for (int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++) {
                 assertNull("TTL key should not be in the map", map.get(k));
             }
-        } catch (UnsupportedOperationException e) {
-            //TODO: Why are we catching this one
         }
     }
 
