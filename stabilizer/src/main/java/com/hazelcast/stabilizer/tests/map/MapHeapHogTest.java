@@ -12,8 +12,8 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
-import static com.hazelcast.stabilizer.tests.map.helpers.Utils.nextKeyOwnedby;
-import static com.hazelcast.stabilizer.tests.map.helpers.Utils.isMemberNode;
+import static com.hazelcast.stabilizer.tests.map.helpers.HazelcastUtils.nextKeyOwnedby;
+import static com.hazelcast.stabilizer.tests.map.helpers.HazelcastUtils.isMemberNode;
 
 import java.util.concurrent.TimeUnit;
 
