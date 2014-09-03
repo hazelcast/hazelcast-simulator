@@ -17,11 +17,6 @@
 
 package com.hazelcast.stabilizer.tests.map.helpers;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Member;
-import com.hazelcast.core.Partition;
-import com.hazelcast.core.PartitionService;
-import com.hazelcast.instance.HazelcastInstanceProxy;
 
 import java.util.Random;
 
