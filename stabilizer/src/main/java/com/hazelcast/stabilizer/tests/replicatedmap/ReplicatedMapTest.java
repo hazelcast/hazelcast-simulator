@@ -150,22 +150,7 @@ public class ReplicatedMapTest {
                     int batchSize = randomizeBatchSize();
 
                     for (int i = 0; i < batchSize; i++) {
-                        int operation = randomizeOperation();
-                        switch (operation) {
-                            case OPERATE_GET:
-                                operateGet();
-                                break;
-                            case OPERATE_PUT:
-                                operatePut();
-                                break;
-                            case OPERATE_UPDATE:
-                                operateUpdate();
-                                break;
-                            case OPERATE_REMOVE:
-                                operateRemove();
-                                break;
-                        }
-                        operations.incrementAndGet();
+                        executeRandomOperation();
 
                         if (testContext.isStopped()) {
                             return;
@@ -178,19 +163,41 @@ public class ReplicatedMapTest {
                         iteration++;
                     }
 
-                    if (System.nanoTime() - lastClearTime >= clearIntervalNanos) {
-                        log("Executing clear operation");
-                        replicatedMap.clear();
-                    }
+                    clearReplicatedMapIfNeeded(clearIntervalNanos, lastClearTime);
                     TimeUnit.NANOSECONDS.sleep(batchSleepNanos);
-                    if (System.nanoTime() - lastClearTime >= clearIntervalNanos) {
-                        log("Executing clear operation");
-                        replicatedMap.clear();
-                    }
+                    clearReplicatedMapIfNeeded(clearIntervalNanos, lastClearTime);
                 }
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        private void clearReplicatedMapIfNeeded(long clearIntervalNanos, long lastClearTime) {
+            if (System.nanoTime() - lastClearTime >= clearIntervalNanos) {
+                log("Executing clear operation");
+                replicatedMap.clear();
+            }
+        }
+
+        private void executeRandomOperation() {
+            int operation = randomOperation();
+            switch (operation) {
+                case OPERATE_GET:
+                    operateGet();
+                    break;
+                case OPERATE_PUT:
+                    operatePut();
+                    break;
+                case OPERATE_UPDATE:
+                    operateUpdate();
+                    break;
+                case OPERATE_REMOVE:
+                    operateRemove();
+                    break;
+            }
+            operations.incrementAndGet();
         }
 
         private void operateGet() {
@@ -226,7 +233,7 @@ public class ReplicatedMapTest {
             return keys.get(index);
         }
 
-        private int randomizeOperation() {
+        private int randomOperation() {
             if (!randomizePut()) {
                 return OPERATE_GET;
             }
