@@ -17,7 +17,6 @@
 
 package com.hazelcast.stabilizer.tests.map.helpers;
 
-
 import java.util.Random;
 
 /**
