@@ -140,7 +140,7 @@ public class MapPredicateTest {
                         int key = random.nextInt(keyCount);
                         Employee e = map.get(key);
                         if (e != null) {
-                            e.setInfo();
+                            e.randomizeProperties();
                             map.put(key, e);
                             counter.updateEmployeCount++;
                         }
