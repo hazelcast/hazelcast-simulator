@@ -66,10 +66,11 @@ public class CasICacheTest {
         HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
                 hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
 
-        CacheConfig<Integer, String> config = new CacheConfig<Integer, String>();
+        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
         config.setName(basename);
-        config.setInMemoryFormat(InMemoryFormat.OBJECT);
+        config.setTypes(Integer.class,Integer.class);
 
+        cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
         resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
     }

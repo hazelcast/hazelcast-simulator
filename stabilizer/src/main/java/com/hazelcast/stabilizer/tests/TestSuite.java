@@ -85,7 +85,7 @@ public class TestSuite implements Serializable {
         return testSuite;
     }
 
-    public final String id = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+    public final String id = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
     public List<TestCase> testCaseList = new LinkedList<TestCase>();
     public int duration;
     public boolean failFast;

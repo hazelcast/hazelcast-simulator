@@ -18,13 +18,14 @@ import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import javax.cache.CacheException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * A performance test for the icache. The key is integer and value is a integer
+ * A performance test for the cache. The key is integer and value is a integer
  */
 public class PerformanceICacheTest {
 
@@ -38,7 +39,7 @@ public class PerformanceICacheTest {
     public String basename = "icacheperformance";
     public int writePercentage = 10;
 
-    private ICache<Integer, Integer> map;
+    private ICache<Integer, Integer> cache;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -61,21 +62,32 @@ public class PerformanceICacheTest {
         HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
                 hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
 
-        CacheConfig<Integer, String> config = new CacheConfig<Integer, String>();
+        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
         config.setName(basename);
+        config.setTypes(Integer.class, Integer.class);
 
-        map = cacheManager.getCache(basename);
+        try {
+            cacheManager.createCache(basename, config);
+        } catch (CacheException hack) {
+            //temp hack to deal with multiple nodes wanting to make the same cache.
+            log.severe(hack);
+        }
+        cache = cacheManager.getCache(basename, Integer.class, Integer.class);
     }
 
     @Teardown
     public void teardown() throws Exception {
-        map.close();
+        cache.close();
     }
 
     @Warmup(global = true)
     public void warmup() throws Exception {
         for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0);
+            cache.put(k, 0);
+
+            if(k%10000==0){
+                log.info("Warmup: "+k);
+            }
         }
     }
 
@@ -107,9 +119,9 @@ public class PerformanceICacheTest {
             while (!testContext.isStopped()) {
                 Integer key = random.nextInt(keyCount);
                 if (shouldWrite(iteration)) {
-                    map.put(key, (int) iteration);
+                    cache.put(key, (int) iteration);
                 } else {
-                    map.get(key);
+                    cache.get(key);
                 }
 
                 if (iteration % logFrequency == 0) {
