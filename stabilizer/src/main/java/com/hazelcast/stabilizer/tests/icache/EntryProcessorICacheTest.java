@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.jcache;
+package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.HazelcastCacheManager;
 import com.hazelcast.cache.HazelcastCachingProvider;
@@ -29,9 +29,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
-public class JCacheEntryProcessorTest {
+public class EntryProcessorICacheTest {
 
-    private final static ILogger log = Logger.getLogger(JCacheEntryProcessorTest.class);
+    private final static ILogger log = Logger.getLogger(EntryProcessorICacheTest.class);
 
     //props
     public String basename = this.getClass().getName();
@@ -193,7 +193,7 @@ public class JCacheEntryProcessorTest {
     }
 
     public static void main(String[] args) throws Throwable {
-        JCacheEntryProcessorTest test = new JCacheEntryProcessorTest();
+        EntryProcessorICacheTest test = new EntryProcessorICacheTest();
         new TestRunner(test).run();
     }
 }

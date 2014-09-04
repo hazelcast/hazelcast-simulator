@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.jcache;
+package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.HazelcastCacheManager;
 import com.hazelcast.cache.HazelcastCachingProvider;
@@ -36,9 +36,9 @@ import static org.junit.Assert.assertEquals;
  * Locally we keep track of all increments, and if the sum of these local increments matches the
  * global increment, we are done
  */
-public class JCacheCasTest {
+public class CasICacheTest {
 
-    private final static ILogger log = Logger.getLogger(JCacheCasTest.class);
+    private final static ILogger log = Logger.getLogger(CasICacheTest.class);
 
     //props
     public int threadCount = 10;
@@ -65,10 +65,10 @@ public class JCacheCasTest {
                 hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
 
         CacheConfig<Integer, String> config = new CacheConfig<Integer, String>();
-        config.setName("SimpleCache");
+        config.setName(basename);
         config.setInMemoryFormat(InMemoryFormat.OBJECT);
 
-        cache = cacheManager.getCache("simpleCache");
+        cache = cacheManager.getCache(basename);
         resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
     }
 
@@ -169,7 +169,7 @@ public class JCacheCasTest {
     }
 
     public static void main(String[] args) throws Throwable {
-        JCacheCasTest test = new JCacheCasTest();
+        CasICacheTest test = new CasICacheTest();
         new TestRunner(test).run();
     }
 }
