@@ -57,7 +57,7 @@ public class StringICacheTest {
     public boolean preventLocalCalls = false;
     public int minNumberOfMembers = 0;
 
-    private ICache<String, String> icache;
+    private ICache<String, String> cache;
     private String[] keys;
     private String[] values;
     private final AtomicLong operations = new AtomicLong();
@@ -82,16 +82,17 @@ public class StringICacheTest {
         HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
                 hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
 
-        CacheConfig<Integer, String> config = new CacheConfig<Integer, String>();
+        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
         config.setName(basename);
-        config.setInMemoryFormat(InMemoryFormat.OBJECT);
+        config.setTypes(Integer.class,Integer.class);
 
-        icache = cacheManager.getCache(basename);
+        cacheManager.createCache(basename, config);
+        cache = cacheManager.getCache(basename);
     }
 
     @Teardown
     public void teardown() throws Exception {
-        icache.close();
+        cache.close();
     }
 
     @Warmup(global = false)
@@ -114,7 +115,7 @@ public class StringICacheTest {
         for (int k = 0; k < keys.length; k++) {
             String key = keys[random.nextInt(keyCount)];
             String value = values[random.nextInt(valueCount)];
-            icache.put(key, value);
+            cache.put(key, value);
         }
     }
 
@@ -145,12 +146,12 @@ public class StringICacheTest {
                 if (shouldWrite(iteration)) {
                     String value = randomValue();
                     if (useGetAndPut) {
-                        icache.getAndPut(key, value);
+                        cache.getAndPut(key, value);
                     } else {
-                        icache.put(key, value);
+                        cache.put(key, value);
                     }
                 } else {
-                    icache.get(key);
+                    cache.get(key);
                 }
 
                 if (iteration % logFrequency == 0) {

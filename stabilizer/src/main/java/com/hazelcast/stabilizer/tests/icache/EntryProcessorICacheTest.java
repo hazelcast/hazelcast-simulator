@@ -58,11 +58,12 @@ public class EntryProcessorICacheTest {
         HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
                 hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
 
-        CacheConfig<Integer, String> config = new CacheConfig<Integer, String>();
-        config.setName("SimpleCache");
-        config.setInMemoryFormat(InMemoryFormat.OBJECT);
+        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
+        config.setName(basename);
+        config.setTypes(Integer.class,Integer.class);
 
-        cache = cacheManager.getCache("simpleCache");
+        cacheManager.createCache(basename, config);
+        cache = cacheManager.getCache(basename);
         resultsPerWorker = targetInstance.getList(basename + "ResultMap" + testContext.getTestId());
     }
 
