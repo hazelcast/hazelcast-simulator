@@ -5,7 +5,6 @@ import com.hazelcast.cache.impl.HazelcastCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.config.CacheConfig;
-import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -20,6 +19,7 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import javax.cache.CacheException;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
@@ -58,12 +58,18 @@ public class EntryProcessorICacheTest {
         HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
                 hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
 
-        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
+        CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
         config.setName(basename);
-        config.setTypes(Integer.class,Integer.class);
+        config.setTypes(Integer.class, Long.class);
 
-        cacheManager.createCache(basename, config);
-        cache = cacheManager.getCache(basename);
+        try {
+            cacheManager.createCache(basename, config);
+        } catch (CacheException hack) {
+            //temp hack to deal with multiple nodes wanting to make the same cache.
+            log.severe(hack);
+        }
+
+        cache = cacheManager.getCache(basename, Integer.class, Long.class);
         resultsPerWorker = targetInstance.getList(basename + "ResultMap" + testContext.getTestId());
     }
 
