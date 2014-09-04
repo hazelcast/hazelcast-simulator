@@ -1,8 +1,9 @@
 package com.hazelcast.stabilizer.tests.icache;
 
-import com.hazelcast.cache.HazelcastCacheManager;
-import com.hazelcast.cache.HazelcastCachingProvider;
 import com.hazelcast.cache.ICache;
+import com.hazelcast.cache.impl.HazelcastCacheManager;
+import com.hazelcast.cache.impl.HazelcastServerCacheManager;
+import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.core.HazelcastInstance;
@@ -52,9 +53,9 @@ public class EntryProcessorICacheTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-        HazelcastCachingProvider hcp = new HazelcastCachingProvider();
+        HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
 
-        HazelcastCacheManager cacheManager = new HazelcastCacheManager(
+        HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
                 hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
 
         CacheConfig<Integer, String> config = new CacheConfig<Integer, String>();
@@ -67,7 +68,7 @@ public class EntryProcessorICacheTest {
 
     @Teardown
     public void teardown() throws Exception {
-        cache.destroy();
+        cache.close();
         resultsPerWorker.destroy();
     }
 

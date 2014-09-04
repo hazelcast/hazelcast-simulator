@@ -36,6 +36,7 @@
         <jclouds.version>1.8.0</jclouds.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.gpg.plugin.version>1.4</maven.gpg.plugin.version>
+        <jsr107.api.version>1.0.0</jsr107.api.version>
     </properties>
 
     <modules>

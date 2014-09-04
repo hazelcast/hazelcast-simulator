@@ -1,9 +1,10 @@
 package com.hazelcast.stabilizer.tests.icache;
 
 
-import com.hazelcast.cache.HazelcastCacheManager;
-import com.hazelcast.cache.HazelcastCachingProvider;
 import com.hazelcast.cache.ICache;
+import com.hazelcast.cache.impl.HazelcastCacheManager;
+import com.hazelcast.cache.impl.HazelcastServerCacheManager;
+import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
@@ -55,9 +56,9 @@ public class PerformanceICacheTest {
         this.testContext = testContext;
 
         targetInstance = testContext.getTargetInstance();
-        HazelcastCachingProvider hcp = new HazelcastCachingProvider();
+        HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
 
-        HazelcastCacheManager cacheManager = new HazelcastCacheManager(
+        HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
                 hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
 
         CacheConfig<Integer, String> config = new CacheConfig<Integer, String>();
@@ -68,7 +69,7 @@ public class PerformanceICacheTest {
 
     @Teardown
     public void teardown() throws Exception {
-        map.destroy();
+        map.close();
     }
 
     @Warmup(global = true)
@@ -106,7 +107,7 @@ public class PerformanceICacheTest {
             while (!testContext.isStopped()) {
                 Integer key = random.nextInt(keyCount);
                 if (shouldWrite(iteration)) {
-                    map.put(key, (int)iteration);
+                    map.put(key, (int) iteration);
                 } else {
                     map.get(key);
                 }
