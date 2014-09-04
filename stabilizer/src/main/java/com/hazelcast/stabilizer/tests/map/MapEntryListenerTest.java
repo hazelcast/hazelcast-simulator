@@ -30,7 +30,6 @@ import com.hazelcast.stabilizer.tests.map.helpers.EntryListenerImpl;
 import com.hazelcast.stabilizer.tests.map.helpers.EventCount;
 import com.hazelcast.stabilizer.tests.map.helpers.ScrambledZipfianGenerator;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
-import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;

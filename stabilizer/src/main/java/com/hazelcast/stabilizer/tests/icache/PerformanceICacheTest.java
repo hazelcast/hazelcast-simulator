@@ -1,24 +1,12 @@
-/*
- * Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.hazelcast.stabilizer.tests.map;
+package com.hazelcast.stabilizer.tests.icache;
 
+
+import com.hazelcast.cache.ICache;
+import com.hazelcast.cache.impl.HazelcastCacheManager;
+import com.hazelcast.cache.impl.HazelcastServerCacheManager;
+import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
+import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.Partition;
-import com.hazelcast.core.PartitionService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -28,34 +16,29 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
-import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
-import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class StringMapTest {
+/**
+ * A performance test for the icache. The key is integer and value is a integer
+ */
+public class PerformanceICacheTest {
 
-    private final static ILogger log = Logger.getLogger(StringMapTest.class);
+    private final static ILogger log = Logger.getLogger(PerformanceICacheTest.class);
 
     //props
-    public int writePercentage = 10;
     public int threadCount = 10;
-    public int keyLength = 10;
-    public int valueLength = 10;
-    public int keyCount = 10000;
-    public int valueCount = 10000;
+    public int keyCount = 1000000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public boolean usePut = true;
-    public String basename = "stringmap";
-    public boolean preventLocalCalls = false;
-    public int minNumberOfMembers = 0;
+    public String basename = "icacheperformance";
+    public int writePercentage = 10;
 
-    private IMap<String, String> map;
-    private String[] keys;
-    private String[] values;
+    private ICache<Integer, Integer> map;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -71,35 +54,28 @@ public class StringMapTest {
         }
 
         this.testContext = testContext;
+
         targetInstance = testContext.getTargetInstance();
-        map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+        HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
+
+        HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
+                hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+
+        CacheConfig<Integer, String> config = new CacheConfig<Integer, String>();
+        config.setName(basename);
+
+        map = cacheManager.getCache(basename);
     }
 
     @Teardown
     public void teardown() throws Exception {
-        map.destroy();
+        map.close();
     }
 
-    @Warmup(global = false)
-    public void warmup() throws InterruptedException {
-        TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
-        TestUtils.warmupPartitions(log,targetInstance);
-        keys = new String[keyCount];
-        for (int k = 0; k < keys.length; k++) {
-            keys[k] = StringUtils.generateKey(keyLength, preventLocalCalls, testContext.getTargetInstance());
-        }
-
-        values = new String[valueCount];
-        for (int k = 0; k < values.length; k++) {
-            values[k] = StringUtils.makeString(valueLength);
-        }
-
-        Random random = new Random();
-
-        for (int k = 0; k < keys.length; k++) {
-            String key = keys[random.nextInt(keyCount)];
-            String value = values[random.nextInt(valueCount)];
-            map.put(key, value);
+    @Warmup(global = true)
+    public void warmup() throws Exception {
+        for (int k = 0; k < keyCount; k++) {
+            map.put(k, 0);
         }
     }
 
@@ -119,21 +95,19 @@ public class StringMapTest {
 
     private class Worker implements Runnable {
         private final Random random = new Random();
+        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         @Override
         public void run() {
+            for (int k = 0; k < keyCount; k++) {
+                result.put(k, 0L);
+            }
+
             long iteration = 0;
             while (!testContext.isStopped()) {
-
-                String key = randomKey();
-
+                Integer key = random.nextInt(keyCount);
                 if (shouldWrite(iteration)) {
-                    String value = randomValue();
-                    if (usePut) {
-                        map.put(key, value);
-                    } else {
-                        map.set(key, value);
-                    }
+                    map.put(key, (int) iteration);
                 } else {
                     map.get(key);
                 }
@@ -150,15 +124,6 @@ public class StringMapTest {
             }
         }
 
-        private String randomValue() {
-            return values[random.nextInt(values.length)];
-        }
-
-        private String randomKey() {
-            int length = keys.length;
-            return keys[random.nextInt(length)];
-        }
-
         private boolean shouldWrite(long iteration) {
             if (writePercentage == 0) {
                 return false;
@@ -171,8 +136,7 @@ public class StringMapTest {
     }
 
     public static void main(String[] args) throws Throwable {
-        StringMapTest test = new StringMapTest();
-        test.writePercentage = 10;
+        PerformanceICacheTest test = new PerformanceICacheTest();
         new TestRunner(test).run();
     }
 }
