@@ -5,9 +5,7 @@ import com.hazelcast.cache.HazelcastCacheManager;
 import com.hazelcast.cache.HazelcastCachingProvider;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.config.CacheConfig;
-import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -27,9 +25,9 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * A performance test for the icache. The key is integer and value is a integer
  */
-public class ICachePerformanceTest {
+public class PerformanceICacheTest {
 
-    private final static ILogger log = Logger.getLogger(ICachePerformanceTest.class);
+    private final static ILogger log = Logger.getLogger(PerformanceICacheTest.class);
 
     //props
     public int threadCount = 10;
@@ -137,7 +135,7 @@ public class ICachePerformanceTest {
     }
 
     public static void main(String[] args) throws Throwable {
-        ICachePerformanceTest test = new ICachePerformanceTest();
+        PerformanceICacheTest test = new PerformanceICacheTest();
         new TestRunner(test).run();
     }
 }
