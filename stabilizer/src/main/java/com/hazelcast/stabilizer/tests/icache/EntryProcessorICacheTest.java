@@ -156,6 +156,7 @@ public class EntryProcessorICacheTest {
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
+                iteration++;
             }
 
             //sleep to give time for the last EntryProcessor tasks to complete.
