@@ -43,7 +43,7 @@ public class MapReduceTest {
     public int keyCount = 1000;
 
     public double mapReduceProd=0.5;
-    public double modifyEmployeData=0.5;
+    public double modifyEmployeData=0;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
