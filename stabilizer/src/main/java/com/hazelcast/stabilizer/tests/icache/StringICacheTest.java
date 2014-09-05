@@ -19,6 +19,8 @@ import com.hazelcast.cache.ICache;
 import com.hazelcast.cache.impl.HazelcastCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
+import com.hazelcast.client.cache.HazelcastClientCacheManager;
+import com.hazelcast.client.cache.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
@@ -77,10 +79,16 @@ public class StringICacheTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
 
-        HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-
-        HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
-                hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        HazelcastCacheManager cacheManager;
+        if(TestUtils.isMemberNode(targetInstance)) {
+            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
+            cacheManager = new HazelcastServerCacheManager(
+                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        }else{
+            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
+            cacheManager = new HazelcastClientCacheManager(
+                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        }
 
         CacheConfig<String, String> config = new CacheConfig<String, String>();
         config.setName(basename);
