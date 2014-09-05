@@ -145,7 +145,7 @@ public class Worker {
         return server;
     }
 
-    private static void logInterestingSystemProperties() {
+    protected static void logInterestingSystemProperties() {
         logSystemProperty("java.class.path");
         logSystemProperty("java.home");
         logSystemProperty("java.vendor");
@@ -201,7 +201,7 @@ public class Worker {
         }
     }
 
-    private static void logInputArguments() {
+    protected static void logInputArguments() {
         List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
         log.info("jvm input arguments = " + inputArguments);
     }
