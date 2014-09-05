@@ -23,7 +23,7 @@ public class MapReduceCounter implements Serializable {
     public String toString() {
         return "MapReduceCounter{" +
                 "mapReduce=" + mapReduce +
-                "getMapEntry=" + getMapEntry +
+                ", getMapEntry=" + getMapEntry +
                 ", modifyMapEntry=" + modifyMapEntry +
                 '}';
     }
