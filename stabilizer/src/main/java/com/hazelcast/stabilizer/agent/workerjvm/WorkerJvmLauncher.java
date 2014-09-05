@@ -4,6 +4,7 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
+import com.hazelcast.stabilizer.worker.ClientWorker;
 import com.hazelcast.stabilizer.worker.Worker;
 import org.apache.log4j.Logger;
 
@@ -142,13 +143,19 @@ public class WorkerJvmLauncher {
         return CLASSPATH + CLASSPATH_SEPARATOR + new File(libDir, "*").getAbsolutePath();
     }
 
-    private List<String> getJvmOptions(WorkerJvmSettings settings) {
-        String workerVmOptions = settings.vmOptions;
-        String[] clientVmOptionsArray = new String[]{};
-        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
-            clientVmOptionsArray = workerVmOptions.split("\\s+");
+    private List<String> getJvmOptions(WorkerJvmSettings settings, String mode) {
+        String workerVmOptions;
+        if ("client".equals(mode)) {
+            workerVmOptions = settings.clientVmOptions;
+        } else {
+            workerVmOptions = settings.vmOptions;
         }
-        return Arrays.asList(clientVmOptionsArray);
+
+        String[] vmOptionsArray = new String[]{};
+        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
+            vmOptionsArray = workerVmOptions.split("\\s+");
+        }
+        return Arrays.asList(vmOptionsArray);
     }
 
     private String[] buildArgs(WorkerJvm workerJvm, String mode) {
@@ -172,8 +179,14 @@ public class WorkerJvmLauncher {
         args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-log4j.xml");
         args.add("-classpath");
         args.add(getClasspath());
-        args.addAll(getJvmOptions(settings));
-        args.add(Worker.class.getName());
+        args.addAll(getJvmOptions(settings, mode));
+
+        // if it is a client, we start the ClientWorker.
+        if ("client".equals(mode)) {
+            args.add(ClientWorker.class.getName());
+        } else {
+            args.add(Worker.class.getName());
+        }
         args.add(hzFile.getAbsolutePath());
         args.add(clientHzFile.getAbsolutePath());
         return args.toArray(new String[args.size()]);
@@ -197,7 +210,7 @@ public class WorkerJvmLauncher {
 
                 if (hasExited(jvm)) {
                     String message = format("Startup failure: worker on host %s failed during startup, " +
-                            "check '%s/out.log' for more info",
+                                    "check '%s/out.log' for more info",
                             getHostAddress(), jvm.workerHome
                     );
                     throw new SpawnWorkerFailedException(message);

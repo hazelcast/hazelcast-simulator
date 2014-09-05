@@ -75,7 +75,12 @@ public class CoordinatorCli {
             "It tests should be run in parallel.");
 
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
-            "Worker VM options (quotes can be used)")
+            "Worker VM options (quotes can be used). These options will be applied to regular members and mixed members " +
+                    "(so with client + member in the same JVM).")
+            .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
+
+    private final OptionSpec<String> clientWorkerVmOptionsSpec = parser.accepts("clientWorkerVmOptions",
+            "Client worker VM options (quotes can be used).")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> agentsFileSpec = parser.accepts("agentsFile",
@@ -168,6 +173,7 @@ public class CoordinatorCli {
 
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
         workerJvmSettings.vmOptions = options.valueOf(workerVmOptionsSpec);
+        workerJvmSettings.clientVmOptions = options.valueOf(clientWorkerVmOptionsSpec);
         workerJvmSettings.memberWorkerCount = options.valueOf(memberWorkerCountSpec);
         workerJvmSettings.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
         workerJvmSettings.mixedWorkerCount = options.valueOf(mixedWorkerCountSpec);
