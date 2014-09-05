@@ -91,7 +91,7 @@ public class HazelcastJars {
                 url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
             }
 
-            bash.execute(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
+            bash.download(hazelcastJarsDir.getAbsolutePath(), url);
         }
     }
 
