@@ -5,7 +5,8 @@ import java.io.Serializable;
 
 public class MapReduceCounter implements Serializable {
     public long mapReduce = 0;
-    public long modifiedDataSet = 0;
+    public long getMapEntry=0;
+    public long modifyMapEntry = 0;
 
 
     public MapReduceCounter() {
@@ -14,14 +15,16 @@ public class MapReduceCounter implements Serializable {
 
     public void add(MapReduceCounter o) {
         mapReduce += o.mapReduce;
-        modifiedDataSet += o.modifiedDataSet;
+        getMapEntry += o.getMapEntry;
+        modifyMapEntry += o.modifyMapEntry;
     }
 
     @Override
     public String toString() {
         return "MapReduceCounter{" +
                 "mapReduce=" + mapReduce +
-                ", modifiedDataSet=" + modifiedDataSet +
+                "getMapEntry=" + getMapEntry +
+                ", modifyMapEntry=" + modifyMapEntry +
                 '}';
     }
 }

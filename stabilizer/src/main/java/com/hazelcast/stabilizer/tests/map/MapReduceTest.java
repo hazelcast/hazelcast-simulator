@@ -31,10 +31,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import static com.hazelcast.stabilizer.tests.utils.TestUtils.waitClusterSize;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.warmupPartitions;
 import static org.junit.Assert.assertTrue;
-
 
 public class MapReduceTest {
 
@@ -44,8 +42,9 @@ public class MapReduceTest {
     public int threadCount = 1;
     public int keyCount = 1000;
 
-    public double mapReduceProd=0.5;
-    public double modifyEmployeData=0;
+    public double mapReduceProb=0.5;
+    public double getMapEntryProb=0;
+    public double modifyEntryProb=0;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -75,16 +74,15 @@ public class MapReduceTest {
         spawner.awaitCompletion();
     }
 
-
     private class Worker implements Runnable {
         private Random random = new Random();
         private MapReduceCounter counter = new MapReduceCounter();
-        @Override
+
         public void run() {
             while (!testContext.isStopped()) {
 
                 double chance = random.nextDouble();
-                if ((chance -= mapReduceProd) < 0) {
+                if ((chance -= mapReduceProb) < 0) {
 
                     IMap<Integer, Employee> map = targetInstance.getMap(basename);
                     JobTracker tracker = targetInstance.getJobTracker(basename);
@@ -116,12 +114,19 @@ public class MapReduceTest {
 
                     counter.mapReduce++;
                 }
-                else if ((chance -= modifyEmployeData) < 0) {
+                else if ((chance -= getMapEntryProb) < 0) {
+                    IMap<Integer, Employee> map = targetInstance.getMap(basename);
+                    map.get(random.nextInt(keyCount));
+
+                    counter.getMapEntry++;
+                }
+                else if ((chance -= modifyEntryProb) < 0) {
                     IMap<Integer, Employee> map = targetInstance.getMap(basename);
 
                     Employee e = map.get(random.nextInt(keyCount));
                     e.randomizeProperties();
-                    counter.modifiedDataSet++;
+                    map.put(e.getId(), e);
+                    counter.modifyMapEntry++;
                 }
             }
             targetInstance.getList(basename).add(counter);
@@ -135,7 +140,7 @@ public class MapReduceTest {
         for (MapReduceCounter i : results) {
             total.add(i);
         }
-                  log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
+        log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
         System.out.println(basename + ": " + total + " from " + results.size() + " worker Threads");
     }
 
