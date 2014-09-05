@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.waitClusterSize;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.warmupPartitions;
 import static org.junit.Assert.assertTrue;
 
 
@@ -52,6 +54,8 @@ public class MapReduceTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+
+        warmupPartitions(log, targetInstance);
     }
 
     @Warmup(global = true)
