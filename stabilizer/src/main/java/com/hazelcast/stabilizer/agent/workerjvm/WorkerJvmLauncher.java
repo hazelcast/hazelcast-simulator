@@ -5,7 +5,7 @@ import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
 import com.hazelcast.stabilizer.worker.ClientWorker;
-import com.hazelcast.stabilizer.worker.Worker;
+import com.hazelcast.stabilizer.worker.MemberWorker;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -185,7 +185,7 @@ public class WorkerJvmLauncher {
         if ("client".equals(mode)) {
             args.add(ClientWorker.class.getName());
         } else {
-            args.add(Worker.class.getName());
+            args.add(MemberWorker.class.getName());
         }
         args.add(hzFile.getAbsolutePath());
         args.add(clientHzFile.getAbsolutePath());
