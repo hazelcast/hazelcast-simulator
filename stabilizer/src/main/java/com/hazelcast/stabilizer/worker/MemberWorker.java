@@ -66,9 +66,9 @@ import static com.hazelcast.stabilizer.tests.utils.TestUtils.bindProperties;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
-public class Worker {
+public class MemberWorker {
 
-    final static ILogger log = Logger.getLogger(Worker.class);
+    final static ILogger log = Logger.getLogger(MemberWorker.class);
 
     private HazelcastInstance serverInstance;
     private HazelcastInstance clientInstance;
@@ -187,7 +187,7 @@ public class Worker {
             String workerMode = System.getProperty("workerMode");
             log.info("Worker mode:" + workerMode);
 
-            Worker worker = new Worker();
+            MemberWorker worker = new MemberWorker();
             worker.workerId = workerId;
             worker.hzFile = workerHzFile;
             worker.clientHzFile = clientHzFile;
