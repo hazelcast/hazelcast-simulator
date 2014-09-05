@@ -234,6 +234,10 @@ public class WorkerJvmLauncher {
             Utils.sleepSeconds(1);
         }
 
+        workerTimeout(workerTimeoutSec, todo);
+    }
+
+    private void workerTimeout(int workerTimeoutSec, List<WorkerJvm> todo) {
         StringBuffer sb = new StringBuffer();
         sb.append("[");
         sb.append(todo.get(0).id);
