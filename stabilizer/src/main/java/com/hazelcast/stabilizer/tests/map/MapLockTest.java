@@ -87,7 +87,7 @@ public class MapLockTest {
             }
         }
 
-        assertEquals("There should not be any data races", 0, failures);
+        assertEquals(basename + ": There should not be any data races", 0, failures);
     }
 
     @Performance

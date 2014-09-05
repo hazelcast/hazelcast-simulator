@@ -27,7 +27,6 @@ public class SimpleLockTest {
     public String basename = this.getClass().getName();
     public int maxAccounts = 7;
     public int threadCount = 10;
-    public int logFrequency = 10000;
 
     private int initialValue = 1000;
     private int totalValue = 0;
@@ -49,28 +48,11 @@ public class SimpleLockTest {
         totalValue = initialValue * maxAccounts;
     }
 
-    @Verify
-    public void verify() {
-        int value = 0;
-        for (int k = 0; k < maxAccounts; k++) {
-            ILock lock = targetInstance.getLock(basename + k);
-            IAtomicLong account = targetInstance.getAtomicLong(basename + k);
-
-            log.info(account + " " + account.get());
-
-            assertFalse("Lock should be unlocked", lock.isLocked());
-            assertTrue("Amount is < 0 ", account.get() >= 0);
-            value += account.get();
-        }
-        assertEquals(totalValue, value);
-    }
-
     private class Worker implements Runnable {
         private final Random random = new Random();
 
         @Override
         public void run() {
-            long iteration = 0;
             int key1;
             int key2;
             while (!testContext.isStopped()) {
@@ -79,7 +61,6 @@ public class SimpleLockTest {
                 do {
                     key2 = random.nextInt(maxAccounts);
                 } while (key1 == key2);
-
 
                 ILock lock1 = targetInstance.getLock(basename + key1);
                 if (lock1.tryLock()) {
@@ -103,14 +84,24 @@ public class SimpleLockTest {
                         lock1.unlock();
                     }
                 }
-
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-
-                iteration++;
             }
         }
+    }
+
+    @Verify
+    public void verify() {
+        int value = 0;
+        for (int k = 0; k < maxAccounts; k++) {
+            ILock lock = targetInstance.getLock(basename + k);
+            IAtomicLong account = targetInstance.getAtomicLong(basename + k);
+
+            log.info(account + " " + account.get());
+
+            assertFalse(basename + ": Lock should be unlocked", lock.isLocked());
+            assertTrue(basename + ": Amount is < 0 ", account.get() >= 0);
+            value += account.get();
+        }
+        assertEquals(basename+" totals not adding up ", totalValue, value);
     }
 
     @Run
@@ -120,11 +111,6 @@ public class SimpleLockTest {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
-    }
-
-    public static void main(String[] args) throws Throwable {
-        SimpleLockTest test = new SimpleLockTest();
-        new TestRunner(test).run();
     }
 }
 

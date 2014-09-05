@@ -36,6 +36,8 @@ public class MapTransactionContextConflictTest {
     public int threadCount = 3;
     public int keyCount = 50;
     public int maxKeysPerTxn = 5;
+    public boolean rethrowAllException=false;
+    public boolean rethrowRollBackException=false;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
@@ -105,12 +107,22 @@ public class MapTransactionContextConflictTest {
                     }
                 } catch (Exception commitFailed) {
                     try {
+                        log.warning(basename + ": commit fail done=" + doneIncs, commitFailed);
+
+                        if(rethrowAllException){
+                            throw new RuntimeException(commitFailed);
+                        }
+
                         context.rollbackTransaction();
                         count.rolled++;
-                        log.warning(basename + ": commit fail done=" + doneIncs, commitFailed);
+
                     } catch (Exception rollBackFailed) {
-                        count.failedRoles++;
                         log.warning(basename + ": rollback fail done=" + doneIncs + " " + rollBackFailed, rollBackFailed);
+                        count.failedRoles++;
+
+                        if(rethrowRollBackException){
+                            throw new RuntimeException(rollBackFailed);
+                        }
                     }
                 }
             }
@@ -144,7 +156,6 @@ public class MapTransactionContextConflictTest {
                 log.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + map.get(k));
             }
         }
-
         assertEquals(basename + ": " + failures + " key=>values have been incremented unExpected", 0, failures);
     }
 }

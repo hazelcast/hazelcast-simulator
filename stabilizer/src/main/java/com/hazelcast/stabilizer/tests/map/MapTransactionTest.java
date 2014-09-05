@@ -29,6 +29,8 @@ public class MapTransactionTest {
     public int threadCount = 5;
     public int keyCount = 1000;
 
+    public boolean reThrowTransactionException=false;
+
     private HazelcastInstance targetInstance;
     private TestContext testContext;
     private int maxInc = 100;
@@ -78,8 +80,10 @@ public class MapTransactionTest {
                     });
                     increments[key] += increment;
                 } catch (TransactionException e) {
-                    // TODO: Bad exception handling; when is this exception thrown??
-                    log.warning(basename + ": executing Trans ", e);
+                    if(reThrowTransactionException){
+                        throw new RuntimeException(e);
+                    }
+                    log.warning(basename + ": caught TransactionException ", e);
                 }
             }
             IList<long[]> results = targetInstance.getList(basename + "results");
@@ -109,7 +113,7 @@ public class MapTransactionTest {
             }
         }
 
-        assertEquals(failures + " keys have been incremented unexpectedly out of " + keyCount + " keys", 0, failures);
+        assertEquals(basename + ": " + failures + " keys have been incremented unexpectedly out of " + keyCount + " keys", 0, failures);
     }
 
 }
