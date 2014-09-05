@@ -38,7 +38,6 @@ public class Bash {
                 "\twget --no-verbose --directory-prefix="+path+" "+url+" \n" +
                 "else\n" +
                 "\t\t\n" +
-                "\techo \"curl is selected\"\n" +
                 "\tpushd .\n" +
                 "\tcd "+path+"\t\n" +
                 "\tcurl -O "+url+"\n" +
