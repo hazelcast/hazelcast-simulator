@@ -217,13 +217,13 @@ public class Provisioner {
             }
         }
 
+        echo("Pausing for machine warmup... (10 sec)");
+        Thread.sleep(10000);
+
         long durationMs = System.currentTimeMillis() - startTimeMs;
         echo("Duration: " + secondsToHuman(TimeUnit.MILLISECONDS.toSeconds(durationMs)));
         echoImportant(format("Successfully provisioned %s %s machines",
                 delta, props.get("CLOUD_PROVIDER")));
-
-        echo("Pausing for Machine Warm up... (10 sec)");
-        Thread.sleep(10000);
     }
 
     public void listAgents() {
