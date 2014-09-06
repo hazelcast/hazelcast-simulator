@@ -26,6 +26,10 @@ public class Bash {
         NativeUtils.execute(command);
     }
 
+    public void executeQuiet(String command) {
+        execute(command+ " || true");
+    }
+
     /**
      * Downloads the content of the url to the target path
      *

@@ -298,7 +298,7 @@ public class Provisioner {
             String syncCommand = format("rsync  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
                     props.get("SSH_OPTIONS", ""), props.get("USER"), address.publicAddress, getVersion());
 
-            bash.execute(syncCommand);
+            bash.executeQuiet(syncCommand);
         }
 
         echoImportant("Finished Downloading Artifacts of %s machines", addresses.size());
