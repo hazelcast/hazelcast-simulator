@@ -79,7 +79,27 @@ public class Provisioner {
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/cache-api*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/tests/", "tests");
 
-//        //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
+        if (props.isEc2()) {
+            // if there is an ephemeral drive, the workers dir will be created there and a symbolic link
+            // to the workers is created in stabilizer home. This is needed because the / drive, is very small
+            // and not big enough for heap-dumps
+
+            bash.ssh(ip, "if [ -d /mnt/ephemeral ] ; then\n" +
+                    "        if [ -d /mnt/ephemeral/workers ] ; then\n" +
+                    "                echo \"workers already exist on ephemeral drive\"\n" +
+                    "        else\n" +
+                    "            \techo \"Ephemeral drive is found and workers is not yet created\"\n" +
+                    "                rm -fr hazelcast-stabilizer-" + getVersion() + "/workers\n" +
+                    "                sudo mkdir /mnt/ephemeral/workers\n" +
+                    "                sudo chown -R " + props.getUser() + " /mnt/ephemeral/workers/\n" +
+                    "                ln -s  /mnt/ephemeral/workers/ hazelcast-stabilizer-" + getVersion() + "/workers\n" +
+                    "        fi\n" +
+                    "else\n" +
+                    "    \techo \"Ephemeral drive is not found\"\n" +
+                    "fi\n");
+        }
+
+        //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
         //this is done to reduce the amount of data we need to upload.
 
         String versionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
@@ -217,13 +237,13 @@ public class Provisioner {
             }
         }
 
+        echo("Pausing for machine warmup... (10 sec)");
+        Thread.sleep(10000);
+
         long durationMs = System.currentTimeMillis() - startTimeMs;
         echo("Duration: " + secondsToHuman(TimeUnit.MILLISECONDS.toSeconds(durationMs)));
         echoImportant(format("Successfully provisioned %s %s machines",
                 delta, props.get("CLOUD_PROVIDER")));
-
-        echo("Pausing for Machine Warm up... (10 sec)");
-        Thread.sleep(10000);
     }
 
     public void listAgents() {
@@ -295,8 +315,8 @@ public class Provisioner {
         for (AgentAddress address : addresses) {
             echo("Downloading from %s", address.publicAddress);
 
-            String syncCommand = format("rsync  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
-                    props.get("SSH_OPTIONS", ""), props.get("USER"), address.publicAddress, getVersion());
+            String syncCommand = format("rsync --copy-links  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
+                    props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getVersion());
 
             bash.execute(syncCommand);
         }

@@ -93,7 +93,7 @@ public class TemplateBuilder {
     }
 
     private void initSecurityGroup() {
-        if (!isEc2()) {
+        if (!props.isEc2()) {
             return;
         }
 
@@ -123,7 +123,4 @@ public class TemplateBuilder {
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
     }
 
-    private boolean isEc2() {
-        return "aws-ec2".equals(props.get("CLOUD_PROVIDER"));
-    }
 }

@@ -4,6 +4,7 @@ package com.hazelcast.stabilizer.agent.remoting;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvm;
+import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.messaging.Message;
@@ -112,9 +113,10 @@ class ClientSocketTask implements Runnable {
         log.info("Poked by coordinator");
     }
 
-    private ArrayList<Failure> getFailures() {
-        ArrayList<Failure> failures = new ArrayList<Failure>();
-        agent.getWorkerJvmFailureMonitor().drainFailures(failures);
+    private List<Failure> getFailures() {
+        List<Failure> failures = new ArrayList<Failure>();
+        WorkerJvmFailureMonitor failureMonitor = agent.getWorkerJvmFailureMonitor();
+        failureMonitor.drainFailures(failures);
         return failures;
     }
 

@@ -30,6 +30,14 @@ public class StabilizerProperties {
         load(defaultPropsFile);
     }
 
+    public String getUser(){
+        return get("USER","stabilizer");
+    }
+
+    public boolean isEc2() {
+        return "aws-ec2".equals(get("CLOUD_PROVIDER"));
+    }
+
     /**
      * Initialized the StabilizerProperties
      *
