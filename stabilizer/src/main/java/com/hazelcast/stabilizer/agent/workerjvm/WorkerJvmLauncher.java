@@ -194,7 +194,7 @@ public class WorkerJvmLauncher {
             args.add("java");
         }
 
-        args.add("-XX:OnOutOfMemoryError=\"\"touch worker.oome\"\"");
+        args.add("-XX:OnOutOfMemoryError=\"touch worker.oome\"");
         args.add("-DSTABILIZER_HOME=" + STABILIZER_HOME);
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-DworkerId=" + workerJvm.id);
