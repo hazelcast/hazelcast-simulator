@@ -162,18 +162,19 @@ public class WorkerJvmLauncher {
     private String[] buildArgs(WorkerJvm workerJvm, String mode) {
         List<String> args = new LinkedList<String>();
 
-        if ("perf".equals(settings.profiler)) {
+        String profiler = settings.profiler;
+        if ("perf".equals(profiler)) {
             String[] perfSettings = settings.perfSettings.split("\\s+");
             // perf command always need to be in front of the java command.
             args.addAll(asList(perfSettings));
             args.add("java");
-        } else if ("yourkit".equals(settings.profiler)) {
+        } else if ("yourkit".equals(profiler)) {
             args.add("java");
             String agentSetting = settings.yourkitConfig
                     .replace("${STABILIZER_HOME}", STABILIZER_HOME.getAbsolutePath())
                     .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());
             args.add(agentSetting);
-        } else if ("hprof".equals(settings.profiler)) {
+        } else if ("hprof".equals(profiler)) {
             args.add("java");
             args.add(settings.hprofSettings);
         } else {
@@ -198,6 +199,9 @@ public class WorkerJvmLauncher {
         }
         args.add(hzFile.getAbsolutePath());
         args.add(clientHzFile.getAbsolutePath());
+
+        log.info("worker args:"+args);
+
         return args.toArray(new String[args.size()]);
     }
 
