@@ -33,6 +33,7 @@ public class WorkerJvmSettings implements Serializable {
     public String profiler = "none";
     public String yourkitConfig;
     public String hprofSettings = "";
+    public String perfSettings = "";
     public String clientVmOptions;
 
     public WorkerJvmSettings() {
@@ -53,6 +54,7 @@ public class WorkerJvmSettings implements Serializable {
         this.yourkitConfig = settings.yourkitConfig;
         this.profiler = settings.profiler;
         this.hprofSettings = settings.hprofSettings;
+        this.perfSettings = settings.perfSettings;
     }
 
     public int totalWorkerCount() {
@@ -76,6 +78,7 @@ public class WorkerJvmSettings implements Serializable {
                 "\n, hzConfig='" + hzConfig + '\'' +
                 "\n, clientHzConfig='" + clientHzConfig + '\'' +
                 "\n, hprofSettings='" + hprofSettings + '\'' +
+                "\n, perfSettings='" + perfSettings + '\'' +
                 "\n}";
     }
 }

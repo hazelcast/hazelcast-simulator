@@ -160,15 +160,22 @@ public class WorkerJvmLauncher {
 
     private String[] buildArgs(WorkerJvm workerJvm, String mode) {
         List<String> args = new LinkedList<String>();
-        args.add("java");
 
-        if ("yourkit".equals(settings.profiler)) {
+        if ("perf".equals(settings.profiler)) {
+            // perf command always need to be in front of the java command.
+            args.add(settings.perfSettings);
+            args.add("java");
+        } else if ("yourkit".equals(settings.profiler)) {
+            args.add("java");
             String agentSetting = settings.yourkitConfig
                     .replace("${STABILIZER_HOME}", STABILIZER_HOME.getAbsolutePath())
                     .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());
             args.add(agentSetting);
         } else if ("hprof".equals(settings.profiler)) {
+            args.add("java");
             args.add(settings.hprofSettings);
+        } else {
+            args.add("java");
         }
 
         args.add("-XX:OnOutOfMemoryError=\"\"touch worker.oome\"\"");
