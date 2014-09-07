@@ -120,7 +120,7 @@ public class WorkerJvmLauncher {
 
         generateWorkerStartScript(mode, workerJvm);
 
-        ProcessBuilder processBuilder = new ProcessBuilder("bash worker.sh")
+        ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"bash","worker.sh"})
                 .directory(workerHome)
                 .redirectErrorStream(true);
 
