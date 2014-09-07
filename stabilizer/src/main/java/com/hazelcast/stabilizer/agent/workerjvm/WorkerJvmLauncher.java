@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -119,9 +118,9 @@ public class WorkerJvmLauncher {
         WorkerJvm workerJvm = new WorkerJvm(workerId);
         workerJvm.workerHome = workerHome;
 
-        String[] args = buildArgs(workerJvm, mode);
+        generateWorkerStartScript(mode, workerJvm);
 
-        ProcessBuilder processBuilder = new ProcessBuilder(args)
+        ProcessBuilder processBuilder = new ProcessBuilder("bash worker.sh")
                 .directory(workerHome)
                 .redirectErrorStream(true);
 
@@ -137,6 +136,20 @@ public class WorkerJvmLauncher {
         workerJvm.mode = WorkerJvm.Mode.valueOf(mode.toUpperCase());
         workerJvms.put(workerId, workerJvm);
         return workerJvm;
+    }
+
+    private void generateWorkerStartScript(String mode, WorkerJvm workerJvm) {
+        String[] args = buildArgs(workerJvm, mode);
+        File startScript = new File("worker.sh");
+
+        StringBuffer sb = new StringBuffer("#!/bin/bash");
+        sb.append("\n");
+        for (String arg : args) {
+            sb.append(arg).append(" ");
+        }
+        sb.append("\n");
+
+        Utils.writeText(sb.toString(), startScript);
     }
 
     private String getClasspath() {
@@ -200,7 +213,7 @@ public class WorkerJvmLauncher {
         args.add(hzFile.getAbsolutePath());
         args.add(clientHzFile.getAbsolutePath());
 
-        log.info("worker args:"+args);
+        log.info("worker args:" + args);
 
         return args.toArray(new String[args.size()]);
     }
