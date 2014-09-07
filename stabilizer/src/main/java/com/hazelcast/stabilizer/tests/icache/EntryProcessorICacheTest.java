@@ -58,11 +58,11 @@ public class EntryProcessorICacheTest {
         targetInstance = testContext.getTargetInstance();
 
         HazelcastCacheManager cacheManager;
-        if(TestUtils.isMemberNode(targetInstance)) {
+        if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        }else{
+        } else {
             HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
             cacheManager = new HazelcastClientCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);

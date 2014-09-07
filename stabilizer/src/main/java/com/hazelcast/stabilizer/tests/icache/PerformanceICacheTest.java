@@ -61,11 +61,11 @@ public class PerformanceICacheTest {
 
         targetInstance = testContext.getTargetInstance();
         HazelcastCacheManager cacheManager;
-        if(TestUtils.isMemberNode(targetInstance)) {
+        if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        }else{
+        } else {
             HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
             cacheManager = new HazelcastClientCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
@@ -94,8 +94,8 @@ public class PerformanceICacheTest {
         for (int k = 0; k < keyCount; k++) {
             cache.put(k, 0);
 
-            if(k%10000==0){
-                log.info("Warmup: "+k);
+            if (k % 10000 == 0) {
+                log.info("Warmup: " + k);
             }
         }
     }
