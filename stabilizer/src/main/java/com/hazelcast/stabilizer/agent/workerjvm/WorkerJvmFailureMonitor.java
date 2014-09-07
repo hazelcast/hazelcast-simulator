@@ -136,16 +136,24 @@ public class WorkerJvmFailureMonitor {
         }
     }
 
-    private void detectOomeFailure(WorkerJvm jvm, List<Failure> failures) {
-        File oomeFile = new File(jvm.workerHome, "worker.oome");
+    public class HProfExtFilter implements FilenameFilter {
 
-        if (!oomeFile.exists()) {
+        public boolean accept(File dir, String name) {
+            return name.endsWith(".hprof");
+        }
+    }
+
+    private void detectOomeFailure(WorkerJvm jvm, List<Failure> failures) {
+        // once the failure is detected, we don't need to detect it again.
+        if (jvm.oomeDetected) {
+            return;
+        }
+
+        if (!isOomeFound(jvm)) {
             return;
         }
 
         jvm.oomeDetected = true;
-
-        oomeFile.delete();
 
         Failure failure = new Failure();
         failure.message = "Worker ran into an Out Of Memory Error";
@@ -155,6 +163,19 @@ public class WorkerJvmFailureMonitor {
         failure.workerId = jvm.id;
         failure.testSuite = agent.getTestSuite();
         failures.add(failure);
+    }
+
+    private boolean isOomeFound(WorkerJvm jvm) {
+        File oomeFile = new File(jvm.workerHome, "worker.oome");
+        if (oomeFile.exists()) {
+            return true;
+        }
+
+        // if we find the hprof file, we also know there is an OOME. The problem with the worker.oome file is that it is created
+        // after the heap dump is done, and creating the heap dump can take a lot of time. And then the system could think there
+        // is another problem (e.g. lack of inactivity; or timeouts). This hides the OOME.
+        String[] hprofFiles = jvm.workerHome.list(new HProfExtFilter());
+        return hprofFiles.length > 0;
     }
 
     private void detectUnexpectedExit(WorkerJvm jvm, List<Failure> failures) {
@@ -175,7 +196,8 @@ public class WorkerJvmFailureMonitor {
             return;
         }
 
-        agent.getWorkerJvmManager().terminateWorker(jvm);
+        WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
+        workerJvmManager.terminateWorker(jvm);
 
         Failure failure = new Failure();
         failure.message = "Worker terminated with exit code not 0, but  " + exitCode;
