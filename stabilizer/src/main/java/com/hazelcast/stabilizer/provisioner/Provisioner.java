@@ -41,7 +41,7 @@ public class Provisioner {
     public final StabilizerProperties props = new StabilizerProperties();
 
     private final static String STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath();
-    private File agentsFile = new File("agents.txt");
+    private final File agentsFile = new File("agents.txt");
     //big number of threads, but they are used to offload ssh tasks. So there is no load on this machine..
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
 

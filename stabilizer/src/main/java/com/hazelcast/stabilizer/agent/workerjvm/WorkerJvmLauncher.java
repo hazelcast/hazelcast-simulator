@@ -177,9 +177,8 @@ public class WorkerJvmLauncher {
 
         String profiler = settings.profiler;
         if ("perf".equals(profiler)) {
-            String[] perfSettings = settings.perfSettings.split("\\s+");
             // perf command always need to be in front of the java command.
-            args.addAll(asList(perfSettings));
+            args.add(settings.perfSettings);
             args.add("java");
         } else if ("yourkit".equals(profiler)) {
             args.add("java");
@@ -212,8 +211,6 @@ public class WorkerJvmLauncher {
         }
         args.add(hzFile.getAbsolutePath());
         args.add(clientHzFile.getAbsolutePath());
-
-        log.info("worker args:" + args);
 
         return args.toArray(new String[args.size()]);
     }
@@ -272,7 +269,8 @@ public class WorkerJvmLauncher {
         }
         sb.append("]");
 
-        throw new SpawnWorkerFailedException(format("Timeout: workers %s of testsuite %s on host %s didn't start within %s seconds",
+        throw new SpawnWorkerFailedException(format(
+                "Timeout: workers %s of testsuite %s on host %s didn't start within %s seconds",
                 sb, agent.getTestSuite().id, getHostAddress(),
                 workerTimeoutSec));
     }
