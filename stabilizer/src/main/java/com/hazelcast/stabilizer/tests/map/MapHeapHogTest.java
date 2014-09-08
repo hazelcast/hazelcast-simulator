@@ -12,8 +12,8 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
-import static com.hazelcast.stabilizer.tests.map.helpers.HazelcastUtils.nextKeyOwnedby;
-import static com.hazelcast.stabilizer.tests.map.helpers.HazelcastUtils.isMemberNode;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.nextKeyOwnedBy;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.isMemberNode;
 
 import java.util.concurrent.TimeUnit;
 
@@ -78,7 +78,7 @@ public class MapHeapHogTest {
 
                 long key = 0;
                 for (int i = 0; i < maxLocalEntries; i++) {
-                    key = nextKeyOwnedby(key, targetInstance);
+                    key = nextKeyOwnedBy(key, targetInstance);
                     map.put(key, key, ttlHours, TimeUnit.HOURS);
                     key++;
                 }

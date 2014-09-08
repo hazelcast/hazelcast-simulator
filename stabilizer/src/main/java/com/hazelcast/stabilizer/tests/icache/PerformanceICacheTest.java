@@ -5,6 +5,8 @@ import com.hazelcast.cache.ICache;
 import com.hazelcast.cache.impl.HazelcastCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
+import com.hazelcast.client.cache.HazelcastClientCacheManager;
+import com.hazelcast.client.cache.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
@@ -16,6 +18,7 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import javax.cache.CacheException;
@@ -57,10 +60,16 @@ public class PerformanceICacheTest {
         this.testContext = testContext;
 
         targetInstance = testContext.getTargetInstance();
-        HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-
-        HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
-                hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        HazelcastCacheManager cacheManager;
+        if (TestUtils.isMemberNode(targetInstance)) {
+            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
+            cacheManager = new HazelcastServerCacheManager(
+                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        } else {
+            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
+            cacheManager = new HazelcastClientCacheManager(
+                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        }
 
         CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
         config.setName(basename);
@@ -85,8 +94,8 @@ public class PerformanceICacheTest {
         for (int k = 0; k < keyCount; k++) {
             cache.put(k, 0);
 
-            if(k%10000==0){
-                log.info("Warmup: "+k);
+            if (k % 10000 == 0) {
+                log.info("Warmup: " + k);
             }
         }
     }

@@ -19,8 +19,9 @@ import com.hazelcast.cache.ICache;
 import com.hazelcast.cache.impl.HazelcastCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
+import com.hazelcast.client.cache.HazelcastClientCacheManager;
+import com.hazelcast.client.cache.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
-import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -35,6 +36,7 @@ import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import javax.cache.CacheException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -77,17 +79,28 @@ public class StringICacheTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
 
-        HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
+        HazelcastCacheManager cacheManager;
+        if (TestUtils.isMemberNode(targetInstance)) {
+            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
+            cacheManager = new HazelcastServerCacheManager(
+                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        } else {
+            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
+            cacheManager = new HazelcastClientCacheManager(
+                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        }
 
-        HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
-                hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-
-        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
+        CacheConfig<String, String> config = new CacheConfig<String, String>();
         config.setName(basename);
-        config.setTypes(Integer.class,Integer.class);
+        config.setTypes(String.class, String.class);
 
-        cacheManager.createCache(basename, config);
-        cache = cacheManager.getCache(basename);
+        try {
+            cacheManager.createCache(basename, config);
+        } catch (CacheException hack) {
+            //temp hack to deal with multiple nodes wanting to make the same cache.
+            log.severe(hack);
+        }
+        cache = cacheManager.getCache(basename, String.class, String.class);
     }
 
     @Teardown

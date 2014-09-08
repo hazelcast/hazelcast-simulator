@@ -2,11 +2,11 @@ package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.ICache;
 import com.hazelcast.cache.impl.HazelcastCacheManager;
-import com.hazelcast.cache.impl.HazelcastCachingProvider;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
+import com.hazelcast.client.cache.HazelcastClientCacheManager;
+import com.hazelcast.client.cache.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
-import com.hazelcast.config.InMemoryFormat;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
@@ -19,8 +19,10 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import javax.cache.CacheException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -61,17 +63,29 @@ public class CasICacheTest {
 
         targetInstance = testContext.getTargetInstance();
 
-        HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
+        HazelcastCacheManager cacheManager;
+        if (TestUtils.isMemberNode(targetInstance)) {
+            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
+            cacheManager = new HazelcastServerCacheManager(
+                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        } else {
+            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
+            cacheManager = new HazelcastClientCacheManager(
+                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        }
 
-        HazelcastCacheManager cacheManager = new HazelcastServerCacheManager(
-                hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-
-        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
+        CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
         config.setName(basename);
-        config.setTypes(Integer.class,Integer.class);
+        config.setTypes(Integer.class, Long.class);
 
-        cacheManager.createCache(basename, config);
-        cache = cacheManager.getCache(basename);
+        try {
+            cacheManager.createCache(basename, config);
+        } catch (CacheException hack) {
+            //temp hack to deal with multiple nodes wanting to make the same cache.
+            log.severe(hack);
+        }
+
+        cache = cacheManager.getCache(basename, Integer.class, Long.class);
         resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
     }
 
