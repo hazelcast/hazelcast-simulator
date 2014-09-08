@@ -141,7 +141,6 @@ public class MapReduceTest {
             total.add(i);
         }
         log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
-        System.out.println(basename + ": " + total + " from " + results.size() + " worker Threads");
     }
 
     public static class ModIdMapper implements Mapper<Integer, Employee, Integer, Employee> {
