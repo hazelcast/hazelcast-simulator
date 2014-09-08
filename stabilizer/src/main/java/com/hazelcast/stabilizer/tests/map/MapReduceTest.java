@@ -85,7 +85,9 @@ public class MapReduceTest {
                 if ((chance -= mapReduceProb) < 0) {
 
                     IMap<Integer, Employee> map = targetInstance.getMap(basename);
-                    JobTracker tracker = targetInstance.getJobTracker(basename);
+
+                    JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + basename);
+
                     Job<Integer, Employee> job = tracker.newJob(KeyValueSource.fromMap(map));
 
                     ICompletableFuture< Map< Integer, Set<Employee>> > future = job
