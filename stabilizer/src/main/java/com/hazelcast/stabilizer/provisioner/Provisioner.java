@@ -318,7 +318,7 @@ public class Provisioner {
             String syncCommand = format("rsync --copy-links  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
                     props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getVersion());
 
-            bash.execute(syncCommand);
+            bash.executeQuiet(syncCommand);
         }
 
         echoImportant("Finished Downloading Artifacts of %s machines", addresses.size());
