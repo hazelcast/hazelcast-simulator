@@ -14,7 +14,7 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
-import static com.hazelcast.stabilizer.tests.map.helpers.HazelcastUtils.isMemberNode;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.isMemberNode;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
