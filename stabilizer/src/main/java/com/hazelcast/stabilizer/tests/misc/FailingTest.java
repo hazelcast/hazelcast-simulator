@@ -9,9 +9,8 @@ import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import java.util.LinkedList;
 import java.util.List;
 
-//A test that causes a failure. This is useful fortesting the stabilizer framework and for demonstration purposes.
+//A test that causes a failure. This is useful for testing the stabilizer framework and for demonstration purposes.
 public class FailingTest {
-
 
     private TestContext testContext;
 

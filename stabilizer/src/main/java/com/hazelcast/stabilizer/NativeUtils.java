@@ -10,6 +10,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 
 public class NativeUtils {
+
     private static final Logger log = Logger.getLogger(NativeUtils.class);
 
     private NativeUtils() { }

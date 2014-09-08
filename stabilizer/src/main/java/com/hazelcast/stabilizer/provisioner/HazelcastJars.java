@@ -56,6 +56,7 @@ public class HazelcastJars {
         File repositoryDir = Utils.newFile(userhome, ".m2", "repository");
         File artifactFile = Utils.newFile(repositoryDir, "com", "hazelcast",
                 artifact, version, format("%s-%s.jar", artifact, version));
+
         if (artifactFile.exists()) {
             log.finest("Using artifact: " + artifactFile + " from local maven repository");
             bash.execute(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
@@ -90,7 +91,7 @@ public class HazelcastJars {
                 url = format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
             }
 
-            bash.execute(format("wget --no-verbose --directory-prefix=%s %s", hazelcastJarsDir.getAbsolutePath(), url));
+            bash.download(hazelcastJarsDir.getAbsolutePath(), url);
         }
     }
 

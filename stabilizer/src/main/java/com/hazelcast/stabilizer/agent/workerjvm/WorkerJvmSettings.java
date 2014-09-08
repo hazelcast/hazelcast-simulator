@@ -33,12 +33,15 @@ public class WorkerJvmSettings implements Serializable {
     public String profiler = "none";
     public String yourkitConfig;
     public String hprofSettings = "";
+    public String perfSettings = "";
+    public String clientVmOptions;
 
     public WorkerJvmSettings() {
     }
 
     public WorkerJvmSettings(WorkerJvmSettings settings) {
         this.vmOptions = settings.vmOptions;
+        this.clientVmOptions = settings.clientVmOptions;
         this.hzConfig = settings.hzConfig;
         this.clientHzConfig = settings.clientHzConfig;
         this.memberWorkerCount = settings.memberWorkerCount;
@@ -51,6 +54,7 @@ public class WorkerJvmSettings implements Serializable {
         this.yourkitConfig = settings.yourkitConfig;
         this.profiler = settings.profiler;
         this.hprofSettings = settings.hprofSettings;
+        this.perfSettings = settings.perfSettings;
     }
 
     public int totalWorkerCount() {
@@ -61,6 +65,7 @@ public class WorkerJvmSettings implements Serializable {
     public String toString() {
         return "WorkerSettings{" +
                 "\n  vmOptions='" + vmOptions + '\'' +
+                "\n  clientVmOptions='" + clientVmOptions + '\'' +
                 "\n, memberWorkerCount=" + memberWorkerCount +
                 "\n, clientWorkerCount=" + clientWorkerCount +
                 "\n, mixedWorkerCount=" + mixedWorkerCount +
@@ -73,6 +78,7 @@ public class WorkerJvmSettings implements Serializable {
                 "\n, hzConfig='" + hzConfig + '\'' +
                 "\n, clientHzConfig='" + clientHzConfig + '\'' +
                 "\n, hprofSettings='" + hprofSettings + '\'' +
+                "\n, perfSettings='" + perfSettings + '\'' +
                 "\n}";
     }
 }
