@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import static com.hazelcast.stabilizer.Utils.getFilesFromClassPath;
 import static com.hazelcast.stabilizer.Utils.loadProperties;
 import static java.lang.String.format;
 
@@ -36,7 +37,7 @@ public class TestSuite implements Serializable {
 
     private static final long serialVersionUID = 1;
 
-    public static TestSuite loadTestSuite(File file) throws Exception {
+    public static TestSuite loadTestSuite(File file, String propertiesOverrideString) throws Exception {
         Properties properties = loadProperties(file);
 
         Map<String, TestCase> testcases = new HashMap<String, TestCase>();
@@ -64,9 +65,13 @@ public class TestSuite implements Serializable {
         List<String> testcaseIds = new LinkedList<String>(testcases.keySet());
         Collections.sort(testcaseIds);
 
+        Map<String,String> propertiesOverride = parse(propertiesOverrideString);
+
         TestSuite testSuite = new TestSuite();
         for (String testcaseId : testcaseIds) {
             TestCase testcase = testcases.get(testcaseId);
+            testcase.override(propertiesOverride);
+
             if (testcase.getClassname() == null) {
                 if ("".equals(testcaseId)) {
                     throw new RuntimeException(format("There is no class set for the in property file [%s]." +
@@ -80,9 +85,21 @@ public class TestSuite implements Serializable {
                     ));
                 }
             }
+
             testSuite.addTest(testcase);
         }
+
         return testSuite;
+    }
+
+    private static Map<String, String> parse(String overrideProperties) {
+        String[] entries = overrideProperties.split(",");
+        Map<String, String> result = new HashMap<String, String>();
+        for (String entry : entries) {
+            String[] keyValue = entry.split("=");
+            result.put(keyValue[0],keyValue[1]);
+        }
+        return result;
     }
 
     public final String id = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
