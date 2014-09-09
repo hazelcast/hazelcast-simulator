@@ -180,7 +180,7 @@ public class Coordinator {
 
         if (monitorPerformance) {
             double performance = (operationCount * 1.0d) / testSuite.duration;
-            Utils.appendText("" + performance, new File("performance.txt"));
+            Utils.appendText("" + performance + "\n", new File("performance.txt"));
         }
 
         terminateWorkers();
