@@ -46,6 +46,14 @@ public class TestCase implements Serializable {
         return properties;
     }
 
+    public void override(Map<String, String> propertiesOverride) {
+        for (String key : properties.keySet()) {
+            if (propertiesOverride.containsKey(key)) {
+                properties.put(key, propertiesOverride.get(key));
+            }
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("TestCase{");
@@ -63,4 +71,5 @@ public class TestCase implements Serializable {
         sb.append("\n}");
         return sb.toString();
     }
+
 }

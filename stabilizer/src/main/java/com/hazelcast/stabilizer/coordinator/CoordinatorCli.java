@@ -32,6 +32,11 @@ public class CoordinatorCli {
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");
 
+    private final OptionSpec<String> overridesSpec = parser.accepts("overrides",
+            "Properties that override the properties in a given test-case. E.g. --variables \"threadcount=20,writePercentage=20\". " +
+                    "This makes it easy to parametrize a test.")
+            .withRequiredArg().ofType(String.class).defaultsTo("");
+
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
             "Number of Cluster member Worker JVM's. If no value is specified and no mixed members are specified, " +
                     "then the number of cluster members will be equal to the number of machines in the agents file"
@@ -165,7 +170,7 @@ public class CoordinatorCli {
         coordinator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
         coordinator.parallel = options.has(parallelSpec);
 
-        TestSuite testSuite = loadTestSuite(getTestSuiteFile());
+        TestSuite testSuite = loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec));
         coordinator.testSuite = testSuite;
         testSuite.duration = getDuration();
         testSuite.failFast = options.valueOf(failFastSpec);
@@ -188,6 +193,10 @@ public class CoordinatorCli {
         workerJvmSettings.perfSettings = coordinator.props.get("PERF_SETTINGS", "");
 
         coordinator.workerJvmSettings = workerJvmSettings;
+    }
+
+    private String getProperties() {
+        return options.valueOf(propertiesFileSpec);
     }
 
     private String loadClientHzConfig() {
