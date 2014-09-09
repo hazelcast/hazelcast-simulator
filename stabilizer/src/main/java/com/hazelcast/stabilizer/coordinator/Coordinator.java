@@ -172,10 +172,15 @@ public class Coordinator {
 
         long startMs = System.currentTimeMillis();
 
-        if(parallel){
+        if (parallel) {
             runParallel();
-        }else{
+        } else {
             runSequential();
+        }
+
+        if (monitorPerformance) {
+            double performance = (operationCount * 1.0d) / testSuite.duration;
+            Utils.appendText("" + performance, new File("performance.txt"));
         }
 
         terminateWorkers();
@@ -190,7 +195,7 @@ public class Coordinator {
     }
 
     private void runSequential() throws Exception {
-        echo(format("Running %s tests sequentially",testSuite.size()));
+        echo(format("Running %s tests sequentially", testSuite.size()));
 
         for (TestCase testCase : testSuite.testCaseList) {
             TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this);
@@ -208,37 +213,37 @@ public class Coordinator {
     }
 
     private void runParallel() throws InterruptedException, java.util.concurrent.ExecutionException {
-        echo(format("Running %s tests parallel",testSuite.size()));
+        echo(format("Running %s tests parallel", testSuite.size()));
 
         ExecutorService executor = Executors.newFixedThreadPool(testSuite.size());
 
         List<Future> futures = new LinkedList<Future>();
         for (final TestCase testCase : testSuite.testCaseList) {
-           Future f = executor.submit(new Runnable() {
-               @Override
-               public void run() {
-                   try {
-                       TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this);
-                       boolean success = runner.run();
-                       if (!success && testSuite.failFast) {
-                           log.info("Aborting testsuite due to failure");
-                           return;
-                       }
+            Future f = executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this);
+                        boolean success = runner.run();
+                        if (!success && testSuite.failFast) {
+                            log.info("Aborting testsuite due to failure");
+                            return;
+                        }
 
 //                       if (!success || workerJvmSettings.refreshJvm) {
 //                           terminateWorkers();
 //                           startWorkers();
 //                       }
-                   } catch (Exception e) {
-                       throw new RuntimeException(e);
-                   }
-               }
-           });
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
 
             futures.add(f);
         }
 
-        for(Future f: futures){
+        for (Future f : futures) {
             f.get();
         }
     }
