@@ -3,23 +3,40 @@ package com.hazelcast.stabilizer.worker;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.messaging.Message;
+import com.hazelcast.stabilizer.common.probes.impl.ConcurrentIntervalProbe;
+import com.hazelcast.stabilizer.common.probes.impl.ConcurrentSimpleProbe;
+import com.hazelcast.stabilizer.common.probes.IntervalProbe;
+import com.hazelcast.stabilizer.common.probes.impl.MaxLatencyProbe;
+import com.hazelcast.stabilizer.common.probes.impl.MaxLatencyResult;
+import com.hazelcast.stabilizer.common.probes.Result;
+import com.hazelcast.stabilizer.common.probes.SimpleProbe;
+import com.hazelcast.stabilizer.common.probes.impl.OperationsPerSecProbe;
+import com.hazelcast.stabilizer.common.probes.impl.OperationsPerSecondResult;
+import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.annotations.Receive;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
+import com.hazelcast.stabilizer.tests.annotations.Receive;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.util.Clock;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import static com.hazelcast.stabilizer.common.probes.Probes.newMaxLatencyProbe;
+import static com.hazelcast.stabilizer.common.probes.Probes.newOperationsPerSecProbe;
+import static com.hazelcast.stabilizer.common.probes.Probes.wrapAsThreadLocal;
 import static java.lang.String.format;
 
 /**
@@ -48,8 +65,10 @@ public class TestContainer<T extends TestContext> {
     private Method globalVerifyMethod;
 
     private Method operationCountMethod;
-
     private Method messageConsumerMethod;
+
+    private Map<String, SimpleProbe<?, ?>> probeMap = new ConcurrentHashMap<String, SimpleProbe<?, ?>>();
+    private Object[] setupArguments;
 
     public TestContainer(Object testObject, T testContext) {
         if (testObject == null) {
@@ -64,6 +83,17 @@ public class TestContainer<T extends TestContext> {
         this.clazz = testObject.getClass();
 
         initMethods();
+    }
+
+    public Map<String, Result<?>> getResults() {
+        Map<String, Result<?>> results = new HashMap<String, Result<?>>(probeMap.size());
+        for (Map.Entry<String, SimpleProbe<?, ?>> entry : probeMap.entrySet()) {
+            String name = entry.getKey();
+            SimpleProbe<?, ?> probe = entry.getValue();
+            Result<?> result = probe.getResult();
+            results.put(name, result);
+        }
+        return results;
     }
 
     private void initMethods() {
@@ -94,11 +124,19 @@ public class TestContainer<T extends TestContext> {
     }
 
     public void run() throws Throwable {
+        long now = Clock.currentTimeMillis();
+        for (SimpleProbe probe : probeMap.values()) {
+            probe.startProbing(now);
+        }
         invoke(runMethod);
+        now = Clock.currentTimeMillis();
+        for (SimpleProbe probe : probeMap.values()) {
+            probe.stopProbing(now);
+        }
     }
 
     public void setup() throws Throwable {
-        invoke(setupMethod, testContext);
+        invoke(setupMethod, setupArguments);
     }
 
     public void globalTeardown() throws Throwable {
@@ -153,7 +191,24 @@ public class TestContainer<T extends TestContext> {
         method.setAccessible(true);
         assertNotStatic(method);
         assertVoidReturnType(method);
-        assertTestContextArgument(method);
+        assertSetupArguments(method);
+
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        setupArguments = new Object[parameterTypes.length];
+        int i = 0;
+        for (Class<?> parameterType : parameterTypes) {
+            if (parameterType.isAssignableFrom(IntervalProbe.class)) {
+//                ConcurrentIntervalProbe<MaxLatencyResult, MaxLatencyProbe> probe = wrapAsThreadLocal(newMaxLatencyProbe());
+                ConcurrentSimpleProbe<OperationsPerSecondResult, OperationsPerSecProbe> probe = wrapAsThreadLocal(newOperationsPerSecProbe());
+                probeMap.put("Averagel"+i, probe);
+                setupArguments[i] = probe;
+            } else if (parameterType.isAssignableFrom(TestContext.class)) {
+                setupArguments[i] = testContext;
+            }
+            i++;
+        }
+
+
         setupMethod = method;
     }
 
@@ -343,17 +398,25 @@ public class TestContainer<T extends TestContext> {
         throw new IllegalTestException(format("Method '%s' can't have any args", method));
     }
 
-    private void assertTestContextArgument(Method method) {
-        if (method.getParameterTypes().length == 1) {
+    private void assertSetupArguments(Method method) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        if (parameterTypes.length < 1) {
             return;
         }
 
-        if (TestContext.class.equals(method.getParameterTypes()[0])) {
-            return;
+        boolean testContextFound = false;
+        for (Class<?> parameterType : parameterTypes) {
+            if (parameterType.isAssignableFrom(TestContext.class)) {
+                testContextFound = true;
+            } else if (!parameterType.isAssignableFrom(IntervalProbe.class)) {
+                throw new IllegalTestException("Method " + clazz + "." + method + " must have argument of type " + TestContext.class
+                                +" and zero or more arguments of type "+SimpleProbe.class);
+            }
         }
-
-        throw new IllegalTestException(
-                "Method " + clazz + "." + method + " should have single argument of type " + TestContext.class);
+        if (!testContextFound) {
+            throw new IllegalTestException("Method " + clazz + "." + method + " must have argument of type " + TestContext.class
+                    +" and zero or more arguments of type "+SimpleProbe.class);
+        }
     }
 
     private void assertArguments(Method method, Class<?>...arguments) {

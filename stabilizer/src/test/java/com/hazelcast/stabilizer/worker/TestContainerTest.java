@@ -2,6 +2,7 @@ package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.stabilizer.common.messaging.Message;
+import com.hazelcast.stabilizer.common.probes.SimpleProbe;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Receive;
@@ -13,6 +14,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -67,6 +69,17 @@ public class TestContainerTest {
 
         assertTrue(test.localVerifyCalled);
     }
+
+    @Test
+    public void localProbeInjected() throws Throwable {
+        DummyTestContext testContext = new DummyTestContext();
+        DummyTest test = new DummyTest();
+        TestContainer invoker = new TestContainer(test, testContext);
+        invoker.setup();
+
+        assertNotNull(test.simpleProbe);
+    }
+
 
     @Test
     public void testMessageReceiver() throws Throwable {
@@ -164,11 +177,13 @@ public class TestContainerTest {
         boolean runCalled;
         boolean setupCalled;
         TestContext context;
+        SimpleProbe simpleProbe;
 
         @Setup
-        void setup(TestContext context) {
+        void setup(TestContext context, SimpleProbe simpleProbe) {
             this.context = context;
             this.setupCalled = true;
+            this.simpleProbe = simpleProbe;
         }
 
         @Run

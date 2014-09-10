@@ -28,6 +28,7 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.messaging.Message;
+import com.hazelcast.stabilizer.common.probes.Result;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
@@ -36,6 +37,7 @@ import com.hazelcast.stabilizer.worker.commands.CommandRequest;
 import com.hazelcast.stabilizer.worker.commands.CommandResponse;
 import com.hazelcast.stabilizer.worker.commands.DoneCommand;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
+import com.hazelcast.stabilizer.worker.commands.GetBenchmarkResultsCommand;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
 import com.hazelcast.stabilizer.worker.commands.InitCommand;
 import com.hazelcast.stabilizer.worker.commands.MessageCommand;
@@ -53,6 +55,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -304,6 +307,8 @@ public class MemberWorker {
                     process((GenericCommand) command);
                 } else if (command instanceof GetOperationCountCommand) {
                     result = process((GetOperationCountCommand) command);
+                } else if (command instanceof GetBenchmarkResultsCommand) {
+                    result = process((GetBenchmarkResultsCommand) command);
                 } else if (command instanceof MessageCommand) {
                     process((MessageCommand) command);
                 } else {
@@ -317,6 +322,13 @@ public class MemberWorker {
                     responseQueue.add(response);
                 }
             }
+        }
+
+        private Map<String, Result<?>> process(GetBenchmarkResultsCommand command) {
+            String testId = command.getTestId();
+            TestContainer<TestContext> testContainer = tests.get(testId);
+            Map<String, Result<?>> results = testContainer.getResults();
+            return results;
         }
 
         private void process(MessageCommand command) {

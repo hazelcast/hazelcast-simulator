@@ -5,6 +5,8 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.common.probes.IntervalProbe;
+import com.hazelcast.stabilizer.common.probes.SimpleProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
@@ -36,8 +38,13 @@ public class MapLongPerformanceTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
+    private SimpleProbe probe1;
+    private SimpleProbe probe2;
+
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext, SimpleProbe probe1, SimpleProbe probe2) throws Exception {
+        this.probe1 = probe1;
+        this.probe2 = probe2;
         if (writePercentage < 0) {
             throw new IllegalArgumentException("Write percentage can't be smaller than 0");
         }
@@ -93,8 +100,10 @@ public class MapLongPerformanceTest {
                 Integer key = random.nextInt(keyCount);
                 if (shouldWrite(iteration)) {
                     map.set(key, System.currentTimeMillis());
+                    probe1.done();
                 } else {
                     map.get(key);
+                    probe2.done();
                 }
 
                 if (iteration % logFrequency == 0) {
