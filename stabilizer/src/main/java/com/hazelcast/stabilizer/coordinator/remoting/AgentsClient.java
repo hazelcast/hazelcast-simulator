@@ -174,7 +174,7 @@ public class AgentsClient {
         return result;
     }
 
-    public void waitDone(String prefix, String testId) {
+    public void waitDone(String prefix, String testId, String phaseName) {
         long startTimeMs = System.currentTimeMillis();
         for (; ; ) {
             List<List<Boolean>> result = executeOnAllWorkers(new DoneCommand(testId));
@@ -193,7 +193,7 @@ public class AgentsClient {
             }
 
             long durationMs = System.currentTimeMillis() - startTimeMs;
-            log.info(prefix + "Waiting for completion: " + Utils.secondsToHuman(durationMs / 1000));
+            log.info(prefix + "Waiting for "+phaseName+"completion: " + Utils.secondsToHuman(durationMs / 1000));
             Utils.sleepSeconds(5);
         }
     }
