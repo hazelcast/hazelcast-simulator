@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import static com.hazelcast.stabilizer.Utils.getFilesFromClassPath;
 import static com.hazelcast.stabilizer.Utils.loadProperties;
 import static java.lang.String.format;
 
@@ -65,7 +64,7 @@ public class TestSuite implements Serializable {
         List<String> testcaseIds = new LinkedList<String>(testcases.keySet());
         Collections.sort(testcaseIds);
 
-        Map<String,String> propertiesOverride = parse(propertiesOverrideString);
+        Map<String, String> propertiesOverride = parse(propertiesOverrideString);
 
         TestSuite testSuite = new TestSuite();
         for (String testcaseId : testcaseIds) {
@@ -93,11 +92,18 @@ public class TestSuite implements Serializable {
     }
 
     private static Map<String, String> parse(String overrideProperties) {
-        String[] entries = overrideProperties.split(",");
+        overrideProperties = overrideProperties.trim();
+
         Map<String, String> result = new HashMap<String, String>();
+        if(overrideProperties.isEmpty()){
+            return result;
+        }
+
+        String[] entries = overrideProperties.split(",");
+
         for (String entry : entries) {
             String[] keyValue = entry.split("=");
-            result.put(keyValue[0],keyValue[1]);
+            result.put(keyValue[0], keyValue[1]);
         }
         return result;
     }

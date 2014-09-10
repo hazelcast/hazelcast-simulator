@@ -33,7 +33,7 @@ public class CoordinatorCli {
             .withRequiredArg().ofType(String.class).defaultsTo("60");
 
     private final OptionSpec<String> overridesSpec = parser.accepts("overrides",
-            "Properties that override the properties in a given test-case. E.g. --variables \"threadcount=20,writePercentage=20\". " +
+            "Properties that override the properties in a given test-case. E.g. --overrides \"threadcount=20,writePercentage=20\". " +
                     "This makes it easy to parametrize a test.")
             .withRequiredArg().ofType(String.class).defaultsTo("");
 
