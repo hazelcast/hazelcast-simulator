@@ -43,9 +43,10 @@ public class AtomicLongTest {
     public int countersLength = 1000;
     public int threadCount = 10;
     public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 10000;
+    public int performanceUpdateFrequency = 1000;
     public String basename = "atomiclong";
     public boolean preventLocalCalls = false;
+    public int writePercentage = 100;
 
     private IAtomicLong totalCounter;
     private IAtomicLong[] counters;
@@ -55,14 +56,21 @@ public class AtomicLongTest {
     @Setup
     public void setup(TestContext context) throws Exception {
         this.context = context;
-        log.info("countersLength:" + countersLength + " threadCount:" + threadCount);
+
+        if (writePercentage < 0) {
+            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
+        }
+
+        if (writePercentage > 100) {
+            throw new IllegalArgumentException("Write percentage can't be larger than 100");
+        }
 
         HazelcastInstance targetInstance = context.getTargetInstance();
 
         totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            String key = StringUtils.generateKey(4, preventLocalCalls, targetInstance);
+            String key = StringUtils.generateKey(8, preventLocalCalls, targetInstance);
             counters[k] = targetInstance.getAtomicLong(key);
         }
     }
@@ -106,9 +114,16 @@ public class AtomicLongTest {
         @Override
         public void run() {
             long iteration = 0;
+            long increments = 0;
+
             while (!context.isStopped()) {
                 IAtomicLong counter = getRandomCounter();
-                counter.incrementAndGet();
+                if (shouldWrite(iteration)) {
+                    increments++;
+                    counter.incrementAndGet();
+                } else {
+                    counter.get();
+                }
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -120,7 +135,17 @@ public class AtomicLongTest {
                 iteration++;
             }
 
-            totalCounter.addAndGet(iteration);
+            totalCounter.addAndGet(increments);
+        }
+
+        private boolean shouldWrite(long iteration) {
+            if (writePercentage == 0) {
+                return false;
+            } else if (writePercentage == 100) {
+                return true;
+            } else {
+                return (iteration % 100) < writePercentage;
+            }
         }
 
         private IAtomicLong getRandomCounter() {
