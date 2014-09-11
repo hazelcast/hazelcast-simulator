@@ -39,9 +39,7 @@ public class TestUtils {
 
     public static byte[] randomByteArray(Random random, int length) {
         byte[] result = new byte[length];
-        for (int k = 0; k < length; k++) {
-            result[k] = (byte) random.nextInt();
-        }
+        random.nextBytes(result);
         return result;
     }
 
