@@ -9,7 +9,7 @@ ips=$(cat agents.txt | cut -d',' -f1)
 IFS=$'\n'
 
 
-for i in {1..${max}}
+for (( i=1; i<=$max; i++ ))
 do
 
     for box in $ips
