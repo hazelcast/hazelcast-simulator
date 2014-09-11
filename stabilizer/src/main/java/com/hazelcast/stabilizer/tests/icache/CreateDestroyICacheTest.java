@@ -99,8 +99,10 @@ public class CreateDestroyICacheTest {
                 } else if ((chance -= putCacheProb) < 0) {
                     try{
                         ICache cache = cacheManager.getCache(basename);
-                        cache.put(random.nextInt(), random.nextInt());
-                        counter.put++;
+                        if(cache!=null){
+                            cache.put(random.nextInt(), random.nextInt());
+                            counter.put++;
+                        }
                     } catch (Exception e){
                         log.severe(basename+": getCache exception "+e, e);
                         counter.putException++;
