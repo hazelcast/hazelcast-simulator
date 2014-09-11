@@ -26,6 +26,7 @@ import javax.cache.CacheException;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -183,7 +184,7 @@ public class EntryProcessorICacheTest {
         }
     }
 
-    private static class IncrementEntryProcessor implements EntryProcessor<Integer, Long, Object> {
+    private static class IncrementEntryProcessor implements EntryProcessor<Integer, Long, Object> , Serializable {
         private final long increment;
         private final long delayMs;
 
