@@ -51,7 +51,7 @@ public class ConcurentCreateICacheTest {
     public void setup(TestContext testContext) throws Exception {
 
         if(memberCount==-1 || clientCount==-1){
-            throw new IllegalStateException("must Set memberCount and clientCount propities");
+            throw new IllegalStateException("must Set memberCount and clientCount properties");
         }
 
         targetInstance = testContext.getTargetInstance();

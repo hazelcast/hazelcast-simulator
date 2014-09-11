@@ -41,9 +41,7 @@ public class CreateDestroyICacheTest {
 
     private final static ILogger log = Logger.getLogger(CreateDestroyICacheTest.class);
 
-    public String basename = this.getClass().getName();
     public int threadCount = 3;
-
     public double createCacheProb=0.5;
     public double putCacheProb=0.25;
     public double destroyCacheProb=0.25;
@@ -51,11 +49,13 @@ public class CreateDestroyICacheTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private HazelcastCacheManager cacheManager;
+    private String basename;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+        basename = testContext.getTestId();
 
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
@@ -94,7 +94,6 @@ public class CreateDestroyICacheTest {
                         counter.create++;
                     } catch (CacheException e) {
                         log.severe(basename+": createCache exception "+e, e);
-
                         counter.createException++;
                     }
                 } else if ((chance -= putCacheProb) < 0) {
