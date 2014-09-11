@@ -26,9 +26,11 @@ import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
+import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import javax.cache.CacheException;
 import java.io.Serializable;
@@ -83,6 +85,9 @@ public class ConcurentCreateICacheTest {
         targetInstance.getList(baseName).add(counter);
     }
 
+    @Run
+    public void run(){
+    }
 
     @Verify(global = true)
     public void verify() throws Exception {
