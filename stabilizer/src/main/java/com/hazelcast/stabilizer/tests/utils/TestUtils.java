@@ -29,12 +29,21 @@ import com.hazelcast.stabilizer.tests.BindException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Map;
+import java.util.Random;
 
 import static java.lang.String.format;
 
 public class TestUtils {
 
     public static final String TEST_INSTANCE = "testInstance";
+
+    public static byte[] randomByteArray(Random random, int length) {
+        byte[] result = new byte[length];
+        for (int k = 0; k < length; k++) {
+            result[k] = (byte) random.nextInt();
+        }
+        return result;
+    }
 
     public static void warmupPartitions(ILogger logger, HazelcastInstance hz) {
         PartitionService partitionService = hz.getPartitionService();
