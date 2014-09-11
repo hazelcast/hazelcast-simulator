@@ -22,9 +22,9 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.Employee;
-import com.hazelcast.stabilizer.tests.map.helpers.MapReduceCounter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -77,7 +77,7 @@ public class MapReduceTest {
 
     private class Worker implements Runnable {
         private Random random = new Random();
-        private MapReduceCounter counter = new MapReduceCounter();
+        private Counter counter = new Counter();
 
         public void run() {
             while (!testContext.isStopped()) {
@@ -133,12 +133,33 @@ public class MapReduceTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        IList<MapReduceCounter> results = targetInstance.getList(baseName);
-        MapReduceCounter total = new MapReduceCounter();
-        for (MapReduceCounter i : results) {
+        IList<Counter> results = targetInstance.getList(baseName);
+        Counter total = new Counter();
+        for (Counter i : results) {
             total.add(i);
         }
         log.info(baseName + ": " + total + " from " + results.size() + " worker Threads");
+    }
+
+    public static class Counter implements Serializable {
+        public long mapReduce = 0;
+        public long getMapEntry=0;
+        public long modifyMapEntry = 0;
+
+        public void add(Counter o) {
+            mapReduce += o.mapReduce;
+            getMapEntry += o.getMapEntry;
+            modifyMapEntry += o.modifyMapEntry;
+        }
+
+        @Override
+        public String toString() {
+            return "Counter{" +
+                    "mapReduce=" + mapReduce +
+                    ", getMapEntry=" + getMapEntry +
+                    ", modifyMapEntry=" + modifyMapEntry +
+                    '}';
+        }
     }
 
     public static class ModIdMapper implements Mapper<Integer, Employee, Integer, Employee> {
