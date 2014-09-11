@@ -26,13 +26,13 @@ public class Employee implements Serializable, Comparable<Employee> {
 
     public Employee(int id) {
         this.id = id;
-        setInfo();
+        randomizeProperties();
     }
 
     public Employee() {
     }
 
-    public void setInfo() {
+    public void randomizeProperties() {
         name = names[random.nextInt(names.length)];
         age = random.nextInt(MAX_AGE);
         active = random.nextBoolean();
