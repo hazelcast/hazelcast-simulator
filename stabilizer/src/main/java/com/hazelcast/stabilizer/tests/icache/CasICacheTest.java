@@ -49,7 +49,6 @@ public class CasICacheTest {
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "icachecas";
 
     private final AtomicLong operations = new AtomicLong();
     private IList<long[]> resultsPerWorker;
@@ -57,12 +56,15 @@ public class CasICacheTest {
     private HazelcastInstance targetInstance;
     private HazelcastCacheManager cacheManager;
     private ICache<Integer, Long> cache;
+    private String basename;
+
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         resultsPerWorker = targetInstance.getList(basename);
+        basename=testContext.getTestId();
 
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
