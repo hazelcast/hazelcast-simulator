@@ -15,6 +15,7 @@
  */
 package com.hazelcast.stabilizer.tests.map;
 
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.Partition;
@@ -78,6 +79,7 @@ public class StringMapTest {
     @Teardown
     public void teardown() throws Exception {
         map.destroy();
+        log.info(TestUtils.getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = false)

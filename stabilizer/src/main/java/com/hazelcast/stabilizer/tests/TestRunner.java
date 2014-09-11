@@ -143,7 +143,7 @@ public class TestRunner<E> {
         testInvoker.localTeardown();
         log.info("Finished local teardown");
 
-        hazelcastInstance.shutdown();
+       // hazelcastInstance.shutdown();
         log.info("Finished");
     }
 

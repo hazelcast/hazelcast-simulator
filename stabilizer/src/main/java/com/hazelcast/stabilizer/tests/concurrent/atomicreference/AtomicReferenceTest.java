@@ -33,6 +33,10 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.makeString;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.randomByteArray;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.warmupPartitions;
+
 public class AtomicReferenceTest {
 
     private final static ILogger log = Logger.getLogger(AtomicReferenceTest.class);
@@ -53,6 +57,7 @@ public class AtomicReferenceTest {
     private AtomicLong operations = new AtomicLong();
     private TestContext context;
     private Object[] values;
+    private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext context) throws Exception {
@@ -66,16 +71,16 @@ public class AtomicReferenceTest {
             throw new IllegalArgumentException("Write percentage can't be larger than 100");
         }
 
-        HazelcastInstance targetInstance = context.getTargetInstance();
-        TestUtils.warmupPartitions(log, targetInstance);
+        targetInstance = context.getTargetInstance();
+        warmupPartitions(log, targetInstance);
 
         values = new Object[valueCount];
         Random random = new Random();
         for (int k = 0; k < valueCount; k++) {
             if (useStringValue) {
-                values[k] = StringUtils.makeString(valueLength);
+                values[k] = makeString(valueLength);
             } else {
-                values[k] = TestUtils.randomByteArray(random, valueLength);
+                values[k] = randomByteArray(random, valueLength);
             }
         }
 
@@ -93,6 +98,7 @@ public class AtomicReferenceTest {
         for (IAtomicReference counter : counters) {
             counter.destroy();
         }
+        log.info(TestUtils.getOperationCountInformation(targetInstance));
     }
 
     @Run

@@ -16,6 +16,8 @@
 package com.hazelcast.stabilizer.tests.utils;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.HazelcastInstanceAware;
+import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
@@ -23,13 +25,19 @@ import com.hazelcast.instance.HazelcastInstanceImpl;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.spi.OperationService;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.tests.BindException;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import static java.lang.String.format;
 
@@ -41,6 +49,66 @@ public class TestUtils {
         byte[] result = new byte[length];
         random.nextBytes(result);
         return result;
+    }
+
+    public static String getOperationCountInformation(HazelcastInstance hz) {
+        Map<Member, Long> operationCountMap = getOperationCount(hz);
+
+        long total = 0;
+        for (Long count : operationCountMap.values()) {
+            total += count;
+        }
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("total operations:").append(total).append("\n");
+        for (Map.Entry<Member, Long> entry : operationCountMap.entrySet()) {
+            Member member = entry.getKey();
+            long count = entry.getValue();
+            double percentage = count * 100 / total;
+            sb.append(member).append(" total=").append(count).append(" percentage=").append(percentage).append("%\n");
+        }
+        return sb.toString();
+    }
+
+    public static Map<Member, Long> getOperationCount(HazelcastInstance hz) {
+        IExecutorService executorService = hz.getExecutorService("operationCountExecutor");
+
+        Map<Member, Future<Long>> futures = new HashMap<Member, Future<Long>>();
+        for (Member member : hz.getCluster().getMembers()) {
+            Future<Long> future = executorService.submitToMember(new GetOperationCount(), member);
+            futures.put(member, future);
+        }
+
+        Map<Member, Long> result = new HashMap<Member, Long>();
+        for (Map.Entry<Member, Future<Long>> entry : futures.entrySet()) {
+            try {
+                Member member = entry.getKey();
+                Long value = entry.getValue().get();
+                result.put(member, value);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return result;
+    }
+
+    public final static class GetOperationCount implements Callable<Long>, HazelcastInstanceAware, Serializable {
+        private HazelcastInstance hz;
+
+        @Override
+        public Long call() throws Exception {
+            Node node = getNode(hz);
+            OperationService operationService = node.getNodeEngine().getOperationService();
+            return operationService.getExecutedOperationCount();
+        }
+
+        @Override
+        public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
+            this.hz = hazelcastInstance;
+        }
     }
 
     public static void warmupPartitions(ILogger logger, HazelcastInstance hz) {

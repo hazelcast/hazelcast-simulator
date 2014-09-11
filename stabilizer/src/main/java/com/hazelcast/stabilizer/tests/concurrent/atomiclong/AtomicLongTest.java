@@ -53,6 +53,7 @@ public class AtomicLongTest {
     private IAtomicLong[] counters;
     private AtomicLong operations = new AtomicLong();
     private TestContext context;
+    private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext context) throws Exception {
@@ -66,7 +67,7 @@ public class AtomicLongTest {
             throw new IllegalArgumentException("Write percentage can't be larger than 100");
         }
 
-        HazelcastInstance targetInstance = context.getTargetInstance();
+        targetInstance = context.getTargetInstance();
         TestUtils.warmupPartitions(log, targetInstance);
 
         totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
@@ -83,6 +84,7 @@ public class AtomicLongTest {
             counter.destroy();
         }
         totalCounter.destroy();
+        log.info(TestUtils.getOperationCountInformation(targetInstance));
     }
 
     @Run
