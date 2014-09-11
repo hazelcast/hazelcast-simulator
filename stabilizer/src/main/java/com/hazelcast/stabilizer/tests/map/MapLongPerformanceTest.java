@@ -9,6 +9,7 @@ import com.hazelcast.stabilizer.common.probes.IntervalProbe;
 import com.hazelcast.stabilizer.common.probes.SimpleProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.tests.annotations.Name;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
@@ -38,13 +39,18 @@ public class MapLongPerformanceTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
-    private SimpleProbe probe1;
-    private SimpleProbe probe2;
+    private SimpleProbe setProbe;
+    private SimpleProbe getProbe;
+    private IntervalProbe intervalProbe;
 
     @Setup
-    public void setup(TestContext testContext, SimpleProbe probe1, SimpleProbe probe2) throws Exception {
-        this.probe1 = probe1;
-        this.probe2 = probe2;
+    public void setup(TestContext testContext,
+                      @Name("set") SimpleProbe setProbe,
+                      @Name("get") SimpleProbe getProbe,
+                      @Name("latencyProbe")IntervalProbe intervalProbe) throws Exception {
+        this.setProbe = setProbe;
+        this.getProbe = getProbe;
+        this.intervalProbe = intervalProbe;
         if (writePercentage < 0) {
             throw new IllegalArgumentException("Write percentage can't be smaller than 0");
         }
@@ -99,11 +105,21 @@ public class MapLongPerformanceTest {
             while (!testContext.isStopped()) {
                 Integer key = random.nextInt(keyCount);
                 if (shouldWrite(iteration)) {
-                    map.set(key, System.currentTimeMillis());
-                    probe1.done();
+                    intervalProbe.started();
+                    try {
+                        map.set(key, System.currentTimeMillis());
+                    } finally {
+                        intervalProbe.done();
+                    }
+                    setProbe.done();
                 } else {
-                    map.get(key);
-                    probe2.done();
+                    intervalProbe.started();
+                    try {
+                        map.get(key);
+                    } finally {
+                        intervalProbe.done();
+                    }
+                    getProbe.done();
                 }
 
                 if (iteration % logFrequency == 0) {

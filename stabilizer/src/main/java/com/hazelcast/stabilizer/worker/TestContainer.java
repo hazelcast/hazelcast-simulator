@@ -3,18 +3,12 @@ package com.hazelcast.stabilizer.worker;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.messaging.Message;
-import com.hazelcast.stabilizer.common.probes.impl.ConcurrentIntervalProbe;
-import com.hazelcast.stabilizer.common.probes.impl.ConcurrentSimpleProbe;
 import com.hazelcast.stabilizer.common.probes.IntervalProbe;
-import com.hazelcast.stabilizer.common.probes.impl.MaxLatencyProbe;
-import com.hazelcast.stabilizer.common.probes.impl.MaxLatencyResult;
 import com.hazelcast.stabilizer.common.probes.Result;
 import com.hazelcast.stabilizer.common.probes.SimpleProbe;
-import com.hazelcast.stabilizer.common.probes.impl.OperationsPerSecProbe;
-import com.hazelcast.stabilizer.common.probes.impl.OperationsPerSecondResult;
-import com.hazelcast.stabilizer.performance.OperationsPerSecond;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.annotations.Name;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Receive;
 import com.hazelcast.stabilizer.tests.annotations.Run;
@@ -23,6 +17,7 @@ import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.util.Clock;
+import com.sun.org.apache.bcel.internal.generic.SIPUSH;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -34,9 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.hazelcast.stabilizer.common.probes.Probes.newMaxLatencyProbe;
+import static com.hazelcast.stabilizer.common.probes.Probes.getDefaultProbe;
 import static com.hazelcast.stabilizer.common.probes.Probes.newOperationsPerSecProbe;
-import static com.hazelcast.stabilizer.common.probes.Probes.wrapAsThreadLocal;
 import static java.lang.String.format;
 
 /**
@@ -197,10 +191,15 @@ public class TestContainer<T extends TestContext> {
         setupArguments = new Object[parameterTypes.length];
         int i = 0;
         for (Class<?> parameterType : parameterTypes) {
-            if (parameterType.isAssignableFrom(IntervalProbe.class)) {
-//                ConcurrentIntervalProbe<MaxLatencyResult, MaxLatencyProbe> probe = wrapAsThreadLocal(newMaxLatencyProbe());
-                ConcurrentSimpleProbe<OperationsPerSecondResult, OperationsPerSecProbe> probe = wrapAsThreadLocal(newOperationsPerSecProbe());
-                probeMap.put("Averagel"+i, probe);
+            if (parameterType.equals(IntervalProbe.class)) {
+                SimpleProbe probe = getDefaultProbe(IntervalProbe.class);
+                String probeName = getProbeName(parameterType, i);
+                probeMap.put(probeName, probe);
+                setupArguments[i] = probe;
+            } else if (parameterType.equals(SimpleProbe.class)) {
+                SimpleProbe probe = getDefaultProbe(SimpleProbe.class);
+                String probeName = getProbeName(parameterType, i);
+                probeMap.put(probeName, probe);
                 setupArguments[i] = probe;
             } else if (parameterType.isAssignableFrom(TestContext.class)) {
                 setupArguments[i] = testContext;
@@ -210,6 +209,17 @@ public class TestContainer<T extends TestContext> {
 
 
         setupMethod = method;
+    }
+
+    private String getProbeName(Class<?> parameterType, int i) {
+        Name nameAnnotation = parameterType.getAnnotation(Name.class);
+        String probeName;
+        if (nameAnnotation == null) {
+            probeName = "Probe"+i;
+        } else {
+            probeName = nameAnnotation.value();
+        }
+        return probeName;
     }
 
     private void initGetOperationCountMethod() {

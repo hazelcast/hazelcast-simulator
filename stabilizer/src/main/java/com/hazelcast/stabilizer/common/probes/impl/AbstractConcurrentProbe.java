@@ -48,6 +48,7 @@ public abstract class AbstractConcurrentProbe<R extends Result<R>, T extends Sim
     public void startProbing(long time) {
         startedAt = time;
     }
+
     public void stopProbing(long time) {
         for (T probe : probeMap.values()) {
             probe.stopProbing(time);
