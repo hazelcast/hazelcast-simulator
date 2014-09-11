@@ -45,7 +45,6 @@ public class CasICacheTest {
 
     private final static ILogger log = Logger.getLogger(CasICacheTest.class);
 
-    //props
     public int threadCount = 10;
     public int keyCount = 1000;
     public int logFrequency = 10000;
@@ -63,6 +62,7 @@ public class CasICacheTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+        resultsPerWorker = targetInstance.getList(basename);
 
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
