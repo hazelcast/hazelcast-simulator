@@ -38,7 +38,6 @@ public class MapReduceTest {
 
     private final static ILogger log = Logger.getLogger(MapReduceTest.class);
 
-    public String basename = this.getClass().getName();
     public int threadCount = 1;
     public int keyCount = 1000;
 
@@ -48,18 +47,20 @@ public class MapReduceTest {
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+    private String baseName = null;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+        baseName = testContext.getTestId();
 
         warmupPartitions(log, targetInstance);
     }
 
     @Warmup(global = true)
     public void warmup() throws InterruptedException {
-        Map map = targetInstance.getMap(basename);
+        Map map = targetInstance.getMap(baseName);
         for (int id = 0; id < keyCount; id++) {
             map.put(id, new Employee(id));
         }
@@ -84,8 +85,8 @@ public class MapReduceTest {
                 double chance = random.nextDouble();
                 if ((chance -= mapReduceProb) < 0) {
 
-                    IMap<Integer, Employee> map = targetInstance.getMap(basename);
-                    JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + basename);
+                    IMap<Integer, Employee> map = targetInstance.getMap(baseName);
+                    JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + baseName);
                     Job<Integer, Employee> job = tracker.newJob(KeyValueSource.fromMap(map));
 
                     ICompletableFuture< Map< Integer, Set<Employee>> > future = job
@@ -98,16 +99,13 @@ public class MapReduceTest {
                         Map<Integer, Set<Employee>> result = future.get();
 
                         for(Set<Employee> s : result.values() ){
-                            if(s!=null){
-                                System.out.println(s);
-                                for(Employee e : s ){
+                            for(Employee e : s ){
 
-                                    assertTrue(e.getId()%2 == 0);
-                                    assertTrue(e.getId() >= 10 && e.getId() <= 30);
-                                    assertTrue(e.getId() != 10);
-                                    assertTrue(e.getId() != 20);
-                                    assertTrue(e.getId() != 30);
-                                }
+                                assertTrue(e.getId()%2 == 0);
+                                assertTrue(e.getId() >= 10 && e.getId() <= 30);
+                                assertTrue(e.getId() != 10);
+                                assertTrue(e.getId() != 20);
+                                assertTrue(e.getId() != 30);
                             }
                         }
                     } catch (Exception e) { throw new RuntimeException(e);}
@@ -115,13 +113,13 @@ public class MapReduceTest {
                     counter.mapReduce++;
                 }
                 else if ((chance -= getMapEntryProb) < 0) {
-                    IMap<Integer, Employee> map = targetInstance.getMap(basename);
+                    IMap<Integer, Employee> map = targetInstance.getMap(baseName);
                     map.get(random.nextInt(keyCount));
 
                     counter.getMapEntry++;
                 }
                 else if ((chance -= modifyEntryProb) < 0) {
-                    IMap<Integer, Employee> map = targetInstance.getMap(basename);
+                    IMap<Integer, Employee> map = targetInstance.getMap(baseName);
 
                     Employee e = map.get(random.nextInt(keyCount));
                     e.randomizeProperties();
@@ -129,18 +127,18 @@ public class MapReduceTest {
                     counter.modifyMapEntry++;
                 }
             }
-            targetInstance.getList(basename).add(counter);
+            targetInstance.getList(baseName).add(counter);
         }
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        IList<MapReduceCounter> results = targetInstance.getList(basename);
+        IList<MapReduceCounter> results = targetInstance.getList(baseName);
         MapReduceCounter total = new MapReduceCounter();
         for (MapReduceCounter i : results) {
             total.add(i);
         }
-        log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
+        log.info(baseName + ": " + total + " from " + results.size() + " worker Threads");
     }
 
     public static class ModIdMapper implements Mapper<Integer, Employee, Integer, Employee> {
@@ -223,6 +221,9 @@ public class MapReduceTest {
             }
 
             public Set<Employee> finalizeReduce() {
+                if(passed.isEmpty()){
+                    return null;
+                }
                 return passed;
             }
         }
