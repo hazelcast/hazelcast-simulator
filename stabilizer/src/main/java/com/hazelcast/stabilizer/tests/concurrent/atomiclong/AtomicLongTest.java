@@ -28,6 +28,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
+import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
@@ -66,6 +67,7 @@ public class AtomicLongTest {
         }
 
         HazelcastInstance targetInstance = context.getTargetInstance();
+        TestUtils.warmupPartitions(log, targetInstance);
 
         totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];

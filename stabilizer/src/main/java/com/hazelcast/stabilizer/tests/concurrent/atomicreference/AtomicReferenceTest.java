@@ -67,6 +67,7 @@ public class AtomicReferenceTest {
         }
 
         HazelcastInstance targetInstance = context.getTargetInstance();
+        TestUtils.warmupPartitions(log, targetInstance);
 
         values = new Object[valueCount];
         Random random = new Random();
