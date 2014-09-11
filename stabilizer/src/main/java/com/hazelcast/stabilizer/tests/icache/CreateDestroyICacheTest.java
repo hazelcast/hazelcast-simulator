@@ -93,7 +93,7 @@ public class CreateDestroyICacheTest {
                         cacheManager.createCache(basename, config);
                         counter.create++;
                     } catch (CacheException e) {
-                        log.severe(basename+": createCache exception "+e, e);
+                        log.severe(basename+": createCache "+e, e);
                         counter.createException++;
                     }
                 } else if ((chance -= putCacheProb) < 0) {
@@ -104,7 +104,7 @@ public class CreateDestroyICacheTest {
                             counter.put++;
                         }
                     } catch (Exception e){
-                        log.severe(basename+": getCache exception "+e, e);
+                        log.severe(basename+": getCache "+e, e);
                         counter.putException++;
                     }
                 } else if ((chance -= destroyCacheProb) < 0) {
@@ -112,7 +112,7 @@ public class CreateDestroyICacheTest {
                         cacheManager.destroyCache(basename);
                         counter.destroy++;
                     } catch (Exception e){
-                        log.severe(basename+": destroyCache exception "+e, e);
+                        log.severe(basename+": destroyCache "+e, e);
                         counter.destroyException++;
                     }
                 }
