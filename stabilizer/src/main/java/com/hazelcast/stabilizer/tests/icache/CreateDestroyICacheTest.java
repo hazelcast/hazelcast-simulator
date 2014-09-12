@@ -92,7 +92,7 @@ public class CreateDestroyICacheTest {
                     try {
                         cacheManager.createCache(basename, config);
                         counter.create++;
-                    } catch (CacheException e) {
+                    } catch (Exception e) {
                         log.severe(basename+": createCache "+e, e);
                         counter.createException++;
                     }
