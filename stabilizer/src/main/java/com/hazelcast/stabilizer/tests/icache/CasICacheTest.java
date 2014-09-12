@@ -49,7 +49,6 @@ public class CasICacheTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private HazelcastCacheManager cacheManager;
-
     private String basename;
 
     @Setup

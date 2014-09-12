@@ -128,7 +128,7 @@ public class CreateDestroyICacheTest {
         for(Counter c : counters){
             total.add(c);
         }
-        log.info(basename + ": " + total + " collected results from " + counters.size() + " worker threads");
+        log.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
 
     public static class Counter implements Serializable {
