@@ -40,7 +40,8 @@ public class ExceptionReporter {
 
         try {
             if (!tmpFile.createNewFile()) {
-                throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath());
+                // can't happen since id's are always incrementing. So just for safety reason this is added.
+                throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath()+" file already exists.");
             }
         } catch (IOException e) {
             log.severe("Could not report exception; this means that this exception is not visible to the coordinator", e);
