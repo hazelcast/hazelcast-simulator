@@ -31,6 +31,7 @@ import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -48,17 +49,16 @@ public class ExpiryICacheTest {
 
     private final static ILogger log = Logger.getLogger(ExpiryICacheTest.class);
 
-    // properties
-    public String basename = "ttlicachetest";
     public int threadCount = 3;
     public double maxHeapUsagePercentage = 80;
-    public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+    public String basename;
+
+    private HazelcastCacheManager cacheManager;
     private ICache cache;
-    private long baseLineUsed;
     private final ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(Duration.ONE_MINUTE);
     private final AtomicLong operations = new AtomicLong();
 
@@ -66,7 +66,8 @@ public class ExpiryICacheTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-        HazelcastCacheManager cacheManager;
+        basename = testContext.getTestId();
+
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
@@ -76,18 +77,14 @@ public class ExpiryICacheTest {
             cacheManager = new HazelcastClientCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         }
+    }
 
+    @Warmup(global = true)
+    public void warmup( ) throws Exception {
         CacheConfig<Long, Long> config = new CacheConfig<Long, Long>();
         config.setName(basename);
         config.setTypes(Long.class, Long.class);
-
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException hack) {
-            //temp hack to deal with multiple nodes wanting to make the same cache.
-            log.severe(hack);
-        }
-        cache = cacheManager.getCache(basename, Long.class, Long.class);
+        cacheManager.createCache(basename, config);
     }
 
     @Performance
@@ -113,17 +110,10 @@ public class ExpiryICacheTest {
     private class Worker implements Runnable {
         @Override
         public void run() {
-            long free = Runtime.getRuntime().freeMemory();
-            long total = Runtime.getRuntime().totalMemory();
-            baseLineUsed = total - free;
-            long maxBytes = Runtime.getRuntime().maxMemory();
-            double usedOfMax = 100.0 * ((double) baseLineUsed / (double) maxBytes);
+            cache = cacheManager.getCache(basename, Long.class, Long.class);
 
-            log.info(basename + " before Init");
-            log.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
-            log.info(basename + " used = " + humanReadableByteCount(baseLineUsed, true) + " = " + baseLineUsed);
-            log.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-            log.info(basename + " usedOfMax = " + usedOfMax + "%");
+            TestUtils.logMemStats(log, basename);
+            log.info(basename + " map = " + cache.size());
 
             long iteration = 1;
             Random random = new Random();
@@ -143,9 +133,6 @@ public class ExpiryICacheTest {
                         long key = random.nextLong();
                         cache.put(key, 0l, expiryPolicy);
 
-                        if (iteration % logFrequency == 0) {
-                            log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                        }
 
                         if (iteration % performanceUpdateFrequency == 0) {
                             operations.addAndGet(performanceUpdateFrequency);
@@ -153,36 +140,15 @@ public class ExpiryICacheTest {
                     }
                 }
             }
-
-            free = Runtime.getRuntime().freeMemory();
-            total = Runtime.getRuntime().totalMemory();
-            long nowUsed = total - free;
-            maxBytes = Runtime.getRuntime().maxMemory();
-            usedOfMax = 100.0 * ((double) nowUsed / (double) maxBytes);
-
-            log.info(basename + " After Init");
+            TestUtils.logMemStats(log, basename);
             log.info(basename + " map = " + cache.size());
-            log.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
-            log.info(basename + " used = " + humanReadableByteCount(nowUsed, true) + " = " + nowUsed);
-            log.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-            log.info(basename + " usedOfMax = " + usedOfMax + "%");
-            log.info(basename + " map size:" + cache.size());
         }
     }
 
     @Verify(global = false)
     public void globalVerify() throws Exception {
-        long free = Runtime.getRuntime().freeMemory();
-        long total = Runtime.getRuntime().totalMemory();
-        long used = total - free;
-        long maxBytes = Runtime.getRuntime().maxMemory();
-        double usedOfMax = 100.0 * ((double) used / (double) maxBytes);
-
+        TestUtils.logMemStats(log, basename);
         log.info(basename + " map = " + cache.size());
-        log.info(basename + "free = " + humanReadableByteCount(free, true) + " = " + free);
-        log.info(basename + "used = " + humanReadableByteCount(used, true) + " = " + used);
-        log.info(basename + "max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-        log.info(basename + "usedOfMax = " + usedOfMax + "%");
     }
 
     public static void main(String[] args) throws Throwable {

@@ -22,7 +22,6 @@ import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
-import javax.cache.CacheException;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
@@ -38,8 +37,6 @@ public class EntryProcessorICacheTest {
 
     private final static ILogger log = Logger.getLogger(EntryProcessorICacheTest.class);
 
-    //props
-    public String basename = this.getClass().getName();
     public int threadCount = 10;
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
@@ -49,16 +46,19 @@ public class EntryProcessorICacheTest {
 
     private final AtomicLong operations = new AtomicLong();
     private ICache<Integer, Long> cache;
-    private IList<Map<Integer, Long>> resultsPerWorker;
+    private IList<long[]> resultsPerWorker;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+    private HazelcastCacheManager cacheManager;
+    private String basename;
+
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+        basename = testContext.getTestId();
 
-        HazelcastCacheManager cacheManager;
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
@@ -68,20 +68,7 @@ public class EntryProcessorICacheTest {
             cacheManager = new HazelcastClientCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         }
-
-        CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
-        config.setName(basename);
-        config.setTypes(Integer.class, Long.class);
-
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException hack) {
-            //temp hack to deal with multiple nodes wanting to make the same cache.
-            log.severe(hack);
-        }
-
-        cache = cacheManager.getCache(basename, Integer.class, Long.class);
-        resultsPerWorker = targetInstance.getList(basename + "ResultMap" + testContext.getTestId());
+        resultsPerWorker = targetInstance.getList(basename);
     }
 
     @Teardown
@@ -92,10 +79,17 @@ public class EntryProcessorICacheTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
+
+        CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
+        config.setName(basename);
+        config.setTypes(Integer.class, Long.class);
+
+        cacheManager.createCache(basename, config);
+        cache = cacheManager.getCache(basename);
+
         for (int k = 0; k < keyCount; k++) {
             cache.put(k, 0l);
         }
-        System.out.println(basename + " cache size ==>" + cache.size());
     }
 
     @Run
@@ -112,41 +106,14 @@ public class EntryProcessorICacheTest {
         return operations.get();
     }
 
-    @Verify
-    public void verify() throws Exception {
-        long[] amount = new long[keyCount];
-
-        for (Map<Integer, Long> map : resultsPerWorker) {
-            for (Map.Entry<Integer, Long> entry : map.entrySet()) {
-                amount[entry.getKey()] += entry.getValue();
-            }
-        }
-
-        int failures = 0;
-        for (int k = 0; k < keyCount; k++) {
-            long expected = amount[k];
-            long found = cache.get(k);
-            if (expected != found) {
-                failures++;
-            }
-        }
-
-        assertEquals("Failures have been found", 0, failures);
-    }
-
     private class Worker implements Runnable {
         private final Random random = new Random();
-        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
+        private final long[] increments = new long[keyCount];
 
-        public Worker() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
-            }
-        }
-
-        @Override
         public void run() {
             long iteration = 0;
+            cache = cacheManager.getCache(basename);
+
             while (!testContext.isStopped()) {
                 int key = random.nextInt(keyCount);
                 long increment = random.nextInt(100);
@@ -157,12 +124,7 @@ public class EntryProcessorICacheTest {
                 }
 
                 cache.invoke(key, new IncrementEntryProcessor(increment, delayMs));
-                increment(key, increment);
-
-
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
+                increments[key] += increment;
 
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
@@ -176,12 +138,28 @@ public class EntryProcessorICacheTest {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            resultsPerWorker.add(result);
+            resultsPerWorker.add(increments);
+        }
+    }
+
+    @Verify
+    public void verify() throws Exception {
+        long[] expected = new long[keyCount];
+
+        for (long[] increments : resultsPerWorker) {
+            for (int i=0; i<keyCount; i++) {
+                expected[i] += increments[i];
+            }
         }
 
-        private void increment(int key, long increment) {
-            result.put(key, result.get(key) + increment);
+        int failures = 0;
+        for (int k = 0; k < keyCount; k++) {
+            if (expected[k] != cache.get(k)) {
+                failures++;
+                log.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + cache.get(k));
+            }
         }
+        assertEquals(basename + ": " + failures + " key=>values have been incremented unExpected", 0, failures);
     }
 
     private static class IncrementEntryProcessor implements EntryProcessor<Integer, Long, Object> , Serializable {

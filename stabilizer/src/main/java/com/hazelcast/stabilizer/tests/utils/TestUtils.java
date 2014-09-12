@@ -329,8 +329,25 @@ public class TestUtils {
         return format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
+    public static void logMemStats(ILogger log, String prefix){
+        long free = Runtime.getRuntime().freeMemory();
+        long total = Runtime.getRuntime().totalMemory();
+        long used = total - free;
+        long max = Runtime.getRuntime().maxMemory();
+        double usedOfMax = 100.0 * ((double) used / (double) max);
+
+        long totalFree = max - used;
+
+        log.info(prefix + ": free = " + TestUtils.humanReadableByteCount(free, true) + " = " + free);
+        log.info(prefix + ": total free = " + TestUtils.humanReadableByteCount(totalFree, true) + " = " + totalFree);
+        log.info(prefix + ": used = " + TestUtils.humanReadableByteCount(used, true) + " = " + used);
+        log.info(prefix + ": max = " + TestUtils.humanReadableByteCount(max, true) + " = " + max);
+        log.info(prefix + ": usedOfMax = " + usedOfMax + "%");
+    }
+
+
     public static void sleepMs(long delayMs) {
-        if (delayMs < 0) {
+        if (delayMs <= 0) {
             return;
         }
         try {

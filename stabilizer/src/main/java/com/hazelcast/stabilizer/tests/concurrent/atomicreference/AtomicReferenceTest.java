@@ -86,7 +86,12 @@ public class AtomicReferenceTest {
 
         counters = new IAtomicReference[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            String key = StringUtils.generateKey(8, preventLocalCalls, targetInstance);
+            String key;
+            if(preventLocalCalls){
+                key = StringUtils.generateNotKeyOwnedBy(8, targetInstance);
+            }else{
+                key = StringUtils.makeString(8);
+            }
             IAtomicReference atomicReference = targetInstance.getAtomicReference(key);
             atomicReference.set(values[random.nextInt(values.length)]);
             counters[k] = atomicReference;

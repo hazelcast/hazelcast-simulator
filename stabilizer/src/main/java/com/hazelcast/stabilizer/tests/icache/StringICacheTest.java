@@ -44,42 +44,37 @@ public class StringICacheTest {
 
     private final static ILogger log = Logger.getLogger(StringICacheTest.class);
 
-    //props
-    public int writePercentage = 10;
     public int threadCount = 10;
+    public double getProb=0.5;
+    public double putProb=0.25;
+    public double getAndPutProb=0.25;
+
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 10000;
     public int valueCount = 10000;
-    public int logFrequency = 10000;
+
     public int performanceUpdateFrequency = 10000;
-    // if we use the putAndGet (so returning a value) or the put (which returns void)
-    public boolean useGetAndPut = true;
-    public String basename = "stringicache";
-    public boolean preventLocalCalls = false;
+
+    public boolean remoteKeysOnly = false;
     public int minNumberOfMembers = 0;
 
+    private TestContext testContext;
+    private HazelcastInstance targetInstance;
+    private String basename;
+
+    private HazelcastCacheManager cacheManager;
     private ICache<String, String> cache;
     private String[] keys;
     private String[] values;
     private final AtomicLong operations = new AtomicLong();
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+        basename = testContext.getTestId();
 
-        HazelcastCacheManager cacheManager;
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
@@ -96,9 +91,8 @@ public class StringICacheTest {
 
         try {
             cacheManager.createCache(basename, config);
-        } catch (CacheException hack) {
-            //temp hack to deal with multiple nodes wanting to make the same cache.
-            log.severe(hack);
+        } catch (CacheException e) {
+            log.severe(basename+" :"+e, e);
         }
         cache = cacheManager.getCache(basename, String.class, String.class);
     }
@@ -115,7 +109,11 @@ public class StringICacheTest {
 
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
-            keys[k] = StringUtils.generateKey(keyLength, preventLocalCalls, testContext.getTargetInstance());
+            if(remoteKeysOnly){
+                keys[k] = StringUtils.generateNotKeyOwnedBy( keyLength, targetInstance);
+            } else {
+                keys[k] = StringUtils.makeString(keyLength);
+            }
         }
 
         values = new String[valueCount];
@@ -149,59 +147,34 @@ public class StringICacheTest {
     private class Worker implements Runnable {
         private final Random random = new Random();
 
-        @Override
         public void run() {
             long iteration = 0;
             while (!testContext.isStopped()) {
 
-                String key = randomKey();
+                String key = values[random.nextInt(keyCount)];
+                String value = keys[random.nextInt(valueCount)];
 
-                if (shouldWrite(iteration)) {
-                    String value = randomValue();
-                    if (useGetAndPut) {
-                        cache.getAndPut(key, value);
-                    } else {
-                        cache.put(key, value);
-                    }
-                } else {
+                double chance = random.nextDouble();
+                if ((chance -= getProb) < 0) {
                     cache.get(key);
-                }
 
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                } else if ((chance -= putProb) < 0) {
+                    cache.put(key, value);
+
+                } else if ((chance -= getAndPutProb) < 0) {
+                    cache.getAndPut(key, value);
                 }
 
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
-
                 iteration++;
-            }
-        }
-
-        private String randomValue() {
-            return values[random.nextInt(values.length)];
-        }
-
-        private String randomKey() {
-            int length = keys.length;
-            return keys[random.nextInt(length)];
-        }
-
-        private boolean shouldWrite(long iteration) {
-            if (writePercentage == 0) {
-                return false;
-            } else if (writePercentage == 100) {
-                return true;
-            } else {
-                return (iteration % 100) < writePercentage;
             }
         }
     }
 
     public static void main(String[] args) throws Throwable {
         StringICacheTest test = new StringICacheTest();
-        test.writePercentage = 10;
         new TestRunner(test).run();
     }
 }

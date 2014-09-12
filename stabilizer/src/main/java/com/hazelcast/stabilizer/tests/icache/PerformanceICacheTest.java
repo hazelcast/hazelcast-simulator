@@ -32,35 +32,29 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class PerformanceICacheTest {
 
-    private final static ILogger log = Logger.getLogger(PerformanceICacheTest.class);
-
-    //props
     public int threadCount = 10;
     public int keyCount = 1000000;
-    public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "icacheperformance";
-    public int writePercentage = 10;
+
+    public double getProb = 0.9;
+    public double putProb = 0.1;
+
 
     private ICache<Integer, Integer> cache;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+    private HazelcastCacheManager cacheManager;
+    private String basename;
+
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
 
         this.testContext = testContext;
-
         targetInstance = testContext.getTargetInstance();
-        HazelcastCacheManager cacheManager;
+        basename=testContext.getTestId();
+
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
@@ -70,18 +64,6 @@ public class PerformanceICacheTest {
             cacheManager = new HazelcastClientCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         }
-
-        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
-        config.setName(basename);
-        config.setTypes(Integer.class, Integer.class);
-
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException hack) {
-            //temp hack to deal with multiple nodes wanting to make the same cache.
-            log.severe(hack);
-        }
-        cache = cacheManager.getCache(basename, Integer.class, Integer.class);
     }
 
     @Teardown
@@ -91,12 +73,16 @@ public class PerformanceICacheTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
+
+        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
+        config.setName(basename);
+        config.setTypes(Integer.class, Integer.class);
+
+        cacheManager.createCache(basename, config);
+        cache = cacheManager.getCache(basename, Integer.class, Integer.class);
+
         for (int k = 0; k < keyCount; k++) {
             cache.put(k, 0);
-
-            if (k % 10000 == 0) {
-                log.info("Warmup: " + k);
-            }
         }
     }
 
@@ -116,42 +102,26 @@ public class PerformanceICacheTest {
 
     private class Worker implements Runnable {
         private final Random random = new Random();
-        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         @Override
         public void run() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
-            }
 
             long iteration = 0;
-            while (!testContext.isStopped()) {
-                Integer key = random.nextInt(keyCount);
-                if (shouldWrite(iteration)) {
-                    cache.put(key, (int) iteration);
-                } else {
-                    cache.get(key);
-                }
 
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+            while (!testContext.isStopped()) {
+
+                int key = random.nextInt(keyCount);
+                double chance = random.nextDouble();
+                if ( (chance -= putProb) < 0) {
+                    cache.put(key, (int) iteration);
+                } else if ((chance -= getProb) < 0) {
+                    cache.get(key);
                 }
 
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
-
                 iteration++;
-            }
-        }
-
-        private boolean shouldWrite(long iteration) {
-            if (writePercentage == 0) {
-                return false;
-            } else if (writePercentage == 100) {
-                return true;
-            } else {
-                return (iteration % 100) < writePercentage;
             }
         }
     }

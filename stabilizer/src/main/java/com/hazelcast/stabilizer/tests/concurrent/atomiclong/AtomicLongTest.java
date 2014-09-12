@@ -73,7 +73,12 @@ public class AtomicLongTest {
         totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            String key = StringUtils.generateKey(8, preventLocalCalls, targetInstance);
+            String key;
+            if(preventLocalCalls){
+                key = StringUtils.generateNotKeyOwnedBy(8, targetInstance);
+            }else{
+                key = StringUtils.makeString(8);
+            }
             counters[k] = targetInstance.getAtomicLong(key);
         }
     }

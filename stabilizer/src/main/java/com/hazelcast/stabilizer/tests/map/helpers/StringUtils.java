@@ -14,20 +14,25 @@ public class StringUtils {
     private final static String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
     private final static Random random = new Random();
 
-    public static String generateKey(int keyLength, boolean preventLocalCalls, HazelcastInstance instance) {
-        if (!preventLocalCalls) {
-            return makeString(keyLength);
-        }
-        for (; ; ) {
+    public static String generateKeyOwnedBy(int keyLength, HazelcastInstance instance) {
+        while (true) {
             String key = makeString(keyLength);
-            if (!isLocalKey(instance, key)) {
+            if (isKeyOwnedBy(key, instance)) {
                 return key;
             }
         }
-
     }
 
-    private static boolean isLocalKey(HazelcastInstance instance, String key) {
+    public static String generateNotKeyOwnedBy(int keyLength, HazelcastInstance instance) {
+        while (true) {
+            String key = makeString(keyLength);
+            if ( !isKeyOwnedBy(key, instance) ) {
+                return key;
+            }
+        }
+    }
+
+    private static boolean isKeyOwnedBy(String key, HazelcastInstance instance) {
         PartitionService partitionService = instance.getPartitionService();
         Partition partition = partitionService.getPartition(key);
         for (; ; ) {
