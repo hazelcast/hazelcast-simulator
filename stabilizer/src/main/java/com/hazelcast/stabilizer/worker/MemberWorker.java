@@ -346,7 +346,7 @@ public class MemberWorker {
                     return;
                 }
 
-                new CommandThread(command, testId) {
+                CommandThread commandThread = new CommandThread(command, testId) {
                     @Override
                     public void doRun() throws Throwable {
                         boolean passive = command.clientOnly && clientInstance == null;
@@ -365,15 +365,16 @@ public class MemberWorker {
                                 log.info(format("--------------------------- Completed %s.run() " +
                                                 "------------------------------------",
                                         testName));
-                            }catch(Throwable t){
+                            } catch (Throwable t) {
                                 String msg = format("--------------------------- Failed to execute %s.run() " +
                                                 "------------------------------------",
                                         testName);
-                                log.severe(msg,t);
+                                log.severe(msg, t);
                             }
                         }
                     }
-                }.start();
+                };
+                commandThread.start();
             } catch (Exception e) {
                 log.severe("Failed to start test", e);
                 throw e;
@@ -395,7 +396,7 @@ public class MemberWorker {
                 }
 
                 final Method method = test.getClass().getMethod(methodName);
-                new CommandThread(command, command.testId) {
+                CommandThread commandThread = new CommandThread(command, command.testId) {
                     @Override
                     public void doRun() throws Throwable {
                         log.info(format("--------------------------- Starting %s.%s() ------------------------------------",
@@ -415,7 +416,8 @@ public class MemberWorker {
                             }
                         }
                     }
-                }.start();
+                };
+                commandThread.start();
             } catch (Exception e) {
                 log.severe(format("Failed to execute test.%s()", methodName), e);
                 throw e;
@@ -492,7 +494,7 @@ public class MemberWorker {
                 commands.put(testId, command);
                 doRun();
             } catch (Throwable t) {
-                ExceptionReporter.report(null, t);
+                ExceptionReporter.report(testId, t);
             } finally {
                 commands.remove(testId);
             }

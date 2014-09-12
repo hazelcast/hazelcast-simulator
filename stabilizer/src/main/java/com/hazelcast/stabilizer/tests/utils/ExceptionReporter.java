@@ -15,7 +15,7 @@ import static com.hazelcast.stabilizer.Utils.writeText;
  */
 public class ExceptionReporter {
 
-    private final static AtomicLong FAILURE_ID = new AtomicLong(1);
+    private final static AtomicLong FAILURE_ID = new AtomicLong(0);
     private final static ILogger log = Logger.getLogger(ExceptionReporter.class);
 
     /**
@@ -31,16 +31,27 @@ public class ExceptionReporter {
             return;
         }
 
-        log.severe("Exception detected", cause);
+        long exceptionCount = FAILURE_ID.incrementAndGet();
+        log.severe("Exception #" + exceptionCount + " detected", cause);
 
-        final File tmpFile = createTmpFile();
-        if (tmpFile == null) {
+        String targetFileName = exceptionCount + ".exception";
+
+        final File tmpFile = new File(targetFileName + ".tmp");
+
+        try {
+            if (!tmpFile.createNewFile()) {
+                // can't happen since id's are always incrementing. So just for safety reason this is added.
+                throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath()+" file already exists.");
+            }
+        } catch (IOException e) {
+            log.severe("Could not report exception; this means that this exception is not visible to the coordinator", e);
             return;
         }
 
         writeCauseToFile(testId, cause, tmpFile);
 
-        final File file = new File(FAILURE_ID.incrementAndGet() + ".exception");
+        final File file = new File(targetFileName);
+
         if (!tmpFile.renameTo(file)) {
             log.severe("Failed to rename tmp file:" + tmpFile + " to " + file);
         }
