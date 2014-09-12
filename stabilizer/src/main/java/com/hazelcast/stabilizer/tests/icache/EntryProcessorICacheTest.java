@@ -45,7 +45,6 @@ public class EntryProcessorICacheTest {
     public int performanceUpdateFrequency = 10000;
 
     private final AtomicLong operations = new AtomicLong();
-    private ICache<Integer, Long> cache;
     private IList<long[]> resultsPerWorker;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -71,12 +70,6 @@ public class EntryProcessorICacheTest {
         resultsPerWorker = targetInstance.getList(basename);
     }
 
-    @Teardown
-    public void teardown() throws Exception {
-        cache.close();
-        resultsPerWorker.destroy();
-    }
-
     @Warmup(global = true)
     public void warmup() throws Exception {
 
@@ -85,7 +78,7 @@ public class EntryProcessorICacheTest {
         config.setTypes(Integer.class, Long.class);
 
         cacheManager.createCache(basename, config);
-        cache = cacheManager.getCache(basename);
+        ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
 
         for (int k = 0; k < keyCount; k++) {
             cache.put(k, 0l);
@@ -109,10 +102,10 @@ public class EntryProcessorICacheTest {
     private class Worker implements Runnable {
         private final Random random = new Random();
         private final long[] increments = new long[keyCount];
+        private final ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
 
         public void run() {
             long iteration = 0;
-            cache = cacheManager.getCache(basename);
 
             while (!testContext.isStopped()) {
                 int key = random.nextInt(keyCount);
@@ -152,6 +145,7 @@ public class EntryProcessorICacheTest {
             }
         }
 
+        ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != cache.get(k)) {

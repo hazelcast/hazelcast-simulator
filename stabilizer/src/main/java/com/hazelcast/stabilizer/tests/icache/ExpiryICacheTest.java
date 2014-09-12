@@ -58,7 +58,6 @@ public class ExpiryICacheTest {
     public String basename;
 
     private HazelcastCacheManager cacheManager;
-    private ICache cache;
     private final ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(Duration.ONE_MINUTE);
     private final AtomicLong operations = new AtomicLong();
 
@@ -110,7 +109,7 @@ public class ExpiryICacheTest {
     private class Worker implements Runnable {
         @Override
         public void run() {
-            cache = cacheManager.getCache(basename, Long.class, Long.class);
+            ICache<Long, Long> cache = cacheManager.getCache(basename, Long.class, Long.class);
 
             TestUtils.logMemStats(log, basename);
             log.info(basename + " map = " + cache.size());
@@ -147,6 +146,7 @@ public class ExpiryICacheTest {
 
     @Verify(global = false)
     public void globalVerify() throws Exception {
+        ICache<Long, Long> cache = cacheManager.getCache(basename, Long.class, Long.class);
         TestUtils.logMemStats(log, basename);
         log.info(basename + " map = " + cache.size());
     }

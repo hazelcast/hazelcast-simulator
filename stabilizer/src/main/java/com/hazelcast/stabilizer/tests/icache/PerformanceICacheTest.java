@@ -39,14 +39,11 @@ public class PerformanceICacheTest {
     public double getProb = 0.9;
     public double putProb = 0.1;
 
-
-    private ICache<Integer, Integer> cache;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private HazelcastCacheManager cacheManager;
     private String basename;
-
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -66,11 +63,6 @@ public class PerformanceICacheTest {
         }
     }
 
-    @Teardown
-    public void teardown() throws Exception {
-        cache.close();
-    }
-
     @Warmup(global = true)
     public void warmup() throws Exception {
 
@@ -79,7 +71,7 @@ public class PerformanceICacheTest {
         config.setTypes(Integer.class, Integer.class);
 
         cacheManager.createCache(basename, config);
-        cache = cacheManager.getCache(basename, Integer.class, Integer.class);
+        ICache<Integer, Integer> cache = cacheManager.getCache(basename, Integer.class, Integer.class);
 
         for (int k = 0; k < keyCount; k++) {
             cache.put(k, 0);
@@ -105,9 +97,9 @@ public class PerformanceICacheTest {
 
         @Override
         public void run() {
+            ICache<Integer, Integer> cache = cacheManager.getCache(basename, Integer.class, Integer.class);
 
             long iteration = 0;
-
             while (!testContext.isStopped()) {
 
                 int key = random.nextInt(keyCount);

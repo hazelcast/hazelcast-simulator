@@ -16,7 +16,6 @@ import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
-import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
@@ -50,9 +49,8 @@ public class CasICacheTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private HazelcastCacheManager cacheManager;
-    private ICache<Integer, Long> cache;
-    private String basename;
 
+    private String basename;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -60,7 +58,6 @@ public class CasICacheTest {
         targetInstance = testContext.getTargetInstance();
         basename=testContext.getTestId();
         resultsPerWorker = targetInstance.getList(basename);
-
 
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
@@ -73,12 +70,6 @@ public class CasICacheTest {
         }
     }
 
-    @Teardown
-    public void teardown() throws Exception {
-        cache.close();
-        resultsPerWorker.destroy();
-    }
-
     @Warmup(global = true)
     public void warmup() throws Exception {
         CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
@@ -86,7 +77,7 @@ public class CasICacheTest {
         config.setTypes(Integer.class, Long.class);
 
         cacheManager.createCache(basename, config);
-        cache = cacheManager.getCache(basename, Integer.class, Long.class);
+        ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
 
         for (int k = 0; k < keyCount; k++) {
             cache.put(k, 0l);
@@ -95,10 +86,6 @@ public class CasICacheTest {
 
     @Run
     public void run() {
-        if (cache.size() != keyCount) {
-            throw new RuntimeException("warmup has not run since the map is not filled correctly, found size:" + cache.size());
-        }
-
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int k = 0; k < threadCount; k++) {
             spawner.spawn(new Worker());
@@ -116,6 +103,7 @@ public class CasICacheTest {
             }
         }
 
+        ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
         int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             long expected = amount[k];
@@ -137,6 +125,8 @@ public class CasICacheTest {
         private final long[] increments = new long[keyCount];
 
         public void run() {
+            ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
+
             long iteration = 0;
             while (!testContext.isStopped()) {
                 int key = random.nextInt(keyCount);
