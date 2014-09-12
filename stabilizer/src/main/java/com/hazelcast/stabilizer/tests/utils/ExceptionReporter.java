@@ -15,7 +15,7 @@ import static com.hazelcast.stabilizer.Utils.writeText;
  */
 public class ExceptionReporter {
 
-    private final static AtomicLong FAILURE_ID = new AtomicLong(1);
+    private final static AtomicLong FAILURE_ID = new AtomicLong(0);
     private final static ILogger log = Logger.getLogger(ExceptionReporter.class);
 
     /**
