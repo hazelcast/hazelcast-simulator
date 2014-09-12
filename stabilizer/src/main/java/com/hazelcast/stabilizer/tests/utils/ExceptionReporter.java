@@ -31,9 +31,10 @@ public class ExceptionReporter {
             return;
         }
 
-        log.severe("Exception detected", cause);
+        long exceptionCount = FAILURE_ID.incrementAndGet();
+        log.severe("Exception #" + exceptionCount + " detected", cause);
 
-        String targetFileName = FAILURE_ID.incrementAndGet() + ".exception";
+        String targetFileName = exceptionCount + ".exception";
 
         final File tmpFile = new File(targetFileName + ".tmp");
 
