@@ -33,14 +33,23 @@ public class ExceptionReporter {
 
         log.severe("Exception detected", cause);
 
-        final File tmpFile = createTmpFile();
-        if (tmpFile == null) {
+        String targetFileName = FAILURE_ID.incrementAndGet() + ".exception";
+
+        final File tmpFile = new File(targetFileName + ".tmp");
+
+        try {
+            if (!tmpFile.createNewFile()) {
+                throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            log.severe("Could not report exception; this means that this exception is not visible to the coordinator", e);
             return;
         }
 
         writeCauseToFile(testId, cause, tmpFile);
 
-        final File file = new File(FAILURE_ID.incrementAndGet() + ".exception");
+        final File file = new File(targetFileName);
+
         if (!tmpFile.renameTo(file)) {
             log.severe("Failed to rename tmp file:" + tmpFile + " to " + file);
         }
