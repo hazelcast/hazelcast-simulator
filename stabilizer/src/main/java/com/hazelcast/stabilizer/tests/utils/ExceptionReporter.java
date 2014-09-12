@@ -62,19 +62,6 @@ public class ExceptionReporter {
         writeText(text, file);
     }
 
-    private static File createTmpFile() {
-        //we need to write to a temp file before and then rename the file so that the worker will not see
-        //a partially written failure.
-        final File tmpFile;
-        try {
-            tmpFile = File.createTempFile("worker", "exception");
-        } catch (IOException e) {
-            log.severe("Failed to create temp file", e);
-            return null;
-        }
-        return tmpFile;
-    }
-
     private ExceptionReporter() {
     }
 }
