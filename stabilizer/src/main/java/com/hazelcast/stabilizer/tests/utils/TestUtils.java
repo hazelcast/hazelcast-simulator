@@ -64,7 +64,7 @@ public class TestUtils {
         for (Map.Entry<Member, Long> entry : operationCountMap.entrySet()) {
             Member member = entry.getKey();
             long count = entry.getValue();
-            double percentage = count * 100 / total;
+            double percentage = count * 100d / total;
             sb.append(member).append(" total=").append(count).append(" percentage=").append(percentage).append("%\n");
         }
         return sb.toString();
