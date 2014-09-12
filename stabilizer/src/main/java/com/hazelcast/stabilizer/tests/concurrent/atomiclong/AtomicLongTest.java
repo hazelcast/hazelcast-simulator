@@ -57,6 +57,8 @@ public class AtomicLongTest {
 
     @Setup
     public void setup(TestContext context) throws Exception {
+        System.out.println("Temporary sys out call see if it is captured correctly");
+
         this.context = context;
 
         if (writePercentage < 0) {
