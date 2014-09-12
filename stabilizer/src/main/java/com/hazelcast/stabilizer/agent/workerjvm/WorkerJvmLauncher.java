@@ -147,7 +147,7 @@ public class WorkerJvmLauncher {
         for (String arg : args) {
             sb.append(arg).append(" ");
         }
-        sb.append(" > worker.log");
+        sb.append(" > sysout.log");
         sb.append("\n");
 
         Utils.writeText(sb.toString(), startScript);
