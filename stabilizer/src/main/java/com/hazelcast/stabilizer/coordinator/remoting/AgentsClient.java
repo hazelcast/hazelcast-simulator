@@ -193,7 +193,7 @@ public class AgentsClient {
             }
 
             long durationMs = System.currentTimeMillis() - startTimeMs;
-            log.info(prefix + "Waiting for "+phaseName+"completion: " + Utils.secondsToHuman(durationMs / 1000));
+            log.info(prefix + "Waiting for "+phaseName+" completion: " + Utils.secondsToHuman(durationMs / 1000));
             Utils.sleepSeconds(5);
         }
     }
