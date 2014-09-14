@@ -22,6 +22,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.worker.TestContainer;
 
 import java.io.File;
@@ -52,7 +53,7 @@ public class TestRunner<E> {
             throw new NullPointerException("test can't be null");
         }
         this.test = test;
-        this.testInvoker = new TestContainer(test, testContext);
+        this.testInvoker = new TestContainer(test, testContext, new ProbesConfiguration());
     }
 
     public E getTest() {

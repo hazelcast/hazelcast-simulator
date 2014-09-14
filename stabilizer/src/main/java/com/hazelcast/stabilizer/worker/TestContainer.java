@@ -4,6 +4,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.probes.IntervalProbe;
+import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.common.probes.Result;
 import com.hazelcast.stabilizer.common.probes.SimpleProbe;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
@@ -17,7 +18,6 @@ import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.util.Clock;
-import com.sun.org.apache.bcel.internal.generic.SIPUSH;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -29,8 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.hazelcast.stabilizer.common.probes.Probes.getDefaultProbe;
-import static com.hazelcast.stabilizer.common.probes.Probes.newOperationsPerSecProbe;
+import static com.hazelcast.stabilizer.common.probes.Probes.createProbe;
 import static java.lang.String.format;
 
 /**
@@ -46,6 +45,8 @@ public class TestContainer<T extends TestContext> {
     private final Object testObject;
     private final Class<? extends Object> clazz;
     private final T testContext;
+    private final ProbesConfiguration probesConfiguration;
+
     private Method runMethod;
     private Method setupMethod;
 
@@ -64,7 +65,7 @@ public class TestContainer<T extends TestContext> {
     private Map<String, SimpleProbe<?, ?>> probeMap = new ConcurrentHashMap<String, SimpleProbe<?, ?>>();
     private Object[] setupArguments;
 
-    public TestContainer(Object testObject, T testContext) {
+    public TestContainer(Object testObject, T testContext, ProbesConfiguration probesConfiguration) {
         if (testObject == null) {
             throw new NullPointerException();
         }
@@ -75,11 +76,12 @@ public class TestContainer<T extends TestContext> {
         this.testContext = testContext;
         this.testObject = testObject;
         this.clazz = testObject.getClass();
+        this.probesConfiguration = probesConfiguration;
 
         initMethods();
     }
 
-    public Map<String, Result<?>> getResults() {
+    public Map<String, Result<?>> getProbeResults() {
         Map<String, Result<?>> results = new HashMap<String, Result<?>>(probeMap.size());
         for (Map.Entry<String, SimpleProbe<?, ?>> entry : probeMap.entrySet()) {
             String name = entry.getKey();
@@ -187,39 +189,44 @@ public class TestContainer<T extends TestContext> {
         assertVoidReturnType(method);
         assertSetupArguments(method);
 
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        setupArguments = new Object[parameterTypes.length];
-        int i = 0;
-        for (Class<?> parameterType : parameterTypes) {
-            if (parameterType.equals(IntervalProbe.class)) {
-                SimpleProbe probe = getDefaultProbe(IntervalProbe.class);
-                String probeName = getProbeName(parameterType, i);
-                probeMap.put(probeName, probe);
-                setupArguments[i] = probe;
-            } else if (parameterType.equals(SimpleProbe.class)) {
-                SimpleProbe probe = getDefaultProbe(SimpleProbe.class);
-                String probeName = getProbeName(parameterType, i);
-                probeMap.put(probeName, probe);
-                setupArguments[i] = probe;
-            } else if (parameterType.isAssignableFrom(TestContext.class)) {
-                setupArguments[i] = testContext;
-            }
-            i++;
-        }
-
-
+        initSetupArguments(method);
         setupMethod = method;
     }
 
-    private String getProbeName(Class<?> parameterType, int i) {
-        Name nameAnnotation = parameterType.getAnnotation(Name.class);
-        String probeName;
-        if (nameAnnotation == null) {
-            probeName = "Probe"+i;
-        } else {
-            probeName = nameAnnotation.value();
+    private void initSetupArguments(Method method) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+        setupArguments = new Object[parameterTypes.length];
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Class<?> parameterType = parameterTypes[i];
+            initSetupArgument(i, parameterType, parameterAnnotations[i]);
         }
-        return probeName;
+    }
+
+    private void initSetupArgument(int i, Class<?> parameterType, Annotation[] parameterAnnotations) {
+        if (parameterType.equals(IntervalProbe.class)) {
+            String probeName = getProbeName(parameterAnnotations, i);
+            SimpleProbe probe = createProbe(IntervalProbe.class, probeName, probesConfiguration);
+            probeMap.put(probeName, probe);
+            setupArguments[i] = probe;
+        } else if (parameterType.equals(SimpleProbe.class)) {
+            String probeName = getProbeName(parameterAnnotations, i);
+            SimpleProbe probe = createProbe(SimpleProbe.class, probeName, probesConfiguration);
+            probeMap.put(probeName, probe);
+            setupArguments[i] = probe;
+        } else if (parameterType.isAssignableFrom(TestContext.class)) {
+            setupArguments[i] = testContext;
+        }
+    }
+
+    private String getProbeName(Annotation[] parameterType, int i) {
+        for (Annotation annotation : parameterType) {
+            if (annotation.annotationType().equals(Name.class)) {
+                Name name = (Name) annotation;
+                return name.value();
+            }
+        }
+        return "Probe"+i;
     }
 
     private void initGetOperationCountMethod() {

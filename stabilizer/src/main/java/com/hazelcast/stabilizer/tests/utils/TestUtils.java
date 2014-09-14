@@ -24,6 +24,7 @@ import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.TestCase;
+import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.tests.BindException;
 
 import java.lang.reflect.Field;
@@ -94,9 +95,25 @@ public class TestUtils {
             if ("class".equals(property)) {
                 continue;
             }
+            if (property.startsWith("probe-")) {
+                continue;
+            }
             String value = entry.getValue();
             bindProperty(test, property, value);
         }
+    }
+
+    public static ProbesConfiguration parseProbeConfiguration(TestCase testCase) {
+        ProbesConfiguration configuration = new ProbesConfiguration();
+        String probePrefix = "probe-";
+        for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
+            String property = entry.getKey();
+            if (property.startsWith(probePrefix)) {
+                String probeName = property.substring(probePrefix.length());
+                configuration.addConfig(probeName, entry.getValue());
+            }
+        }
+        return configuration;
     }
 
     public static void bindProperty(Object test, String property, String value) throws IllegalAccessException {

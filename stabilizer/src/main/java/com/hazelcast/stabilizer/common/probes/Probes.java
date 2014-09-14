@@ -2,6 +2,7 @@ package com.hazelcast.stabilizer.common.probes;
 
 import com.hazelcast.stabilizer.common.probes.impl.ConcurrentIntervalProbe;
 import com.hazelcast.stabilizer.common.probes.impl.ConcurrentSimpleProbe;
+import com.hazelcast.stabilizer.common.probes.impl.DisabledProbe;
 import com.hazelcast.stabilizer.common.probes.impl.LatencyDistributionProbe;
 import com.hazelcast.stabilizer.common.probes.impl.MaxLatencyProbe;
 import com.hazelcast.stabilizer.common.probes.impl.OperationsPerSecProbe;
@@ -15,15 +16,32 @@ public class Probes {
         return new ConcurrentIntervalProbe<R, T>(probe);
     }
 
-    public static <T extends SimpleProbe> T getDefaultProbe(Class<T> type) {
+    public static <T extends SimpleProbe> T createProbe(Class<T> type, String name, ProbesConfiguration probesConfiguration) {
+        String config = probesConfiguration.getConfig(name);
         if (type.equals(SimpleProbe.class)) {
-            SimpleProbe probe = newOperationsPerSecProbe();
-            return (T) probe;
+            if (config == null) {
+                return (T) newDefaultSimpleProbe();
+            } else if ("throughput".equals(config)) {
+                return (T) newOperationsPerSecProbe();
+            } else if ("disabled".equals(config)) {
+                return (T) disabledProbe();
+            } else {
+                throw new IllegalArgumentException("Unknown probe "+config+" for probe type "+type.getName()+".");
+            }
         } else if (type.equals(IntervalProbe.class)) {
-            IntervalProbe probe = newLatencyDistributionProbe();
-            return (T) probe;
+            if (config == null) {
+                return (T) newDefaultIntervalProbe();
+            } else if ("latency".equals(config)) {
+                return (T) newLatencyDistributionProbe();
+            } else if ("maxLatency".equals(config)) {
+                return (T) newMaxLatencyProbe();
+            } else if ("disabled".equals(config)) {
+                return (T) disabledProbe();
+            } else {
+                throw new IllegalArgumentException("Unknown probe "+config+" for probe type "+type.getName()+".");
+            }
         } else {
-            throw new IllegalArgumentException("Unknown probe type "+type.getName());
+            throw new IllegalArgumentException("Unknown probe "+config+" for probe type "+type.getName()+".");
         }
     }
 
@@ -38,4 +56,17 @@ public class Probes {
     public static IntervalProbe newLatencyDistributionProbe() {
         return Probes.wrapAsThreadLocal(new LatencyDistributionProbe());
     }
+
+    public static IntervalProbe disabledProbe() {
+        return DisabledProbe.INSTANCE;
+    }
+
+    private static SimpleProbe newDefaultSimpleProbe() {
+        return disabledProbe();
+    }
+
+    private static IntervalProbe newDefaultIntervalProbe() {
+        return disabledProbe();
+    }
+
 }
