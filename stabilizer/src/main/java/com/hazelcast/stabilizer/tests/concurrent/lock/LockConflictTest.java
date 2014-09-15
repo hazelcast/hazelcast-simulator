@@ -33,6 +33,7 @@ public class LockConflictTest {
     public int keyCount = 50;
     public int maxKeysPerTxn = 5;
     public int tryLockTimeOutMs = 10;
+    public boolean throwException=false;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
@@ -88,12 +89,16 @@ public class LockConflictTest {
                                 counter.locked++;
                             }
                         } catch (Exception e) {
-                            // TODO: Bad exception handling
                             log.severe(basename + ": trying lock=" + i.key, e);
+                            if(throwException){
+                                throw new RuntimeException(e);
+                            }
                         }
                     } catch (Exception e) {
-                        // TODO: Bad exception handling.
                         log.severe(basename + ": getting lock for locking=" + i.key, e);
+                        if(throwException){
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
 
@@ -105,8 +110,10 @@ public class LockConflictTest {
                         localIncrements[i.key] += i.inc;
                         counter.inced++;
                     } catch (Exception e) {
-                        // TODO : Bad exception handling
                         log.severe(basename + ": updating account=" + i, e);
+                        if(throwException){
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
 
@@ -122,15 +129,18 @@ public class LockConflictTest {
                                 counter.unlocked++;
                                 it.remove();
                             } catch (Exception e) {
-                                // TODO : Bad exception handling
                                 log.severe(basename + ": unlocking lock =" + i.key, e);
+                                if(throwException){
+                                    throw new RuntimeException(e);
+                                }
                             }
                         } catch (Exception e) {
-                            // TODO: Bad exception handling
                             log.severe(basename + ": getting lock for unlocking=" + i.key, e);
+                            if(throwException){
+                                throw new RuntimeException(e);
+                            }
                         }
                     }
-
                     sleepMs(1000);
 
                     if (++unlockAttempts > 5) {

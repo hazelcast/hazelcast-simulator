@@ -27,6 +27,9 @@ public class MapTransactionContextTest {
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 10;
+    public boolean rethrowAllException=false;
+    public boolean rethrowRollBackException=false;
+
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
@@ -84,15 +87,23 @@ public class MapTransactionContextTest {
                     localIncrements[key] += increment;
                     count.committed++;
                 } catch (Exception commitFailedException) {
-                    // TODO: Bad exception handling
                     if (context != null) {
                         try {
+                            log.warning(basename + ": commit   fail key=" + key + " inc=" + increment, commitFailedException);
+
+                            if(rethrowAllException){
+                                throw new RuntimeException(commitFailedException);
+                            }
+
                             context.rollbackTransaction();
                             count.rolled++;
-                            log.warning(basename + ": commit   fail key=" + key + " inc=" + increment, commitFailedException);
                         } catch (Exception rollBackFailed) {
-                            count.failedRoles++;
                             log.warning(basename + ": rollback fail key=" + key + " inc=" + increment, rollBackFailed);
+                            count.failedRoles++;
+
+                            if(rethrowRollBackException){
+                                throw new RuntimeException(commitFailedException);
+                            }
                         }
                     }
                 }

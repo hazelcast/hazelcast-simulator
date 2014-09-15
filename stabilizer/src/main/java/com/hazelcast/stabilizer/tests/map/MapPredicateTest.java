@@ -101,7 +101,7 @@ public class MapPredicateTest {
                         Collection<Employee> employees = map.values(predicate);
                         for (Employee emp : employees) {
                             QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                            assertTrue(emp + " NO Match " + predicate, predicate.apply(qe));
+                            assertTrue(basename + ": "+ emp + " NO Match " + predicate, predicate.apply(qe));
                         }
                         counter.predicateBuilderCount++;
                     } else if ((chance -= sqlString) < 0) {
@@ -114,7 +114,7 @@ public class MapPredicateTest {
 
                         for (Employee emp : employees) {
                             QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                            assertTrue(emp + " NO Match " + predicate, predicate.apply(qe));
+                            assertTrue(basename + ": "+ emp + " NO Match " + predicate, predicate.apply(qe));
                         }
                         counter.sqlStringCount++;
                     } else if ((chance -= pagePred) < 0) {
@@ -128,7 +128,7 @@ public class MapPredicateTest {
                             employees = map.values(pagingPredicate);
                             for (Employee emp : employees) {
                                 QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                                assertTrue(emp + " NO Match " + predicate, predicate.apply(qe));
+                                assertTrue(basename + ": " + emp + " NO Match " + predicate, predicate.apply(qe));
                             }
                             pagingPredicate.nextPage();
                         } while (!employees.isEmpty());

@@ -87,7 +87,7 @@ public class LockTest {
         }
 
         long expected = totalMoney.get();
-        assertEquals("Money was lost/created", expected, actual);
+        assertEquals(basename+ ": Money was lost/created", expected, actual);
     }
 
     @Teardown
