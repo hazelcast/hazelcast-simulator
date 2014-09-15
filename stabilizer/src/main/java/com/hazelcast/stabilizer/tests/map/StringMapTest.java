@@ -15,11 +15,8 @@
  */
 package com.hazelcast.stabilizer.tests.map;
 
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.core.Partition;
-import com.hazelcast.core.PartitionService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -85,7 +82,7 @@ public class StringMapTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
-        TestUtils.warmupPartitions(log,targetInstance);
+        TestUtils.warmupPartitions(log, targetInstance);
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
             keys[k] = StringUtils.generateKey(keyLength, preventLocalCalls, testContext.getTargetInstance());
