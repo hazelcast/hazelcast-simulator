@@ -5,16 +5,21 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.stabilizer.common.probes.Result;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
+import com.hazelcast.stabilizer.worker.commands.GetBenchmarkResultsCommand;
 import com.hazelcast.stabilizer.worker.commands.InitCommand;
 import com.hazelcast.stabilizer.worker.commands.RunCommand;
 import com.hazelcast.stabilizer.worker.commands.StopCommand;
 
 import java.text.NumberFormat;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
@@ -86,6 +91,7 @@ public class TestCaseRunner {
             echo("Completed Test stop");
 
             logPerformance();
+            printProbesResults();
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
@@ -115,6 +121,27 @@ public class TestCaseRunner {
         } catch (Exception e) {
             log.severe("Failed", e);
             return false;
+        }
+    }
+
+    private <R extends Result<R>> void printProbesResults() {
+        List<List<Map<String, R>>> workerProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
+        Map<String, R> combinedResults = new HashMap<String, R>();
+        for (List<Map<String, R>> agentProbeResults : workerProbeResults) {
+            for (Map<String, R> workerProbeResult : agentProbeResults) {
+                for (Map.Entry<String, R> probe : workerProbeResult.entrySet()) {
+                    String probeName = probe.getKey();
+                    R currentResult = probe.getValue();
+                    R combinedValue = combinedResults.get(probeName);
+                    combinedValue = currentResult.combine(combinedValue);
+                    combinedResults.put(probeName, combinedValue);
+                }
+            }
+        }
+        for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
+            String probeName = entry.getKey();
+            R result = entry.getValue();
+            echo("Probe " + probeName + " result: "+result.toHumanString());
         }
     }
 

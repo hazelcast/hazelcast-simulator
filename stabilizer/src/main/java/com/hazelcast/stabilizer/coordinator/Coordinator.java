@@ -204,7 +204,6 @@ public class Coordinator {
                 log.info("Aborting testsuite due to failure");
                 break;
             }
-
             if (!success || workerJvmSettings.refreshJvm) {
                 terminateWorkers();
                 startWorkers();
