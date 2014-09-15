@@ -27,6 +27,7 @@ import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.spi.OperationService;
 import com.hazelcast.stabilizer.TestCase;
+import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.tests.BindException;
 
 import java.io.Serializable;
@@ -64,7 +65,7 @@ public class TestUtils {
         for (Map.Entry<Member, Long> entry : operationCountMap.entrySet()) {
             Member member = entry.getKey();
             long count = entry.getValue();
-            double percentage = count * 100 / total;
+            double percentage = count * 100d / total;
             sb.append(member).append(" total=").append(count).append(" percentage=").append(percentage).append("%\n");
         }
         return sb.toString();
@@ -169,9 +170,25 @@ public class TestUtils {
             if ("class".equals(property)) {
                 continue;
             }
+            if (property.startsWith("probe-")) {
+                continue;
+            }
             String value = entry.getValue();
             bindProperty(test, property, value);
         }
+    }
+
+    public static ProbesConfiguration parseProbeConfiguration(TestCase testCase) {
+        ProbesConfiguration configuration = new ProbesConfiguration();
+        String probePrefix = "probe-";
+        for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
+            String property = entry.getKey();
+            if (property.startsWith(probePrefix)) {
+                String probeName = property.substring(probePrefix.length());
+                configuration.addConfig(probeName, entry.getValue());
+            }
+        }
+        return configuration;
     }
 
     public static void bindProperty(Object test, String property, String value) throws IllegalAccessException {

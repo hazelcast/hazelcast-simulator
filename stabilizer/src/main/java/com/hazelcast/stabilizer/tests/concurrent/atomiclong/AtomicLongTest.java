@@ -57,7 +57,7 @@ public class AtomicLongTest {
 
     @Setup
     public void setup(TestContext context) throws Exception {
-         this.context = context;
+        this.context = context;
 
         if (writePercentage < 0) {
             throw new IllegalArgumentException("Write percentage can't be smaller than 0");

@@ -28,6 +28,8 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.messaging.Message;
+import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
+import com.hazelcast.stabilizer.common.probes.Result;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
@@ -36,6 +38,7 @@ import com.hazelcast.stabilizer.worker.commands.CommandRequest;
 import com.hazelcast.stabilizer.worker.commands.CommandResponse;
 import com.hazelcast.stabilizer.worker.commands.DoneCommand;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
+import com.hazelcast.stabilizer.worker.commands.GetBenchmarkResultsCommand;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
 import com.hazelcast.stabilizer.worker.commands.InitCommand;
 import com.hazelcast.stabilizer.worker.commands.MessageCommand;
@@ -53,6 +56,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -63,6 +67,7 @@ import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.writeObject;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.bindProperties;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.parseProbeConfiguration;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
@@ -304,6 +309,8 @@ public class MemberWorker {
                     process((GenericCommand) command);
                 } else if (command instanceof GetOperationCountCommand) {
                     result = process((GetOperationCountCommand) command);
+                } else if (command instanceof GetBenchmarkResultsCommand) {
+                    result = process((GetBenchmarkResultsCommand) command);
                 } else if (command instanceof MessageCommand) {
                     process((MessageCommand) command);
                 } else {
@@ -317,6 +324,13 @@ public class MemberWorker {
                     responseQueue.add(response);
                 }
             }
+        }
+
+        private Map<String, Result<?>> process(GetBenchmarkResultsCommand command) {
+            String testId = command.getTestId();
+            TestContainer<TestContext> testContainer = tests.get(testId);
+            Map<String, Result<?>> results = testContainer.getProbeResults();
+            return results;
         }
 
         private void process(MessageCommand command) {
@@ -439,9 +453,11 @@ public class MemberWorker {
                 String clazzName = testCase.getClassname();
                 Object testObject = InitCommand.class.getClassLoader().loadClass(clazzName).newInstance();
                 bindProperties(testObject, testCase);
+                ProbesConfiguration probesConfiguration = parseProbeConfiguration(testCase);
+
 
                 TestContextImpl testContext = new TestContextImpl(testCase.id);
-                TestContainer<TestContext> testContainer = new TestContainer<TestContext>(testObject, testContext);
+                TestContainer<TestContext> testContainer = new TestContainer<TestContext>(testObject, testContext, probesConfiguration);
                 tests.put(testContext.getTestId(), testContainer);
 
                 if (serverInstance != null) {
