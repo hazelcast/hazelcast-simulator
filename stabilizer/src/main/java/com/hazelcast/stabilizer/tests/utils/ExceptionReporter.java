@@ -15,6 +15,8 @@ import static com.hazelcast.stabilizer.Utils.writeText;
  */
 public class ExceptionReporter {
 
+    public static final int MAX_EXCEPTION_COUNT = 1000;
+
     private final static AtomicLong FAILURE_ID = new AtomicLong(0);
     private final static ILogger log = Logger.getLogger(ExceptionReporter.class);
 
@@ -32,6 +34,13 @@ public class ExceptionReporter {
         }
 
         long exceptionCount = FAILURE_ID.incrementAndGet();
+
+        if (exceptionCount > MAX_EXCEPTION_COUNT) {
+            log.severe("Exception #" + exceptionCount + " detected. The maximum number of exceptions has been" +
+                    "exceeded, so it won't be reported to the agent.", cause);
+            return;
+        }
+
         log.severe("Exception #" + exceptionCount + " detected", cause);
 
         String targetFileName = exceptionCount + ".exception";
@@ -41,7 +50,7 @@ public class ExceptionReporter {
         try {
             if (!tmpFile.createNewFile()) {
                 // can't happen since id's are always incrementing. So just for safety reason this is added.
-                throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath()+" file already exists.");
+                throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath() + " file already exists.");
             }
         } catch (IOException e) {
             log.severe("Could not report exception; this means that this exception is not visible to the coordinator", e);
