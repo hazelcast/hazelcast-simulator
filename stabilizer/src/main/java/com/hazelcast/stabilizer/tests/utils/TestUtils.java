@@ -133,6 +133,18 @@ public class TestUtils {
 
             logger.info("waiting cluster == " + clusterSize);
             Thread.sleep(1000);
+
+        }
+
+    }
+
+    public static void verifyPercentage(String name, int percentage) {
+        if (percentage < 0) {
+            throw new IllegalArgumentException(name + " can't be smaller than 0");
+        }
+
+        if (percentage > 100) {
+            throw new IllegalArgumentException(name + " can't be larger than 100");
         }
     }
 

@@ -33,6 +33,8 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.verifyPercentage;
+
 public class StringMapTest {
 
     private final static ILogger log = Logger.getLogger(StringMapTest.class);
@@ -60,13 +62,7 @@ public class StringMapTest {
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
+        verifyPercentage("writePercentage", writePercentage);
 
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();

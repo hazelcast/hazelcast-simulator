@@ -35,6 +35,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.verifyPercentage;
+
 public class ReplicatedMapTest {
 
     private static final ILogger log = Logger.getLogger(ReplicatedMapTest.class);
@@ -49,29 +51,38 @@ public class ReplicatedMapTest {
     public int threadCount = 20;
     public int minBatchSize = 1000;
     public int maxBatchSize = 100000;
-    public int putRatio = 50;
-    public int getRatio = 100 - putRatio;
-    public int updateRatio = 30;
-    public int removeRatio = 20;
+    public int putPercentage = 50;
+    public int updatePercentage = 30;
+
     public int minClearIntervalSeconds = 3600;
     public int maxClearIntervalSeconds = 86400;
     public int minValueSize = 1024;
     public int maxValueSize = 1024 * 1024;
     public int minSleepBetweenBatchesMillis = 0;
     public int maxSleepBetweenBatchesMillis = 60000;
-    public int ttlRatio = 50;
+    public int ttlPercentage = 50;
     public int minTtlTimeSeconds = 0;
     public int maxTtlTimeSeconds = 60;
     public int logFrequency = 100;
+    public int performanceUpdateFrequency = 10000;
 
     private final AtomicLong operations = new AtomicLong(0);
     private ReplicatedMap<String, byte[]> replicatedMap;
     private TestContext testContext;
     private HazelcastInstance hz;
+    private int removePercentage;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
+
+        verifyPercentage("putPercentage", putPercentage);
+        verifyPercentage("updatePercentage", updatePercentage);
+        verifyPercentage("ttlPercentage", ttlPercentage);
+
+        removePercentage = 100 - putPercentage - updatePercentage;
+        verifyPercentage("removePercentage", removePercentage);
+
         this.hz = testContext.getTargetInstance();
         replicatedMap = hz.getReplicatedMap(basename + "-" + testContext.getTestId());
     }
@@ -88,10 +99,10 @@ public class ReplicatedMapTest {
     }
 
     @Run
-    public void createTestThreads() {
+    public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker(k));
+            spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
     }
@@ -129,48 +140,43 @@ public class ReplicatedMapTest {
         return value;
     }
 
-    private final class Worker
-            implements Runnable {
+    private final class Worker implements Runnable {
 
         private final Random random = new Random();
-        private final int workerId;
-
-        private Worker(int workerId) {
-            this.workerId = workerId;
-        }
 
         @Override
         public void run() {
-            try {
-                long clearIntervalNanos = randomizeClearInterval();
-                long iteration = 0;
-                long lastClearTime = System.nanoTime();
-                while (!testContext.isStopped()) {
-                    long batchSleepNanos = randomizeBatchSleep();
-                    int batchSize = randomizeBatchSize();
+            long clearIntervalNanos = randomizeClearInterval();
+            long iteration = 0;
+            long lastClearTime = System.nanoTime();
+            while (!testContext.isStopped()) {
+                long batchSleepNanos = randomizeBatchSleep();
+                int batchSize = randomizeBatchSize();
 
-                    for (int i = 0; i < batchSize; i++) {
-                        executeRandomOperation();
+                for (int i = 0; i < batchSize; i++) {
+                    executeRandomOperation();
 
-                        if (testContext.isStopped()) {
-                            return;
-                        }
-
-                        if (iteration % logFrequency == 0) {
-                            log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                        }
-
-                        iteration++;
+                    if (testContext.isStopped()) {
+                        return;
                     }
 
-                    clearReplicatedMapIfNeeded(clearIntervalNanos, lastClearTime);
-                    TimeUnit.NANOSECONDS.sleep(batchSleepNanos);
-                    clearReplicatedMapIfNeeded(clearIntervalNanos, lastClearTime);
+                    if (iteration % logFrequency == 0) {
+                        log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    }
+
+                    iteration++;
+                    if (iteration % performanceUpdateFrequency == 0) {
+                        operations.addAndGet(performanceUpdateFrequency);
+                    }
                 }
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+
+                clearReplicatedMapIfNeeded(clearIntervalNanos, lastClearTime);
+                try {
+                    TimeUnit.NANOSECONDS.sleep(batchSleepNanos);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                clearReplicatedMapIfNeeded(clearIntervalNanos, lastClearTime);
             }
         }
 
@@ -197,7 +203,6 @@ public class ReplicatedMapTest {
                     operateRemove();
                     break;
             }
-            operations.incrementAndGet();
         }
 
         private void operateGet() {
@@ -234,21 +239,21 @@ public class ReplicatedMapTest {
         }
 
         private int randomOperation() {
-            if (!randomizePut()) {
+            if (!isPut()) {
                 return OPERATE_GET;
             }
 
             int rnd = random.nextInt(100);
-            if (rnd < updateRatio) {
+            if (rnd < updatePercentage) {
                 return OPERATE_UPDATE;
-            } else if (rnd < updateRatio + removeRatio) {
+            } else if (rnd < updatePercentage + removePercentage) {
                 return OPERATE_REMOVE;
             }
             return OPERATE_PUT;
         }
 
-        private boolean randomizePut() {
-            return random.nextInt(100) < putRatio;
+        private boolean isPut() {
+            return random.nextInt(100) < putPercentage;
         }
 
         private long randomizeClearInterval() {
@@ -268,7 +273,7 @@ public class ReplicatedMapTest {
         }
 
         private int randomizeTtlSeconds() {
-            if (random.nextInt(100) > ttlRatio) {
+            if (random.nextInt(100) > ttlPercentage) {
                 return 0;
             }
             return minTtlTimeSeconds + random.nextInt(maxTtlTimeSeconds - minTtlTimeSeconds);
