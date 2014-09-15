@@ -107,7 +107,7 @@ public class ExpiryTest {
     private class Worker implements Runnable {
         private Random random = new Random();
         private Counter counter = new Counter();
-        private ICache<Integer, Long> cache = cacheManager.getCache(basename, config.getKeyType(), config.getValueType());
+        private ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
 
         public void run() {
             while (!testContext.isStopped()) {
@@ -151,7 +151,7 @@ public class ExpiryTest {
         }
         log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
-        final ICache<Integer, Long> cache = cacheManager.getCache(basename, config.getKeyType(), config.getValueType());
+        final ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
         whileApproachingZero(new TestUtils.Targetable() {
             public long getTarget() {
                 return cache.size();

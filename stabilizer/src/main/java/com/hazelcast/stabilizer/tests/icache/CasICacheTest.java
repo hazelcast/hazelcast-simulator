@@ -73,7 +73,7 @@ public class CasICacheTest {
         }
     }
 
-    @Teardown
+    @Teardown(global = true)
     public void teardown() throws Exception {
         cache.close();
         resultsPerWorker.destroy();
