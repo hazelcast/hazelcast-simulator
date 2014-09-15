@@ -55,8 +55,8 @@ public class StringICacheTest {
     public int valueCount = 10000;
 
     public int performanceUpdateFrequency = 10000;
-    public boolean remoteKeysOnly = false;
 
+    public boolean remoteKeysOnly = false;
     public int minNumberOfMembers = 0;
 
     private TestContext testContext;
@@ -109,11 +109,7 @@ public class StringICacheTest {
 
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
-            if(remoteKeysOnly){
-                keys[k] = StringUtils.generateNotKeyOwnedBy(keyLength, targetInstance);
-            } else {
-                keys[k] = StringUtils.makeString(keyLength);
-            }
+            keys[k] = StringUtils.generateKey(keyLength, remoteKeysOnly, testContext.getTargetInstance());
         }
 
         values = new String[valueCount];

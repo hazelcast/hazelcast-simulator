@@ -85,12 +85,7 @@ public class StringMapTest {
         TestUtils.warmupPartitions(log, targetInstance);
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
-            String key;
-            if(preventLocalCalls){
-                key = StringUtils.generateNotKeyOwnedBy(keyLength, targetInstance);
-            }else{
-                key = StringUtils.makeString(keyLength);
-            }
+            keys[k] = StringUtils.generateKey(keyLength, preventLocalCalls, testContext.getTargetInstance());
         }
 
         values = new String[valueCount];
