@@ -197,5 +197,10 @@ public class TestContainerTest {
         public void stop() {
             throw new UnsupportedOperationException("Not implemented");
         }
+
+        @Override
+        public void sleepNanos(long nanos) {
+            // no-op
+        }
     }
 }

@@ -24,13 +24,12 @@ public class LockTest {
 
     private final static ILogger log = Logger.getLogger(LockTest.class);
 
-    // properties
-    public String basename = "lock";
     public int lockCount = 500;
     public int threadCount = 10;
     public int initialAmount = 1000;
     public int amount = 50;
     public int logFrequency = 1000;
+    public String basename = "lock";
 
     private IAtomicLong lockCounter;
     private IAtomicLong totalMoney;
