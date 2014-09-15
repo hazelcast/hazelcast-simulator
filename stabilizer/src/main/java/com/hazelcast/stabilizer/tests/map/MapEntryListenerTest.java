@@ -206,7 +206,7 @@ public class MapEntryListenerTest {
         for (int i = 0; i < listeners.size() - 1; i++) {
             EntryListenerImpl a = listeners.get(i);
             EntryListenerImpl b = listeners.get(i + 1);
-            assertEquals("not same amount of event in all listeners", a, b);
+            assertEquals(basename + ": not same amount of event in all listeners", a, b);
         }
     }
 

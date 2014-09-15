@@ -109,8 +109,8 @@ public class TxnQueueWithLockTest {
         }
 
         log.info(basename + ": " + total + " from " + results.size() + " worker Threads  Queue size=" + queue.size());
-        assertFalse(firstLock.isLocked());
-        assertFalse(secondLock.isLocked());
+        assertFalse(basename + ": firstLock.isLocked()", firstLock.isLocked());
+        assertFalse(basename + ": secondLock.isLocked()", secondLock.isLocked());
         //assertEquals(total.committed - total.rolled, queue.size());
     }
 

@@ -173,7 +173,7 @@ public class MapStoreTest {
             assertEquals("sets should be equals", map.getAll(map.localKeySet()).entrySet(), mapStore.store.entrySet());
 
             for (int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++) {
-                assertNull("TTL key should not be in the map", map.get(k));
+                assertNull(basename+ ": TTL key should not be in the map", map.get(k));
             }
         }
     }
