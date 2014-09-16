@@ -92,11 +92,7 @@ public class ExpiryTest {
 
     @Warmup(global = true)
     public void warmup() {
-
         cacheManager.createCache(basename, config);
-
-        config = new CacheConfig();
-        config.setName(basename);
     }
 
     @Run
