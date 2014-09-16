@@ -395,6 +395,8 @@ public class TestUtils {
             }
             lastDelta=delta;
 
+            System.out.println(" "+staticCount+" "+delta);
+
         } while ( delta != 0 && staticCount < maxStaticItterations ) ;
     }
 
