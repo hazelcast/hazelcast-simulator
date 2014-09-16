@@ -85,12 +85,13 @@ public class ExpiryTest {
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         }
         expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
+
+        config.setName(basename);
+        config.setTypes(Integer.class, Long.class);
     }
 
     @Warmup(global = true)
     public void warmup() {
-        config.setName(basename);
-        config.setTypes(Integer.class, Long.class);
 
         cacheManager.createCache(basename, config);
 
