@@ -24,7 +24,6 @@ import com.hazelcast.client.cache.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -32,7 +31,6 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
-import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -40,13 +38,10 @@ import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.tests.utils.TestUtils.whileApproachingZero;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -136,6 +131,7 @@ public class ExpiryTest {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
+
                 }
             }
             targetInstance.getList(basename).add(counter);
@@ -156,19 +152,10 @@ public class ExpiryTest {
         final ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
 
         for(int i=0; i<keyCount; i++){
-            assertFalse("cache should not contain any keys ", cache.containsKey(i) );
+            assertFalse(basename + ": cache should not contain any keys ", cache.containsKey(i) );
         }
 
-        /*
-        whileApproachingZero(new TestUtils.Targetable() {
-            public long getTarget() {
-                return cache.size();
-            }
-        });
-        */
-
-
-
+        assertFalse(basename + ": iterator should not have elements ", cache.iterator().hasNext());
         assertEquals(basename + ": cache size not 0", 0, cache.size());
     }
 
