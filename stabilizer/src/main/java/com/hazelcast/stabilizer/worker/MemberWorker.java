@@ -379,11 +379,12 @@ public class MemberWorker {
                                 log.info(format("--------------------------- Completed %s.run() " +
                                                 "------------------------------------",
                                         testName));
-                            } catch (Throwable t) {
+                            } catch (InvocationTargetException e) {
                                 String msg = format("--------------------------- Failed to execute %s.run() " +
                                                 "------------------------------------",
                                         testName);
-                                log.severe(msg, t);
+                                log.severe(msg, e.getCause());
+                                throw e.getCause();
                             }
                         }
                     }
