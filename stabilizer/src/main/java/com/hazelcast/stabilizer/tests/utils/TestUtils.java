@@ -379,7 +379,7 @@ public class TestUtils {
 
     public static void whileApproaching(Targetable targetable, long target) throws Exception {
 
-        final long sleepMs=1000;
+        final long sleepMs=1500;
         final int maxStaticItterations=120;
         int staticCount=0;
         long delta, lastDelta=0;

@@ -40,6 +40,7 @@ import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -47,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.whileApproachingZero;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class ExpiryTest {
 
@@ -152,11 +154,20 @@ public class ExpiryTest {
         log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
         final ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
+
+        for(int i=0; i<keyCount; i++){
+            assertFalse("cache should not contain any keys ", cache.containsKey(i) );
+        }
+
+        /*
         whileApproachingZero(new TestUtils.Targetable() {
             public long getTarget() {
                 return cache.size();
             }
         });
+        */
+
+
 
         assertEquals(basename + ": cache size not 0", 0, cache.size());
     }
