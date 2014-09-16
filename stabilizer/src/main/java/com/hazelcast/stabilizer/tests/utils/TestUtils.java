@@ -393,7 +393,6 @@ public class TestUtils {
             }else{
                 staticCount=0;
             }
-
             lastDelta=delta;
 
         } while ( delta != 0 && staticCount < maxStaticItterations ) ;
