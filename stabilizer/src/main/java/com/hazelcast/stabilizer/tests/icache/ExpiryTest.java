@@ -93,6 +93,9 @@ public class ExpiryTest {
         config.setTypes(Integer.class, Long.class);
 
         cacheManager.createCache(basename, config);
+
+        config = new CacheConfig();
+        config.setName(basename);
     }
 
     @Run
