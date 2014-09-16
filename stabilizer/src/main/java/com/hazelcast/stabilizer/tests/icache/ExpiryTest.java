@@ -67,7 +67,7 @@ public class ExpiryTest {
     private String basename;
 
     private ExpiryPolicy expiryPolicy;
-    private CacheConfig<Integer, Long> config;
+    private CacheConfig<Integer, Long> config = new CacheConfig();
 
     @Setup
     public void setup(TestContext textConTx) {
@@ -85,14 +85,13 @@ public class ExpiryTest {
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         }
         expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
-
-        config = new CacheConfig();
-        config.setName(basename);
-        config.setTypes(Integer.class, Long.class);
     }
 
     @Warmup(global = true)
     public void warmup() {
+        config.setName(basename);
+        config.setTypes(Integer.class, Long.class);
+
         cacheManager.createCache(basename, config);
     }
 
