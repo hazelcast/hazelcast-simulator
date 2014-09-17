@@ -1,14 +1,14 @@
 package com.hazelcast.stabilizer.worker.commands;
 
 /**
- * Checks if there currently is a command running.
+ * Checks if a test-phase on a member has completed for a given test.
  */
-public class DoneCommand extends Command {
+public class IsPhaseCompletedCommand extends Command {
 
     public final String testId;
 
-    public DoneCommand(String testId) {
-        if(testId == null){
+    public IsPhaseCompletedCommand(String testId) {
+        if (testId == null) {
             throw new NullPointerException("testId can't be null");
         }
         this.testId = testId;
@@ -16,7 +16,7 @@ public class DoneCommand extends Command {
 
     @Override
     public String toString() {
-        return "DoneCommand{" +
+        return "IsPhaseCompletedCommand{" +
                 "testId='" + testId + '\'' +
                 '}';
     }
