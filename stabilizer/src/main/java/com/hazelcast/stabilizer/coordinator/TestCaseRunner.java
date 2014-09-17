@@ -46,9 +46,7 @@ public class TestCaseRunner {
         this.testSuite = testSuite;
         this.agentsClient = coordinator.agentsClient;
         this.prefix = testCase.id.equals("") ? "" : testCase.id + " ";
-
-        nonCriticalFailures = testSuite.tolerableFailures;
-
+        this.nonCriticalFailures = testSuite.tolerableFailures;
     }
 
     public boolean run() throws Exception {
