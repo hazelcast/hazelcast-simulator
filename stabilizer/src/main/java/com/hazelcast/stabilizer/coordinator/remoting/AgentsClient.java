@@ -12,7 +12,7 @@ import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.commands.Command;
-import com.hazelcast.stabilizer.worker.commands.DoneCommand;
+import com.hazelcast.stabilizer.worker.commands.IsPhaseCompletedCommand;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,7 +33,6 @@ import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_ECHO;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_EXECUTE_ALL_WORKERS;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_EXECUTE_SINGLE_WORKER;
-import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_GET_ALL_WORKERS;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_GET_FAILURES;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_INIT_TESTSUITE;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_POKE;
@@ -116,7 +115,8 @@ public class AgentsClient {
             return;
         }
 
-        StringBuilder sb = new StringBuilder("The Coordinator has dropped the following agents because they are not reachable:\n");
+        StringBuilder sb = new StringBuilder("The Coordinator has dropped the following " +
+                "agents because they are not reachable:\n");
         for (AgentClient agent : unchecked) {
             sb.append("\t").append(agent.publicAddress).append("\n");
         }
@@ -174,17 +174,22 @@ public class AgentsClient {
         return result;
     }
 
-    public void waitDone(String prefix, String testId, String phaseName) {
+    public void waitForPhaseCompletion(String prefix, String testId, String phaseName) {
         long startTimeMs = System.currentTimeMillis();
+        IsPhaseCompletedCommand command = new IsPhaseCompletedCommand(testId);
         for (; ; ) {
-            List<List<Boolean>> result = executeOnAllWorkers(new DoneCommand(testId));
+            List<List<Boolean>> allResults = executeOnAllWorkers(command);
             boolean complete = true;
-            for (List<Boolean> l : result) {
-                for (Boolean b : l) {
-                    if (!b) {
+            for (List<Boolean> resultsPerAgent : allResults) {
+                for (Boolean result : resultsPerAgent) {
+                    if (!result) {
                         complete = false;
                         break;
                     }
+                }
+
+                if (!complete) {
+                    break;
                 }
             }
 
@@ -360,17 +365,6 @@ public class AgentsClient {
         }
         return futures;
     }
-
-    public <E> List<String> getWorkers(final AgentClient agentClient) {
-        Future future = agentExecutor.submit(new Callable<List<String>>() {
-            @Override
-            public List<String> call() throws Exception {
-                return (List<String>) agentClient.execute(SERVICE_GET_ALL_WORKERS);
-            }
-        });
-        return getAllFutures(Arrays.asList(future));
-    }
-
 
     public <E> List<E> executeOnAllWorkers(final Command command) {
         List<Future> futures = new LinkedList<Future>();

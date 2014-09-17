@@ -77,11 +77,11 @@ public class AgentSmokeTest {
 
         System.out.println("localWarmup");
         client.executeOnAllWorkers(new GenericCommand(testCase.id, "localWarmup"));
-        client.waitDone("", testCase.id, "localWarmup");
+        client.waitForPhaseCompletion("", testCase.id, "localWarmup");
 
         System.out.println("globalWarmup");
         client.executeOnAllWorkers(new GenericCommand(testCase.id, "globalWarmup"));
-        client.waitDone("", testCase.id, "globalWarmup");
+        client.waitForPhaseCompletion("", testCase.id, "globalWarmup");
 
         System.out.println("run");
         RunCommand runCommand = new RunCommand(testCase.id);
@@ -94,23 +94,23 @@ public class AgentSmokeTest {
 
         System.out.println("stop");
         client.executeOnAllWorkers(new StopCommand(testCase.id));
-        client.waitDone("", testCase.id, "stop");
+        client.waitForPhaseCompletion("", testCase.id, "stop");
 
         System.out.println("localVerify");
         client.executeOnAllWorkers(new GenericCommand(testCase.id, "localVerify"));
-        client.waitDone("", testCase.id, "localVerify");
+        client.waitForPhaseCompletion("", testCase.id, "localVerify");
 
         System.out.println("globalVerify");
         client.executeOnAllWorkers(new GenericCommand(testCase.id, "globalVerify"));
-        client.waitDone("", testCase.id, "globalVerify");
+        client.waitForPhaseCompletion("", testCase.id, "globalVerify");
 
         System.out.println("globalTeardown");
         client.executeOnAllWorkers(new GenericCommand(testCase.id, "globalTeardown"));
-        client.waitDone("", testCase.id, "globalTeardown");
+        client.waitForPhaseCompletion("", testCase.id, "globalTeardown");
 
         System.out.println("localTeardown");
         client.executeOnAllWorkers(new GenericCommand(testCase.id, "localTeardown"));
-        client.waitDone("", testCase.id, "localTeardown");
+        client.waitForPhaseCompletion("", testCase.id, "localTeardown");
 
         System.out.println("Done");
     }
