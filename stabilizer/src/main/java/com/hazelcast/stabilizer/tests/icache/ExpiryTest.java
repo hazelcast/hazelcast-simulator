@@ -140,7 +140,6 @@ public class ExpiryTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        Thread.sleep(expiryDuration * 4);
 
         IList<Counter> results = targetInstance.getList(basename);
         Counter total = new Counter();

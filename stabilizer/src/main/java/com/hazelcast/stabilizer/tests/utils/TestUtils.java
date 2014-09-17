@@ -371,36 +371,4 @@ public class TestUtils {
     public static boolean isMemberNode(HazelcastInstance instance) {
         return instance instanceof HazelcastInstanceProxy;
     }
-
-
-    public interface Targetable {
-        public long getTarget();
-    }
-
-    public static void whileApproaching(Targetable targetable, long target) throws Exception {
-
-        final long sleepMs=1500;
-        final int maxStaticItterations=120;
-        int staticCount=0;
-        long delta, lastDelta=0;
-
-        do{
-            Thread.sleep(sleepMs);
-            delta = Math.abs( targetable.getTarget() - target );
-
-            if(Math.abs( lastDelta - delta ) == 0 ){
-                staticCount++;
-            }else{
-                staticCount=0;
-            }
-            lastDelta=delta;
-
-            System.out.println(" "+staticCount+" "+delta);
-
-        } while ( delta != 0 && staticCount < maxStaticItterations ) ;
-    }
-
-    public static void whileApproachingZero(Targetable targetable) throws Exception{
-        whileApproaching(targetable, 0);
-    }
 }

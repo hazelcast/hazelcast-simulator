@@ -46,9 +46,11 @@ public class CasICacheTest {
     public int performanceUpdateFrequency = 10000;
 
     private final AtomicLong operations = new AtomicLong();
+    private IList<long[]> resultsPerWorker;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private HazelcastCacheManager cacheManager;
+    private ICache<Integer, Long> cache;
     private String basename;
 
 
@@ -57,6 +59,8 @@ public class CasICacheTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         basename=testContext.getTestId();
+        resultsPerWorker = targetInstance.getList(basename);
+
 
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
@@ -69,6 +73,12 @@ public class CasICacheTest {
         }
     }
 
+    @Teardown
+    public void teardown() throws Exception {
+        cache.close();
+        resultsPerWorker.destroy();
+    }
+
     @Warmup(global = true)
     public void warmup() throws Exception {
         CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
@@ -76,7 +86,7 @@ public class CasICacheTest {
         config.setTypes(Integer.class, Long.class);
 
         cacheManager.createCache(basename, config);
-        ICache cache = cacheManager.getCache(basename, Integer.class, Long.class);
+        cache = cacheManager.getCache(basename, Integer.class, Long.class);
 
         for (int k = 0; k < keyCount; k++) {
             cache.put(k, 0l);
@@ -85,11 +95,36 @@ public class CasICacheTest {
 
     @Run
     public void run() {
+        if (cache.size() != keyCount) {
+            throw new RuntimeException("warmup has not run since the map is not filled correctly, found size:" + cache.size());
+        }
+
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int k = 0; k < threadCount; k++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
+    }
+
+    @Verify
+    public void verify() throws Exception {
+        long[] amount = new long[keyCount];
+
+        for (long[] incrments : resultsPerWorker) {
+            for (int i=0 ; i<keyCount; i++) {
+                amount[i] += incrments[i];
+            }
+        }
+
+        int failures = 0;
+        for (int k = 0; k < keyCount; k++) {
+            long expected = amount[k];
+            long found = cache.get(k);
+            if (expected != found) {
+                failures++;
+            }
+        }
+        assertEquals(failures + " key=>values have been incremented unExpected", 0, failures);
     }
 
     @Performance
@@ -100,7 +135,6 @@ public class CasICacheTest {
     private class Worker implements Runnable {
         private final Random random = new Random();
         private final long[] increments = new long[keyCount];
-        ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
 
         public void run() {
             long iteration = 0;
@@ -126,30 +160,12 @@ public class CasICacheTest {
 
                 iteration++;
             }
-            targetInstance.getList(basename).add(increments);
+            resultsPerWorker.add(increments);
         }
     }
 
-    @Verify
-    public void verify() throws Exception {
-        long[] amount = new long[keyCount];
-
-        IList<long[]>resultsPerWorker = targetInstance.getList(basename);
-        for (long[] incrments : resultsPerWorker) {
-            for (int i=0 ; i<keyCount; i++) {
-                amount[i] += incrments[i];
-            }
-        }
-
-        ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
-        int failures = 0;
-        for (int k = 0; k < keyCount; k++) {
-            long expected = amount[k];
-            long found = cache.get(k);
-            if (expected != found) {
-                failures++;
-            }
-        }
-        assertEquals(failures + " key=>values have been incremented unExpected", 0, failures);
+    public static void main(String[] args) throws Throwable {
+        CasICacheTest test = new CasICacheTest();
+        new TestRunner(test).run();
     }
 }
