@@ -58,8 +58,7 @@ public class Provisioner {
         }
         addresses.addAll(AgentsFile.load(agentsFile));
         bash = new Bash(props);
-        String hzVersionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
-        hazelcastJars = new HazelcastJars(bash, hzVersionSpec);
+        hazelcastJars = new HazelcastJars(bash, props.getHazelcastVersionSpec());
     }
 
     void installAgent(String ip) {
@@ -102,7 +101,7 @@ public class Provisioner {
         //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
         //this is done to reduce the amount of data we need to upload.
 
-        String versionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
+        String versionSpec = props.getHazelcastVersionSpec();
         if (!versionSpec.equals("outofthebox")) {
             //todo: in the future we can improve this; we upload the hz jars, to delete them again.
 
@@ -183,6 +182,7 @@ public class Provisioner {
         echo("Desired number of machines: " + (addresses.size() + delta));
         String groupName = props.get("GROUP_NAME", "stabilizer-agent");
         echo("GroupName: " + groupName);
+        echo("Username: " + props.getUser());
 
         long startTimeMs = System.currentTimeMillis();
 
