@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.visualiser.ui;
+package com.hazelcast.stabilizer.visualiser.data;
 
 import org.jfree.data.xy.AbstractIntervalXYDataset;
 import org.jfree.data.xy.IntervalXYDataset;
@@ -6,7 +6,7 @@ import org.jfree.data.xy.IntervalXYDataset;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MyDataSet extends AbstractIntervalXYDataset implements IntervalXYDataset {
+public class AggregatedDataSet extends AbstractIntervalXYDataset implements IntervalXYDataset {
     private int noOfSeries = 0;
     private List<IntervalXYDataset> series = new ArrayList<IntervalXYDataset>();
     private List<String> keys = new ArrayList<String>();

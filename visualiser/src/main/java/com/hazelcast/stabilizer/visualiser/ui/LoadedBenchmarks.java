@@ -1,19 +1,16 @@
 package com.hazelcast.stabilizer.visualiser.ui;
 
-import com.hazelcast.stabilizer.visualiser.Model;
+import com.hazelcast.stabilizer.visualiser.data.Model;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class OpenBenchmarks extends JPanel implements Model.BenchmarkChangeListener {
-    private final Model model;
-
-    public OpenBenchmarks(Model model) {
+public class LoadedBenchmarks extends JPanel implements Model.BenchmarkChangeListener {
+    public LoadedBenchmarks() {
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         BoxLayout layout = new BoxLayout(this, BoxLayout.Y_AXIS);
         setLayout(layout);
         setBorder(BorderFactory.createTitledBorder("Benchmarks"));
-        this.model = model;
     }
 
 

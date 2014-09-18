@@ -4,7 +4,7 @@ import com.hazelcast.stabilizer.common.LinearHistogram;
 import com.hazelcast.stabilizer.common.probes.IntervalProbe;
 
 public class LatencyDistributionProbe implements IntervalProbe<LatencyDistributionResult, LatencyDistributionProbe> {
-    private static final int MAXIMUM_LATENCY = 500000;
+    private static final int MAXIMUM_LATENCY = 5000000;
     private static final int STEP = 10;
 
     private final LinearHistogram histogram = new LinearHistogram(MAXIMUM_LATENCY, STEP);

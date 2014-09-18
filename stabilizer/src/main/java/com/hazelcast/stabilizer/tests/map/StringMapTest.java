@@ -19,8 +19,11 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.common.probes.IntervalProbe;
+import com.hazelcast.stabilizer.common.probes.SimpleProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.tests.annotations.Name;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
@@ -58,8 +61,19 @@ public class StringMapTest {
     private TestContext testContext;
     private HazelcastInstance targetInstance;
 
+    private IntervalProbe getLatency;
+    private IntervalProbe putLatency;
+    private SimpleProbe throughput;
+
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext,
+                      @Name("getLatency") IntervalProbe getLatency,
+                      @Name("putLatency") IntervalProbe putLatency,
+                      @Name("throughput") SimpleProbe throughput) throws Exception {
+        this.getLatency = getLatency;
+        this.putLatency = putLatency;
+        this.throughput = throughput;
+
         if (writePercentage < 0) {
             throw new IllegalArgumentException("Write percentage can't be smaller than 0");
         }
@@ -128,13 +142,17 @@ public class StringMapTest {
 
                 if (shouldWrite(iteration)) {
                     String value = randomValue();
+                    putLatency.started();
                     if (usePut) {
                         map.put(key, value);
                     } else {
                         map.set(key, value);
                     }
+                    putLatency.done();
                 } else {
+                    getLatency.started();
                     map.get(key);
+                    getLatency.done();
                 }
 
                 if (iteration % logFrequency == 0) {
@@ -146,6 +164,7 @@ public class StringMapTest {
                 }
 
                 iteration++;
+                throughput.done();
             }
         }
 

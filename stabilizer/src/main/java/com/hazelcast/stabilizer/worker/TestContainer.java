@@ -7,6 +7,7 @@ import com.hazelcast.stabilizer.common.probes.IntervalProbe;
 import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.common.probes.Result;
 import com.hazelcast.stabilizer.common.probes.SimpleProbe;
+import com.hazelcast.stabilizer.common.probes.impl.DisabledResult;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Name;
@@ -87,7 +88,9 @@ public class TestContainer<T extends TestContext> {
             String name = entry.getKey();
             SimpleProbe<?, ?> probe = entry.getValue();
             Result<?> result = probe.getResult();
-            results.put(name, result);
+            if (!(result instanceof DisabledResult)) {
+                results.put(name, result);
+            }
         }
         return results;
     }

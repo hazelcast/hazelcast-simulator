@@ -92,11 +92,7 @@ public class TestCaseRunner {
             echo("Completed Test stop");
 
             logPerformance();
-            Map<String, ? extends Result> probesResult = getProbesResult();
-
-            ProbesResultXmlWriter xmlWriter = new ProbesResultXmlWriter();
-            xmlWriter.write(probesResult, new File("results-" + coordinator.testSuite.id + ".xml"));
-            logProbesResultInHumanReadableFormat(probesResult);
+            processProbeResults();
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
@@ -129,6 +125,15 @@ public class TestCaseRunner {
         }
     }
 
+    private void processProbeResults() {
+        Map<String, ? extends Result> probesResult = getProbesResult();
+        if (!probesResult.isEmpty()) {
+            ProbesResultXmlWriter xmlWriter = new ProbesResultXmlWriter();
+            xmlWriter.write(probesResult, new File("results-" + coordinator.testSuite.id + ".xml"));
+            logProbesResultInHumanReadableFormat(probesResult);
+        }
+    }
+
     private <R extends Result<R>> void logProbesResultInHumanReadableFormat(Map<String, R> combinedResults) {
         for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
             String probeName = entry.getKey();
@@ -138,19 +143,21 @@ public class TestCaseRunner {
     }
 
     private <R extends Result<R>> Map<String, R> getProbesResult() {
-        List<List<Map<String, R>>> workerProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
+        List<List<Map<String, R>>> agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
         Map<String, R> combinedResults = new HashMap<String, R>();
-        for (List<Map<String, R>> agentProbeResults : workerProbeResults) {
+        for (List<Map<String, R>> agentProbeResults : agentsProbeResults) {
             for (Map<String, R> workerProbeResult : agentProbeResults) {
-                for (Map.Entry<String, R> probe : workerProbeResult.entrySet()) {
-                    String probeName = probe.getKey();
-                    R currentResult = probe.getValue();
-                    if (currentResult != null) {
-                        R combinedValue = combinedResults.get(probeName);
-                        combinedValue = currentResult.combine(combinedValue);
-                        combinedResults.put(probeName, combinedValue);
-                    } else {
-                        log.warning("Probe "+probeName+" has null value for some member. This should not happen.");
+                if (workerProbeResult != null) {
+                    for (Map.Entry<String, R> probe : workerProbeResult.entrySet()) {
+                        String probeName = probe.getKey();
+                        R currentResult = probe.getValue();
+                        if (currentResult != null) {
+                            R combinedValue = combinedResults.get(probeName);
+                            combinedValue = currentResult.combine(combinedValue);
+                            combinedResults.put(probeName, combinedValue);
+                        } else {
+                            log.warning("Probe " + probeName + " has null value for some member. This should not happen.");
+                        }
                     }
                 }
             }

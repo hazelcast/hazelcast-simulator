@@ -1,7 +1,7 @@
 package com.hazelcast.stabilizer.visualiser.ui;
 
-import com.hazelcast.stabilizer.visualiser.BenchmarkResults;
-import com.hazelcast.stabilizer.visualiser.Model;
+import com.hazelcast.stabilizer.visualiser.data.BenchmarkResults;
+import com.hazelcast.stabilizer.visualiser.data.Model;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,15 +32,6 @@ public class ProbesCheckboxes extends JPanel implements Model.BenchmarkChangeLis
             }
         }
         return results;
-    }
-
-
-    private void removeProbe(String name) {
-        JCheckBox checkBox = checkBoxMap.get(name);
-        if (checkBox != null) {
-            remove(checkBox);
-            checkBoxMap.remove(name);
-        }
     }
 
     private void addProbeIfNotExist(String name) {

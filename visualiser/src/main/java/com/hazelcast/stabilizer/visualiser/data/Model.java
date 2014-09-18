@@ -1,4 +1,6 @@
-package com.hazelcast.stabilizer.visualiser;
+package com.hazelcast.stabilizer.visualiser.data;
+
+import com.hazelcast.stabilizer.visualiser.data.BenchmarkResults;
 
 import java.util.ArrayList;
 import java.util.Collections;

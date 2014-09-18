@@ -1,41 +1,24 @@
 package com.hazelcast.stabilizer.visualiser;
 
-import com.hazelcast.stabilizer.common.LinearHistogram;
-import com.hazelcast.stabilizer.common.probes.Result;
-import com.hazelcast.stabilizer.common.probes.impl.LatencyDistributionResult;
+import com.hazelcast.stabilizer.visualiser.data.Model;
 import com.hazelcast.stabilizer.visualiser.io.ResultParserWorker;
+import com.hazelcast.stabilizer.visualiser.ui.Chart;
+import com.hazelcast.stabilizer.visualiser.ui.LoadedBenchmarks;
+import com.hazelcast.stabilizer.visualiser.ui.ProbesCheckboxes;
+import org.jfree.ui.ExtensionFileFilter;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import com.hazelcast.stabilizer.visualiser.ui.MyDataSet;
-import com.hazelcast.stabilizer.visualiser.ui.OpenBenchmarks;
-import com.hazelcast.stabilizer.visualiser.ui.ProbesCheckboxes;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.data.statistics.SimpleHistogramBin;
-import org.jfree.data.statistics.SimpleHistogramDataset;
-import org.jfree.ui.ExtensionFileFilter;
 
 public class Main {
 
     private JFrame frame;
-    private ChartPanel cp;
+    private Chart chartPanel;
     private Model model;
-    private XYPlot plot;
 
     public Main() {
         model = new Model();
@@ -77,7 +60,7 @@ public class Main {
     }
 
     private void createUI() {
-        frame = new JFrame("Stabilize Workbench");
+        frame = new JFrame("Stabilizer Workbench");
 
         frame.setSize(600, 400);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -87,29 +70,30 @@ public class Main {
         Container mainPane = frame.getContentPane();
 
 
-        cp = new ChartPanel(null);
-        mainPane.add(cp, BorderLayout.CENTER);
 
         final ProbesCheckboxes checkBoxes = new ProbesCheckboxes(model);
         model.addBenchmarkChangeListener(checkBoxes);
+
+        chartPanel = new Chart(model, checkBoxes);
+        mainPane.add(chartPanel, BorderLayout.CENTER);
 
         JPanel westPanel = new JPanel();
         westPanel.setLayout(new BorderLayout());
 
         JPanel nortWestPanel = new JPanel();
-        nortWestPanel.setMinimumSize(new Dimension(400, 1));
+//        nortWestPanel.setMinimumSize(new Dimension(400, 1));
         nortWestPanel.setLayout(new BoxLayout(nortWestPanel, BoxLayout.Y_AXIS));
         nortWestPanel.add(checkBoxes);
-        OpenBenchmarks openBenchmarks = new OpenBenchmarks(model);
-        model.addBenchmarkChangeListener(openBenchmarks);
+        LoadedBenchmarks loadedBenchmarks = new LoadedBenchmarks();
+        model.addBenchmarkChangeListener(loadedBenchmarks);
 
-        nortWestPanel.add(openBenchmarks);
+        nortWestPanel.add(loadedBenchmarks);
 
         JButton renderButton = new JButton("Render");
         renderButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                updateChart(checkBoxes);
+                chartPanel.updateChart();
             }
         });
         westPanel.add(nortWestPanel, BorderLayout.NORTH);
@@ -117,53 +101,5 @@ public class Main {
 
         mainPane.add(westPanel, BorderLayout.WEST);
 
-        createChart();
     }
-
-    private void updateChart(ProbesCheckboxes checkBoxes) {
-        List<String> selectedProbes = checkBoxes.getEnabledProbes();
-
-        int bins = 60;
-        int threshold = 1000;
-
-        MyDataSet dataSet = new MyDataSet();
-
-        Set<String> benchmarkNames = model.getBenchmarkNames();
-        for (String benchmarkName : benchmarkNames) {
-            BenchmarkResults benchmarkResults = model.getBenchmarkResults(benchmarkName);
-            for (String selectedProbe : selectedProbes) {
-                Result probeData = benchmarkResults.getProbeData(selectedProbe);
-                if (probeData instanceof LatencyDistributionResult) {
-                    SimpleHistogramDataset simpleHistogramDataset = new SimpleHistogramDataset("key");
-                    String name = benchmarkName + " - " + selectedProbe;
-                    dataSet.addNewSeries(simpleHistogramDataset, name);
-                    LinearHistogram histogram = ((LatencyDistributionResult) probeData).getHistogram();
-                    int[] buckets = histogram.getBuckets();
-                    int step = histogram.getStep();
-                    int binNo = 0;
-                    for (int values : buckets ) {
-                        if (values > threshold) {
-                            double lowerBound = step * binNo;
-                            binNo++;
-                            double upperBound = step * binNo;
-                            SimpleHistogramBin bin = new SimpleHistogramBin(lowerBound, upperBound, true, false);
-                            bin.setItemCount(values);
-                            simpleHistogramDataset.addBin(bin);
-                        }
-                    }
-                }
-            }
-        }
-        plot.setDataset(dataSet);
-    }
-
-    private void createChart() {
-        JFreeChart chart = ChartFactory.createHistogram("Latency Distribution", "Latency (µs)", "Operations", null,
-                PlotOrientation.VERTICAL, true, true, true);
-        plot = (XYPlot) chart.getPlot();
-        plot.setForegroundAlpha(0.65f);
-        cp.setChart(chart);
-
-    }
-
 }

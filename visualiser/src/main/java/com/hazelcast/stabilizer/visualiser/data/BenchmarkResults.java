@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.visualiser;
+package com.hazelcast.stabilizer.visualiser.data;
 
 
 import com.hazelcast.stabilizer.common.probes.Result;

@@ -3,20 +3,16 @@ package com.hazelcast.stabilizer.visualiser.io;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.probes.Result;
 import com.hazelcast.stabilizer.common.probes.impl.ProbesResultXmlReader;
-import com.hazelcast.stabilizer.visualiser.BenchmarkResults;
-import com.hazelcast.stabilizer.visualiser.Model;
-import org.jfree.chart.ChartPanel;
+import com.hazelcast.stabilizer.visualiser.data.BenchmarkResults;
+import com.hazelcast.stabilizer.visualiser.data.Model;
 
 import javax.swing.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ResultParserWorker extends SwingWorker<BenchmarkResults, Void> {
-    private static int ID = 0;
-
     private final File file;
     private final Model model;
 
