@@ -140,15 +140,21 @@ public class TestCaseRunner {
         for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
             String probeName = entry.getKey();
             R result = entry.getValue();
-            echo("Probe " + probeName + " result: "+result.toHumanString());
+            echo("Probe " + probeName + " result: " + result.toHumanString());
         }
     }
 
     private void logPerformance() {
         if (coordinator.monitorPerformance) {
-            log.info("Operation-count: " + performanceFormat.format(coordinator.operationCount));
-            double performance = (coordinator.operationCount * 1.0d) / testSuite.duration;
-            log.info("Performance: " + performanceFormat.format(performance) + " ops/s");
+            long operationCount = coordinator.operationCount;
+            if (operationCount < 0) {
+                log.info("Operation-count: not available");
+                log.info("Performance: not available");
+            } else {
+                log.info("Operation-count: " + performanceFormat.format(operationCount));
+                double performance = (operationCount * 1.0d) / testSuite.duration;
+                log.info("Performance: " + performanceFormat.format(performance) + " ops/s");
+            }
         }
     }
 
@@ -176,7 +182,11 @@ public class TestCaseRunner {
             String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
 
             if (coordinator.monitorPerformance) {
-                msg += ", " + performanceFormat.format(coordinator.performance) + " ops/s.";
+                if (coordinator.operationCount < 0) {
+                    msg += ",  performance not available";
+                } else {
+                    msg += ", " + performanceFormat.format(coordinator.performance) + " ops/s.";
+                }
             }
 
             log.info(prefix + msg);
