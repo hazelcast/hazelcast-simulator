@@ -1,12 +1,29 @@
 package com.hazelcast.stabilizer.common;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 public class LinearHistogram implements Serializable {
     private final int maxValue;
     private final int step;
 
     private int[] buckets;
+
+    public LinearHistogram(int maxValue, int step) {
+        this(maxValue, step, null);
+    }
+
+    private LinearHistogram(int maxValue, int step, int[] buckets) {
+        if (maxValue <= 0) {
+            throw new IllegalArgumentException("Maximum value must be great then 0. Passed maximum value: "+maxValue);
+        }
+        if (step <= 0) {
+            throw new IllegalArgumentException("Step must be great then 0. Passed step: "+step);
+        }
+        this.maxValue = maxValue;
+        this.step = step;
+        this.buckets = (buckets == null ? createBuckets(maxValue) : buckets);
+    }
 
     public HistogramPart getPercentile(double percentile) {
         int[] copyOfBuckets = getBuckets();
@@ -43,22 +60,6 @@ public class LinearHistogram implements Serializable {
         return new LinearHistogram(maxValue, step, combinedBuckets);
     }
 
-    private LinearHistogram(int maxValue, int step, int[] buckets) {
-        if (maxValue <= 0) {
-            throw new IllegalArgumentException("Maximum value must be great then 0. Passed maximum value: "+maxValue);
-        }
-        if (step <= 0) {
-            throw new IllegalArgumentException("Step must be great then 0. Passed step: "+step);
-        }
-        this.maxValue = maxValue;
-        this.step = step;
-        this.buckets = (buckets == null ? createBuckets(maxValue) : buckets);
-    }
-
-    public LinearHistogram(int maxValue, int step) {
-        this(maxValue, step, null);
-    }
-
     public void addValue(int value) {
         if (value < 0) {
             throw new IllegalArgumentException("Value cannot be a negative number. Passed value: "+value);
@@ -67,11 +68,27 @@ public class LinearHistogram implements Serializable {
         buckets[bucket]++;
     }
 
+    public void addMultipleValues(int value, int times) {
+        if (value < 0) {
+            throw new IllegalArgumentException("Value cannot be a negative number. Passed value: "+value);
+        }
+        int bucket = calculateBucket(value);
+        buckets[bucket] += times;
+    }
+
     public int[] getBuckets() {
         int noOfBuckets = buckets.length;
         int[] copy = new int[noOfBuckets];
         System.arraycopy(buckets, 0, copy, 0, noOfBuckets);
         return copy;
+    }
+
+    public int getMaxValue() {
+        return maxValue;
+    }
+
+    public int getStep() {
+        return step;
     }
 
     private void validateBeforeCombining(LinearHistogram other) {
@@ -98,5 +115,27 @@ public class LinearHistogram implements Serializable {
         } else {
             return (value / step);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        LinearHistogram that = (LinearHistogram) o;
+
+        if (maxValue != that.maxValue) return false;
+        if (step != that.step) return false;
+        if (!Arrays.equals(buckets, that.buckets)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = maxValue;
+        result = 31 * result + step;
+        result = 31 * result + Arrays.hashCode(buckets);
+        return result;
     }
 }

@@ -4,6 +4,8 @@ import com.hazelcast.stabilizer.common.HistogramPart;
 import com.hazelcast.stabilizer.common.LinearHistogram;
 import com.hazelcast.stabilizer.common.probes.Result;
 
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -42,5 +44,57 @@ public class LatencyDistributionResult implements Result<LatencyDistributionResu
                     .append(" Ops.\n");
         }
         return builder.toString();
+    }
+
+    public LinearHistogram getHistogram() {
+        return linearHistogram;
+    }
+
+    @Override
+    public void writeTo(XMLStreamWriter writer) {
+        try {
+            writer.writeStartElement("step");
+            int step = linearHistogram.getStep();
+            writer.writeCharacters(Integer.toString(step));
+            writer.writeEndElement();
+
+            writer.writeStartElement("max-value");
+            int maxValue = linearHistogram.getMaxValue();
+            writer.writeCharacters(Integer.toString(maxValue));
+            writer.writeEndElement();
+
+            writer.writeStartElement("buckets");
+            int[] buckets = linearHistogram.getBuckets();
+            for (int i = 0; i < buckets.length; i++) {
+                int upperBound = (i + 1) * step;
+                int values = buckets[i];
+                if (values != 0) {
+                    writer.writeStartElement("bucket");
+                    writer.writeAttribute("upper-bound", Integer.toString(upperBound));
+                    writer.writeAttribute("values", Integer.toString(values));
+                    writer.writeEndElement();
+                }
+            }
+            writer.writeEndElement();
+        } catch (XMLStreamException e) {
+            throw new IllegalStateException("Error while writing probe output", e);
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        LatencyDistributionResult that = (LatencyDistributionResult) o;
+
+        if (!linearHistogram.equals(that.linearHistogram)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return linearHistogram.hashCode();
     }
 }

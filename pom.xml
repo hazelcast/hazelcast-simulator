@@ -43,6 +43,7 @@
         <module>stabilizer</module>
         <module>archetype</module>
         <module>dist</module>
+        <module>visualiser</module>
     </modules>
 
     <scm>
