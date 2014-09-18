@@ -63,6 +63,11 @@ public class Provisioner {
         addresses.addAll(AgentsFile.load(agentsFile));
         bash = new Bash(props);
         hazelcastJars = new HazelcastJars(bash, props.getHazelcastVersionSpec());
+
+        initScript = new File("init.sh");
+        if (!initScript.exists()) {
+            initScript = new File(CONF_DIR + "/init.sh");
+        }
     }
 
     void installAgent(String ip) {
@@ -179,11 +184,6 @@ public class Provisioner {
         String groupName = props.get("GROUP_NAME", "stabilizer-agent");
         echo("GroupName: " + groupName);
         echo("Username: " + props.getUser());
-
-        initScript = new File("init.sh");
-        if (!initScript.exists()) {
-            initScript = new File(CONF_DIR + "/init.sh");
-        }
 
         log.info("Using init script:"+initScript.getAbsolutePath());
 
