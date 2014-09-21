@@ -72,11 +72,7 @@ public class MapEntryListenerTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-
-        values = new String[valueCount];
-        for (int k = 0; k < values.length; k++) {
-            values[k] = StringUtils.generateString(valueLength);
-        }
+        values = StringUtils.generateStrings(valueCount, valueLength);
 
         map = targetInstance.getMap(basename);
         listener = new EntryListenerImpl(minEntryListenerDelayMs, maxEntryListenerDelayMs);

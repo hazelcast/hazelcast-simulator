@@ -41,6 +41,11 @@ import javax.cache.CacheException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.generateKeys;
+import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.generateStrings;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.waitClusterSize;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.warmupPartitions;
+
 public class StringICacheTest {
 
     private final static ILogger log = Logger.getLogger(StringICacheTest.class);
@@ -111,18 +116,11 @@ public class StringICacheTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
-        TestUtils.warmupPartitions(log, targetInstance);
+        waitClusterSize(log, targetInstance, minNumberOfMembers);
+        warmupPartitions(log, targetInstance);
 
-        keys = new String[keyCount];
-        for (int k = 0; k < keys.length; k++) {
-            keys[k] = StringUtils.generateKey(keyLength, keyLocality, testContext.getTargetInstance());
-        }
-
-        values = new String[valueCount];
-        for (int k = 0; k < values.length; k++) {
-            values[k] = StringUtils.generateString(valueLength);
-        }
+        keys = generateKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
+        values = generateStrings(valueCount, valueLength);
 
         Random random = new Random();
 
