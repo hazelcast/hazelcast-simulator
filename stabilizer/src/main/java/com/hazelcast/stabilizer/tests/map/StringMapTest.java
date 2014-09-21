@@ -27,6 +27,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
+import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -48,7 +49,7 @@ public class StringMapTest {
     public int performanceUpdateFrequency = 10000;
     public boolean usePut = true;
     public String basename = "stringmap";
-    public boolean preventLocalCalls = false;
+    public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
 
     private IMap<String, String> map;
@@ -85,12 +86,12 @@ public class StringMapTest {
         TestUtils.warmupPartitions(log, targetInstance);
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
-            keys[k] = StringUtils.generateKey(keyLength, preventLocalCalls, testContext.getTargetInstance());
+            keys[k] = StringUtils.generateKey(keyLength, keyLocality, testContext.getTargetInstance());
         }
 
         values = new String[valueCount];
         for (int k = 0; k < values.length; k++) {
-            values[k] = StringUtils.makeString(valueLength);
+            values[k] = StringUtils.generateString(valueLength);
         }
 
         Random random = new Random();

@@ -27,13 +27,14 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
+import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.makeString;
+import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.generateString;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.randomByteArray;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.warmupPartitions;
 
@@ -47,7 +48,7 @@ public class AtomicReferenceTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
     public String basename = "atomicreference";
-    public boolean preventLocalCalls = false;
+    public KeyLocality keyLocality = KeyLocality.Random;
     public int writePercentage = 100;
     public int valueCount = 1000;
     public int valueLength = 512;
@@ -78,7 +79,7 @@ public class AtomicReferenceTest {
         Random random = new Random();
         for (int k = 0; k < valueCount; k++) {
             if (useStringValue) {
-                values[k] = makeString(valueLength);
+                values[k] = generateString(valueLength);
             } else {
                 values[k] = randomByteArray(random, valueLength);
             }
@@ -86,7 +87,7 @@ public class AtomicReferenceTest {
 
         counters = new IAtomicReference[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            String key = StringUtils.generateKey(8, preventLocalCalls, targetInstance);
+            String key = StringUtils.generateKey(8, keyLocality, targetInstance);
             IAtomicReference atomicReference = targetInstance.getAtomicReference(key);
             atomicReference.set(values[random.nextInt(values.length)]);
             counters[k] = atomicReference;

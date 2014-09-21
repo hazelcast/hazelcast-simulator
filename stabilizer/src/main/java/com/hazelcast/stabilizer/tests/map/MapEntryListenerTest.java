@@ -75,7 +75,7 @@ public class MapEntryListenerTest {
 
         values = new String[valueCount];
         for (int k = 0; k < values.length; k++) {
-            values[k] = StringUtils.makeString(valueLength);
+            values[k] = StringUtils.generateString(valueLength);
         }
 
         map = targetInstance.getMap(basename);

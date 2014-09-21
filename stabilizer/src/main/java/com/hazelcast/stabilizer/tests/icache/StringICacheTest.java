@@ -33,6 +33,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
+import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -56,7 +57,7 @@ public class StringICacheTest {
     // if we use the putAndGet (so returning a value) or the put (which returns void)
     public boolean useGetAndPut = true;
     public String basename = "stringicache";
-    public boolean preventLocalCalls = false;
+    public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
 
     private ICache<String, String> cache;
@@ -115,12 +116,12 @@ public class StringICacheTest {
 
         keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
-            keys[k] = StringUtils.generateKey(keyLength, preventLocalCalls, testContext.getTargetInstance());
+            keys[k] = StringUtils.generateKey(keyLength, keyLocality, testContext.getTargetInstance());
         }
 
         values = new String[valueCount];
         for (int k = 0; k < values.length; k++) {
-            values[k] = StringUtils.makeString(valueLength);
+            values[k] = StringUtils.generateString(valueLength);
         }
 
         Random random = new Random();
