@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import static com.hazelcast.stabilizer.Utils.appendText;
 import static com.hazelcast.stabilizer.Utils.fileAsText;
@@ -41,6 +42,8 @@ public class Provisioner {
     public final StabilizerProperties props = new StabilizerProperties();
 
     private final static String STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath();
+    private final static String CONF_DIR = STABILIZER_HOME + "/conf";
+
     private final File agentsFile = new File("agents.txt");
     //big number of threads, but they are used to offload ssh tasks. So there is no load on this machine..
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
@@ -48,6 +51,7 @@ public class Provisioner {
     private final List<AgentAddress> addresses = Collections.synchronizedList(new LinkedList<AgentAddress>());
     private Bash bash;
     private HazelcastJars hazelcastJars;
+    private File initScript;
 
     public Provisioner() {
     }
@@ -58,8 +62,12 @@ public class Provisioner {
         }
         addresses.addAll(AgentsFile.load(agentsFile));
         bash = new Bash(props);
-        String hzVersionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
-        hazelcastJars = new HazelcastJars(bash, hzVersionSpec);
+        hazelcastJars = new HazelcastJars(bash, props.getHazelcastVersionSpec());
+
+        initScript = new File("init.sh");
+        if (!initScript.exists()) {
+            initScript = new File(CONF_DIR + "/init.sh");
+        }
     }
 
     void installAgent(String ip) {
@@ -79,30 +87,13 @@ public class Provisioner {
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/cache-api*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/tests/", "tests");
 
-        if (props.isEc2()) {
-            // if there is an ephemeral drive, the workers dir will be created there and a symbolic link
-            // to the workers is created in stabilizer home. This is needed because the / drive, is very small
-            // and not big enough for heap-dumps
-
-            bash.ssh(ip, "if [ -d /mnt/ephemeral ] ; then\n" +
-                    "        if [ -d /mnt/ephemeral/workers ] ; then\n" +
-                    "                echo \"workers already exist on ephemeral drive\"\n" +
-                    "        else\n" +
-                    "            \techo \"Ephemeral drive is found and workers is not yet created\"\n" +
-                    "                rm -fr hazelcast-stabilizer-" + getVersion() + "/workers\n" +
-                    "                sudo mkdir /mnt/ephemeral/workers\n" +
-                    "                sudo chown -R " + props.getUser() + " /mnt/ephemeral/workers/\n" +
-                    "                ln -s  /mnt/ephemeral/workers/ hazelcast-stabilizer-" + getVersion() + "/workers\n" +
-                    "        fi\n" +
-                    "else\n" +
-                    "    \techo \"Ephemeral drive is not found\"\n" +
-                    "fi\n");
-        }
+        String script = loadInitScript();
+        bash.ssh(ip, script);
 
         //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
         //this is done to reduce the amount of data we need to upload.
 
-        String versionSpec = props.get("HAZELCAST_VERSION_SPEC", "outofthebox");
+        String versionSpec = props.getHazelcastVersionSpec();
         if (!versionSpec.equals("outofthebox")) {
             //todo: in the future we can improve this; we upload the hz jars, to delete them again.
 
@@ -114,6 +105,15 @@ public class Provisioner {
                 bash.scpToRemote(ip, hazelcastJars.getAbsolutePath() + "/*.jar", format("hazelcast-stabilizer-%s/lib", getVersion()));
             }
         }
+    }
+
+    private String loadInitScript() {
+        String script = Utils.fileAsText(initScript);
+
+        script = script.replaceAll(Pattern.quote("${user}"), props.getUser());
+        script = script.replaceAll(Pattern.quote("${version}"), getVersion());
+
+        return script;
     }
 
     public void startAgents() {
@@ -183,6 +183,9 @@ public class Provisioner {
         echo("Desired number of machines: " + (addresses.size() + delta));
         String groupName = props.get("GROUP_NAME", "stabilizer-agent");
         echo("GroupName: " + groupName);
+        echo("Username: " + props.getUser());
+
+        log.info("Using init script:"+initScript.getAbsolutePath());
 
         long startTimeMs = System.currentTimeMillis();
 

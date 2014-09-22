@@ -371,4 +371,8 @@ public class TestUtils {
     public static boolean isMemberNode(HazelcastInstance instance) {
         return instance instanceof HazelcastInstanceProxy;
     }
+
+    public static boolean isClient(HazelcastInstance instance) {
+        return !isMemberNode(instance);
+    }
 }

@@ -46,9 +46,7 @@ public class TestCaseRunner {
         this.testSuite = testSuite;
         this.agentsClient = coordinator.agentsClient;
         this.prefix = testCase.id.equals("") ? "" : testCase.id + " ";
-
-        nonCriticalFailures = testSuite.tolerableFailures;
-
+        this.nonCriticalFailures = testSuite.tolerableFailures;
     }
 
     public boolean run() throws Exception {
@@ -64,17 +62,17 @@ public class TestCaseRunner {
 
             echo("Starting Test setup");
             agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "setup"));
-            agentsClient.waitDone(prefix, testCase.id,"setup");
+            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "setup");
             echo("Completed Test setup");
 
             echo("Starting Test local warmup");
             agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localWarmup"));
-            agentsClient.waitDone(prefix, testCase.id,"localWarmup");
+            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "localWarmup");
             echo("Completed Test local warmup");
 
             echo("Starting Test global warmup");
             agentsClient.executeOnSingleWorker(new GenericCommand(testCase.id, "globalWarmup"));
-            agentsClient.waitDone(prefix, testCase.id,"globalWarmup");
+            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "globalWarmup");
             echo("Completed Test global warmup");
 
             echo("Starting Test start");
@@ -87,7 +85,7 @@ public class TestCaseRunner {
 
             echo("Starting Test stop");
             agentsClient.executeOnAllWorkers(new StopCommand(testCase.id));
-            agentsClient.waitDone(prefix, testCase.id,"stop");
+            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "stop");
             echo("Completed Test stop");
 
             logPerformance();
@@ -96,12 +94,12 @@ public class TestCaseRunner {
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
                 agentsClient.executeOnSingleWorker(new GenericCommand(testCase.id, "globalVerify"));
-                agentsClient.waitDone(prefix, testCase.id,"globalVerify");
+                agentsClient.waitForPhaseCompletion(prefix, testCase.id, "globalVerify");
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
                 agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localVerify"));
-                agentsClient.waitDone(prefix, testCase.id,"localVerify");
+                agentsClient.waitForPhaseCompletion(prefix, testCase.id, "localVerify");
                 echo("Completed Test local verify");
             } else {
                 echo("Skipping Test verification");
@@ -109,11 +107,11 @@ public class TestCaseRunner {
 
             echo("Starting Test global tear down");
             agentsClient.executeOnSingleWorker(new GenericCommand(testCase.id, "globalTeardown"));
-            agentsClient.waitDone(prefix, testCase.id,"globalTeardown");
+            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "globalTeardown");
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentsClient.waitDone(prefix, testCase.id,"localTeardown");
+            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "localTeardown");
             agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localTeardown"));
             echo("Completed Test local tear down");
 
@@ -125,7 +123,8 @@ public class TestCaseRunner {
     }
 
     private <R extends Result<R>> void printProbesResults() {
-        List<List<Map<String, R>>> workerProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
+        GetBenchmarkResultsCommand command = new GetBenchmarkResultsCommand(testCase.id);
+        List<List<Map<String, R>>> workerProbeResults = agentsClient.executeOnAllWorkers(command);
         Map<String, R> combinedResults = new HashMap<String, R>();
         for (List<Map<String, R>> agentProbeResults : workerProbeResults) {
             for (Map<String, R> workerProbeResult : agentProbeResults) {
@@ -141,15 +140,21 @@ public class TestCaseRunner {
         for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
             String probeName = entry.getKey();
             R result = entry.getValue();
-            echo("Probe " + probeName + " result: "+result.toHumanString());
+            echo("Probe " + probeName + " result: " + result.toHumanString());
         }
     }
 
     private void logPerformance() {
         if (coordinator.monitorPerformance) {
-            log.info("Operation-count: " + performanceFormat.format(coordinator.operationCount));
-            double performance = (coordinator.operationCount * 1.0d) / testSuite.duration;
-            log.info("Performance: " + performanceFormat.format(performance) + " ops/s");
+            long operationCount = coordinator.operationCount;
+            if (operationCount < 0) {
+                log.info("Operation-count: not available");
+                log.info("Performance: not available");
+            } else {
+                log.info("Operation-count: " + performanceFormat.format(operationCount));
+                double performance = (operationCount * 1.0d) / testSuite.duration;
+                log.info("Performance: " + performanceFormat.format(performance) + " ops/s");
+            }
         }
     }
 
@@ -177,7 +182,11 @@ public class TestCaseRunner {
             String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
 
             if (coordinator.monitorPerformance) {
-                msg += ", " + performanceFormat.format(coordinator.performance) + " ops/s.";
+                if (coordinator.operationCount < 0) {
+                    msg += ",  performance not available";
+                } else {
+                    msg += ", " + performanceFormat.format(coordinator.performance) + " ops/s.";
+                }
             }
 
             log.info(prefix + msg);

@@ -23,7 +23,7 @@ public class ProvisionerCli {
     );
 
     public final OptionSpec cleanSpec = parser.accepts("clean",
-            "Cleans the workers directories. ");
+            "Cleans the workers directories.");
 
     public final OptionSpec<Integer> scaleSpec = parser.accepts("scale",
             "Number of agent machines to scale to. If the number of machines already exists, the call is ignored. If the " +
@@ -35,9 +35,9 @@ public class ProvisionerCli {
             "Terminate all agent machines in the provisioner");
 
     public final OptionSpec killSpec = parser.accepts("kill",
-            "Kill all the agent processes");
+            "Kill all the agent processes (it will do a killall -9 java and kills all java processes)");
 
-    public final OptionSpec listAgentsSpec = parser.accepts("list-agents", "Lists the running agents.");
+    public final OptionSpec listAgentsSpec = parser.accepts("listAgents", "Lists the running agents.");
 
     public final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 

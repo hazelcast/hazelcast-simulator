@@ -42,9 +42,10 @@ public class CreateDestroyICacheTest {
     private final static ILogger log = Logger.getLogger(CreateDestroyICacheTest.class);
 
     public int threadCount = 3;
-    public double createCacheProb=0.5;
-    public double putCacheProb=0.25;
-    public double destroyCacheProb=0.25;
+    public double createCacheProb=0.4;
+    public double putCacheProb=0.2;
+    public double closeCacheProb=0.2;
+    public double destroyCacheProb=0.2;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -92,7 +93,7 @@ public class CreateDestroyICacheTest {
                     try {
                         cacheManager.createCache(basename, config);
                         counter.create++;
-                    } catch (CacheException e) {
+                    } catch (Exception e) {
                         log.severe(basename+": createCache "+e, e);
                         counter.createException++;
                     }
@@ -106,6 +107,17 @@ public class CreateDestroyICacheTest {
                     } catch (Exception e){
                         log.severe(basename+": getCache "+e, e);
                         counter.putException++;
+                    }
+                } else if ((chance -= closeCacheProb) < 0){
+                    try{
+                        ICache cache = cacheManager.getCache(basename);
+                        if(cache!=null){
+                            cache.close();
+                            counter.close++;
+                        }
+                    } catch (Exception e){
+                        log.severe(basename+": getCache "+e, e);
+                        counter.closeException++;
                     }
                 } else if ((chance -= destroyCacheProb) < 0) {
                     try{
@@ -136,17 +148,23 @@ public class CreateDestroyICacheTest {
 
         public long put = 0;
         public long create = 0;
+        public long close=0;
         public long destroy = 0;
+
         public long putException = 0;
         public long createException = 0;
+        public long closeException = 0;
         public long destroyException = 0;
 
         public void add(Counter c) {
             put += c.put;
             create += c.create;
+            close += c.close;
             destroy += c.destroy;
+
             putException += c.putException;
             createException += c.createException;
+            closeException += c. closeException;
             destroyException += c.destroyException;
         }
 
@@ -155,9 +173,11 @@ public class CreateDestroyICacheTest {
             return "Counter{" +
                     "put=" + put +
                     ", create=" + create +
+                    ", close=" + close +
                     ", destroy=" + destroy +
                     ", putException=" + putException +
                     ", createException=" + createException +
+                    ", closeException=" + closeException +
                     ", destroyException=" + destroyException +
                     '}';
         }

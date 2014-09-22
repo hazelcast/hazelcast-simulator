@@ -30,12 +30,16 @@ public class StabilizerProperties {
         load(defaultPropsFile);
     }
 
-    public String getUser(){
-        return get("USER","stabilizer");
+    public String getUser() {
+        return get("USER", "stabilizer");
     }
 
     public boolean isEc2() {
         return "aws-ec2".equals(get("CLOUD_PROVIDER"));
+    }
+
+    public String getHazelcastVersionSpec() {
+        return get("HAZELCAST_VERSION_SPEC", "outofthebox");
     }
 
     /**
@@ -114,10 +118,10 @@ public class StabilizerProperties {
             String username = System.getProperty("user.name").toLowerCase();
 
             StringBuffer sb = new StringBuffer();
-            for(char c: username.toCharArray()){
-                if(Character.isLetter(c)){
+            for (char c : username.toCharArray()) {
+                if (Character.isLetter(c)) {
                     sb.append(c);
-                }else if(Character.isDigit(c)){
+                } else if (Character.isDigit(c)) {
                     sb.append(c);
                 }
             }

@@ -357,6 +357,7 @@ public class Coordinator {
         cli.init(args);
 
         log.info(format("Loading agents file: %s", coordinator.agentsFile.getAbsolutePath()));
+        log.info(format("HAZELCAST_VERSION_SPEC: %s", coordinator.props.getHazelcastVersionSpec()));
 
         try {
             coordinator.run();

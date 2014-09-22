@@ -36,7 +36,7 @@ import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.worker.commands.Command;
 import com.hazelcast.stabilizer.worker.commands.CommandRequest;
 import com.hazelcast.stabilizer.worker.commands.CommandResponse;
-import com.hazelcast.stabilizer.worker.commands.DoneCommand;
+import com.hazelcast.stabilizer.worker.commands.IsPhaseCompletedCommand;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
 import com.hazelcast.stabilizer.worker.commands.GetBenchmarkResultsCommand;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
@@ -297,8 +297,8 @@ public class MemberWorker {
         private void doProcess(long id, Command command) throws Throwable {
             Object result = null;
             try {
-                if (command instanceof DoneCommand) {
-                    result = process((DoneCommand) command);
+                if (command instanceof IsPhaseCompletedCommand) {
+                    result = process((IsPhaseCompletedCommand) command);
                 } else if (command instanceof InitCommand) {
                     process((InitCommand) command);
                 } else if (command instanceof RunCommand) {
@@ -379,11 +379,12 @@ public class MemberWorker {
                                 log.info(format("--------------------------- Completed %s.run() " +
                                                 "------------------------------------",
                                         testName));
-                            } catch (Throwable t) {
+                            } catch (InvocationTargetException e) {
                                 String msg = format("--------------------------- Failed to execute %s.run() " +
                                                 "------------------------------------",
                                         testName);
-                                log.severe(msg, t);
+                                log.severe(msg, e.getCause());
+                                throw e.getCause();
                             }
                         }
                     }
@@ -487,7 +488,7 @@ public class MemberWorker {
             }
         }
 
-        public boolean process(DoneCommand command) throws Exception {
+        public boolean process(IsPhaseCompletedCommand command) throws Exception {
             return !commands.containsKey(command.testId);
         }
     }
