@@ -33,12 +33,18 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
+import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import javax.cache.CacheException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.generateKeys;
+import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.generateStrings;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.waitClusterSize;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.warmupPartitions;
 
 public class StringICacheTest {
 
@@ -56,7 +62,7 @@ public class StringICacheTest {
     // if we use the putAndGet (so returning a value) or the put (which returns void)
     public boolean useGetAndPut = true;
     public String basename = "stringicache";
-    public boolean preventLocalCalls = false;
+    public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
 
     private ICache<String, String> cache;
@@ -110,18 +116,11 @@ public class StringICacheTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
-        TestUtils.warmupPartitions(log, targetInstance);
+        waitClusterSize(log, targetInstance, minNumberOfMembers);
+        warmupPartitions(log, targetInstance);
 
-        keys = new String[keyCount];
-        for (int k = 0; k < keys.length; k++) {
-            keys[k] = StringUtils.generateKey(keyLength, preventLocalCalls, testContext.getTargetInstance());
-        }
-
-        values = new String[valueCount];
-        for (int k = 0; k < values.length; k++) {
-            values[k] = StringUtils.makeString(valueLength);
-        }
+        keys = generateKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
+        values = generateStrings(valueCount, valueLength);
 
         Random random = new Random();
 

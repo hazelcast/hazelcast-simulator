@@ -28,6 +28,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
+import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -46,7 +47,7 @@ public class AtomicLongTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
     public String basename = "atomiclong";
-    public boolean preventLocalCalls = false;
+    public KeyLocality keyLocality = KeyLocality.Random;
     public int writePercentage = 100;
 
     private IAtomicLong totalCounter;
@@ -73,7 +74,7 @@ public class AtomicLongTest {
         totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            String key = StringUtils.generateKey(8, preventLocalCalls, targetInstance);
+            String key = StringUtils.generateKey(8, keyLocality, targetInstance);
             counters[k] = targetInstance.getAtomicLong(key);
         }
     }
