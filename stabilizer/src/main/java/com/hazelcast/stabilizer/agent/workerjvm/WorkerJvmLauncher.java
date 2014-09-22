@@ -182,7 +182,7 @@ public class WorkerJvmLauncher {
             args.add(settings.perfSettings);
             args.add("java");
         }else if ("vtune".equals(profiler)) {
-            // perf command always need to be in front of the java command.
+            // vtune command always need to be in front of the java command.
             args.add(settings.vtuneSettings);
             args.add("java");
         } else if ("yourkit".equals(profiler)) {
