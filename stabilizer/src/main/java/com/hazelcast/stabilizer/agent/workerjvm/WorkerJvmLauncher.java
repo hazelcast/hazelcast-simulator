@@ -181,6 +181,10 @@ public class WorkerJvmLauncher {
             // perf command always need to be in front of the java command.
             args.add(settings.perfSettings);
             args.add("java");
+        }else if ("vtune".equals(profiler)) {
+            // vtune command always need to be in front of the java command.
+            args.add(settings.vtuneSettings);
+            args.add("java");
         } else if ("yourkit".equals(profiler)) {
             args.add("java");
             String agentSetting = settings.yourkitConfig
