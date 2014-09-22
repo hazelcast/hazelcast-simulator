@@ -2,11 +2,8 @@ package com.hazelcast.stabilizer.common.probes.impl;
 
 import com.hazelcast.stabilizer.common.probes.Result;
 
-import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import javax.xml.stream.events.XMLEvent;
 
 public class MaxLatencyResult implements Result<MaxLatencyResult> {
     private final long maxLatency;
@@ -39,36 +36,6 @@ public class MaxLatencyResult implements Result<MaxLatencyResult> {
         }
     }
 
-    public static MaxLatencyResult readFrom(XMLStreamReader reader) throws XMLStreamException {
-        MaxLatencyResult result = null;
-        Elements currentElement = null;
-        while (reader.hasNext()) {
-            int eventType = reader.next();
-            switch (eventType) {
-                case XMLEvent.CHARACTERS:
-                    if (currentElement == Elements.MAX_LATENCY) {
-                        String text = reader.getText();
-                        result = new MaxLatencyResult(Long.parseLong(text));
-                    }
-                    break;
-                case XMLEvent.END_ELEMENT:
-                    String elementName = reader.getLocalName();
-                    if ("probe".equals(elementName)) {
-                        return result;
-                    } else if ("max-latency".equals(elementName)) {
-                            currentElement = null;
-                    }
-                case XMLEvent.START_ELEMENT:
-                    elementName = reader.getLocalName();
-                    if ("max-latency".equals(elementName)) {
-                        currentElement = Elements.MAX_LATENCY;
-                    }
-                    break;
-            }
-        }
-        return null;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -86,7 +53,4 @@ public class MaxLatencyResult implements Result<MaxLatencyResult> {
         return (int) (maxLatency ^ (maxLatency >>> 32));
     }
 
-    private enum Elements {
-        MAX_LATENCY
-    }
 }
