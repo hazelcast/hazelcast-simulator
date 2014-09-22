@@ -191,6 +191,7 @@ public class CoordinatorCli {
         workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
         workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS", "");
         workerJvmSettings.perfSettings = coordinator.props.get("PERF_SETTINGS", "");
+        workerJvmSettings.vtuneSettings = coordinator.props.get("VTUNE_SETTINGS", "");
 
         coordinator.workerJvmSettings = workerJvmSettings;
     }
