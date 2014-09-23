@@ -4,6 +4,7 @@ import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
+import com.hazelcast.stabilizer.coordinator.AgentMemberLayout;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -24,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertFalse;
 
 @Ignore
@@ -117,14 +119,16 @@ public class AgentSmokeTest {
 
     private void spawnWorkers(AgentsClient client) {
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
-        workerJvmSettings.memberWorkerCount = 1;
         workerJvmSettings.profiler = "";
         workerJvmSettings.vmOptions = "";
         workerJvmSettings.workerStartupTimeout = 60000;
         workerJvmSettings.clientHzConfig = Utils.fileAsText("/java/projects/Hazelcast/hazelcast-stabilizer/dist/src/main/dist/conf/client-hazelcast.xml");
         workerJvmSettings.hzConfig = Utils.fileAsText("/java/projects/Hazelcast/hazelcast-stabilizer/dist/src/main/dist/conf/hazelcast.xml");
 
-        client.spawnWorkers(new WorkerJvmSettings[]{workerJvmSettings});
+        AgentMemberLayout agentLayout = new AgentMemberLayout(workerJvmSettings);
+        agentLayout.memberSettings.memberWorkerCount = 1;
+
+        client.spawnWorkers(asList(agentLayout),true);
     }
 
     private void startAgent() throws InterruptedException {

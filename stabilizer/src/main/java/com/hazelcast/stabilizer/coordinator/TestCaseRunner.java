@@ -182,7 +182,7 @@ public class TestCaseRunner {
     private void startTestCase() {
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
         RunCommand runCommand = new RunCommand(testCase.id);
-        runCommand.clientOnly = workerJvmSettings.mixedWorkerCount > 0 || workerJvmSettings.clientWorkerCount > 0;
+        runCommand.clientOnly = workerJvmSettings.clientWorkerCount > 0;
         agentsClient.executeOnAllWorkers(runCommand);
     }
 

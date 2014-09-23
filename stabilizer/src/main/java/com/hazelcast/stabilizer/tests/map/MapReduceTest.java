@@ -54,8 +54,6 @@ public class MapReduceTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         baseName = testContext.getTestId();
-
-        warmupPartitions(log, targetInstance);
     }
 
     @Warmup(global = true)

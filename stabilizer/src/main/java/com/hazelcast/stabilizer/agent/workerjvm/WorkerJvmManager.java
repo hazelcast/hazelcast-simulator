@@ -230,10 +230,6 @@ public class WorkerJvmManager {
     }
 
     public void spawn(WorkerJvmSettings settings) throws Exception {
-        if (workerJvms.size() > 0) {
-            terminateWorkers();
-        }
-
         this.lastUsedWorkerJvmSettings = settings;
         WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvms, settings);
         launcher.launch();
@@ -328,7 +324,6 @@ public class WorkerJvmManager {
         WorkerJvmSettings settings = new WorkerJvmSettings(lastUsedWorkerJvmSettings);
         settings.memberWorkerCount = 1;
         settings.clientWorkerCount = 0;
-        settings.mixedWorkerCount = 0;
 
         WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvms, settings);
         launcher.launch();

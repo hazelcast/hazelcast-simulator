@@ -46,9 +46,11 @@ public class CoordinatorCli {
             "Number of Cluster Client Worker JVM's")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
-    private final OptionSpec<Integer> mixedWorkerCountSpec = parser.accepts("mixedWorkerCount",
-            "Number of Mixed Cluster member JVM's (a client hz + member hz and all communication through client)")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
+    private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
+            "Controls the number of dedicated member machines. For example when there are 4 machines" +
+                    "and 2 servers and 9 clients, and there is 1 dedicated member machine, then " +
+                    "1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
+            .withRequiredArg().ofType(Integer.class);
 
     private final OptionSpec<String> workerClassPathSpec = parser.accepts("workerClassPath",
             "A file/directory containing the " +
@@ -171,27 +173,33 @@ public class CoordinatorCli {
         coordinator.parallel = options.has(parallelSpec);
 
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec));
-        coordinator.testSuite = testSuite;
         testSuite.duration = getDuration();
         testSuite.failFast = options.valueOf(failFastSpec);
         testSuite.tolerableFailures = Failure.Type.fromPropertyValue(options.valueOf(tolerableFailureSpec));
+        coordinator.testSuite = testSuite;
 
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
         workerJvmSettings.vmOptions = options.valueOf(workerVmOptionsSpec);
         workerJvmSettings.clientVmOptions = options.valueOf(clientWorkerVmOptionsSpec);
         workerJvmSettings.memberWorkerCount = options.valueOf(memberWorkerCountSpec);
         workerJvmSettings.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
-        workerJvmSettings.mixedWorkerCount = options.valueOf(mixedWorkerCountSpec);
         workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
         workerJvmSettings.hzConfig = loadHzConfig();
         workerJvmSettings.clientHzConfig = loadClientHzConfig();
         workerJvmSettings.refreshJvm = options.valueOf(workerRefreshSpec);
-
         workerJvmSettings.profiler = coordinator.props.get("PROFILER", "none");
         workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
         workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS", "");
         workerJvmSettings.perfSettings = coordinator.props.get("PERF_SETTINGS", "");
         workerJvmSettings.vtuneSettings = coordinator.props.get("VTUNE_SETTINGS", "");
+
+        if (options.has(dedicatedMemberMachinesSpec)) {
+            int dedicatedMemberCount = dedicatedMemberMachinesSpec.value(options);
+            if (dedicatedMemberCount < 0) {
+                Utils.exitWithError(log, "dedicatedMemberCount can't be smaller than 0");
+            }
+            coordinator.dedicatedMemberMachineCount = dedicatedMemberCount;
+        }
 
         coordinator.workerJvmSettings = workerJvmSettings;
     }

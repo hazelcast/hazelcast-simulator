@@ -73,7 +73,6 @@ public class AtomicReferenceTest {
         }
 
         targetInstance = context.getTargetInstance();
-        warmupPartitions(log, targetInstance);
 
         values = new Object[valueCount];
         Random random = new Random();

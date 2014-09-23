@@ -11,6 +11,7 @@
     </group>
 
     <network>
+        <connection-attempt-limit>1000</connection-attempt-limit>
         <cluster-members>
             <!--MEMBERS-->
         </cluster-members>

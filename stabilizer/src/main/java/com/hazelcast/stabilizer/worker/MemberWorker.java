@@ -102,17 +102,13 @@ public class MemberWorker {
             log.info("             member mode");
             log.info("------------------------------------------------------------------------");
             this.serverInstance = createServerHazelcastInstance();
+            TestUtils.warmupPartitions(log, serverInstance);
         } else if ("client".equals(workerMode)) {
             log.info("------------------------------------------------------------------------");
             log.info("             client mode");
             log.info("------------------------------------------------------------------------");
             this.clientInstance = createClientHazelcastInstance();
-        } else if ("mixed".equals(workerMode)) {
-            log.info("------------------------------------------------------------------------");
-            log.info("             mixed client/member mode");
-            log.info("------------------------------------------------------------------------");
-            this.serverInstance = createServerHazelcastInstance();
-            this.clientInstance = createClientHazelcastInstance();
+            TestUtils.warmupPartitions(log, clientInstance);
         } else {
             throw new IllegalStateException("Unknown worker mode:" + workerMode);
         }
@@ -124,6 +120,7 @@ public class MemberWorker {
         new TestCommandRequestProcessingThread().start();
         new SocketThread().start();
 
+        // the last thing we do is to signal to the agent we have started.
         signalStartToAgent();
     }
 
@@ -184,6 +181,8 @@ public class MemberWorker {
     }
 
     public static void main(String[] args) {
+        registerLog4jShutdownHandler();
+
         log.info("Starting Stabilizer Worker");
 
         registerLog4jShutdownHandler();

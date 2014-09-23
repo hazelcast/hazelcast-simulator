@@ -217,7 +217,7 @@ public class Provisioner {
                 String privateIpAddress = node.getPrivateAddresses().iterator().next();
                 String publicIpAddress = node.getPublicAddresses().iterator().next();
 
-                echo("\t" + publicIpAddress + " LAUNCHED");
+                echo("    " + publicIpAddress + " LAUNCHED");
                 appendText(publicIpAddress + "," + privateIpAddress + "\n", agentsFile);
 
                 AgentAddress address = new AgentAddress(publicIpAddress, privateIpAddress);
@@ -252,7 +252,7 @@ public class Provisioner {
     public void listAgents() {
         echo("Running Agents (from agents.txt):");
         String agents = fileAsText(agentsFile);
-        echo("\t" + agents);
+        echo("    " + agents);
     }
 
     private class InstallNodeTask implements Runnable {
@@ -269,14 +269,14 @@ public class Provisioner {
                 bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
                 bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
                 bash.ssh(ip, "bash install-java.sh");
-                echo("\t" + ip + " JAVA INSTALLED");
+                echo("    " + ip + " JAVA INSTALLED");
             }
 
             installAgent(ip);
-            echo("\t" + ip + " STABILIZER AGENT INSTALLED");
+            echo("    " + ip + " STABILIZER AGENT INSTALLED");
 
             startAgent(ip);
-            echo("\t" + ip + " STABILIZER AGENT STARTED");
+            echo("    " + ip + " STABILIZER AGENT STARTED");
         }
     }
 
@@ -381,7 +381,7 @@ public class Provisioner {
                         for (String publicAddress : nodeMetadata.getPublicAddresses()) {
                             AgentAddress address = terminateMap.remove(publicAddress);
                             if (address != null) {
-                                echo(format("\t%s Terminating", publicAddress));
+                                echo(format("    %s Terminating", publicAddress));
                                 addresses.remove(address);
                                 return true;
                             }
@@ -413,8 +413,6 @@ public class Provisioner {
             Provisioner provisioner = new Provisioner();
             ProvisionerCli cli = new ProvisionerCli(provisioner);
             cli.run(args);
-
-
             System.exit(0);
         } catch (Throwable e) {
             log.severe(e);

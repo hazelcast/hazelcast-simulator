@@ -61,6 +61,8 @@ public class Coordinator {
     public Integer testStopTimeoutMs;
     public File agentsFile;
     public TestSuite testSuite;
+    public int dedicatedMemberMachineCount;
+    public boolean parallel;
 
     //internal state.
     final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
@@ -70,7 +72,6 @@ public class Coordinator {
     public volatile double performance;
     public volatile long operationCount;
     private Bash bash;
-    public boolean parallel;
 
     private void run() throws Exception {
         bash = new Bash(props);
@@ -118,7 +119,6 @@ public class Coordinator {
         log.info(format("Total number of agents: %s", agentCount));
         log.info(format("Total number of Hazelcast member workers: %s", workerJvmSettings.memberWorkerCount));
         log.info(format("Total number of Hazelcast client workers: %s", workerJvmSettings.clientWorkerCount));
-        log.info(format("Total number of Hazelcast mixed client & member workers: %s", workerJvmSettings.mixedWorkerCount));
 
         agentsClient.initTestSuite(testSuite);
 
@@ -253,55 +253,112 @@ public class Coordinator {
         echo("All workers have been terminated");
     }
 
-    long startWorkers() throws Exception {
-        echo("Starting workers");
+    private long startWorkers() throws Exception {
+        List<AgentMemberLayout> agentMemberLayouts = initMemberLayout();
 
         long startMs = System.currentTimeMillis();
-
-        int agentCount = agentsClient.getAgentCount();
-
-        WorkerJvmSettings[] settingsArray = new WorkerJvmSettings[agentCount];
-        for (int k = 0; k < agentCount; k++) {
-            WorkerJvmSettings s = new WorkerJvmSettings(workerJvmSettings);
-            s.memberWorkerCount = 0;
-            s.mixedWorkerCount = 0;
-            s.clientWorkerCount = 0;
-            settingsArray[k] = s;
-        }
-
-        int index = 0;
-        for (int k = 0; k < workerJvmSettings.memberWorkerCount; k++) {
-            WorkerJvmSettings s = settingsArray[index % agentCount];
-            s.memberWorkerCount++;
-            index++;
-        }
-        for (int k = 0; k < workerJvmSettings.clientWorkerCount; k++) {
-            WorkerJvmSettings s = settingsArray[index % agentCount];
-            s.clientWorkerCount++;
-            index++;
-        }
-        for (int k = 0; k < workerJvmSettings.mixedWorkerCount; k++) {
-            WorkerJvmSettings s = settingsArray[index % agentCount];
-            s.mixedWorkerCount++;
-            index++;
-        }
-
         try {
-            agentsClient.spawnWorkers(settingsArray);
+            echo("Killing all remaining workers");
+            agentsClient.terminateWorkers();
+            echo("Successfully killed all remaining workers");
+
+            echo("Starting " + workerJvmSettings.memberWorkerCount + " member workers");
+            agentsClient.spawnWorkers(agentMemberLayouts, true);
+            echo("Successfully started member workers");
+
+            if (workerJvmSettings.clientWorkerCount > 0) {
+                echo("Starting " + workerJvmSettings.clientWorkerCount + " client workers");
+                agentsClient.spawnWorkers(agentMemberLayouts, false);
+                echo("Successfully started client workers");
+            } else {
+                echo("Skipping client startup, since no clients are configured");
+            }
         } catch (SpawnWorkerFailedException e) {
             log.severe(e.getMessage());
             System.exit(1);
         }
+
         long durationMs = System.currentTimeMillis() - startMs;
-        log.info((format("Finished starting a grand total of %s Workers JVM's after %s ms",
+        log.info((format("Successfully started a grand total of %s Workers JVM's after %s ms",
                 workerJvmSettings.totalWorkerCount(), durationMs)));
 
         return startMs;
     }
 
+    private List<AgentMemberLayout> initMemberLayout() {
+        int agentCount = agentsClient.getAgentCount();
+
+        if (dedicatedMemberMachineCount > agentCount) {
+            Utils.exitWithError(log, "dedicatedMemberMachineCount can't be larger than number of agents. " +
+                    "dedicatedMemberMachineCount is " + dedicatedMemberMachineCount + ", number of agents is: " + agentCount);
+        }
+
+        if (workerJvmSettings.clientWorkerCount > 0) {
+            if (dedicatedMemberMachineCount > agentCount - 1) {
+                Utils.exitWithError(log, "dedicatedMemberMachineCount is too big. There are no machines left for clients.");
+            }
+        }
+
+        List<AgentMemberLayout> agentMemberLayouts = new LinkedList<AgentMemberLayout>();
+
+        for (String agentIp : agentsClient.getPublicAddresses()) {
+            AgentMemberLayout layout = new AgentMemberLayout(workerJvmSettings);
+            layout.publicIp = agentIp;
+            layout.agentMemberMode = AgentMemberMode.mixed;
+            agentMemberLayouts.add(layout);
+        }
+
+        if (dedicatedMemberMachineCount > 0) {
+            for (int k = 0; k < dedicatedMemberMachineCount; k++) {
+                agentMemberLayouts.get(k).agentMemberMode = AgentMemberMode.member;
+            }
+
+            for (int k = dedicatedMemberMachineCount; k < agentCount; k++) {
+                agentMemberLayouts.get(k).agentMemberMode = AgentMemberMode.client;
+            }
+        }
+
+        // assign server nodes
+        int i = -1;
+        for (int k = 0; k < workerJvmSettings.memberWorkerCount; k++) {
+            for (; ; ) {
+                i++;
+                int index = i % agentMemberLayouts.size();
+                AgentMemberLayout agentLayout = agentMemberLayouts.get(index);
+                if (agentLayout.agentMemberMode != AgentMemberMode.client) {
+                    agentLayout.memberSettings.memberWorkerCount++;
+                    break;
+                }
+
+            }
+        }
+
+        // assign the clients.
+        for (int k = 0; k < workerJvmSettings.clientWorkerCount; k++) {
+            for (; ; ) {
+                i++;
+                AgentMemberLayout agentLayout = agentMemberLayouts.get(i % agentMemberLayouts.size());
+                if (agentLayout.agentMemberMode != AgentMemberMode.member) {
+                    agentLayout.clientSettings.clientWorkerCount++;
+                    break;
+                }
+            }
+        }
+
+        // log the layout
+        for (int k = 0; k < agentCount; k++) {
+            AgentMemberLayout spawnPlan = agentMemberLayouts.get(k);
+            log.info("    Agent " + spawnPlan.publicIp
+                    + " members: " + spawnPlan.memberSettings.memberWorkerCount
+                    + " clients: " + spawnPlan.clientSettings.clientWorkerCount);
+        }
+
+        return agentMemberLayouts;
+    }
+
     private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {
         int agentCount = agentsClient.getAgentCount();
-        if (masterSettings.memberWorkerCount == -1 && masterSettings.mixedWorkerCount == 0) {
+        if (masterSettings.memberWorkerCount == -1) {
             masterSettings.memberWorkerCount = agentCount;
         }
     }

@@ -42,6 +42,7 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -122,10 +123,17 @@ public class TestUtils {
     }
 
     public static void warmupPartitions(ILogger logger, HazelcastInstance hz) {
+        logger.info("Waiting for partition warmup");
+
         PartitionService partitionService = hz.getPartitionService();
+        long startTime = System.currentTimeMillis();
         for (Partition partition : partitionService.getPartitions()) {
+            if (System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
+                throw new IllegalStateException("Partition warmup timeout. Partitions didn't get an owner in time");
+            }
+
             while (partition.getOwner() == null) {
-                logger.info("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
+                logger.finest("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -133,6 +141,8 @@ public class TestUtils {
                 }
             }
         }
+
+        logger.info("Partitions are warmed up successfully");
     }
 
     public static void waitClusterSize(ILogger logger, HazelcastInstance hz, int clusterSize) throws InterruptedException {

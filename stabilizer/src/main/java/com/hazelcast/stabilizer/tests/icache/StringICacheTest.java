@@ -117,7 +117,6 @@ public class StringICacheTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         waitClusterSize(log, targetInstance, minNumberOfMembers);
-        warmupPartitions(log, targetInstance);
 
         keys = generateKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = generateStrings(valueCount, valueLength);
