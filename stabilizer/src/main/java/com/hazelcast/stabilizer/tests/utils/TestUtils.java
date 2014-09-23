@@ -32,7 +32,6 @@ import com.hazelcast.stabilizer.tests.BindException;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -304,7 +303,9 @@ public class TestUtils {
                 throw new BindException(
                         format("Unhandled type [%s] for field [%s.%s]", field.getType(), test.getClass().getName(), field.getName()));
             }
-        } catch (NumberFormatException e) {
+        } catch (BindException e) {
+            throw e;
+        } catch (Exception e) {
             throw new BindException(
                     format("Failed to bind value [%s] to property [%s.%s] of type [%s]",
                             value, test.getClass().getName(), property, field.getType())
@@ -312,27 +313,18 @@ public class TestUtils {
         }
     }
 
-    private static Enum getEnumValue(String value, Field field) {
+    private static Enum getEnumValue(String value, Field field) throws Exception {
         Class<? extends Enum> type = (Class<? extends Enum>) field.getType();
-        Enum[] values;
-        try {
-            Method method = type.getMethod("values");
-            values = (Enum[]) method.invoke(null);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        Method method = type.getMethod("values");
+        Enum[] values = (Enum[]) method.invoke(null);
 
-        for(Enum v: values){
-            if(v.name().equalsIgnoreCase(value)){
+        for (Enum v : values) {
+            if (v.name().equalsIgnoreCase(value)) {
                 return v;
             }
         }
 
-        throw new NumberFormatException("Could not find enum value "+type.getSimpleName()+"."+value);
+        throw new RuntimeException("Could not find enum value " + type.getSimpleName() + "." + value);
     }
 
     public static Field findPropertyField(Class clazz, String property) {
