@@ -33,6 +33,9 @@ public class TestUtilsTest {
 
         bindProperty(someObject, "enumField", TimeUnit.HOURS.name());
         assertEquals(someObject.enumField, TimeUnit.HOURS);
+
+        bindProperty(someObject, "enumField", "dAyS");
+        assertEquals(someObject.enumField, TimeUnit.DAYS);
     }
 
     @Test

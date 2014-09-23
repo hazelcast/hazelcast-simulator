@@ -32,6 +32,8 @@ import com.hazelcast.stabilizer.tests.BindException;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
@@ -292,7 +294,7 @@ public class TestUtils {
                     field.set(test, null);
                 } else {
                     try {
-                        Object enumValue = Enum.valueOf((Class<? extends Enum>) field.getType(), value);
+                        Object enumValue = getEnumValue(value, field);
                         field.set(test, enumValue);
                     } catch (IllegalArgumentException e) {
                         throw new NumberFormatException(e.getMessage());
@@ -303,11 +305,35 @@ public class TestUtils {
                         format("Unhandled type [%s] for field [%s.%s]", field.getType(), test.getClass().getName(), field.getName()));
             }
         } catch (NumberFormatException e) {
+            e.printStackTrace();
             throw new BindException(
                     format("Failed to bind value [%s] to property [%s.%s] of type [%s]",
                             value, test.getClass().getName(), property, field.getType())
             );
         }
+    }
+
+    private static Enum getEnumValue(String value, Field field) {
+        Class<? extends Enum> type = (Class<? extends Enum>) field.getType();
+        Enum[] values;
+        try {
+            Method method = type.getMethod("values");
+            values = (Enum[]) method.invoke(null);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        for(Enum v: values){
+            if(v.name().equalsIgnoreCase(value)){
+                return v;
+            }
+        }
+
+        return null;
     }
 
     public static Field findPropertyField(Class clazz, String property) {
