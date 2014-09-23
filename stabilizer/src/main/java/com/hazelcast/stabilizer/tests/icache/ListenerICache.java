@@ -4,8 +4,8 @@ import com.hazelcast.cache.ICache;
 import com.hazelcast.cache.impl.HazelcastCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.HazelcastClientCachingProvider;
+import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
+import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
@@ -37,8 +37,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepMs;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 public class ListenerICache {
 
@@ -68,7 +66,7 @@ public class ListenerICache {
     private MyCacheEntryListener<Integer, Long> listener;
     private MyCacheEntryEventFilter<Integer, Long> filter;
 
-    private int paussForLastEvents=8000;
+    private int paussForLastEvents=1000 * 10;
 
     @Setup
     public void setup(TestContext textConTx) {
@@ -190,15 +188,7 @@ public class ListenerICache {
         log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
         final ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
-
-        for(int i=0; i<keyCount; i++){
-            assertFalse(basename + ": cache should not contain any keys ", cache.containsKey(i) );
-        }
-
-        assertFalse(basename + ": iterator should not have elements ", cache.iterator().hasNext());
-        assertEquals(basename + ": cache size not 0", 0, cache.size());
     }
-
 
     private static class Counter implements Serializable {
         public long put;
@@ -232,14 +222,13 @@ public class ListenerICache {
         }
     }
 
-
     public static class MyCacheEntryListener<K, V> implements CacheEntryCreatedListener<K, V>, Serializable {
-        private static final long serialVersionUID = 1L;
 
         public AtomicLong created = new AtomicLong();
         public AtomicLong updated = new AtomicLong();
         public AtomicLong removed = new AtomicLong();
         public AtomicLong expired = new AtomicLong();
+        public AtomicLong unExpected = new AtomicLong();
 
         public void onCreated(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) throws CacheEntryListenerException {
 
@@ -258,9 +247,10 @@ public class ListenerICache {
                     case EXPIRED:
                         expired.incrementAndGet();
                         break;
+                    default:
+                        unExpected.incrementAndGet();
+                        break;
                 }
-
-                System.out.println("Received " + event);
             }
 
         }
@@ -271,12 +261,12 @@ public class ListenerICache {
                     ", updated=" + updated +
                     ", removed=" + removed +
                     ", expired=" + expired +
+                    ", unExpected=" + unExpected +
                     '}';
         }
     }
 
     public static class MyCacheEntryEventFilter<K, V> implements CacheEntryEventFilter<K, V>, Serializable {
-        private static final long serialVersionUID = 1L;
 
         public EventType eventFilter = null;//EventType.CREATED;
         public final AtomicLong filtered = new AtomicLong();
