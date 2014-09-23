@@ -332,7 +332,7 @@ public class TestUtils {
             }
         }
 
-        throw new NumberFormatException("Could not find "+type+"."+value);
+        throw new NumberFormatException("Could not find "+type.getSimpleName()+"."+value);
     }
 
     public static Field findPropertyField(Class clazz, String property) {
