@@ -305,7 +305,6 @@ public class TestUtils {
                         format("Unhandled type [%s] for field [%s.%s]", field.getType(), test.getClass().getName(), field.getName()));
             }
         } catch (NumberFormatException e) {
-            e.printStackTrace();
             throw new BindException(
                     format("Failed to bind value [%s] to property [%s.%s] of type [%s]",
                             value, test.getClass().getName(), property, field.getType())
