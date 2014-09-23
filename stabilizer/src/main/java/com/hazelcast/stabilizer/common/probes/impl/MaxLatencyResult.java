@@ -2,6 +2,9 @@ package com.hazelcast.stabilizer.common.probes.impl;
 
 import com.hazelcast.stabilizer.common.probes.Result;
 
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+
 public class MaxLatencyResult implements Result<MaxLatencyResult> {
     private final long maxLatency;
 
@@ -21,4 +24,33 @@ public class MaxLatencyResult implements Result<MaxLatencyResult> {
     public String toHumanString() {
         return "Maximum latency: "+maxLatency+" ms.";
     }
+
+    @Override
+    public void writeTo(XMLStreamWriter writer) {
+        try {
+            writer.writeStartElement("max-latency");
+            writer.writeCharacters(Long.toString(maxLatency));
+            writer.writeEndElement();
+        } catch (XMLStreamException e) {
+            throw new IllegalStateException("Error while writing probe output", e);
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MaxLatencyResult that = (MaxLatencyResult) o;
+
+        if (maxLatency != that.maxLatency) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (maxLatency ^ (maxLatency >>> 32));
+    }
+
 }

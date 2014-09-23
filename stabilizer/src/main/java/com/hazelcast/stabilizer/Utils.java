@@ -21,6 +21,8 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -441,6 +443,14 @@ public final class Utils {
         try {
             c.close();
         } catch (IOException ignore) {
+        }
+    }
+
+    public static void closeQuietly(XMLStreamWriter c) {
+        if (c == null) return;
+        try {
+            c.close();
+        } catch (XMLStreamException ignore) {
         }
     }
 

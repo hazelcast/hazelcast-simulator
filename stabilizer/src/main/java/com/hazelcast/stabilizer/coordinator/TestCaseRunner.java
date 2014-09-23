@@ -6,6 +6,7 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.probes.Result;
+import com.hazelcast.stabilizer.common.probes.impl.ProbesResultXmlWriter;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
@@ -15,6 +16,7 @@ import com.hazelcast.stabilizer.worker.commands.InitCommand;
 import com.hazelcast.stabilizer.worker.commands.RunCommand;
 import com.hazelcast.stabilizer.worker.commands.StopCommand;
 
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import static com.hazelcast.stabilizer.Utils.closeQuietly;
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
 
@@ -89,7 +92,7 @@ public class TestCaseRunner {
             echo("Completed Test stop");
 
             logPerformance();
-            printProbesResults();
+            processProbeResults();
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
@@ -122,26 +125,44 @@ public class TestCaseRunner {
         }
     }
 
-    private <R extends Result<R>> void printProbesResults() {
-        GetBenchmarkResultsCommand command = new GetBenchmarkResultsCommand(testCase.id);
-        List<List<Map<String, R>>> workerProbeResults = agentsClient.executeOnAllWorkers(command);
-        Map<String, R> combinedResults = new HashMap<String, R>();
-        for (List<Map<String, R>> agentProbeResults : workerProbeResults) {
-            for (Map<String, R> workerProbeResult : agentProbeResults) {
-                for (Map.Entry<String, R> probe : workerProbeResult.entrySet()) {
-                    String probeName = probe.getKey();
-                    R currentResult = probe.getValue();
-                    R combinedValue = combinedResults.get(probeName);
-                    combinedValue = currentResult.combine(combinedValue);
-                    combinedResults.put(probeName, combinedValue);
-                }
-            }
+    private void processProbeResults() {
+        Map<String, ? extends Result> probesResult = getProbesResult();
+        if (!probesResult.isEmpty()) {
+            ProbesResultXmlWriter xmlWriter = new ProbesResultXmlWriter();
+            xmlWriter.write(probesResult, new File("results-" + coordinator.testSuite.id + ".xml"));
+            logProbesResultInHumanReadableFormat(probesResult);
         }
+    }
+
+    private <R extends Result<R>> void logProbesResultInHumanReadableFormat(Map<String, R> combinedResults) {
         for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
             String probeName = entry.getKey();
             R result = entry.getValue();
             echo("Probe " + probeName + " result: " + result.toHumanString());
         }
+    }
+
+    private <R extends Result<R>> Map<String, R> getProbesResult() {
+        List<List<Map<String, R>>> agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
+        Map<String, R> combinedResults = new HashMap<String, R>();
+        for (List<Map<String, R>> agentProbeResults : agentsProbeResults) {
+            for (Map<String, R> workerProbeResult : agentProbeResults) {
+                if (workerProbeResult != null) {
+                    for (Map.Entry<String, R> probe : workerProbeResult.entrySet()) {
+                        String probeName = probe.getKey();
+                        R currentResult = probe.getValue();
+                        if (currentResult != null) {
+                            R combinedValue = combinedResults.get(probeName);
+                            combinedValue = currentResult.combine(combinedValue);
+                            combinedResults.put(probeName, combinedValue);
+                        } else {
+                            log.warning("Probe " + probeName + " has null value for some member. This should not happen.");
+                        }
+                    }
+                }
+            }
+        }
+        return combinedResults;
     }
 
     private void logPerformance() {
