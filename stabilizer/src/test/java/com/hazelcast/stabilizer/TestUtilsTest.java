@@ -25,17 +25,34 @@ public class TestUtilsTest {
     }
 
     @Test
-    public void bindProperty_enum() throws IllegalAccessException {
+    public void bindProperty_enum_nullValue() throws IllegalAccessException {
         SomeObject someObject = new SomeObject();
 
         bindProperty(someObject, "enumField", "null");
         assertNull(someObject.enumField);
+    }
+
+    @Test
+    public void bindProperty_enum() throws IllegalAccessException {
+        SomeObject someObject = new SomeObject();
 
         bindProperty(someObject, "enumField", TimeUnit.HOURS.name());
         assertEquals(someObject.enumField, TimeUnit.HOURS);
+    }
+
+    @Test
+    public void bindProperty_enum_caseInsensitive() throws IllegalAccessException {
+        SomeObject someObject = new SomeObject();
 
         bindProperty(someObject, "enumField", "dAyS");
         assertEquals(someObject.enumField, TimeUnit.DAYS);
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_enum_notFound() throws IllegalAccessException {
+        SomeObject someObject = new SomeObject();
+
+        bindProperty(someObject, "enumField", "dontexist");
     }
 
     @Test
