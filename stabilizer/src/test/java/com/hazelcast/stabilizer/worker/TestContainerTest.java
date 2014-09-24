@@ -2,8 +2,10 @@ package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.stabilizer.common.messaging.Message;
+import com.hazelcast.stabilizer.common.probes.IntervalProbe;
 import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.common.probes.SimpleProbe;
+import com.hazelcast.stabilizer.common.probes.impl.DisabledProbe;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Name;
@@ -85,21 +87,71 @@ public class TestContainerTest {
     }
 
     @Test
-    public void localProbe_explicit_name_set_via_annotation() throws Throwable {
+    public void probe_explicit_name_set_via_annotation() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
         DummyTest test = new DummyTest();
-        TestContainer invoker = new TestContainer(test, testContext, new ProbesConfiguration());
+        ProbesConfiguration probesConfig = new ProbesConfiguration();
+        probesConfig.addConfig("explicitProbeName", "throughput");
+        TestContainer invoker = new TestContainer(test, testContext, probesConfig);
         Map probeResults = invoker.getProbeResults();
         assertTrue(probeResults.keySet().contains("explicitProbeName"));
     }
 
     @Test
-    public void localProbe_implicit_name() throws Throwable {
+    public void probe_implicit_name() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
         DummyTest test = new DummyTest();
-        TestContainer invoker = new TestContainer(test, testContext, new ProbesConfiguration());
+        ProbesConfiguration probesConfig = new ProbesConfiguration();
+        probesConfig.addConfig("Probe2", "throughput");
+        TestContainer invoker = new TestContainer(test, testContext, probesConfig);
         Map probeResults = invoker.getProbeResults();
         assertTrue(probeResults.keySet().contains("Probe2"));
+    }
+
+    @Test
+    public void probe_inject_simpleProbe_to_field() {
+        DummyTestContext testContext = new DummyTestContext();
+        DummyTest test = new DummyTest();
+        ProbesConfiguration probesConfig = new ProbesConfiguration();
+        probesConfig.addConfig("throughputProbe", "throughput");
+        TestContainer invoker = new TestContainer(test, testContext, probesConfig);
+        Map probeResults = invoker.getProbeResults();
+        assertNotNull(test.throughputProbe);
+        assertTrue(probeResults.keySet().contains("throughputProbe"));
+    }
+
+    @Test
+         public void probe_inject_IntervalProbe_to_field() {
+        DummyTestContext testContext = new DummyTestContext();
+        DummyTest test = new DummyTest();
+        ProbesConfiguration probesConfig = new ProbesConfiguration();
+        probesConfig.addConfig("latencyProbe", "latency");
+        TestContainer invoker = new TestContainer(test, testContext, probesConfig);
+        Map probeResults = invoker.getProbeResults();
+        assertNotNull(test.latencyProbe);
+        assertTrue(probeResults.keySet().contains("latencyProbe"));
+    }
+
+    @Test
+    public void probe_inject_explicitly_named_probe_to_field() {
+        DummyTestContext testContext = new DummyTestContext();
+        DummyTest test = new DummyTest();
+        ProbesConfiguration probesConfig = new ProbesConfiguration();
+        probesConfig.addConfig("explicitProbeInjectedToField", "throughput");
+        TestContainer invoker = new TestContainer(test, testContext, probesConfig);
+        Map probeResults = invoker.getProbeResults();
+        assertNotNull(test.fooProbe);
+        assertTrue(probeResults.keySet().contains("explicitProbeInjectedToField"));
+    }
+
+    @Test
+    public void probe_inject_disabled_to_field() {
+        DummyTestContext testContext = new DummyTestContext();
+        DummyTest test = new DummyTest();
+        ProbesConfiguration probesConfig = new ProbesConfiguration();
+        TestContainer invoker = new TestContainer(test, testContext, probesConfig);
+        assertNotNull(test.disabled);
+        assertTrue(test.disabled instanceof DisabledProbe);
     }
 
 
@@ -200,6 +252,13 @@ public class TestContainerTest {
         boolean setupCalled;
         TestContext context;
         SimpleProbe simpleProbe;
+
+        private SimpleProbe throughputProbe;
+        private IntervalProbe latencyProbe;
+
+        @Name("explicitProbeInjectedToField")
+        private SimpleProbe fooProbe;
+        private IntervalProbe disabled;
 
         @Setup
         void setup(TestContext context, @Name("explicitProbeName") SimpleProbe probe1, SimpleProbe probe2) {
