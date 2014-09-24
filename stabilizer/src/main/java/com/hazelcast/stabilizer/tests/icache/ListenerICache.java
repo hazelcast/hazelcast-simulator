@@ -45,6 +45,7 @@ public class ListenerICache {
     public int threadCount = 3;
     public int maxExpiryDurationMs = 500;
     public int keyCount = 1000;
+    public boolean syncEvents = true;
 
 
     public double put = 0.5;
@@ -100,7 +101,7 @@ public class ListenerICache {
         cache.registerCacheEntryListener(
                 new MutableCacheEntryListenerConfiguration<Integer, Long> (FactoryBuilder.factoryOf(listener),
                         FactoryBuilder.factoryOf(filter)
-                        ,false,false));
+                        , false, syncEvents));
     }
 
     @Run
