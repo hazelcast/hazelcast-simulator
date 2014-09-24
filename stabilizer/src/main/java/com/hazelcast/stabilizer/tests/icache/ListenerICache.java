@@ -26,6 +26,8 @@ import javax.cache.event.CacheEntryCreatedListener;
 import javax.cache.event.CacheEntryEvent;
 import javax.cache.event.CacheEntryEventFilter;
 import javax.cache.event.CacheEntryListenerException;
+import javax.cache.event.CacheEntryRemovedListener;
+import javax.cache.event.CacheEntryUpdatedListener;
 import javax.cache.event.EventType;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
@@ -37,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepMs;
+import static junit.framework.Assert.assertEquals;
 
 public class ListenerICache {
 
@@ -188,7 +191,14 @@ public class ListenerICache {
         }
         log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
-        final ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
+        IList<MyCacheEntryListener> listeners = targetInstance.getList(basename+"listeners");
+        MyCacheEntryListener totalEvents = new MyCacheEntryListener();
+        for(MyCacheEntryListener listener : listeners){
+            totalEvents.add(listener);
+        }
+        log.info(basename + ": totalEvents " + totalEvents);
+
+        assertEquals(basename + ": unExpected Events found ", 0, totalEvents.unExpected.get());
     }
 
     private static class Counter implements Serializable {
@@ -223,7 +233,7 @@ public class ListenerICache {
         }
     }
 
-    public static class MyCacheEntryListener<K, V> implements CacheEntryCreatedListener<K, V>, Serializable {
+    public static class MyCacheEntryListener<K, V> implements CacheEntryCreatedListener<K, V>, CacheEntryRemovedListener<K, V>, CacheEntryUpdatedListener<K, V>, Serializable {
 
         public AtomicLong created = new AtomicLong();
         public AtomicLong updated = new AtomicLong();
@@ -234,26 +244,45 @@ public class ListenerICache {
         public void onCreated(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) throws CacheEntryListenerException {
 
             for (CacheEntryEvent<? extends K, ? extends V> event : events) {
-
                 switch (event.getEventType()){
                     case CREATED:
                         created.incrementAndGet();
-                        break;
-                    case UPDATED:
-                        updated.incrementAndGet();
-                        break;
-                    case REMOVED:
-                        removed.incrementAndGet();
-                        break;
-                    case EXPIRED:
-                        expired.incrementAndGet();
                         break;
                     default:
                         unExpected.incrementAndGet();
                         break;
                 }
             }
+        }
 
+        @Override
+        public void onRemoved(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) throws CacheEntryListenerException {
+
+            for (CacheEntryEvent<? extends K, ? extends V> event : events) {
+                switch (event.getEventType()){
+                    case REMOVED:
+                        removed.incrementAndGet();
+                        break;
+                    default:
+                        unExpected.incrementAndGet();
+                        break;
+                }
+            }
+        }
+
+        @Override
+        public void onUpdated(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) throws CacheEntryListenerException {
+
+            for (CacheEntryEvent<? extends K, ? extends V> event : events) {
+                switch (event.getEventType()){
+                    case UPDATED:
+                        updated.incrementAndGet();
+                        break;
+                    default:
+                        unExpected.incrementAndGet();
+                        break;
+                }
+            }
         }
 
         public String toString() {
@@ -264,6 +293,14 @@ public class ListenerICache {
                     ", expired=" + expired +
                     ", unExpected=" + unExpected +
                     '}';
+        }
+
+        public void add(MyCacheEntryListener listener){
+            created.addAndGet(listener.created.get());
+            updated.addAndGet(listener.updated.get());
+            removed.addAndGet( listener.removed.get() );
+            expired.addAndGet(listener.expired.get());
+            unExpected.addAndGet( listener.unExpected.get() );
         }
     }
 
