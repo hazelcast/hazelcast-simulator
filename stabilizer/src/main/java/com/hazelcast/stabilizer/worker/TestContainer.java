@@ -21,6 +21,7 @@ import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.util.Clock;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -111,6 +112,7 @@ public class TestContainer<T extends TestContext> {
         initGetOperationCountMethod();
 
         initMessageConsumerMethod();
+        injectDependencies();
     }
 
     public T getTestContext() {
@@ -196,6 +198,37 @@ public class TestContainer<T extends TestContext> {
         setupMethod = method;
     }
 
+    private void injectDependencies() {
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            String name = getProbeName(field);
+            if (SimpleProbe.class.equals(field.getType())) {
+                SimpleProbe probe = getOrCreateProbe(name, SimpleProbe.class);
+                injectObjectToTest(field, probe);
+            } else if (IntervalProbe.class.equals(field.getType())) {
+                IntervalProbe probe = getOrCreateProbe(name, IntervalProbe.class);
+                injectObjectToTest(field, probe);
+            }
+        }
+    }
+
+    private String getProbeName(Field field) {
+        Name nameAnnotation = field.getAnnotation(Name.class);
+        if (nameAnnotation != null) {
+            return nameAnnotation.value();
+        }
+        return field.getName();
+    }
+
+    private void injectObjectToTest(Field field, Object object) {
+        field.setAccessible(true);
+        try {
+            field.set(testObject, object);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void initSetupArguments(Method method) {
         Class<?>[] parameterTypes = method.getParameterTypes();
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
@@ -209,17 +242,31 @@ public class TestContainer<T extends TestContext> {
     private void initSetupArgument(int i, Class<?> parameterType, Annotation[] parameterAnnotations) {
         if (parameterType.equals(IntervalProbe.class)) {
             String probeName = getProbeName(parameterAnnotations, i);
-            SimpleProbe probe = createProbe(IntervalProbe.class, probeName, probesConfiguration);
-            probeMap.put(probeName, probe);
+            IntervalProbe probe = getOrCreateProbe(probeName, IntervalProbe.class);
             setupArguments[i] = probe;
         } else if (parameterType.equals(SimpleProbe.class)) {
             String probeName = getProbeName(parameterAnnotations, i);
-            SimpleProbe probe = createProbe(SimpleProbe.class, probeName, probesConfiguration);
+            SimpleProbe probe = getOrCreateProbe(probeName, SimpleProbe.class);
             probeMap.put(probeName, probe);
             setupArguments[i] = probe;
         } else if (parameterType.isAssignableFrom(TestContext.class)) {
             setupArguments[i] = testContext;
         }
+    }
+
+    private <T extends SimpleProbe> T getOrCreateProbe(String probeName, Class<T> probeType) {
+        SimpleProbe<?, ?> probe = probeMap.get(probeName);
+        if (probe == null) {
+            probe = createProbe(probeType, probeName, probesConfiguration);
+            probeMap.put(probeName, probe);
+            return (T) probe;
+        }
+        if (probeType.isAssignableFrom(probe.getClass())) {
+            return (T) probe;
+        }
+        throw new IllegalArgumentException("Can't create a probe "+probeName+" of type "+probeType.getName()+" as " +
+                "there is already a probe "+probe.getClass()+" with the same name");
+
     }
 
     private String getProbeName(Annotation[] parameterType, int i) {
