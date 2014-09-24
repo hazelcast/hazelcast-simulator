@@ -44,6 +44,7 @@ import com.hazelcast.stabilizer.worker.commands.InitCommand;
 import com.hazelcast.stabilizer.worker.commands.MessageCommand;
 import com.hazelcast.stabilizer.worker.commands.RunCommand;
 import com.hazelcast.stabilizer.worker.commands.StopCommand;
+import org.apache.log4j.LogManager;
 
 import java.io.File;
 import java.io.ObjectInputStream;
@@ -174,6 +175,9 @@ public class MemberWorker {
 
     public static void main(String[] args) {
         log.info("Starting Stabilizer Worker");
+
+        registerLog4jShutdownHandler();
+
         try {
             logInputArguments();
             logInterestingSystemProperties();
@@ -204,6 +208,16 @@ public class MemberWorker {
             ExceptionReporter.report(null, e);
             System.exit(1);
         }
+    }
+
+    private static void registerLog4jShutdownHandler() {
+        // makes sure that log4j will always flush log-buffers
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                LogManager.shutdown();
+            }
+        });
     }
 
     protected static void logInputArguments() {
