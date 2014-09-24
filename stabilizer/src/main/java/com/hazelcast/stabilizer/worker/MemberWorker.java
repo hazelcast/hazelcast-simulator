@@ -98,15 +98,25 @@ public class MemberWorker {
 
     public void start() throws Exception {
         if ("server".equals(workerMode)) {
+            log.info("------------------------------------------------------------------------");
+            log.info("             member mode");
+            log.info("------------------------------------------------------------------------");
             this.serverInstance = createServerHazelcastInstance();
         } else if ("client".equals(workerMode)) {
+            log.info("------------------------------------------------------------------------");
+            log.info("             client mode");
+            log.info("------------------------------------------------------------------------");
             this.clientInstance = createClientHazelcastInstance();
         } else if ("mixed".equals(workerMode)) {
+            log.info("------------------------------------------------------------------------");
+            log.info("             mixed client/member mode");
+            log.info("------------------------------------------------------------------------");
             this.serverInstance = createServerHazelcastInstance();
             this.clientInstance = createClientHazelcastInstance();
         } else {
             throw new IllegalStateException("Unknown worker mode:" + workerMode);
         }
+        log.info("------------------------------------------------------------------------");
 
         workerMessageProcessor.setHazelcastServerInstance(serverInstance);
         workerMessageProcessor.setHazelcastClientInstance(clientInstance);
