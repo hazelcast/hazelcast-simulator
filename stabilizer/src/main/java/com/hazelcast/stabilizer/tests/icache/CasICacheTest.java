@@ -22,6 +22,7 @@ import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import javax.cache.CacheException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -71,6 +72,17 @@ public class CasICacheTest {
             cacheManager = new HazelcastClientCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         }
+
+        CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
+        config.setName(basename);
+        config.setTypes(Integer.class, Long.class);
+
+        try {
+            cacheManager.createCache(basename, config);
+        } catch (CacheException e) {
+            log.severe(basename + ": createCache "+e);
+        }
+        cache = cacheManager.getCache(basename, Integer.class, Long.class);
     }
 
     @Teardown
@@ -81,13 +93,6 @@ public class CasICacheTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
-        config.setName(basename);
-        config.setTypes(Integer.class, Long.class);
-
-        cacheManager.createCache(basename, config);
-        cache = cacheManager.getCache(basename, Integer.class, Long.class);
-
         for (int k = 0; k < keyCount; k++) {
             cache.put(k, 0l);
         }
