@@ -41,9 +41,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepMs;
 import static junit.framework.Assert.assertEquals;
 
-public class ListenerICache {
+public class ListenerICacheTest {
 
-    private final static ILogger log = Logger.getLogger(ListenerICache.class);
+    private final static ILogger log = Logger.getLogger(ListenerICacheTest.class);
 
     public int threadCount = 3;
     public int maxExpiryDurationMs = 500;
