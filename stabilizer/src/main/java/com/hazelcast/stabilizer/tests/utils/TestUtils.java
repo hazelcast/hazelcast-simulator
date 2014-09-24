@@ -25,10 +25,12 @@ import com.hazelcast.instance.HazelcastInstanceImpl;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.OperationService;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.tests.BindException;
+import com.hazelcast.stabilizer.worker.TestContainer;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -46,6 +48,7 @@ import static java.lang.String.format;
 public class TestUtils {
 
     public static final String TEST_INSTANCE = "testInstance";
+    private final static ILogger log = Logger.getLogger(TestUtils.class);
 
     public static byte[] randomByteArray(Random random, int length) {
         byte[] result = new byte[length];
@@ -102,9 +105,14 @@ public class TestUtils {
 
         @Override
         public Long call() throws Exception {
-            Node node = getNode(hz);
-            OperationService operationService = node.getNodeEngine().getOperationService();
-            return operationService.getExecutedOperationCount();
+            try {
+                Node node = getNode(hz);
+                OperationService operationService = node.getNodeEngine().getOperationService();
+                return operationService.getExecutedOperationCount();
+            }catch(NoSuchMethodError e){
+                log.warning(e);
+                return -1l;
+            }
         }
 
         @Override
