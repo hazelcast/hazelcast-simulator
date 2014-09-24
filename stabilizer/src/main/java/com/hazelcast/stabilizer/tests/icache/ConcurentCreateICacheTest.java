@@ -89,11 +89,9 @@ public class ConcurentCreateICacheTest {
         for(Counter c : counters){
             total.add(c);
         }
-        log.info(baseName + ": collected results from " + counters.size() + " worker threads");
-        log.info(baseName + ": "+total);
+        log.info(baseName + ": "+total + " from " + counters.size() + " worker threads");
 
-        assertEquals(baseName + ": multi thread/Members/clients created the cache", 1,total.create);
-
+        assertEquals(baseName + ": multi thread/Members/clients created the cache", 1, total.create);
     }
 
     static class Counter implements Serializable {
