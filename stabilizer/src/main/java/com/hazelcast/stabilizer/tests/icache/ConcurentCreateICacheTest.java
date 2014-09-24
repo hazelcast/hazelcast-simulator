@@ -41,9 +41,6 @@ public class ConcurentCreateICacheTest {
 
     private final static ILogger log = Logger.getLogger(ConcurentCreateICacheTest.class);
 
-    public int memberCount=-1;
-    public int clientCount=-1;
-
     private HazelcastInstance targetInstance;
     private HazelcastCacheManager cacheManager;
     private String baseName;
@@ -51,10 +48,6 @@ public class ConcurentCreateICacheTest {
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-
-        if(memberCount==-1 || clientCount==-1){
-            throw new IllegalStateException("must Set memberCount and clientCount properties");
-        }
 
         targetInstance = testContext.getTargetInstance();
         baseName = testContext.getTestId();
@@ -96,12 +89,9 @@ public class ConcurentCreateICacheTest {
         for(Counter c : counters){
             total.add(c);
         }
-        log.info(baseName + ": collected results from " + counters.size() + " worker threads");
-        log.info(baseName + ": "+total);
+        log.info(baseName + ": "+total + " from " + counters.size() + " worker threads");
 
-        assertEquals("multipule thread/Members/clients created the ", 1,total.create);
-        int expectedExceptions=memberCount+clientCount-1;
-        assertEquals("multi thread/Members/clients createCache "+baseName, expectedExceptions, total.createException);
+        assertEquals(baseName + ": We expect 0 CacheException from multi node create cache calls", 0, total.createException);
     }
 
     static class Counter implements Serializable {
