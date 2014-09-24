@@ -91,7 +91,7 @@ public class ConcurentCreateICacheTest {
         }
         log.info(baseName + ": "+total + " from " + counters.size() + " worker threads");
 
-        assertEquals(baseName + ": multi thread/Members/clients created the cache", 1, total.create);
+        assertEquals(baseName + ": We expect 0 CacheException from multi node create cache calls", 0, total.createException);
     }
 
     static class Counter implements Serializable {
