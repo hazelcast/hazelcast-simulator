@@ -14,8 +14,8 @@ public class CommandFuture<E> implements Future<E> {
             return "NO_RESULT";
         }
     };
-    private final Command command;
 
+    private final Command command;
     private volatile Object result = NO_RESULT;
 
     public CommandFuture(Command command) {

@@ -9,5 +9,4 @@ public abstract class Command implements Serializable {
     public boolean awaitReply() {
         return true;
     }
-
 }

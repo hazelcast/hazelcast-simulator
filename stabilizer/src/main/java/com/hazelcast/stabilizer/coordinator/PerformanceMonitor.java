@@ -8,6 +8,9 @@ import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
 
 import java.util.List;
 
+/**
+ * Responsible for collecting performance metrics from the agents and logging/storing it.
+ */
 public class PerformanceMonitor extends Thread {
     private final ILogger log = Logger.getLogger(PerformanceMonitor.class);
 

@@ -42,7 +42,8 @@ public class HarakiriMonitor extends Thread {
                 log.info("Trying to commit Harakiri (will only try once)");
                 Bash bash = new Bash(new StabilizerProperties());
                 try {
-                    String cmd = format("ec2-terminate-instances $(curl -s http://169.254.169.254/latest/meta-data/instance-id) --aws-access-key %s --aws-secret-key %s", agent.cloudIdentity, agent.cloudCredential);
+                    String cmd = format("ec2-terminate-instances $(curl -s http://169.254.169.254/latest/meta-data/instance-id) " +
+                            "--aws-access-key %s --aws-secret-key %s", agent.cloudIdentity, agent.cloudCredential);
                     log.info("harakiri command: " + cmd);
                     bash.execute(cmd);
                 } catch (RuntimeException e) {

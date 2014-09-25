@@ -376,8 +376,14 @@ public class Coordinator {
 
             for (String ip : agentsClient.getPublicAddresses()) {
                 for (File file : upload) {
-                    String syncCommand = format("rsync --ignore-existing -av -e \"ssh %s\" %s %s@%s:hazelcast-stabilizer-%s/workers/%s/lib",
-                            props.get("SSH_OPTIONS", ""), file.getAbsolutePath(), props.get("USER"), ip, getVersion(), testSuite.id);
+                    String syncCommand =
+                            format("rsync --ignore-existing -av -e \"ssh %s\" %s %s@%s:hazelcast-stabilizer-%s/workers/%s/lib",
+                                    props.get("SSH_OPTIONS", ""),
+                                    file.getAbsolutePath(),
+                                    props.get("USER"),
+                                    ip,
+                                    getVersion(),
+                                    testSuite.id);
 
                     bash.execute(syncCommand);
                 }

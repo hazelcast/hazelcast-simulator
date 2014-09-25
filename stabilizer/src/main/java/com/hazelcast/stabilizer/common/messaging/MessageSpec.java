@@ -10,21 +10,21 @@ import java.lang.annotation.Target;
  * {@link com.hazelcast.stabilizer.common.messaging.MessageSpec} are auto-registered by
  * {@link com.hazelcast.stabilizer.common.messaging.MessagesFactory} and can be constructed
  * by calling {@link com.hazelcast.stabilizer.common.messaging.Message#newBySpec(String, String)}
- *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface MessageSpec {
 
     /**
-     * Specification of the message to be used when calling {@link com.hazelcast.stabilizer.common.messaging.Message#newBySpec(String, String)}
+     * Specification of the message to be used when calling
+     * {@link com.hazelcast.stabilizer.common.messaging.Message#newBySpec(String, String)}
      */
-    public String value();
+    String value();
 
     /**
      * A human-readable description of a message. It can be used to generate --help
      *
      * @return
      */
-    public String description() default "No description provided";
+    String description() default "No description provided";
 }

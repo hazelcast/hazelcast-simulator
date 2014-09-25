@@ -12,6 +12,7 @@ public class Probes {
     private static <R extends Result<R>, T extends SimpleProbe<R, T>> ConcurrentSimpleProbe<R, T> wrapAsThreadLocal(T probe) {
         return new ConcurrentSimpleProbe<R, T>(probe);
     }
+
     private static <R extends Result<R>, T extends IntervalProbe<R, T>> ConcurrentIntervalProbe<R, T> wrapAsThreadLocal(T probe) {
         return new ConcurrentIntervalProbe<R, T>(probe);
     }
@@ -26,7 +27,7 @@ public class Probes {
             } else if ("disabled".equals(config)) {
                 return (T) disabledProbe();
             } else {
-                throw new IllegalArgumentException("Unknown probe "+config+" for probe type "+type.getName()+".");
+                throw new IllegalArgumentException("Unknown probe " + config + " for probe type " + type.getName() + ".");
             }
         } else if (type.equals(IntervalProbe.class)) {
             if (config == null) {
@@ -38,10 +39,10 @@ public class Probes {
             } else if ("disabled".equals(config)) {
                 return (T) disabledProbe();
             } else {
-                throw new IllegalArgumentException("Unknown probe "+config+" for probe type "+type.getName()+".");
+                throw new IllegalArgumentException("Unknown probe " + config + " for probe type " + type.getName() + ".");
             }
         } else {
-            throw new IllegalArgumentException("Unknown probe "+config+" for probe type "+type.getName()+".");
+            throw new IllegalArgumentException("Unknown probe " + config + " for probe type " + type.getName() + ".");
         }
     }
 

@@ -264,8 +264,8 @@ public class TestContainer<T extends TestContext> {
         if (probeType.isAssignableFrom(probe.getClass())) {
             return (T) probe;
         }
-        throw new IllegalArgumentException("Can't create a probe "+probeName+" of type "+probeType.getName()+" as " +
-                "there is already a probe "+probe.getClass()+" with the same name");
+        throw new IllegalArgumentException("Can't create a probe " + probeName + " of type " + probeType.getName() + " as " +
+                "there is already a probe " + probe.getClass() + " with the same name");
 
     }
 
@@ -276,7 +276,7 @@ public class TestContainer<T extends TestContext> {
                 return name.value();
             }
         }
-        return "Probe"+i;
+        return "Probe" + i;
     }
 
     private void initGetOperationCountMethod() {
@@ -476,17 +476,17 @@ public class TestContainer<T extends TestContext> {
             if (parameterType.isAssignableFrom(TestContext.class)) {
                 testContextFound = true;
             } else if (!parameterType.isAssignableFrom(IntervalProbe.class)) {
-                throw new IllegalTestException("Method " + clazz + "." + method + " must have argument of type " + TestContext.class
-                                +" and zero or more arguments of type "+SimpleProbe.class);
+                throw new IllegalTestException("Method " + clazz + "." + method + " must have argument of type "
+                        + TestContext.class + " and zero or more arguments of type " + SimpleProbe.class);
             }
         }
         if (!testContextFound) {
             throw new IllegalTestException("Method " + clazz + "." + method + " must have argument of type " + TestContext.class
-                    +" and zero or more arguments of type "+SimpleProbe.class);
+                    + " and zero or more arguments of type " + SimpleProbe.class);
         }
     }
 
-    private void assertArguments(Method method, Class<?>...arguments) {
+    private void assertArguments(Method method, Class<?>... arguments) {
         Class<?>[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length != arguments.length) {
             throw new IllegalTestException(
@@ -498,7 +498,7 @@ public class TestContainer<T extends TestContext> {
             if (!parameterTypes[i].isAssignableFrom(arguments[i])) {
                 throw new IllegalTestException(
                         format("Method %s has %s. argument of type %s where type %s is expected",
-                                method, i+1, parameterTypes[i], arguments[i]));
+                                method, i + 1, parameterTypes[i], arguments[i]));
             }
         }
     }
