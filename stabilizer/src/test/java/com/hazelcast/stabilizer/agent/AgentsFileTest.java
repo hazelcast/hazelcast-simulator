@@ -14,10 +14,32 @@ import static org.junit.Assert.assertEquals;
 public class AgentsFileTest {
 
     @Test
+    public void load_publicAndPrivateIp() throws IOException {
+        File file = File.createTempFile("AgentsFileTest", "txt");
+        file.deleteOnExit();
+        Utils.writeText("192.168.1.1,10.10.10.10", file);
+
+        List<AgentAddress> addressList = AgentsFile.load(file);
+        assertEquals(1, addressList.size());
+        assertEquals(new AgentAddress("192.168.1.1", "10.10.10.10"), addressList.get(0));
+    }
+
+    @Test
+    public void load_onlyPublicIp() throws IOException {
+        File file = File.createTempFile("AgentsFileTest", "txt");
+        file.deleteOnExit();
+        Utils.writeText("192.168.1.1", file);
+
+        List<AgentAddress> addressList = AgentsFile.load(file);
+        assertEquals(1, addressList.size());
+        assertEquals(new AgentAddress("192.168.1.1", "192.168.1.1"), addressList.get(0));
+    }
+
+    @Test
     public void load_fileContainsEmptyLines() throws IOException {
         File file = File.createTempFile("AgentsFileTest", "txt");
         file.deleteOnExit();
-        Utils.writeText("\n192.168.1.1#foo\n\n", file);
+        Utils.writeText("\n192.168.1.1\n\n", file);
 
         List<AgentAddress> addressList = AgentsFile.load(file);
         assertEquals(1, addressList.size());
