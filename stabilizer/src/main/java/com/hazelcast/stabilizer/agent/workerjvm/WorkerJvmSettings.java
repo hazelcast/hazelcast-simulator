@@ -19,11 +19,11 @@ import java.io.Serializable;
 
 public class WorkerJvmSettings implements Serializable {
     public String vmOptions;
+    public String clientVmOptions;
     public String hzConfig;
 
     public int memberWorkerCount;
     public int clientWorkerCount;
-    public int mixedWorkerCount;
 
     public int workerStartupTimeout;
     public boolean refreshJvm;
@@ -35,7 +35,6 @@ public class WorkerJvmSettings implements Serializable {
     public String hprofSettings = "";
     public String perfSettings = "";
     public String vtuneSettings = "";
-    public String clientVmOptions;
 
     public WorkerJvmSettings() {
     }
@@ -47,7 +46,6 @@ public class WorkerJvmSettings implements Serializable {
         this.clientHzConfig = settings.clientHzConfig;
         this.memberWorkerCount = settings.memberWorkerCount;
         this.clientWorkerCount = settings.clientWorkerCount;
-        this.mixedWorkerCount = settings.mixedWorkerCount;
         this.workerStartupTimeout = settings.workerStartupTimeout;
         this.refreshJvm = settings.refreshJvm;
         this.javaVendor = settings.javaVendor;
@@ -60,7 +58,7 @@ public class WorkerJvmSettings implements Serializable {
     }
 
     public int totalWorkerCount() {
-        return memberWorkerCount + clientWorkerCount + mixedWorkerCount;
+        return memberWorkerCount + clientWorkerCount;
     }
 
     @Override
@@ -70,7 +68,6 @@ public class WorkerJvmSettings implements Serializable {
                 "\n  clientVmOptions='" + clientVmOptions + '\'' +
                 "\n, memberWorkerCount=" + memberWorkerCount +
                 "\n, clientWorkerCount=" + clientWorkerCount +
-                "\n, mixedWorkerCount=" + mixedWorkerCount +
                 "\n, workerStartupTimeout=" + workerStartupTimeout +
                 "\n, refreshJvm=" + refreshJvm +
                 "\n, profiler='" + profiler + '\'' +

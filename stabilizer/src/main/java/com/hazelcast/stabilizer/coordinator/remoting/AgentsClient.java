@@ -9,6 +9,7 @@ import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.CountdownWatch;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
+import com.hazelcast.stabilizer.coordinator.AgentMemberLayout;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.commands.Command;
@@ -293,22 +294,44 @@ public class AgentsClient {
         getAllFutures(futures);
     }
 
-    public void spawnWorkers(final WorkerJvmSettings[] workerJvmSettingsArray) {
+    private AgentClient getAgent(String publicIp) {
+        for (AgentClient client : agents) {
+            if (publicIp.equals(client.publicAddress)) {
+                return client;
+            }
+        }
+
+        return null;
+    }
+
+    public void spawnWorkers(final List<AgentMemberLayout> agentLayouts, final boolean member) {
         List<Future> futures = new LinkedList<Future>();
 
-        for (int k = 0; k < agents.size(); k++) {
-            final int index = k;
+        for (final AgentMemberLayout spawnPlan : agentLayouts) {
+            final AgentClient agentClient = getAgent(spawnPlan.publicIp);
             Future f = agentExecutor.submit(new Callable() {
                 @Override
                 public Object call() throws Exception {
-                    AgentClient agentClient = agents.get(index);
-                    WorkerJvmSettings settings = workerJvmSettingsArray[index];
+                    WorkerJvmSettings settings;
+                    if (member) {
+                        settings = spawnPlan.memberSettings;
+                        if (spawnPlan.memberSettings.clientWorkerCount > 0) {
+                            //todo: remove
+                            log.severe("Found clients during member startup");
+                        }
+                    } else {
+                        settings = spawnPlan.clientSettings;
+                        if (spawnPlan.clientSettings.memberWorkerCount > 0) {
+                            //todo: remove
+                            log.severe("Found members during client startup");
+                        }
+                    }
+
                     agentClient.execute(SERVICE_SPAWN_WORKERS, settings);
                     return null;
                 }
             });
             futures.add(f);
-
         }
 
         getAllFutures(futures);

@@ -97,7 +97,6 @@ public class StringMapTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
-        TestUtils.warmupPartitions(log, targetInstance);
         keys = StringUtils.generateKeys(keyCount, keyLength,keyLocality,testContext.getTargetInstance());
         values = StringUtils.generateStrings(valueCount,valueLength);
 

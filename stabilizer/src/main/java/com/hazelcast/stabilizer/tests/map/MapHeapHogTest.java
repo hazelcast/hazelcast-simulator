@@ -49,8 +49,6 @@ public class MapHeapHogTest {
                 log.info(basename + " waiting cluster == 3");
                 Thread.sleep(1000);
             }
-
-            TestUtils.warmupPartitions(log, targetInstance);
         }
     }
 

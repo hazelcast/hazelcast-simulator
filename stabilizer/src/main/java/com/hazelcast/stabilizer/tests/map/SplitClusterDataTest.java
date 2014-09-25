@@ -42,7 +42,6 @@ public class SplitClusterDataTest {
     @Warmup(global = true)
     public void warmup() throws Exception {
         waitClusterSize(log,targetInstance, clusterSize);
-        warmupPartitions(log, targetInstance);
 
         for (int i = 0; i < maxItems; i++) {
             map.put(i, i);

@@ -36,12 +36,12 @@ public class ExceptionReporter {
         long exceptionCount = FAILURE_ID.incrementAndGet();
 
         if (exceptionCount > MAX_EXCEPTION_COUNT) {
-            log.severe("Exception #" + exceptionCount + " detected. The maximum number of exceptions has been" +
+            log.warning("Exception #" + exceptionCount + " detected. The maximum number of exceptions has been" +
                     "exceeded, so it won't be reported to the agent.", cause);
             return;
         }
 
-        log.severe("Exception #" + exceptionCount + " detected", cause);
+        log.warning("Exception #" + exceptionCount + " detected", cause);
 
         String targetFileName = exceptionCount + ".exception";
 

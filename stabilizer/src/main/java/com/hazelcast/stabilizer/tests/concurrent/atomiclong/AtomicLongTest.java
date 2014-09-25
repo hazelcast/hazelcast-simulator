@@ -69,7 +69,6 @@ public class AtomicLongTest {
         }
 
         targetInstance = context.getTargetInstance();
-        TestUtils.warmupPartitions(log, targetInstance);
 
         totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];

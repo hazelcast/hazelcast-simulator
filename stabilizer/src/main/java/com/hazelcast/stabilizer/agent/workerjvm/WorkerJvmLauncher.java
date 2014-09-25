@@ -64,7 +64,6 @@ public class WorkerJvmLauncher {
         log.info("Spawning Worker JVM using settings: " + settings);
         spawn(settings.memberWorkerCount, "server");
         spawn(settings.clientWorkerCount, "client");
-        spawn(settings.mixedWorkerCount, "mixed");
     }
 
     private void spawn(int count, String mode) throws Exception {
