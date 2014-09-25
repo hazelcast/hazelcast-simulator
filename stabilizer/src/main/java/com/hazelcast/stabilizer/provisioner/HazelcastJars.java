@@ -13,6 +13,9 @@ import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 
+/**
+ * Responsible for uploading the correct Hazelcast jars to the agents/workers.
+ */
 public class HazelcastJars {
 
     private final static ILogger log = Logger.getLogger(HazelcastJars.class);

@@ -4,5 +4,4 @@ public class SpawnWorkerFailedException extends RuntimeException {
     public SpawnWorkerFailedException(String message) {
         super(message);
     }
-
 }

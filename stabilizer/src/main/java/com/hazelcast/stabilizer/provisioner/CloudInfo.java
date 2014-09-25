@@ -14,6 +14,9 @@ import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
 import static java.lang.String.format;
 
+/**
+ * Commandline tool to retrieve various cloud info.
+ */
 public class CloudInfo {
     private final static ILogger log = Logger.getLogger(CloudInfo.class);
 

@@ -1,7 +1,5 @@
 package com.hazelcast.stabilizer.common.messaging;
 
-import org.bouncycastle.pqc.asn1.ParSet;
-
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,7 +8,6 @@ public class MessageAddressParser {
     /**
      * Warning: Change user help in {@link com.hazelcast.stabilizer.communicator.CommunicatorCli#messageAddressSpec}
      * when changing input format accepted by this parser
-     *
      */
     public static final String AGENT = "Agent";
     public static final String WORKER = "Worker";

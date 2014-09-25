@@ -7,7 +7,6 @@ import org.reflections.Reflections;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.security.Key;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -19,14 +18,14 @@ class MessagesFactory {
 
     private final Map<String, Constructor<? extends Message>> noAttributeConstructors;
     private final Map<String, Constructor<? extends Message>> attributeConstructors;
-    private final Map<String, String> messageDesription;
+    private final Map<String, String> messageDescription;
     private final MessageAddressParser messageAddressParser;
 
     private MessagesFactory() {
         noAttributeConstructors = new HashMap<String, Constructor<? extends Message>>();
         attributeConstructors = new HashMap<String, Constructor<? extends Message>>();
         messageAddressParser = new MessageAddressParser();
-        messageDesription= new HashMap<String, String>();
+        messageDescription = new HashMap<String, String>();
         findAndInitMessageTypes();
     }
 
@@ -37,7 +36,7 @@ class MessagesFactory {
     }
 
     static String getMessageDescription(String messageSpec) {
-        String description = instance.messageDesription.get(messageSpec);
+        String description = instance.messageDescription.get(messageSpec);
         if (description == null) {
             throw new IllegalArgumentException("Unknown message type '"+messageSpec+"'.");
         }
@@ -112,7 +111,7 @@ class MessagesFactory {
     private void registerDescription(Class<? extends Message> clazz) {
         String specString = getSpecString(clazz);
         String description = getDescription(clazz);
-        messageDesription.put(specString, description);
+        messageDescription.put(specString, description);
     }
 
     private Boolean registerMessageTryConstructorWithKeyValue(Class<? extends Message> clazz) {
