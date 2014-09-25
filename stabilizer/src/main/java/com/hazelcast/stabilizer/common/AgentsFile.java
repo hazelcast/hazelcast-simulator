@@ -51,12 +51,17 @@ public class AgentsFile {
         int lineNumber = 1;
         List<AgentAddress> pairs = new LinkedList<AgentAddress>();
         for (String line : addresses) {
-            String trimLine = line.trim();
-            if (trimLine.isEmpty()) {
+            int indexOfComment = line.indexOf("#");
+            if (indexOfComment != -1) {
+                line = line.substring(0, indexOfComment);
+            }
+
+            line = line.trim();
+            if (line.isEmpty()) {
                 continue;
             }
 
-            String[] chunks = trimLine.split(",");
+            String[] chunks = line.split(",");
             switch (chunks.length) {
                 case 1:
                     pairs.add(new AgentAddress(chunks[0], chunks[0]));
