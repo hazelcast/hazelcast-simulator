@@ -150,12 +150,10 @@ public class ITopicTest {
             while (!testContext.isStopped()) {
                 sleepRandom(random, maxPublicationDelayNanos);
 
-                int index = random.nextInt(topics.length);
-                ITopic topic = topics[index];
+                ITopic topic = getRandomTopic();
 
                 long msg = nextMessage();
                 count += msg;
-
                 topic.publish(msg);
 
                 if (iteration % logFrequency == 0) {
@@ -173,6 +171,11 @@ public class ITopicTest {
             }
 
             totalExpectedCounter.addAndGet(count);
+        }
+
+        private ITopic getRandomTopic() {
+            int index = random.nextInt(topics.length);
+            return topics[index];
         }
 
         private long nextMessage() {
