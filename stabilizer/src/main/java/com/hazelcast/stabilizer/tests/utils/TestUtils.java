@@ -30,7 +30,6 @@ import com.hazelcast.spi.OperationService;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.tests.BindException;
-import com.hazelcast.stabilizer.worker.TestContainer;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -52,15 +51,22 @@ public class TestUtils {
     public static final String TEST_INSTANCE = "testInstance";
     private final static ILogger log = Logger.getLogger(TestUtils.class);
 
-    public static void sleepRandom(Random random, long maxDelayNanos){
-        if(maxDelayNanos == 0){
+    /**
+     * Sleeps a random amount of time.
+     *
+     * @param random        the Random used to randomize
+     * @param maxDelayNanos the maximum sleeping period in nano seconds. If maxDelayNanos equals or smaller than zero,
+     *                      the call is ignored.
+     */
+    public static void sleepRandom(Random random, long maxDelayNanos) {
+        if (maxDelayNanos <= 0) {
             return;
         }
 
-        long delayNanos = random.nextLong() % maxDelayNanos;
+        long randomValue = Math.abs(random.nextLong());
+        long delayNanos = randomValue % maxDelayNanos;
         LockSupport.parkNanos(delayNanos);
     }
-
 
     public static byte[] randomByteArray(Random random, int length) {
         byte[] result = new byte[length];
@@ -121,7 +127,7 @@ public class TestUtils {
                 Node node = getNode(hz);
                 OperationService operationService = node.getNodeEngine().getOperationService();
                 return operationService.getExecutedOperationCount();
-            }catch(NoSuchMethodError e){
+            } catch (NoSuchMethodError e) {
                 log.warning(e);
                 return -1l;
             }
