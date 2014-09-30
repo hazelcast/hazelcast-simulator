@@ -135,8 +135,8 @@ public class ITopicTest {
             }
         }
 
-        private boolean isStopped(long l) {
-            return (!waitForMessagesToComplete && testContext.isStopped()) || l < 0;
+        private boolean isStopped(long payload) {
+            return (!waitForMessagesToComplete && testContext.isStopped()) || payload < 0;
         }
     }
 
