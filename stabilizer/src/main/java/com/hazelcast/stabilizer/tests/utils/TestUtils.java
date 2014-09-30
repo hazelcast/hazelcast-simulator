@@ -51,6 +51,38 @@ public class TestUtils {
     public static final String TEST_INSTANCE = "testInstance";
     private final static ILogger log = Logger.getLogger(TestUtils.class);
 
+    public static void assertTrueEventually(AssertTask task, long timeoutSeconds) {
+        AssertionError error = null;
+
+        //we are going to check 5 times a second.
+        long iterations = timeoutSeconds * 5;
+        int sleepMillis = 200;
+        for (int k = 0; k < iterations; k++) {
+            try {
+                try {
+                    task.run();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                return;
+            } catch (AssertionError e) {
+                error = e;
+            }
+            sleepMillis(sleepMillis);
+        }
+
+        throw error;
+    }
+
+
+    public static void sleepMillis(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+        }
+    }
+
+
     /**
      * Sleeps a random amount of time.
      *
@@ -58,7 +90,7 @@ public class TestUtils {
      * @param maxDelayNanos the maximum sleeping period in nano seconds. If maxDelayNanos equals or smaller than zero,
      *                      the call is ignored.
      */
-    public static void sleepRandom(Random random, long maxDelayNanos) {
+    public static void sleepRandomNanos(Random random, long maxDelayNanos) {
         if (maxDelayNanos <= 0) {
             return;
         }

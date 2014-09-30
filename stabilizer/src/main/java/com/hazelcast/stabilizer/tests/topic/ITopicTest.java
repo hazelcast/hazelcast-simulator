@@ -14,13 +14,16 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.utils.AssertTask;
+import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepRandom;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepRandomNanos;
 import static org.junit.Assert.assertEquals;
 
 
@@ -40,8 +43,8 @@ public class ITopicTest {
     public int logFrequency = 100000;
     public int performanceUpdateFrequency = 100000;
     public int maxProcessingDelayNanos = 0;
-    public int maxPublicationDelayNanos = 0;
-    public boolean waitForMessagesToComplete = true;
+    public int maxPublicationDelayNanos = 1000;
+    public int maxVerificationTimeSeconds = 60;
     public String basename = "topic";
 
     private final static ILogger log = Logger.getLogger(ITopicTest.class);
@@ -49,25 +52,27 @@ public class ITopicTest {
     private IAtomicLong totalFoundCounter;
     private ITopic[] topics;
     private AtomicLong operations = new AtomicLong();
-    private CountDownLatch listenersCompleteLatch;
     private TestContext testContext;
+    private HazelcastInstance hz;
+    private List<TopicListener> listeners;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+        hz = testContext.getTargetInstance();
 
-        totalExpectedCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalExpectedCounter");
-        totalFoundCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalFoundCounter");
+        totalExpectedCounter = hz.getAtomicLong(testContext.getTestId() + ":TotalExpectedCounter");
+        totalFoundCounter = hz.getAtomicLong(testContext.getTestId() + ":TotalFoundCounter");
         topics = new ITopic[topicCount];
-        listenersCompleteLatch = new CountDownLatch(listenersPerTopic * topicCount);
-
+        listeners = new LinkedList<TopicListener>();
         for (int k = 0; k < topics.length; k++) {
-            ITopic<Long> topic = targetInstance.getTopic(basename + "-" + testContext.getTestId() + "-" + k);
+            ITopic<Long> topic = hz.getTopic(basename + "-" + testContext.getTestId() + "-" + k);
             topics[k] = topic;
 
             for (int l = 0; l < listenersPerTopic; l++) {
-                new TopicListener(topic);
+                TopicListener topicListener = new TopicListener();
+                topic.addMessageListener(topicListener);
+                listeners.add(topicListener);
             }
         }
     }
@@ -83,9 +88,22 @@ public class ITopicTest {
 
     @Verify(global = true)
     public void verify() {
-        long expectedCount = totalExpectedCounter.get();
-        long foundCount = totalFoundCounter.get();
-        assertEquals(expectedCount, foundCount);
+        if (maxVerificationTimeSeconds < 0) {
+            return;
+        }
+
+        final long expectedCount = totalExpectedCounter.get();
+
+        TestUtils.assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                long actualCount = 0;
+                for (TopicListener topicListener : listeners) {
+                    actualCount += topicListener.count;
+                }
+                assertEquals("published messages don't match received messages", expectedCount, actualCount);
+            }
+        }, maxVerificationTimeSeconds);
     }
 
     @Teardown
@@ -102,44 +120,6 @@ public class ITopicTest {
         return operations.get();
     }
 
-
-    private class TopicListener implements MessageListener<Long> {
-        private final ITopic topic;
-        private final String registrationId;
-        private long count;
-        private boolean completed = false;
-        private final Random random = new Random();
-
-        private TopicListener(ITopic topic) {
-            this.topic = topic;
-            registrationId = topic.addMessageListener(this);
-        }
-
-        @Override
-        public void onMessage(Message<Long> message) {
-            long payload = message.getMessageObject();
-
-            sleepRandom(random, maxProcessingDelayNanos);
-
-            if (isStopped(payload)) {
-                totalFoundCounter.addAndGet(count);
-                count = 0;
-
-                if (!completed) {
-                    completed = true;
-                    listenersCompleteLatch.countDown();
-                }
-                topic.removeMessageListener(registrationId);
-            } else {
-                count += message.getMessageObject();
-            }
-        }
-
-        private boolean isStopped(long payload) {
-            return (!waitForMessagesToComplete && testContext.isStopped()) || payload < 0;
-        }
-    }
-
     private class Worker implements Runnable {
         private final Random random = new Random();
 
@@ -148,7 +128,7 @@ public class ITopicTest {
             long iteration = 0;
             long count = 0;
             while (!testContext.isStopped()) {
-                sleepRandom(random, maxPublicationDelayNanos);
+                sleepRandomNanos(random, maxPublicationDelayNanos);
 
                 ITopic topic = getRandomTopic();
 
@@ -164,10 +144,6 @@ public class ITopicTest {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
                 iteration++;
-            }
-
-            for (ITopic topic : topics) {
-                topic.publish(-1l);
             }
 
             totalExpectedCounter.addAndGet(count);
@@ -187,8 +163,21 @@ public class ITopicTest {
         }
     }
 
+    private class TopicListener implements MessageListener<Long> {
+        private final Random random = new Random();
+        private volatile long count;
+
+
+        @Override
+        public void onMessage(Message<Long> message) {
+            sleepRandomNanos(random, maxProcessingDelayNanos);
+            count += message.getMessageObject();
+        }
+    }
+
     public static void main(String[] args) throws Throwable {
         ITopicTest test = new ITopicTest();
-        new TestRunner(test).run();
+        new TestRunner(test).withDuration(10).run();
+        System.exit(0);
     }
 }
