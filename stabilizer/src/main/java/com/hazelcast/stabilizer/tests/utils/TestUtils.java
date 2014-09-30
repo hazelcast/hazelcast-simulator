@@ -43,6 +43,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import static java.lang.String.format;
 
@@ -50,6 +51,16 @@ public class TestUtils {
 
     public static final String TEST_INSTANCE = "testInstance";
     private final static ILogger log = Logger.getLogger(TestUtils.class);
+
+    public static void sleepRandom(Random random, long maxDelayNanos){
+        if(maxDelayNanos == 0){
+            return;
+        }
+
+        long delayNanos = random.nextLong() % maxDelayNanos;
+        LockSupport.parkNanos(delayNanos);
+    }
+
 
     public static byte[] randomByteArray(Random random, int length) {
         byte[] result = new byte[length];
