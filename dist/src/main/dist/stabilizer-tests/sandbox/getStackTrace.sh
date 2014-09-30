@@ -1,7 +1,7 @@
 #!/bin/sh
 
-everySeconds=10
-max=12
+max=1
+everySeconds=1
 
 ips=$(cat agents.txt | cut -d',' -f1)
 
@@ -14,14 +14,20 @@ do
 
     for box in $ips
     do
-        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${box} "rm -f jstackTrack.txt; jps | grep .*Worker | cut -d ' ' -f1 | xargs -L 1  jstack $1 >> jstackTrack.txt"
-        scp stabilizer@${box}:jstackTrack.txt ${box}temp
+        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${box} "rm -f serverStackTrace.txt; jps | grep Member.* | cut -d ' ' -f1 | xargs -L 1  jstack $1 >> serverStackTrace.txt"
+        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${box} "rm -f clientStackTrace.txt; jps | grep Client.* | cut -d ' ' -f1 | xargs -L 1  jstack $1 >> clientStackTrace.txt"
+
+        scp stabilizer@${box}:serverStackTrace.txt ${box}serverStackTrace.txt
+        scp stabilizer@${box}:clientStackTrace.txt ${box}clientStackTrace.txt
     done
 
     for box in $ips
     do
-        cat ${box}temp >> jstackTrack${i}.txt
-        rm -f ${box}temp
+        cat ${box}serverStackTrace.txt >> serverStackTrace${i}.txt
+        cat ${box}clientStackTrace.txt >> clientStackTrace${i}.txt
+
+        rm -f ${box}serverStackTrace.txt
+        rm -f ${box}clientStackTrace.txt
     done
 
     sleep ${everySeconds}
@@ -29,4 +35,3 @@ do
 done
 
 echo "The End"
-
