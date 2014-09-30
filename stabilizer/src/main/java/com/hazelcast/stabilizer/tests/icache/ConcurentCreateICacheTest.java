@@ -37,6 +37,9 @@ import java.io.Serializable;
 
 import static junit.framework.Assert.assertEquals;
 
+/**
+ * In This tests we concurrently call createCache, from multi clients/members we expect no exceptions
+ */
 public class ConcurentCreateICacheTest {
 
     private final static ILogger log = Logger.getLogger(ConcurentCreateICacheTest.class);

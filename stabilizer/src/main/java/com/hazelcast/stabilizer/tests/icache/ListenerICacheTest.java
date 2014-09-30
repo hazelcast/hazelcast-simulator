@@ -35,6 +35,11 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepMs;
 import static junit.framework.Assert.assertEquals;
 
+/*
+* In this test was adding listeners to a cache, and recording the number of events the listeners recive
+* and compare that to the number of events we should have generated using put / get operations ect
+* we Verify that no unexpected events have been received
+* */
 public class ListenerICacheTest {
 
     private final static ILogger log = Logger.getLogger(ListenerICacheTest.class);

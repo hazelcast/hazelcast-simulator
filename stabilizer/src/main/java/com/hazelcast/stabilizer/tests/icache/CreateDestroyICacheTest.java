@@ -37,6 +37,12 @@ import javax.cache.CacheException;
 import java.io.Serializable;
 import java.util.Random;
 
+
+
+/**
+ * In This tests we concurrently creating deleting destroying and putting to a cache.
+ * However this test is a sub set of MangleIcacheTest ? so could be deleted
+ */
 public class CreateDestroyICacheTest {
 
     private final static ILogger log = Logger.getLogger(CreateDestroyICacheTest.class);
