@@ -8,20 +8,23 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable {
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.sleepMs;
 
+public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable {
 
     public ConcurrentHashMap<K, K> loaded = new ConcurrentHashMap<K, K>();
     public AtomicInteger loadCount = new AtomicInteger(0);
-    public String uuid = UUID.randomUUID().toString();
 
-    public boolean load=false;
+    public int loadDelayMs=0;
+    public int loadAllDelayMs=0;
 
     @Override
     public K load(final K key) {
 
+        if(loadDelayMs>0){
+            sleepMs(loadDelayMs);
+        }
 
-        System.err.println("uuid: " + uuid);
         if (key == null) {
             throw new NullPointerException("load Null key!");
         }
@@ -33,10 +36,12 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
 
     @Override
     public Map<K, K> loadAll(Iterable<? extends K> keys) {
-        Map<K, K> map = new HashMap<K, K>();
-        if(!load){
-            return map;
+
+        if(loadAllDelayMs>0){
+            sleepMs(loadAllDelayMs);
         }
+
+        Map<K, K> map = new HashMap<K, K>();
         for (K key : keys) {
             load(key);
             map.put(key, key);
@@ -53,8 +58,6 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
         return "RecordingCacheLoader{" +
                 "loaded=" + loaded +
                 ", loadCount=" + loadCount +
-                ", uuid=" + uuid +
-                ", loadBoole=" + load +
                 '}';
     }
 }

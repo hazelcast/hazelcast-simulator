@@ -29,6 +29,7 @@ import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
+import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.icache.helpers.RecordingCacheLoader;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
@@ -43,13 +44,22 @@ import java.util.Set;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertFalse;
 
-
+/**
+ * This tests concurrent load all calls to CacheLoader.
+ * we can configure a delay in the loadAll method of the CacheLoader
+ * we can configure to wait for loadAll completion boolean
+ * a large delay and high concurrent calls to loadAll could overflow some internal queues
+ * if waitForLoadAllFutureComplition is false, again we could overflow some internal queues
+ * we Verify that the cache contains all keys,  and that the keys have been loaded through a loader instance
+ * */
 public class CacheLoaderTest {
 
     private final static ILogger log = Logger.getLogger(CacheLoaderTest.class);
 
     public int threadCount = 3;
     public int keyCount = 10;
+    public int loadAllDelayMs = 0;
+    public boolean waitForLoadAllFutureComplition = true;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -76,14 +86,20 @@ public class CacheLoaderTest {
 
         config = new CacheConfig();
         config.setName(basename);
-        config.setTypes(Object.class, Object.class);
         config.setReadThrough(true);
-        config.setCacheLoaderFactory(FactoryBuilder.factoryOf( new RecordingCacheLoader() ));
+
+        RecordingCacheLoader recordingCacheLoader = new RecordingCacheLoader();
+        recordingCacheLoader.loadAllDelayMs = loadAllDelayMs;
+
+        config.setCacheLoaderFactory(FactoryBuilder.factoryOf( recordingCacheLoader ));
 
         cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
         config = cache.getConfiguration(CacheConfig.class);
+    }
 
+    @Warmup(global = false)
+    public void warmup(){
         for(int i=0; i< keyCount; i++){
             keySet.add(i);
         }
@@ -99,18 +115,18 @@ public class CacheLoaderTest {
     }
 
     private class Worker implements Runnable {
-
-        @Override
         public void run() {
             while (!testContext.isStopped()) {
 
                 CompletionListenerFuture loaded = new CompletionListenerFuture();
                 cache.loadAll(keySet, true, loaded);
 
-                try {
-                    loaded.get();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                if ( waitForLoadAllFutureComplition ) {
+                    try {
+                        loaded.get();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
             RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
