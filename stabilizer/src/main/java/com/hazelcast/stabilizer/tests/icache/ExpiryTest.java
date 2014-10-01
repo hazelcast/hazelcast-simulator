@@ -84,7 +84,6 @@ public class ExpiryTest {
         expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
 
         config.setName(basename);
-        config.setTypes(Integer.class, Long.class);
     }
 
     @Warmup(global = true)
@@ -104,7 +103,7 @@ public class ExpiryTest {
     private class Worker implements Runnable {
         private Random random = new Random();
         private Counter counter = new Counter();
-        private ICache<Integer, Long> cache = cacheManager.getCache(basename, config.getKeyType(), config.getValueType());
+        private ICache<Integer, Long> cache = cacheManager.getCache(basename);
 
         public void run() {
             while (!testContext.isStopped()) {

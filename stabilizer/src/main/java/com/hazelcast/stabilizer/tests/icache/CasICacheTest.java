@@ -75,7 +75,6 @@ public class CasICacheTest {
 
         CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
         config.setName(basename);
-        config.setTypes(Integer.class, Long.class);
 
         try {
             cacheManager.createCache(basename, config);
