@@ -109,7 +109,7 @@ public class EntryProcessorICacheTest {
                 int increment = random.nextInt(maxIncrement);
                 int delayMs=0;
                 if(maxProcessorDelayMs > 0){
-                    delayMs = random.nextInt(maxProcessorDelayMs) + minProcessorDelayMs;
+                    delayMs = random.nextInt(maxProcessorDelayMs - minProcessorDelayMs) + minProcessorDelayMs;
                 }
 
                 cache.invoke(key, new IncrementEntryProcessor(increment, delayMs));

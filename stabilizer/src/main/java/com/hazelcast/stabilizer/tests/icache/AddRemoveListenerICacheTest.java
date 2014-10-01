@@ -23,7 +23,6 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import javax.cache.Cache;
 import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
-import javax.cache.configuration.MutableConfiguration;
 import java.io.Serializable;
 import java.util.Random;
 
@@ -67,8 +66,7 @@ public class AddRemoveListenerICacheTest {
         }
 
         config.setName(basename);
-        MutableConfiguration a;
-        
+
         cacheManager.createCache(basename, config);
     }
 
