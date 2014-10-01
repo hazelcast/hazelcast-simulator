@@ -431,12 +431,10 @@ public class TestUtils {
     }
 
     public static void sleepMs(long delayMs) {
-        if (delayMs < 0) {
-            return;
-        }
-        try {
-            Thread.sleep(delayMs);
-        } catch (InterruptedException e) {
+        if (delayMs > 0) {
+            try {
+                Thread.sleep(delayMs);
+            } catch (InterruptedException e) { }
         }
     }
 
