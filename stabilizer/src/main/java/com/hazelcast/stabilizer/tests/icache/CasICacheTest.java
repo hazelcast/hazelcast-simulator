@@ -81,7 +81,7 @@ public class CasICacheTest {
         } catch (CacheException e) {
             log.severe(basename + ": createCache "+e);
         }
-        cache = cacheManager.getCache(basename, Integer.class, Long.class);
+        cache = cacheManager.getCache(basename);
     }
 
     @Teardown

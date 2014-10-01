@@ -79,7 +79,7 @@ public class EntryProcessorICacheTest {
             log.severe(hack);
         }
 
-        cache = cacheManager.getCache(basename, Integer.class, Long.class);
+        cache = cacheManager.getCache(basename);
         resultsPerWorker = targetInstance.getList(basename + "ResultMap" + testContext.getTestId());
     }
 

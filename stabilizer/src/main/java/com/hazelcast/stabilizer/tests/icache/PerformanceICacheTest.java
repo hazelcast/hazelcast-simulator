@@ -80,7 +80,7 @@ public class PerformanceICacheTest {
             //temp hack to deal with multiple nodes wanting to make the same cache.
             log.severe(hack);
         }
-        cache = cacheManager.getCache(basename, Integer.class, Integer.class);
+        cache = cacheManager.getCache(basename);
     }
 
     @Teardown
