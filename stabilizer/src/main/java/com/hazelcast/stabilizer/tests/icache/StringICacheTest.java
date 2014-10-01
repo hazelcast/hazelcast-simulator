@@ -32,7 +32,6 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
-import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
@@ -44,7 +43,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.generateKeys;
 import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.generateStrings;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.waitClusterSize;
-import static com.hazelcast.stabilizer.tests.utils.TestUtils.warmupPartitions;
 
 public class StringICacheTest {
 
@@ -98,7 +96,6 @@ public class StringICacheTest {
 
         CacheConfig<String, String> config = new CacheConfig<String, String>();
         config.setName(basename);
-        config.setTypes(String.class, String.class);
 
         try {
             cacheManager.createCache(basename, config);

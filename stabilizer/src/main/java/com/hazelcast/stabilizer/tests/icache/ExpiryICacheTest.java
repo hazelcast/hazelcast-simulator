@@ -79,7 +79,6 @@ public class ExpiryICacheTest {
 
         CacheConfig<Long, Long> config = new CacheConfig<Long, Long>();
         config.setName(basename);
-        config.setTypes(Long.class, Long.class);
 
         try {
             cacheManager.createCache(basename, config);

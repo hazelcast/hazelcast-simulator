@@ -30,7 +30,6 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
-import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import javax.cache.CacheException;
 import java.io.Serializable;
@@ -65,7 +64,6 @@ public class ConcurentCreateICacheTest {
         final CacheConfig config = new CacheConfig();
 
         config.setName(baseName);
-        config.setTypes(Object.class, Object.class);
 
         try {
             cacheManager.createCache(baseName, config);

@@ -89,7 +89,7 @@ public class ListenerICacheTest {
 
     @Warmup(global = false)
     public void warmup() {
-        cache = cacheManager.getCache(basename, config.getKeyType(), config.getValueType());
+        cache = cacheManager.getCache(basename);
 
         listener = new MyCacheEntryListener<Integer, Long>();
         filter = new MyCacheEntryEventFilter<Integer, Long>();

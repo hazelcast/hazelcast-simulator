@@ -33,7 +33,6 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
-import javax.cache.CacheException;
 import java.io.Serializable;
 import java.util.Random;
 
@@ -85,7 +84,6 @@ public class CreateDestroyICacheTest {
 
         public void run() {
             config.setName(basename);
-            config.setTypes(Object.class, Object.class);
 
             while (!testContext.isStopped()) {
                 double chance = random.nextDouble();

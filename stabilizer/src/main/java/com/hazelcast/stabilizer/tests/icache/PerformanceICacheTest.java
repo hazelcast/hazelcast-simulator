@@ -73,7 +73,6 @@ public class PerformanceICacheTest {
 
         CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
         config.setName(basename);
-        config.setTypes(Integer.class, Integer.class);
 
         try {
             cacheManager.createCache(basename, config);
