@@ -19,6 +19,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+/*
+* in this test we are using lock to controle the access to an Ilist of accounts
+* we are using tryLock with a configurable time out: tryLockTimeOutMs
+* we verify that the total value of accounts is the same at the end of the test
+* */
 public class TryLockTimeOutTest {
 
     private final static ILogger log = Logger.getLogger(TryLockTimeOutTest.class);
