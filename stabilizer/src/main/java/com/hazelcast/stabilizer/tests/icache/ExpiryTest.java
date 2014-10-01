@@ -147,7 +147,7 @@ public class ExpiryTest {
         }
         log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
-        final ICache<Integer, Long> cache = cacheManager.getCache(basename, Integer.class, Long.class);
+        final ICache<Integer, Long> cache = cacheManager.getCache(basename);
 
         for(int i=0; i<keyCount; i++){
             assertFalse(basename + ": cache should not contain any keys ", cache.containsKey(i) );
