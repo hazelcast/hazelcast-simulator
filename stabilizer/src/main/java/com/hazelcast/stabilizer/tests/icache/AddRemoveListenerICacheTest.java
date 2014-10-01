@@ -66,6 +66,7 @@ public class AddRemoveListenerICacheTest {
         }
 
         config.setName(basename);
+
         cacheManager.createCache(basename, config);
     }
 
