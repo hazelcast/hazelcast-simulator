@@ -35,16 +35,3 @@ do
 done
 
 echo "The End"
-
-
-
-ips=$(cat agents.txt | cut -d',' -f1)
-
-#Set the field separator to new line
-IFS=$'\n'
-
-
-for box in $ips
-do
-ssh -o StrictHostKeyChecking=no stabilizer@${box} "grep $1 ~/hazelcast-stabilizer-0.4-SNAPSHOT/workers/ -R"
-done
