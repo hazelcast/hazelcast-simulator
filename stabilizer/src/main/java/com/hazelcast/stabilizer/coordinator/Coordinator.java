@@ -382,6 +382,7 @@ public class Coordinator {
 
                     bash.execute(syncCommand);
                 }
+                log.info("    " + ip + " copied");
             }
 
             log.info(format("Finished copying workerClasspath '%s' to agents", workerClassPath));
