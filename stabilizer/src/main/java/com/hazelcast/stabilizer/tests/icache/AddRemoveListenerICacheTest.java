@@ -26,7 +26,10 @@ import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
 import java.io.Serializable;
 import java.util.Random;
 
-
+/**
+ * In This test we concurrently add remove cache listeners while putting and getting from the cache
+ * this test is out side of normal usage, however has found problems where put operations hang
+ * **/
 public class AddRemoveListenerICacheTest {
 
     private final static ILogger log = Logger.getLogger(AddRemoveListenerICacheTest.class);
@@ -38,6 +41,7 @@ public class AddRemoveListenerICacheTest {
     public double register=0;
     public double deregister=0;
     public double put=0;
+    public double get=0;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -115,6 +119,10 @@ public class AddRemoveListenerICacheTest {
                     cache.put(random.nextInt(keyCount), 1l);
                     counter.put++;
                 }
+                else if((chance -= get) < 0){
+                    cache.get(random.nextInt(keyCount));
+                    counter.put++;
+                }
             }
             log.info(basename + ": "+counter);
             targetInstance.getList(basename).add(counter);
@@ -134,6 +142,7 @@ public class AddRemoveListenerICacheTest {
 
     private static class Counter implements Serializable {
         public long put;
+        public long get;
         public long register;
         public long registerIllegalArgException;
         public long deregister;
@@ -141,6 +150,7 @@ public class AddRemoveListenerICacheTest {
 
         public void add(Counter c) {
             put += c.put;
+            get += c.get;
             register += c.register;
             registerIllegalArgException += c.registerIllegalArgException;
             deregister += c.deregister;
@@ -149,6 +159,7 @@ public class AddRemoveListenerICacheTest {
         public String toString() {
             return "Counter{" +
                     "put=" + put +
+                    ", get=" + get +
                     ", register=" + register +
                     ", registerIllegalArgException=" + registerIllegalArgException +
                     ", deregister=" + deregister +

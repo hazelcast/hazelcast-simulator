@@ -45,6 +45,11 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+/**
+ * In This tests we a putting and getting to/from a cache using an Expiry Policy
+ * the expiryDuration can be configured
+ * we Verify that the cache is empty and items have expired
+ * */
 public class ExpiryTest {
 
     private final static ILogger log = Logger.getLogger(ExpiryTest.class);
