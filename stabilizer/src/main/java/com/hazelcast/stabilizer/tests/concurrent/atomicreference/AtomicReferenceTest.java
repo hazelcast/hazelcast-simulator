@@ -26,6 +26,7 @@ import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
@@ -34,9 +35,7 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.generateString;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.randomByteArray;
-import static com.hazelcast.stabilizer.tests.utils.TestUtils.warmupPartitions;
 
 public class AtomicReferenceTest {
 
@@ -78,7 +77,7 @@ public class AtomicReferenceTest {
         Random random = new Random();
         for (int k = 0; k < valueCount; k++) {
             if (useStringValue) {
-                values[k] = generateString(valueLength);
+                values[k] = StringUtils.generateString(valueLength);
             } else {
                 values[k] = randomByteArray(random, valueLength);
             }
@@ -86,7 +85,7 @@ public class AtomicReferenceTest {
 
         counters = new IAtomicReference[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            String key = StringUtils.generateKey(8, keyLocality, targetInstance);
+            String key = KeyUtils.generateStringKey(8, keyLocality, targetInstance);
             IAtomicReference atomicReference = targetInstance.getAtomicReference(key);
             atomicReference.set(values[random.nextInt(values.length)]);
             counters[k] = atomicReference;

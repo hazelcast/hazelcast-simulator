@@ -29,6 +29,7 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
@@ -97,8 +98,8 @@ public class StringMapTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
-        keys = StringUtils.generateKeys(keyCount, keyLength,keyLocality,testContext.getTargetInstance());
-        values = StringUtils.generateStrings(valueCount,valueLength);
+        keys = KeyUtils.generateKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
+        values = StringUtils.generateStrings(valueCount, valueLength);
 
         Random random = new Random();
         for (int k = 0; k < keys.length; k++) {

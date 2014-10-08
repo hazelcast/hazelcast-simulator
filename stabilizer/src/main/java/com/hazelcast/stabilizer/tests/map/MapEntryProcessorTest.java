@@ -6,6 +6,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.map.AbstractEntryProcessor;
+import com.hazelcast.stabilizer.common.probes.IntervalProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
@@ -13,6 +14,8 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
+import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.HashMap;
@@ -32,11 +35,14 @@ public class MapEntryProcessorTest {
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
     public int maxProcessorDelayMs = 0;
+    public KeyLocality keyLocality = KeyLocality.Random;
 
     private IMap<Integer, Long> map;
     private IList<Map<Integer, Long>> resultsPerWorker;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+
+    private IntervalProbe latency;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -113,7 +119,9 @@ public class MapEntryProcessorTest {
                 long increment = calculateIncrement();
                 int delayMs = calculateDelay();
                 int key = calculateKey();
+                latency.started();
                 map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
+                latency.done();
                 incrementLocalStats(key, increment);
             }
 
@@ -123,7 +131,7 @@ public class MapEntryProcessorTest {
         }
 
         private int calculateKey() {
-            return random.nextInt(keyCount);
+            return KeyUtils.generateInt(keyCount, keyLocality, targetInstance);
         }
 
         private int calculateIncrement() {
