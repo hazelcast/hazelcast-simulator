@@ -40,6 +40,12 @@ public class MapEntryProcessorTest {
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
+        if (minProcessorDelayMs > maxProcessorDelayMs) {
+            throw new IllegalArgumentException("minProcessorDelayMs has to be >= maxProcessorDelayMs. " +
+                    "Current settings: minProcessorDelayMs = "+minProcessorDelayMs +
+                    " maxProcessorDelayMs = "+maxProcessorDelayMs);
+        }
+
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
@@ -103,18 +109,12 @@ public class MapEntryProcessorTest {
 
         @Override
         public void run() {
-
             while (!testContext.isStopped()) {
-                int key = random.nextInt(keyCount);
-                long increment = random.nextInt(100);
-
-                int delayMs = 0;
-                if (maxProcessorDelayMs != 0) {
-                    delayMs = minProcessorDelayMs + random.nextInt(maxProcessorDelayMs);
-                }
-
+                long increment = calculateIncrement();
+                int delayMs = calculateDelay();
+                int key = calculateKey();
                 map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
-                increment(key, increment);
+                incrementLocalStats(key, increment);
             }
 
             //sleep to give time for the last EntryProcessor tasks to complete.
@@ -122,7 +122,23 @@ public class MapEntryProcessorTest {
             resultsPerWorker.add(result);
         }
 
-        private void increment(int key, long increment) {
+        private int calculateKey() {
+            return random.nextInt(keyCount);
+        }
+
+        private int calculateIncrement() {
+            return random.nextInt(100);
+        }
+
+        private int calculateDelay() {
+            int delayMs = 0;
+            if (maxProcessorDelayMs != 0) {
+                delayMs = minProcessorDelayMs + random.nextInt(maxProcessorDelayMs - minProcessorDelayMs + 1);
+            }
+            return delayMs;
+        }
+
+        private void incrementLocalStats(int key, long increment) {
             result.put(key, result.get(key) + increment);
         }
     }
