@@ -36,6 +36,7 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import javax.cache.Cache;
 import javax.cache.configuration.FactoryBuilder;
+import javax.cache.configuration.MutableConfiguration;
 import javax.cache.integration.CompletionListenerFuture;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -66,7 +67,7 @@ public class CacheLoaderTest {
     private HazelcastCacheManager cacheManager;
     private String basename;
 
-    private CacheConfig config;
+    private MutableConfiguration config;
     private Cache<Object,Object> cache;
     private Set keySet = new HashSet();
 
@@ -84,8 +85,7 @@ public class CacheLoaderTest {
             cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         }
 
-        config = new CacheConfig();
-        config.setName(basename);
+        config = new MutableConfiguration();
         config.setReadThrough(true);
 
         RecordingCacheLoader recordingCacheLoader = new RecordingCacheLoader();
@@ -95,7 +95,6 @@ public class CacheLoaderTest {
 
         cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
-        config = cache.getConfiguration(CacheConfig.class);
     }
 
     @Warmup(global = false)

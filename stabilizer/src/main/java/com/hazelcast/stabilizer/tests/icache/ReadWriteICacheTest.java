@@ -36,6 +36,7 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import javax.cache.Cache;
 import javax.cache.configuration.FactoryBuilder;
+import javax.cache.configuration.MutableConfiguration;
 import java.io.Serializable;
 import java.util.Random;
 
@@ -68,7 +69,7 @@ public class ReadWriteICacheTest {
     private HazelcastCacheManager cacheManager;
     private String basename;
 
-    private CacheConfig config;
+    private MutableConfiguration config;
     private Cache<Object,Object> cache;
 
     @Setup
@@ -85,8 +86,7 @@ public class ReadWriteICacheTest {
             cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         }
 
-        config = new CacheConfig();
-        config.setName(basename);
+        config = new MutableConfiguration();
         config.setReadThrough(true);
         config.setWriteThrough(true);
 
@@ -102,7 +102,6 @@ public class ReadWriteICacheTest {
 
         cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
-        config = cache.getConfiguration(CacheConfig.class);
     }
 
     @Run
