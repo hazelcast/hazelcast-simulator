@@ -6,6 +6,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.map.AbstractEntryProcessor;
+import com.hazelcast.stabilizer.common.probes.IntervalProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
@@ -37,6 +38,8 @@ public class MapEntryProcessorTest {
     private IList<Map<Integer, Long>> resultsPerWorker;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+
+    private IntervalProbe latency;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -113,7 +116,9 @@ public class MapEntryProcessorTest {
                 long increment = calculateIncrement();
                 int delayMs = calculateDelay();
                 int key = calculateKey();
+                latency.started();
                 map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
+                latency.done();
                 incrementLocalStats(key, increment);
             }
 
