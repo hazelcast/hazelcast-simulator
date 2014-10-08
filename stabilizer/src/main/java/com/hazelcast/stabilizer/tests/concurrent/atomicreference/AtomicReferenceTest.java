@@ -35,7 +35,6 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.tests.map.helpers.KeyUtils.generateKey;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.randomByteArray;
 
 public class AtomicReferenceTest {
@@ -86,7 +85,7 @@ public class AtomicReferenceTest {
 
         counters = new IAtomicReference[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            String key = generateKey(8, keyLocality, targetInstance);
+            String key = KeyUtils.generateStringKey(8, keyLocality, targetInstance);
             IAtomicReference atomicReference = targetInstance.getAtomicReference(key);
             atomicReference.set(values[random.nextInt(values.length)]);
             counters[k] = atomicReference;

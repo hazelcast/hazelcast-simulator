@@ -14,14 +14,22 @@ import static com.hazelcast.stabilizer.tests.utils.TestUtils.isClient;
 
 public class KeyUtils {
 
-    public static String generateKey(int keyLength, KeyLocality keyLocality, HazelcastInstance instance) {
+    public static int generateInt(int max, KeyLocality keyLocality, HazelcastInstance instance) {
+        return generateKey(keyLocality, instance, new IntGenerator(max));
+    }
+
+    public static String generateStringKey(int keyLength, KeyLocality keyLocality, HazelcastInstance instance) {
+        return generateKey(keyLocality, instance, new StringGenerator(keyLength));
+    }
+
+    public static <T> T generateKey(KeyLocality keyLocality, HazelcastInstance instance, Generator<T> generator) {
         switch (keyLocality) {
             case Local:
-                return generateLocalKey(keyLength, instance);
+                return generateLocalKey(generator, instance);
             case Remote:
-                return generateRemoteKey(keyLength, instance);
+                return generateRemoteKey(generator, instance);
             case Random:
-                return StringUtils.generateString(keyLength);
+                return generator.newKey();
             default:
                 throw new IllegalArgumentException("Unrecognized keyLocality:" + keyLocality);
         }
@@ -41,7 +49,7 @@ public class KeyUtils {
     public static String[] generateKeys(int keyCount, int keyLength, KeyLocality keyLocality, HazelcastInstance instance){
         String[] keys = new String[keyCount];
         for (int k = 0; k < keys.length; k++) {
-            keys[k] = KeyUtils.generateKey(keyLength, keyLocality, instance);
+            keys[k] = KeyUtils.generateStringKey(keyLength, keyLocality, instance);
         }
         return keys;
     }
@@ -51,17 +59,17 @@ public class KeyUtils {
      * Generates a key that is going to be stored on the remote instance. It can safely be called with a client instance, resulting
      * in a random key being returned.
      *
-     * @param keyLength the length of the key
+     * @param generator
      * @param instance
      * @return
      */
-    public static String generateRemoteKey(int keyLength, HazelcastInstance instance) {
+    private static <T> T generateRemoteKey(Generator<T> generator, HazelcastInstance instance) {
         if (isClient(instance)) {
-            return StringUtils.generateString(keyLength);
+            return generator.newKey();
         }
 
         for (; ; ) {
-            String key = StringUtils.generateString(keyLength);
+            T key = generator.newKey();
             if (!isLocalKey(instance, key)) {
                 return key;
             }
@@ -73,17 +81,17 @@ public class KeyUtils {
      * Generates a key that is local to the given instance. It can safely be called with a client instance, resulting in
      * a random key being returned.
      *
-     * @param keyLength
+     * @param generator
      * @param instance
      * @return
      */
-    public static String generateLocalKey(int keyLength, HazelcastInstance instance) {
+    private static <T> T generateLocalKey(Generator<T> generator, HazelcastInstance instance) {
         if (isClient(instance)) {
-            return StringUtils.generateString(keyLength);
+            return generator.newKey();
         }
 
         for (; ; ) {
-            String key = StringUtils.generateString(keyLength);
+            T key = generator.newKey();
             if (isLocalKey(instance, key)) {
                 return key;
             }
@@ -100,6 +108,36 @@ public class KeyUtils {
                 continue;
             }
             return owner.equals(instance.getLocalEndpoint());
+        }
+    }
+
+    private interface Generator<K> {
+        K newKey();
+    }
+
+    private static class StringGenerator implements Generator<String> {
+        private int length;
+        private StringGenerator(int length) {
+            this.length = length;
+        }
+
+        @Override
+        public String newKey() {
+            return StringUtils.generateString(length);
+        }
+    }
+
+    private static class IntGenerator implements Generator<Integer> {
+        private static Random random = new Random();
+        private int n;
+
+        private IntGenerator(int n) {
+            this.n = n;
+        }
+
+        @Override
+        public Integer newKey() {
+            return random.nextInt(n);
         }
     }
 }

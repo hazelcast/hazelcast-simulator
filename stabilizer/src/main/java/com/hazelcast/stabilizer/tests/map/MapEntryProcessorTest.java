@@ -14,6 +14,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -130,7 +131,7 @@ public class MapEntryProcessorTest {
         }
 
         private int calculateKey() {
-            return random.nextInt(keyCount);
+            return KeyUtils.generateInt(keyCount, keyLocality, targetInstance);
         }
 
         private int calculateIncrement() {
