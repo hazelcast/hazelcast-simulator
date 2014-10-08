@@ -56,26 +56,21 @@ public class StringMapTest {
     public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
 
+    //probes
+    public IntervalProbe getLatency;
+    public IntervalProbe putLatency;
+    public SimpleProbe throughput;
+
     private IMap<String, String> map;
     private String[] keys;
     private String[] values;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
+
     private HazelcastInstance targetInstance;
 
-    private IntervalProbe getLatency;
-    private IntervalProbe putLatency;
-    private SimpleProbe throughput;
-
     @Setup
-    public void setup(TestContext testContext,
-                      @Name("getLatency") IntervalProbe getLatency,
-                      @Name("putLatency") IntervalProbe putLatency,
-                      @Name("throughput") SimpleProbe throughput) throws Exception {
-        this.getLatency = getLatency;
-        this.putLatency = putLatency;
-        this.throughput = throughput;
-
+    public void setup(TestContext testContext) throws Exception {
         if (writePercentage < 0) {
             throw new IllegalArgumentException("Write percentage can't be smaller than 0");
         }
