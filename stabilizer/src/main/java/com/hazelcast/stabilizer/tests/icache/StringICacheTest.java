@@ -32,6 +32,7 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
@@ -40,8 +41,7 @@ import javax.cache.CacheException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.generateKeys;
-import static com.hazelcast.stabilizer.tests.map.helpers.StringUtils.generateStrings;
+import static com.hazelcast.stabilizer.tests.map.helpers.KeyUtils.generateKeys;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.waitClusterSize;
 
 public class StringICacheTest {
@@ -116,7 +116,7 @@ public class StringICacheTest {
         waitClusterSize(log, targetInstance, minNumberOfMembers);
 
         keys = generateKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
-        values = generateStrings(valueCount, valueLength);
+        values = StringUtils.generateStrings(valueCount, valueLength);
 
         Random random = new Random();
 

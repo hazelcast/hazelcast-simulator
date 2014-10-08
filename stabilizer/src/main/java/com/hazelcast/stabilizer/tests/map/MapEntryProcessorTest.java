@@ -14,6 +14,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.HashMap;
@@ -33,6 +34,7 @@ public class MapEntryProcessorTest {
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
     public int maxProcessorDelayMs = 0;
+    public KeyLocality keyLocality = KeyLocality.Random;
 
     private IMap<Integer, Long> map;
     private IList<Map<Integer, Long>> resultsPerWorker;
