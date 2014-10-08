@@ -26,7 +26,8 @@ public class Chart extends JPanel {
     public static final float ALPHA = 0.65f;
 
     private final ChartPanel chartPanel;
-    private final JSlider horizontalSlider;
+    private final JSlider mainHorizontalSlider;
+    private final JSlider fineHorizontalSlider;
     private final JSlider verticalSlider;
     private final XYPlot plot;
 
@@ -40,14 +41,21 @@ public class Chart extends JPanel {
 
         setLayout(new BorderLayout());
 
-        horizontalSlider = new JSlider();
+        mainHorizontalSlider = new JSlider();
+        fineHorizontalSlider = new JSlider();
         verticalSlider = new JSlider();
         chartPanel = new ChartPanel(null);
 
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         verticalSlider.setOrientation(JSlider.VERTICAL);
         add(chartPanel, BorderLayout.CENTER);
-        add(horizontalSlider, BorderLayout.SOUTH);
+
+        JPanel horizontalSlidersPanel = new JPanel();
+        horizontalSlidersPanel.setLayout(new BoxLayout(horizontalSlidersPanel, BoxLayout.Y_AXIS));
+        horizontalSlidersPanel.add(mainHorizontalSlider);
+        horizontalSlidersPanel.add(fineHorizontalSlider);
+
+        add(horizontalSlidersPanel, BorderLayout.SOUTH);
         add(verticalSlider, BorderLayout.EAST);
 
 
@@ -57,10 +65,21 @@ public class Chart extends JPanel {
         plot.setForegroundAlpha(ALPHA);
         chartPanel.setChart(chart);
 
-        horizontalSlider.addChangeListener(new ChangeListener() {
+        mainHorizontalSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                plot.getDomainAxis().setUpperBound(horizontalSlider.getValue());
+                int value = mainHorizontalSlider.getValue();
+                plot.getDomainAxis().setUpperBound(value);
+                fineHorizontalSlider.setMaximum(value);
+                fineHorizontalSlider.setValue(value);
+            }
+        });
+
+        fineHorizontalSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int value = fineHorizontalSlider.getValue();
+                plot.getDomainAxis().setUpperBound(value);
             }
         });
 
@@ -117,8 +136,8 @@ public class Chart extends JPanel {
         plot.getRangeAxis().setAutoRange(true);
         plot.setDataset(dataSet);
         Double horizontalUpperBound = plot.getDomainAxis().getRange().getUpperBound();
-        horizontalSlider.setMaximum(horizontalUpperBound.intValue());
-        horizontalSlider.setValue(horizontalUpperBound.intValue());
+        mainHorizontalSlider.setMaximum(horizontalUpperBound.intValue());
+        mainHorizontalSlider.setValue(horizontalUpperBound.intValue());
 
         Double verticalUpperBound = plot.getRangeAxis().getRange().getUpperBound();
         verticalSlider.setMaximum(verticalUpperBound.intValue());
