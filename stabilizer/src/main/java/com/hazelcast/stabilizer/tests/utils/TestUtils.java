@@ -151,7 +151,7 @@ public class TestUtils {
     }
 
     public final static class GetOperationCount implements Callable<Long>, HazelcastInstanceAware, Serializable {
-        private HazelcastInstance hz;
+        private transient HazelcastInstance hz;
 
         @Override
         public Long call() throws Exception {
