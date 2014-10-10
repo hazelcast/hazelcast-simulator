@@ -1,8 +1,8 @@
 package com.hazelcast.stabilizer.visualiser.io;
 
-import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.common.probes.Result;
-import com.hazelcast.stabilizer.common.probes.impl.ProbesResultXmlReader;
+import com.hazelcast.stabilizer.probes.probes.Result;
+import com.hazelcast.stabilizer.probes.probes.ProbesResultXmlReader;
+import com.hazelcast.stabilizer.probes.probes.util.Utils;
 import com.hazelcast.stabilizer.visualiser.data.BenchmarkResults;
 import com.hazelcast.stabilizer.visualiser.data.Model;
 

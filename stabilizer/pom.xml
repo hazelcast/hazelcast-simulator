@@ -32,6 +32,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.hazelcast.stabilizer</groupId>
+            <artifactId>probes</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>net.sf.jopt-simple</groupId>
             <artifactId>jopt-simple</artifactId>
             <version>${jopt.version}</version>

@@ -28,7 +28,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.OperationService;
 import com.hazelcast.stabilizer.TestCase;
-import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
+import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.tests.BindException;
 
 import java.io.Serializable;

@@ -44,6 +44,7 @@
         <module>archetype</module>
         <module>dist</module>
         <module>visualiser</module>
+        <module>probes</module>
     </modules>
 
     <scm>
