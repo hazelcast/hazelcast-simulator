@@ -88,7 +88,6 @@ public class MangleICacheTest {
                         counter.createCacheManager++;
 
                     } catch (CacheException e) {
-                        log.severe(basename+": createCacheManager "+e, e);
                         counter.createCacheManagerException++;
 
                     } catch (Exception e) {
@@ -102,7 +101,6 @@ public class MangleICacheTest {
                         counter.cacheManagerClose++;
 
                     } catch (CacheException e) {
-                        log.severe(basename+": cacheManagerClose "+e, e);
                         counter.cacheManagerCloseException++;
 
                     } catch (Exception e) {
@@ -116,11 +114,9 @@ public class MangleICacheTest {
                         counter.cacheManagerdestroy++;
 
                     } catch (CacheException e) {
-                        log.severe(basename+": cacheManagerdestroy "+e, e);
                         counter.cacheManagerdestroyException++;
 
                     } catch (IllegalStateException e) {
-                        log.severe(basename+": cacheManagerdestroy "+e, e);
                         counter.cacheManagerdestroyException++;
 
                     } catch (Exception e) {
@@ -136,7 +132,6 @@ public class MangleICacheTest {
                             counter.cachingProviderClose++;
                         }
                     } catch (CacheException e) {
-                        log.severe(basename+": cachingProviderClose "+e, e);
                         counter.cachingProviderCloseException++;
 
                     } catch (Exception e) {
@@ -150,11 +145,9 @@ public class MangleICacheTest {
                         counter.create++;
 
                     } catch (CacheException e) {
-                        log.severe(basename+": create "+e, e);
                         counter.createException++;
 
                     } catch (IllegalStateException e) {
-                        log.severe(basename+": create "+e, e);
                         counter.createException++;
 
                     } catch (Exception e) {
@@ -171,11 +164,9 @@ public class MangleICacheTest {
                             counter.put++;
                         }
                     } catch (CacheException e){
-                        log.severe(basename+": putCache "+e, e);
                         counter.getPutException++;
 
                     } catch (IllegalStateException e){
-                        log.severe(basename+": putCache "+e, e);
                         counter.getPutException++;
 
                     } catch (Exception e){
@@ -192,15 +183,13 @@ public class MangleICacheTest {
                             counter.cacheClose++;
                         }
                     } catch (CacheException e){
-                        log.severe(basename+": putCache "+e, e);
                         counter.cacheCloseException++;
 
                     } catch (IllegalStateException e){
-                        log.severe(basename+": putCache "+e, e);
                         counter.cacheCloseException++;
 
                     } catch (Exception e){
-                        log.severe(basename+": closeCache "+e, e);
+                        log.severe(basename+": closeCache ERROR "+e, e);
                         counter.generalException++;
                     }
 
@@ -211,11 +200,9 @@ public class MangleICacheTest {
                         counter.destroy++;
 
                     } catch (CacheException e){
-                        log.severe(basename+": destroy "+e, e);
                         counter.destroyException++;
 
                     } catch (IllegalStateException e){
-                        log.severe(basename+": destroy "+e, e);
                         counter.destroyException++;
 
                     } catch (Exception e){
@@ -247,11 +234,9 @@ public class MangleICacheTest {
                 return cache;
 
             } catch (CacheException e){
-                log.severe(basename+": getCache "+e, e);
                 counter.getCacheException++;
 
             } catch (IllegalStateException e){
-                log.severe(basename+": getCache "+e, e);
                 counter.getCacheException++;
 
             } catch (Exception e){
