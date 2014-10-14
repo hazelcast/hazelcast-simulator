@@ -152,10 +152,10 @@ public class Provisioner {
         echoImportant("Successfully killed %s Agents", addresses.size());
     }
 
-    public void restart() {
+    public void restart(boolean eejars) {
         echoImportant("Restarting %s Agents", addresses.size());
 
-        hazelcastJars.prepare();
+        hazelcastJars.prepare(eejars);
         for (AgentAddress address : addresses) {
             echo("Installing agent: " + address.publicAddress);
             installAgent(address.publicAddress);
@@ -164,7 +164,7 @@ public class Provisioner {
         echoImportant("Restarting %s Agents", addresses.size());
     }
 
-    public void scale(int size) throws Exception {
+    public void scale(int size, boolean eejars) throws Exception {
         int delta = size - addresses.size();
         if (delta == 0) {
             echo("Current number of machines: " + addresses.size());
@@ -173,11 +173,11 @@ public class Provisioner {
         } else if (delta < 0) {
             terminate(-delta);
         } else {
-            scaleUp(delta);
+            scaleUp(delta, eejars);
         }
     }
 
-    private void scaleUp(int delta) throws Exception {
+    private void scaleUp(int delta, boolean eejars) throws Exception {
         echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
         echo("Current number of machines: " + addresses.size());
         echo("Desired number of machines: " + (addresses.size() + delta));
@@ -197,7 +197,7 @@ public class Provisioner {
             log.info(format("JDK spec: %s %s", jdkFlavor, jdkVersion));
         }
 
-        hazelcastJars.prepare();
+        hazelcastJars.prepare(eejars);
 
         ComputeService compute = new ComputeServiceBuilder(props).build();
 
