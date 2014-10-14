@@ -1,6 +1,7 @@
 package $package;
 
-
+import com.hazelcast.stabilizer.common.probes.IntervalProbe;
+import com.hazelcast.stabilizer.common.probes.SimpleProbe;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
@@ -26,7 +27,7 @@ public class ExampleTest {
     public int threadCount = 1;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-
+    public IntervalProbe latencyProbe = new LatencyDistributionProbe();
 
     private IAtomicLong totalCounter;
     private AtomicLong operations = new AtomicLong();
@@ -75,7 +76,9 @@ public class ExampleTest {
         public void run() {
             long iteration = 0;
             while (!testContext.isStopped()) {
+                latencyProbe.started();
                 counter.incrementAndGet();
+                latencyProbe.done();
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
