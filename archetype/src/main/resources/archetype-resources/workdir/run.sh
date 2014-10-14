@@ -9,6 +9,7 @@ coordinator     --workerVmOptions "-ea -server -Xms2G -Xmx2G -XX:+PrintGC -XX:+H
                 --memberWorkerCount 2 \
                 --workerClassPath   '../target/*.jar' \
                 --duration          5m \
+                --monitorPerformance \
                 test.properties
 
 provisioner --download
