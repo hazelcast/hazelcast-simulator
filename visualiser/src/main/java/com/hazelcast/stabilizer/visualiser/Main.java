@@ -32,8 +32,8 @@ public class Main {
         menu.setMnemonic(KeyEvent.VK_A);
         menuBar.add(menu);
 
-        JMenuItem menuItem = new JMenuItem("Load...");
-        menuItem.addActionListener(new ActionListener() {
+        JMenuItem loadMenuItem = new JMenuItem("Load...");
+        loadMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 final JFileChooser fc = new JFileChooser();
@@ -46,7 +46,16 @@ public class Main {
             }
         });
 
-        menu.add(menuItem);
+        JMenuItem exitMenuItem = new JMenuItem("Exit");
+        exitMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+
+        menu.add(loadMenuItem);
+        menu.add(exitMenuItem);
         frame.setJMenuBar(menuBar);
 
     }
@@ -66,6 +75,7 @@ public class Main {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         Container mainPane = frame.getContentPane();
 
