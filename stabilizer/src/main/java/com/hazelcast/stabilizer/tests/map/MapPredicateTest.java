@@ -77,7 +77,6 @@ public class MapPredicateTest {
     }
 
     private class Worker implements Runnable {
-        final private SerializationService ss = new SerializationServiceBuilder().build();
 
         private final Random random = new Random();
         private OppCounterIdxTest counter = new OppCounterIdxTest();
@@ -100,8 +99,8 @@ public class MapPredicateTest {
 
                         Collection<Employee> employees = map.values(predicate);
                         for (Employee emp : employees) {
-                            QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                            assertTrue(basename + ": "+ emp + " NO Match " + predicate, predicate.apply(qe));
+                            assertTrue(basename + ": "+ emp + " not matching " + predicate, emp.getAge() < age);
+                            assertTrue(basename + ": "+ emp + " not matching " + predicate, emp.getName().equals(name));
                         }
                         counter.predicateBuilderCount++;
                     } else if ((chance -= sqlString) < 0) {
@@ -113,8 +112,8 @@ public class MapPredicateTest {
                         Collection<Employee> employees = map.values(predicate);
 
                         for (Employee emp : employees) {
-                            QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                            assertTrue(basename + ": "+ emp + " NO Match " + predicate, predicate.apply(qe));
+                            assertTrue(basename + ": "+ emp + " not matching " + predicate, emp.isActive()==active);
+                            assertTrue(basename + ": "+ emp + " not matching " + predicate, emp.getAge() > age);
                         }
                         counter.sqlStringCount++;
                     } else if ((chance -= pagePred) < 0) {
@@ -127,8 +126,7 @@ public class MapPredicateTest {
                         do {
                             employees = map.values(pagingPredicate);
                             for (Employee emp : employees) {
-                                QueryEntry qe = new QueryEntry(null, ss.toData(emp.getId()), emp.getId(), emp);
-                                assertTrue(basename + ": " + emp + " NO Match " + predicate, predicate.apply(qe));
+                                assertTrue(basename + ": "+ emp + " not matching " + predicate, emp.getSalary() < maxSal);
                             }
                             pagingPredicate.nextPage();
                         } while (!employees.isEmpty());
