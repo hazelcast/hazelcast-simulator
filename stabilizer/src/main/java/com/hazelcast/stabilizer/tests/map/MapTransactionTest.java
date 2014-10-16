@@ -1,5 +1,6 @@
 package com.hazelcast.stabilizer.tests.map;
 
+import com.hazelcast.core.HazelcastException;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
@@ -17,6 +18,7 @@ import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
 
 import java.util.Random;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -83,7 +85,9 @@ public class MapTransactionTest {
                     if(reThrowTransactionException){
                         throw new RuntimeException(e);
                     }
-                    log.warning(basename + ": caught TransactionException ", e);
+                    log.warning(basename + ": caught TransactionException " + e, e);
+                } catch (HazelcastException e) {
+                    log.severe(basename + ": caught HazelcastException " + e, e);
                 }
             }
             IList<long[]> results = targetInstance.getList(basename + "results");
