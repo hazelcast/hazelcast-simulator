@@ -310,15 +310,15 @@ public class Provisioner {
         return new File(scriptDir, "jdk-support.sh");
     }
 
-    public void download() {
+    public void download(String dir) {
         echoImportant("Download artifacts of %s machines", addresses.size());
 
-        bash.execute("mkdir -p workers");
+        bash.execute("mkdir -p "+dir);
 
         for (AgentAddress address : addresses) {
             echo("Downloading from %s", address.publicAddress);
 
-            String syncCommand = format("rsync --copy-links  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
+            String syncCommand = format("rsync --copy-links  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers/* ./"+dir,
                     props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getVersion());
 
             bash.executeQuiet(syncCommand);
