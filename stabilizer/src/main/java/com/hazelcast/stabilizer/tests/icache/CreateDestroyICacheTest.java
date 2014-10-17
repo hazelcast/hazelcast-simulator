@@ -33,13 +33,13 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import javax.cache.CacheException;
 import java.io.Serializable;
 import java.util.Random;
 
 
-
 /**
- * In This tests we concurrently creating deleting destroying and putting to a cache.
+ * In This tests we are concurrently creating deleting destroying and putting to a cache.
  * However this test is a sub set of MangleIcacheTest ? so could be deleted
  */
 public class CreateDestroyICacheTest {
@@ -97,8 +97,7 @@ public class CreateDestroyICacheTest {
                     try {
                         cacheManager.createCache(basename, config);
                         counter.create++;
-                    } catch (Exception e) {
-                        log.severe(basename+": createCache "+e, e);
+                    } catch (CacheException e) {
                         counter.createException++;
                     }
                 } else if ((chance -= putCacheProb) < 0) {
@@ -108,8 +107,7 @@ public class CreateDestroyICacheTest {
                             cache.put(random.nextInt(), random.nextInt());
                             counter.put++;
                         }
-                    } catch (Exception e){
-                        log.severe(basename+": getCache "+e, e);
+                    } catch (IllegalStateException e){
                         counter.putException++;
                     }
                 } else if ((chance -= closeCacheProb) < 0){
@@ -119,16 +117,14 @@ public class CreateDestroyICacheTest {
                             cache.close();
                             counter.close++;
                         }
-                    } catch (Exception e){
-                        log.severe(basename+": getCache "+e, e);
+                    } catch (IllegalStateException e){
                         counter.closeException++;
                     }
                 } else if ((chance -= destroyCacheProb) < 0) {
                     try{
                         cacheManager.destroyCache(basename);
                         counter.destroy++;
-                    } catch (Exception e){
-                        log.severe(basename+": destroyCache "+e, e);
+                    } catch (IllegalStateException e){
                         counter.destroyException++;
                     }
                 }
