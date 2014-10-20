@@ -2,10 +2,10 @@ package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.stabilizer.common.messaging.Message;
-import com.hazelcast.stabilizer.common.probes.IntervalProbe;
-import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
-import com.hazelcast.stabilizer.common.probes.SimpleProbe;
-import com.hazelcast.stabilizer.common.probes.impl.DisabledProbe;
+import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
+import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
+import com.hazelcast.stabilizer.probes.probes.SimpleProbe;
+import com.hazelcast.stabilizer.probes.probes.impl.DisabledProbe;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Name;

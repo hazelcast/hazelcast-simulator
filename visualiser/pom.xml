@@ -30,7 +30,7 @@
 
         <dependency>
             <groupId>com.hazelcast.stabilizer</groupId>
-            <artifactId>stabilizer</artifactId>
+            <artifactId>probes</artifactId>
             <version>${parent.version}</version>
         </dependency>
 

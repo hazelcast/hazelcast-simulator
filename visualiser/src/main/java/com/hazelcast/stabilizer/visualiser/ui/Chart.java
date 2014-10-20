@@ -1,8 +1,8 @@
 package com.hazelcast.stabilizer.visualiser.ui;
 
-import com.hazelcast.stabilizer.common.LinearHistogram;
-import com.hazelcast.stabilizer.common.probes.Result;
-import com.hazelcast.stabilizer.common.probes.impl.LatencyDistributionResult;
+import com.hazelcast.stabilizer.probes.probes.LinearHistogram;
+import com.hazelcast.stabilizer.probes.probes.Result;
+import com.hazelcast.stabilizer.probes.probes.impl.LatencyDistributionResult;
 import com.hazelcast.stabilizer.visualiser.data.BenchmarkResults;
 import com.hazelcast.stabilizer.visualiser.data.Model;
 import com.hazelcast.stabilizer.visualiser.data.AggregatedDataSet;
