@@ -78,6 +78,8 @@ public class Provisioner {
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/bin/", "bin");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/conf/", "conf");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/jdk-install/", "jdk-install");
+
+        // we don't copy all jars to the agent since most of them are not needed.
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/hazelcast*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/jopt*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/junit*", "lib");
@@ -85,6 +87,7 @@ public class Provisioner {
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/stabilizer*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/commons-lang3*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/cache-api*", "lib");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/probes-*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/tests/", "tests");
 
         String script = loadInitScript();
