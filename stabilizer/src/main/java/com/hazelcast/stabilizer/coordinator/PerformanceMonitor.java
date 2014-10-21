@@ -77,29 +77,23 @@ public class PerformanceMonitor extends Thread {
         previousCount = totalCount;
     }
 
-    public String getDetailedPerformanceInfo(int duration) {
+    public void logDetailedPerformanceInfo(int duration) {
         long totalOperations = 0;
         for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
             totalOperations += entry.getValue();
         }
 
-        StringBuffer sb = new StringBuffer();
-        sb.append("Total operations executed: "+totalOperations+"\n");
+        log.info("Total operations executed: " + totalOperations);
+
         for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
             AgentClient client = entry.getKey();
             long operationCount = entry.getValue();
-            double percentage = 100* (operationCount * 1.0d) / totalOperations;
+            double percentage = 100 * (operationCount * 1.0d) / totalOperations;
             double performance = (operationCount * 1.0d) / duration;
-            sb.append("    Agent: ")
-                    .append(client.getPublicAddress())
-                    .append(" operations: ")
-                    .append(performanceFormat.format(operationCount))
-                    .append(" operations/second: ")
-                    .append(performanceFormat.format(performance))
-                    .append(" share: ")
-                    .append(performanceFormat.format(percentage))
-                    .append(" %\n");
+            log.info("    Agent: " + client.getPublicAddress() + " operations: " + performanceFormat.format(operationCount)
+                    + " operations/second: " + performanceFormat.format(performance)
+                    + " share: " + performanceFormat.format(percentage) + " %\n");
         }
-        return sb.toString();
+
     }
 }

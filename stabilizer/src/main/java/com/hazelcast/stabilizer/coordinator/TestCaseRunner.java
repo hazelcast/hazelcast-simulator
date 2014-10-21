@@ -183,7 +183,7 @@ public class TestCaseRunner {
                 double performance = (operationCount * 1.0d) / testSuite.duration;
                 Utils.appendText("" + performance + "\n", new File("performance.txt"));
 
-                log.info(coordinator.performanceMonitor.getDetailedPerformanceInfo(testSuite.duration));
+                coordinator.performanceMonitor.logDetailedPerformanceInfo(testSuite.duration);
             }
         }
     }
