@@ -90,8 +90,8 @@ public class PerformanceMonitor extends Thread {
             long operationCount = entry.getValue();
             double percentage = 100 * (operationCount * 1.0d) / totalOperations;
             double performance = (operationCount * 1.0d) / duration;
-            log.info("    Agent: " + client.getPublicAddress() + " operations: " + performanceFormat.format(operationCount)
-                    + " operations/second: " + performanceFormat.format(performance)
+            log.info("    Agent " + client.getPublicAddress() + " ops: " + performanceFormat.format(operationCount)
+                    + " ops/s: " + performanceFormat.format(performance)
                     + " share: " + performanceFormat.format(percentage) + " %\n");
         }
 
