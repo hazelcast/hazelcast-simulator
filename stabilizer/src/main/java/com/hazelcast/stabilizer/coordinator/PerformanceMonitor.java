@@ -7,7 +7,9 @@ import com.hazelcast.stabilizer.coordinator.remoting.AgentClient;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
 
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -17,6 +19,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class PerformanceMonitor extends Thread {
     private final ILogger log = Logger.getLogger(PerformanceMonitor.class);
+    private final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
 
     private final AgentsClient client;
     private final Coordinator coordinator;
@@ -90,9 +93,9 @@ public class PerformanceMonitor extends Thread {
             sb.append("Agent: ")
                     .append(client.getPublicAddress())
                     .append(" operations: ")
-                    .append(operationCount)
+                    .append(performanceFormat.format(operationCount))
                     .append(" operations/second: ")
-                    .append(performance)
+                    .append(performanceFormat.format(performance))
                     .append(" share: ")
                     .append(percentage)
                     .append(" %\n");
