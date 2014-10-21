@@ -88,16 +88,16 @@ public class PerformanceMonitor extends Thread {
         for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
             AgentClient client = entry.getKey();
             long operationCount = entry.getValue();
-            double percentage = (operationCount * 1.0d) / totalOperations;
+            double percentage = 100* (operationCount * 1.0d) / totalOperations;
             double performance = (operationCount * 1.0d) / duration;
-            sb.append("Agent: ")
+            sb.append("    Agent: ")
                     .append(client.getPublicAddress())
                     .append(" operations: ")
                     .append(performanceFormat.format(operationCount))
                     .append(" operations/second: ")
                     .append(performanceFormat.format(performance))
                     .append(" share: ")
-                    .append(percentage)
+                    .append(performanceFormat.format(percentage))
                     .append(" %\n");
         }
         return sb.toString();
