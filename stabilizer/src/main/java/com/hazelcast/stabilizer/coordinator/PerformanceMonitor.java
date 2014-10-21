@@ -83,7 +83,7 @@ public class PerformanceMonitor extends Thread {
             totalOperations += entry.getValue();
         }
 
-        log.info("Total operations executed: " + totalOperations);
+        log.info("Total operations executed: " + performanceFormat.format(totalOperations));
 
         for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
             AgentClient client = entry.getKey();
@@ -92,7 +92,7 @@ public class PerformanceMonitor extends Thread {
             double performance = (operationCount * 1.0d) / duration;
             log.info("    Agent " + client.getPublicAddress() + " ops: " + performanceFormat.format(operationCount)
                     + " ops/s: " + performanceFormat.format(performance)
-                    + " share: " + performanceFormat.format(percentage) + " %\n");
+                    + " share: " + performanceFormat.format(percentage) + " %");
         }
 
     }
