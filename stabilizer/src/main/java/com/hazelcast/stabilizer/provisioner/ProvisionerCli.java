@@ -17,10 +17,10 @@ public class ProvisionerCli {
     public final OptionSpec restartSpec = parser.accepts("restart",
             "Restarts all agents");
 
-    public final OptionSpec downloadSpec = parser.accepts("download",
+    public final OptionSpec<String> downloadSpec = parser.accepts("download",
             "Download all the files from the workers directory. " +
-                    "To delete all worker directories, run with --clean"
-    );
+            "To delete all worker directories, run with --clean"
+    ).withOptionalArg().defaultsTo("workers").ofType(String.class);
 
     public final OptionSpec cleanSpec = parser.accepts("clean",
             "Cleans the workers directories.");
@@ -76,7 +76,8 @@ public class ProvisionerCli {
         } else if (options.has(killSpec)) {
             provisioner.killAgents();
         } else if (options.has(downloadSpec)) {
-            provisioner.download();
+            String dir = options.valueOf(downloadSpec);
+            provisioner.download(dir);
         } else if (options.has(cleanSpec)) {
             provisioner.clean();
         } else if (options.has(terminateSpec)) {
