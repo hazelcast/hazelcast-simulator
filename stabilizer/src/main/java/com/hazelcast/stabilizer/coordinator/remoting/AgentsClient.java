@@ -435,8 +435,8 @@ public class AgentsClient {
         for(Map.Entry<AgentClient,Future> entry: futures.entrySet()){
             AgentClient agentClient = entry.getKey();
             Future f = entry.getValue();
-            List<E> r = getAllFutures(asList(f));
-            result.put(agentClient, r);
+            List<List<E>> r = getAllFutures(asList(f));
+            result.put(agentClient, r.get(0));
         }
 
         return result;
