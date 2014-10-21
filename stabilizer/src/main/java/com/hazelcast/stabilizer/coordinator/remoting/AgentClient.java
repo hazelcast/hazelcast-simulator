@@ -12,7 +12,7 @@ import java.net.Socket;
 
 import static com.hazelcast.stabilizer.Utils.closeQuietly;
 
-class AgentClient {
+public class AgentClient {
 
     final String publicAddress;
     final String privateIp;
@@ -20,6 +20,14 @@ class AgentClient {
     public AgentClient(AgentAddress address) {
         this.publicAddress = address.publicAddress;
         this.privateIp = address.privateAddress;
+    }
+
+    public String getPublicAddress() {
+        return publicAddress;
+    }
+
+    public String getPrivateIp() {
+        return privateIp;
     }
 
     Object execute(AgentRemoteService.Service service, Object... args) throws Exception {
@@ -56,5 +64,13 @@ class AgentClient {
         } catch (IOException e) {
             throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AgentClient{" +
+                "publicAddress='" + publicAddress + '\'' +
+                ", privateIp='" + privateIp + '\'' +
+                '}';
     }
 }

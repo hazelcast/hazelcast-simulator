@@ -18,9 +18,11 @@ import com.hazelcast.stabilizer.worker.commands.IsPhaseCompletedCommand;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -40,6 +42,7 @@ import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_PROCESS_MESSAGE;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_SPAWN_WORKERS;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_TERMINATE_WORKERS;
+import static java.util.Arrays.asList;
 
 public class AgentsClient {
 
@@ -345,7 +348,7 @@ public class AgentsClient {
             futures = sendMessageToAllAgents(message);
         } else if (MessageAddress.RANDOM.equals(messageAddress.getAgentAddress())) {
             Future future = sendMessageToRandomAgent(message);
-            futures = Arrays.asList(future);
+            futures = asList(future);
         } else {
             throw new UnsupportedOperationException("Not Implemented yet");
         }
@@ -409,6 +412,35 @@ public class AgentsClient {
         return getAllFutures(futures);
     }
 
+    // a temporary hack to get the correct mapping between futures and their agents.
+    public <E> Map<AgentClient,List<E>> executeOnAllWorkersDetailed(final Command command) {
+        Map<AgentClient, Future> futures = new HashMap<AgentClient,Future>();
+
+        for (final AgentClient agentClient : agents) {
+            Future f = agentExecutor.submit(new Callable() {
+                @Override
+                public Object call() throws Exception {
+                    try {
+                        return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
+                    } catch (RuntimeException t) {
+                        log.severe(t);
+                        throw t;
+                    }
+                }
+            });
+            futures.put(agentClient, f);
+        }
+
+        Map<AgentClient,List<E>> result = new HashMap<AgentClient,List<E>>();
+        for(Map.Entry<AgentClient,Future> entry: futures.entrySet()){
+            AgentClient agentClient = entry.getKey();
+            Future f = entry.getValue();
+            List<E> r = getAllFutures(asList(f));
+            result.put(agentClient, r);
+        }
+
+        return result;
+    }
 
     public void executeOnSingleWorker(final Command command) {
         if (agents.isEmpty()) {
@@ -424,7 +456,7 @@ public class AgentsClient {
         });
 
         try {
-            getAllFutures(Arrays.asList(f));
+            getAllFutures(asList(f));
         } catch (Throwable e) {
             //ignore
         }

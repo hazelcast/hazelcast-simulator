@@ -182,6 +182,8 @@ public class TestCaseRunner {
             if (performanceWritten.compareAndSet(false, true)) {
                 double performance = (operationCount * 1.0d) / testSuite.duration;
                 Utils.appendText("" + performance + "\n", new File("performance.txt"));
+
+                log.info(coordinator.performanceMonitor.getDetailedPerformanceInfo(testSuite.duration));
             }
         }
     }

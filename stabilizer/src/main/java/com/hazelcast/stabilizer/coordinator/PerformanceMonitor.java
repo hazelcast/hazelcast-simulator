@@ -3,10 +3,14 @@ package com.hazelcast.stabilizer.coordinator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.coordinator.remoting.AgentClient;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Responsible for collecting performance metrics from the agents and logging/storing it.
@@ -16,6 +20,7 @@ public class PerformanceMonitor extends Thread {
 
     private final AgentsClient client;
     private final Coordinator coordinator;
+    private final ConcurrentMap<AgentClient, Long> operationCountPerAgent = new ConcurrentHashMap<AgentClient, Long>();
     private long previousCount = 0;
     public long previousTime = System.currentTimeMillis();
 
@@ -38,24 +43,60 @@ public class PerformanceMonitor extends Thread {
     }
 
     private void checkPerformance() {
-        GetOperationCountCommand getOperationCountTestCommand = new GetOperationCountCommand();
-        List<List<Long>> result = client.executeOnAllWorkers(getOperationCountTestCommand);
-        long currentCount = 0;
-        for (List<Long> list : result) {
-            for (Long item : list) {
-                if (item != null) {
-                    currentCount += item;
+        GetOperationCountCommand command = new GetOperationCountCommand();
+        Map<AgentClient, List<Long>> result = client.executeOnAllWorkersDetailed(command);
+        long totalCount = 0;
+        for (Map.Entry<AgentClient, List<Long>> entry : result.entrySet()) {
+            AgentClient agentClient = entry.getKey();
+            Long countPerAgent = operationCountPerAgent.get(agentClient);
+
+            if (countPerAgent == null) {
+                countPerAgent = 0l;
+            }
+
+            for (Long value : entry.getValue()) {
+                if (value != null) {
+                    totalCount += value;
+                    countPerAgent += value;
                 }
             }
+
+            operationCountPerAgent.put(agentClient, countPerAgent);
         }
 
-        long delta = currentCount - previousCount;
+        long delta = totalCount - previousCount;
         long currentMs = System.currentTimeMillis();
         long durationMs = currentMs - previousTime;
 
         coordinator.performance = (delta * 1000d) / durationMs;
-        coordinator.operationCount = currentCount;
+        coordinator.operationCount = totalCount;
         previousTime = currentMs;
-        previousCount = currentCount;
+        previousCount = totalCount;
+    }
+
+    public String getDetailedPerformanceInfo(int duration) {
+        long totalOperations = 0;
+        for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
+            totalOperations += entry.getValue();
+        }
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("Total operations executed: "+totalOperations+"\n");
+        for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
+            AgentClient client = entry.getKey();
+            long operationCount = entry.getValue();
+            double percentage = (operationCount * 1.0d) / totalOperations;
+            double performance = (operationCount * 1.0d) / duration;
+            sb.append("Agent: ")
+                    .append(client.getPublicAddress())
+                    .append(" operations: ")
+                    .append(operationCount)
+                    .append(" operations/second: ")
+                    .append(performance)
+                    .append(" share: ")
+                    .append(percentage)
+                    .append(" %\n");
+        }
+        return sb.toString();
     }
 }

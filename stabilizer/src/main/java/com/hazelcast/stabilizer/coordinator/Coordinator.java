@@ -72,6 +72,7 @@ public class Coordinator {
     public volatile double performance;
     public volatile long operationCount;
     private Bash bash;
+    public PerformanceMonitor performanceMonitor = new PerformanceMonitor(this);
 
     private void run() throws Exception {
         bash = new Bash(props);
@@ -83,7 +84,7 @@ public class Coordinator {
         new FailureMonitorThread(this).start();
 
         if (monitorPerformance) {
-            new PerformanceMonitor(this).start();
+             performanceMonitor.start();
         }
 
         runTestSuite();
