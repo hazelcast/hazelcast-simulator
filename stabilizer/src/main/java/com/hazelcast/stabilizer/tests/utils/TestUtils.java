@@ -27,8 +27,6 @@ import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.OperationService;
-import com.hazelcast.stabilizer.TestCase;
-import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -47,13 +45,31 @@ public class TestUtils {
     public static final String TEST_INSTANCE = "testInstance";
     private final static ILogger log = Logger.getLogger(TestUtils.class);
 
+    /**
+     * Assert that a certain task is going to assert to true eventually.
+     *
+     * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
+     * more times it fails the less frequent the task is going to be retried.
+     *
+     * @param task
+     * @param timeoutSeconds
+     * @throws java.lang.NullPointerException if task is null.
+     */
     public static void assertTrueEventually(AssertTask task, long timeoutSeconds) {
-        AssertionError error = null;
+        if (task == null) {
+            throw new NullPointerException("task can't be null");
+        }
 
-        //we are going to check 5 times a second.
-        long iterations = timeoutSeconds * 5;
-        int sleepMillis = 200;
-        for (int k = 0; k < iterations; k++) {
+        AssertionError error;
+
+        // the total timeout in ms.
+        long timeoutMs = TimeUnit.SECONDS.toMillis(timeoutSeconds);
+
+        // the time in ms when the assertTrue is going to expire.
+        long expirationMs = System.currentTimeMillis() + timeoutMs;
+        int sleepMillis = 100;
+
+        for (; ; ) {
             try {
                 try {
                     task.run();
@@ -64,10 +80,15 @@ public class TestUtils {
             } catch (AssertionError e) {
                 error = e;
             }
-            sleepMillis(sleepMillis);
-        }
 
-        throw error;
+            // there is a timeout, so we are done.
+            if (System.currentTimeMillis() > expirationMs) {
+                throw error;
+            }
+
+            sleepMillis(sleepMillis);
+            sleepMillis *= 1.5;
+        }
     }
 
     public static void sleepMillis(int millis) {
@@ -214,7 +235,7 @@ public class TestUtils {
         return impl;
     }
 
-     public static String humanReadableByteCount(long bytes, boolean si) {
+    public static String humanReadableByteCount(long bytes, boolean si) {
         int unit = si ? 1000 : 1024;
         if (bytes < unit) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(unit));
