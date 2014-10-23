@@ -20,6 +20,7 @@ import com.hazelcast.core.AsyncAtomicLong;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
+import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
@@ -37,7 +38,11 @@ import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.assertTrueEventually;
@@ -55,6 +60,7 @@ public class AsyncAtomicLongTest {
     public KeyLocality keyLocality = KeyLocality.Random;
     public int writePercentage = 100;
     public int assertEventuallySeconds = 300;
+    public int batchSize = -1;
 
     private IAtomicLong totalCounter;
     private AsyncAtomicLong[] counters;
@@ -127,7 +133,7 @@ public class AsyncAtomicLongTest {
         return operations.get();
     }
 
-    private class Worker implements Runnable, ExecutionCallback{
+    private class Worker implements Runnable, ExecutionCallback {
         private final Random random = new Random();
 
         @Override
@@ -135,13 +141,34 @@ public class AsyncAtomicLongTest {
             long iteration = 0;
             long increments = 0;
 
+
+            List<ICompletableFuture> batch = new LinkedList<ICompletableFuture>();
             while (!context.isStopped()) {
                 AsyncAtomicLong counter = getRandomCounter();
+                ICompletableFuture<Long> future;
                 if (shouldWrite(iteration)) {
                     increments++;
-                    counter.asyncIncrementAndGet().andThen(this);
+                    future = counter.asyncIncrementAndGet();
                 } else {
-                    counter.asyncGet();
+                    future = counter.asyncGet();
+                }
+
+                future.andThen(this);
+
+                if(batchSize>0){
+                    batch.add(future);
+
+                    if(batch.size()==batchSize){
+                        for(ICompletableFuture f: batch){
+                            try {
+                                f.get();
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            } catch (ExecutionException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
                 }
 
                 if (iteration % logFrequency == 0) {
