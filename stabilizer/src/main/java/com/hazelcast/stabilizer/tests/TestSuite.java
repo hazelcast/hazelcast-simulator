@@ -73,12 +73,12 @@ public class TestSuite implements Serializable {
 
             if (testcase.getClassname() == null) {
                 if ("".equals(testcaseId)) {
-                    throw new RuntimeException(format("There is no class set for the in property file [%s]." +
+                    throw new BindException(format("There is no class set for the in property file [%s]. " +
                                     "Add class=YourTestClass",
                             file.getAbsolutePath()
                     ));
                 } else {
-                    throw new RuntimeException(format("There is no class set for test [%s] in property file [%s]." +
+                    throw new BindException(format("There is no class set for test [%s] in property file [%s]. " +
                                     "Add %s.class=YourTestClass",
                             testcaseId, file.getAbsolutePath(), testcaseId
                     ));
