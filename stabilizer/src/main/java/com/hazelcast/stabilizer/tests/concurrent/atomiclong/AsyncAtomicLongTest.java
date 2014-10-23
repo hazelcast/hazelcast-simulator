@@ -22,6 +22,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
@@ -109,6 +110,9 @@ public class AsyncAtomicLongTest {
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
+                //hack to prevent overloading the system with get calls. Else it is done many times a second.
+                Utils.sleepSeconds(10);
+
                 long actual = 0;
                 for (IAtomicLong counter : counters) {
                     actual += counter.get();
