@@ -68,7 +68,7 @@ public class TestSuiteTest {
 
     private TestSuite load(String txt) throws Exception {
         File file = File.createTempFile("stabilizer", "properties");
-        //file.deleteOnExit();
+        file.deleteOnExit();
         Utils.writeText(txt, file);
 
         return TestSuite.loadTestSuite(file, "");
