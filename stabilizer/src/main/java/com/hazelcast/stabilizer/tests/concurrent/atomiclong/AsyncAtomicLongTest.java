@@ -17,6 +17,7 @@ package com.hazelcast.stabilizer.tests.concurrent.atomiclong;
 
 
 import com.hazelcast.core.AsyncAtomicLong;
+import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
@@ -30,6 +31,7 @@ import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
 import com.hazelcast.stabilizer.tests.utils.AssertTask;
+import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
@@ -48,7 +50,6 @@ public class AsyncAtomicLongTest {
     public int countersLength = 1000;
     public int threadCount = 10;
     public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 1000;
     public String basename = "atomiclong";
     public KeyLocality keyLocality = KeyLocality.Random;
     public int writePercentage = 100;
@@ -122,7 +123,7 @@ public class AsyncAtomicLongTest {
         return operations.get();
     }
 
-    private class Worker implements Runnable {
+    private class Worker implements Runnable, ExecutionCallback{
         private final Random random = new Random();
 
         @Override
@@ -134,7 +135,7 @@ public class AsyncAtomicLongTest {
                 AsyncAtomicLong counter = getRandomCounter();
                 if (shouldWrite(iteration)) {
                     increments++;
-                    counter.asyncIncrementAndGet();
+                    counter.asyncIncrementAndGet().andThen(this);
                 } else {
                     counter.asyncGet();
                 }
@@ -143,13 +144,20 @@ public class AsyncAtomicLongTest {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
                 iteration++;
             }
 
             totalCounter.addAndGet(increments);
+        }
+
+        @Override
+        public void onResponse(Object response) {
+            operations.addAndGet(1);
+        }
+
+        @Override
+        public void onFailure(Throwable t) {
+            ExceptionReporter.report(context.getTestId(), t);
         }
 
         private boolean shouldWrite(long iteration) {
