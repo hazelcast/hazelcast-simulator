@@ -67,8 +67,8 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.writeObject;
-import static com.hazelcast.stabilizer.tests.utils.TestUtils.bindProperties;
-import static com.hazelcast.stabilizer.tests.utils.TestUtils.parseProbeConfiguration;
+import static com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport.bindProperties;
+import static com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport.parseProbeConfiguration;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 

@@ -1,5 +1,6 @@
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.tests.utils;
 
+import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.tests.BindException;
 import org.junit.Test;
 
@@ -7,11 +8,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.tests.utils.TestUtils.bindProperty;
+import static com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport.bindProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class TestUtilsTest {
+public class PropertyBindingSupportTest {
 
     @Test
     public void bindProperty_string() throws IllegalAccessException {
@@ -88,13 +89,37 @@ public class TestUtilsTest {
         bindProperty(someObject, "objectField", "null");
     }
 
+    @Test
+    public void bindProperty_withPath() throws IllegalAccessException {
+        SomeObject someObject = new SomeObject();
+
+        bindProperty(someObject, "otherObject.stringField", "newvalue");
+
+        assertEquals("newvalue",someObject.otherObject.stringField);
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_withPathAndNullValue() throws IllegalAccessException {
+        SomeObject someObject = new SomeObject();
+
+        bindProperty(someObject, "nullOtherObject.stringField", "newvalue");
+    }
+
     class SomeObject {
         private String stringField;
         private TimeUnit enumField;
         private int intField;
         private Integer integerField;
         private Object objectField;
+        public OtherObject otherObject = new OtherObject();
+        public OtherObject nullOtherObject;
     }
+
+    class OtherObject {
+        public String stringField;
+
+    }
+
 
     public static File writeToTempFile(String text) throws IOException {
         File file = File.createTempFile("test", "test");
