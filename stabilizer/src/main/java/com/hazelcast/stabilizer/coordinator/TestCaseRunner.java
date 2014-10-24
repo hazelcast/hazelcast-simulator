@@ -191,13 +191,13 @@ public class TestCaseRunner {
             Utils.sleepSeconds(period);
             final int elapsed = period * k;
             final float percentage = (100f * elapsed) / seconds;
-            String msg = format("Running %s, %6.2f %% complete", secondsToHuman(elapsed), percentage);
+            String msg = format("Running %s, %6.2f%% complete", secondsToHuman(elapsed), percentage);
 
             if (coordinator.monitorPerformance) {
                 if (coordinator.operationCount < 0) {
                     msg += ", performance not available";
                 } else {
-                    msg += Utils.formatDouble(coordinator.performance, 12) + " ops/s";
+                    msg += Utils.formatDouble(coordinator.performance, 14) + " ops/s";
                 }
             }
 

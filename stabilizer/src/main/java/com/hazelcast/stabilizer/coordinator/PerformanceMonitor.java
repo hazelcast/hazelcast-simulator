@@ -91,8 +91,6 @@ public class PerformanceMonitor extends Thread {
         if (performanceWritten.compareAndSet(false, true)) {
             double performance = (operationCount * 1.0d) / duration;
             Utils.appendText("" + performance + "\n", new File("performance.txt"));
-
-            coordinator.performanceMonitor.logDetailedPerformanceInfo(duration);
         }
 
         for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
@@ -100,7 +98,7 @@ public class PerformanceMonitor extends Thread {
             long operationCountPerAgent = entry.getValue();
             double percentage = 100 * (operationCountPerAgent * 1.0d) / operationCount;
             double performance = (operationCountPerAgent * 1.0d) / duration;
-            log.info("    Agent " + client.getPublicAddress() + " " + Utils.formatLong(operationCountPerAgent,15) + " ops: "
+            log.info("    Agent " + client.getPublicAddress() + " " + Utils.formatLong(operationCountPerAgent,15) + " ops "
                     + Utils.formatDouble(performance,12)
                     + " ops/s: " + Utils.formatDouble(percentage,5) + " %");
         }
