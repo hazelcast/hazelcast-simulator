@@ -7,19 +7,22 @@ import com.hazelcast.stabilizer.coordinator.remoting.AgentClient;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
 
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Responsible for collecting performance metrics from the agents and logging/storing it.
  */
 public class PerformanceMonitor extends Thread {
-    private final ILogger log = Logger.getLogger(PerformanceMonitor.class);
-    private final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
+    private static final  AtomicBoolean performanceWritten = new AtomicBoolean();
+    private static final ILogger log = Logger.getLogger(PerformanceMonitor.class);
+    private static final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
 
     private final AgentsClient client;
     private final Coordinator coordinator;
@@ -60,7 +63,7 @@ public class PerformanceMonitor extends Thread {
             for (Long value : entry.getValue()) {
                 if (value != null) {
                     totalCount += value;
-                    countPerAgent += value;
+                    countPerAgent = value;
                 }
             }
 
@@ -78,19 +81,31 @@ public class PerformanceMonitor extends Thread {
     }
 
     public void logDetailedPerformanceInfo(int duration) {
-        long totalOperations = 0;
-        for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
-            totalOperations += entry.getValue();
+        long operationCount = coordinator.operationCount;
+        if (operationCount < 0) {
+            log.info("Operation-count: not available");
+            log.info("Performance: not available");
+        } else {
+            log.info("Operation-count: " + performanceFormat.format(operationCount));
+            double performance = (operationCount * 1.0d) / duration;
+            log.info("Performance: " + performanceFormat.format(performance) + " ops/s");
         }
 
-        log.info("Total operations executed: " + performanceFormat.format(totalOperations));
+        if (performanceWritten.compareAndSet(false, true)) {
+            double performance = (operationCount * 1.0d) / duration;
+            Utils.appendText("" + performance + "\n", new File("performance.txt"));
+
+            coordinator.performanceMonitor.logDetailedPerformanceInfo(duration);
+        }
+
+        log.info("Total operations executed: " + performanceFormat.format(operationCount));
 
         for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
             AgentClient client = entry.getKey();
-            long operationCount = entry.getValue();
-            double percentage = 100 * (operationCount * 1.0d) / totalOperations;
-            double performance = (operationCount * 1.0d) / duration;
-            log.info("    Agent " + client.getPublicAddress() + " " + performanceFormat.format(operationCount) + " ops: "
+            long operationCountPerAgent = entry.getValue();
+            double percentage = 100 * (operationCountPerAgent * 1.0d) / operationCount;
+            double performance = (operationCountPerAgent * 1.0d) / duration;
+            log.info("    Agent " + client.getPublicAddress() + " " + performanceFormat.format(operationCountPerAgent) + " ops: "
                     + performanceFormat.format(performance)
                     + " ops/s: " + performanceFormat.format(percentage) + " %");
         }

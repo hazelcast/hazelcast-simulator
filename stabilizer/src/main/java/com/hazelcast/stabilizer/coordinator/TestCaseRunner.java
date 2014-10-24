@@ -6,8 +6,8 @@ import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
-import com.hazelcast.stabilizer.probes.probes.Result;
 import com.hazelcast.stabilizer.probes.probes.ProbesResultXmlWriter;
+import com.hazelcast.stabilizer.probes.probes.Result;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
@@ -34,8 +33,6 @@ import static java.lang.String.format;
  */
 public class TestCaseRunner {
     private final static ILogger log = Logger.getLogger(TestCaseRunner.class);
-
-    public final static AtomicBoolean performanceWritten = new AtomicBoolean();
 
     private final TestCase testCase;
     private final Coordinator coordinator;
@@ -169,22 +166,7 @@ public class TestCaseRunner {
 
     private void logPerformance() {
         if (coordinator.monitorPerformance) {
-            long operationCount = coordinator.operationCount;
-            if (operationCount < 0) {
-                log.info("Operation-count: not available");
-                log.info("Performance: not available");
-            } else {
-                log.info("Operation-count: " + performanceFormat.format(operationCount));
-                double performance = (operationCount * 1.0d) / testSuite.duration;
-                log.info("Performance: " + performanceFormat.format(performance) + " ops/s");
-            }
-
-            if (performanceWritten.compareAndSet(false, true)) {
-                double performance = (operationCount * 1.0d) / testSuite.duration;
-                Utils.appendText("" + performance + "\n", new File("performance.txt"));
-
-                coordinator.performanceMonitor.logDetailedPerformanceInfo(testSuite.duration);
-            }
+            coordinator.performanceMonitor.logDetailedPerformanceInfo(testSuite.duration);
         }
     }
 
@@ -215,7 +197,8 @@ public class TestCaseRunner {
                 if (coordinator.operationCount < 0) {
                     msg += ",  performance not available";
                 } else {
-                    msg += ", " + performanceFormat.format(coordinator.performance) + " ops/s.";
+                    String performance = String.format(", %10.2f ops/s", coordinator.performance);
+                    msg += performance;
                 }
             }
 
