@@ -48,9 +48,9 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.Formatter;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -82,6 +82,40 @@ public final class Utils {
         newStackTrace[remoteStackTrace.length] = new StackTraceElement(EXCEPTION_SEPARATOR, "", null, -1);
         System.arraycopy(localSideStackTrace, 1, newStackTrace, remoteStackTrace.length + 1, localSideStackTrace.length - 1);
         remoteCause.setStackTrace(newStackTrace);
+    }
+
+    /**
+     * Formats a number and leftpads it. It is very inefficient; but a lot easier to deal with the formatting API.
+     *
+     * @param number
+     * @param length
+     * @return
+     */
+    public static String formatDouble(double number, int length) {
+        StringBuffer sb = new StringBuffer();
+        Formatter f = new Formatter(sb);
+        f.format("%(,.2f", number);
+        return leftPad(sb.toString(), length);
+    }
+
+    public static String formatLong(long number, int length) {
+        StringBuffer sb = new StringBuffer();
+        Formatter f = new Formatter(sb);
+        f.format("%(,d", number);
+        return leftPad(sb.toString(), length);
+    }
+
+    private static String leftPad(String s, int length) {
+        if (s.length() >= length) {
+            return s;
+        }
+
+        StringBuffer sb = new StringBuffer(length);
+        for (int k = 0; k < length - s.length(); k++) {
+            sb.append(' ');
+        }
+        sb.append(s);
+        return sb.toString();
     }
 
     public static File newFile(String path) {
@@ -432,7 +466,7 @@ public final class Utils {
         }
     }
 
-    public static void closeQuietly(Closeable...closeables) {
+    public static void closeQuietly(Closeable... closeables) {
         for (Closeable c : closeables) {
             closeQuietly(c);
         }

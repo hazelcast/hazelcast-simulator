@@ -8,9 +8,7 @@ import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
 
 import java.io.File;
-import java.text.NumberFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -20,9 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Responsible for collecting performance metrics from the agents and logging/storing it.
  */
 public class PerformanceMonitor extends Thread {
-    private static final  AtomicBoolean performanceWritten = new AtomicBoolean();
+    private static final AtomicBoolean performanceWritten = new AtomicBoolean();
     private static final ILogger log = Logger.getLogger(PerformanceMonitor.class);
-    private static final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
 
     private final AgentsClient client;
     private final Coordinator coordinator;
@@ -86,9 +83,9 @@ public class PerformanceMonitor extends Thread {
             log.info("Operation-count: not available");
             log.info("Performance: not available");
         } else {
-            log.info("Operation-count: " + performanceFormat.format(operationCount));
+            log.info("Operation-count: " + Utils.formatLong(operationCount, 0));
             double performance = (operationCount * 1.0d) / duration;
-            log.info("Performance: " + performanceFormat.format(performance) + " ops/s");
+            log.info("Performance: " + Utils.formatDouble(performance, 0) + " ops/s");
         }
 
         if (performanceWritten.compareAndSet(false, true)) {
@@ -98,16 +95,14 @@ public class PerformanceMonitor extends Thread {
             coordinator.performanceMonitor.logDetailedPerformanceInfo(duration);
         }
 
-        log.info("Total operations executed: " + performanceFormat.format(operationCount));
-
         for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
             AgentClient client = entry.getKey();
             long operationCountPerAgent = entry.getValue();
             double percentage = 100 * (operationCountPerAgent * 1.0d) / operationCount;
             double performance = (operationCountPerAgent * 1.0d) / duration;
-            log.info("    Agent " + client.getPublicAddress() + " " + performanceFormat.format(operationCountPerAgent) + " ops: "
-                    + performanceFormat.format(performance)
-                    + " ops/s: " + performanceFormat.format(percentage) + " %");
+            log.info("    Agent " + client.getPublicAddress() + " " + Utils.formatLong(operationCountPerAgent,15) + " ops: "
+                    + Utils.formatDouble(performance,12)
+                    + " ops/s: " + Utils.formatDouble(percentage,5) + " %");
         }
 
     }
