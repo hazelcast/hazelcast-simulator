@@ -18,6 +18,7 @@ import com.hazelcast.stabilizer.worker.commands.StopCommand;
 
 import java.io.File;
 import java.text.NumberFormat;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -193,12 +194,15 @@ public class TestCaseRunner {
             final float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s, %5.2f %% complete", secondsToHuman(elapsed), percentage);
 
+
             if (coordinator.monitorPerformance) {
                 if (coordinator.operationCount < 0) {
                     msg += ", performance not available";
                 } else {
-                    String performance = String.format(", %10.2f ops/s", coordinator.performance);
-                    msg += performance;
+                    StringBuilder sb = new StringBuilder();
+                    Formatter formatter = new Formatter(sb, Locale.US);
+                    formatter.format("%10.2f ops/s", coordinator.performance);
+                    msg += sb.toString();
                 }
             }
 
