@@ -191,7 +191,7 @@ public class TestCaseRunner {
             Utils.sleepSeconds(period);
             final int elapsed = period * k;
             final float percentage = (100f * elapsed) / seconds;
-            String msg = format("Running %s, %-6.2f percent complete", secondsToHuman(elapsed), percentage);
+            String msg = format("Running %s, %6.2f percent complete", secondsToHuman(elapsed), percentage);
 
             if (coordinator.monitorPerformance) {
                 if (coordinator.operationCount < 0) {
