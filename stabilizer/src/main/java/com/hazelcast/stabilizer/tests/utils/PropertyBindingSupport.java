@@ -67,13 +67,16 @@ public final class PropertyBindingSupport {
         for (int k = 0; k < path.length - 1; k++) {
             String element = path[k];
             field = findPropertyField(object.getClass(), element);
+            if (field == null) {
+                throw new BindException("Failed to find property:" + element + " in property: " + property);
+            }
             object = field.get(object);
             if (object == null) {
                 throw new BindException("Failed to bind to property: " + property + " encountered a null value at field:" + field);
             }
         }
 
-        field = findPropertyField(object.getClass(), path[path.length-1]);
+        field = findPropertyField(object.getClass(), path[path.length - 1]);
 
         if (field == null) {
             throw new BindException(

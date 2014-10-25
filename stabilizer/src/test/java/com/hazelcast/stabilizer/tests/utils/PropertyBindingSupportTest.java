@@ -105,6 +105,13 @@ public class PropertyBindingSupportTest {
         bindProperty(someObject, "nullOtherObject.stringField", "newvalue");
     }
 
+    @Test(expected = BindException.class)
+    public void bindProperty_withPath_missingProperty() throws IllegalAccessException {
+        SomeObject someObject = new SomeObject();
+
+        bindProperty(someObject, "notexist.stringField", "newvalue");
+    }
+
     class SomeObject {
         private String stringField;
         private TimeUnit enumField;
