@@ -99,9 +99,8 @@ public class PerformanceMonitor extends Thread {
             double percentage = 100 * (operationCountPerAgent * 1.0d) / operationCount;
             double performance = (operationCountPerAgent * 1.0d) / duration;
             log.info("    Agent " + client.getPublicAddress() + " " + Utils.formatLong(operationCountPerAgent,15) + " ops "
-                    + Utils.formatDouble(performance,12)
+                    + Utils.formatDouble(performance,15)
                     + " ops/s " + Utils.formatDouble(percentage,5) + "%");
         }
-
     }
 }
