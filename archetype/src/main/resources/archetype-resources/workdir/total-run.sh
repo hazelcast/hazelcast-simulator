@@ -4,7 +4,7 @@ set -e
 
 provisioner --scale 4
 
-coordinator     --workerVmOptions "-ea -server -Xms2G -Xmx2G -XX:+PrintGC -XX:+HeapDumpOnOutOfMemoryError" \
+coordinator     --workerVmOptions "-ea -server -Xms2G -Xmx2G  -verbosegc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.log  -XX:+HeapDumpOnOutOfMemoryError" \
                 --clientHzFile      client-hazelcast.xml \
                 --hzFile            conf/hazelcast.xml \
                 --clientWorkerCount 2 \
