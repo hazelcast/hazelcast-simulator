@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
@@ -142,8 +143,14 @@ public class TestCaseRunner {
     }
 
     private <R extends Result<R>> Map<String, R> getProbesResult() {
-        List<List<Map<String, R>>> agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
         Map<String, R> combinedResults = new HashMap<String, R>();
+        List<List<Map<String, R>>> agentsProbeResults = null;
+        try {
+            agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
+        } catch (TimeoutException e) {
+            log.severe("A timeout happened while retrieving the benchmark results");
+            return combinedResults;
+        }
         for (List<Map<String, R>> agentProbeResults : agentsProbeResults) {
             for (Map<String, R> workerProbeResult : agentProbeResults) {
                 if (workerProbeResult != null) {
@@ -170,7 +177,7 @@ public class TestCaseRunner {
         }
     }
 
-    private void startTestCase() {
+    private void startTestCase() throws TimeoutException {
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
         RunCommand runCommand = new RunCommand(testCase.id);
         runCommand.clientOnly = workerJvmSettings.clientWorkerCount > 0;
@@ -217,7 +224,11 @@ public class TestCaseRunner {
     }
 
     private void echo(String msg) {
-        agentsClient.echo(prefix + msg);
+        try {
+            agentsClient.echo(prefix + msg);
+        } catch (TimeoutException e) {
+            log.warning("Failed to echo message due to timeout");
+        }
         log.info(prefix + msg);
     }
 }

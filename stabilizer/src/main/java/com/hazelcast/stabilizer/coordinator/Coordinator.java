@@ -43,6 +43,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
@@ -361,7 +362,11 @@ public class Coordinator {
     }
 
     private void echo(String msg) {
-        agentsClient.echo(msg);
+        try {
+            agentsClient.echo(msg);
+        } catch (TimeoutException e) {
+            log.warning("Failed to send echo message to agents due to timeout");
+        }
         log.info(msg);
     }
 

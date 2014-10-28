@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -41,22 +40,15 @@ public class PerformanceMonitor extends Thread {
 
             try {
                 checkPerformance();
-            } catch (Throwable t) {
-                if(t instanceof ExecutionException){
-                    ExecutionException e = (ExecutionException)t;
-                    t = e.getCause();
-                }
-
-                if(t instanceof TimeoutException){
-                    log.severe("There was a timeout retrieving the performance information.");
-                }else {
-                    log.severe(t);
-                }
+            } catch (TimeoutException e) {
+                log.severe("There was a timeout retrieving the performance information.");
+            } catch (Throwable cause) {
+                log.severe(cause);
             }
         }
     }
 
-    private void checkPerformance() {
+    private void checkPerformance() throws TimeoutException {
         GetOperationCountCommand command = new GetOperationCountCommand();
         Map<AgentClient, List<Long>> result = client.executeOnAllWorkersDetailed(command);
         long totalCount = 0;
@@ -109,9 +101,9 @@ public class PerformanceMonitor extends Thread {
             long operationCountPerAgent = entry.getValue();
             double percentage = 100 * (operationCountPerAgent * 1.0d) / operationCount;
             double performance = (operationCountPerAgent * 1.0d) / duration;
-            log.info("    Agent " + client.getPublicAddress() + " " + Utils.formatLong(operationCountPerAgent,15) + " ops "
-                    + Utils.formatDouble(performance,15)
-                    + " ops/s " + Utils.formatDouble(percentage,5) + "%");
+            log.info("    Agent " + client.getPublicAddress() + " " + Utils.formatLong(operationCountPerAgent, 15) + " ops "
+                    + Utils.formatDouble(performance, 15)
+                    + " ops/s " + Utils.formatDouble(percentage, 5) + "%");
         }
     }
 }
