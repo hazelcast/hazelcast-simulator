@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -40,7 +42,16 @@ public class PerformanceMonitor extends Thread {
             try {
                 checkPerformance();
             } catch (Throwable t) {
-                log.severe(t);
+                if(t instanceof ExecutionException){
+                    ExecutionException e = (ExecutionException)t;
+                    t = e.getCause();
+                }
+
+                if(t instanceof TimeoutException){
+                    log.severe("There was a timeout retrieving the performance information.");
+                }else {
+                    log.severe(t);
+                }
             }
         }
     }
