@@ -122,7 +122,7 @@ public class AtomicLongTest {
 
             while (!context.isStopped()) {
                 IAtomicLong counter = getRandomCounter();
-                if (shouldWrite(iteration)) {
+                if (isWrite()) {
                     increments++;
                     counter.incrementAndGet();
                 } else {
@@ -142,13 +142,13 @@ public class AtomicLongTest {
             totalCounter.addAndGet(increments);
         }
 
-        private boolean shouldWrite(long iteration) {
-            if (writePercentage == 0) {
-                return false;
-            } else if (writePercentage == 100) {
+        private boolean isWrite() {
+            if (writePercentage == 100) {
                 return true;
+            } else if (writePercentage == 0) {
+                return false;
             } else {
-                return (iteration % 100) < writePercentage;
+                return random.nextInt(100) <= writePercentage;
             }
         }
 

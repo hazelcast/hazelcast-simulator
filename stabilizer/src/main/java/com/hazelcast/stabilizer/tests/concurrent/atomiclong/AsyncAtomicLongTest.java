@@ -196,8 +196,10 @@ public class AsyncAtomicLongTest {
                 return false;
             } else if (writePercentage == 100) {
                 return true;
+            } else if (writePercentage == 0) {
+                return false;
             } else {
-                return (iteration % 100) < writePercentage;
+                return random.nextInt(100) <= writePercentage;
             }
         }
 
