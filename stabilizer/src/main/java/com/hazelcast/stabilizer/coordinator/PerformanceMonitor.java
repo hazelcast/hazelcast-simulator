@@ -41,7 +41,7 @@ public class PerformanceMonitor extends Thread {
             try {
                 checkPerformance();
             } catch (TimeoutException e) {
-                log.severe("There was a timeout retrieving the performance information.");
+                log.warning("There was a timeout retrieving performance information from the members.");
             } catch (Throwable cause) {
                 log.severe(cause);
             }
