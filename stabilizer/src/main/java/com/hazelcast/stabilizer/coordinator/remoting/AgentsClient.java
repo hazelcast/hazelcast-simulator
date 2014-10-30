@@ -404,8 +404,9 @@ public class AgentsClient {
                 public Object call() throws Exception {
                     try {
                         return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
-                    } catch (RuntimeException t) {
-                        log.severe(t);
+                    }catch (RuntimeException t) {
+                        log.severe(t.getMessage());
+                        log.finest(t.getMessage(), t);
                         throw t;
                     }
                 }
