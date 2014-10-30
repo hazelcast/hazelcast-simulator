@@ -214,7 +214,7 @@ public class WorkerJvmManager {
                 results.add(result);
             } catch (TimeoutException e) {
                 registerWorkerFailure(workerJvm, e);
-                throw new FailureAlreadyThrownRuntimeException(e);
+                throw e;
             } catch (ExecutionException e) {
                 registerWorkerFailure(workerJvm,e);
                 throw new FailureAlreadyThrownRuntimeException(e);
