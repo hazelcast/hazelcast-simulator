@@ -1,7 +1,9 @@
 package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastCacheManager;
+
+import javax.cache.Cache;
+import javax.cache.CacheManager;;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -48,7 +50,7 @@ public class EntryProcessorICacheTest {
     public int performanceUpdateFrequency = 10000;
 
     private final AtomicLong operations = new AtomicLong();
-    private ICache<Integer, Long> cache;
+    private Cache<Integer, Long> cache;
     private IList<Map<Integer, Long>> resultsPerWorker;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -58,7 +60,7 @@ public class EntryProcessorICacheTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
 
-        HazelcastCacheManager cacheManager;
+        CacheManager cacheManager;
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
@@ -94,7 +96,6 @@ public class EntryProcessorICacheTest {
         for (int k = 0; k < keyCount; k++) {
             cache.put(k, 0l);
         }
-        System.out.println(basename + " cache size ==>" + cache.size());
     }
 
     @Run
