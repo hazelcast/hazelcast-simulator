@@ -1,7 +1,9 @@
 package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastCacheManager;
+
+import javax.cache.Cache;
+import javax.cache.CacheManager;;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -50,8 +52,8 @@ public class CasICacheTest {
     private IList<long[]> resultsPerWorker;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private HazelcastCacheManager cacheManager;
-    private ICache<Integer, Long> cache;
+    private CacheManager cacheManager;
+    private Cache<Integer, Long> cache;
     private String basename;
 
 
@@ -99,9 +101,6 @@ public class CasICacheTest {
 
     @Run
     public void run() {
-        if (cache.size() != keyCount) {
-            throw new RuntimeException("warmup has not run since the map is not filled correctly, found size:" + cache.size());
-        }
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int k = 0; k < threadCount; k++) {
