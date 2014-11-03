@@ -47,7 +47,7 @@ public class ProvisionerCli {
                     "are always loaded from STABILIZER_HOME/conf/stabilizer.properties"
     ).withRequiredArg().ofType(String.class);
 
-    private final OptionSpec<Boolean> enterpriseEdition = parser.accepts("ee",
+    private final OptionSpec<Boolean> enterpriseEnabledSpec = parser.accepts("enterpriseEnabled",
             "use hazelcast enterprise edition jars")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
@@ -75,8 +75,8 @@ public class ProvisionerCli {
         provisioner.init();
 
         if (options.has(restartSpec)) {
-            boolean eejars = options.valueOf(enterpriseEdition);
-            provisioner.restart(eejars);
+            boolean enterpriseEnabled = options.valueOf(enterpriseEnabledSpec);
+            provisioner.restart(enterpriseEnabled);
             provisioner.startAgents();
         } else if (options.has(killSpec)) {
             provisioner.killAgents();
@@ -89,8 +89,8 @@ public class ProvisionerCli {
             provisioner.terminate();
         } else if (options.has(scaleSpec)) {
             int size = options.valueOf(scaleSpec);
-            boolean eejars = options.valueOf(enterpriseEdition);
-            provisioner.scale(size, eejars);
+            boolean enterpriseEnabled = options.valueOf(enterpriseEnabledSpec);
+            provisioner.scale(size, enterpriseEnabled);
         } else if (options.has(listAgentsSpec)) {
             provisioner.listAgents();
         } else {
