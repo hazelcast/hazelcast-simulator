@@ -20,6 +20,17 @@ import java.util.Random;
 
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.nextKeyOwnedBy;
 
+/*
+* Test performance of map put/get.  gives latency histogram and through put
+* every member node in the test,  init's the map with keysPerNode number of key/value
+* during initialization each member puts to a partition they own,  this cuts down on network traffic during
+* test init.  In total there will be keysPerNode * memberCount keys in the map.  the value used is
+* a byte array,  the test uses the same byte array to put as the value for every map entry, so
+* cutting down the memory footprint of the test.
+* the clients or members that run the test, do puts and get (at ratio putProb) from the key range 0 to totalKeys,  so
+* their puts and gets can hit every member.  put / get latency and through put info is collected from every worker thread
+* so there is no competition between worker threads.  this test also has a JIT warm up phase before the measurements are take
+* */
 public class MapPutGet {
     private final static ILogger log = Logger.getLogger(MapPutGet.class);
 
@@ -60,11 +71,6 @@ public class MapPutGet {
             }
             totalKeys = keysPerNode * memberCount;
         }
-    }
-
-    @Warmup(global = false)
-    public void warmup() throws Exception {
-
     }
 
     @Run
