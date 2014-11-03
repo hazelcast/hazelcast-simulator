@@ -2,15 +2,19 @@ package com.hazelcast.stabilizer.tests.performance;
 
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import org.HdrHistogram.IntHistogram;
 
 import java.util.Random;
 
@@ -20,9 +24,13 @@ public class MapPutGet {
     private final static ILogger log = Logger.getLogger(MapPutGet.class);
 
     public String basename = this.getClass().getName();
+    public int threadCount = 3;
     public int valueLength = 1000;
     public int keysPerNode = 1000;
-    public int memberCount = 3;
+    public int memberCount = 1;
+    public int jitWarmUpMs = 1000*30;
+    public int durationMs = 1000*60;
+    public double putProb = 0.5;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -31,8 +39,8 @@ public class MapPutGet {
     private int totalKeys;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
+    public void setup(TestContext testContex) throws Exception {
+        testContext = testContex;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         value = new byte[valueLength];
@@ -47,7 +55,7 @@ public class MapPutGet {
             long key=0;
             for(int i=0; i<keysPerNode; i++){
                 key = nextKeyOwnedBy(key, targetInstance);
-                map.put(key, value);
+                map.put((int)key, value);
                 key++;
             }
             totalKeys = keysPerNode * memberCount;
@@ -57,82 +65,100 @@ public class MapPutGet {
     @Warmup(global = false)
     public void warmup() throws Exception {
 
-        MapConfig mapConfig = targetInstance.getConfig().getMapConfig(basename);
-        log.info(basename+": "+mapConfig);
     }
 
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        spawner.spawn(new Worker());
+
+        Worker[] workers = new Worker[threadCount];
+
+        for(int i=0; i<threadCount; i++){
+            workers[i] = new Worker();
+            spawner.spawn(workers[i]);
+        }
         spawner.awaitCompletion();
+
+        for(int i=1; i<threadCount; i++){
+            workers[0].putLatencyHisto.add(workers[i].putLatencyHisto);
+            workers[0].getLatencyHisto.add(workers[i].getLatencyHisto);
+        }
+
+        targetInstance.getList(basename+"putHisto").add(workers[0].putLatencyHisto);
+        targetInstance.getList(basename+"getHisto").add(workers[0].getLatencyHisto);
     }
 
     private class Worker implements Runnable {
-
-        long puts=0;
-        double putAvgLatency=0.0;
-        double putMinLatency=0.0;
-        double putMaxLatency=0.0;
-
-        long gets=0;
-        boolean put=true;
-
-        int[] allKeys = new int[totalKeys];
-        int[] latencyHisto = new int[500];
-
-        public Worker(){
-            for(int i=0; i<totalKeys; i++){
-                allKeys[i]=i;
-            }
-            shuffleArray(allKeys);
-        }
+        IntHistogram putLatencyHisto = new IntHistogram(1, 1000*30, 2);
+        IntHistogram getLatencyHisto = new IntHistogram(1, 1000*30, 2);
+        Random random = new Random();
 
         public void run() {
-            int keyIdx=0;
-            while (!testContext.isStopped()) {
+            test(jitWarmUpMs);
+            putLatencyHisto.reset();
+            getLatencyHisto.reset();
+            test(durationMs);
+        }
 
-                int key = allKeys[keyIdx];
-                if(put){
+        private void test(long maxTime){
+            long runStart = System.currentTimeMillis();
+            long now;
+            do{
+                int key = random.nextInt(totalKeys);
+
+                if(random.nextDouble() < putProb){
                     long start = System.currentTimeMillis();
                     map.put(key, value);
                     long stop = System.currentTimeMillis();
-                    long latency = stop - start;
-                    putAvgLatency = (latency - putAvgLatency) / ++puts;
-
-                    if(latency < putMinLatency){
-                        putMinLatency = latency;
-                    }
-                    else if(latency > putMaxLatency){
-                        putMaxLatency = latency;
-                    }
-
-                    int histoIdx=0;
-                    while(latency <  ){
-                        histoIdx++;
-                    }
-
+                    putLatencyHisto.recordValue(stop - start);
                 }else{
+                    long start = System.currentTimeMillis();
                     map.get(key);
-                    gets++;
+                    long stop = System.currentTimeMillis();
+                    getLatencyHisto.recordValue(stop - start);
                 }
-                put=!put;
-                keyIdx = (++keyIdx == totalKeys) ? 0 : keyIdx;
-            }
-        }
 
-        void shuffleArray(int[] ar){
-
-            Random rnd = new Random();
-            for (int i = ar.length - 1; i > 0; i--) {
-                int index = rnd.nextInt(i + 1);
-                // Simple swap
-                int temp = ar[index];
-                ar[index] = ar[i];
-                ar[i] = temp;
-            }
+                now = System.currentTimeMillis();
+            }while(now - runStart < maxTime);
         }
     }
 
-}
+    @Verify(global = true)
+    public void verify() throws Exception {
 
+        MapConfig mapConfig = targetInstance.getConfig().getMapConfig(basename);
+        log.info(basename+": "+mapConfig);
+        log.info(basename+": map size ="+map.size());
+
+        IList<IntHistogram>  putHistos = targetInstance.getList(basename+"putHisto");
+        IList<IntHistogram>  getHistos = targetInstance.getList(basename+"getHisto");
+
+        IntHistogram putHisto = putHistos.get(0);
+        IntHistogram getHisto = getHistos.get(0);
+
+        for(int i=1; i<putHistos.size(); i++){
+            putHisto.add(putHistos.get(i));
+        }
+        for(int i=1; i<getHistos.size(); i++){
+            getHisto.add(getHistos.get(i));
+        }
+
+        log.info(basename + ": Put Latency Histogram");
+        putHisto.outputPercentileDistribution(System.out, 1.0);
+        double putsPerSec = putHisto.getTotalCount() / (durationMs/1000);
+
+        log.info(basename + ": Get Latency Histogram");
+        getHisto.outputPercentileDistribution(System.out, 1.0);
+        double getPerSec = getHisto.getTotalCount() / (durationMs/1000);
+
+        log.info(basename+": put/sec ="+putsPerSec);
+        log.info(basename+": get/Sec ="+getPerSec);
+
+        System.out.println(putHisto.getEstimatedFootprintInBytes());
+    }
+
+    public static void main(String[] args) throws Throwable {
+        MapPutGet test = new MapPutGet();
+        new TestRunner(test).run();
+    }
+}
