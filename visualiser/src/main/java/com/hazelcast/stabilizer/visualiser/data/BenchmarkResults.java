@@ -1,7 +1,7 @@
 package com.hazelcast.stabilizer.visualiser.data;
 
 
-import com.hazelcast.stabilizer.common.probes.Result;
+import com.hazelcast.stabilizer.probes.probes.Result;
 
 import java.util.Collections;
 import java.util.HashMap;

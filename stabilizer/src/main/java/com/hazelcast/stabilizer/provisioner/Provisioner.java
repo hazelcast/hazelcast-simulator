@@ -78,6 +78,8 @@ public class Provisioner {
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/bin/", "bin");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/conf/", "conf");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/jdk-install/", "jdk-install");
+
+        // we don't copy all jars to the agent since most of them are not needed.
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/hazelcast*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/jopt*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/junit*", "lib");
@@ -85,6 +87,7 @@ public class Provisioner {
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/stabilizer*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/commons-lang3*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/cache-api*", "lib");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/probes-*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/tests/", "tests");
 
         String script = loadInitScript();
@@ -310,15 +313,15 @@ public class Provisioner {
         return new File(scriptDir, "jdk-support.sh");
     }
 
-    public void download() {
+    public void download(String dir) {
         echoImportant("Download artifacts of %s machines", addresses.size());
 
-        bash.execute("mkdir -p workers");
+        bash.execute("mkdir -p "+dir);
 
         for (AgentAddress address : addresses) {
             echo("Downloading from %s", address.publicAddress);
 
-            String syncCommand = format("rsync --copy-links  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers .",
+            String syncCommand = format("rsync --copy-links  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers/* ./"+dir,
                     props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getVersion());
 
             bash.executeQuiet(syncCommand);

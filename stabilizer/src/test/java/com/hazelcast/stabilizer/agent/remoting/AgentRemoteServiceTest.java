@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import static org.mockito.Mockito.*;
 
@@ -45,14 +46,14 @@ public class AgentRemoteServiceTest {
 
 
     @Test
-    public void testEcho() throws IOException {
+    public void testEcho() throws IOException, TimeoutException {
         String string = "foo";
         client.echo(string);
         verify(agentMock).echo(string);
     }
 
     @Test
-    public void testMessageToAgent() {
+    public void testMessageToAgent() throws TimeoutException {
         MessageAddress address = MessageAddress.builder().toRandomAgent().build();
         Message message = new DummyRunnableMessage(address);
         client.sendMessage(message);

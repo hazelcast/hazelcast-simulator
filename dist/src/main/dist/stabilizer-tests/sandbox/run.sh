@@ -15,7 +15,7 @@ do
     coordinator --memberWorkerCount $members \
         --clientWorkerCount $clients \
         --duration $duration \
-        --workerVmOptions "-XX:+HeapDumpOnOutOfMemoryError" \
+        --workerVmOptions " -Xmx1000m -XX:+HeapDumpOnOutOfMemoryError -verbose:gc -XX:+PrintGCTimeStamps -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -Xloggc:verbosegc.log" \
         --parallel \
         sandBoxTest.properties
 

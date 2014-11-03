@@ -1,6 +1,6 @@
 package com.hazelcast.stabilizer.tests.icache;
 
-import com.hazelcast.cache.impl.HazelcastCacheManager;
+import javax.cache.CacheManager;;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -45,7 +45,7 @@ public class AddRemoveListenerICacheTest {
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private HazelcastCacheManager cacheManager;
+    private CacheManager cacheManager;
     private String basename;
 
     private CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();

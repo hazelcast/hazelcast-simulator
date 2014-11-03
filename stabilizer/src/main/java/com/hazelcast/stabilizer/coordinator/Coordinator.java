@@ -43,6 +43,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.stabilizer.Utils.getStablizerHome;
 import static com.hazelcast.stabilizer.Utils.getVersion;
@@ -72,6 +73,7 @@ public class Coordinator {
     public volatile double performance;
     public volatile long operationCount;
     private Bash bash;
+    public PerformanceMonitor performanceMonitor;
 
     private void run() throws Exception {
         bash = new Bash(props);
@@ -83,7 +85,8 @@ public class Coordinator {
         new FailureMonitorThread(this).start();
 
         if (monitorPerformance) {
-            new PerformanceMonitor(this).start();
+            performanceMonitor = new PerformanceMonitor(this);
+            performanceMonitor.start();
         }
 
         runTestSuite();
@@ -359,7 +362,11 @@ public class Coordinator {
     }
 
     private void echo(String msg) {
-        agentsClient.echo(msg);
+        try {
+            agentsClient.echo(msg);
+        } catch (TimeoutException e) {
+            log.warning("Failed to send echo message to agents due to timeout");
+        }
         log.info(msg);
     }
 

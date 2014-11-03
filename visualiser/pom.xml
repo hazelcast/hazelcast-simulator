@@ -9,6 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>visualiser</artifactId>
+    <name>Hazelcast Stabilizer Visualiser</name>
 
     <properties>
         <jfreechart.version>1.0.19</jfreechart.version>
@@ -30,7 +31,7 @@
 
         <dependency>
             <groupId>com.hazelcast.stabilizer</groupId>
-            <artifactId>stabilizer</artifactId>
+            <artifactId>probes</artifactId>
             <version>${parent.version}</version>
         </dependency>
 

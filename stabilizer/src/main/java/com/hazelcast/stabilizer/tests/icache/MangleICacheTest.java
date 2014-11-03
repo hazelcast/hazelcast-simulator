@@ -25,8 +25,6 @@ import java.util.Random;
 
 import static junit.framework.Assert.assertEquals;
 
-
-
 /**
  * In This tests we intentionally creating destroying closing and using, cache managers and there caches
  * this type of cache usage well out side normal usage however we did find 2 bugs with this test
@@ -88,12 +86,8 @@ public class MangleICacheTest {
                         counter.createCacheManager++;
 
                     } catch (CacheException e) {
-                        log.severe(basename+": createCacheManager "+e, e);
                         counter.createCacheManagerException++;
 
-                    } catch (Exception e) {
-                        log.severe(basename+": createCacheManager ERROR "+e, e);
-                        counter.generalException++;
                     }
                 }
                 else if((chance -= cacheManagerClose) < 0){
@@ -102,12 +96,8 @@ public class MangleICacheTest {
                         counter.cacheManagerClose++;
 
                     } catch (CacheException e) {
-                        log.severe(basename+": cacheManagerClose "+e, e);
                         counter.cacheManagerCloseException++;
 
-                    } catch (Exception e) {
-                        log.severe(basename+": cacheManagerClose ERROR "+e, e);
-                        counter.generalException++;
                     }
                 }
                 else if((chance -= cacheManagerdestroy) < 0){
@@ -116,16 +106,11 @@ public class MangleICacheTest {
                         counter.cacheManagerdestroy++;
 
                     } catch (CacheException e) {
-                        log.severe(basename+": cacheManagerdestroy "+e, e);
                         counter.cacheManagerdestroyException++;
 
                     } catch (IllegalStateException e) {
-                        log.severe(basename+": cacheManagerdestroy "+e, e);
                         counter.cacheManagerdestroyException++;
 
-                    } catch (Exception e) {
-                        log.severe(basename+": cacheManagerdestroy ERROR "+e, e);
-                        counter.generalException++;
                     }
                 }
                 else if((chance -= cachingProviderClose) < 0){
@@ -136,12 +121,8 @@ public class MangleICacheTest {
                             counter.cachingProviderClose++;
                         }
                     } catch (CacheException e) {
-                        log.severe(basename+": cachingProviderClose "+e, e);
                         counter.cachingProviderCloseException++;
 
-                    } catch (Exception e) {
-                        log.severe(basename+": cachingProviderClose ERROR "+e, e);
-                        counter.generalException++;
                     }
                 }
                 else if ((chance -= createCacheProb) < 0) {
@@ -150,16 +131,11 @@ public class MangleICacheTest {
                         counter.create++;
 
                     } catch (CacheException e) {
-                        log.severe(basename+": create "+e, e);
                         counter.createException++;
 
                     } catch (IllegalStateException e) {
-                        log.severe(basename+": create "+e, e);
                         counter.createException++;
 
-                    } catch (Exception e) {
-                        log.severe(basename+": create ERROR "+e, e);
-                        counter.generalException++;
                     }
                 }
                 else if ((chance -= putCacheProb) < 0) {
@@ -171,18 +147,12 @@ public class MangleICacheTest {
                             counter.put++;
                         }
                     } catch (CacheException e){
-                        log.severe(basename+": putCache "+e, e);
                         counter.getPutException++;
 
                     } catch (IllegalStateException e){
-                        log.severe(basename+": putCache "+e, e);
                         counter.getPutException++;
 
-                    } catch (Exception e){
-                        log.severe(basename+": putCache ERROR "+e, e);
-                        counter.generalException++;
                     }
-
                 }
                 else if ((chance -= closeCacheProb) < 0){
                     Cache cache=getAcache(cacheNumber);
@@ -192,18 +162,12 @@ public class MangleICacheTest {
                             counter.cacheClose++;
                         }
                     } catch (CacheException e){
-                        log.severe(basename+": putCache "+e, e);
                         counter.cacheCloseException++;
 
                     } catch (IllegalStateException e){
-                        log.severe(basename+": putCache "+e, e);
                         counter.cacheCloseException++;
 
-                    } catch (Exception e){
-                        log.severe(basename+": closeCache "+e, e);
-                        counter.generalException++;
                     }
-
                 }
                 else if ((chance -= destroyCacheProb) < 0) {
                     try{
@@ -211,16 +175,11 @@ public class MangleICacheTest {
                         counter.destroy++;
 
                     } catch (CacheException e){
-                        log.severe(basename+": destroy "+e, e);
                         counter.destroyException++;
 
                     } catch (IllegalStateException e){
-                        log.severe(basename+": destroy "+e, e);
                         counter.destroyException++;
 
-                    } catch (Exception e){
-                        log.severe(basename+": destroy ERROR "+e, e);
-                        counter.generalException++;
                     }
                 }
             }
@@ -247,16 +206,11 @@ public class MangleICacheTest {
                 return cache;
 
             } catch (CacheException e){
-                log.severe(basename+": getCache "+e, e);
                 counter.getCacheException++;
 
             } catch (IllegalStateException e){
-                log.severe(basename+": getCache "+e, e);
                 counter.getCacheException++;
 
-            } catch (Exception e){
-                log.severe(basename+": getCache ERROR "+e, e);
-                counter.generalException++;
             }
             return null;
         }
@@ -270,8 +224,6 @@ public class MangleICacheTest {
             total.add(c);
         }
         log.info(basename + ": " + total + " from " + counters.size() + " worker threads");
-
-        assertEquals(basename + ": " + total.generalException + " Unexpected Exceptions were thrown during the test ", 0, total.generalException);
     }
 
     static class Counter implements Serializable {
@@ -291,7 +243,6 @@ public class MangleICacheTest {
         public long destroyException = 0;
         public long cacheCloseException = 0;
 
-
         public long cacheManagerClose=0;
         public long cacheManagerdestroy=0;
         public long cachingProviderClose=0;
@@ -299,8 +250,6 @@ public class MangleICacheTest {
         public long cacheManagerCloseException=0;
         public long cacheManagerdestroyException=0;
         public long cachingProviderCloseException=0;
-
-        public long generalException=0;
 
         public void add(Counter c) {
 
@@ -312,7 +261,6 @@ public class MangleICacheTest {
             create += c.create;
             destroy += c.destroy;
             cacheClose += c.cacheClose;
-
 
             getCacheException += c.getCacheException;
             getPutException += c.getPutException;
@@ -326,8 +274,6 @@ public class MangleICacheTest {
             cacheManagerCloseException += c.cacheManagerCloseException;
             cacheManagerdestroyException += c.cacheManagerdestroyException;
             cachingProviderCloseException += c.cachingProviderCloseException;
-
-            generalException += c.generalException;
         }
 
         public String toString() {
@@ -350,7 +296,6 @@ public class MangleICacheTest {
                     ", cacheManagerCloseException=" + cacheManagerCloseException +
                     ", cacheManagerdestroyException=" + cacheManagerdestroyException +
                     ", cachingProviderCloseException=" + cachingProviderCloseException +
-                    ", generalException=" + generalException +
                     '}';
         }
     }

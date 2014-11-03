@@ -16,7 +16,9 @@
 package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastCacheManager;
+
+import javax.cache.Cache;
+import javax.cache.CacheManager;;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -33,13 +35,13 @@ import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import javax.cache.CacheException;
 import java.io.Serializable;
 import java.util.Random;
 
 
-
 /**
- * In This tests we concurrently creating deleting destroying and putting to a cache.
+ * In This tests we are concurrently creating deleting destroying and putting to a cache.
  * However this test is a sub set of MangleIcacheTest ? so could be deleted
  */
 public class CreateDestroyICacheTest {
@@ -54,7 +56,7 @@ public class CreateDestroyICacheTest {
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private HazelcastCacheManager cacheManager;
+    private CacheManager cacheManager;
     private String basename;
 
     @Setup
@@ -97,38 +99,34 @@ public class CreateDestroyICacheTest {
                     try {
                         cacheManager.createCache(basename, config);
                         counter.create++;
-                    } catch (Exception e) {
-                        log.severe(basename+": createCache "+e, e);
+                    } catch (CacheException e) {
                         counter.createException++;
                     }
                 } else if ((chance -= putCacheProb) < 0) {
                     try{
-                        ICache cache = cacheManager.getCache(basename);
+                        Cache cache = cacheManager.getCache(basename);
                         if(cache!=null){
                             cache.put(random.nextInt(), random.nextInt());
                             counter.put++;
                         }
-                    } catch (Exception e){
-                        log.severe(basename+": getCache "+e, e);
+                    } catch (IllegalStateException e){
                         counter.putException++;
                     }
                 } else if ((chance -= closeCacheProb) < 0){
                     try{
-                        ICache cache = cacheManager.getCache(basename);
+                        Cache cache = cacheManager.getCache(basename);
                         if(cache!=null){
                             cache.close();
                             counter.close++;
                         }
-                    } catch (Exception e){
-                        log.severe(basename+": getCache "+e, e);
+                    } catch (IllegalStateException e){
                         counter.closeException++;
                     }
                 } else if ((chance -= destroyCacheProb) < 0) {
                     try{
                         cacheManager.destroyCache(basename);
                         counter.destroy++;
-                    } catch (Exception e){
-                        log.severe(basename+": destroyCache "+e, e);
+                    } catch (IllegalStateException e){
                         counter.destroyException++;
                     }
                 }

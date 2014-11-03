@@ -24,6 +24,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertFalse;
@@ -117,7 +118,7 @@ public class AgentSmokeTest {
         System.out.println("Done");
     }
 
-    private void spawnWorkers(AgentsClient client) {
+    private void spawnWorkers(AgentsClient client) throws TimeoutException {
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
         workerJvmSettings.profiler = "";
         workerJvmSettings.vmOptions = "";

@@ -42,13 +42,13 @@ public class TestSuite implements Serializable {
         Map<String, TestCase> testcases = new HashMap<String, TestCase>();
         for (String property : properties.stringPropertyNames()) {
             String value = (String) properties.get(property);
-            int indexOfDot = property.indexOf(".");
+            int indexOfAt = property.indexOf("@");
 
             String testCaseId = "";
             String field = property;
-            if (indexOfDot > -1) {
-                testCaseId = property.substring(0, indexOfDot);
-                field = property.substring(indexOfDot + 1);
+            if (indexOfAt > -1) {
+                testCaseId = property.substring(0, indexOfAt);
+                field = property.substring(indexOfAt + 1);
             }
 
             TestCase testCase = testcases.get(testCaseId);
@@ -73,12 +73,12 @@ public class TestSuite implements Serializable {
 
             if (testcase.getClassname() == null) {
                 if ("".equals(testcaseId)) {
-                    throw new RuntimeException(format("There is no class set for the in property file [%s]." +
+                    throw new BindException(format("There is no class set for the in property file [%s]. " +
                                     "Add class=YourTestClass",
                             file.getAbsolutePath()
                     ));
                 } else {
-                    throw new RuntimeException(format("There is no class set for test [%s] in property file [%s]." +
+                    throw new BindException(format("There is no class set for test [%s] in property file [%s]. " +
                                     "Add %s.class=YourTestClass",
                             testcaseId, file.getAbsolutePath(), testcaseId
                     ));

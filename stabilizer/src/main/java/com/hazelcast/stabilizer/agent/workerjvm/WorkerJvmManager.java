@@ -41,7 +41,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -131,8 +130,8 @@ public class WorkerJvmManager {
         } else if (MessageAddress.RANDOM_WORKER_WITH_MEMBER.equals(workerAddress)) {
             sendMessageToRandomWorkerWithClusterMember(message);
         } else {
-            throw new UnsupportedOperationException("Unsupported addressing mode for worker '"+workerAddress+"'. " +
-                    "Full address: '"+message.getMessageAddress()+"'.");
+            throw new UnsupportedOperationException("Unsupported addressing mode for worker '" + workerAddress + "'. " +
+                    "Full address: '" + message.getMessageAddress() + "'.");
         }
     }
 
@@ -169,7 +168,7 @@ public class WorkerJvmManager {
     private void preprocessMessage(Message message, Collection<WorkerJvm> workerJvmList) {
         for (WorkerJvm workerJvm : new ArrayList<WorkerJvm>(workerJvmList)) {
             if (message.removeFromAgentList()) {
-                while (workerJvms.values().remove(workerJvm)); //remove worker
+                while (workerJvms.values().remove(workerJvm)) ; //remove worker
             } else if (message.disableMemberFailureDetection()) {
                 workerJvm.detectFailure = false;
             }
@@ -213,20 +212,27 @@ public class WorkerJvmManager {
             try {
                 Object result = future.get(30, TimeUnit.SECONDS);
                 results.add(result);
+            } catch (TimeoutException e) {
+                registerWorkerFailure(workerJvm, e);
+                throw e;
             } catch (ExecutionException e) {
-                Failure failure = new Failure();
-                failure.type = Failure.Type.WORKER_EXCEPTION;
-                failure.message = e.getMessage();
-                failure.agentAddress = getHostAddress();
-                failure.workerAddress = workerJvm.memberAddress;
-                failure.workerId = workerJvm.id;
-                failure.testSuite = agent.getTestSuite();
-                failure.cause = throwableToString(e);
-                agent.getWorkerJvmFailureMonitor().publish(failure);
+                registerWorkerFailure(workerJvm,e);
                 throw new FailureAlreadyThrownRuntimeException(e);
             }
         }
         return results;
+    }
+
+    private void registerWorkerFailure(WorkerJvm workerJvm, Exception e) {
+        Failure failure = new Failure();
+        failure.type = Failure.Type.WORKER_EXCEPTION;
+        failure.message = e.getMessage();
+        failure.agentAddress = getHostAddress();
+        failure.workerAddress = workerJvm.memberAddress;
+        failure.workerId = workerJvm.id;
+        failure.testSuite = agent.getTestSuite();
+        failure.cause = throwableToString(e);
+        agent.getWorkerJvmFailureMonitor().publish(failure);
     }
 
     public void spawn(WorkerJvmSettings settings) throws Exception {

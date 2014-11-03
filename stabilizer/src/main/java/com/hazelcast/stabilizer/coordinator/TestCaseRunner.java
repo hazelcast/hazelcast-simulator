@@ -5,9 +5,9 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.stabilizer.common.probes.Result;
-import com.hazelcast.stabilizer.common.probes.impl.ProbesResultXmlWriter;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
+import com.hazelcast.stabilizer.probes.probes.ProbesResultXmlWriter;
+import com.hazelcast.stabilizer.probes.probes.Result;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.stabilizer.Utils.secondsToHuman;
 import static java.lang.String.format;
@@ -34,8 +34,6 @@ import static java.lang.String.format;
  */
 public class TestCaseRunner {
     private final static ILogger log = Logger.getLogger(TestCaseRunner.class);
-
-    public final static AtomicBoolean performanceWritten = new AtomicBoolean();
 
     private final TestCase testCase;
     private final Coordinator coordinator;
@@ -145,8 +143,14 @@ public class TestCaseRunner {
     }
 
     private <R extends Result<R>> Map<String, R> getProbesResult() {
-        List<List<Map<String, R>>> agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
         Map<String, R> combinedResults = new HashMap<String, R>();
+        List<List<Map<String, R>>> agentsProbeResults = null;
+        try {
+            agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
+        } catch (TimeoutException e) {
+            log.severe("A timeout happened while retrieving the benchmark results");
+            return combinedResults;
+        }
         for (List<Map<String, R>> agentProbeResults : agentsProbeResults) {
             for (Map<String, R> workerProbeResult : agentProbeResults) {
                 if (workerProbeResult != null) {
@@ -169,24 +173,11 @@ public class TestCaseRunner {
 
     private void logPerformance() {
         if (coordinator.monitorPerformance) {
-            long operationCount = coordinator.operationCount;
-            if (operationCount < 0) {
-                log.info("Operation-count: not available");
-                log.info("Performance: not available");
-            } else {
-                log.info("Operation-count: " + performanceFormat.format(operationCount));
-                double performance = (operationCount * 1.0d) / testSuite.duration;
-                log.info("Performance: " + performanceFormat.format(performance) + " ops/s");
-            }
-
-            if (performanceWritten.compareAndSet(false, true)) {
-                double performance = (operationCount * 1.0d) / testSuite.duration;
-                Utils.appendText("" + performance + "\n", new File("performance.txt"));
-            }
+            coordinator.performanceMonitor.logDetailedPerformanceInfo(testSuite.duration);
         }
     }
 
-    private void startTestCase() {
+    private void startTestCase() throws TimeoutException {
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
         RunCommand runCommand = new RunCommand(testCase.id);
         runCommand.clientOnly = workerJvmSettings.clientWorkerCount > 0;
@@ -207,13 +198,13 @@ public class TestCaseRunner {
             Utils.sleepSeconds(period);
             final int elapsed = period * k;
             final float percentage = (100f * elapsed) / seconds;
-            String msg = format("Running %s, %-4.2f percent complete", secondsToHuman(elapsed), percentage);
+            String msg = format("Running %s, %6.2f%% complete", secondsToHuman(elapsed), percentage);
 
             if (coordinator.monitorPerformance) {
                 if (coordinator.operationCount < 0) {
-                    msg += ",  performance not available";
+                    msg += ", performance not available";
                 } else {
-                    msg += ", " + performanceFormat.format(coordinator.performance) + " ops/s.";
+                    msg += Utils.formatDouble(coordinator.performance, 14) + " ops/s";
                 }
             }
 
@@ -233,7 +224,11 @@ public class TestCaseRunner {
     }
 
     private void echo(String msg) {
-        agentsClient.echo(prefix + msg);
+        try {
+            agentsClient.echo(prefix + msg);
+        } catch (TimeoutException e) {
+            log.warning("Failed to echo message due to timeout");
+        }
         log.info(prefix + msg);
     }
 }

@@ -16,7 +16,7 @@
 package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastCacheManager;
+import javax.cache.CacheManager;;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -65,7 +65,7 @@ public class ExpiryTest {
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private HazelcastCacheManager cacheManager;
+    private CacheManager cacheManager;
     private String basename;
 
     private ExpiryPolicy expiryPolicy;
@@ -108,7 +108,7 @@ public class ExpiryTest {
     private class Worker implements Runnable {
         private Random random = new Random();
         private Counter counter = new Counter();
-        private ICache<Integer, Long> cache = cacheManager.getCache(basename);
+        private ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
 
         public void run() {
             while (!testContext.isStopped()) {
@@ -152,7 +152,7 @@ public class ExpiryTest {
         }
         log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
-        final ICache<Integer, Long> cache = cacheManager.getCache(basename);
+        final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
 
         for(int i=0; i<keyCount; i++){
             assertFalse(basename + ": cache should not contain any keys ", cache.containsKey(i) );

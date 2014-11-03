@@ -3,11 +3,11 @@ package com.hazelcast.stabilizer.worker;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.messaging.Message;
-import com.hazelcast.stabilizer.common.probes.IntervalProbe;
-import com.hazelcast.stabilizer.common.probes.ProbesConfiguration;
-import com.hazelcast.stabilizer.common.probes.Result;
-import com.hazelcast.stabilizer.common.probes.SimpleProbe;
-import com.hazelcast.stabilizer.common.probes.impl.DisabledResult;
+import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
+import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
+import com.hazelcast.stabilizer.probes.probes.Result;
+import com.hazelcast.stabilizer.probes.probes.SimpleProbe;
+import com.hazelcast.stabilizer.probes.probes.impl.DisabledResult;
 import com.hazelcast.stabilizer.tests.IllegalTestException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Name;
@@ -30,8 +30,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import com.hazelcast.stabilizer.probes.probes.Probes;
 
-import static com.hazelcast.stabilizer.common.probes.Probes.createProbe;
 import static java.lang.String.format;
 
 /**
@@ -257,7 +257,7 @@ public class TestContainer<T extends TestContext> {
     private <T extends SimpleProbe> T getOrCreateProbe(String probeName, Class<T> probeType) {
         SimpleProbe<?, ?> probe = probeMap.get(probeName);
         if (probe == null) {
-            probe = createProbe(probeType, probeName, probesConfiguration);
+            probe = Probes.createProbe(probeType, probeName, probesConfiguration);
             probeMap.put(probeName, probe);
             return (T) probe;
         }
