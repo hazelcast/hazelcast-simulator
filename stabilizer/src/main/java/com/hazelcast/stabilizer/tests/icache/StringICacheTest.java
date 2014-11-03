@@ -15,8 +15,6 @@
  */
 package com.hazelcast.stabilizer.tests.icache;
 
-import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -37,7 +35,9 @@ import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
+import javax.cache.Cache;
 import javax.cache.CacheException;
+import javax.cache.CacheManager;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -63,7 +63,7 @@ public class StringICacheTest {
     public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
 
-    private ICache<String, String> cache;
+    private Cache<String, String> cache;
     private String[] keys;
     private String[] values;
     private final AtomicLong operations = new AtomicLong();
@@ -83,7 +83,7 @@ public class StringICacheTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
 
-        HazelcastCacheManager cacheManager;
+        CacheManager cacheManager;
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(

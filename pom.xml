@@ -30,7 +30,7 @@
         <!-- we want to remain java 1.6 compatible -->
         <java.version>1.6</java.version>
         <junit.version>4.11</junit.version>
-        <hazelcast.version>3.3.1</hazelcast.version>
+        <hazelcast.version>3.4-SNAPSHOT</hazelcast.version>
         <jopt.version>4.4</jopt.version>
         <log4j.version>1.2.17</log4j.version>
         <jclouds.version>1.8.0</jclouds.version>
