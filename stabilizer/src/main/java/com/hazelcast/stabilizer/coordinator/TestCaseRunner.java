@@ -205,7 +205,7 @@ public class TestCaseRunner {
                     msg += ", performance not available";
                 } else {
                     msg += Utils.formatDouble(coordinator.performance, 14)
-                            + " ops/s "+Utils.formatLong(coordinator.operationCount, 9)+ " ops";
+                            + " ops/s "+Utils.formatLong(coordinator.operationCount, 14)+ " ops";
                 }
             }
 
