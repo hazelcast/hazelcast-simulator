@@ -69,8 +69,8 @@ public class MapPutGet {
                 map.put((int)key, value);
                 key++;
             }
-            totalKeys = keysPerNode * memberCount;
         }
+        totalKeys = keysPerNode * memberCount;
     }
 
     @Run

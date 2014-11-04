@@ -1,6 +1,7 @@
 #!/bin/sh
 
-boxCount=2
+boxCount=3
+dedicatedMemberBox=2
 members=2
 clients=2
 duration=2m
@@ -12,12 +13,13 @@ do
     provisioner --clean
     provisioner --restart
 
-    coordinator --memberWorkerCount $members \
-        --clientWorkerCount $clients \
-        --duration $duration \
-        --workerVmOptions " -Xmx1000m -XX:+HeapDumpOnOutOfMemoryError -verbose:gc -XX:+PrintGCTimeStamps -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -Xloggc:verbosegc.log" \
-        --parallel \
-        sandBoxTest.properties
+    coordinator --dedicatedMemberMachines $dedicatedMemberBox \
+                --memberWorkerCount $members \
+                --clientWorkerCount $clients \
+                --duration $duration \
+                --workerVmOptions " -Xmx1000m -XX:+HeapDumpOnOutOfMemoryError -verbose:gc -XX:+PrintGCTimeStamps -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -Xloggc:verbosegc.log" \
+                --parallel \
+                sandBoxTest.properties
 
     provisioner --download
 
