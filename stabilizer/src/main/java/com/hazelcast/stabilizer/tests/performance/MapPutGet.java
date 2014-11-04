@@ -61,8 +61,6 @@ public class MapPutGet {
         Random random = new Random();
         random.nextBytes(value);
 
-        log.info(basename+": keysPerNode ="+totalKeys);
-
         if(TestUtils.isMemberNode(targetInstance)){
             TestUtils.waitClusterSize(log, targetInstance, memberCount);
             TestUtils.warmupPartitions(log, targetInstance);
@@ -84,8 +82,6 @@ public class MapPutGet {
                     map.put(i, value);
                 }
             }
-
-            log.info(basename+": setup map Size ="+map.size());
         }
     }
 
@@ -151,7 +147,6 @@ public class MapPutGet {
         MapConfig mapConfig = targetInstance.getConfig().getMapConfig(basename);
         log.info(basename+": "+mapConfig);
         log.info(basename+": map size="+map.size());
-        log.info(basename+": map keys="+map.keySet());
 
         IList<IntHistogram>  putHistos = targetInstance.getList(basename+"putHisto");
         IList<IntHistogram>  getHistos = targetInstance.getList(basename+"getHisto");
@@ -166,22 +161,15 @@ public class MapPutGet {
             getHisto.add(getHistos.get(i));
         }
 
-        log.info(basename + ": Put Latency Histogram");
+        System.out.println(basename + ": Put Latency Histogram");
         putHisto.outputPercentileDistribution(System.out, 1.0);
         double putsPerSec = putHisto.getTotalCount() / (durationMs/1000);
 
-        log.info(basename + ": Get Latency Histogram");
+        System.out.println(basename + ": Get Latency Histogram");
         getHisto.outputPercentileDistribution(System.out, 1.0);
         double getPerSec = getHisto.getTotalCount() / (durationMs/1000);
 
         log.info(basename+": put/sec ="+putsPerSec);
         log.info(basename+": get/Sec ="+getPerSec);
-
-        System.out.println(putHisto.getEstimatedFootprintInBytes());
-    }
-
-    public static void main(String[] args) throws Throwable {
-        MapPutGet test = new MapPutGet();
-        new TestRunner(test).run();
     }
 }
