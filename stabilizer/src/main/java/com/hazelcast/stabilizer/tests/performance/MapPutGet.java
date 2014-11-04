@@ -71,7 +71,7 @@ public class MapPutGet {
                 map.put(key, value);
                 key++;
             }
-            log.info(basename+": map Size ="+map.size());
+            log.info(basename+": setup map Size ="+map.size());
         }
         totalKeys = keysPerNode * memberCount;
     }
