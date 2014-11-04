@@ -16,7 +16,9 @@
 package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastCacheManager;
+
+import javax.cache.Cache;
+import javax.cache.CacheManager;;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -54,7 +56,7 @@ public class CreateDestroyICacheTest {
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private HazelcastCacheManager cacheManager;
+    private CacheManager cacheManager;
     private String basename;
 
     @Setup
@@ -102,7 +104,7 @@ public class CreateDestroyICacheTest {
                     }
                 } else if ((chance -= putCacheProb) < 0) {
                     try{
-                        ICache cache = cacheManager.getCache(basename);
+                        Cache cache = cacheManager.getCache(basename);
                         if(cache!=null){
                             cache.put(random.nextInt(), random.nextInt());
                             counter.put++;
@@ -112,7 +114,7 @@ public class CreateDestroyICacheTest {
                     }
                 } else if ((chance -= closeCacheProb) < 0){
                     try{
-                        ICache cache = cacheManager.getCache(basename);
+                        Cache cache = cacheManager.getCache(basename);
                         if(cache!=null){
                             cache.close();
                             counter.close++;

@@ -1,7 +1,9 @@
 package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastCacheManager;
+
+import javax.cache.Cache;
+import javax.cache.CacheManager;;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -22,6 +24,7 @@ import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import javax.cache.CacheException;
+import javax.cache.configuration.CacheEntryListenerConfiguration;
 import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
 import javax.cache.expiry.CreatedExpiryPolicy;
@@ -49,7 +52,6 @@ public class ListenerICacheTest {
     public int keyCount = 1000;
     public boolean syncEvents = true;
 
-
     public double put = 0.5;
     public double putExpiry = 0.0;
     public double putAsyncExpiry = 0.0;
@@ -58,10 +60,9 @@ public class ListenerICacheTest {
     public double remove = 0.1;
     public double replace = 0.1;
 
-
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private HazelcastCacheManager cacheManager;
+    private CacheManager cacheManager;
     private String basename;
 
     private CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
@@ -94,12 +95,12 @@ public class ListenerICacheTest {
 
     @Warmup(global = false)
     public void warmup() {
-        cache = cacheManager.getCache(basename);
+        cache = (ICache) cacheManager.getCache(basename);
 
         listener = new MyCacheEntryListener<Integer, Long>();
         filter = new MyCacheEntryEventFilter<Integer, Long>();
 
-        MutableCacheEntryListenerConfiguration<Integer, Long> conf = new MutableCacheEntryListenerConfiguration<Integer, Long>(
+        CacheEntryListenerConfiguration<Integer, Long> conf = new MutableCacheEntryListenerConfiguration<Integer, Long>(
                 FactoryBuilder.factoryOf(listener),
                 FactoryBuilder.factoryOf(filter),
                 false, syncEvents);
