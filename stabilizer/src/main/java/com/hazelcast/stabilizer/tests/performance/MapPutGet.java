@@ -65,14 +65,6 @@ public class MapPutGet {
             TestUtils.waitClusterSize(log, targetInstance, memberCount);
             TestUtils.warmupPartitions(log, targetInstance);
 
-            /*int key=0;
-            for(int i=0; i<totalKeys; i++){
-                key = nextKeyOwnedBy(key, targetInstance);
-                map.put(key, value);
-                log.info(basename+": keys added ="+key);
-                key++;
-            }*/
-
             final Member localMember = targetInstance.getCluster().getLocalMember();
             final PartitionService partitionService = targetInstance.getPartitionService();
 
@@ -107,8 +99,8 @@ public class MapPutGet {
     }
 
     private class Worker implements Runnable {
-        IntHistogram putLatencyHisto = new IntHistogram(1, 1000*30, 2);
-        IntHistogram getLatencyHisto = new IntHistogram(1, 1000*30, 2);
+        IntHistogram putLatencyHisto = new IntHistogram(0, 1000*30, 0);
+        IntHistogram getLatencyHisto = new IntHistogram(0, 1000*30, 0);
         Random random = new Random();
 
         public void run() {
