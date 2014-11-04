@@ -37,7 +37,7 @@ public class MapPutGet {
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int valueLength = 1000;
-    public int keysPerNode = 1000;
+    public int totalKeys = 1000;
     public int memberCount = 1;
     public int jitWarmUpMs = 1000*30;
     public int durationMs = 1000*60;
@@ -47,7 +47,6 @@ public class MapPutGet {
     private HazelcastInstance targetInstance;
     private IMap map;
     private byte[] value;
-    private int totalKeys;
 
     @Setup
     public void setup(TestContext testContex) throws Exception {
@@ -59,14 +58,14 @@ public class MapPutGet {
         Random random = new Random();
         random.nextBytes(value);
 
-        log.info(basename+": keysPerNode ="+keysPerNode);
+        log.info(basename+": keysPerNode ="+totalKeys);
 
         if(TestUtils.isMemberNode(targetInstance)){
             TestUtils.waitClusterSize(log, targetInstance, memberCount);
             TestUtils.warmupPartitions(log, targetInstance);
 
             int key=0;
-            for(int i=0; i<keysPerNode; i++){
+            for(int i=0; i<totalKeys; i++){
                 key = nextKeyOwnedBy(key, targetInstance);
                 map.put(key, value);
                 log.info(basename+": keys added ="+key);
@@ -74,7 +73,6 @@ public class MapPutGet {
             }
             log.info(basename+": setup map Size ="+map.size());
         }
-        totalKeys = keysPerNode * memberCount;
     }
 
     @Run
@@ -116,10 +114,6 @@ public class MapPutGet {
             do{
                 int key = random.nextInt(totalKeys);
 
-                if(key > totalKeys){
-                    log.info(basename+": WHAT ???? ="+key);
-                }
-
                 if(random.nextDouble() < putProb){
                     long start = System.currentTimeMillis();
                     map.put(key, value);
@@ -144,8 +138,6 @@ public class MapPutGet {
         log.info(basename+": "+mapConfig);
         log.info(basename+": map size="+map.size());
         log.info(basename+": map keys="+map.keySet());
-        log.info(basename+": totalKeys="+totalKeys);
-
 
         IList<IntHistogram>  putHistos = targetInstance.getList(basename+"putHisto");
         IList<IntHistogram>  getHistos = targetInstance.getList(basename+"getHisto");
