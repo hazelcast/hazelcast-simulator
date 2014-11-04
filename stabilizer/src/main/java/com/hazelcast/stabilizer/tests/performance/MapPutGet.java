@@ -99,8 +99,8 @@ public class MapPutGet {
     }
 
     private class Worker implements Runnable {
-        IntHistogram putLatencyHisto = new IntHistogram(0, 1000*30, 0);
-        IntHistogram getLatencyHisto = new IntHistogram(0, 1000*30, 0);
+        IntHistogram putLatencyHisto = new IntHistogram(1, 1000*30, 0);
+        IntHistogram getLatencyHisto = new IntHistogram(1, 1000*30, 0);
         Random random = new Random();
 
         public void run() {
