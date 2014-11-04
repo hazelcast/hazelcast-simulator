@@ -4,6 +4,9 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.hazelcast.core.Member;
+import com.hazelcast.core.Partition;
+import com.hazelcast.core.PartitionService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -64,13 +67,24 @@ public class MapPutGet {
             TestUtils.waitClusterSize(log, targetInstance, memberCount);
             TestUtils.warmupPartitions(log, targetInstance);
 
-            int key=0;
+            /*int key=0;
             for(int i=0; i<totalKeys; i++){
                 key = nextKeyOwnedBy(key, targetInstance);
                 map.put(key, value);
                 log.info(basename+": keys added ="+key);
                 key++;
+            }*/
+
+            final Member localMember = targetInstance.getCluster().getLocalMember();
+            final PartitionService partitionService = targetInstance.getPartitionService();
+
+            for(int i=0; i<totalKeys; i++){
+                Partition partition = partitionService.getPartition(i);
+                if (localMember.equals(partition.getOwner())) {
+                    map.put(i, value);
+                }
             }
+
             log.info(basename+": setup map Size ="+map.size());
         }
     }
