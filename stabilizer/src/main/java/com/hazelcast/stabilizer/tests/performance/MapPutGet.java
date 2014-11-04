@@ -59,6 +59,8 @@ public class MapPutGet {
         Random random = new Random();
         random.nextBytes(value);
 
+        log.info(basename+": keysPerNode ="+keysPerNode);
+
         if(TestUtils.isMemberNode(targetInstance)){
             TestUtils.waitClusterSize(log, targetInstance, memberCount);
             TestUtils.warmupPartitions(log, targetInstance);
