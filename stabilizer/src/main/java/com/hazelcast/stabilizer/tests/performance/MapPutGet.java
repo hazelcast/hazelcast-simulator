@@ -115,6 +115,10 @@ public class MapPutGet {
             do{
                 int key = random.nextInt(totalKeys);
 
+                if(key > totalKeys){
+                    log.info(basename+": WHAT ???? ="+key);
+                }
+
                 if(random.nextDouble() < putProb){
                     long start = System.currentTimeMillis();
                     map.put(key, value);
