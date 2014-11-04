@@ -69,6 +69,7 @@ public class MapPutGet {
             for(int i=0; i<keysPerNode; i++){
                 key = nextKeyOwnedBy(key, targetInstance);
                 map.put(key, value);
+                log.info(basename+": keys added ="+key);
                 key++;
             }
             log.info(basename+": setup map Size ="+map.size());
