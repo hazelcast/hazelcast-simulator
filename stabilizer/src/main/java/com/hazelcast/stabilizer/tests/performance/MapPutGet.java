@@ -65,12 +65,13 @@ public class MapPutGet {
             TestUtils.waitClusterSize(log, targetInstance, memberCount);
             TestUtils.warmupPartitions(log, targetInstance);
 
-            long key=0;
+            int key=0;
             for(int i=0; i<keysPerNode; i++){
                 key = nextKeyOwnedBy(key, targetInstance);
-                map.put((int)key, value);
+                map.put(key, value);
                 key++;
             }
+            log.info(basename+": map Size ="+map.size());
         }
         totalKeys = keysPerNode * memberCount;
     }

@@ -187,37 +187,22 @@ public class TestUtils {
     }
 
     public static void warmupPartitions(ILogger logger, HazelcastInstance hz) {
-        logger.info("Waiting for partition warmup");
-
+        logger.info("Waiting for partition assignment");
         PartitionService partitionService = hz.getPartitionService();
-        long startTime = System.currentTimeMillis();
         for (Partition partition : partitionService.getPartitions()) {
-            if (System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
-                throw new IllegalStateException("Partition warmup timeout. Partitions didn't get an owner in time");
-            }
-
             while (partition.getOwner() == null) {
-                logger.finest("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                sleepMs(1000);
             }
         }
-
-        logger.info("Partitions are warmed up successfully");
+        logger.info("all Partitions assigned");
     }
 
     public static void waitClusterSize(ILogger logger, HazelcastInstance hz, int clusterSize) throws InterruptedException {
-        for (; ; ) {
-            if (hz.getCluster().getMembers().size() >= clusterSize) {
-                return;
-            }
-
-            logger.info("waiting cluster == " + clusterSize);
+        logger.info("waiting cluster == " + clusterSize);
+        while ( hz.getCluster().getMembers().size() != clusterSize ) {
             Thread.sleep(1000);
         }
+        logger.info("cluster == " + clusterSize);
     }
 
     public static Node getNode(HazelcastInstance hz) {
@@ -253,7 +238,7 @@ public class TestUtils {
         }
     }
 
-    public static long nextKeyOwnedBy(long key, HazelcastInstance instance) {
+    public static int nextKeyOwnedBy(int key, HazelcastInstance instance) {
         final Member localMember = instance.getCluster().getLocalMember();
         final PartitionService partitionService = instance.getPartitionService();
         for (; ; ) {
