@@ -134,7 +134,9 @@ public class MapPutGet {
 
         MapConfig mapConfig = targetInstance.getConfig().getMapConfig(basename);
         log.info(basename+": "+mapConfig);
-        log.info(basename+": map size ="+map.size());
+        log.info(basename+": map size="+map.size());
+        log.info(basename+": map keys="+map.keySet());
+
 
         IList<IntHistogram>  putHistos = targetInstance.getList(basename+"putHisto");
         IList<IntHistogram>  getHistos = targetInstance.getList(basename+"getHisto");
