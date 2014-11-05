@@ -159,6 +159,10 @@ public class SyntheticBackPressureTest {
                 return backupDelayNanos;
             }
 
+            if(backupDelayNanos == 0){
+                return 0;
+            }
+
             long d = Math.abs(random.nextLong());
             return d % backupDelayNanos;
         }
