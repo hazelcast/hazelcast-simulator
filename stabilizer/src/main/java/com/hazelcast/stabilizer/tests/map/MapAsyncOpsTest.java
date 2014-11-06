@@ -13,9 +13,12 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.OperationSelector;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import static com.hazelcast.stabilizer.tests.map.MapAsyncOpsTest.Operation.*;
 
 
 public class MapAsyncOpsTest {
@@ -34,10 +37,11 @@ public class MapAsyncOpsTest {
     //
     public int maxTTLExpireySeconds = 3;
 
-
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private MapOperationsCount count = new MapOperationsCount();
+
+    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
 
     public MapAsyncOpsTest() {
     }
@@ -46,6 +50,12 @@ public class MapAsyncOpsTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+
+        selector.addOperation(PUT_ASYNC, PutAsyncProb)
+                .addOperation(PUT_ASYNC_TTL, PutAsyncTTLProb)
+                .addOperation(GET_ASYNC, getAsyncProb)
+                .addOperation(REMOVE_ASYNC, removeAsyncProb)
+                .addOperation(DESTROY, destroyProb);
     }
 
     @Run
@@ -70,29 +80,31 @@ public class MapAsyncOpsTest {
                 try {
                     final int key = random.nextInt(keyCount);
                     final IMap map = targetInstance.getMap(basename);
-
-                    double chance = random.nextDouble();
-                    if ((chance -= PutAsyncProb) < 0) {
-                        final Object value = random.nextInt();
-                        map.putAsync(key, value);
-                        count.putAsyncCount.incrementAndGet();
+                    switch (selector.select()) {
+                        case PUT_ASYNC:
+                            Object value = random.nextInt();
+                            map.putAsync(key, value);
+                            count.putAsyncCount.incrementAndGet();
+                            break;
+                        case PUT_ASYNC_TTL:
+                            value = random.nextInt();
+                            int delay = 1 + random.nextInt(maxTTLExpireySeconds);
+                            map.putAsync(key, value, delay, TimeUnit.SECONDS);
+                            count.putAsyncTTLCount.incrementAndGet();
+                            break;
+                        case GET_ASYNC:
+                            map.getAsync(key);
+                            count.getAsyncCount.incrementAndGet();
+                            break;
+                        case REMOVE_ASYNC:
+                            map.removeAsync(key);
+                            count.removeAsyncCount.incrementAndGet();
+                            break;
+                        case DESTROY:
+                            map.destroy();
+                            count.destroyCount.incrementAndGet();
+                            break;
                     }
-                    if ((chance -= PutAsyncTTLProb) < 0) {
-                        final Object value = random.nextInt();
-                        int delay = 1 + random.nextInt(maxTTLExpireySeconds);
-                        map.putAsync(key, value, delay, TimeUnit.SECONDS);
-                        count.putAsyncTTLCount.incrementAndGet();
-                    } else if ((chance -= getAsyncProb) < 0) {
-                        map.getAsync(key);
-                        count.getAsyncCount.incrementAndGet();
-                    } else if ((chance -= removeAsyncProb) < 0) {
-                        map.removeAsync(key);
-                        count.removeAsyncCount.incrementAndGet();
-                    } else if ((chance -= destroyProb) <= 0) {
-                        map.destroy();
-                        count.destroyCount.incrementAndGet();
-                    }
-
                 } catch (DistributedObjectDestroyedException e) {
                 }
             }
@@ -119,5 +131,13 @@ public class MapAsyncOpsTest {
 
     public static void main(String[] args) throws Throwable {
         new TestRunner(new MapAsyncOpsTest()).run();
+    }
+
+    static enum Operation {
+        PUT_ASYNC,
+        PUT_ASYNC_TTL,
+        GET_ASYNC,
+        REMOVE_ASYNC,
+        DESTROY
     }
 }
