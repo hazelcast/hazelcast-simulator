@@ -121,6 +121,32 @@ public class TestUtils {
         return result;
     }
 
+    public static String getPartitionDistributionInformation(HazelcastInstance hz) {
+        Map<Member, Integer> partitionCountMap = new HashMap<Member, Integer>();
+        int totalPartitions = 0;
+        for(Partition partition: hz.getPartitionService().getPartitions()){
+            totalPartitions++;
+            Member member = partition.getOwner();
+            Integer count = partitionCountMap.get(member);
+            if(count == null){
+                count = 0;
+            }
+
+            count++;
+            partitionCountMap.put(member,count);
+        }
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("total partitions:").append(totalPartitions).append("\n");
+        for (Map.Entry<Member, Integer> entry : partitionCountMap.entrySet()) {
+            Member member = entry.getKey();
+            long count = entry.getValue();
+            double percentage = count * 100d / totalPartitions;
+            sb.append(member).append(" total=").append(count).append(" percentage=").append(percentage).append("%\n");
+        }
+        return sb.toString();
+    }
+
     public static String getOperationCountInformation(HazelcastInstance hz) {
         Map<Member, Long> operationCountMap = getOperationCount(hz);
 

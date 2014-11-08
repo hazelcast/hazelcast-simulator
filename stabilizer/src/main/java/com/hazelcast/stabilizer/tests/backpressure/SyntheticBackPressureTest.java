@@ -31,6 +31,7 @@ import java.util.concurrent.locks.LockSupport;
 
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.getNode;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.getOperationCountInformation;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.getPartitionDistributionInformation;
 
 
 /**
@@ -82,6 +83,7 @@ public class SyntheticBackPressureTest {
     @Teardown
     public void teardown() throws Exception {
         log.info(getOperationCountInformation(targetInstance));
+        log.info(getPartitionDistributionInformation(targetInstance));
     }
 
     @Run
