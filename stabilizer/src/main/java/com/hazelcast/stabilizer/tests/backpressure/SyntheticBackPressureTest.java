@@ -128,7 +128,7 @@ public class SyntheticBackPressureTest {
             while (!context.isStopped()) {
                 SomeOperation operation = new SomeOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
                 int partitionId = nextPartitionId();
-                ICompletableFuture f = operationService.invokeOnPartition("don'tcare", operation, partitionId);
+                ICompletableFuture f = operationService.invokeOnPartition(null, operation, partitionId);
                 try {
                     if (syncInvocation) {
                         f.get();
