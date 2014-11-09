@@ -24,6 +24,8 @@ import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -105,12 +107,22 @@ public class SyntheticBackPressureTest {
         private final Random random = new Random();
         private final OperationService operationService;
         private final int partitionCount;
+        private final ArrayList<Integer> partitions = new ArrayList<Integer>();
 
         public Worker() {
             Node node = getNode(context.getTargetInstance());
             node.getPartitionService().getPartitionCount();
             operationService = node.getNodeEngine().getOperationService();
             partitionCount = node.getPartitionService().getPartitionCount();
+
+            if (randomPartition) {
+                for (int k = 0; k < 10; k++) {
+                    for (int partitionId = 0; k < partitionCount; k++) {
+                        partitions.add(partitionId);
+                    }
+                }
+                Collections.shuffle(partitions);
+            }
         }
 
         @Override
@@ -126,10 +138,21 @@ public class SyntheticBackPressureTest {
         @Override
         public void run() {
             long iteration = 0;
+            int partitionIndex = 0;
 
             while (!context.isStopped()) {
+                int partitionId;
+                if (randomPartition) {
+                    partitionId = 0;
+                } else {
+                    partitionId = partitions.get(partitionIndex);
+                    partitionIndex++;
+                    if (partitionIndex >= partitions.size()) {
+                        partitionIndex = 0;
+                    }
+                }
+
                 SomeOperation operation = new SomeOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
-                int partitionId = nextPartitionId();
                 ICompletableFuture f = operationService.invokeOnPartition(null, operation, partitionId);
                 try {
                     if (syncInvocation) {
@@ -161,20 +184,12 @@ public class SyntheticBackPressureTest {
                 return backupDelayNanos;
             }
 
-            if(backupDelayNanos == 0){
+            if (backupDelayNanos == 0) {
                 return 0;
             }
 
             long d = Math.abs(random.nextLong());
             return d % backupDelayNanos;
-        }
-
-        public int nextPartitionId() {
-            if (randomPartition) {
-                return random.nextInt(partitionCount);
-            } else {
-                return 0;
-            }
         }
     }
 
