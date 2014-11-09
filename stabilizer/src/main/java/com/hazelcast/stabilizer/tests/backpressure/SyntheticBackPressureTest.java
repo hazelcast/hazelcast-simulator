@@ -107,7 +107,7 @@ public class SyntheticBackPressureTest {
         private final Random random = new Random();
         private final OperationService operationService;
         private final int partitionCount;
-        private final ArrayList<Integer> partitions = new ArrayList<Integer>();
+        private final ArrayList<Integer> partitionSequence = new ArrayList<Integer>();
 
         public Worker() {
             Node node = getNode(context.getTargetInstance());
@@ -118,10 +118,10 @@ public class SyntheticBackPressureTest {
             if (randomPartition) {
                 for (int k = 0; k < 10; k++) {
                     for (int partitionId = 0; partitionId < partitionCount; partitionId++) {
-                        partitions.add(partitionId);
+                        partitionSequence.add(partitionId);
                     }
                 }
-                Collections.shuffle(partitions);
+                Collections.shuffle(partitionSequence);
             }
         }
 
@@ -143,13 +143,13 @@ public class SyntheticBackPressureTest {
             while (!context.isStopped()) {
                 int partitionId;
                 if (randomPartition) {
-                    partitionId = 0;
-                } else {
-                    partitionId = partitions.get(partitionIndex);
+                    partitionId = partitionSequence.get(partitionIndex);
                     partitionIndex++;
-                    if (partitionIndex >= partitions.size()) {
+                    if (partitionIndex >= partitionSequence.size()) {
                         partitionIndex = 0;
                     }
+                } else {
+                    partitionId = 0;
                 }
 
                 SomeOperation operation = new SomeOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
