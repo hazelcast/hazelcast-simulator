@@ -117,7 +117,7 @@ public class SyntheticBackPressureTest {
 
             if (randomPartition) {
                 for (int k = 0; k < 10; k++) {
-                    for (int partitionId = 0; k < partitionCount; k++) {
+                    for (int partitionId = 0; partitionId < partitionCount; partitionId++) {
                         partitions.add(partitionId);
                     }
                 }
