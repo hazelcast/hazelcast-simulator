@@ -26,6 +26,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.hdrhistogram</groupId>
+            <artifactId>HdrHistogram</artifactId>
+            <version>1.2.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast-client</artifactId>
             <version>${hazelcast.version}</version>

@@ -74,7 +74,7 @@ public class MapHeapHogTest {
 
                 long maxLocalEntries = (long) ((totalFree / approxEntryBytesSize) * approxHeapUsageFactor);
 
-                long key = 0;
+                int key = 0;
                 for (int i = 0; i < maxLocalEntries; i++) {
                     key = nextKeyOwnedBy(key, targetInstance);
                     map.put(key, key, ttlHours, TimeUnit.HOURS);
