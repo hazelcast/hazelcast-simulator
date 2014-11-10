@@ -36,11 +36,11 @@ import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.worker.commands.Command;
 import com.hazelcast.stabilizer.worker.commands.CommandRequest;
 import com.hazelcast.stabilizer.worker.commands.CommandResponse;
-import com.hazelcast.stabilizer.worker.commands.IsPhaseCompletedCommand;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
 import com.hazelcast.stabilizer.worker.commands.GetBenchmarkResultsCommand;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
 import com.hazelcast.stabilizer.worker.commands.InitCommand;
+import com.hazelcast.stabilizer.worker.commands.IsPhaseCompletedCommand;
 import com.hazelcast.stabilizer.worker.commands.MessageCommand;
 import com.hazelcast.stabilizer.worker.commands.RunCommand;
 import com.hazelcast.stabilizer.worker.commands.StopCommand;
@@ -96,6 +96,8 @@ public class MemberWorker {
     private final BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
     private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
 
+    private final File performanceFile = new File("performance.txt");
+
     public void start() throws Exception {
         if ("server".equals(workerMode)) {
             log.info("------------------------------------------------------------------------");
@@ -119,6 +121,7 @@ public class MemberWorker {
 
         new TestCommandRequestProcessingThread().start();
         new SocketThread().start();
+        new PerformanceMonitorThread().start();
 
         // the last thing we do is to signal to the agent we have started.
         signalStartToAgent();
@@ -571,6 +574,56 @@ public class MemberWorker {
         @Override
         public void stop() {
             stopped = true;
+        }
+    }
+
+    class PerformanceMonitorThread extends Thread {
+        private long oldCount;
+        private long oldTimeMillis = System.currentTimeMillis();
+
+        public PerformanceMonitorThread() {
+            super("PerformanceMonitorThread");
+            setDaemon(true);
+        }
+
+        @Override
+        public void run() {
+            for (; ; ) {
+                try {
+                    Thread.sleep(5000);
+                    singleRun();
+                } catch (Throwable t) {
+                    log.severe("Failed to run performance monitor", t);
+                }
+            }
+        }
+
+        private void singleRun() {
+            long currentCount = getCount();
+            long delta = currentCount - oldCount;
+
+            long currentTimeMs = System.currentTimeMillis();
+            long durationMs = currentTimeMs - oldTimeMillis;
+
+            double performance = (delta * 1000d) / durationMs;
+
+            oldCount = currentCount;
+            oldTimeMillis = currentTimeMs;
+
+            String s = Utils.formatLong(currentCount, 14) + " ops " + Utils.formatDouble(performance, 14) + " ops/s\n";
+            Utils.appendText(s, performanceFile);
+        }
+
+        private long getCount() {
+            long operationCount = 0;
+            for (TestContainer container : tests.values()) {
+                try {
+                    operationCount += container.getOperationCount();
+                } catch (Throwable throwable) {
+                }
+            }
+
+            return operationCount;
         }
     }
 }
