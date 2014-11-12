@@ -1,21 +1,22 @@
 #!/bin/bash
 
-list=$(find . -name "nohup-[0-9]*.out" -o -name "failures-[0-9]*.txt")
+list=$(find . -maxdepth 1 -name "*[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]__[0-9][0-9]_[0-9][0-9]_[0-9][0-9]*")
 
 IFS=$'\n'
 
 for item in $list
 do
-	dir=$(echo "${item}" | cut -d '-' -f2 | cut -d '.' -f1)
+    dir=$(echo "${item}" | grep -o [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]__[0-9][0-9]_[0-9][0-9]_[0-9][0-9])
 
-	mv ${item} workers/${dir}/
+    fullPath=$(find -maxdepth 9 -type d -name ${dir} | head -n1)
+
+	mv ${item} ${fullPath}
 done
 
-rm -f logs/*
 
-dir=$(pwd)
-base=$(basename ${dir})
-cd ..
+#dir=$(pwd)
+#base=$(basename ${dir})
+#cd ..
 
-zip results.zip ${base} -r -x agents.txt *.hprof
-mv results.zip ${base}/
+#zip results.zip ${base} -r -x agents.txt *.hprof
+#mv results.zip ${base}/

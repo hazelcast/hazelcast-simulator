@@ -1,26 +1,43 @@
 #!/bin/sh
 
-boxCount=2
+boxCount=3
+dedicatedMemberBox=2
 members=2
 clients=2
-duration=2m
 
-for i in {1..1}
+partitions=271
+jvmArgs="-Dhazelcast.initial.min.cluster.size=$members -Dhazelcast.partition.count=$partitions"
+jvmArgs="$jvmArgs -Dhazelcast.health.monitoring.level=NOISY -Dhazelcast.health.monitoring.delay.seconds=30"
+jvmArgs="$jvmArgs -Xmx1000m -XX:+HeapDumpOnOutOfMemoryError"
+jvmArgs="$jvmArgs -verbose:gc -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -Xloggc:verbosegc.log"
+
+versions=(3.2.6 3.3.3)
+duration=1m
+maxRuns=1
+
+for hzVersion in ${versions[@]}
 do
+  sed -i s/maven=.*/maven=$hzVersion/g stabilizer.properties
 
-    provisioner --scale $boxCount
-    provisioner --clean
-    provisioner --restart
+  for (( i=0; i<$maxRuns; i++ ))
+  do
+      provisioner --scale $boxCount
+      ./initSysStats.sh
+      provisioner --clean
+      provisioner --restart
 
-    coordinator --memberWorkerCount $members \
-        --clientWorkerCount $clients \
-        --duration $duration \
-        --workerVmOptions " -Xmx1000m -XX:+HeapDumpOnOutOfMemoryError -verbose:gc -XX:+PrintGCTimeStamps -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -Xloggc:verbosegc.log" \
-        --parallel \
-        sandBoxTest.properties
+      coordinator --dedicatedMemberMachines $dedicatedMemberBox \
+                --memberWorkerCount $members \
+                --clientWorkerCount $clients \
+                --duration $duration \
+                --workerVmOptions "$jvmArgs" \
+                --parallel \
+		        --workerClassPath "~/.m2/repository/org/hdrhistogram/HdrHistogram/1.2.1/HdrHistogram-1.2.1.jar" \
+                sandBoxTest.properties
 
-    provisioner --download
 
+      provisioner --download output/$hzVersion
+  done
 done
-
 echo "The End"
+
