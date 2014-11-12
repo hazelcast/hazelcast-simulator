@@ -2,7 +2,9 @@ package com.hazelcast.stabilizer.tests.icache;
 
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastCacheManager;
+
+import javax.cache.Cache;
+import javax.cache.CacheManager;;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -42,7 +44,7 @@ public class PerformanceICacheTest {
     public String basename = "icacheperformance";
     public int writePercentage = 10;
 
-    private ICache<Integer, Integer> cache;
+    private Cache<Object, Object> cache;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -60,7 +62,7 @@ public class PerformanceICacheTest {
         this.testContext = testContext;
 
         targetInstance = testContext.getTargetInstance();
-        HazelcastCacheManager cacheManager;
+        CacheManager cacheManager;
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(

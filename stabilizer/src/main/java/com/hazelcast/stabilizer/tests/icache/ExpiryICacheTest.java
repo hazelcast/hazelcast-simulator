@@ -16,7 +16,9 @@
 package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastCacheManager;
+
+import javax.cache.Cache;
+import javax.cache.CacheManager;;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -57,7 +59,7 @@ public class ExpiryICacheTest {
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private ICache cache;
+    private ICache<Object, Object> cache;
     private long baseLineUsed;
     private final ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(Duration.ONE_MINUTE);
     private final AtomicLong operations = new AtomicLong();
@@ -66,7 +68,7 @@ public class ExpiryICacheTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-        HazelcastCacheManager cacheManager;
+        CacheManager cacheManager;
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
@@ -86,7 +88,7 @@ public class ExpiryICacheTest {
             //temp hack to deal with multiple nodes wanting to make the same cache.
             log.severe(hack);
         }
-        cache = cacheManager.getCache(basename);
+        cache = (ICache<Object, Object>) cacheManager.getCache(basename);
     }
 
     @Performance
