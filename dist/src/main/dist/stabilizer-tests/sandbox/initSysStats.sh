@@ -2,7 +2,6 @@
 
 ips=$(cat agents.txt | cut -d',' -f1)
 
-#Set the field separator to new line
 IFS=$'\n'
 
 for box in $ips

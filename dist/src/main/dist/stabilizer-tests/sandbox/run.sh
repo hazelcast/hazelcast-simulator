@@ -5,14 +5,15 @@ dedicatedMemberBox=2
 members=2
 clients=2
 
-duration=1m
-maxRuns=1
-
-versions=(3.2.6)
-
-jvmArgs="-Dhazelcast.partition.count=2711 -Dhazelcast.health.monitoring.level=NOISY -Dhazelcast.health.monitoring.delay.seconds=30"
+partitions=271
+jvmArgs="-Dhazelcast.initial.min.cluster.size=$members -Dhazelcast.partition.count=$partitions"
+jvmArgs="$jvmArgs -Dhazelcast.health.monitoring.level=NOISY -Dhazelcast.health.monitoring.delay.seconds=30"
 jvmArgs="$jvmArgs -Xmx1000m -XX:+HeapDumpOnOutOfMemoryError"
 jvmArgs="$jvmArgs -verbose:gc -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -Xloggc:verbosegc.log"
+
+versions=(3.2.6 3.3.3)
+duration=1m
+maxRuns=1
 
 for hzVersion in ${versions[@]}
 do
@@ -31,11 +32,11 @@ do
                 --duration $duration \
                 --workerVmOptions "$jvmArgs" \
                 --parallel \
-		        --workerClassPath "/home/danny/.m2/repository/org/hdrhistogram/HdrHistogram/1.2.1/HdrHistogram-1.2.1.jar" \
+		        --workerClassPath "~/.m2/repository/org/hdrhistogram/HdrHistogram/1.2.1/HdrHistogram-1.2.1.jar" \
                 sandBoxTest.properties
 
 
-      provisioner --download results/$hzVersion
+      provisioner --download output/$hzVersion
   done
 done
 echo "The End"
