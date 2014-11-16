@@ -321,6 +321,8 @@ public class MemberWorker {
         }
 
         private void doProcess(long id, Command command) throws Throwable {
+            long startMs = System.currentTimeMillis();
+
             Object result = null;
             try {
                 if (command instanceof IsPhaseCompletedCommand) {
@@ -349,6 +351,11 @@ public class MemberWorker {
                     response.result = result;
                     responseQueue.add(response);
                 }
+            }
+
+            long durationMs = System.currentTimeMillis() - startMs;
+            if (durationMs > 5000) {
+                log.warning(command + " took " + durationMs + " ms to execute");
             }
         }
 
