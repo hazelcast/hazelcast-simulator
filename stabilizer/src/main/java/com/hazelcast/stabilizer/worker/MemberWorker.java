@@ -245,6 +245,7 @@ public class MemberWorker {
                 try {
                     List<CommandRequest> requests = execute(WorkerJvmManager.SERVICE_POLL_WORK, workerId);
                     for (CommandRequest request : requests) {
+                        request.task.enteredMs = System.currentTimeMillis();
                         requestQueue.add(request);
                     }
 
