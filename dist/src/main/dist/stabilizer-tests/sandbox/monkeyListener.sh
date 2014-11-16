@@ -21,11 +21,16 @@ mkfifo "${fifo}" || exit 1
 } | {
 
     id=$(grep -oh -m 1 "Starting testsuite: [0-9].*" | cut -d ' ' -f3)
+
+    ./startStats.sh
+
     grep -m 1 "${actionTriger}"
 
     sh ./monkeyAction.sh &
 
     grep -m 1 "The End"
+
+    ./getStats.sh "${id}"
 
     # notify the first pipeline stage that grep is done
     echo "${id}">${fifo}
