@@ -119,7 +119,7 @@ public class MemberWorker {
         workerMessageProcessor.setHazelcastServerInstance(serverInstance);
         workerMessageProcessor.setHazelcastClientInstance(clientInstance);
 
-        new TestCommandRequestProcessingThread().start();
+        new CommandRequestProcessingThread().start();
         new SocketThread().start();
         new PerformanceMonitorThread().start();
 
@@ -303,7 +303,7 @@ public class MemberWorker {
         }
     }
 
-    private class TestCommandRequestProcessingThread extends Thread {
+    private class CommandRequestProcessingThread extends Thread {
 
         @Override
         public void run() {
@@ -353,7 +353,7 @@ public class MemberWorker {
                 }
             }
 
-            long durationMs = System.currentTimeMillis() - startMs;
+            long durationMs = System.currentTimeMillis() - command.enteredMs;
             if (durationMs > 5000) {
                 log.warning(command + " took " + durationMs + " ms to execute");
             }
