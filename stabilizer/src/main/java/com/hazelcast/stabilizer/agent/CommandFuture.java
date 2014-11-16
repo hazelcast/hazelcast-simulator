@@ -72,7 +72,8 @@ public class CommandFuture<E> implements Future<E> {
                 }
 
                 if (remainingTimeoutMs <= 0) {
-                    throw new TimeoutException("Timeout while executing : " + command);
+                    throw new TimeoutException("Timeout while executing : "
+                            + command + " total timeout: " + unit.toMillis(timeout) + " ms");
                 }
 
                 long startMs = System.currentTimeMillis();
