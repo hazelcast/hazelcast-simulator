@@ -86,7 +86,6 @@ public class Coordinator {
 
         if (monitorPerformance) {
             performanceMonitor = new PerformanceMonitor(this);
-            performanceMonitor.start();
         }
 
         runTestSuite();

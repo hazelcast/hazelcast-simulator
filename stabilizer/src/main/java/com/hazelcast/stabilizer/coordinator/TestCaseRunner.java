@@ -178,6 +178,10 @@ public class TestCaseRunner {
     }
 
     private void startTestCase() throws TimeoutException {
+        if (coordinator.monitorPerformance) {
+            coordinator.performanceMonitor.start();
+        }
+
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
         RunCommand runCommand = new RunCommand(testCase.id);
         runCommand.clientOnly = workerJvmSettings.clientWorkerCount > 0;

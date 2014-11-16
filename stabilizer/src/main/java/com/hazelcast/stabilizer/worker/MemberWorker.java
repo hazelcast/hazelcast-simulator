@@ -245,7 +245,6 @@ public class MemberWorker {
                 try {
                     List<CommandRequest> requests = execute(WorkerJvmManager.SERVICE_POLL_WORK, workerId);
                     for (CommandRequest request : requests) {
-                        request.task.enteredMs = System.currentTimeMillis();
                         requestQueue.add(request);
                     }
 
@@ -352,11 +351,6 @@ public class MemberWorker {
                     response.result = result;
                     responseQueue.add(response);
                 }
-            }
-
-            long durationMs = System.currentTimeMillis() - command.enteredMs;
-            if (durationMs > 5000) {
-                log.warning(command + " took " + durationMs + " ms to execute");
             }
         }
 
