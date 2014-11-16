@@ -2,11 +2,15 @@ package com.hazelcast.stabilizer.visualiser.ui;
 
 import com.hazelcast.stabilizer.probes.probes.LinearHistogram;
 import com.hazelcast.stabilizer.probes.probes.Result;
+import com.hazelcast.stabilizer.probes.probes.impl.HdrLatencyProbeResult;
 import com.hazelcast.stabilizer.probes.probes.impl.LatencyDistributionResult;
 import com.hazelcast.stabilizer.visualiser.data.BenchmarkResults;
 import com.hazelcast.stabilizer.visualiser.data.Model;
 import com.hazelcast.stabilizer.visualiser.data.AggregatedDataSet;
 import com.hazelcast.stabilizer.visualiser.data.UnsafeSimpleHistogramDataset;
+import org.HdrHistogram.AbstractHistogram;
+import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramIterationValue;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -108,10 +112,28 @@ public class Chart extends JPanel {
                     String name = benchmarkName + " - " + selectedProbe;
                     SimpleHistogramDataset simpleHistogramDataset = calculateSingleProbeDataset((LatencyDistributionResult) probeData);
                     dataSet.addNewSeries(simpleHistogramDataset, name);
+                } else if (probeData instanceof HdrLatencyProbeResult) {
+                    String name = benchmarkName + " - " + selectedProbe;
+                    SimpleHistogramDataset simpleHistogramDataset = calculateSingleProbeDataset((HdrLatencyProbeResult) probeData);
+                    dataSet.addNewSeries(simpleHistogramDataset, name);
                 }
             }
         }
         return dataSet;
+    }
+
+    private SimpleHistogramDataset calculateSingleProbeDataset(HdrLatencyProbeResult probeData) {
+        UnsafeSimpleHistogramDataset simpleHistogramDataset = new UnsafeSimpleHistogramDataset("key");
+        Histogram histogram = probeData.getHistogram();
+        AbstractHistogram.LinearBucketValues histogramIterationValues = histogram.linearBucketValues(3);
+        for (HistogramIterationValue v : histogramIterationValues) {
+            double lowerBound = v.getDoubleValueIteratedFrom();
+            double upperBound = v.getDoubleValueIteratedTo();
+            SimpleHistogramBin bin = new SimpleHistogramBin(lowerBound, upperBound, true, false);
+            bin.setItemCount((int) v.getCountAddedInThisIterationStep());
+            simpleHistogramDataset.addBin(bin);
+        }
+        return simpleHistogramDataset;
     }
 
     private SimpleHistogramDataset calculateSingleProbeDataset(LatencyDistributionResult probeData) {

@@ -1,7 +1,11 @@
 package com.hazelcast.stabilizer.probes.probes;
 
+import com.hazelcast.stabilizer.probes.probes.impl.HdrLatencyDistributionProbe;
+import com.hazelcast.stabilizer.probes.probes.impl.HdrLatencyProbeResult;
+import com.hazelcast.stabilizer.probes.probes.impl.LatencyDistributionProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.LatencyDistributionResult;
 import com.hazelcast.stabilizer.probes.probes.impl.MaxLatencyResult;
+import org.HdrHistogram.Histogram;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -13,6 +17,16 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 
 public class ProbesResultXmlWriterTest {
+
+    @Test
+    public void testHdrLatencyProbeResult() throws Exception {
+        Map<String, Result> resultMap = new HashMap<String, Result>();
+        Histogram histogram = new Histogram(HdrLatencyDistributionProbe.MAXIMUM_LATENCY, 4);
+        HdrLatencyProbeResult originalResult = new HdrLatencyProbeResult(histogram);
+        resultMap.put("getLatency", originalResult);
+        Map<String, Result> result = serializeAndDeserializeAgain(resultMap);
+        assertEquals(originalResult, result.get("getLatency"));
+    }
 
     @Test
     public void testMaxLatencyResult() throws Exception {

@@ -1,10 +1,11 @@
 package com.hazelcast.stabilizer.probes.probes;
 
-import com.hazelcast.stabilizer.probes.probes.LinearHistogram;
-import com.hazelcast.stabilizer.probes.probes.Result;
+import com.hazelcast.stabilizer.probes.probes.impl.HdrLatencyProbeResult;
 import com.hazelcast.stabilizer.probes.probes.impl.LatencyDistributionResult;
 import com.hazelcast.stabilizer.probes.probes.impl.MaxLatencyResult;
 import com.hazelcast.stabilizer.probes.probes.impl.OperationsPerSecondResult;
+import org.HdrHistogram.Histogram;
+import sun.misc.BASE64Decoder;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -13,9 +14,12 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.EndElement;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.DataFormatException;
 
 public class ProbesResultXmlReader {
 
@@ -69,6 +73,8 @@ public class ProbesResultXmlReader {
             probeResult = parseLatencyDistributionResult(reader);
         } else if ("OperationsPerSecondResult".equals(type)) {
             probeResult = parseOperationsPerSecondResult(reader);
+        } else if ("HdrLatencyProbeResult".equals(type)) {
+            probeResult = parseHdrLatencyProbeResult(reader);
         }
         result.put(name, probeResult);
 
@@ -87,6 +93,38 @@ public class ProbesResultXmlReader {
                 throw new XMLStreamException("Unexpected characters "+eventType.asCharacters().getData());
             }
         }
+    }
+
+    private Result parseHdrLatencyProbeResult(XMLEventReader reader) throws XMLStreamException {
+        String encodedData = null;
+        while (reader.hasNext()) {
+            XMLEvent xmlEvent = reader.nextEvent();
+            if (xmlEvent.isEndElement()) {
+                EndElement endElement = xmlEvent.asEndElement();
+                if ("data".equals(endElement.getName().getLocalPart())) {
+                    if (encodedData != null) {
+                        BASE64Decoder base64Decoder = new BASE64Decoder();
+                        try {
+                            byte[] bytes = base64Decoder.decodeBuffer(encodedData);
+                            Histogram histogram = Histogram.decodeFromCompressedByteBuffer(ByteBuffer.wrap(bytes), 0);
+                            return new HdrLatencyProbeResult(histogram);
+                        } catch (IOException e) {
+                            new RuntimeException(e);
+                        } catch (DataFormatException e) {
+                            new RuntimeException(e);
+                        }
+                    } else {
+                        throw new XMLStreamException("Unexpected end element data.");
+                    }
+                } else {
+                    throw new XMLStreamException("Unexpected end element "+endElement.getName());
+                }
+            } else if (xmlEvent.isCharacters()) {
+                encodedData = xmlEvent.asCharacters().getData();
+            }
+        }
+        throw new XMLStreamException("Unexpected end of stream");
+
     }
 
     private Result parseOperationsPerSecondResult(XMLEventReader reader) throws XMLStreamException {
