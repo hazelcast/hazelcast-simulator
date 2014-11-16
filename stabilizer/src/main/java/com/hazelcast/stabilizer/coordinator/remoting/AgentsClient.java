@@ -227,6 +227,8 @@ public class AgentsClient {
 //                failure.testRecipe = console.getTestRecipe();
 //                failure.cause = e;
 //                console.statusTopic.publish(failure);
+
+
                 throw e;
             } catch (ExecutionException e) {
                 Throwable cause = e.getCause();
@@ -239,11 +241,12 @@ public class AgentsClient {
 //                    console.statusTopic.publish(failure);
                 }
 
+                Utils.fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
+
                 if(cause instanceof TimeoutException){
                     throw (TimeoutException)cause;
                 }
 
-                Utils.fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
                 if (cause instanceof RuntimeException) {
                     throw ((RuntimeException) cause);
                 }

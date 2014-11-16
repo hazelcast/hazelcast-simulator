@@ -187,7 +187,7 @@ public class WorkerJvmManager {
     }
 
     private List executeOnWorkers(Command command, Collection<WorkerJvm> workers) throws TimeoutException, InterruptedException {
-        Map<WorkerJvm, Future> futures = new HashMap<WorkerJvm, Future>();
+        Map<WorkerJvm, CommandFuture> futures = new HashMap<WorkerJvm, CommandFuture>();
 
         for (WorkerJvm workerJvm : workers) {
             if (workerJvm.oomeDetected) {
@@ -206,14 +206,16 @@ public class WorkerJvmManager {
         }
 
         List results = new LinkedList();
-        for (Map.Entry<WorkerJvm, Future> entry : futures.entrySet()) {
+        for (Map.Entry<WorkerJvm, CommandFuture> entry : futures.entrySet()) {
             WorkerJvm workerJvm = entry.getKey();
-            Future future = entry.getValue();
+            CommandFuture future = entry.getValue();
             try {
                 Object result = future.get(30, TimeUnit.SECONDS);
                 results.add(result);
             } catch (TimeoutException e) {
-                registerWorkerFailure(workerJvm, e);
+                if(!future.getCommand().ignoreTimeout()) {
+                    registerWorkerFailure(workerJvm, e);
+                }
                 throw e;
             } catch (ExecutionException e) {
                 registerWorkerFailure(workerJvm,e);

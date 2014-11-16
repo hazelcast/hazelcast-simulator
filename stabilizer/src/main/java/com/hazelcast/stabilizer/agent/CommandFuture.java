@@ -22,6 +22,10 @@ public class CommandFuture<E> implements Future<E> {
         this.command = command;
     }
 
+    public Command getCommand() {
+        return command;
+    }
+
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
         throw new UnsupportedOperationException();
