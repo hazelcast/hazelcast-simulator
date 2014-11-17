@@ -34,13 +34,13 @@
         <dependency>
             <groupId>com.hazelcast.stabilizer</groupId>
             <artifactId>probes</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.hazelcast.stabilizer</groupId>
             <artifactId>visualiser</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>

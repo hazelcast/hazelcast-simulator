@@ -1,11 +1,11 @@
 Provisioning
 ===========================
 
-The provisioner is responsible for provisioning (starting/stopping) instances in a cloud. It will start an Operating System instance,
-install Java, open firewall ports and install Stabilizer Agent.
+The provisioner is responsible for provisioning (starting/stopping) instances in a cloud. It will start an Operating
+System instance, install Java, open firewall ports and install Stabilizer Agent.
 
-The behavior of the cluster like cloud, os, hardware, jvm version, Hazelcast version or region can be configured through the
-stabilizer.properties. 
+The behavior of the cluster like cloud, os, hardware, jvm version, Hazelcast version or region can be configured through
+the stabilizer.properties. 
 
 To start a cluster:
 
@@ -45,7 +45,7 @@ provisioner --restart
 
 To download all worker home directories (containing logs and whatever has been put inside). This command also is useful
 if you added profiling so that the profiling information is downloaded. And when a OOME has happened so you can download
-the heapdump.
+the heap dump.
 
 ```
 provisioner --download
@@ -56,7 +56,6 @@ To remove all the worker home directories
 ```
 provisioner --clean
 ```
-
 
 ### Accessing the provisioned machine
 

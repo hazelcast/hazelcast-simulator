@@ -24,7 +24,6 @@ to generate the correct Hazelcast configuration. But you can override this, so y
 
 coordinator --clientHzFile=your-client-hazelcast.xml --hzFile your-hazelcast.xml ....
 
-
 ## Controlling duration:
 The duration of a single test can be controlled using the --duration setting, which defaults to 60 seconds.
 
@@ -52,8 +51,8 @@ By default the provisioner will only start members, but you can control how many
 coordinator --memberWorkerCount 4 --clientWorkerCount 8 --duration 12h  map.properties
 ```
 
-In this case we create a 4 node Hazelcast cluster and 8 clients and all load will be generated through the clients. We run
-the map.properties test for a duration of 12 hours. Also m for minutes, d for days or s for seconds can be used.
+In this case we create a 4 node Hazelcast cluster and 8 clients and all load will be generated through the clients. We
+run the map.properties test for a duration of 12 hours. Also m for minutes, d for days or s for seconds can be used.
 
 One of the suggestions is that currently the profiles are configured with X clients and Y servers.
 
@@ -69,7 +68,7 @@ Or maybe you want to have a JVM with embedded client + server but all communicat
 coordinator --mixedWorkerCount 12  --duration 12h  map.properties
 ```
 
-Or maybe you want to run 2 member JVM's per machine:
+Or maybe you want to run 2 member JVMs per machine:
 
 ```
 coordinator --memberWorkerCount 24  --duration 12h  map.properties

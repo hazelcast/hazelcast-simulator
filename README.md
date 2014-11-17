@@ -1,12 +1,14 @@
 hazelcast-stabilizer
 ===========================
 
-A production simulator for stress testing Hazelcast and Hazelcast based applications in clustered environments. This can be in a local machine, but can also be in a cloud like EC2 or Google Compute Engine. The Stabilizer makes use of JClouds, so in theory
-we can roll out in any cloud.
+A production simulator for stress testing Hazelcast and Hazelcast based applications in clustered environments. This
+can be in a local machine, but can also be in a cloud like EC2 or Google Compute Engine. The Stabilizer makes use of
+JClouds, so in theory we can roll out in any cloud.
 
 Stabilizer includes a test suite for our own stress simulation, but you can fork this repo, and add your own. 
 
-Commerically we offer support agreements where we will integrate your tests into our runs for new releases so that your tests act as an Application TCK. 
+Commercially we offer support agreements where we will integrate your tests into our runs for new releases so that your
+tests act as an Application TCK. 
 
 * [Hazelcast Structure](docs/STRUCTURE.md)
 
