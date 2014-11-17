@@ -9,7 +9,7 @@ http://search.maven.org/remotecontent?filepath=com/hazelcast/stabilizer/hazelcas
 
 Download and unpack the tar.gz or zip file to e.g. the home directory.
 
-add to ~/.bashr when using Linux or ~/.profile when using OSX:
+add to ~/.bashrc when using Linux or ~/.profile when using OSX:
 
 ```
 export STABILIZER_HOME=~/hazelcast-stabilizer-0.3
@@ -59,7 +59,7 @@ Make sure wget is installed. For Linux machines in most cases it is installed, b
 
 For setup on GCE a developer email can be obtained from the GCE admin GUI console.
 Its usually something in the form: <my account id>@developer.gserviceaccount.com
-go to API & Auth > Credentials, click Create New Client ID,  select Service Acount.
+go to API & Auth > Credentials, click Create New Client ID,  select Service Account.
 save your p12 keystore file that is obtained when creating a "Service Account"
 
 run ./setupGce.sh script

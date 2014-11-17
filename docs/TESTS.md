@@ -1,12 +1,11 @@
 Writing a test
 ===========================
 
-A Stabilizer test is a bit like a JUnit test but there are some fundamental differences. Below you can see an example test
-where some counter is being incremented.
+A Stabilizer test is a bit like a JUnit test but there are some fundamental differences. Below you can see an example
+test where some counter is being incremented.
 
 ```
 package yourgroupid;
-
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
@@ -117,8 +116,8 @@ logFrequency=10000
 performanceUpdateFrequency=10000
 ```
 
-The 'class' property defines the actual test case and the rest are the properties you want to bind in your test. If a property is
-not defined in the property file, the default value of the property is used.
+The 'class' property defines the actual test case and the rest are the properties you want to bind in your test. If a
+property is not defined in the property file, the default value of the property is used.
 
 You can also define multiple tests in a single property file:
 
@@ -130,4 +129,5 @@ bar.class=yourgroupid.ExampleTest
 bar.threadCount=1
 
 ```
-This is useful if you want to run multiple tests sequentially, or tests in parallel using 'coordinator --parallel' option.
+This is useful if you want to run multiple tests sequentially, or tests in parallel using the 'coordinator --parallel'
+option.

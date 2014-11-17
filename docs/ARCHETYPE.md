@@ -12,9 +12,9 @@ mvn archetype:generate  \
     -DartifactId=yourproject
 ```
 
-This will create fully working stabilizer project including a very basic test: see ExampleTest that Increments an IAtomicLong. 
-When the test has completed, a verification is done if the actual number of increments is equal to the expected number of increments.
-In your case you probably want to do something more interesting.
+This will create fully working stabilizer project including a very basic test: see ExampleTest that Increments an
+IAtomicLong. When the test has completed, a verification is done if the actual number of increments is equal to the
+expected number of increments. In your case you probably want to do something more interesting.
 
 After this project is generated, go to the created directory and run:
 
@@ -48,8 +48,8 @@ And finally you can run the test from the workdir directory:
 
 This script will:
  * start 4 EC2 instances, install Java, install the agents.
- * upload your jars, run the test using a 2 node test cluster and 2 client machines (the clients generate the load). This
-   test will run for 2 minutes.
+ * upload your jars, run the test using a 2 node test cluster and 2 client machines (the clients generate the load).
+   This test will run for 2 minutes.
  * After the test completes the the artifacts (log files) are downloaded in the 'workers' directory
  * terminate the 4 created instances. If you don't want to start/terminate the instances for every run, just comment out
    'provisioner --terminate' line.  This prevents the machines from being terminated.
