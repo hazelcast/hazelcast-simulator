@@ -1,13 +1,24 @@
 package com.hazelcast.stabilizer.tests.backpressure;
 
+import com.hazelcast.client.impl.HazelcastClientProxy;
+import com.hazelcast.client.impl.client.PartitionClientRequest;
+import com.hazelcast.client.spi.ClientInvocationService;
+import com.hazelcast.client.spi.ClientPartitionService;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.nio.Address;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.ClassDefinition;
+import com.hazelcast.nio.serialization.Portable;
+import com.hazelcast.nio.serialization.PortableFactory;
+import com.hazelcast.nio.serialization.PortableHook;
+import com.hazelcast.nio.serialization.PortableReader;
+import com.hazelcast.nio.serialization.PortableWriter;
 import com.hazelcast.spi.AbstractOperation;
 import com.hazelcast.spi.BackupAwareOperation;
 import com.hazelcast.spi.BackupOperation;
@@ -24,7 +35,9 @@ import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.io.IOException;
+import java.security.Permission;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -34,6 +47,7 @@ import java.util.concurrent.locks.LockSupport;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.getNode;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.getOperationCountInformation;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.getPartitionDistributionInformation;
+import static com.hazelcast.stabilizer.tests.utils.TestUtils.isClient;
 
 
 /**
@@ -108,12 +122,27 @@ public class SyntheticBackPressureTest {
         private final OperationService operationService;
         private final int partitionCount;
         private final ArrayList<Integer> partitionSequence = new ArrayList<Integer>();
+        private final boolean isClient;
+        private final ClientInvocationService clientInvocationService;
+        private final ClientPartitionService clientPartitionService;
+        int partitionIndex = 0;
 
         public Worker() {
-            Node node = getNode(context.getTargetInstance());
-            node.getPartitionService().getPartitionCount();
-            operationService = node.getNodeEngine().getOperationService();
-            partitionCount = node.getPartitionService().getPartitionCount();
+            isClient = isClient(targetInstance);
+            if (isClient) {
+                HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy)targetInstance;
+                operationService = null;
+                clientPartitionService = (ClientPartitionService)hazelcastClientProxy.client.getPartitionService();
+                clientInvocationService = hazelcastClientProxy.client.getInvocationService();
+                partitionCount =  clientPartitionService.getPartitionCount();
+            } else {
+                clientInvocationService = null;
+                clientPartitionService = null;
+                Node node = getNode(context.getTargetInstance());
+                node.getPartitionService().getPartitionCount();
+                operationService = node.getNodeEngine().getOperationService();
+                partitionCount = node.getPartitionService().getPartitionCount();
+            }
 
             if (randomPartition) {
                 for (int k = 0; k < 10; k++) {
@@ -137,34 +166,24 @@ public class SyntheticBackPressureTest {
 
         @Override
         public void run() {
+            try {
+                doRun();
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public void doRun() throws Exception {
             long iteration = 0;
-            int partitionIndex = 0;
 
             while (!context.isStopped()) {
-                int partitionId;
-                if (randomPartition) {
-                    partitionId = partitionSequence.get(partitionIndex);
-                    partitionIndex++;
-                    if (partitionIndex >= partitionSequence.size()) {
-                        partitionIndex = 0;
-                    }
-                } else {
-                    partitionId = 0;
-                }
+                int partitionId = nextPartitionId();
 
-                SomeOperation operation = new SomeOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
-                ICompletableFuture f = operationService.invokeOnPartition(null, operation, partitionId);
-                try {
-                    if (syncInvocation) {
-                        f.get();
-                    } else {
-                        f.andThen(this);
-                    }
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                } catch (ExecutionException e) {
-                    throw new RuntimeException(e);
-                }
+                ICompletableFuture f = invoke(partitionId);
+
+                awaitCompletion(f);
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -177,6 +196,48 @@ public class SyntheticBackPressureTest {
                 }
                 iteration++;
             }
+        }
+
+        private void awaitCompletion(ICompletableFuture f) {
+            try {
+                if (syncInvocation) {
+                    f.get();
+                } else {
+                    f.andThen(this);
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private ICompletableFuture invoke(int partitionId) throws Exception {
+            ICompletableFuture f;
+            if (isClient) {
+                SomeRequest request = new SomeRequest(syncBackupCount, asyncBackupCount, backupDelayNanos);
+                request.setPartitionId(partitionId);
+                Address target = clientPartitionService.getPartitionOwner(partitionId);
+                f = clientInvocationService.invokeOnTarget(request, target);
+            } else {
+                SomeOperation operation = new SomeOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
+                f = operationService.invokeOnPartition(null, operation, partitionId);
+            }
+            return f;
+        }
+
+        private int nextPartitionId() {
+            int partitionId;
+            if (randomPartition) {
+                partitionId = partitionSequence.get(partitionIndex);
+                partitionIndex++;
+                if (partitionIndex >= partitionSequence.size()) {
+                    partitionIndex = 0;
+                }
+            } else {
+                partitionId = 0;
+            }
+            return partitionId;
         }
 
         private long getBackupDelayNanos() {
@@ -193,6 +254,102 @@ public class SyntheticBackPressureTest {
         }
     }
 
+    public static class SomeRequestPortableHook implements PortableHook {
+
+        public static final int FACTORY_ID = 10000000;
+
+        @Override
+        public int getFactoryId() {
+            return FACTORY_ID;
+        }
+
+        @Override
+        public PortableFactory createFactory() {
+            return new PortableFactory() {
+                @Override
+                public Portable create(int classId) {
+                    return new SomeRequest();
+                }
+            };
+        }
+
+        @Override
+        public Collection<ClassDefinition> getBuiltinDefinitions() {
+            return null;
+        }
+    }
+
+    public static class SomeRequest extends PartitionClientRequest {
+        int partitionId;
+        int syncBackupCount;
+        int asyncBackupCount;
+        long backupDelayNanos;
+
+        public SomeRequest() {
+        }
+
+        public SomeRequest(int syncBackupCount, int asyncBackupCount, long backupDelayNanos) {
+            this.syncBackupCount = syncBackupCount;
+            this.asyncBackupCount = asyncBackupCount;
+            this.backupDelayNanos = backupDelayNanos;
+        }
+
+        public void setPartitionId(int partitionId) {
+            this.partitionId = partitionId;
+        }
+
+        @Override
+        protected Operation prepareOperation() {
+            SomeOperation op = new SomeOperation(syncBackupCount, asyncBackupCount, backupDelayNanos);
+            op.setPartitionId(partitionId);
+            return op;
+        }
+
+        @Override
+        protected int getPartition() {
+            return partitionId;
+        }
+
+        @Override
+        public String getServiceName() {
+            return null;
+        }
+
+        @Override
+        public int getFactoryId() {
+            return SomeRequestPortableHook.FACTORY_ID;
+        }
+
+        @Override
+        public int getClassId() {
+            return 0;
+        }
+
+        @Override
+        public Permission getRequiredPermission() {
+            return null;
+        }
+
+        @Override
+        public void write(PortableWriter writer) throws IOException {
+            super.write(writer);
+
+            writer.writeInt("syncBackupCount", syncBackupCount);
+            writer.writeInt("asyncBackupCount", asyncBackupCount);
+            writer.writeLong("backupDelayNanos", backupDelayNanos);
+            writer.writeInt("partitionId", partitionId);
+        }
+
+        @Override
+        public void read(PortableReader reader) throws IOException {
+            super.read(reader);
+
+            syncBackupCount = reader.readInt("syncBackupCount");
+            asyncBackupCount = reader.readInt("asyncBackupCount");
+            backupDelayNanos = reader.readLong("backupDelayNanos");
+            partitionId = reader.readInt("partitionId");
+        }
+    }
 
     public static class SomeOperation extends AbstractOperation implements BackupAwareOperation, PartitionAwareOperation {
         private int syncBackupCount;

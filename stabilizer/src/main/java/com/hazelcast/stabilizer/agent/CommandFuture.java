@@ -38,7 +38,7 @@ public class CommandFuture<E> implements Future<E> {
 
     @Override
     public boolean isDone() {
-        throw new UnsupportedOperationException();
+        return result!=NO_RESULT;
     }
 
     public void set(Object result) {
