@@ -51,7 +51,7 @@ public class SomeRequest extends PartitionClientRequest {
 
     @Override
     public int getClassId() {
-        return 0;
+        return 1;
     }
 
     @Override
