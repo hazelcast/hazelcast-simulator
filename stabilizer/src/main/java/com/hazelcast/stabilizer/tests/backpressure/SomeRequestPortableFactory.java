@@ -12,22 +12,7 @@ public class SomeRequestPortableFactory implements PortableFactory {
     public static final int FACTORY_ID = 10000000;
 
     @Override
-    public int getFactoryId() {
-        return FACTORY_ID;
-    }
-
-    @Override
-    public PortableFactory createFactory() {
-        return new PortableFactory() {
-            @Override
-            public Portable create(int classId) {
-                return new SomeRequest();
-            }
-        };
-    }
-
-    @Override
-    public Collection<ClassDefinition> getBuiltinDefinitions() {
-        return null;
+    public Portable create(int i) {
+        return new SomeRequest();
     }
 }
