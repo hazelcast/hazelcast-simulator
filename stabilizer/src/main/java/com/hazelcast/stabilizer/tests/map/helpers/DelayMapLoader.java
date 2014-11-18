@@ -7,8 +7,6 @@ import java.util.*;
 
 public class DelayMapLoader implements MapLoader {
 
-    private final Random random = new Random();
-    public KeyLocality keyLocality = KeyLocality.Random;
     public int keyCount = 3500;
     public int keyLength = 10;
     final int size = 3500;
@@ -39,8 +37,7 @@ public class DelayMapLoader implements MapLoader {
     public Set loadAllKeys() {
         Set keys = new HashSet();
         for (int i = 0; i < size; i++) {
-            final int key = random.nextInt(keyCount);
-            keys.add(key);
+            keys.add(i);
         }
         return keys;
     }
