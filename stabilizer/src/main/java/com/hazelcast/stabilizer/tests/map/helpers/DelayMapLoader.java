@@ -13,7 +13,7 @@ public class DelayMapLoader implements MapLoader {
     public int keyLength = 10;
     final int size = 3500;
 
-    DelayMapLoader() {
+    public DelayMapLoader() {
     }
 
     @Override
