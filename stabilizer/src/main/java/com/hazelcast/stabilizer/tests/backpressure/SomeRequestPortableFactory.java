@@ -7,7 +7,7 @@ import com.hazelcast.nio.serialization.PortableHook;
 
 import java.util.Collection;
 
-public class SomeRequestPortableHook implements PortableHook {
+public class SomeRequestPortableFactory implements PortableFactory {
 
     public static final int FACTORY_ID = 10000000;
 

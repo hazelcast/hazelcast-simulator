@@ -46,7 +46,7 @@ public class SomeRequest extends PartitionClientRequest {
 
     @Override
     public int getFactoryId() {
-        return SomeRequestPortableHook.FACTORY_ID;
+        return SomeRequestPortableFactory.FACTORY_ID;
     }
 
     @Override
