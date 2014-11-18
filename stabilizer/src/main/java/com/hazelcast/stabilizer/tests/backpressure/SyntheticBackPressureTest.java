@@ -1,7 +1,6 @@
 package com.hazelcast.stabilizer.tests.backpressure;
 
 import com.hazelcast.client.impl.HazelcastClientProxy;
-import com.hazelcast.client.impl.client.PartitionClientRequest;
 import com.hazelcast.client.spi.ClientInvocationService;
 import com.hazelcast.client.spi.ClientPartitionService;
 import com.hazelcast.core.ExecutionCallback;
@@ -13,16 +12,8 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.nio.serialization.ClassDefinition;
-import com.hazelcast.nio.serialization.Portable;
-import com.hazelcast.nio.serialization.PortableFactory;
-import com.hazelcast.nio.serialization.PortableHook;
-import com.hazelcast.nio.serialization.PortableReader;
-import com.hazelcast.nio.serialization.PortableWriter;
 import com.hazelcast.spi.AbstractOperation;
-import com.hazelcast.spi.BackupAwareOperation;
 import com.hazelcast.spi.BackupOperation;
-import com.hazelcast.spi.Operation;
 import com.hazelcast.spi.OperationService;
 import com.hazelcast.spi.PartitionAwareOperation;
 import com.hazelcast.stabilizer.tests.TestContext;
@@ -35,9 +26,7 @@ import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.io.IOException;
-import java.security.Permission;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -251,190 +240,6 @@ public class SyntheticBackPressureTest {
 
             long d = Math.abs(random.nextLong());
             return d % backupDelayNanos;
-        }
-    }
-
-    public static class SomeRequestPortableHook implements PortableHook {
-
-        public static final int FACTORY_ID = 10000000;
-
-        @Override
-        public int getFactoryId() {
-            return FACTORY_ID;
-        }
-
-        @Override
-        public PortableFactory createFactory() {
-            return new PortableFactory() {
-                @Override
-                public Portable create(int classId) {
-                    return new SomeRequest();
-                }
-            };
-        }
-
-        @Override
-        public Collection<ClassDefinition> getBuiltinDefinitions() {
-            return null;
-        }
-    }
-
-    public static class SomeRequest extends PartitionClientRequest {
-        int partitionId;
-        int syncBackupCount;
-        int asyncBackupCount;
-        long backupDelayNanos;
-
-        public SomeRequest() {
-        }
-
-        public SomeRequest(int syncBackupCount, int asyncBackupCount, long backupDelayNanos) {
-            this.syncBackupCount = syncBackupCount;
-            this.asyncBackupCount = asyncBackupCount;
-            this.backupDelayNanos = backupDelayNanos;
-        }
-
-        public void setPartitionId(int partitionId) {
-            this.partitionId = partitionId;
-        }
-
-        @Override
-        protected Operation prepareOperation() {
-            SomeOperation op = new SomeOperation(syncBackupCount, asyncBackupCount, backupDelayNanos);
-            op.setPartitionId(partitionId);
-            return op;
-        }
-
-        @Override
-        protected int getPartition() {
-            return partitionId;
-        }
-
-        @Override
-        public String getServiceName() {
-            return null;
-        }
-
-        @Override
-        public int getFactoryId() {
-            return SomeRequestPortableHook.FACTORY_ID;
-        }
-
-        @Override
-        public int getClassId() {
-            return 0;
-        }
-
-        @Override
-        public Permission getRequiredPermission() {
-            return null;
-        }
-
-        @Override
-        public void write(PortableWriter writer) throws IOException {
-            super.write(writer);
-
-            writer.writeInt("syncBackupCount", syncBackupCount);
-            writer.writeInt("asyncBackupCount", asyncBackupCount);
-            writer.writeLong("backupDelayNanos", backupDelayNanos);
-            writer.writeInt("partitionId", partitionId);
-        }
-
-        @Override
-        public void read(PortableReader reader) throws IOException {
-            super.read(reader);
-
-            syncBackupCount = reader.readInt("syncBackupCount");
-            asyncBackupCount = reader.readInt("asyncBackupCount");
-            backupDelayNanos = reader.readLong("backupDelayNanos");
-            partitionId = reader.readInt("partitionId");
-        }
-    }
-
-    public static class SomeOperation extends AbstractOperation implements BackupAwareOperation, PartitionAwareOperation {
-        private int syncBackupCount;
-        private int asyncBackupCount;
-        private long backupOperationDelayNanos;
-
-        public SomeOperation() {
-        }
-
-        public SomeOperation(int syncBackupCount, int asyncBackupCount, long backupOperationDelayNanos) {
-            this.syncBackupCount = syncBackupCount;
-            this.asyncBackupCount = asyncBackupCount;
-            this.backupOperationDelayNanos = backupOperationDelayNanos;
-        }
-
-        @Override
-        public boolean shouldBackup() {
-            return true;
-        }
-
-        @Override
-        public int getSyncBackupCount() {
-            return syncBackupCount;
-        }
-
-        @Override
-        public int getAsyncBackupCount() {
-            return asyncBackupCount;
-        }
-
-        @Override
-        public Operation getBackupOperation() {
-            SomeBackupOperation someBackupOperation = new SomeBackupOperation(backupOperationDelayNanos);
-            someBackupOperation.setPartitionId(getPartitionId());
-            return someBackupOperation;
-        }
-
-        @Override
-        public void run() throws Exception {
-            //do nothing
-        }
-
-        @Override
-        protected void writeInternal(ObjectDataOutput out) throws IOException {
-            super.writeInternal(out);
-            out.writeInt(syncBackupCount);
-            out.writeInt(asyncBackupCount);
-            out.writeLong(backupOperationDelayNanos);
-        }
-
-        @Override
-        protected void readInternal(ObjectDataInput in) throws IOException {
-            super.readInternal(in);
-
-            syncBackupCount = in.readInt();
-            asyncBackupCount = in.readInt();
-            backupOperationDelayNanos = in.readLong();
-        }
-    }
-
-    public static class SomeBackupOperation extends AbstractOperation implements BackupOperation, PartitionAwareOperation {
-        private long delayNs;
-
-        public SomeBackupOperation() {
-        }
-
-        public SomeBackupOperation(long delayNs) {
-            this.delayNs = delayNs;
-        }
-
-        @Override
-        public void run() throws Exception {
-            LockSupport.parkNanos(delayNs);
-        }
-
-        @Override
-        protected void writeInternal(ObjectDataOutput out) throws IOException {
-            super.writeInternal(out);
-            out.writeLong(delayNs);
-        }
-
-        @Override
-        protected void readInternal(ObjectDataInput in) throws IOException {
-            super.readInternal(in);
-            delayNs = in.readLong();
         }
     }
 
