@@ -1,11 +1,13 @@
 package com.hazelcast.stabilizer.tests.backpressure;
 
 import com.hazelcast.client.impl.HazelcastClientProxy;
+import com.hazelcast.client.proxy.PartitionServiceProxy;
 import com.hazelcast.client.spi.ClientInvocationService;
 import com.hazelcast.client.spi.ClientPartitionService;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -23,6 +25,7 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
+import com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.io.IOException;
@@ -121,7 +124,8 @@ public class SyntheticBackPressureTest {
             if (isClient) {
                 HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy)targetInstance;
                 operationService = null;
-                clientPartitionService = (ClientPartitionService)hazelcastClientProxy.client.getPartitionService();
+                PartitionServiceProxy partitionService = (PartitionServiceProxy)hazelcastClientProxy.client.getPartitionService();
+                clientPartitionService = PropertyBindingSupport.getField(partitionService,"partitionService");
                 clientInvocationService = hazelcastClientProxy.client.getInvocationService();
                 partitionCount =  clientPartitionService.getPartitionCount();
             } else {
