@@ -37,6 +37,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.gpg.plugin.version>1.4</maven.gpg.plugin.version>
         <jsr107.api.version>1.0.0</jsr107.api.version>
+        <hdr-histogram.version>2.0.1</hdr-histogram.version>
     </properties>
 
     <modules>
