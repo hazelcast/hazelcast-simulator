@@ -7,17 +7,11 @@ import com.hazelcast.client.spi.ClientPartitionService;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.spi.AbstractOperation;
-import com.hazelcast.spi.BackupOperation;
 import com.hazelcast.spi.OperationService;
-import com.hazelcast.spi.PartitionAwareOperation;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
@@ -28,13 +22,10 @@ import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.LockSupport;
 
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.getNode;
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.getOperationCountInformation;
@@ -76,6 +67,7 @@ public class SyntheticBackPressureTest {
     public int threadCount = 10;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
+    public int syncFrequency = 1;
 
     private AtomicLong operations = new AtomicLong();
     private TestContext context;
@@ -117,17 +109,18 @@ public class SyntheticBackPressureTest {
         private final boolean isClient;
         private final ClientInvocationService clientInvocationService;
         private final ClientPartitionService clientPartitionService;
+        private final ArrayList<ICompletableFuture> futureList = new ArrayList<ICompletableFuture>(syncFrequency);
         int partitionIndex = 0;
 
         public Worker() {
             isClient = isClient(targetInstance);
             if (isClient) {
-                HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy)targetInstance;
+                HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy) targetInstance;
                 operationService = null;
-                PartitionServiceProxy partitionService = (PartitionServiceProxy)hazelcastClientProxy.client.getPartitionService();
-                clientPartitionService = PropertyBindingSupport.getField(partitionService,"partitionService");
+                PartitionServiceProxy partitionService = (PartitionServiceProxy) hazelcastClientProxy.client.getPartitionService();
+                clientPartitionService = PropertyBindingSupport.getField(partitionService, "partitionService");
                 clientInvocationService = hazelcastClientProxy.client.getInvocationService();
-                partitionCount =  clientPartitionService.getPartitionCount();
+                partitionCount = clientPartitionService.getPartitionCount();
             } else {
                 clientInvocationService = null;
                 clientPartitionService = null;
@@ -172,11 +165,26 @@ public class SyntheticBackPressureTest {
             long iteration = 0;
 
             while (!context.isStopped()) {
+
                 int partitionId = nextPartitionId();
 
                 ICompletableFuture f = invoke(partitionId);
-
-                awaitCompletion(f);
+                if (syncInvocation) {
+                    if (syncFrequency == 1) {
+                        f.get();
+                    } else {
+                        if (iteration > 0 && iteration % syncFrequency == 0) {
+                            for (ICompletableFuture future : futureList) {
+                                future.get();
+                            }
+                            futureList.clear();
+                        } else {
+                            futureList.add(f);
+                        }
+                    }
+                } else {
+                    f.andThen(this);
+                }
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -187,23 +195,13 @@ public class SyntheticBackPressureTest {
                         operations.addAndGet(performanceUpdateFrequency);
                     }
                 }
+
                 iteration++;
+
+
             }
         }
 
-        private void awaitCompletion(ICompletableFuture f) {
-            try {
-                if (syncInvocation) {
-                    f.get();
-                } else {
-                    f.andThen(this);
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            } catch (ExecutionException e) {
-                throw new RuntimeException(e);
-            }
-        }
 
         private ICompletableFuture invoke(int partitionId) throws Exception {
             ICompletableFuture f;
