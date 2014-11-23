@@ -88,6 +88,7 @@ public class Provisioner {
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/commons-lang3*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/cache-api*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/probes-*", "lib");
+        bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/lib/HdrHistogram-*", "lib");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/tests/", "tests");
 
         String script = loadInitScript();

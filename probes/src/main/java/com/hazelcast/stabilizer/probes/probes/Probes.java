@@ -1,5 +1,6 @@
 package com.hazelcast.stabilizer.probes.probes;
 
+import com.hazelcast.stabilizer.probes.probes.impl.HdrLatencyDistributionProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.MaxLatencyProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.ConcurrentIntervalProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.ConcurrentSimpleProbe;
@@ -38,12 +39,18 @@ public class Probes {
                 return (T) newMaxLatencyProbe();
             } else if ("disabled".equals(config)) {
                 return (T) disabledProbe();
+            } else if ("hdr".equals(config)) {
+                return (T) hdrProbe();
             } else {
                 throw new IllegalArgumentException("Unknown probe " + config + " for probe type " + type.getName() + ".");
             }
         } else {
             throw new IllegalArgumentException("Unknown probe " + config + " for probe type " + type.getName() + ".");
         }
+    }
+
+    private static IntervalProbe hdrProbe() {
+        return Probes.wrapAsThreadLocal(new HdrLatencyDistributionProbe());
     }
 
     public static <T extends IntervalProbe> IntervalProbe newMaxLatencyProbe() {
