@@ -41,7 +41,6 @@ public class Ticket589 {
         public void run() {
             while (!testContext.isStopped()) {
                 IMap map = targetInstance.getMap(basename);
-                log.info(basename + ": map size  =" + map.size());
             }
         }
     }
