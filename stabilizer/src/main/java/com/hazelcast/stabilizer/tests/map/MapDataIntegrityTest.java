@@ -12,8 +12,10 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
+import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import org.junit.Assert;
 
 import java.util.Random;
 import java.util.Set;
@@ -112,6 +114,14 @@ public class MapDataIntegrityTest {
                 int key = random.nextInt(totalStressKeys);
                 stressMap.put(key, value);
             }
+        }
+    }
+
+    @Verify(global = false)
+    public void verify() throws Exception {
+        if(TestUtils.isMemberNode(targetInstance)){
+            log.info(id + ": cluster size 1=" + targetInstance.getCluster().getMembers().size());
+            log.info(id + ": cluster size 2=" + targetInstance.getCluster().getMembers().size());
         }
     }
 }
