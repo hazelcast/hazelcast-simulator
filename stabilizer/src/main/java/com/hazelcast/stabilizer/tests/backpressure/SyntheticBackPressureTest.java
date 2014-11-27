@@ -7,6 +7,7 @@ import com.hazelcast.client.spi.ClientPartitionService;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.Partition;
 import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -18,7 +19,9 @@ import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Teardown;
+import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
 import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
+import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
@@ -67,6 +70,7 @@ public class SyntheticBackPressureTest {
     public int threadCount = 10;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
+    public KeyLocality keyLocality = KeyLocality.Random;
     public int syncFrequency = 1;
 
     private AtomicLong operations = new AtomicLong();
@@ -104,7 +108,6 @@ public class SyntheticBackPressureTest {
 
         private final Random random = new Random();
         private final OperationService operationService;
-        private final int partitionCount;
         private final ArrayList<Integer> partitionSequence = new ArrayList<Integer>();
         private final boolean isClient;
         private final ClientInvocationService clientInvocationService;
@@ -120,21 +123,26 @@ public class SyntheticBackPressureTest {
                 PartitionServiceProxy partitionService = (PartitionServiceProxy) hazelcastClientProxy.client.getPartitionService();
                 clientPartitionService = PropertyBindingSupport.getField(partitionService, "partitionService");
                 clientInvocationService = hazelcastClientProxy.client.getInvocationService();
-                partitionCount = clientPartitionService.getPartitionCount();
             } else {
                 clientInvocationService = null;
                 clientPartitionService = null;
                 Node node = getNode(context.getTargetInstance());
                 node.getPartitionService().getPartitionCount();
                 operationService = node.getNodeEngine().getOperationService();
-                partitionCount = node.getPartitionService().getPartitionCount();
             }
 
             if (randomPartition) {
-                for (int k = 0; k < 10; k++) {
-                    for (int partitionId = 0; partitionId < partitionCount; partitionId++) {
-                        partitionSequence.add(partitionId);
-                    }
+                if (isClient) {
+                    if (keyLocality == KeyLocality.Local)
+                    throw new IllegalStateException("A KeyLocality has been set to Local, but test is running on a client. " +
+                            "It doesn't make sense as no keys are stored on clients. ");
+                }
+                int keys = 1000;
+                String[] strings = KeyUtils.generateKeys(keys, keys, keyLocality, targetInstance);
+                for (int k = 0; k < keys; k++) {
+                    String key = strings[k];
+                    Partition partition = targetInstance.getPartitionService().getPartition(key);
+                    partitionSequence.add(partition.getPartitionId());
                 }
                 Collections.shuffle(partitionSequence);
             }
