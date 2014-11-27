@@ -8,6 +8,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
+import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
@@ -44,6 +45,11 @@ public class MapAsyncOpsTest {
     private OperationSelector<Operation> selector = new OperationSelector<Operation>();
 
     public MapAsyncOpsTest() {
+    }
+
+    @Performance
+    public long getOperationCount() {
+        return count.getTotalNoOfOps();
     }
 
     @Setup
@@ -110,6 +116,8 @@ public class MapAsyncOpsTest {
             }
         }
     }
+
+
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
