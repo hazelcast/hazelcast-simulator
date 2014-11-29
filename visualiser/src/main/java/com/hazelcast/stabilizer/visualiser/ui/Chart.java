@@ -124,8 +124,9 @@ public class Chart extends JPanel {
 
     private SimpleHistogramDataset calculateSingleProbeDataset(HdrLatencyProbeResult probeData) {
         UnsafeSimpleHistogramDataset simpleHistogramDataset = new UnsafeSimpleHistogramDataset("key");
+        simpleHistogramDataset.setAdjustForBinSize(false);
         Histogram histogram = probeData.getHistogram();
-        AbstractHistogram.LinearBucketValues histogramIterationValues = histogram.linearBucketValues(3);
+        AbstractHistogram.LinearBucketValues histogramIterationValues = histogram.linearBucketValues(10);
         for (HistogramIterationValue v : histogramIterationValues) {
             double lowerBound = v.getDoubleValueIteratedFrom();
             double upperBound = v.getDoubleValueIteratedTo();
