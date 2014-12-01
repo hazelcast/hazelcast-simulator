@@ -8,10 +8,10 @@ public class SimpleMetronomeTest {
 
     @Test
     public void testSimple() {
-        int intervalMs = 10;
+        int intervalMs = 50;
         Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
         long lastTimestamp = 0;
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10; i++) {
             long startTimestamp = System.currentTimeMillis();
             metronome.waitForNext();
 
