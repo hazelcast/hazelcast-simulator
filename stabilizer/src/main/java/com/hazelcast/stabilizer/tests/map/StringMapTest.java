@@ -97,7 +97,7 @@ public class StringMapTest {
 
         Random random = new Random();
         for (int k = 0; k < keys.length; k++) {
-            String key = keys[random.nextInt(keyCount)];
+            String key = keys[k];
             String value = values[random.nextInt(valueCount)];
             map.put(key, value);
         }
