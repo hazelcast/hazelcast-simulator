@@ -119,7 +119,7 @@ public class MemberWorker {
         workerMessageProcessor.setHazelcastServerInstance(serverInstance);
         workerMessageProcessor.setHazelcastClientInstance(clientInstance);
 
-        new TestCommandRequestProcessingThread().start();
+        new CommandRequestProcessingThread().start();
         new SocketThread().start();
         new PerformanceMonitorThread().start();
 
@@ -303,7 +303,7 @@ public class MemberWorker {
         }
     }
 
-    private class TestCommandRequestProcessingThread extends Thread {
+    private class CommandRequestProcessingThread extends Thread {
 
         @Override
         public void run() {
@@ -321,6 +321,8 @@ public class MemberWorker {
         }
 
         private void doProcess(long id, Command command) throws Throwable {
+            long startMs = System.currentTimeMillis();
+
             Object result = null;
             try {
                 if (command instanceof IsPhaseCompletedCommand) {

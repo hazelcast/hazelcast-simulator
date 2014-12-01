@@ -22,6 +22,10 @@ public class CommandFuture<E> implements Future<E> {
         this.command = command;
     }
 
+    public Command getCommand() {
+        return command;
+    }
+
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
         throw new UnsupportedOperationException();
@@ -34,7 +38,7 @@ public class CommandFuture<E> implements Future<E> {
 
     @Override
     public boolean isDone() {
-        throw new UnsupportedOperationException();
+        return result!=NO_RESULT;
     }
 
     public void set(Object result) {
@@ -72,7 +76,8 @@ public class CommandFuture<E> implements Future<E> {
                 }
 
                 if (remainingTimeoutMs <= 0) {
-                    throw new TimeoutException("Timeout while executing : " + command);
+                    throw new TimeoutException("Timeout while executing : "
+                            + command + " total timeout: " + unit.toMillis(timeout) + " ms");
                 }
 
                 long startMs = System.currentTimeMillis();

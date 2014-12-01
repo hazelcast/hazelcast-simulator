@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Responsible for collecting performance metrics from the agents and logging/storing it.
  */
-public class PerformanceMonitor extends Thread {
+public class PerformanceMonitor {
     private static final AtomicBoolean performanceWritten = new AtomicBoolean();
     private static final ILogger log = Logger.getLogger(PerformanceMonitor.class);
 
@@ -27,23 +27,37 @@ public class PerformanceMonitor extends Thread {
     private final ConcurrentMap<AgentClient, Long> operationCountPerAgent = new ConcurrentHashMap<AgentClient, Long>();
     private long previousCount = 0;
     public long previousTime = System.currentTimeMillis();
+    private final AtomicBoolean started = new AtomicBoolean();
 
     public PerformanceMonitor(Coordinator coordinator) {
         this.client = coordinator.agentsClient;
         this.coordinator = coordinator;
     }
 
-    @Override
-    public void run() {
-        for (; ; ) {
-            Utils.sleepSeconds(10);
+    public void start(){
+        if(started.compareAndSet(false, true)){
+            new PerformanceThread().start();
+        }
+    }
 
-            try {
-                checkPerformance();
-            } catch (TimeoutException e) {
-                log.warning("There was a timeout retrieving performance information from the members.");
-            } catch (Throwable cause) {
-                log.severe(cause);
+    class PerformanceThread extends Thread {
+        public PerformanceThread(){
+            super("PerformanceThread");
+            setDaemon(true);
+        }
+
+        @Override
+        public void run() {
+            for (; ; ) {
+                Utils.sleepSeconds(10);
+
+                try {
+                    checkPerformance();
+                } catch (TimeoutException e) {
+                    log.warning("There was a timeout retrieving performance information from the members.");
+                } catch (Throwable cause) {
+                    log.severe(cause);
+                }
             }
         }
     }

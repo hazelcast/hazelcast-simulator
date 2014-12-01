@@ -1,4 +1,11 @@
+#!/bin/bash
+
 VERSION=0.4-SNAPSHOT
+PROJECT_HOME=~
+if [ -n "$1" ]; then
+    PROJECT_HOME=$1
+fi
+
 mvn clean install -DskipTests
-rm -fr ~/hazelcast-stabilizer-${VERSION} 
-unzip -q -d ~ dist/target/hazelcast-stabilizer-${VERSION}-dist.zip 
+rm -fr ${PROJECT_HOME}/hazelcast-stabilizer-${VERSION}
+unzip -q -d ${PROJECT_HOME} dist/target/hazelcast-stabilizer-${VERSION}-dist.zip

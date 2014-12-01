@@ -16,4 +16,11 @@
         </cluster-members>
     </network>
 
+    <serialization>
+        <portable-version>1</portable-version>
+        <portable-factories>
+            <portable-factory factory-id="10000000">com.hazelcast.stabilizer.tests.backpressure.SomeRequestPortableFactory</portable-factory>
+        </portable-factories>
+    </serialization>
+
 </hazelcast-client>

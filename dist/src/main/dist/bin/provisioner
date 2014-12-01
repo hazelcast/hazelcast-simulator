@@ -4,10 +4,22 @@ if [ -z "${STABILIZER_HOME}" ] ; then
     export STABILIZER_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
 fi
 
-#echo  STABILIZER_HOME = ${STABILIZER_HOME}
+# options for all Java versions
+JAVA_OPTS_COMMON="-server -Xms64m -Xmx1g"
+JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
+if [[ "$JAVA_VERSION" < "1.8" ]]; then
+    # options for Java 6 & 7
+    export JAVA_OPTS="${JAVA_OPTS_COMMON} -XX:MaxPermSize=256m ${JAVA_EXTRA_OPTS}"
+else
+    # options for Java 8
+    export JAVA_OPTS="${JAVA_OPTS_COMMON} -XX:MaxMetaspaceSize=256m ${JAVA_EXTRA_OPTS}"
+fi
 
-export JAVA_OPTS="-Xms64m -Xmx1g -XX:MaxPermSize=256m -server ${JAVA_EXTRA_OPTS}"
+#echo PARAMETERS = $@
+#echo STABILIZER_HOME = ${STABILIZER_HOME}
+#echo JAVA_VERSION = ${JAVA_VERSION}
 #echo JAVA_OPTS = ${JAVA_OPTS}
+
 java -cp "${STABILIZER_HOME}/lib/*" ${JAVA_OPTS} \
     -DSTABILIZER_HOME=${STABILIZER_HOME}  \
     -Dhazelcast.logging.type=log4j \
