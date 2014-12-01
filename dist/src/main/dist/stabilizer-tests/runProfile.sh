@@ -5,22 +5,22 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-target=$1
+HOME=$(pwd)
 
-dirs=$(find ${target} -name run.sh | xargs -L 1 dirname)
+TARGET=$1
+DIRS=$(find ${TARGET} -name run.sh | xargs -L 1 dirname)
 
 IFS=$'\n'
 
-home=$(pwd)
-
-for dir in $dirs
+for DIR in ${DIRS}
 do
-	cd ${dir}
+	echo "Running stabilizer in folder: ${DIR}"
+	cd ${DIR}
 	pwd
 
 	rm -f nohup.out
 	nohup ./run.sh &
-	cd ${home}
+	cd ${HOME}
 
 	sleep 30
 done

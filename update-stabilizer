@@ -1,10 +1,15 @@
 #!/bin/bash
 
-VERSION=0.4-SNAPSHOT
+VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[')
 PROJECT_HOME=~
 if [ -n "$1" ]; then
     PROJECT_HOME=$1
+elif [ -n "${STABILIZER_HOME}" ]; then
+    PROJECT_HOME=$(dirname "${STABILIZER_HOME}")
 fi
+
+echo STABILIZER_VERSION = ${VERSION}
+echo PROJECT_HOME = ${PROJECT_HOME}
 
 mvn clean install -DskipTests
 rm -fr ${PROJECT_HOME}/hazelcast-stabilizer-${VERSION}
