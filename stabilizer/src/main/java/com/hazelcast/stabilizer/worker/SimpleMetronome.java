@@ -23,7 +23,6 @@ public class SimpleMetronome implements Metronome {
             //noop
         }
         nextNotBefore = timestamp + intervalMs;
-        System.out.println("Next is " + nextNotBefore);
     }
 
     private static class EmptyMetronome implements Metronome {
