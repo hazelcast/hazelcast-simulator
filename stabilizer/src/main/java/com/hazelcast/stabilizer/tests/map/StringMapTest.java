@@ -92,12 +92,11 @@ public class StringMapTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
-        keys = KeyUtils.generateKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
+        keys = KeyUtils.generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = StringUtils.generateStrings(valueCount, valueLength);
 
         Random random = new Random();
-        for (int k = 0; k < keys.length; k++) {
-            String key = keys[k];
+        for (String key : keys) {
             String value = values[random.nextInt(valueCount)];
             map.put(key, value);
         }

@@ -138,7 +138,7 @@ public class SyntheticBackPressureTest {
                             "It doesn't make sense as no keys are stored on clients. ");
                 }
                 int keys = 1000;
-                String[] strings = KeyUtils.generateKeys(keys, keys, keyLocality, targetInstance);
+                String[] strings = KeyUtils.generateStringKeys(keys, keys, keyLocality, targetInstance);
                 for (int k = 0; k < keys; k++) {
                     String key = strings[k];
                     Partition partition = targetInstance.getPartitionService().getPartition(key);
