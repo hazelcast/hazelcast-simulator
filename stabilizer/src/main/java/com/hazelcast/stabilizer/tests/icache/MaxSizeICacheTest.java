@@ -90,7 +90,7 @@ public class MaxSizeICacheTest {
                 if(max < size){
                     max = size;
                 }
-                assertTrue(id+": cache "+cache.getName()+" over size error ", size < maxSizeThreshold );
+                assertTrue(id+": cache "+cache.getName()+" size="+cache.size() +" > "+maxSizeThreshold, size > maxSizeThreshold );
             }
             targetInstance.getList(basename+"max").add(max);
         }
