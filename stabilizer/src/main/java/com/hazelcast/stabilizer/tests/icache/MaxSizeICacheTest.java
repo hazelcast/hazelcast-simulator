@@ -36,7 +36,8 @@ public class MaxSizeICacheTest {
     private HazelcastInstance targetInstance;
     private byte[] value;
     private ICache<Object, Object> cache;
-    private int maxSizeThreshold;
+    private int maxSize;
+    private int threshold;
 
     @Setup
     public void setup(TestContext testContex) throws Exception {
@@ -63,8 +64,8 @@ public class MaxSizeICacheTest {
         CacheConfig config = cache.getConfiguration(CacheConfig.class);
         log.info(id+": "+cache.getName()+" config="+config);
 
-        int maxsize = config.getMaxSizeConfig().getSize();
-        maxSizeThreshold = (int) (maxsize * sizeMargin) + maxsize;
+        maxSize = config.getMaxSizeConfig().getSize();
+        threshold = (int) (maxSize * sizeMargin) + maxSize;
     }
 
     @Run
@@ -90,7 +91,8 @@ public class MaxSizeICacheTest {
                 if(max < size){
                     max = size;
                 }
-                assertTrue(id+": cache "+cache.getName()+" size="+cache.size() +" > "+maxSizeThreshold, size > maxSizeThreshold );
+
+                assertTrue(id+": cache "+cache.getName()+" size="+cache.size()+" max="+maxSize+" threshold="+ threshold, size < threshold);
             }
             targetInstance.getList(basename+"max").add(max);
         }
