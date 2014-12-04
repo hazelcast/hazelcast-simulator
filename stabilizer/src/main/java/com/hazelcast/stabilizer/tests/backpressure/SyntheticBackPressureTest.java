@@ -13,6 +13,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
 import com.hazelcast.spi.OperationService;
+import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
@@ -76,6 +77,8 @@ public class SyntheticBackPressureTest {
     private AtomicLong operations = new AtomicLong();
     private TestContext context;
     private HazelcastInstance targetInstance;
+
+    public IntervalProbe latency;
 
     @Setup
     public void setup(TestContext context) throws Exception {
@@ -177,6 +180,8 @@ public class SyntheticBackPressureTest {
                 int partitionId = nextPartitionId();
 
                 ICompletableFuture f = invoke(partitionId);
+                latency.started();
+
                 if (syncInvocation) {
                     if (syncFrequency == 1) {
                         f.get();
@@ -193,6 +198,7 @@ public class SyntheticBackPressureTest {
                 } else {
                     f.andThen(this);
                 }
+                latency.done();
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
