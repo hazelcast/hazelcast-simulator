@@ -6,6 +6,7 @@ import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
 import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 
+import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -22,22 +23,19 @@ import java.util.Random;
 
 import static junit.framework.Assert.assertTrue;
 
-public class MaxSizeCacheTest {
+public class MaxSizeICacheTest {
 
-    private final static ILogger log = Logger.getLogger(MaxSizeCacheTest.class);
+    private final static ILogger log = Logger.getLogger(MaxSizeICacheTest.class);
     public int threadCount=3;
     public int valueSize=100;
     public double sizeMargin=0.2;
-
-    public String basename = this.getClass().getCanonicalName();
+    public String basename;
 
     private String id;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private byte[] value;
-    private ICache cache;
-
-    public int keyCount=10000;
+    private ICache<Object, Object> cache;
     private int maxSizeThreshold;
 
     @Setup
@@ -60,9 +58,13 @@ public class MaxSizeCacheTest {
             cacheManager = new HazelcastClientCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         }
-
         cache = (ICache) cacheManager.getCache(basename);
-        maxSizeThreshold = (int) (keyCount * sizeMargin) + keyCount;
+
+        CacheConfig config = cache.getConfiguration(CacheConfig.class);
+        log.info(id+": "+cache.getName()+" config="+config);
+
+        int maxsize = config.getMaxSizeConfig().getSize();
+        maxSizeThreshold = (int) (maxsize * sizeMargin) + maxsize;
     }
 
     @Run
@@ -81,7 +83,7 @@ public class MaxSizeCacheTest {
         public void run() {
             while (!testContext.isStopped()) {
 
-                int key = random.nextInt(keyCount);
+                int key = random.nextInt();
                 cache.put(key, value);
 
                 int size = cache.size();
@@ -104,6 +106,5 @@ public class MaxSizeCacheTest {
             }
         }
         log.info(id + ": cache "+cache.getName()+" max size ="+max);
-        cache.getConfiguration();
     }
 }
