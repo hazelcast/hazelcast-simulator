@@ -33,6 +33,8 @@ import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.Metronome;
+import com.hazelcast.stabilizer.worker.SimpleMetronome;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -54,16 +56,18 @@ public class StringMapTest {
     public String basename = "stringmap";
     public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
+    private int intervalMs;
 
     //probes
     public IntervalProbe getLatency;
     public IntervalProbe putLatency;
-    public SimpleProbe throughput;
 
+    public SimpleProbe throughput;
     private IMap<String, String> map;
     private String[] keys;
     private String[] values;
     private final AtomicLong operations = new AtomicLong();
+
     private TestContext testContext;
 
     private HazelcastInstance targetInstance;
@@ -97,7 +101,7 @@ public class StringMapTest {
 
         Random random = new Random();
         for (int k = 0; k < keys.length; k++) {
-            String key = keys[random.nextInt(keyCount)];
+            String key = keys[k];
             String value = values[random.nextInt(valueCount)];
             map.put(key, value);
         }
@@ -123,8 +127,9 @@ public class StringMapTest {
         @Override
         public void run() {
             long iteration = 0;
+            Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
             while (!testContext.isStopped()) {
-
+                metronome.waitForNext();
                 String key = randomKey();
 
                 if (shouldWrite(iteration)) {
