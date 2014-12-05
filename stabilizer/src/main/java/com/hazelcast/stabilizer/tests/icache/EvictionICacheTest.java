@@ -30,14 +30,21 @@ import static junit.framework.Assert.fail;
 * As the max-size policy is not a hard limit we use a configurable size margin in the verification
 * of the cache size.  The test also logs the global max size of the ICache observed from all test
 * participants, providing no assertion errors were throw.
-*
 * */
 public class EvictionICacheTest {
 
     private final static ILogger log = Logger.getLogger(EvictionICacheTest.class);
+
+    //number of threads each test participants will use to run the test
     public int threadCount=3;
+
+    //number of bytes for the value/payload of a key
     public int valueSize=100;
+
+    //the size of the cache can be larger than the defined max-size by this percentage before the test fails
     public double cacheSizeMargin=0.2;
+
+    //used as the basename of the data structure
     public String basename;
 
     private String id;
