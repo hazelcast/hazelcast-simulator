@@ -21,14 +21,23 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import javax.cache.CacheManager;
 import java.util.Random;
 
-import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
-public class MaxSizeICacheTest {
+/*
+* This test is expecting to work with an ICache which has a max-size policy and an eviction-policy
+* defined.  the run body of the test simply puts random key value pairs to the ICache, and checks
+* the size of the Icache has not grown above the defined max size + a configurable size margin.
+* As the max-size policy is not a hard limit we use a configurable size margin in the verification
+* of the cache size.  The test also logs the global max size of the ICache observed from all test
+* participants, providing no assertion errors were throw.
+*
+* */
+public class EvictionICacheTest {
 
-    private final static ILogger log = Logger.getLogger(MaxSizeICacheTest.class);
+    private final static ILogger log = Logger.getLogger(EvictionICacheTest.class);
     public int threadCount=3;
     public int valueSize=100;
-    public double sizeMargin=0.2;
+    public double cacheSizeMargin=0.2;
     public String basename;
 
     private String id;
@@ -49,6 +58,10 @@ public class MaxSizeICacheTest {
         Random random = new Random();
         random.nextBytes(value);
 
+        //size 1000
+        //size 271*15  + 15
+        //30000
+
         CacheManager cacheManager;
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
@@ -65,7 +78,7 @@ public class MaxSizeICacheTest {
         log.info(id+": "+cache.getName()+" config="+config);
 
         maxSize = config.getMaxSizeConfig().getSize();
-        threshold = (int) (maxSize * sizeMargin) + maxSize;
+        threshold = (int) (maxSize * cacheSizeMargin) + maxSize;
     }
 
     @Run
@@ -81,6 +94,7 @@ public class MaxSizeICacheTest {
         Random random = new Random();
         int max=0;
 
+        @Override
         public void run() {
             while (!testContext.isStopped()) {
 
@@ -88,11 +102,13 @@ public class MaxSizeICacheTest {
                 cache.put(key, value);
 
                 int size = cache.size();
-                if(max < size){
+                if(size > max){
                     max = size;
                 }
 
-                assertTrue(id+": cache "+cache.getName()+" size="+cache.size()+" max="+maxSize+" threshold="+ threshold, size < threshold);
+                if(size > threshold){
+                    fail(id + ": cache " + cache.getName() + " size=" + cache.size() + " max=" + maxSize + " threshold=" + threshold);
+                }
             }
             targetInstance.getList(basename+"max").add(max);
         }
