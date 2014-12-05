@@ -1,11 +1,12 @@
 package com.hazelcast.stabilizer.worker;
 
+import org.apache.commons.lang3.RandomUtils;
+
 public class SimpleMetronome implements Metronome {
     private final int intervalMs;
     private long nextNotBefore;
 
     private SimpleMetronome(int intervalMs) {
-        this.nextNotBefore = 0;
         this.intervalMs = intervalMs;
     }
 
@@ -18,6 +19,9 @@ public class SimpleMetronome implements Metronome {
 
     @Override
     public void waitForNext() {
+        if (nextNotBefore == 0) {
+            nextNotBefore = System.currentTimeMillis() + RandomUtils.nextInt(0, intervalMs);
+        }
         long timestamp;
         while ((timestamp = System.currentTimeMillis()) < nextNotBefore) {
             //noop
