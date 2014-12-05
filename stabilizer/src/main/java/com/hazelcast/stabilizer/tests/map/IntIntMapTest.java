@@ -28,9 +28,12 @@ import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.OperationSelector;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static com.hazelcast.stabilizer.tests.map.IntIntMapTest.Operation.*;
 
 public class IntIntMapTest {
 
@@ -45,15 +48,17 @@ public class IntIntMapTest {
     public int valueCount = 10000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public boolean usePut = true;
     public String basename = "intIntMap";
     public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
 
-    //probes
-    public IntervalProbe getLatency;
-    public IntervalProbe putLatency;
-    public SimpleProbe throughput;
+	public double putProb = 0.1;
+	public double setProb = 0.0;
+
+	//probes
+	public IntervalProbe getLatency;
+	public IntervalProbe putLatency;
+	public SimpleProbe throughput;
 
     private IMap<Integer, Integer> map;
     private int[] keys;
@@ -62,19 +67,17 @@ public class IntIntMapTest {
 
     private HazelcastInstance targetInstance;
 
+	private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+
+	    selector.addOperation(PUT, putProb)
+	            .addOperation(SET, setProb)
+			    .addOperationRemainingProbability(GET);
     }
 
     @Teardown
@@ -120,19 +123,23 @@ public class IntIntMapTest {
                 int key = randomKey();
                 int value = randomValue();
 
-                if (shouldWrite(iteration)) {
-                    putLatency.started();
-                    if (usePut) {
-                        map.put(key, value);
-                    } else {
-                        map.set(key, value);
-                    }
-                    putLatency.done();
-                } else {
-                    getLatency.started();
-                    map.get(key);
-                    getLatency.done();
-                }
+	            switch (selector.select()) {
+		            case PUT:
+			            putLatency.started();
+			            map.put(key, value);
+			            putLatency.done();
+			            break;
+		            case SET:
+			            putLatency.started();
+			            map.put(key, value);
+			            putLatency.done();
+			            break;
+	                case GET:
+			            getLatency.started();
+			            map.put(key, value);
+			            getLatency.done();
+			            break;
+	            }
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -155,16 +162,6 @@ public class IntIntMapTest {
         private int randomValue() {
             return random.nextInt(Integer.MAX_VALUE);
         }
-
-        private boolean shouldWrite(long iteration) {
-            if (writePercentage == 0) {
-                return false;
-            } else if (writePercentage == 100) {
-                return true;
-            } else {
-                return (iteration % 100) < writePercentage;
-            }
-        }
     }
 
     public static void main(String[] args) throws Throwable {
@@ -172,4 +169,10 @@ public class IntIntMapTest {
         test.writePercentage = 10;
         new TestRunner<IntIntMapTest>(test).run();
     }
+
+	static enum Operation {
+		PUT,
+		SET,
+		GET
+	}
 }
