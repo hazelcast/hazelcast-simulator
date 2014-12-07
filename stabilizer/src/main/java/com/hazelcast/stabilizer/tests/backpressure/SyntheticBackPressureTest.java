@@ -211,8 +211,6 @@ public class SyntheticBackPressureTest {
                 }
 
                 iteration++;
-
-
             }
         }
 
@@ -220,12 +218,12 @@ public class SyntheticBackPressureTest {
         private ICompletableFuture invoke(int partitionId) throws Exception {
             ICompletableFuture f;
             if (isClient) {
-                SomeRequest request = new SomeRequest(syncBackupCount, asyncBackupCount, backupDelayNanos);
+                SyntheticRequest request = new SyntheticRequest(syncBackupCount, asyncBackupCount, backupDelayNanos);
                 request.setPartitionId(partitionId);
                 Address target = clientPartitionService.getPartitionOwner(partitionId);
                 f = clientInvocationService.invokeOnTarget(request, target);
             } else {
-                SomeOperation operation = new SomeOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
+                SyntheticOperation operation = new SyntheticOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
                 f = operationService.invokeOnPartition(null, operation, partitionId);
             }
             return f;

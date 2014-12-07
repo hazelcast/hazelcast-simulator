@@ -8,16 +8,16 @@ import com.hazelcast.spi.Operation;
 import java.io.IOException;
 import java.security.Permission;
 
-public class SomeRequest extends PartitionClientRequest {
-    int partitionId;
-    int syncBackupCount;
-    int asyncBackupCount;
-    long backupDelayNanos;
+public class SyntheticRequest extends PartitionClientRequest {
+    private int partitionId;
+    private int syncBackupCount;
+    private int asyncBackupCount;
+    private long backupDelayNanos;
 
-    public SomeRequest() {
+    public SyntheticRequest() {
     }
 
-    public SomeRequest(int syncBackupCount, int asyncBackupCount, long backupDelayNanos) {
+    public SyntheticRequest(int syncBackupCount, int asyncBackupCount, long backupDelayNanos) {
         this.syncBackupCount = syncBackupCount;
         this.asyncBackupCount = asyncBackupCount;
         this.backupDelayNanos = backupDelayNanos;
@@ -29,7 +29,7 @@ public class SomeRequest extends PartitionClientRequest {
 
     @Override
     protected Operation prepareOperation() {
-        SomeOperation op = new SomeOperation(syncBackupCount, asyncBackupCount, backupDelayNanos);
+        SyntheticOperation op = new SyntheticOperation(syncBackupCount, asyncBackupCount, backupDelayNanos);
         op.setPartitionId(partitionId);
         return op;
     }
@@ -46,7 +46,7 @@ public class SomeRequest extends PartitionClientRequest {
 
     @Override
     public int getFactoryId() {
-        return SomeRequestPortableFactory.FACTORY_ID;
+        return SyntheticRequestPortableFactory.FACTORY_ID;
     }
 
     @Override
