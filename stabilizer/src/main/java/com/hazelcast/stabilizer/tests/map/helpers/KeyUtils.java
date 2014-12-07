@@ -30,6 +30,8 @@ public class KeyUtils {
                 return generateRemoteKey(generator, instance);
             case Random:
                 return generator.newKey();
+            case SinglePartition:
+                return generator.newConstantKey();
             default:
                 throw new IllegalArgumentException("Unrecognized keyLocality:" + keyLocality);
         }
@@ -113,6 +115,8 @@ public class KeyUtils {
 
     private interface Generator<K> {
         K newKey();
+
+        K newConstantKey();
     }
 
     private static class StringGenerator implements Generator<String> {
@@ -124,6 +128,11 @@ public class KeyUtils {
         @Override
         public String newKey() {
             return StringUtils.generateString(length);
+        }
+
+        @Override
+        public String newConstantKey() {
+            return "";
         }
     }
 
@@ -138,6 +147,11 @@ public class KeyUtils {
         @Override
         public Integer newKey() {
             return random.nextInt(n);
+        }
+
+        @Override
+        public Integer newConstantKey() {
+            return 0;
         }
     }
 }
