@@ -130,15 +130,10 @@ public class BatchingICacheTest {
 
     private class Worker implements Runnable {
         private final Random random = new Random();
-        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
         private final List<ICompletableFuture<?>> futureList = new ArrayList<ICompletableFuture<?>>(batchSize);
 
         @Override
         public void run() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
-            }
-
             long iteration = 0;
             while (!testContext.isStopped()) {
                 ICompletableFuture<?> future = selectAndInvokeOperation();
