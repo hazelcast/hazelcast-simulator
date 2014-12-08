@@ -130,20 +130,20 @@ public class SyntheticBackPressureTest {
                 operationService = node.getNodeEngine().getOperationService();
             }
 
-                if (isClient) {
-                    if (keyLocality == KeyLocality.Local)
+            if (isClient) {
+                if (keyLocality == KeyLocality.Local)
                     throw new IllegalStateException("A KeyLocality has been set to Local, but test is running on a client. " +
                             "It doesn't make sense as no keys are stored on clients. ");
-                }
-
-                int keys = 1000;
-                for (int k = 0; k < keys; k++) {
-                    Integer key = KeyUtils.generateIntKey(keys, keyLocality, targetInstance);
-                    Partition partition = targetInstance.getPartitionService().getPartition(key);
-                    partitionSequence.add(partition.getPartitionId());
-                }
-                Collections.shuffle(partitionSequence);
             }
+
+            int keys = 1000;
+            for (int k = 0; k < keys; k++) {
+                Integer key = KeyUtils.generateIntKey(keys, keyLocality, targetInstance);
+                Partition partition = targetInstance.getPartitionService().getPartition(key);
+                partitionSequence.add(partition.getPartitionId());
+            }
+            Collections.shuffle(partitionSequence);
+        }
 
         @Override
         public void onResponse(Object response) {
@@ -224,10 +224,10 @@ public class SyntheticBackPressureTest {
 
         private int nextPartitionId() {
             int partitionId = partitionSequence.get(partitionIndex);
-                partitionIndex++;
-                if (partitionIndex >= partitionSequence.size()) {
-                    partitionIndex = 0;
-                }
+            partitionIndex++;
+            if (partitionIndex >= partitionSequence.size()) {
+                partitionIndex = 0;
+            }
             return partitionId;
         }
 

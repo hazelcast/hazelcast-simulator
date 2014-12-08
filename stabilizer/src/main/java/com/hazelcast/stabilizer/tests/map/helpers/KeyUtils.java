@@ -160,6 +160,6 @@ public class KeyUtils {
         @Override
         public Integer newConstantKey() {
             return 0;
-    }
+        }
     }
 }
