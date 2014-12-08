@@ -106,7 +106,7 @@ public class EvictionICacheTest {
         configuredMaxSize = config.getMaxSizeConfig().getSize();
 
         for(int i=0; i< configuredMaxSize/2; i++){
-            putAllMap.put(i, value);
+            putAllMap.put(random.nextInt(), value);
         }
 
         balancedPartitionSize = (double) configuredMaxSize / (double) partitionCount;
