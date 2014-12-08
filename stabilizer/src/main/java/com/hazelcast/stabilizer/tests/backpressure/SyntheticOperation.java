@@ -2,6 +2,7 @@ package com.hazelcast.stabilizer.tests.backpressure;
 
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.spi.AbstractOperation;
 import com.hazelcast.spi.BackupAwareOperation;
 import com.hazelcast.spi.Operation;
@@ -9,15 +10,17 @@ import com.hazelcast.spi.PartitionAwareOperation;
 
 import java.io.IOException;
 
-public class SomeOperation extends AbstractOperation implements BackupAwareOperation, PartitionAwareOperation {
+public class SyntheticOperation extends AbstractOperation
+        implements BackupAwareOperation, PartitionAwareOperation, IdentifiedDataSerializable {
+
     private int syncBackupCount;
     private int asyncBackupCount;
     private long backupOperationDelayNanos;
 
-    public SomeOperation() {
+    public SyntheticOperation() {
     }
 
-    public SomeOperation(int syncBackupCount, int asyncBackupCount, long backupOperationDelayNanos) {
+    public SyntheticOperation(int syncBackupCount, int asyncBackupCount, long backupOperationDelayNanos) {
         this.syncBackupCount = syncBackupCount;
         this.asyncBackupCount = asyncBackupCount;
         this.backupOperationDelayNanos = backupOperationDelayNanos;
@@ -40,14 +43,24 @@ public class SomeOperation extends AbstractOperation implements BackupAwareOpera
 
     @Override
     public Operation getBackupOperation() {
-        SomeBackupOperation someBackupOperation = new SomeBackupOperation(backupOperationDelayNanos);
-        someBackupOperation.setPartitionId(getPartitionId());
-        return someBackupOperation;
+        SyntheticBackupOperation syntheticBackupOperation = new SyntheticBackupOperation(backupOperationDelayNanos);
+        syntheticBackupOperation.setPartitionId(getPartitionId());
+        return syntheticBackupOperation;
     }
 
     @Override
     public void run() throws Exception {
         //do nothing
+    }
+
+    @Override
+    public int getFactoryId() {
+        return SyntheticSerializableFactory.ID;
+    }
+
+    @Override
+    public int getId() {
+        return SyntheticSerializableFactory.OPERATION;
     }
 
     @Override
