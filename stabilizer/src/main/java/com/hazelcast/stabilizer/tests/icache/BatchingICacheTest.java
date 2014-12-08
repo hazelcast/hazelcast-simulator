@@ -72,18 +72,7 @@ public class BatchingICacheTest {
             cacheManager = new HazelcastClientCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         }
-
-        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
-        config.setName(basename);
-
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException hack) {
-            //temp hack to deal with multiple nodes wanting to make the same cache.
-            log.severe(hack);
-        }
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
-
         selector.addOperation(Operation.PUT, writeProbability)
                 .empty(Operation.GET);
     }
