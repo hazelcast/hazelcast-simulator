@@ -138,7 +138,7 @@ public class SyntheticBackPressureTest {
 
                 int keys = 1000;
                 for (int k = 0; k < keys; k++) {
-                    Integer key = KeyUtils.generateInt(keys, keyLocality, targetInstance);
+                    Integer key = KeyUtils.generateIntKey(keys, keyLocality, targetInstance);
                     Partition partition = targetInstance.getPartitionService().getPartition(key);
                     partitionSequence.add(partition.getPartitionId());
                 }
