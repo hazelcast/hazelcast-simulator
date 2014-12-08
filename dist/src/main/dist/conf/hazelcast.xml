@@ -62,7 +62,7 @@
     </cache>
 
     <cache name="maxCachLarge*">
-        <max-size policy="ENTRY_COUNT" size="30000"/>
+        <max-size policy="ENTRY_COUNT" size="100000"/>
         <eviction-policy>LFU</eviction-policy>
     </cache>
 

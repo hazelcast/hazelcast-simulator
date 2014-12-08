@@ -49,9 +49,6 @@ public class EvictionICacheTest {
     public double putAsyncProb=0.1;
     public double putAllProb=0.1;
 
-    //the size of the cache can be larger than the defined max-size by this percentage before the test fails
-    public double cacheSizeMargin=0.2;
-
     //used as the basename of the data structure
     public String basename;
 
@@ -66,7 +63,6 @@ public class EvictionICacheTest {
     private byte[] value;
     private ICache<Object, Object> cache;
     private int configuredMaxSize;
-    private int threshold;
     private Map putAllMap = new HashMap();
 
     // Find balanced partition size if all entires are distributed perfectly
@@ -108,7 +104,6 @@ public class EvictionICacheTest {
         log.info(id+": "+cache.getName()+" config="+config);
 
         configuredMaxSize = config.getMaxSizeConfig().getSize();
-        threshold = (int) (configuredMaxSize * cacheSizeMargin) + configuredMaxSize;
 
         for(int i=0; i< configuredMaxSize/2; i++){
             putAllMap.put(i, value);
@@ -137,9 +132,9 @@ public class EvictionICacheTest {
         private Counter counter = new Counter();
 
         WorkerThread(){
-            selector.addOperation(Operation.PUT, 0.8)
-                    .addOperation(Operation.PUT_ASYNC, 0.1)
-                    .addOperation(Operation.PUT_ALL, 0.1);
+            selector.addOperation(Operation.PUT, putProb)
+                    .addOperation(Operation.PUT_ASYNC, putAsyncProb)
+                    .addOperation(Operation.PUT_ALL, putAllProb);
         }
 
         @Override
@@ -171,7 +166,7 @@ public class EvictionICacheTest {
                 }
 
                 if(size > estimatedMaxSize){
-                    fail(id + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize + " threshold=" + threshold);
+                    fail(id + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
                 }
             }
             targetInstance.getList(basename+"max").add(max);
@@ -189,7 +184,7 @@ public class EvictionICacheTest {
                 observedMaxSize = m;
             }
         }
-        log.info(id + ": cache "+cache.getName()+"configuredMaxSize="+ configuredMaxSize +" observedMaxSize="+observedMaxSize+" estimatedMaxSize="+estimatedMaxSize);
+        log.info(id + ": cache "+cache.getName()+" configuredMaxSize="+ configuredMaxSize +" observedMaxSize="+observedMaxSize+" estimatedMaxSize="+estimatedMaxSize);
 
         IList<Counter> counters = targetInstance.getList(basename+"counter");
         Counter total=new Counter();
