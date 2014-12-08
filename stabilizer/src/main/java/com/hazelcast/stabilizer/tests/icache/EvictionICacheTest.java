@@ -192,6 +192,7 @@ public class EvictionICacheTest {
             total.add(c);
         }
         log.info(id + ": "+total);
+        log.info(id + ": putAllMap size="+putAllMap.size());
     }
 
     public static class Counter implements Serializable {
