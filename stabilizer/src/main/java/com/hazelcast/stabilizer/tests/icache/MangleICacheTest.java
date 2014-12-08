@@ -196,7 +196,6 @@ public class MangleICacheTest {
                 HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
                 cacheManager = new HazelcastClientCacheManager(
                         hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-                throw new RuntimeException("Code doesnt' compile on my machine, please fix it");
             }
         }
 
