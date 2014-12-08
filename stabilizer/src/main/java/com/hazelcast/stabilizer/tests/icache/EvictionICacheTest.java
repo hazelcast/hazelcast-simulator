@@ -20,6 +20,7 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.worker.OperationSelector;
 
 import javax.cache.CacheManager;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -198,7 +199,7 @@ public class EvictionICacheTest {
         log.info(id + ": "+total);
     }
 
-    public class Counter{
+    public static class Counter implements Serializable {
         public int put=0;
         public int putAsync=0;
         public int putAll=0;
