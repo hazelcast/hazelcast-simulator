@@ -47,6 +47,10 @@ public class EvictionICacheTest {
     //used as the basename of the data structure
     public String basename;
 
+    // As clients might be running this test they have no way of knowing the value
+    // Default value is 271 or configure via "GroupProperties.PROP_PARTITION_COUNT" property
+    public int partitionCount=271;
+
     private String id;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -54,6 +58,20 @@ public class EvictionICacheTest {
     private ICache<Object, Object> cache;
     private int maxSize;
     private int threshold;
+
+
+    // Find balanced partition size if all entires are distributed perfectly
+    private double balancedPartitionSize;
+
+    // Square root of "balancedPartitionSize" gives values so close to our measured standard deviation values.
+    private double approximatedStdDev;
+    private int stdDevMultiplier;
+
+    // Find estimated max partition size that any partition can reach at max
+    private int estimatedMaxPartitionSize;
+
+    // Find estimated max size (entry count) that cache can reach at max
+    private int estimatedMaxSize = estimatedMaxPartitionSize * partitionCount;
 
     @Setup
     public void setup(TestContext testContex) throws Exception {
@@ -86,6 +104,13 @@ public class EvictionICacheTest {
 
         maxSize = config.getMaxSizeConfig().getSize();
         threshold = (int) (maxSize * cacheSizeMargin) + maxSize;
+
+
+        balancedPartitionSize = (double) maxSize / (double) partitionCount;
+        approximatedStdDev = Math.sqrt(balancedPartitionSize);
+        stdDevMultiplier = maxSize <= 4000 ? 5 : 3;
+        estimatedMaxPartitionSize = (int) (balancedPartitionSize + (approximatedStdDev * stdDevMultiplier));
+        estimatedMaxSize = estimatedMaxPartitionSize * partitionCount;
     }
 
     @Run
@@ -130,6 +155,6 @@ public class EvictionICacheTest {
                 max = m;
             }
         }
-        log.info(id + ": cache "+cache.getName()+" max size ="+max);
+        log.info(id + ": cache "+cache.getName()+"configured max size="+maxSize+" observed max size="+max+" estimatedMaxSize="+estimatedMaxSize);
     }
 }
