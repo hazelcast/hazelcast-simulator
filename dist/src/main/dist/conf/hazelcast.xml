@@ -51,8 +51,18 @@
         </portable-factories>
     </serialization>
 
-    <cache name="maxCache*">
+    <cache name="maxCachSmall*">
+        <max-size policy="ENTRY_COUNT" size="271"/>
+        <eviction-policy>LFU</eviction-policy>
+    </cache>
+
+    <cache name="maxCachMediume*">
         <max-size policy="ENTRY_COUNT" size="1000"/>
+        <eviction-policy>LFU</eviction-policy>
+    </cache>
+
+    <cache name="maxCachLarge*">
+        <max-size policy="ENTRY_COUNT" size="30000"/>
         <eviction-policy>LFU</eviction-policy>
     </cache>
 

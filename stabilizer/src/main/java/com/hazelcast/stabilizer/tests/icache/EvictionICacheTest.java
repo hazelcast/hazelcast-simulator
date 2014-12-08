@@ -17,6 +17,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.OperationSelector;
 
 import javax.cache.CacheManager;
 import java.util.HashMap;
@@ -43,6 +44,10 @@ public class EvictionICacheTest {
     //number of bytes for the value/payload of a key
     public int valueSize=100;
 
+    public double putProb=0.8;
+    public double putAsyncProb=0.1;
+    public double putAllProb=0.1;
+
     //the size of the cache can be larger than the defined max-size by this percentage before the test fails
     public double cacheSizeMargin=0.2;
 
@@ -52,6 +57,7 @@ public class EvictionICacheTest {
     // As clients might be running this test they have no way of knowing the value
     // Default value is 271 or configure via "GroupProperties.PROP_PARTITION_COUNT" property
     public int partitionCount=271;
+
 
     private String id;
     private TestContext testContext;
@@ -85,10 +91,6 @@ public class EvictionICacheTest {
         Random random = new Random();
         random.nextBytes(value);
 
-        //size 1000
-        //size 271*15  + 15
-        //30000
-
         CacheManager cacheManager;
         if (TestUtils.isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
@@ -107,7 +109,7 @@ public class EvictionICacheTest {
         configuredMaxSize = config.getMaxSizeConfig().getSize();
         threshold = (int) (configuredMaxSize * cacheSizeMargin) + configuredMaxSize;
 
-        for(int i=0; i< configuredMaxSize; i++){
+        for(int i=0; i< configuredMaxSize/2; i++){
             putAllMap.put(i, value);
         }
 
@@ -130,6 +132,14 @@ public class EvictionICacheTest {
     private class WorkerThread implements Runnable {
         Random random = new Random();
         int max=0;
+        private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+        private Counter counter = new Counter();
+
+        WorkerThread(){
+            selector.addOperation(Operation.PUT, 0.8)
+                    .addOperation(Operation.PUT_ASYNC, 0.1)
+                    .addOperation(Operation.PUT_ALL, 0.1);
+        }
 
         @Override
         public void run() {
@@ -137,10 +147,21 @@ public class EvictionICacheTest {
 
                 int key = random.nextInt();
 
-                if( random.nextDouble() < 0.5){
-                    cache.put(key, value);
-                }else {
-                    cache.putAll(putAllMap);
+                switch (selector.select()) {
+                    case PUT:
+                        cache.put(key, value);
+                        counter.put++;
+                        break;
+
+                    case PUT_ASYNC:
+                        cache.putAsync(key, value);
+                        counter.putAsync++;
+                        break;
+
+                    case PUT_ALL:
+                        cache.putAll(putAllMap);
+                        counter.putAll++;
+                        break;
                 }
 
                 int size = cache.size();
@@ -148,12 +169,14 @@ public class EvictionICacheTest {
                     max = size;
                 }
 
-                if(size > threshold){
+                if(size > estimatedMaxSize){
                     fail(id + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize + " threshold=" + threshold);
                 }
             }
             targetInstance.getList(basename+"max").add(max);
+            targetInstance.getList(basename+"counter").add(counter);
         }
+
     }
 
     @Verify(global = true)
@@ -166,5 +189,39 @@ public class EvictionICacheTest {
             }
         }
         log.info(id + ": cache "+cache.getName()+"configuredMaxSize="+ configuredMaxSize +" observedMaxSize="+observedMaxSize+" estimatedMaxSize="+estimatedMaxSize);
+
+        IList<Counter> counters = targetInstance.getList(basename+"counter");
+        Counter total=new Counter();
+        for (Counter c : counters) {
+            total.add(c);
+        }
+        log.info(id + ": "+total);
+    }
+
+    public class Counter{
+        public int put=0;
+        public int putAsync=0;
+        public int putAll=0;
+
+        public void add(Counter c){
+            put+=c.put;
+            putAsync+=c.putAsync;
+            putAll+=c.putAll;
+        }
+
+        @Override
+        public String toString() {
+            return "Counter{" +
+                    "put=" + put +
+                    ", putAsync=" + putAsync +
+                    ", putAll=" + putAll +
+                    '}';
+        }
+    }
+
+    static enum Operation {
+        PUT,
+        PUT_ASYNC,
+        PUT_ALL,
     }
 }
