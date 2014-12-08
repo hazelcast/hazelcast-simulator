@@ -52,13 +52,13 @@ public class IntIntMapTest {
     public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
 
-	public double putProb = 0.1;
-	public double setProb = 0.0;
+    public double putProb = 0.1;
+    public double setProb = 0.0;
 
-	//probes
-	public IntervalProbe getLatency;
-	public IntervalProbe putLatency;
-	public SimpleProbe throughput;
+    //probes
+    public IntervalProbe getLatency;
+    public IntervalProbe putLatency;
+    public SimpleProbe throughput;
 
     private IMap<Integer, Integer> map;
     private int[] keys;
@@ -67,7 +67,7 @@ public class IntIntMapTest {
 
     private HazelcastInstance targetInstance;
 
-	private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -75,9 +75,9 @@ public class IntIntMapTest {
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
 
-	    selector.addOperation(PUT, putProb)
-	            .addOperation(SET, setProb)
-			    .addOperationRemainingProbability(GET);
+        selector.addOperation(PUT, putProb)
+                .addOperation(SET, setProb)
+                .addOperationRemainingProbability(GET);
     }
 
     @Teardown
@@ -123,23 +123,25 @@ public class IntIntMapTest {
                 int key = randomKey();
                 int value = randomValue();
 
-	            switch (selector.select()) {
-		            case PUT:
-			            putLatency.started();
-			            map.put(key, value);
-			            putLatency.done();
-			            break;
-		            case SET:
-			            putLatency.started();
-			            map.put(key, value);
-			            putLatency.done();
-			            break;
-	                case GET:
-			            getLatency.started();
-			            map.put(key, value);
-			            getLatency.done();
-			            break;
-	            }
+                switch (selector.select()) {
+                    case PUT:
+                        putLatency.started();
+                        map.put(key, value);
+                        putLatency.done();
+                        break;
+                    case SET:
+                        putLatency.started();
+                        map.put(key, value);
+                        putLatency.done();
+                        break;
+                    case GET:
+                        getLatency.started();
+                        map.put(key, value);
+                        getLatency.done();
+                        break;
+                    default:
+                        throw new UnsupportedOperationException();
+                }
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -170,9 +172,9 @@ public class IntIntMapTest {
         new TestRunner<IntIntMapTest>(test).run();
     }
 
-	static enum Operation {
-		PUT,
-		SET,
-		GET
-	}
+    static enum Operation {
+        PUT,
+        SET,
+        GET
+    }
 }
