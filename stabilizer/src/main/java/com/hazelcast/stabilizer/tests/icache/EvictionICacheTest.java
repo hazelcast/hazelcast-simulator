@@ -105,6 +105,8 @@ public class EvictionICacheTest {
 
         configuredMaxSize = config.getMaxSizeConfig().getSize();
 
+        //we are explicitly using a random key so that all participants of the test do not put keys 0..Max
+        //the size of putAllMap is not guarantied to be configuredMaxSize/2 as keys are random
         for(int i=0; i< configuredMaxSize/2; i++){
             putAllMap.put(random.nextInt(), value);
         }
