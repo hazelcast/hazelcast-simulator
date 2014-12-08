@@ -49,7 +49,7 @@ public class BatchingICacheTest {
     public int keyCount = 1000000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "icacheperformance";
+    public String basename = getClass().getSimpleName();
     public int writePercentage = 10;
     public int batchSize = 1;
 
@@ -141,7 +141,7 @@ public class BatchingICacheTest {
 
             long iteration = 0;
             while (!testContext.isStopped()) {
-                ICompletableFuture<?> future = selectAndInvokeOperation(iteration);
+                ICompletableFuture<?> future = selectAndInvokeOperation();
                 futureList.add(future);
 
                 if (iteration % logFrequency == 0) {
@@ -156,21 +156,18 @@ public class BatchingICacheTest {
             }
         }
 
-        private ICompletableFuture<?> selectAndInvokeOperation(long iteration) {
+        private ICompletableFuture<?> selectAndInvokeOperation() {
             Integer key = random.nextInt(keyCount);
-            ICompletableFuture<?> future;
             Operation operation = selector.select();
             switch (operation) {
                 case PUT:
-                    future = cache.putAsync(key, iteration);
-                    break;
+                    Integer value = random.nextInt();
+                    return cache.putAsync(key, value);
                 case GET:
-                    future = cache.getAsync(key);
-                    break;
+                    return cache.getAsync(key);
                 default:
                     throw new RuntimeException("Unknown operation '" + operation + "' selected.");
             }
-            return future;
         }
 
         private void syncIfNecessary(long iteration) {
