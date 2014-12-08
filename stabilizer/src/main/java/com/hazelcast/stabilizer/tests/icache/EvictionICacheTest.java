@@ -19,6 +19,8 @@ import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import javax.cache.CacheManager;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import static junit.framework.Assert.fail;
@@ -56,9 +58,9 @@ public class EvictionICacheTest {
     private HazelcastInstance targetInstance;
     private byte[] value;
     private ICache<Object, Object> cache;
-    private int maxSize;
+    private int configuredMaxSize;
     private int threshold;
-
+    private Map putAllMap = new HashMap();
 
     // Find balanced partition size if all entires are distributed perfectly
     private double balancedPartitionSize;
@@ -102,13 +104,16 @@ public class EvictionICacheTest {
         CacheConfig config = cache.getConfiguration(CacheConfig.class);
         log.info(id+": "+cache.getName()+" config="+config);
 
-        maxSize = config.getMaxSizeConfig().getSize();
-        threshold = (int) (maxSize * cacheSizeMargin) + maxSize;
+        configuredMaxSize = config.getMaxSizeConfig().getSize();
+        threshold = (int) (configuredMaxSize * cacheSizeMargin) + configuredMaxSize;
 
+        for(int i=0; i< configuredMaxSize; i++){
+            putAllMap.put(i, value);
+        }
 
-        balancedPartitionSize = (double) maxSize / (double) partitionCount;
+        balancedPartitionSize = (double) configuredMaxSize / (double) partitionCount;
         approximatedStdDev = Math.sqrt(balancedPartitionSize);
-        stdDevMultiplier = maxSize <= 4000 ? 5 : 3;
+        stdDevMultiplier = configuredMaxSize <= 4000 ? 5 : 3;
         estimatedMaxPartitionSize = (int) (balancedPartitionSize + (approximatedStdDev * stdDevMultiplier));
         estimatedMaxSize = estimatedMaxPartitionSize * partitionCount;
     }
@@ -131,7 +136,12 @@ public class EvictionICacheTest {
             while (!testContext.isStopped()) {
 
                 int key = random.nextInt();
-                cache.put(key, value);
+
+                if( random.nextDouble() < 0.5){
+                    cache.put(key, value);
+                }else {
+                    cache.putAll(putAllMap);
+                }
 
                 int size = cache.size();
                 if(size > max){
@@ -139,7 +149,7 @@ public class EvictionICacheTest {
                 }
 
                 if(size > threshold){
-                    fail(id + ": cache " + cache.getName() + " size=" + cache.size() + " max=" + maxSize + " threshold=" + threshold);
+                    fail(id + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize + " threshold=" + threshold);
                 }
             }
             targetInstance.getList(basename+"max").add(max);
@@ -149,12 +159,12 @@ public class EvictionICacheTest {
     @Verify(global = true)
     public void globalVerify() throws Exception {
         IList<Integer> results = targetInstance.getList(basename+"max");
-        int max=0;
+        int observedMaxSize=0;
         for (int m : results) {
-            if(max < m){
-                max = m;
+            if(observedMaxSize < m){
+                observedMaxSize = m;
             }
         }
-        log.info(id + ": cache "+cache.getName()+"configured max size="+maxSize+" observed max size="+max+" estimatedMaxSize="+estimatedMaxSize);
+        log.info(id + ": cache "+cache.getName()+"configuredMaxSize="+ configuredMaxSize +" observedMaxSize="+observedMaxSize+" estimatedMaxSize="+estimatedMaxSize);
     }
 }
