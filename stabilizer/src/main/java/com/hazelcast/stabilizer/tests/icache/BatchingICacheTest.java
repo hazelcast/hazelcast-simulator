@@ -26,9 +26,7 @@ import com.hazelcast.stabilizer.worker.OperationSelector;
 
 import javax.cache.CacheException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -50,7 +48,7 @@ public class BatchingICacheTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
     public String basename = getClass().getSimpleName().toLowerCase();
-    public int writePercentage = 10;
+    public double writeProbability = 0.1;
     public int batchSize = 1;
 
     private ICache<Object, Object> cache;
@@ -61,14 +59,6 @@ public class BatchingICacheTest {
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
         this.testContext = testContext;
 
         targetInstance = testContext.getTargetInstance();
@@ -94,7 +84,7 @@ public class BatchingICacheTest {
         }
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
 
-        selector.addOperation(Operation.PUT, ((double)writePercentage) / 100)
+        selector.addOperation(Operation.PUT, writeProbability)
                 .empty(Operation.GET);
     }
 
