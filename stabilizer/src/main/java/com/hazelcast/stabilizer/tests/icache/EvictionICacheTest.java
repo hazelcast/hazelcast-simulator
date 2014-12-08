@@ -3,10 +3,13 @@ package com.hazelcast.stabilizer.tests.icache;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
+import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
 import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 
+import com.hazelcast.client.impl.HazelcastClientProxy;
 import com.hazelcast.config.CacheConfig;
+import com.hazelcast.config.CacheEvictionConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -17,8 +20,12 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.OperationSelector;
 
 import javax.cache.CacheManager;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import static junit.framework.Assert.fail;
@@ -39,10 +46,11 @@ public class EvictionICacheTest {
     public int threadCount=3;
 
     //number of bytes for the value/payload of a key
-    public int valueSize=100;
+    public int valueSize=2;
 
-    //the size of the cache can be larger than the defined max-size by this percentage before the test fails
-    public double cacheSizeMargin=0.2;
+    public double putProb=0.8;
+    public double putAsyncProb=0.1;
+    public double putAllProb=0.1;
 
     //used as the basename of the data structure
     public String basename;
@@ -52,22 +60,23 @@ public class EvictionICacheTest {
     private HazelcastInstance targetInstance;
     private byte[] value;
     private ICache<Object, Object> cache;
-    private int maxSize;
-    private int threshold;
+    private int configuredMaxSize;
+    private Map putAllMap = new HashMap();
+    public int partitionCount;
+
+    // Find estimated max size (entry count) that cache can reach at max
+    private int estimatedMaxSize;
 
     @Setup
     public void setup(TestContext testContex) throws Exception {
         this.testContext = testContex;
         targetInstance = testContext.getTargetInstance();
-        id=testContex.getTestId();
+        partitionCount = targetInstance.getPartitionService().getPartitions().size();
 
+        id=testContex.getTestId();
         value = new byte[valueSize];
         Random random = new Random();
         random.nextBytes(value);
-
-        //size 1000
-        //size 271*15  + 15
-        //30000
 
         CacheManager cacheManager;
         if (TestUtils.isMemberNode(targetInstance)) {
@@ -78,14 +87,23 @@ public class EvictionICacheTest {
             HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
             cacheManager = new HazelcastClientCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+
         }
         cache = (ICache) cacheManager.getCache(basename);
 
         CacheConfig config = cache.getConfiguration(CacheConfig.class);
         log.info(id+": "+cache.getName()+" config="+config);
 
-        maxSize = config.getMaxSizeConfig().getSize();
-        threshold = (int) (maxSize * cacheSizeMargin) + maxSize;
+        configuredMaxSize = config.getEvictionConfig().getSize();
+
+        //we are explicitly using a random key so that all participants of the test do not put keys 0..Max
+        //the size of putAllMap is not guarantied to be configuredMaxSize/2 as keys are random
+        for(int i=0; i< configuredMaxSize/2; i++){
+            putAllMap.put(random.nextInt(), value);
+        }
+
+        int maxEstimatedPartitionSize = com.hazelcast.cache.impl.maxsize.impl.EntryCountCacheMaxSizeChecker.calculateMaxPartitionSize(configuredMaxSize, partitionCount);
+        estimatedMaxSize = maxEstimatedPartitionSize * partitionCount;
     }
 
     @Run
@@ -100,36 +118,97 @@ public class EvictionICacheTest {
     private class WorkerThread implements Runnable {
         Random random = new Random();
         int max=0;
+        private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+        private Counter counter = new Counter();
+
+        WorkerThread(){
+            selector.addOperation(Operation.PUT, putProb)
+                    .addOperation(Operation.PUT_ASYNC, putAsyncProb)
+                    .addOperation(Operation.PUT_ALL, putAllProb);
+        }
 
         @Override
         public void run() {
             while (!testContext.isStopped()) {
 
                 int key = random.nextInt();
-                cache.put(key, value);
+
+                switch (selector.select()) {
+                    case PUT:
+                        cache.put(key, value);
+                        counter.put++;
+                        break;
+
+                    case PUT_ASYNC:
+                        cache.putAsync(key, value);
+                        counter.putAsync++;
+                        break;
+
+                    case PUT_ALL:
+                        cache.putAll(putAllMap);
+                        counter.putAll++;
+                        break;
+                }
 
                 int size = cache.size();
                 if(size > max){
                     max = size;
                 }
 
-                if(size > threshold){
-                    fail(id + ": cache " + cache.getName() + " size=" + cache.size() + " max=" + maxSize + " threshold=" + threshold);
+                if(size > estimatedMaxSize){
+                    fail(id + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
                 }
             }
             targetInstance.getList(basename+"max").add(max);
+            targetInstance.getList(basename+"counter").add(counter);
         }
+
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
         IList<Integer> results = targetInstance.getList(basename+"max");
-        int max=0;
+        int observedMaxSize=0;
         for (int m : results) {
-            if(max < m){
-                max = m;
+            if(observedMaxSize < m){
+                observedMaxSize = m;
             }
         }
-        log.info(id + ": cache "+cache.getName()+" max size ="+max);
+        log.info(id + ": cache "+cache.getName()+" size="+cache.size()+" configuredMaxSize="+ configuredMaxSize +" observedMaxSize="+observedMaxSize+" estimatedMaxSize="+estimatedMaxSize);
+
+        IList<Counter> counters = targetInstance.getList(basename+"counter");
+        Counter total=new Counter();
+        for (Counter c : counters) {
+            total.add(c);
+        }
+        log.info(id + ": "+total);
+        log.info(id + ": putAllMap size="+putAllMap.size());
+    }
+
+    public static class Counter implements Serializable {
+        public int put=0;
+        public int putAsync=0;
+        public int putAll=0;
+
+        public void add(Counter c){
+            put+=c.put;
+            putAsync+=c.putAsync;
+            putAll+=c.putAll;
+        }
+
+        @Override
+        public String toString() {
+            return "Counter{" +
+                    "put=" + put +
+                    ", putAsync=" + putAsync +
+                    ", putAll=" + putAll +
+                    '}';
+        }
+    }
+
+    static enum Operation {
+        PUT,
+        PUT_ASYNC,
+        PUT_ALL,
     }
 }
