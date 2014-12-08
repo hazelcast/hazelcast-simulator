@@ -2,6 +2,7 @@ package com.hazelcast.stabilizer.tests.backpressure;
 
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.spi.AbstractOperation;
 import com.hazelcast.spi.BackupOperation;
 import com.hazelcast.spi.PartitionAwareOperation;
@@ -9,19 +10,31 @@ import com.hazelcast.spi.PartitionAwareOperation;
 import java.io.IOException;
 import java.util.concurrent.locks.LockSupport;
 
-public class SomeBackupOperation extends AbstractOperation implements BackupOperation, PartitionAwareOperation {
+public class SyntheticBackupOperation extends AbstractOperation
+        implements BackupOperation, PartitionAwareOperation, IdentifiedDataSerializable {
+
     private long delayNs;
 
-    public SomeBackupOperation() {
+    public SyntheticBackupOperation() {
     }
 
-    public SomeBackupOperation(long delayNs) {
+    public SyntheticBackupOperation(long delayNs) {
         this.delayNs = delayNs;
     }
 
     @Override
     public void run() throws Exception {
         LockSupport.parkNanos(delayNs);
+    }
+
+    @Override
+    public int getFactoryId() {
+        return SyntheticSerializableFactory.ID;
+    }
+
+    @Override
+    public int getId() {
+        return SyntheticSerializableFactory.BACKUP_OPERATION;
     }
 
     @Override
