@@ -49,7 +49,7 @@ public class BatchingICacheTest {
     public int keyCount = 1000000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = getClass().getSimpleName();
+    public String basename = getClass().getSimpleName().toLowerCase();
     public int writePercentage = 10;
     public int batchSize = 1;
 
