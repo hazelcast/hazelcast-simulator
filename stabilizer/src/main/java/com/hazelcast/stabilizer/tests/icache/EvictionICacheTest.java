@@ -184,7 +184,7 @@ public class EvictionICacheTest {
                 observedMaxSize = m;
             }
         }
-        log.info(id + ": cache "+cache.getName()+" configuredMaxSize="+ configuredMaxSize +" observedMaxSize="+observedMaxSize+" estimatedMaxSize="+estimatedMaxSize);
+        log.info(id + ": cache "+cache.getName()+" size="+cache.size()+" configuredMaxSize="+ configuredMaxSize +" observedMaxSize="+observedMaxSize+" estimatedMaxSize="+estimatedMaxSize);
 
         IList<Counter> counters = targetInstance.getList(basename+"counter");
         Counter total=new Counter();
