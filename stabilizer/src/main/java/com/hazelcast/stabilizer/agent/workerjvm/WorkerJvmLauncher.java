@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.agent.workerjvm;
 
-
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
@@ -38,21 +37,23 @@ public class WorkerJvmLauncher {
 
     private final WorkerJvmSettings settings;
     private final Agent agent;
-    private final ConcurrentMap<String, WorkerJvm> workerJvms;
+    private final ConcurrentMap<String, WorkerJvm> workerJVMs;
     private File hzFile;
     private File clientHzFile;
+    private File log4jFile;
     private final List<WorkerJvm> workersInProgress = new LinkedList<WorkerJvm>();
     private File testSuiteDir;
 
-    public WorkerJvmLauncher(Agent agent, ConcurrentMap<String, WorkerJvm> workerJvms, WorkerJvmSettings settings) {
+    public WorkerJvmLauncher(Agent agent, ConcurrentMap<String, WorkerJvm> workerJVMs, WorkerJvmSettings settings) {
         this.settings = settings;
-        this.workerJvms = workerJvms;
+        this.workerJVMs = workerJVMs;
         this.agent = agent;
     }
 
     public void launch() throws Exception {
-        hzFile = createHzConfigFile();
-        clientHzFile = createClientHzConfigFile();
+        hzFile = createTmpXmlFile("hazelcast", settings.hzConfig);
+        clientHzFile = createTmpXmlFile("client-hazelcast", settings.clientHzConfig);
+        log4jFile = createTmpXmlFile("worker-log4j", settings.log4jConfig);
 
         testSuiteDir = agent.getTestSuiteDir();
         if (!testSuiteDir.exists()) {
@@ -80,18 +81,12 @@ public class WorkerJvmLauncher {
         workersInProgress.clear();
     }
 
-    private File createHzConfigFile() throws IOException {
-        File hzConfigFile = File.createTempFile("hazelcast", "xml");
-        hzConfigFile.deleteOnExit();
-        writeText(settings.hzConfig, hzConfigFile);
-        return hzConfigFile;
-    }
+    private File createTmpXmlFile(String name, String content) throws IOException {
+        File tmpXmlFile = File.createTempFile(name, ".xml");
+        tmpXmlFile.deleteOnExit();
+        writeText(content, tmpXmlFile);
 
-    private File createClientHzConfigFile() throws IOException {
-        File clientHzConfigFile = File.createTempFile("client-hazelcast", "xml");
-        clientHzConfigFile.deleteOnExit();
-        writeText(settings.clientHzConfig, clientHzConfigFile);
-        return clientHzConfigFile;
+        return tmpXmlFile;
     }
 
     private String getJavaHome(String javaVendor, String javaVersion) {
@@ -106,11 +101,7 @@ public class WorkerJvmLauncher {
     private WorkerJvm startWorkerJvm(String mode) throws IOException {
         String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet() + "-" + mode;
         File workerHome = new File(testSuiteDir, workerId);
-        if (!workerHome.exists()) {
-            if (!workerHome.mkdir()) {
-                throw new SpawnWorkerFailedException("Could not create workerhome: " + workerHome.getAbsolutePath());
-            }
-        }
+        Utils.ensureExistingDirectory(workerHome);
 
         String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
 
@@ -133,7 +124,7 @@ public class WorkerJvmLauncher {
         new WorkerJvmProcessOutputGobbler(process.getInputStream(), new FileOutputStream(logFile)).start();
         workerJvm.process = process;
         workerJvm.mode = WorkerJvm.Mode.valueOf(mode.toUpperCase());
-        workerJvms.put(workerId, workerJvm);
+        workerJVMs.put(workerId, workerJvm);
         return workerJvm;
     }
 
@@ -141,12 +132,11 @@ public class WorkerJvmLauncher {
         String[] args = buildArgs(workerJvm, mode);
         File startScript = new File(workerJvm.workerHome, "worker.sh");
 
-        StringBuffer sb = new StringBuffer("#!/bin/bash");
-        sb.append("\n");
+        StringBuilder sb = new StringBuilder("#!/bin/bash\n");
         for (String arg : args) {
             sb.append(arg).append(" ");
         }
-     //   sb.append(" > sysout.log");
+        //sb.append(" > sysout.log");
         sb.append("\n");
 
         Utils.writeText(sb.toString(), startScript);
@@ -180,7 +170,7 @@ public class WorkerJvmLauncher {
             // perf command always need to be in front of the java command.
             args.add(settings.perfSettings);
             args.add("java");
-        }else if ("vtune".equals(profiler)) {
+        } else if ("vtune".equals(profiler)) {
             // vtune command always need to be in front of the java command.
             args.add(settings.vtuneSettings);
             args.add("java");
@@ -202,7 +192,7 @@ public class WorkerJvmLauncher {
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-DworkerId=" + workerJvm.id);
         args.add("-DworkerMode=" + mode);
-        args.add("-Dlog4j.configuration=file:" + STABILIZER_HOME + File.separator + "conf" + File.separator + "worker-log4j.xml");
+        args.add("-Dlog4j.configuration=file:" + log4jFile.getAbsolutePath());
         args.add("-classpath");
         args.add(getClasspath());
         args.addAll(getJvmOptions(settings, mode));
@@ -265,7 +255,7 @@ public class WorkerJvmLauncher {
     }
 
     private void workerTimeout(int workerTimeoutSec, List<WorkerJvm> todo) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("[");
         sb.append(todo.get(0).id);
         for (int l = 1; l < todo.size(); l++) {

@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getFile;
+import static com.hazelcast.stabilizer.Utils.getFileAsTextFromWorkingDirOrStabilizerHome;
 import static com.hazelcast.stabilizer.Utils.newFile;
 import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
 import static java.lang.String.format;
@@ -39,8 +40,8 @@ public class CoordinatorCli {
 
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
             "Number of Cluster member Worker JVM's. If no value is specified and no mixed members are specified, " +
-                    "then the number of cluster members will be equal to the number of machines in the agents file"
-    ).withRequiredArg().ofType(Integer.class).defaultsTo(-1);
+                    "then the number of cluster members will be equal to the number of machines in the agents file")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
 
     private final OptionSpec<Integer> clientWorkerCountSpec = parser.accepts("clientWorkerCount",
             "Number of Cluster Client Worker JVM's")
@@ -55,8 +56,8 @@ public class CoordinatorCli {
     private final OptionSpec<String> workerClassPathSpec = parser.accepts("workerClassPath",
             "A file/directory containing the " +
                     "classes/jars/resources that are going to be uploaded to the agents. " +
-                    "Use ';' as separator for multiple entries. Wildcard '*' can also be used."
-    ).withRequiredArg().ofType(String.class);
+                    "Use ';' as separator for multiple entries. Wildcard '*' can also be used.")
+            .withRequiredArg().ofType(String.class);
 
     private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
             "Track performance");
@@ -97,20 +98,20 @@ public class CoordinatorCli {
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
             "The file containing the stabilizer properties. If no file is explicitly configured, first the " +
                     "working directory is checked for a file 'stabilizer.properties'. All missing properties" +
-                    "are always loaded from STABILIZER_HOME/conf/stabilizer.properties"
-    ).withRequiredArg().ofType(String.class);
+                    "are always loaded from STABILIZER_HOME/conf/stabilizer.properties")
+            .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> hzFileSpec = parser.accepts("hzFile",
             "The Hazelcast xml configuration file for the worker. If one is not explicitly configured, first" +
                     "the 'hazelcast.xml' in the working directory is loaded, if that doesn't exist then " +
-                    "STABILIZER_HOME/conf/hazelcast.xml is loaded."
-    ).withRequiredArg().ofType(String.class).defaultsTo(getDefaultHzFile());
+                    "STABILIZER_HOME/conf/hazelcast.xml is loaded.")
+            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultHzFile());
 
     private final OptionSpec<String> clientHzFileSpec = parser.accepts("clientHzFile",
             "The client Hazelcast xml configuration file for the worker. If one is not explicitly configured, first" +
                     "the 'client-hazelcast.xml' in the working directory is loaded, if that doesn't exist then " +
-                    "STABILIZER_HOME/conf/client-hazelcast.xml is loaded."
-    ).withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
+                    "STABILIZER_HOME/conf/client-hazelcast.xml is loaded.")
+            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
 
     private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
             "The startup timeout in seconds for a worker")
@@ -126,7 +127,7 @@ public class CoordinatorCli {
 
     private static String getDefaultHzFile() {
         File file = new File("hazelcast.xml");
-        //if something exists in the current working directory, use that.
+        // if something exists in the current working directory, use that.
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
@@ -136,7 +137,7 @@ public class CoordinatorCli {
 
     private static String getDefaultClientHzFile() {
         File file = new File("client-hazelcast.xml");
-        //if something exists in the current working directory, use that.
+        // if something exists in the current working directory, use that.
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
@@ -186,6 +187,9 @@ public class CoordinatorCli {
         workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
         workerJvmSettings.hzConfig = loadHzConfig();
         workerJvmSettings.clientHzConfig = loadClientHzConfig();
+        workerJvmSettings.log4jConfig = getFileAsTextFromWorkingDirOrStabilizerHome(
+                "worker-log4j.xml", "Log4j configuration for worker"
+        );
         workerJvmSettings.refreshJvm = options.valueOf(workerRefreshSpec);
         workerJvmSettings.profiler = coordinator.props.get("PROFILER", "none");
         workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
@@ -204,6 +208,7 @@ public class CoordinatorCli {
         coordinator.workerJvmSettings = workerJvmSettings;
     }
 
+    @SuppressWarnings("unused")
     private String getProperties() {
         return options.valueOf(propertiesFileSpec);
     }
@@ -240,6 +245,10 @@ public class CoordinatorCli {
         } else if (testsuiteFiles.size() > 1) {
             exitWithError(log, "Too many testsuite files specified.");
             //won't be executed.
+            return null;
+        }
+        if (testsuiteFileName == null) {
+            exitWithError(log, "TestSuite filename was null.");
             return null;
         }
 

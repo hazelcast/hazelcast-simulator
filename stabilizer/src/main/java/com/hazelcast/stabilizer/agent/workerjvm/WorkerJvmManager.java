@@ -50,7 +50,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -205,7 +204,7 @@ public class WorkerJvmManager {
             workerJvm.commandQueue.add(request);
         }
 
-        List results = new LinkedList();
+        List<Object> results = new LinkedList<Object>();
         for (Map.Entry<WorkerJvm, CommandFuture> entry : futures.entrySet()) {
             WorkerJvm workerJvm = entry.getKey();
             CommandFuture future = entry.getValue();
@@ -297,8 +296,7 @@ public class WorkerJvmManager {
     }
 
     private List<WorkerJvm> getAllWorkersWithClusterMembers() {
-        List<WorkerJvm> jvmCollection = withoutMode(workerJvms.values(), WorkerJvm.Mode.CLIENT);
-        return jvmCollection;
+        return withoutMode(workerJvms.values(), WorkerJvm.Mode.CLIENT);
     }
 
     public List<WorkerJvm> withoutMode(Iterable<WorkerJvm> source, WorkerJvm.Mode mode) {
