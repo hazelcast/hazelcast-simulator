@@ -76,11 +76,11 @@ import static java.util.Arrays.asList;
 
 public class MemberWorker {
 
-	private static final String DASHES = "---------------------------";
-	private static final ILogger log = Logger.getLogger(MemberWorker.class);
+    private static final String DASHES = "---------------------------";
+    private static final ILogger log = Logger.getLogger(MemberWorker.class);
 
-	private final ConcurrentMap<String, Command> commands = new ConcurrentHashMap<String, Command>();
-	private final ConcurrentMap<String, TestContainer<TestContext>> tests
+    private final ConcurrentMap<String, Command> commands = new ConcurrentHashMap<String, Command>();
+    private final ConcurrentMap<String, TestContainer<TestContext>> tests
             = new ConcurrentHashMap<String, TestContainer<TestContext>>();
 
     private final WorkerMessageProcessor workerMessageProcessor = new WorkerMessageProcessor(tests);
@@ -88,16 +88,16 @@ public class MemberWorker {
     private final BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
     private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
 
-	private HazelcastInstance serverInstance;
-	private HazelcastInstance clientInstance;
+    private HazelcastInstance serverInstance;
+    private HazelcastInstance clientInstance;
 
-	private String hzFile;
-	private String clientHzFile;
+    private String hzFile;
+    private String clientHzFile;
 
-	private String workerMode;
-	private String workerId;
+    private String workerMode;
+    private String workerId;
 
-	public void start() throws Exception {
+    public void start() throws Exception {
         if ("server".equals(workerMode)) {
             log.info("------------------------------------------------------------------------");
             log.info("             member mode");
@@ -562,8 +562,8 @@ public class MemberWorker {
     }
 
     class PerformanceMonitorThread extends Thread {
-	    private final File performanceFile = new File("performance.txt");
-	    private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        private final File performanceFile = new File("performance.txt");
+        private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
         private long oldCount;
         private long oldTimeMillis = System.currentTimeMillis();
@@ -572,8 +572,8 @@ public class MemberWorker {
             super("PerformanceMonitorThread");
             setDaemon(true);
 
-	        Utils.appendText("Timestamp                      Ops (sum)     Ops/s (interval)\n", performanceFile);
-	        Utils.appendText("-------------------------------------------------------------\n", performanceFile);
+            Utils.appendText("Timestamp                      Ops (sum)     Ops/s (interval)\n", performanceFile);
+            Utils.appendText("-------------------------------------------------------------\n", performanceFile);
         }
 
         @Override
@@ -601,10 +601,10 @@ public class MemberWorker {
             oldTimeMillis = currentTimeMs;
 
             Utils.appendText(format("[%s] %s ops %s ops/s\n",
-				            simpleDateFormat.format(new Date()),
-				            Utils.formatLong(currentCount, 14),
-				            Utils.formatDouble(performance, 14)
-                ), performanceFile
+                            simpleDateFormat.format(new Date()),
+                            Utils.formatLong(currentCount, 14),
+                            Utils.formatDouble(performance, 14)
+                    ), performanceFile
             );
         }
 
@@ -612,7 +612,10 @@ public class MemberWorker {
             long operationCount = 0;
             for (TestContainer container : tests.values()) {
                 try {
-                    operationCount += container.getOperationCount();
+                    long testOperationCount = container.getOperationCount();
+                    if (testOperationCount >= 0) {
+                        operationCount += testOperationCount;
+                    }
                 } catch (Throwable ignored) {
                 }
             }
