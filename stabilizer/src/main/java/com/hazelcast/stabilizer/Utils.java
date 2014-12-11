@@ -94,7 +94,7 @@ public final class Utils {
     public static String formatDouble(double number, int length) {
         StringBuffer sb = new StringBuffer();
         Formatter f = new Formatter(sb);
-        f.format("%(,.2f", number);
+        f.format("%,.2f", number);
 
         return padLeft(sb.toString(), length);
     }
@@ -102,35 +102,23 @@ public final class Utils {
     public static String formatLong(long number, int length) {
         StringBuffer sb = new StringBuffer();
         Formatter f = new Formatter(sb);
-        f.format("%(,d", number);
+        f.format("%,d", number);
 
         return padLeft(sb.toString(), length);
     }
 
-    public static String padRight(String s, int n) {
-        if (n <= 0 || s == null || s.isEmpty()) {
-            return s;
+    public static String padRight(String argument, int length) {
+        if (length <= 0) {
+            return argument;
         }
-        try {
-            return String.format("%-" + n + "s", s);
-        } catch (Exception e) {
-            log.warning("String " + s + " and padding length " + n + " caused an exception!");
-            e.printStackTrace();
-            return s;
-        }
+        return String.format("%-" + length + "s", argument);
     }
 
-    public static String padLeft(String s, int n) {
-        if (n <= 0 || s == null || s.isEmpty()) {
-            return s;
+    public static String padLeft(String argument, int length) {
+        if (length <= 0) {
+            return argument;
         }
-        try {
-            return String.format("%" + n + "s", s);
-        } catch (Exception e) {
-            log.warning("String " + s + " and padding length " + n + " caused an exception!");
-            e.printStackTrace();
-            return s;
-        }
+        return String.format("%" + length + "s", argument);
     }
 
     public static File newFile(String path) {
