@@ -10,6 +10,7 @@ import com.hazelcast.stabilizer.probes.probes.ProbesResultXmlWriter;
 import com.hazelcast.stabilizer.probes.probes.Result;
 import com.hazelcast.stabilizer.tests.Failure;
 import com.hazelcast.stabilizer.tests.TestSuite;
+import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
 import com.hazelcast.stabilizer.worker.commands.GetBenchmarkResultsCommand;
 import com.hazelcast.stabilizer.worker.commands.InitCommand;
@@ -17,10 +18,8 @@ import com.hazelcast.stabilizer.worker.commands.RunCommand;
 import com.hazelcast.stabilizer.worker.commands.StopCommand;
 
 import java.io.File;
-import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -39,16 +38,16 @@ public class TestCaseRunner {
     private final Coordinator coordinator;
     private final AgentsClient agentsClient;
     private final TestSuite testSuite;
-    private final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
     private final String prefix;
     private final Set<Failure.Type> nonCriticalFailures;
+    //private final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
 
-    public TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator) {
+    public TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int maxTextCaseIdLength) {
         this.testCase = testCase;
         this.coordinator = coordinator;
         this.testSuite = testSuite;
         this.agentsClient = coordinator.agentsClient;
-        this.prefix = testCase.id.equals("") ? "" : testCase.id + " ";
+        this.prefix = (testCase.id.isEmpty() ? "" : Utils.padRight(testCase.id, maxTextCaseIdLength + 1));
         this.nonCriticalFailures = testSuite.tolerableFailures;
     }
 
@@ -59,7 +58,7 @@ public class TestCaseRunner {
 
         int oldFailureCount = coordinator.failureList.size();
         try {
-            echo(prefix + "Starting Test initialization");
+            echo("Starting Test initialization");
             agentsClient.executeOnAllWorkers(new InitCommand(testCase));
             echo("Completed Test initialization");
 
@@ -144,7 +143,7 @@ public class TestCaseRunner {
 
     private <R extends Result<R>> Map<String, R> getProbesResult() {
         Map<String, R> combinedResults = new HashMap<String, R>();
-        List<List<Map<String, R>>> agentsProbeResults = null;
+        List<List<Map<String, R>>> agentsProbeResults;
         try {
             agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
         } catch (TimeoutException e) {
@@ -208,8 +207,10 @@ public class TestCaseRunner {
                 if (coordinator.operationCount < 0) {
                     msg += ", performance not available";
                 } else {
-                    msg += Utils.formatDouble(coordinator.performance, 14)
-                            + " ops/s "+Utils.formatLong(coordinator.operationCount, 14)+ " ops";
+                    msg += String.format("%s ops/s %s ops",
+                            Utils.formatDouble(coordinator.performance, 14),
+                            Utils.formatLong(coordinator.operationCount, 14)
+                    );
                 }
             }
 
