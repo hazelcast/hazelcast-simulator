@@ -108,11 +108,29 @@ public final class Utils {
     }
 
     public static String padRight(String s, int n) {
-        return String.format("%1$-" + n + "s", s);
+        if (n <= 0 || s == null || s.isEmpty()) {
+            return s;
+        }
+        try {
+            return String.format("%-" + n + "s", s);
+        } catch (Exception e) {
+            log.warning("String " + s + " and padding length " + n + " caused an exception!");
+            e.printStackTrace();
+            return s;
+        }
     }
 
     public static String padLeft(String s, int n) {
-        return String.format("%1$" + n + "s", s);
+        if (n <= 0 || s == null || s.isEmpty()) {
+            return s;
+        }
+        try {
+            return String.format("%" + n + "s", s);
+        } catch (Exception e) {
+            log.warning("String " + s + " and padding length " + n + " caused an exception!");
+            e.printStackTrace();
+            return s;
+        }
     }
 
     public static File newFile(String path) {
