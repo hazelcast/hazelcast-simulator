@@ -115,10 +115,6 @@ public class MapCasTest {
 
         @Override
         public void run() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
-            }
-
             long iteration = 0;
             while (!testContext.isStopped()) {
                 Integer key = random.nextInt(keyCount);
