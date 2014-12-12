@@ -187,8 +187,6 @@ public class MemberWorker {
 
         log.info("Starting Stabilizer Worker");
 
-        registerLog4jShutdownHandler();
-
         try {
             logInputArguments();
             logInterestingSystemProperties();

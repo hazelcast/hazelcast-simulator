@@ -3,7 +3,6 @@ package com.hazelcast.stabilizer.communicator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.common.KeyValuePair;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.common.messaging.MessageAddressParser;

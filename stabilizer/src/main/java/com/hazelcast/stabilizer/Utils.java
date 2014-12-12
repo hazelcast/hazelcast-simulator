@@ -17,6 +17,7 @@ package com.hazelcast.stabilizer;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.coordinator.Coordinator;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -580,13 +581,25 @@ public final class Utils {
         return builder.toString();
     }
 
-
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
             exitWithError(log, format("%s [%s] does not exist\n", desc, file));
         }
         return file;
+    }
+
+    public static String getFileAsTextFromWorkingDirOrStabilizerHome(String fileName, String desc) {
+        File file = newFile(fileName);
+        if (!file.exists()) {
+            file = newFile(Coordinator.STABILIZER_HOME + File.separator + "conf" + File.separator + fileName);
+        }
+        if (!file.exists()) {
+            exitWithError(log, format("%s [%s] does not exist\n", desc, file.getAbsolutePath()));
+        }
+        log.info("Loading " + desc + ": " + file.getAbsolutePath());
+
+        return fileAsText(file);
     }
 
     public static List<File> getFilesFromClassPath(String classpath) throws IOException {
