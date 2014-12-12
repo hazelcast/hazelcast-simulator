@@ -56,6 +56,7 @@ public class ExpiryICacheTest {
     public double maxHeapUsagePercentage = 80;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
+    public int keyCount=1000000;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -141,8 +142,12 @@ public class ExpiryICacheTest {
                         if (iteration % 100000 == 0) {
                             log.info("at:" + iteration + " heap used: " + usedPercentage + " % map.size:" + cache.size());
                         }
-                        long key = random.nextLong();
+                        int key = random.nextInt(keyCount);
                         cache.put(key, 0l, expiryPolicy);
+
+                        //a chance to evict a key through Icache lazy eviction on get
+                        key = random.nextInt(keyCount);
+                        cache.get(key);
 
                         if (iteration % logFrequency == 0) {
                             log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
