@@ -10,7 +10,7 @@ import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
-import com.hazelcast.stabilizer.tests.map.helpers.KeyInc;
+import com.hazelcast.stabilizer.tests.map.helpers.KeyIncrementPair;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 
 import java.util.ArrayList;
@@ -71,16 +71,14 @@ public class LockConflictTest {
         public void run() {
             while (!testContext.isStopped()) {
 
-                List<KeyInc> potentialLocks = new ArrayList();
+                List<KeyIncrementPair> potentialLocks = new ArrayList();
                 for (int i = 0; i < maxKeysPerTxn; i++) {
-                    KeyInc p = new KeyInc();
-                    p.key = random.nextInt(keyCount);
-                    p.inc = random.nextInt(999);
+                    KeyIncrementPair p = new KeyIncrementPair(random, keyCount, 999);
                     potentialLocks.add(p);
                 }
 
-                List<KeyInc> locked = new ArrayList();
-                for (KeyInc i : potentialLocks) {
+                List<KeyIncrementPair> locked = new ArrayList();
+                for (KeyIncrementPair i : potentialLocks) {
                     try {
                         ILock lock = targetInstance.getLock(basename + "l" + i.key);
                         try {
@@ -102,7 +100,7 @@ public class LockConflictTest {
                     }
                 }
 
-                for (KeyInc i : locked) {
+                for (KeyIncrementPair i : locked) {
                     try {
                         IList<Long> accounts = targetInstance.getList(basename);
                         long value = accounts.get(i.key);
@@ -119,9 +117,9 @@ public class LockConflictTest {
 
                 int unlockAttempts = 0;
                 while (!locked.isEmpty()) {
-                    Iterator<KeyInc> it = locked.iterator();
+                    Iterator<KeyIncrementPair> it = locked.iterator();
                     while (it.hasNext()) {
-                        KeyInc i = it.next();
+                        KeyIncrementPair i = it.next();
                         try {
                             ILock lock = targetInstance.getLock(basename + "l" + i.key);
                             try {
