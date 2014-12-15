@@ -3,10 +3,10 @@ package com.hazelcast.stabilizer.tests.map.helpers;
 import java.io.Serializable;
 import java.util.Random;
 
-/*
-* Helper class,  holds a key and an amount to increment by
-* also use full for printing out data in nice format
-* */
+/**
+ * Holds a key and an amount to increment by.
+ * Also useful for printing data in nice format.
+ */
 public class KeyIncrementPair implements Serializable {
 
     public final int key;
@@ -17,7 +17,6 @@ public class KeyIncrementPair implements Serializable {
         key = random.nextInt(maxKey);
         inc = random.nextInt(maxInc-1)+1;
     }
-
 
     @Override
     public String toString() {

@@ -13,7 +13,7 @@ public class StringUtils {
      * @param length the length of each individual string
      * @return the created array of Strings.
      */
-    public static String[] generateStrings(int count, int length){
+    public static String[] generateStrings(int count, int length) {
         String[] keys = new String[count];
         for (int k = 0; k < keys.length; k++) {
             keys[k] = generateString(length);
@@ -30,6 +30,4 @@ public class StringUtils {
 
         return sb.toString();
     }
-
-
 }

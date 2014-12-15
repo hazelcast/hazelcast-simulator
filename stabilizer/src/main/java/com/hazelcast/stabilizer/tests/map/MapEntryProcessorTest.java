@@ -131,7 +131,7 @@ public class MapEntryProcessorTest {
         }
 
         private int calculateKey() {
-            return KeyUtils.generateInt(keyCount, keyLocality, targetInstance);
+            return KeyUtils.generateIntKey(keyCount, keyLocality, targetInstance);
         }
 
         private int calculateIncrement() {
