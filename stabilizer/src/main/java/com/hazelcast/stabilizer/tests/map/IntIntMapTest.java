@@ -154,6 +154,7 @@ public class IntIntMapTest {
                 iteration++;
                 throughput.done();
             }
+            operations.addAndGet(iteration % performanceUpdateFrequency);
         }
 
         private int randomKey() {
