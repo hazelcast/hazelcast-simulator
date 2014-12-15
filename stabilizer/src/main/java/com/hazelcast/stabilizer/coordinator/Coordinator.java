@@ -194,8 +194,10 @@ public class Coordinator {
     private void runSequential() throws Exception {
         echo(format("Running %s tests sequentially", testSuite.size()));
 
+        int maxTestCaseIdLength = getMaxTestCaseIdLength(testSuite.testCaseList);
+
         for (TestCase testCase : testSuite.testCaseList) {
-            TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this);
+            TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this, maxTestCaseIdLength);
             boolean success = runner.run();
             if (!success && testSuite.failFast) {
                 log.info("Aborting testsuite due to failure");
@@ -213,13 +215,15 @@ public class Coordinator {
 
         ExecutorService executor = Executors.newFixedThreadPool(testSuite.size());
 
+        final int maxTestCaseIdLength = getMaxTestCaseIdLength(testSuite.testCaseList);
+
         List<Future> futures = new LinkedList<Future>();
         for (final TestCase testCase : testSuite.testCaseList) {
             Future f = executor.submit(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this);
+                        TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this, maxTestCaseIdLength);
                         boolean success = runner.run();
                         if (!success && testSuite.failFast) {
                             log.info("Aborting testsuite due to failure");
@@ -244,7 +248,7 @@ public class Coordinator {
         }
     }
 
-    void terminateWorkers() throws Exception {
+    private void terminateWorkers() throws Exception {
         echo("Terminating workers");
         agentsClient.terminateWorkers();
         echo("All workers have been terminated");
@@ -409,6 +413,16 @@ public class Coordinator {
                 bash.execute(syncCommand);
             }
         }
+    }
+
+    private int getMaxTestCaseIdLength(List<TestCase> testCaseList) {
+        int maxLength = Integer.MIN_VALUE;
+        for (TestCase testCase : testCaseList) {
+            if (testCase.id != null && !testCase.id.isEmpty() && testCase.id.length() > maxLength) {
+                maxLength = testCase.id.length();
+            }
+        }
+        return (maxLength > 0) ? maxLength : 0;
     }
 
     public static void main(String[] args) throws Exception {

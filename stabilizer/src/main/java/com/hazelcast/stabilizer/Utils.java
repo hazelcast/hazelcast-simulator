@@ -17,6 +17,7 @@ package com.hazelcast.stabilizer;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.coordinator.Coordinator;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -67,13 +68,12 @@ import static java.lang.String.format;
 public final class Utils {
     public static final String NEW_LINE = System.getProperty("line.separator");
 
+    private static final String DEFAULT_DELIMITER = ", ";
+    private static final String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
     private static final String USER_HOME = System.getProperty("user.home");
     private static final ILogger log = Logger.getLogger(Utils.class);
-    private static final String DEFAULT_DELIMITER = ", ";
 
     private static volatile String hostAddress;
-
-    private final static String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
 
     public static void fixRemoteStackTrace(Throwable remoteCause, StackTraceElement[] localSideStackTrace) {
         StackTraceElement[] remoteStackTrace = remoteCause.getStackTrace();
@@ -85,37 +85,41 @@ public final class Utils {
     }
 
     /**
-     * Formats a number and leftpads it. It is very inefficient; but a lot easier to deal with the formatting API.
+     * Formats a number and adds padding to the left.
+     * It is very inefficient; but a lot easier to deal with the formatting API.
      *
-     * @param number
-     * @param length
-     * @return
+     * @param number    number to format
+     * @param length    width of padding
+     * @return formatted number
      */
     public static String formatDouble(double number, int length) {
         StringBuffer sb = new StringBuffer();
         Formatter f = new Formatter(sb);
-        f.format("%(,.2f", number);
-        return leftPad(sb.toString(), length);
+        f.format("%,.2f", number);
+
+        return padLeft(sb.toString(), length);
     }
 
     public static String formatLong(long number, int length) {
         StringBuffer sb = new StringBuffer();
         Formatter f = new Formatter(sb);
-        f.format("%(,d", number);
-        return leftPad(sb.toString(), length);
+        f.format("%,d", number);
+
+        return padLeft(sb.toString(), length);
     }
 
-    private static String leftPad(String s, int length) {
-        if (s.length() >= length) {
-            return s;
+    public static String padRight(String argument, int length) {
+        if (length <= 0) {
+            return argument;
         }
+        return String.format("%-" + length + "s", argument);
+    }
 
-        StringBuffer sb = new StringBuffer(length);
-        for (int k = 0; k < length - s.length(); k++) {
-            sb.append(' ');
+    public static String padLeft(String argument, int length) {
+        if (length <= 0) {
+            return argument;
         }
-        sb.append(s);
-        return sb.toString();
+        return String.format("%" + length + "s", argument);
     }
 
     public static File newFile(String path) {
@@ -125,10 +129,8 @@ public final class Utils {
         } else if (path.startsWith("~" + File.separator)) {
             path = USER_HOME + path.substring(1);
         }
+        path = new StrSubstitutor().replace(path);
 
-
-        StrSubstitutor substitutor = new StrSubstitutor();
-        path = substitutor.replace(path);
         return new File(path);
     }
 
@@ -155,8 +157,8 @@ public final class Utils {
     }
 
     public static File newFile(File file, String... items) {
-        for (int k = 0; k < items.length; k++) {
-            file = new File(file, items[k]);
+        for (String item : items) {
+            file = new File(file, item);
         }
         return file;
     }
@@ -275,7 +277,6 @@ public final class Utils {
             throw new RuntimeException(e);
         }
     }
-
 
     public static String fileAsText(String filePath) {
         return fileAsText(new File(filePath));
@@ -535,13 +536,11 @@ public final class Utils {
         time = time / 24;
         long days = time;
 
-        StringBuffer sb = new StringBuffer();
-
+        StringBuilder sb = new StringBuilder();
         sb.append(format("%02d", days)).append("d ")
                 .append(format("%02d", h)).append("h ")
                 .append(format("%02d", m)).append("m ")
                 .append(format("%02d", s)).append("s");
-
 
         return sb.toString();
     }
@@ -582,13 +581,25 @@ public final class Utils {
         return builder.toString();
     }
 
-
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
             exitWithError(log, format("%s [%s] does not exist\n", desc, file));
         }
         return file;
+    }
+
+    public static String getFileAsTextFromWorkingDirOrStabilizerHome(String fileName, String desc) {
+        File file = newFile(fileName);
+        if (!file.exists()) {
+            file = newFile(Coordinator.STABILIZER_HOME + File.separator + "conf" + File.separator + fileName);
+        }
+        if (!file.exists()) {
+            exitWithError(log, format("%s [%s] does not exist\n", desc, file.getAbsolutePath()));
+        }
+        log.info("Loading " + desc + ": " + file.getAbsolutePath());
+
+        return fileAsText(file);
     }
 
     public static List<File> getFilesFromClassPath(String classpath) throws IOException {

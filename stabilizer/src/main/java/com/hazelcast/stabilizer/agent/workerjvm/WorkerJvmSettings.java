@@ -21,6 +21,8 @@ public class WorkerJvmSettings implements Serializable {
     public String vmOptions;
     public String clientVmOptions;
     public String hzConfig;
+    public String clientHzConfig;
+    public String log4jConfig;
 
     public int memberWorkerCount;
     public int clientWorkerCount;
@@ -29,7 +31,6 @@ public class WorkerJvmSettings implements Serializable {
     public boolean refreshJvm;
     public String javaVendor;
     public String javaVersion;
-    public String clientHzConfig;
     public String profiler = "none";
     public String yourkitConfig;
     public String hprofSettings = "";
@@ -44,6 +45,7 @@ public class WorkerJvmSettings implements Serializable {
         this.clientVmOptions = settings.clientVmOptions;
         this.hzConfig = settings.hzConfig;
         this.clientHzConfig = settings.clientHzConfig;
+        this.log4jConfig = settings.log4jConfig;
         this.memberWorkerCount = settings.memberWorkerCount;
         this.clientWorkerCount = settings.clientWorkerCount;
         this.workerStartupTimeout = settings.workerStartupTimeout;
@@ -76,6 +78,7 @@ public class WorkerJvmSettings implements Serializable {
                 "\n, javaVersion=" + javaVersion +
                 "\n, hzConfig='" + hzConfig + '\'' +
                 "\n, clientHzConfig='" + clientHzConfig + '\'' +
+                "\n, log4jConfig='" + log4jConfig + '\'' +
                 "\n, hprofSettings='" + hprofSettings + '\'' +
                 "\n, perfSettings='" + perfSettings + '\'' +
                 "\n, vtuneSettings='" + vtuneSettings + '\'' +

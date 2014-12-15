@@ -2,6 +2,25 @@
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
 <log4j:configuration>
 
+    <!--
+        We configure Log4j with RollingFileAppender to prevent "out of disk" errors on the test machines.
+        If you need full reports to debug a special test situation you can switch to the FileAppender config.
+
+        Just place this file into your working directory and adjust the configuration as you need it.
+        It will automatically be used if it exists.
+    -->
+
+    <appender name="file" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="worker.log"/>
+        <param name="MaxFileSize" value="1gb"/>
+        <param name="MaxBackupIndex" value="5"/>
+        <param name="Threshold" value="INFO"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
+        </layout>
+    </appender>
+
+    <!--
     <appender name="file" class="org.apache.log4j.FileAppender">
         <param name="File" value="worker.log"/>
         <param name="Threshold" value="INFO"/>
@@ -9,6 +28,7 @@
             <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
         </layout>
     </appender>
+    -->
 
     <root>
         <priority value="debug"/>
