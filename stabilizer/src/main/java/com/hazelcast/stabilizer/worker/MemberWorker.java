@@ -55,8 +55,6 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -120,7 +118,7 @@ public class MemberWorker {
 
         new CommandRequestProcessingThread().start();
         new SocketThread().start();
-        new PerformanceMonitorThread().start();
+        new PerformanceMonitor(tests.values()).start();
 
         // the last thing we do is to signal to the agent we have started.
         signalStartToAgent();
@@ -364,7 +362,10 @@ public class MemberWorker {
             long result = 0;
 
             for (TestContainer testContainer : tests.values()) {
-                result += testContainer.getOperationCount();
+                long operationCount = testContainer.getOperationCount();
+                if (operationCount > 0) {
+                    result += operationCount;
+                }
             }
 
             return result;
@@ -453,8 +454,14 @@ public class MemberWorker {
                 TestCase testCase = command.testCase;
                 String testId = testCase.getId();
                 if (tests.containsKey(testId)) {
-                    throw new IllegalStateException("Can't init testcase: " + command + ", another test with [" + testId +
-                            "] testId already exists");
+                    throw new IllegalStateException(format(
+                            "Can't init TestCase: %s, another test with testId [%s] already exists", command, testId
+                    ));
+                }
+                if (!Utils.isValidFileName(testId)) {
+                    throw new IllegalArgumentException(format(
+                            "Can't init TestCase: %s, testId [%s] is an invalid filename", command, testId
+                    ));
                 }
 
                 log.info(format("%s Initializing test %s %s\n%s", DASHES, testId, testCase, DASHES));
@@ -463,7 +470,6 @@ public class MemberWorker {
                 Object testObject = InitCommand.class.getClassLoader().loadClass(clazzName).newInstance();
                 bindProperties(testObject, testCase);
                 ProbesConfiguration probesConfiguration = parseProbeConfiguration(testCase);
-
 
                 TestContextImpl testContext = new TestContextImpl(testCase.id);
                 TestContainer<TestContext> testContainer = new TestContainer<TestContext>(testObject, testContext, probesConfiguration);
@@ -556,69 +562,6 @@ public class MemberWorker {
         @Override
         public void stop() {
             stopped = true;
-        }
-    }
-
-    class PerformanceMonitorThread extends Thread {
-        private final File performanceFile = new File("performance.txt");
-        private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-
-        private long oldCount;
-        private long oldTimeMillis = System.currentTimeMillis();
-
-        public PerformanceMonitorThread() {
-            super("PerformanceMonitorThread");
-            setDaemon(true);
-
-            Utils.appendText("Timestamp                      Ops (sum)     Ops/s (interval)\n", performanceFile);
-            Utils.appendText("-------------------------------------------------------------\n", performanceFile);
-        }
-
-        @Override
-        public void run() {
-            for (; ; ) {
-                try {
-                    Thread.sleep(5000);
-                    singleRun();
-                } catch (Throwable t) {
-                    log.severe("Failed to run performance monitor", t);
-                }
-            }
-        }
-
-        private void singleRun() {
-            long currentCount = getCount();
-            long delta = currentCount - oldCount;
-
-            long currentTimeMs = System.currentTimeMillis();
-            long durationMs = currentTimeMs - oldTimeMillis;
-
-            double performance = (delta * 1000d) / durationMs;
-
-            oldCount = currentCount;
-            oldTimeMillis = currentTimeMs;
-
-            Utils.appendText(format("[%s] %s ops %s ops/s\n",
-                            simpleDateFormat.format(new Date()),
-                            Utils.formatLong(currentCount, 14),
-                            Utils.formatDouble(performance, 14)
-                    ), performanceFile
-            );
-        }
-
-        private long getCount() {
-            long operationCount = 0;
-            for (TestContainer container : tests.values()) {
-                try {
-                    long testOperationCount = container.getOperationCount();
-                    if (testOperationCount >= 0) {
-                        operationCount += testOperationCount;
-                    }
-                } catch (Throwable ignored) {
-                }
-            }
-
-            return operationCount;
         }
     }
 }

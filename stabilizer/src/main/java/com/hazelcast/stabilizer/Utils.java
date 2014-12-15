@@ -49,6 +49,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Formatter;
@@ -59,6 +60,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.locks.LockSupport;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -68,6 +70,7 @@ import static java.lang.String.format;
 public final class Utils {
     public static final String NEW_LINE = System.getProperty("line.separator");
 
+    private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-_]+$");
     private static final String DEFAULT_DELIMITER = ", ";
     private static final String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
     private static final String USER_HOME = System.getProperty("user.home");
@@ -82,6 +85,10 @@ public final class Utils {
         newStackTrace[remoteStackTrace.length] = new StackTraceElement(EXCEPTION_SEPARATOR, "", null, -1);
         System.arraycopy(localSideStackTrace, 1, newStackTrace, remoteStackTrace.length + 1, localSideStackTrace.length - 1);
         remoteCause.setStackTrace(newStackTrace);
+    }
+
+    public static boolean isValidFileName(String fileName) {
+        return VALID_FILE_NAME_PATTERN.matcher(fileName).matches();
     }
 
     /**
@@ -120,6 +127,15 @@ public final class Utils {
             return argument;
         }
         return String.format("%" + length + "s", argument);
+    }
+
+    public static String fillString(int length, char charToFill) {
+        if (length == 0) {
+            return "";
+        }
+        char[] array = new char[length];
+        Arrays.fill(array, charToFill);
+        return new String(array);
     }
 
     public static File newFile(String path) {
