@@ -55,6 +55,8 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +76,17 @@ import static java.util.Arrays.asList;
 
 public class MemberWorker {
 
-    final static ILogger log = Logger.getLogger(MemberWorker.class);
+    private static final String DASHES = "---------------------------";
+    private static final ILogger log = Logger.getLogger(MemberWorker.class);
+
+    private final ConcurrentMap<String, Command> commands = new ConcurrentHashMap<String, Command>();
+    private final ConcurrentMap<String, TestContainer<TestContext>> tests
+            = new ConcurrentHashMap<String, TestContainer<TestContext>>();
+
+    private final WorkerMessageProcessor workerMessageProcessor = new WorkerMessageProcessor(tests);
+
+    private final BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
+    private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
 
     private HazelcastInstance serverInstance;
     private HazelcastInstance clientInstance;
@@ -84,19 +96,6 @@ public class MemberWorker {
 
     private String workerMode;
     private String workerId;
-
-    private final ConcurrentMap<String, TestContainer<TestContext>> tests
-            = new ConcurrentHashMap<String, TestContainer<TestContext>>();
-
-    private final ConcurrentMap<String, Command> commands
-            = new ConcurrentHashMap<String, Command>();
-
-    private WorkerMessageProcessor workerMessageProcessor = new WorkerMessageProcessor(tests);
-
-    private final BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
-    private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
-
-    private final File performanceFile = new File("performance.txt");
 
     public void start() throws Exception {
         if ("server".equals(workerMode)) {
@@ -188,8 +187,6 @@ public class MemberWorker {
 
         log.info("Starting Stabilizer Worker");
 
-        registerLog4jShutdownHandler();
-
         try {
             logInputArguments();
             logInterestingSystemProperties();
@@ -271,8 +268,8 @@ public class MemberWorker {
             }
         }
 
-        //we create a new socket for every request because don't want to depend on the state of a socket
-        //since we are going to do nasty stuff.
+        // we create a new socket for every request because don't want to depend on the state of a socket
+        // since we are going to do nasty stuff.
         private <E> E execute(String service, Object... args) throws Exception {
             Socket socket = new Socket(InetAddress.getByName(null), WorkerJvmManager.PORT);
 
@@ -296,6 +293,7 @@ public class MemberWorker {
                     Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
                     throw exception;
                 }
+
                 return (E) response;
             } finally {
                 Utils.closeQuietly(socket);
@@ -321,8 +319,6 @@ public class MemberWorker {
         }
 
         private void doProcess(long id, Command command) throws Throwable {
-            long startMs = System.currentTimeMillis();
-
             Object result = null;
             try {
                 if (command instanceof IsPhaseCompletedCommand) {
@@ -356,9 +352,7 @@ public class MemberWorker {
 
         private Map<String, Result<?>> process(GetBenchmarkResultsCommand command) {
             String testId = command.getTestId();
-            TestContainer<TestContext> testContainer = tests.get(testId);
-            Map<String, Result<?>> results = testContainer.getProbeResults();
-            return results;
+            return tests.get(testId).getProbeResults();
         }
 
         private void process(MessageCommand command) {
@@ -383,8 +377,7 @@ public class MemberWorker {
 
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
-                    log.warning("Failed to process command: " + command + " no test with " +
-                            "testId" + testId + " is found");
+                    log.warning("Failed to process command: " + command + " no test with testId" + testId + " is found");
                     return;
                 }
 
@@ -394,24 +387,15 @@ public class MemberWorker {
                         boolean passive = command.clientOnly && clientInstance == null;
 
                         if (passive) {
-                            log.info(format("--------------------------- Skipping %s.run(); " +
-                                            "member is passive ------------------------------------",
-                                    testName));
+                            log.info(format("%s Skipping %s.run() (member is passive) %s", DASHES, testName, DASHES));
                         } else {
-                            log.info(format("--------------------------- Starting %s.run() " +
-                                            "------------------------------------",
-                                    testId));
+                            log.info(format("%s Starting %s.run() %s", DASHES, testId, DASHES));
 
                             try {
                                 test.run();
-                                log.info(format("--------------------------- Completed %s.run() " +
-                                                "------------------------------------",
-                                        testName));
+                                log.info(format("%s Completed %s.run() %s", DASHES, testName, DASHES));
                             } catch (InvocationTargetException e) {
-                                String msg = format("--------------------------- Failed to execute %s.run() " +
-                                                "------------------------------------",
-                                        testName);
-                                log.severe(msg, e.getCause());
+                                log.severe(format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES), e.getCause());
                                 throw e.getCause();
                             }
                         }
@@ -432,7 +416,7 @@ public class MemberWorker {
             try {
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
-                    //we log a warning: it could be that it is a newly created machine from mama-monkey.
+                    // we log a warning: it could be that it is a newly created machine from mama-monkey.
                     log.warning("Failed to process command: " + command + " no test with " +
                             "testId " + testId + " is found");
                     return;
@@ -442,16 +426,13 @@ public class MemberWorker {
                 CommandThread commandThread = new CommandThread(command, command.testId) {
                     @Override
                     public void doRun() throws Throwable {
-                        log.info(format("--------------------------- Starting %s.%s() ------------------------------------",
-                                testName, methodName));
+                        log.info(format("%s Starting %s.%s() %s", DASHES, testName, methodName, DASHES));
 
                         try {
                             method.invoke(test);
-                            log.info(format("--------------------------- Finished %s.%s() " +
-                                    "---------------------------", testName, methodName));
+                            log.info(format("%s Finished %s.%s() %s", DASHES, testName, methodName, DASHES));
                         } catch (InvocationTargetException e) {
-                            log.severe(format("--------------------------- Failed %s.%s() ---------------------------",
-                                    testName, methodName));
+                            log.severe(format("%s Failed %s.%s() %s", DASHES, testName, methodName, DASHES));
                             throw e.getCause();
                         } finally {
                             if ("localTeardown".equals(methodName)) {
@@ -476,8 +457,7 @@ public class MemberWorker {
                             "] testId already exists");
                 }
 
-                log.info(format("--------------------------- Initializing test %s ---------------------------\n%s",
-                        testId, testCase));
+                log.info(format("%s Initializing test %s %s\n%s", DASHES, testId, testCase, DASHES));
 
                 String clazzName = testCase.getClassname();
                 Object testObject = InitCommand.class.getClassLoader().loadClass(clazzName).newInstance();
@@ -508,7 +488,7 @@ public class MemberWorker {
                     return;
                 }
 
-                log.info(format("--------------------------- %s.stop() ------------------------------------", testName));
+                log.info(format("%s %s.stop() %s", DASHES, testName, DASHES));
                 test.getTestContext().stop();
             } catch (Exception e) {
                 log.severe("Failed to execute test.stop", e);
@@ -580,12 +560,18 @@ public class MemberWorker {
     }
 
     class PerformanceMonitorThread extends Thread {
+        private final File performanceFile = new File("performance.txt");
+        private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+
         private long oldCount;
         private long oldTimeMillis = System.currentTimeMillis();
 
         public PerformanceMonitorThread() {
             super("PerformanceMonitorThread");
             setDaemon(true);
+
+            Utils.appendText("Timestamp                      Ops (sum)     Ops/s (interval)\n", performanceFile);
+            Utils.appendText("-------------------------------------------------------------\n", performanceFile);
         }
 
         @Override
@@ -612,16 +598,23 @@ public class MemberWorker {
             oldCount = currentCount;
             oldTimeMillis = currentTimeMs;
 
-            String s = Utils.formatLong(currentCount, 14) + " ops " + Utils.formatDouble(performance, 14) + " ops/s\n";
-            Utils.appendText(s, performanceFile);
+            Utils.appendText(format("[%s] %s ops %s ops/s\n",
+                            simpleDateFormat.format(new Date()),
+                            Utils.formatLong(currentCount, 14),
+                            Utils.formatDouble(performance, 14)
+                    ), performanceFile
+            );
         }
 
         private long getCount() {
             long operationCount = 0;
             for (TestContainer container : tests.values()) {
                 try {
-                    operationCount += container.getOperationCount();
-                } catch (Throwable throwable) {
+                    long testOperationCount = container.getOperationCount();
+                    if (testOperationCount >= 0) {
+                        operationCount += testOperationCount;
+                    }
+                } catch (Throwable ignored) {
                 }
             }
 

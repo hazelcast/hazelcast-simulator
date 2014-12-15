@@ -46,9 +46,27 @@
 
     <serialization>
         <portable-version>1</portable-version>
-        <portable-factories>
-            <portable-factory factory-id="10000000">com.hazelcast.stabilizer.tests.backpressure.SomeRequestPortableFactory</portable-factory>
+        <data-serializable-factories>
+            <data-serializable-factory factory-id="2000">
+                com.hazelcast.stabilizer.tests.backpressure.SyntheticSerializableFactory
+            </data-serializable-factory>
+        </data-serializable-factories>  <portable-factories>
+            <portable-factory factory-id="10000000">
+                com.hazelcast.stabilizer.tests.backpressure.SyntheticRequestPortableFactory
+            </portable-factory>
         </portable-factories>
     </serialization>
+
+    <cache name="maxCachSmall*">
+        <eviction max-size-policy="ENTRY_COUNT" size="271" eviction-policy="LFU"/>
+    </cache>
+
+    <cache name="maxCachMedium*">
+        <eviction max-size-policy="ENTRY_COUNT" size="1000" eviction-policy="LFU"/>
+    </cache>
+
+    <cache name="maxCachLarge*">
+        <eviction max-size-policy="ENTRY_COUNT" size="10000" eviction-policy="LFU"/>
+    </cache>
 
 </hazelcast>

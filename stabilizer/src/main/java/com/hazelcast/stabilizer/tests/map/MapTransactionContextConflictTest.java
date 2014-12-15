@@ -7,14 +7,16 @@ import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.helpers.TxnCounter;
-import com.hazelcast.stabilizer.tests.map.helpers.KeyInc;
+import com.hazelcast.stabilizer.tests.map.helpers.KeyIncrementPair;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
+import com.hazelcast.transaction.TransactionException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,16 +33,16 @@ import static org.junit.Assert.assertEquals;
 public class MapTransactionContextConflictTest {
     private final static ILogger log = Logger.getLogger(MapTransactionContextConflictTest.class);
 
-    // properties
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 50;
     public int maxKeysPerTxn = 5;
-    public boolean rethrowAllException=false;
-    public boolean rethrowRollBackException=false;
+    public boolean throwCommitException = false;
+    public boolean throwRollBackException = false;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
+    private static final int maxIntrement = 999;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -69,78 +71,74 @@ public class MapTransactionContextConflictTest {
 
         private final Random random = new Random();
         private final long[] localIncrements = new long[keyCount];
-        private TxnCounter count = new TxnCounter();
+        private final TxnCounter count = new TxnCounter();
 
         @Override
         public void run() {
             while (!testContext.isStopped()) {
 
-                List<KeyInc> potentialIncs = new ArrayList();
-
+                List<KeyIncrementPair> potentialIncrements = new ArrayList();
                 for (int i = 0; i < maxKeysPerTxn; i++) {
-                    KeyInc p = new KeyInc();
-                    p.key = random.nextInt(keyCount);
-                    p.inc = random.nextInt(999);
-                    potentialIncs.add(p);
+                    KeyIncrementPair p = new KeyIncrementPair(random, keyCount, maxIntrement);
+                    potentialIncrements.add(p);
                 }
 
-                List<KeyInc> doneIncs = new ArrayList();
+                List<KeyIncrementPair> putIncrements = new ArrayList();
 
                 TransactionContext context = targetInstance.newTransactionContext();
                 try {
                     context.beginTransaction();
+                    TransactionalMap<Integer, Long> map = context.getMap(basename);
 
-                    for (KeyInc p : potentialIncs) {
-                        final TransactionalMap<Integer, Long> map = context.getMap(basename);
-
+                    for (KeyIncrementPair p : potentialIncrements) {
                         long current = map.getForUpdate(p.key);
                         map.put(p.key, current + p.inc);
 
-                        doneIncs.add(p);
+                        putIncrements.add(p);
                     }
                     context.commitTransaction();
 
                     // Do local key increments if commit is successful
                     count.committed++;
-                    for (KeyInc p : doneIncs) {
+                    for (KeyIncrementPair p : putIncrements) {
                         localIncrements[p.key] += p.inc;
                     }
-                } catch (Exception commitFailed) {
+                } catch (TransactionException e) {
+
+                    log.warning(basename + ": commit fail. tried key increments=" + putIncrements +" "+e.getMessage());
+                    if(throwCommitException){
+                        throw new RuntimeException(e);
+                    }
+
                     try {
-                        log.warning(basename + ": commit fail done=" + doneIncs, commitFailed);
-
-                        if(rethrowAllException){
-                            throw new RuntimeException(commitFailed);
-                        }
-
                         context.rollbackTransaction();
                         count.rolled++;
 
-                    } catch (Exception rollBackFailed) {
-                        log.warning(basename + ": rollback fail done=" + doneIncs + " " + rollBackFailed, rollBackFailed);
+                    } catch (TransactionException rollBack) {
+                        log.warning(basename + ": rollback fail " + rollBack.getMessage(), rollBack);
                         count.failedRoles++;
 
-                        if(rethrowRollBackException){
-                            throw new RuntimeException(rollBackFailed);
+                        if(throwRollBackException){
+                            throw new RuntimeException(rollBack);
                         }
                     }
                 }
             }
-            targetInstance.getList(basename + "res").add(localIncrements);
-            targetInstance.getList(basename + "report").add(count);
+            targetInstance.getList(basename + "inc").add(localIncrements);
+            targetInstance.getList(basename + "count").add(count);
         }
     }
 
     @Verify(global = false)
     public void verify() throws Exception {
-        IList<TxnCounter> counts = targetInstance.getList(basename + "report");
+        IList<TxnCounter> counts = targetInstance.getList(basename + "count");
         TxnCounter total = new TxnCounter();
         for (TxnCounter c : counts) {
             total.add(c);
         }
         log.info(basename + ": " + total + " from " + counts.size() + " worker threads");
 
-        IList<long[]> allIncrements = targetInstance.getList(basename + "res");
+        IList<long[]> allIncrements = targetInstance.getList(basename + "inc");
         long expected[] = new long[keyCount];
         for (long[] incs : allIncrements) {
             for (int i = 0; i < incs.length; i++) {
@@ -158,4 +156,5 @@ public class MapTransactionContextConflictTest {
         }
         assertEquals(basename + ": " + failures + " key=>values have been incremented unExpected", 0, failures);
     }
+
 }

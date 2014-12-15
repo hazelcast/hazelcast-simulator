@@ -13,6 +13,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
 import com.hazelcast.spi.OperationService;
+import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.Performance;
@@ -61,7 +62,6 @@ public class SyntheticBackPressureTest {
     private final static ILogger log = Logger.getLogger(SyntheticBackPressureTest.class);
 
     //props
-    public boolean randomPartition = true;
     public boolean syncInvocation = true;
     public int syncBackupCount = 0;
     public int asyncBackupCount = 1;
@@ -76,12 +76,12 @@ public class SyntheticBackPressureTest {
     private AtomicLong operations = new AtomicLong();
     private TestContext context;
     private HazelcastInstance targetInstance;
+    public IntervalProbe latency;
 
     @Setup
     public void setup(TestContext context) throws Exception {
         this.context = context;
-
-        targetInstance = context.getTargetInstance();
+        this.targetInstance = context.getTargetInstance();
     }
 
     @Teardown
@@ -105,10 +105,9 @@ public class SyntheticBackPressureTest {
     }
 
     private class Worker implements Runnable, ExecutionCallback {
-
+        private final ArrayList<Integer> partitionSequence = new ArrayList<Integer>();
         private final Random random = new Random();
         private final OperationService operationService;
-        private final ArrayList<Integer> partitionSequence = new ArrayList<Integer>();
         private final boolean isClient;
         private final ClientInvocationService clientInvocationService;
         private final ClientPartitionService clientPartitionService;
@@ -131,21 +130,19 @@ public class SyntheticBackPressureTest {
                 operationService = node.getNodeEngine().getOperationService();
             }
 
-            if (randomPartition) {
-                if (isClient) {
-                    if (keyLocality == KeyLocality.Local)
+            if (isClient) {
+                if (keyLocality == KeyLocality.Local)
                     throw new IllegalStateException("A KeyLocality has been set to Local, but test is running on a client. " +
                             "It doesn't make sense as no keys are stored on clients. ");
-                }
-                int keys = 1000;
-                String[] strings = KeyUtils.generateKeys(keys, keys, keyLocality, targetInstance);
-                for (int k = 0; k < keys; k++) {
-                    String key = strings[k];
-                    Partition partition = targetInstance.getPartitionService().getPartition(key);
-                    partitionSequence.add(partition.getPartitionId());
-                }
-                Collections.shuffle(partitionSequence);
             }
+
+            int keys = 1000;
+            for (int k = 0; k < keys; k++) {
+                Integer key = KeyUtils.generateInt(keys, keyLocality, targetInstance);
+                Partition partition = targetInstance.getPartitionService().getPartition(key);
+                partitionSequence.add(partition.getPartitionId());
+            }
+            Collections.shuffle(partitionSequence);
         }
 
         @Override
@@ -177,6 +174,8 @@ public class SyntheticBackPressureTest {
                 int partitionId = nextPartitionId();
 
                 ICompletableFuture f = invoke(partitionId);
+                latency.started();
+
                 if (syncInvocation) {
                     if (syncFrequency == 1) {
                         f.get();
@@ -193,6 +192,7 @@ public class SyntheticBackPressureTest {
                 } else {
                     f.andThen(this);
                 }
+                latency.done();
 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
@@ -205,36 +205,28 @@ public class SyntheticBackPressureTest {
                 }
 
                 iteration++;
-
-
             }
         }
-
 
         private ICompletableFuture invoke(int partitionId) throws Exception {
             ICompletableFuture f;
             if (isClient) {
-                SomeRequest request = new SomeRequest(syncBackupCount, asyncBackupCount, backupDelayNanos);
+                SyntheticRequest request = new SyntheticRequest(syncBackupCount, asyncBackupCount, backupDelayNanos);
                 request.setPartitionId(partitionId);
                 Address target = clientPartitionService.getPartitionOwner(partitionId);
                 f = clientInvocationService.invokeOnTarget(request, target);
             } else {
-                SomeOperation operation = new SomeOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
+                SyntheticOperation operation = new SyntheticOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
                 f = operationService.invokeOnPartition(null, operation, partitionId);
             }
             return f;
         }
 
         private int nextPartitionId() {
-            int partitionId;
-            if (randomPartition) {
-                partitionId = partitionSequence.get(partitionIndex);
-                partitionIndex++;
-                if (partitionIndex >= partitionSequence.size()) {
-                    partitionIndex = 0;
-                }
-            } else {
-                partitionId = 0;
+            int partitionId = partitionSequence.get(partitionIndex);
+            partitionIndex++;
+            if (partitionIndex >= partitionSequence.size()) {
+                partitionIndex = 0;
             }
             return partitionId;
         }
