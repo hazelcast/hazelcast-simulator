@@ -18,6 +18,7 @@ import com.hazelcast.stabilizer.worker.Metronome;
 import com.hazelcast.stabilizer.worker.SimpleMetronome;
 
 import java.util.Collection;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class SqlPredicateBasicTest {
@@ -29,20 +30,16 @@ public class SqlPredicateBasicTest {
     public int threadCount = 10;
     public int keyLength = 10;
     public int keyCount = 10000;
-    public int idCount = 10000;
-    public int dataAmount = 10000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
     public boolean usePut = true;
     public String basename = "SqlPredicateBasicTest";
     public KeyLocality keyLocality = KeyLocality.Random;
-    public int minNumberOfMembers = 0;
 
-    String sql = "age between 30 and 60"; //it can be change from property file
+    String sql = "age = 30 AND active = true"; //it can be change from property file
 
     //probes
     public IntervalProbe searchLatency;
-    public SimpleProbe throughput;
     private int intervalMs;
     private IMap<String, Employee> map;
     private String[] keys;
@@ -51,14 +48,6 @@ public class SqlPredicateBasicTest {
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
@@ -72,14 +61,14 @@ public class SqlPredicateBasicTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
         keys = KeyUtils.generateKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
-
-        for (int k = 0; k < dataAmount; k++) { //need a configurable amount
+        Random random = new Random();
+        for (int k = 0; k < keyCount; k++) { //need a configurable amount
             String key = keys[k];
-            int id = KeyUtils.generateInt(idCount, keyLocality, testContext.getTargetInstance());
+            int id = random.nextInt();// id is not unique, suppose be.
             map.put(key, new Employee(id));
         }
+        log.info("Map size is:" + map.size());
     }
 
     @Run
@@ -97,7 +86,6 @@ public class SqlPredicateBasicTest {
     }
 
     private class Worker implements Runnable {
-
         @Override
         public void run() {
             long iteration = 0;
@@ -105,12 +93,10 @@ public class SqlPredicateBasicTest {
             final SqlPredicate sqlPredicate = new SqlPredicate(sql);
             while (!testContext.isStopped()) {
                 metronome.waitForNext();
-
                 searchLatency.started();
                 Collection<Employee> values = map.values(sqlPredicate);
-                log.info("" + values);
+                log.info(" " + values);
                 searchLatency.done();
-
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
@@ -118,9 +104,7 @@ public class SqlPredicateBasicTest {
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
-
                 iteration++;
-                throughput.done();
             }
         }
 
