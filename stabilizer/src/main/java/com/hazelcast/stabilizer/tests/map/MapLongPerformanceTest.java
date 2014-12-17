@@ -147,6 +147,6 @@ public class MapLongPerformanceTest {
 
     public static void main(String[] args) throws Throwable {
         MapLongPerformanceTest test = new MapLongPerformanceTest();
-        new TestRunner(test).run();
+        new TestRunner<MapLongPerformanceTest>(test).run();
     }
 }

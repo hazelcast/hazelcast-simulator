@@ -160,7 +160,7 @@ public class AtomicLongTest {
 
     public static void main(String[] args) throws Throwable {
         AtomicLongTest test = new AtomicLongTest();
-        new TestRunner(test).withDuration(10).run();
+        new TestRunner<AtomicLongTest>(test).withDuration(10).run();
     }
 }
 

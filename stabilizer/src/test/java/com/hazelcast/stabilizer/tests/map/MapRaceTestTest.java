@@ -8,6 +8,6 @@ public class MapRaceTestTest {
     @Test(expected = AssertionError.class)
     public void test() throws Throwable {
         MapRaceTest test = new MapRaceTest();
-        new TestRunner(test).withDuration(10).run();
+        new TestRunner<MapRaceTest>(test).withDuration(10).run();
     }
 }

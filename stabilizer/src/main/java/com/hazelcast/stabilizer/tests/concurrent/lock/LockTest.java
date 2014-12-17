@@ -165,7 +165,7 @@ public class LockTest {
 
     public static void main(String[] args) throws Throwable {
         LockTest test = new LockTest();
-        new TestRunner(test).withDuration(10).run();
+        new TestRunner<LockTest>(test).withDuration(10).run();
     }
 }
 

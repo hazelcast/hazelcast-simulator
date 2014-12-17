@@ -130,8 +130,7 @@ public class QueueTest {
 
     public static void main(String[] args) throws Throwable {
         QueueTest test = new QueueTest();
-        new TestRunner(test).run();
-        System.exit(0);
+        new TestRunner<QueueTest>(test).run();
     }
 }
 

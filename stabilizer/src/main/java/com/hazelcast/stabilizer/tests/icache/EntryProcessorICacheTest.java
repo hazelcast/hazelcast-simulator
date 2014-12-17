@@ -214,7 +214,7 @@ public class EntryProcessorICacheTest {
 
     public static void main(String[] args) throws Throwable {
         EntryProcessorICacheTest test = new EntryProcessorICacheTest();
-        new TestRunner(test).run();
+        new TestRunner<EntryProcessorICacheTest>(test).run();
     }
 }
 

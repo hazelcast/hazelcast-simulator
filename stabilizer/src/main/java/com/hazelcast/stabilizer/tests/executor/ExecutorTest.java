@@ -57,12 +57,11 @@ public class ExecutorTest {
     private IAtomicLong executedCounter;
     private IAtomicLong expectedExecutedCounter;
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         executors = new IExecutorService[executorCount];
         for (int k = 0; k < executors.length; k++) {
@@ -162,6 +161,6 @@ public class ExecutorTest {
 
     public static void main(String[] args) throws Throwable {
         ExecutorTest test = new ExecutorTest();
-        new TestRunner(test).run();
+        new TestRunner<ExecutorTest>(test).run();
     }
 }

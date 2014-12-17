@@ -154,6 +154,6 @@ public class GrowingMapTest {
 
     public static void main(String[] args) throws Throwable {
         GrowingMapTest test = new GrowingMapTest();
-        new TestRunner(test).run();
+        new TestRunner<GrowingMapTest>(test).run();
     }
 }

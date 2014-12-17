@@ -142,6 +142,6 @@ public class MapRaceTest {
 
     public static void main(String[] args) throws Throwable {
         MapRaceTest test = new MapRaceTest();
-        new TestRunner(test).run();
+        new TestRunner<MapRaceTest>(test).run();
     }
 }

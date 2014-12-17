@@ -42,7 +42,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.tests.utils.TestUtils.assertTrueEventually;
@@ -141,7 +140,6 @@ public class AsyncAtomicLongTest {
             long iteration = 0;
             long increments = 0;
 
-
             List<ICompletableFuture> batch = new LinkedList<ICompletableFuture>();
             while (!context.isStopped()) {
                 AsyncAtomicLong counter = getRandomCounter();
@@ -155,11 +153,11 @@ public class AsyncAtomicLongTest {
 
                 future.andThen(this);
 
-                if(batchSize>0){
+                if (batchSize > 0) {
                     batch.add(future);
 
-                    if(batch.size()==batchSize){
-                        for(ICompletableFuture f: batch){
+                    if (batch.size() == batchSize) {
+                        for (ICompletableFuture f : batch) {
                             try {
                                 f.get();
                             } catch (InterruptedException e) {
@@ -174,7 +172,6 @@ public class AsyncAtomicLongTest {
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
-
                 iteration++;
             }
 
@@ -196,8 +193,6 @@ public class AsyncAtomicLongTest {
                 return false;
             } else if (writePercentage == 100) {
                 return true;
-            } else if (writePercentage == 0) {
-                return false;
             } else {
                 return random.nextInt(100) <= writePercentage;
             }
@@ -211,7 +206,7 @@ public class AsyncAtomicLongTest {
 
     public static void main(String[] args) throws Throwable {
         AsyncAtomicLongTest test = new AsyncAtomicLongTest();
-        new TestRunner(test).withDuration(10).run();
+        new TestRunner<AsyncAtomicLongTest>(test).withDuration(10).run();
     }
 }
 

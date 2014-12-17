@@ -111,7 +111,7 @@ public class MapOperationsCount implements DataSerializable {
 
     @Override
     public String toString() {
-        return "MapOpperationsCount{" +
+        return "MapOperationsCount{" +
                 "putCount=" + putCount +
                 ", putAsyncCount=" + putAsyncCount +
                 ", putTTLCount=" + putTTLCount +

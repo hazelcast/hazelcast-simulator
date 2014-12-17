@@ -41,6 +41,6 @@ public class FailingTest {
 
     public static void main(String[] args) throws Throwable {
         FailingTest test = new FailingTest();
-        new TestRunner(test).run();
+        new TestRunner<FailingTest>(test).run();
     }
 }

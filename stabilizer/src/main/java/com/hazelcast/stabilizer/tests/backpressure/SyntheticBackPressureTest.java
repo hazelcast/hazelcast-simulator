@@ -247,6 +247,6 @@ public class SyntheticBackPressureTest {
 
     public static void main(String[] args) throws Throwable {
         SyntheticBackPressureTest test = new SyntheticBackPressureTest();
-        new TestRunner(test).withDuration(10).run();
+        new TestRunner<SyntheticBackPressureTest>(test).withDuration(10).run();
     }
 }

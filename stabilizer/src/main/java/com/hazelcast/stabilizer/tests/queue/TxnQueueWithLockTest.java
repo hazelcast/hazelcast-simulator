@@ -116,6 +116,6 @@ public class TxnQueueWithLockTest {
 
     public static void main(String[] args) throws Throwable {
         TxnQueueWithLockTest test = new TxnQueueWithLockTest();
-        new TestRunner(test).run();
+        new TestRunner<TxnQueueWithLockTest>(test).run();
     }
 }
