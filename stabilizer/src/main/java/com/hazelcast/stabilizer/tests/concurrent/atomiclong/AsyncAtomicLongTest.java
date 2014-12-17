@@ -171,13 +171,11 @@ public class AsyncAtomicLongTest {
                     }
                 }
 
+                iteration++;
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
-
-                iteration++;
             }
-
             totalCounter.addAndGet(increments);
         }
 

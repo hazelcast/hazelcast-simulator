@@ -145,13 +145,11 @@ public class LockTest {
                     lock1.unlock();
                 }
 
+                iteration++;
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
-
-                iteration++;
             }
-
             totalMoney.addAndGet(iteration);
         }
 

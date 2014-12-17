@@ -134,16 +134,15 @@ public class PerformanceICacheTest {
                     cache.get(key);
                 }
 
+                iteration++;
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
-
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
-
-                iteration++;
             }
+            operations.addAndGet(iteration % performanceUpdateFrequency);
         }
 
         private boolean shouldWrite(long iteration) {

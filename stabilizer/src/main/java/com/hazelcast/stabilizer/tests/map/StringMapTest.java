@@ -147,17 +147,17 @@ public class StringMapTest {
                     getLatency.done();
                 }
 
+                throughput.done();
+
+                iteration++;
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
-
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
-
-                iteration++;
-                throughput.done();
             }
+            operations.addAndGet(iteration % performanceUpdateFrequency);
         }
 
         private String randomValue() {

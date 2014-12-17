@@ -138,16 +138,15 @@ public class ITopicTest {
                 count += msg;
                 topic.publish(msg);
 
+                iteration++;
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
-
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
-                iteration++;
             }
-
+            operations.addAndGet(iteration % performanceUpdateFrequency);
             totalExpectedCounter.addAndGet(count);
         }
 
@@ -168,7 +167,6 @@ public class ITopicTest {
     private class TopicListener implements MessageListener<Long> {
         private final Random random = new Random();
         private volatile long count;
-
 
         @Override
         public void onMessage(Message<Long> message) {
