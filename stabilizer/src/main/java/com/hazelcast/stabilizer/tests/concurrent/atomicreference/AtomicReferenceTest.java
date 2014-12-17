@@ -15,7 +15,6 @@
  */
 package com.hazelcast.stabilizer.tests.concurrent.atomicreference;
 
-
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicReference;
 import com.hazelcast.logging.ILogger;
@@ -121,7 +120,6 @@ public class AtomicReferenceTest {
         public void run() {
             long iteration = 0;
 
-
             while (!context.isStopped()) {
                 IAtomicReference counter = getRandomCounter();
                 if (shouldWrite(iteration)) {
@@ -160,7 +158,7 @@ public class AtomicReferenceTest {
 
     public static void main(String[] args) throws Throwable {
         AtomicReferenceTest test = new AtomicReferenceTest();
-        new TestRunner(test).withDuration(10).run();
+        new TestRunner<AtomicReferenceTest>(test).withDuration(10).run();
     }
 }
 

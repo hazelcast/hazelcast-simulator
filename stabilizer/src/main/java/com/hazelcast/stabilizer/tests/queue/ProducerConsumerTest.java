@@ -149,8 +149,7 @@ public class ProducerConsumerTest {
 
     public static void main(String[] args) throws Throwable {
         ProducerConsumerTest test = new ProducerConsumerTest();
-        new TestRunner(test).run();
-        System.exit(0);
+        new TestRunner<ProducerConsumerTest>(test).run();
     }
 }
 

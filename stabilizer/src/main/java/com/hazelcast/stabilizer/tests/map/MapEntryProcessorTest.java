@@ -171,7 +171,7 @@ public class MapEntryProcessorTest {
 
     public static void main(String[] args) throws Throwable {
         MapEntryProcessorTest test = new MapEntryProcessorTest();
-        new TestRunner(test).run();
+        new TestRunner<MapEntryProcessorTest>(test).run();
     }
 }
 

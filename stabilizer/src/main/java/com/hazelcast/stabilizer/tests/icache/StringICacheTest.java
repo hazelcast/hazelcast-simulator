@@ -197,6 +197,6 @@ public class StringICacheTest {
     public static void main(String[] args) throws Throwable {
         StringICacheTest test = new StringICacheTest();
         test.writePercentage = 10;
-        new TestRunner(test).run();
+        new TestRunner<StringICacheTest>(test).run();
     }
 }

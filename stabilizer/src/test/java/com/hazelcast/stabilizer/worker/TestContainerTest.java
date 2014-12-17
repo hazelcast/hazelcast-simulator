@@ -63,7 +63,6 @@ public class TestContainerTest {
         assertSame(testContext, test.context);
     }
 
-
     // =================== local verify ========================
 
     @Test
@@ -154,7 +153,6 @@ public class TestContainerTest {
         assertTrue(test.disabled instanceof DisabledProbe);
     }
 
-
     @Test
     public void testMessageReceiver() throws Throwable {
         DummyTestContext testContext = new DummyTestContext();
@@ -218,7 +216,6 @@ public class TestContainerTest {
 
         @Run
         void run() {
-
         }
     }
 
@@ -243,7 +240,6 @@ public class TestContainerTest {
 
         @Run
         void run() {
-
         }
     }
 

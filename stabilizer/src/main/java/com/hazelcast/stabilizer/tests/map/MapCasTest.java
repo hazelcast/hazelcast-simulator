@@ -154,6 +154,6 @@ public class MapCasTest {
 
     public static void main(String[] args) throws Throwable {
         MapCasTest test = new MapCasTest();
-        new TestRunner(test).run();
+        new TestRunner<MapCasTest>(test).run();
     }
 }
