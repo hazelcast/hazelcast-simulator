@@ -106,7 +106,7 @@ public class SqlPredicateTest {
                 iteration++;
             }
 
-            operations.set(iteration);
+            //operations.set(iteration);
         }
     }
 
