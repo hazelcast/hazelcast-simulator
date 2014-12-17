@@ -86,6 +86,8 @@ public class SqlPredicateTest {
     private class Worker implements Runnable {
         @Override
         public void run() {
+            log.info("map.localKeySet.size = "+map.localKeySet().size());
+
             long iteration = 0;
             Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
             SqlPredicate sqlPredicate = new SqlPredicate(sql);
