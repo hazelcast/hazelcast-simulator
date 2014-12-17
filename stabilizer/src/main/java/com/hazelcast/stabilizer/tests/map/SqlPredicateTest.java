@@ -12,6 +12,7 @@ import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.*;
 import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
+import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
@@ -34,13 +35,11 @@ public class SqlPredicateTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1;
     public String basename = "sqlpredicate";
-    public KeyLocality keyLocality = KeyLocality.Random;
     public String sql = "age = 30 AND active = true";
-    public IntervalProbe searchLatency;
+    public IntervalProbe search;
     public int intervalMs = 0;
 
     private IMap<String, DataSerializableEmployee> map;
-    private String[] keys;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private final AtomicLong operations = new AtomicLong();
@@ -60,12 +59,12 @@ public class SqlPredicateTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        keys = KeyUtils.generateKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         Random random = new Random();
         for (int k = 0; k < keyCount; k++) {
-            String key = keys[k];
             int id = random.nextInt();
-            map.put(key, new DataSerializableEmployee(id));
+            String key = StringUtils.generateString(keyLength);
+            DataSerializableEmployee value = new DataSerializableEmployee(id);
+            map.put(key, value);
         }
         log.info("Map size is:" + map.size());
     }
@@ -93,9 +92,9 @@ public class SqlPredicateTest {
 
             while (!testContext.isStopped()) {
                 metronome.waitForNext();
-                searchLatency.started();
+                search.started();
                 map.values(sqlPredicate);
-                searchLatency.done();
+                search.done();
                 
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
