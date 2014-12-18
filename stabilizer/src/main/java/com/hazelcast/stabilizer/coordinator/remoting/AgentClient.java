@@ -1,5 +1,7 @@
 package com.hazelcast.stabilizer.coordinator.remoting;
 
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
 import com.hazelcast.stabilizer.common.AgentAddress;
@@ -7,12 +9,16 @@ import com.hazelcast.stabilizer.common.AgentAddress;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 
 import static com.hazelcast.stabilizer.Utils.closeQuietly;
+import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
 public class AgentClient {
+
+    private final static ILogger log = Logger.getLogger(AgentClient.class);
 
     final String publicAddress;
     final String privateIp;
@@ -58,12 +64,26 @@ public class AgentClient {
     //we create a new socket for every request because it could be that the agents is not reachable
     //and we don't want to depend on state within the socket.
     private Socket newSocket() throws IOException {
-        try {
-            InetAddress hostAddress = InetAddress.getByName(publicAddress);
-            return new Socket(hostAddress, AgentRemoteService.PORT);
-        } catch (IOException e) {
-            throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, e);
+        ConnectException connectException = null;
+        for (int k = 0; k < 30; k++) {
+            try {
+                InetAddress hostAddress = InetAddress.getByName(publicAddress);
+                return new Socket(hostAddress, AgentRemoteService.PORT);
+            } catch (ConnectException e) {
+                if (k < 10) {
+                    // it can happen that when a machine is under a lot of pressure, the connection can't be established
+                    log.finest("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
+                } else {
+                    log.finest("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
+                }
+                sleepSeconds(1);
+                connectException = e;
+            } catch (IOException e) {
+                throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, e);
+            }
         }
+
+        throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, connectException);
     }
 
     @Override
