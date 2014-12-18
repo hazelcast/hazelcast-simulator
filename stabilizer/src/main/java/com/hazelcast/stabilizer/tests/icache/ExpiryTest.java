@@ -16,7 +16,6 @@
 package com.hazelcast.stabilizer.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import javax.cache.CacheManager;;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -27,13 +26,16 @@ import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.annotations.Performance;
 import com.hazelcast.stabilizer.tests.annotations.Run;
 import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.OperationSelector;
 
+import javax.cache.CacheManager;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
@@ -41,6 +43,7 @@ import java.io.Serializable;
 import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -49,8 +52,15 @@ import static org.junit.Assert.assertFalse;
  * In This tests we a putting and getting to/from a cache using an Expiry Policy
  * the expiryDuration can be configured
  * we Verify that the cache is empty and items have expired
- * */
+ */
 public class ExpiryTest {
+
+    private static enum Operation {
+        PUT,
+        PUT_ASYNC,
+        GET,
+        GET_ASYNC
+    }
 
     private final static ILogger log = Logger.getLogger(ExpiryTest.class);
 
@@ -63,13 +73,17 @@ public class ExpiryTest {
     public double getExpiry = 0.2;
     public double getAsyncExpiry = 0.1;
 
+    public int performanceUpdateFrequency = 10000;
+
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+    private AtomicLong operations = new AtomicLong();
     private CacheManager cacheManager;
     private String basename;
 
     private ExpiryPolicy expiryPolicy;
-    private CacheConfig<Integer, Long> config = new CacheConfig();
+    private CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
 
     @Setup
     public void setup(TestContext textConTx) {
@@ -89,6 +103,11 @@ public class ExpiryTest {
         expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
 
         config.setName(basename);
+
+        selector.addOperation(Operation.PUT, putExpiry)
+                .addOperation(Operation.PUT_ASYNC, putAsyncExpiry)
+                .addOperation(Operation.GET, getExpiry)
+                .addOperation(Operation.GET_ASYNC, getAsyncExpiry);
     }
 
     @Warmup(global = true)
@@ -99,7 +118,7 @@ public class ExpiryTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
@@ -108,54 +127,70 @@ public class ExpiryTest {
     private class Worker implements Runnable {
         private Random random = new Random();
         private Counter counter = new Counter();
+        @SuppressWarnings("unchecked")
         private ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
 
         public void run() {
+            long iteration = 0;
             while (!testContext.isStopped()) {
-                int k = random.nextInt(keyCount);
+                int key = random.nextInt(keyCount);
 
-                double chance = random.nextDouble();
-                if ((chance -= putExpiry) < 0) {
-                    cache.put(k, random.nextLong(), expiryPolicy);
-                    counter.putExpiry++;
-
-                } else if ((chance -= putAsyncExpiry) < 0) {
-                    cache.putAsync(k, random.nextLong(), expiryPolicy);
-                    counter.putAsyncExpiry++;
-
-                } else if ((chance -= getExpiry) < 0) {
-                    Long value = cache.get(k, expiryPolicy);
-                    counter.getExpiry++;
-
-                } else if ((chance -= getAsyncExpiry) < 0) {
-                    Future<Long> f = cache.getAsync(k, expiryPolicy);
-                    try {
-                        f.get();
-                        counter.getAsyncExpiry++;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-
+                Operation operation = selector.select();
+                switch (operation) {
+                    case PUT:
+                        cache.put(key, random.nextLong(), expiryPolicy);
+                        counter.putExpiry++;
+                        break;
+                    case PUT_ASYNC:
+                        cache.putAsync(key, random.nextLong(), expiryPolicy);
+                        counter.putAsyncExpiry++;
+                        break;
+                    case GET:
+                        cache.get(key, expiryPolicy);
+                        counter.getExpiry++;
+                        break;
+                    case GET_ASYNC:
+                        Future<Long> f = cache.getAsync(key, expiryPolicy);
+                        try {
+                            f.get();
+                            counter.getAsyncExpiry++;
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                        break;
+                    default:
+                        throw new UnsupportedOperationException("Unknown operation" + operation);
                 }
+                if (iteration % performanceUpdateFrequency == 0) {
+                    operations.addAndGet(performanceUpdateFrequency);
+                }
+                iteration++;
             }
+            operations.addAndGet(iteration % performanceUpdateFrequency);
             targetInstance.getList(basename).add(counter);
         }
+    }
+
+    @Performance
+    public long getOperationCount() {
+        return operations.get();
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
         IList<Counter> results = targetInstance.getList(basename);
-        Counter total = new Counter();
-        for (Counter i : results) {
-            total.add(i);
+        Counter totalCounter = new Counter();
+        for (Counter counter : results) {
+            totalCounter.add(counter);
         }
-        log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
+        log.info(basename + ": " + totalCounter + " from " + results.size() + " worker Threads");
 
+        @SuppressWarnings("unchecked")
         final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
 
-        for(int i=0; i<keyCount; i++){
-            assertFalse(basename + ": cache should not contain any keys ", cache.containsKey(i) );
+        for (int i = 0; i < keyCount; i++) {
+            assertFalse(basename + ": cache should not contain any keys ", cache.containsKey(i));
         }
 
         assertFalse(basename + ": iterator should not have elements ", cache.iterator().hasNext());
