@@ -74,7 +74,7 @@ public class AgentClient {
                     // it can happen that when a machine is under a lot of pressure, the connection can't be established
                     log.finest("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
                 } else {
-                    log.finest("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
+                    log.warning("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
                 }
                 sleepSeconds(1);
                 connectException = e;
