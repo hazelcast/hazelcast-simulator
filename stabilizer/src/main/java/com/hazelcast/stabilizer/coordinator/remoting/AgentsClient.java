@@ -16,7 +16,6 @@ import com.hazelcast.stabilizer.worker.commands.Command;
 import com.hazelcast.stabilizer.worker.commands.IsPhaseCompletedCommand;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -207,13 +206,13 @@ public class AgentsClient {
         }
     }
 
-    private <E> List<E> getAllFutures(Collection<Future> futures) throws TimeoutException{
+    private <E> List<E> getAllFutures(Collection<Future> futures) throws TimeoutException {
         int value = Integer.parseInt(System.getProperty("worker.testmethod.timeout", "10000"));
         return getAllFutures(futures, TimeUnit.SECONDS.toMillis(value));
     }
 
     //todo: probably we don't want to throw exceptions to make sure that don't abort when a agent goes down.
-    private <E> List<E> getAllFutures(Collection<Future> futures, long timeoutMs)throws TimeoutException {
+    private <E> List<E> getAllFutures(Collection<Future> futures, long timeoutMs) throws TimeoutException {
         CountdownWatch watch = CountdownWatch.started(timeoutMs);
         List result = new LinkedList();
         for (Future future : futures) {
@@ -243,8 +242,8 @@ public class AgentsClient {
 
                 Utils.fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
 
-                if(cause instanceof TimeoutException){
-                    throw (TimeoutException)cause;
+                if (cause instanceof TimeoutException) {
+                    throw (TimeoutException) cause;
                 }
 
                 if (cause instanceof RuntimeException) {
@@ -407,7 +406,7 @@ public class AgentsClient {
                 public Object call() throws Exception {
                     try {
                         return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
-                    }catch (RuntimeException t) {
+                    } catch (RuntimeException t) {
                         log.severe(t.getMessage());
                         log.finest(t.getMessage(), t);
                         throw t;
@@ -421,8 +420,8 @@ public class AgentsClient {
     }
 
     // a temporary hack to get the correct mapping between futures and their agents.
-    public <E> Map<AgentClient,List<E>> executeOnAllWorkersDetailed(final Command command) throws TimeoutException {
-        Map<AgentClient, Future> futures = new HashMap<AgentClient,Future>();
+    public <E> Map<AgentClient, List<E>> executeOnAllWorkersDetailed(final Command command) throws TimeoutException {
+        Map<AgentClient, Future> futures = new HashMap<AgentClient, Future>();
 
         for (final AgentClient agentClient : agents) {
             Future f = agentExecutor.submit(new Callable() {
@@ -439,8 +438,8 @@ public class AgentsClient {
             futures.put(agentClient, f);
         }
 
-        Map<AgentClient,List<E>> result = new HashMap<AgentClient,List<E>>();
-        for(Map.Entry<AgentClient,Future> entry: futures.entrySet()){
+        Map<AgentClient, List<E>> result = new HashMap<AgentClient, List<E>>();
+        for (Map.Entry<AgentClient, Future> entry : futures.entrySet()) {
             AgentClient agentClient = entry.getKey();
             Future f = entry.getValue();
             List<List<E>> r = getAllFutures(asList(f));
