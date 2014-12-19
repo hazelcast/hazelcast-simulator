@@ -141,6 +141,7 @@ public class ExpiryICacheTest {
                         if (iteration % 100000 == 0) {
                             log.info("at:" + iteration + " heap used: " + usedPercentage + " % map.size:" + cache.size());
                         }
+
                         long key = random.nextLong();
                         cache.put(key, 0l, expiryPolicy);
 
@@ -154,6 +155,7 @@ public class ExpiryICacheTest {
                     }
                 }
             }
+            operations.addAndGet(iteration % performanceUpdateFrequency);
 
             free = Runtime.getRuntime().freeMemory();
             total = Runtime.getRuntime().totalMemory();

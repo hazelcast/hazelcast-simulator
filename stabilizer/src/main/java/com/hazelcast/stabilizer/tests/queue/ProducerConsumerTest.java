@@ -100,10 +100,14 @@ public class ProducerConsumerTest {
                     Thread.sleep(rand.nextInt(maxIntervalMillis) * consumerCount);
                     produced.incrementAndGet();
                     workQueue.offer(new Work());
+
                     iteration++;
                     if (iteration % 10 == 0) {
-                        log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: "
-                                + iteration + " produced:" + produced.get() + " workqueue:" + workQueue.size() + " consumed:" + consumed.get());
+                        log.info(String.format(
+                                "%s prod-id: %d, iteration: %d, produced: %d, workQueue: %d, consumed: %d",
+                                Thread.currentThread().getName(), id, iteration,
+                                produced.get(), workQueue.size(), consumed.get()
+                        ));
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -128,19 +132,19 @@ public class ProducerConsumerTest {
                     workQueue.take();
                     consumed.incrementAndGet();
                     Thread.sleep(rand.nextInt(maxIntervalMillis) * producerCount);
+
                     iteration++;
                     if (iteration % 20 == 0) {
-                        logState(iteration);
+                        log.info(String.format(
+                                "%s prod-id: %d, iteration: %d, produced: %d, workQueue: %d, consumed: %d",
+                                Thread.currentThread().getName(), id, iteration,
+                                produced.get(), workQueue.size(), consumed.get()
+                        ));
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
-        }
-
-        private void logState(long iter) {
-            log.info(Thread.currentThread().getName() + " prod-id:" + id + " iteration: " + iter
-                    + " produced:" + produced.get() + " workqueue:" + workQueue.size() + " consumed:" + consumed.get());
         }
     }
 

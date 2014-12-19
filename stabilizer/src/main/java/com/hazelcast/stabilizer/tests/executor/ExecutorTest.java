@@ -134,7 +134,6 @@ public class ExecutorTest {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
             }
-
             expectedExecutedCounter.addAndGet(iteration);
         }
     }
