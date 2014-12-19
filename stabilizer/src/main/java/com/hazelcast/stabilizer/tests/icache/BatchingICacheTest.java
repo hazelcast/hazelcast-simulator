@@ -129,16 +129,17 @@ public class BatchingICacheTest {
                 ICompletableFuture<?> future = selectAndInvokeOperation();
                 futureList.add(future);
 
+                iteration++;
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
-
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
-                iteration++;
+
                 syncIfNecessary(iteration);
             }
+            operations.addAndGet(iteration % performanceUpdateFrequency);
         }
 
         private ICompletableFuture<?> selectAndInvokeOperation() {

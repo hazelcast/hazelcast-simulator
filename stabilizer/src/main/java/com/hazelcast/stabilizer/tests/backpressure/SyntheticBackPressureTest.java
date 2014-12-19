@@ -194,18 +194,17 @@ public class SyntheticBackPressureTest {
                 }
                 latency.done();
 
+                iteration++;
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
-
                 if (iteration % performanceUpdateFrequency == 0) {
                     if (syncInvocation) {
                         operations.addAndGet(performanceUpdateFrequency);
                     }
                 }
-
-                iteration++;
             }
+            operations.addAndGet(iteration % performanceUpdateFrequency);
         }
 
         private ICompletableFuture invoke(int partitionId) throws Exception {

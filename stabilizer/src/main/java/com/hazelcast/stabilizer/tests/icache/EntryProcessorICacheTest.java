@@ -159,16 +159,15 @@ public class EntryProcessorICacheTest {
                 cache.invoke(key, new IncrementEntryProcessor(increment, delayMs));
                 increment(key, increment);
 
-
+                iteration++;
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
-
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
-                iteration++;
             }
+            operations.addAndGet(iteration % performanceUpdateFrequency);
 
             //sleep to give time for the last EntryProcessor tasks to complete.
             try {
