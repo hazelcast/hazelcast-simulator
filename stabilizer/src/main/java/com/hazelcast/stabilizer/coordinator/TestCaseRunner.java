@@ -137,7 +137,7 @@ public class TestCaseRunner {
         for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
             String probeName = entry.getKey();
             R result = entry.getValue();
-            echo("Probe " + probeName + " result: " + result.toHumanString());
+            echo("Probe " + probeName + " result:\n" + result.toHumanString());
         }
     }
 
