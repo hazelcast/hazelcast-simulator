@@ -158,6 +158,6 @@ public class PerformanceICacheTest {
 
     public static void main(String[] args) throws Throwable {
         PerformanceICacheTest test = new PerformanceICacheTest();
-        new TestRunner(test).run();
+        new TestRunner<PerformanceICacheTest>(test).run();
     }
 }

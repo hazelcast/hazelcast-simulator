@@ -189,6 +189,6 @@ public class ExpiryICacheTest {
     }
 
     public static void main(String[] args) throws Throwable {
-        new TestRunner(new ExpiryICacheTest()).run();
+        new TestRunner<ExpiryICacheTest>(new ExpiryICacheTest()).run();
     }
 }

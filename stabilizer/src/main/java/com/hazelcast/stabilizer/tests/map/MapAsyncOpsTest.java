@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.stabilizer.tests.map.MapAsyncOpsTest.Operation.*;
 
-
 public class MapAsyncOpsTest {
     private final static ILogger log = Logger.getLogger(MapAsyncOpsTest.class);
 
@@ -36,7 +35,7 @@ public class MapAsyncOpsTest {
     public double removeAsyncProb = 0.2;
     public double destroyProb = 0.2;
     //
-    public int maxTTLExpireySeconds = 3;
+    public int maxTTLExpirySeconds = 3;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -76,7 +75,6 @@ public class MapAsyncOpsTest {
         results.add(count);
     }
 
-
     private class Worker implements Runnable {
         private final Random random = new Random();
 
@@ -94,7 +92,7 @@ public class MapAsyncOpsTest {
                             break;
                         case PUT_ASYNC_TTL:
                             value = random.nextInt();
-                            int delay = 1 + random.nextInt(maxTTLExpireySeconds);
+                            int delay = 1 + random.nextInt(maxTTLExpirySeconds);
                             map.putAsync(key, value, delay, TimeUnit.SECONDS);
                             count.putAsyncTTLCount.incrementAndGet();
                             break;
@@ -117,8 +115,6 @@ public class MapAsyncOpsTest {
         }
     }
 
-
-
     @Verify(global = true)
     public void globalVerify() throws Exception {
         IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
@@ -131,14 +127,14 @@ public class MapAsyncOpsTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
-        Thread.sleep(maxTTLExpireySeconds * 2);
+        Thread.sleep(maxTTLExpirySeconds * 2);
 
         final IMap map = targetInstance.getMap(basename);
         log.info(basename + ": map size  =" + map.size());
     }
 
     public static void main(String[] args) throws Throwable {
-        new TestRunner(new MapAsyncOpsTest()).run();
+        new TestRunner<MapAsyncOpsTest>(new MapAsyncOpsTest()).run();
     }
 
     static enum Operation {

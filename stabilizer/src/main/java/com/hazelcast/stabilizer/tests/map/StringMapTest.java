@@ -183,6 +183,6 @@ public class StringMapTest {
     public static void main(String[] args) throws Throwable {
         StringMapTest test = new StringMapTest();
         test.writePercentage = 10;
-        new TestRunner(test).run();
+        new TestRunner<StringMapTest>(test).run();
     }
 }

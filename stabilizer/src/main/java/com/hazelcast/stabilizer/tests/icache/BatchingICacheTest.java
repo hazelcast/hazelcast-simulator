@@ -174,7 +174,7 @@ public class BatchingICacheTest {
 
     public static void main(String[] args) throws Throwable {
         PerformanceICacheTest test = new PerformanceICacheTest();
-        new TestRunner(test).run();
+        new TestRunner<PerformanceICacheTest>(test).run();
     }
 
     static enum Operation {

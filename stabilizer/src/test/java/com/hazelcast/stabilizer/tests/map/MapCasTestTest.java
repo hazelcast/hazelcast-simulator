@@ -7,6 +7,6 @@ public class MapCasTestTest {
     @Test
     public void test() throws Throwable {
         MapCasTest test = new MapCasTest();
-        new TestRunner(test).withDuration(10).run();
+        new TestRunner<MapCasTest>(test).withDuration(10).run();
     }
 }

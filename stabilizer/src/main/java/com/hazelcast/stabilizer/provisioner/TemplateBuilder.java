@@ -43,8 +43,6 @@ public class TemplateBuilder {
 
         spec = TemplateBuilderSpec.parse(machineSpec);
 
-        initSecurityGroup();
-
 
         Template template = buildTemplate();
 
@@ -58,9 +56,20 @@ public class TemplateBuilder {
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
-                .runScript(adminAccess)
-                .securityGroups(securityGroup);
+                .runScript(adminAccess);
 
+        String subnetId = props.get("SUBNET_ID", "default");
+        if (subnetId.equals("default") || subnetId.isEmpty()) {
+            initSecurityGroup();
+            template.getOptions().securityGroups(securityGroup);
+        } else {
+            if (!props.isEc2()) {
+                throw new IllegalStateException("SUBNET_ID can be used only when EC2 is configured as a cloud provider.");
+            }
+            log.info("Using VPC, Subnet ID = " + subnetId);
+            template.getOptions().as(AWSEC2TemplateOptions.class)
+                    .subnetId(subnetId);
+        }
         return template;
     }
 

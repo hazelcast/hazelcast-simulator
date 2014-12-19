@@ -4,7 +4,8 @@ if [ -z "${STABILIZER_HOME}" ] ; then
     export STABILIZER_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
 fi
 
-export JAVA_OPTS="-Xms64m -Xmx1g -XX:MaxPermSize=256m -client"
+export JAVA_OPTS="-client -Xms64m -Xmx1g ${JAVA_EXTRA_OPTS}"
+
 java -cp "${STABILIZER_HOME}/lib/*" ${JAVA_OPTS} \
     -DSTABILIZER_HOME=${STABILIZER_HOME} \
     -Dlog4j.configuration=file:${STABILIZER_HOME}/conf/visualiser-log4j.xml \

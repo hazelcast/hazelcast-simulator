@@ -142,6 +142,6 @@ public class MapTTLSaturationTest {
         Config config = new Config();
         config.addMapConfig(new MapConfig("mapttlsaturation*").setBackupCount(0).setStatisticsEnabled(false));
         HazelcastInstance hz = Hazelcast.newHazelcastInstance(config);
-        new TestRunner(new MapTTLSaturationTest()).withHazelcastInstance(hz).withDuration(6000).run();
+        new TestRunner<MapTTLSaturationTest>(new MapTTLSaturationTest()).withHazelcastInstance(hz).withDuration(6000).run();
     }
 }
