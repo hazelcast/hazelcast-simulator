@@ -37,7 +37,7 @@ public class MapPredicateTest {
         DESTROY
     }
 
-    private final static ILogger log = Logger.getLogger(MapEntryProcessorTest.class);
+    private final static ILogger log = Logger.getLogger(MapPredicateTest.class);
 
     public String basename = this.getClass().getName();
     public int threadCount = 3;
