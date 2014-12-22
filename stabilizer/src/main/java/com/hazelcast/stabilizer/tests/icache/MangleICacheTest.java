@@ -15,6 +15,7 @@ import com.hazelcast.stabilizer.tests.annotations.Setup;
 import com.hazelcast.stabilizer.tests.annotations.Verify;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.OperationSelector;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
@@ -31,6 +32,19 @@ import static junit.framework.Assert.assertEquals;
  */
 public class MangleICacheTest {
 
+    public static enum Operation {
+        CLOSE_CACHING_PROVIDER,
+
+        CREATE_CACHE_MANAGER,
+        CLOSE_CACHE_MANAGER,
+
+        CREATE_CACHE,
+        CLOSE_CACHE,
+        DESTROY_CACHE,
+
+        PUT
+    }
+
     private final static ILogger log = Logger.getLogger(MangleICacheTest.class);
 
     public int threadCount = 3;
@@ -38,11 +52,10 @@ public class MangleICacheTest {
 
     public double createCacheManager=0.1;
     public double cacheManagerClose=0.1;
-    public double cacheManagerdestroy=0.1;
     public double cachingProviderClose=0.1;
 
     public double createCacheProb=0.1;
-    public double destroyCacheProb=0.1;
+    public double destroyCacheProb=0.2;
     public double putCacheProb=0.3;
     public double closeCacheProb=0.1;
 
@@ -50,11 +63,22 @@ public class MangleICacheTest {
     private HazelcastInstance targetInstance;
     private String basename;
 
+    private OperationSelector<Operation> selector;
+
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
+
+        selector = new OperationSelector<Operation>();
+        selector.addOperation(Operation.CLOSE_CACHING_PROVIDER, cachingProviderClose)
+                .addOperation(Operation.CREATE_CACHE_MANAGER, createCacheManager)
+                .addOperation(Operation.CLOSE_CACHE_MANAGER, cacheManagerClose)
+                .addOperation(Operation.CREATE_CACHE, createCacheProb)
+                .addOperation(Operation.CLOSE_CACHE, closeCacheProb)
+                .addOperation(Operation.DESTROY_CACHE, destroyCacheProb)
+                .addOperation(Operation.PUT, putCacheProb);
     }
 
     @Run
@@ -77,110 +101,97 @@ public class MangleICacheTest {
             createCacheManager();
 
             while (!testContext.isStopped()) {
-
                 int cacheNumber = random.nextInt(maxCaches);
-                double chance = random.nextDouble();
-                if((chance -= createCacheManager) < 0){
-                    try{
-                        createCacheManager();
-                        counter.createCacheManager++;
+                Operation operation = selector.select();
+                switch (operation) {
+                    case CLOSE_CACHING_PROVIDER:
+                        try{
+                            CachingProvider provider = cacheManager.getCachingProvider();
+                            if(provider!=null){
+                                provider.close();
+                                counter.cachingProviderClose++;
+                            }
+                        } catch (CacheException e) {
+                            counter.cachingProviderCloseException++;
 
-                    } catch (CacheException e) {
-                        counter.createCacheManagerException++;
-
-                    }
-                }
-                else if((chance -= cacheManagerClose) < 0){
-                    try{
-                        cacheManager.close();
-                        counter.cacheManagerClose++;
-
-                    } catch (CacheException e) {
-                        counter.cacheManagerCloseException++;
-
-                    }
-                }
-                else if((chance -= cacheManagerdestroy) < 0){
-                    try{
-                        cacheManager.destroyCache(basename + cacheNumber);
-                        counter.cacheManagerdestroy++;
-
-                    } catch (CacheException e) {
-                        counter.cacheManagerdestroyException++;
-
-                    } catch (IllegalStateException e) {
-                        counter.cacheManagerdestroyException++;
-
-                    }
-                }
-                else if((chance -= cachingProviderClose) < 0){
-                    try{
-                        CachingProvider provider = cacheManager.getCachingProvider();
-                        if(provider!=null){
-                            provider.close();
-                            counter.cachingProviderClose++;
                         }
-                    } catch (CacheException e) {
-                        counter.cachingProviderCloseException++;
+                        break;
+                    case CREATE_CACHE_MANAGER:
+                        try{
+                            createCacheManager();
+                            counter.createCacheManager++;
 
-                    }
-                }
-                else if ((chance -= createCacheProb) < 0) {
-                    try {
-                        cacheManager.createCache(basename + cacheNumber, config);
-                        counter.create++;
+                        } catch (CacheException e) {
+                            counter.createCacheManagerException++;
 
-                    } catch (CacheException e) {
-                        counter.createException++;
-
-                    } catch (IllegalStateException e) {
-                        counter.createException++;
-
-                    }
-                }
-                else if ((chance -= putCacheProb) < 0) {
-                    Cache cache=getAcache(cacheNumber);
-
-                    try{
-                        if(cache!=null){
-                            cache.put(random.nextInt(), random.nextInt());
-                            counter.put++;
                         }
-                    } catch (CacheException e){
-                        counter.getPutException++;
+                        break;
+                    case CLOSE_CACHE_MANAGER:
+                        try{
+                            cacheManager.close();
+                            counter.cacheManagerClose++;
 
-                    } catch (IllegalStateException e){
-                        counter.getPutException++;
+                        } catch (CacheException e) {
+                            counter.cacheManagerCloseException++;
 
-                    }
-                }
-                else if ((chance -= closeCacheProb) < 0){
-                    Cache cache=getAcache(cacheNumber);
-                    try{
-                       if(cache!=null){
-                            cache.close();
-                            counter.cacheClose++;
                         }
-                    } catch (CacheException e){
-                        counter.cacheCloseException++;
+                        break;
+                    case CREATE_CACHE:
+                        try {
+                            cacheManager.createCache(basename + cacheNumber, config);
+                            counter.create++;
 
-                    } catch (IllegalStateException e){
-                        counter.cacheCloseException++;
+                        } catch (CacheException e) {
+                            counter.createException++;
 
-                    }
-                }
-                else if ((chance -= destroyCacheProb) < 0) {
-                    try{
-                        cacheManager.destroyCache(basename + cacheNumber);
-                        counter.destroy++;
+                        } catch (IllegalStateException e) {
+                            counter.createException++;
 
-                    } catch (CacheException e){
-                        counter.destroyException++;
+                        }
+                        break;
+                    case CLOSE_CACHE:
+                        Cache cache=getAcache(cacheNumber);
+                        try{
+                            if(cache!=null){
+                                cache.close();
+                                counter.cacheClose++;
+                            }
+                        } catch (CacheException e){
+                            counter.cacheCloseException++;
 
-                    } catch (IllegalStateException e){
-                        counter.destroyException++;
+                        } catch (IllegalStateException e){
+                            counter.cacheCloseException++;
 
-                    }
+                        }
+                        break;
+                    case DESTROY_CACHE:
+                        try{
+                            cacheManager.destroyCache(basename + cacheNumber);
+                            counter.destroy++;
+
+                        } catch (CacheException e){
+                            counter.destroyException++;
+
+                        } catch (IllegalStateException e){
+                            counter.destroyException++;
+
+                        }
+                        break;
+                    case PUT:
+                        cache=getAcache(cacheNumber);
+                        try{
+                            if(cache!=null){
+                                cache.put(random.nextInt(), random.nextInt());
+                                counter.put++;
+                            }
+                        } catch (CacheException e){
+                            counter.getPutException++;
+
+                        } catch (IllegalStateException e){
+                            counter.getPutException++;
+
+                        }
+                        break;
                 }
             }
             targetInstance.getList(basename).add(counter);
@@ -244,11 +255,9 @@ public class MangleICacheTest {
         public long cacheCloseException = 0;
 
         public long cacheManagerClose=0;
-        public long cacheManagerdestroy=0;
         public long cachingProviderClose=0;
 
         public long cacheManagerCloseException=0;
-        public long cacheManagerdestroyException=0;
         public long cachingProviderCloseException=0;
 
         public void add(Counter c) {
@@ -269,10 +278,8 @@ public class MangleICacheTest {
             cacheCloseException += c.cacheCloseException;
 
             cacheManagerClose += c.cacheManagerClose;
-            cacheManagerdestroy += c.cacheManagerdestroy;
             cachingProviderClose += c.cachingProviderClose;
             cacheManagerCloseException += c.cacheManagerCloseException;
-            cacheManagerdestroyException += c.cacheManagerdestroyException;
             cachingProviderCloseException += c.cachingProviderCloseException;
         }
 
@@ -291,10 +298,8 @@ public class MangleICacheTest {
                     ", destroyException=" + destroyException +
                     ", cacheCloseException=" + cacheCloseException +
                     ", cacheManagerClose=" + cacheManagerClose +
-                    ", cacheManagerdestroy=" + cacheManagerdestroy +
                     ", cachingProviderClose=" + cachingProviderClose +
                     ", cacheManagerCloseException=" + cacheManagerCloseException +
-                    ", cacheManagerdestroyException=" + cacheManagerdestroyException +
                     ", cachingProviderCloseException=" + cachingProviderCloseException +
                     '}';
         }
