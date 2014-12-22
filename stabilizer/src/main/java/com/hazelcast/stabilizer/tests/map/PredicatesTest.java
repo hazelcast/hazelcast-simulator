@@ -20,7 +20,6 @@ import com.hazelcast.stabilizer.worker.SimpleMetronome;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -105,8 +104,7 @@ public class PredicatesTest {
                     search.done();
                 } else {
                     search.started();
-                    Collection<Employee> values = map.values(sqlPredicate);
-                    System.out.println(" " + values);
+                    map.values(sqlPredicate);
                     search.done();
                 }
 
