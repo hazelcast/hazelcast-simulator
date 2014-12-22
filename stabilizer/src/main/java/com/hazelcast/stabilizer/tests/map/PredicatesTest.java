@@ -72,8 +72,8 @@ public class PredicatesTest {
             map.put(key, value);
         }
         log.info("Map size is:" + map.size());
-        log.info("Map localKeySet size is: " + map.localKeySet().size());
-
+//        log.info("Map localKeySet size is: " + map.localKeySet().size());
+//        causes problem client side
     }
 
     @Run
@@ -88,6 +88,40 @@ public class PredicatesTest {
     @Performance
     public long getOperationCount() {
         return operations.get();
+    }
+
+    private class Worker implements Runnable {
+        @Override
+        public void run() {
+            long iteration = 0;
+            Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
+            SqlPredicate sqlPredicate = new SqlPredicate(sqlQuery);
+            Predicate predicate = new AgePredicate(56);
+            while (!testContext.isStopped()) {
+                metronome.waitForNext();
+                if (customPredicate == true) {
+                    search.started();
+                    map.values(predicate);
+                    search.done();
+                } else {
+                    search.started();
+                    Collection<Employee> values = map.values(sqlPredicate);
+                    System.out.println(" " + values);
+                    search.done();
+                }
+
+                if (iteration % logFrequency == 0) {
+                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                }
+
+                if (iteration % performanceUpdateFrequency == 0) {
+                    operations.addAndGet(performanceUpdateFrequency);
+                }
+                iteration++;
+            }
+
+            //operations.set(iteration);
+        }
     }
 
     //Serialization Types
@@ -526,39 +560,4 @@ public class PredicatesTest {
                     '}';
         }
     }
-
-    private class Worker implements Runnable {
-        @Override
-        public void run() {
-            long iteration = 0;
-            Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
-            SqlPredicate sqlPredicate = new SqlPredicate(sqlQuery);
-            Predicate predicate = new AgePredicate(56);
-            while (!testContext.isStopped()) {
-                metronome.waitForNext();
-                if (customPredicate == true) {
-                    search.started();
-                    map.values(predicate);
-                    search.done();
-                } else {
-                    search.started();
-                    Collection<Employee> values = map.values(sqlPredicate);
-                    System.out.println(" " + values);
-                    search.done();
-                }
-
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
-                iteration++;
-            }
-
-            //operations.set(iteration);
-        }
-    }
-
 }
