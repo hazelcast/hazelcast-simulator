@@ -102,22 +102,23 @@ public class MangleICacheTest {
 
             while (!testContext.isStopped()) {
                 int cacheNumber = random.nextInt(maxCaches);
+
                 Operation operation = selector.select();
                 switch (operation) {
-                    case CLOSE_CACHING_PROVIDER:
-                        try{
+                    case CLOSE_CACHING_PROVIDER: {
+                        try {
                             CachingProvider provider = cacheManager.getCachingProvider();
-                            if(provider!=null){
+                            if (provider != null) {
                                 provider.close();
                                 counter.cachingProviderClose++;
                             }
                         } catch (CacheException e) {
                             counter.cachingProviderCloseException++;
-
                         }
                         break;
-                    case CREATE_CACHE_MANAGER:
-                        try{
+                    }
+                    case CREATE_CACHE_MANAGER: {
+                        try {
                             createCacheManager();
                             counter.createCacheManager++;
 
@@ -126,8 +127,9 @@ public class MangleICacheTest {
 
                         }
                         break;
-                    case CLOSE_CACHE_MANAGER:
-                        try{
+                    }
+                    case CLOSE_CACHE_MANAGER: {
+                        try {
                             cacheManager.close();
                             counter.cacheManagerClose++;
 
@@ -136,7 +138,8 @@ public class MangleICacheTest {
 
                         }
                         break;
-                    case CREATE_CACHE:
+                    }
+                    case CREATE_CACHE: {
                         try {
                             cacheManager.createCache(basename + cacheNumber, config);
                             counter.create++;
@@ -149,68 +152,82 @@ public class MangleICacheTest {
 
                         }
                         break;
-                    case CLOSE_CACHE:
-                        Cache cache=getAcache(cacheNumber);
-                        try{
-                            if(cache!=null){
+                    }
+                    case CLOSE_CACHE: {
+                        Cache cache = getCacheIfExists(cacheNumber);
+                        try {
+                            if (cache != null) {
                                 cache.close();
                                 counter.cacheClose++;
                             }
-                        } catch (CacheException e){
+                        } catch (CacheException e) {
                             counter.cacheCloseException++;
 
-                        } catch (IllegalStateException e){
+                        } catch (IllegalStateException e) {
                             counter.cacheCloseException++;
 
                         }
                         break;
-                    case DESTROY_CACHE:
-                        try{
+                    }
+                    case DESTROY_CACHE: {
+                        try {
                             cacheManager.destroyCache(basename + cacheNumber);
                             counter.destroy++;
 
-                        } catch (CacheException e){
+                        } catch (CacheException e) {
                             counter.destroyException++;
 
-                        } catch (IllegalStateException e){
+                        } catch (IllegalStateException e) {
                             counter.destroyException++;
 
                         }
                         break;
-                    case PUT:
-                        cache=getAcache(cacheNumber);
-                        try{
-                            if(cache!=null){
+                    }
+                    case PUT: {
+                        Cache cache = getCacheIfExists(cacheNumber);
+                        try {
+                            if (cache != null) {
                                 cache.put(random.nextInt(), random.nextInt());
                                 counter.put++;
                             }
-                        } catch (CacheException e){
+                        } catch (CacheException e) {
                             counter.getPutException++;
 
-                        } catch (IllegalStateException e){
+                        } catch (IllegalStateException e) {
                             counter.getPutException++;
 
                         }
                         break;
+                    }
                 }
             }
             targetInstance.getList(basename).add(counter);
         }
 
         public void createCacheManager(){
-
+            CachingProvider currentCachingProvider = null;
+            if (cacheManager != null) {
+                currentCachingProvider = cacheManager.getCachingProvider();
+                cacheManager.close();
+            }
             if (TestUtils.isMemberNode(targetInstance)) {
-                HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
+                HazelcastServerCachingProvider hcp = (HazelcastServerCachingProvider) currentCachingProvider;
+                if (hcp == null) {
+                    hcp = new HazelcastServerCachingProvider();
+                }
                 cacheManager = new HazelcastServerCacheManager(
                         hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
             } else {
-                HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
+                HazelcastClientCachingProvider hcp = (HazelcastClientCachingProvider) currentCachingProvider;
+                if (hcp == null) {
+                    hcp = new HazelcastClientCachingProvider();
+                }
                 cacheManager = new HazelcastClientCacheManager(
                         hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
             }
         }
 
-        public Cache getAcache(int cacheNumber){
+        public Cache getCacheIfExists(int cacheNumber){
             try{
                 Cache cache = cacheManager.getCache(basename + cacheNumber);
                 counter.getCache++;
