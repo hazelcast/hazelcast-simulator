@@ -45,7 +45,7 @@ public class PredicatesTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1;
     //default
-    public SerializationStrategy serializationStrategy = SerializationStrategy.DATA_SERIALIZABLE;
+    public SerializationStrategy serializationStrategy = SerializationStrategy.IDENTIFIED_DATA_SERIALIZABLE;
     public boolean customPredicate = false;
     public String sqlQuery = "age = 30 AND active = true";
     public double nameProb= 0.0;
@@ -69,9 +69,9 @@ public class PredicatesTest {
         this.map = targetInstance.getMap(basename + "-" + testContext.getTestId());
 
         selector.addOperation(PredicateType.NAME,nameProb)
-                .addOperation(PredicateType.AGE,ageProb)
-                .addOperation(PredicateType.ACTIVE,activeProb)
-                .addOperation(PredicateType.SALARY,salaryProb);
+                .addOperation(PredicateType.AGE, ageProb)
+                .addOperation(PredicateType.ACTIVE, activeProb)
+                .addOperation(PredicateType.SALARY, salaryProb);
     }
 
     @Teardown
@@ -114,40 +114,32 @@ public class PredicatesTest {
             Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
             SqlPredicate sqlPredicate = new SqlPredicate(sqlQuery);
             PredicateType type = selector.select();
+            AgePredicate agePredicate = new AgePredicate(30);
+            NamePredicate namePredicate = new NamePredicate("aaa");
+            ActivePredicate activePredicate = new ActivePredicate(true);
+            SalaryPredicate salaryPredicate = new SalaryPredicate(700.0);
             while (!testContext.isStopped()) {
                 metronome.waitForNext();
-                if (customPredicate == true) {
+                search.started();
+                if (customPredicate) {
                     switch (type){
                         case AGE:
-                            AgePredicate agePredicate = new AgePredicate(30);
-                            search.started();
                             map.values(agePredicate);
-                            search.done();
                             break;
                         case NAME:
-                            NamePredicate namePredicate = new NamePredicate("aaa");
-                            search.started();
                             map.values(namePredicate);
-                            search.done();
                             break;
                         case ACTIVE:
-                            ActivePredicate activePredicate = new ActivePredicate(true);
-                            search.started();
                             map.values(activePredicate);
-                            search.done();
                             break;
                         case SALARY:
-                            SalaryPredicate salaryPredicate = new SalaryPredicate(700.0);
-                            search.started();
                             map.values(salaryPredicate);
-                            search.done();
                             break;
                     }
                 } else {
-                    search.started();
                     map.values(sqlPredicate);
-                    search.done();
                 }
+                search.done();
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
@@ -186,7 +178,6 @@ public class PredicatesTest {
     }
 
     //Custom Predicates
-    //bigger less !!
     private static class NamePredicate implements Predicate<String, EmployeeImpl> {
         private final String name;
 
