@@ -458,7 +458,7 @@ public class MemberWorker {
                             "Can't init TestCase: %s, another test with testId [%s] already exists", command, testId
                     ));
                 }
-                if (!Utils.isValidFileName(testId)) {
+                if (!testId.isEmpty() && !Utils.isValidFileName(testId)) {
                     throw new IllegalArgumentException(format(
                             "Can't init TestCase: %s, testId [%s] is an invalid filename", command, testId
                     ));

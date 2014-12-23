@@ -54,7 +54,7 @@ public class TestSuite implements Serializable {
 
             TestCase testCase = testcases.get(testCaseId);
             if (testCase == null) {
-                if (!Utils.isValidFileName(testCaseId)) {
+                if (!testCaseId.isEmpty() && !Utils.isValidFileName(testCaseId)) {
                     throw new IllegalArgumentException(format(
                             "Can't create TestCase: testId [%s] is an invalid filename for performance log", testCaseId
                     ));
