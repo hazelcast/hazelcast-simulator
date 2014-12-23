@@ -59,7 +59,7 @@ class PerformanceMonitor extends Thread {
 
             TestStats stats = testStats.get(testId);
             if (stats == null) {
-                File testFile = new File("performance-" + testId + ".txt");
+                File testFile = new File("performance-" + (testId.isEmpty() ? "default" : testId) + ".txt");
                 writeHeaderToFile(false, testFile);
 
                 stats = new TestStats(testFile);
