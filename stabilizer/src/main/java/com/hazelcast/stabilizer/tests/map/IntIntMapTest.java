@@ -23,28 +23,23 @@ import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.probes.probes.SimpleProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.TestRunner;
-import com.hazelcast.stabilizer.tests.annotations.Performance;
-import com.hazelcast.stabilizer.tests.annotations.Run;
-import com.hazelcast.stabilizer.tests.annotations.Setup;
-import com.hazelcast.stabilizer.tests.annotations.Teardown;
-import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.annotations.*;
 import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
-import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
-import com.hazelcast.stabilizer.worker.Metronome;
-import com.hazelcast.stabilizer.worker.SimpleMetronome;
+import com.hazelcast.stabilizer.worker.OperationSelector;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class StringMapTest {
+import static com.hazelcast.stabilizer.tests.map.IntIntMapTest.Operation.*;
 
-    private final static ILogger log = Logger.getLogger(StringMapTest.class);
+public class IntIntMapTest {
 
-    //props
-    public int writePercentage = 10;
+    private final static ILogger log = Logger.getLogger(IntIntMapTest.class);
+
+    // properties
     public int threadCount = 10;
     public int keyLength = 10;
     public int valueLength = 10;
@@ -52,39 +47,35 @@ public class StringMapTest {
     public int valueCount = 10000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public boolean usePut = true;
-    public String basename = "stringmap";
+    public String basename = "intIntMap";
     public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
-    private int intervalMs;
 
-    //probes
-    public IntervalProbe getLatency;
+    public double putProb = 0.1;
+    public boolean useSet = false;
+
+    // probes
     public IntervalProbe putLatency;
-
+    public IntervalProbe getLatency;
     public SimpleProbe throughput;
-    private IMap<String, String> map;
-    private String[] keys;
-    private String[] values;
-    private final AtomicLong operations = new AtomicLong();
 
+    private IMap<Integer, Integer> map;
+    private int[] keys;
+    private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
 
     private HazelcastInstance targetInstance;
 
+    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+
+        selector.addOperation(PUT, putProb)
+                .addOperationRemainingProbability(GET);
     }
 
     @Teardown
@@ -96,12 +87,11 @@ public class StringMapTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
-        keys = KeyUtils.generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
-        values = StringUtils.generateStrings(valueCount, valueLength);
+        keys = KeyUtils.generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
 
         Random random = new Random();
-        for (String key : keys) {
-            String value = values[random.nextInt(valueCount)];
+        for (int key : keys) {
+            int value = random.nextInt(Integer.MAX_VALUE);
             map.put(key, value);
         }
     }
@@ -126,62 +116,61 @@ public class StringMapTest {
         @Override
         public void run() {
             long iteration = 0;
-            Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
             while (!testContext.isStopped()) {
-                metronome.waitForNext();
-                String key = randomKey();
 
-                if (shouldWrite(iteration)) {
-                    String value = randomValue();
-                    putLatency.started();
-                    if (usePut) {
+                int key = randomKey();
+                int value = randomValue();
+
+                switch (selector.select()) {
+                    case PUT:
+                        putLatency.started();
+                        if (useSet) {
+                            map.set(key, value);
+                        } else {
+                            map.put(key, value);
+                        }
+                        putLatency.done();
+                        break;
+                    case GET:
+                        getLatency.started();
                         map.put(key, value);
-                    } else {
-                        map.set(key, value);
-                    }
-                    putLatency.done();
-                } else {
-                    getLatency.started();
-                    map.get(key);
-                    getLatency.done();
+                        getLatency.done();
+                        break;
+                    default:
+                        throw new UnsupportedOperationException();
                 }
-
-                throughput.done();
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
+
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
+
+                throughput.done();
             }
             operations.addAndGet(iteration % performanceUpdateFrequency);
         }
 
-        private String randomValue() {
-            return values[random.nextInt(values.length)];
-        }
-
-        private String randomKey() {
+        private int randomKey() {
             int length = keys.length;
             return keys[random.nextInt(length)];
         }
 
-        private boolean shouldWrite(long iteration) {
-            if (writePercentage == 0) {
-                return false;
-            } else if (writePercentage == 100) {
-                return true;
-            } else {
-                return (iteration % 100) < writePercentage;
-            }
+        private int randomValue() {
+            return random.nextInt(Integer.MAX_VALUE);
         }
     }
 
     public static void main(String[] args) throws Throwable {
-        StringMapTest test = new StringMapTest();
-        test.writePercentage = 10;
-        new TestRunner<StringMapTest>(test).run();
+        IntIntMapTest test = new IntIntMapTest();
+        new TestRunner<IntIntMapTest>(test).run();
+    }
+
+    static enum Operation {
+        PUT,
+        GET
     }
 }

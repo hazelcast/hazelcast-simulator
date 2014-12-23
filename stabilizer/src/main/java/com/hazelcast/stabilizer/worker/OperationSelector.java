@@ -44,6 +44,20 @@ public class OperationSelector<T extends Enum<T>> {
     }
 
     /**
+     * Register new operation for selection which uses the remaining probability.
+     *
+     * @param operation operation to be selected
+     * @return this instance to allow method-chaining
+     */
+    public OperationSelector<T> addOperationRemainingProbability(T operation) {
+        if (ops.put(operation, remaining) != null) {
+            throw new IllegalStateException("Operations " + operation + " has been already added to this selector.");
+        }
+        remaining = -1;
+        return this;
+    }
+
+    /**
      * Register an operation to be returned when no operation registered via {@link #addOperation(Enum, double)} has been
      * selected.
      *
