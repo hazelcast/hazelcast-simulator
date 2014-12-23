@@ -16,7 +16,9 @@ import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.worker.Metronome;
+import com.hazelcast.stabilizer.worker.OperationSelector;
 import com.hazelcast.stabilizer.worker.SimpleMetronome;
+import sun.security.pkcs11.wrapper.PKCS11RuntimeException;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -25,6 +27,13 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PredicatesTest {
+
+    private static enum PredicateType {
+        NAME,
+        AGE,
+        ACTIVE,
+        SALARY,
+    }
 
     private final static ILogger log = Logger.getLogger(PredicatesTest.class);
     private final AtomicLong operations = new AtomicLong();
@@ -39,20 +48,30 @@ public class PredicatesTest {
     public SerializationStrategy serializationStrategy = SerializationStrategy.DATA_SERIALIZABLE;
     public boolean customPredicate = false;
     public String sqlQuery = "age = 30 AND active = true";
+    public double nameProb= 0.0;
+    public double ageProb = 1.0;
+    public double activeProb = 0.0;
+    public double salaryProb = 0.0;
 
     public String basename = this.getClass().getName();
     public IntervalProbe search;
     public int intervalMs = 0;
 
-    private IMap<String, Employee> map;
+    private IMap<String, EmployeeImpl> map;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+    private OperationSelector<PredicateType> selector = new OperationSelector<PredicateType>();
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         this.targetInstance = testContext.getTargetInstance();
         this.map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+
+        selector.addOperation(PredicateType.NAME,nameProb)
+                .addOperation(PredicateType.AGE,ageProb)
+                .addOperation(PredicateType.ACTIVE,activeProb)
+                .addOperation(PredicateType.SALARY,salaryProb);
     }
 
     @Teardown
@@ -61,18 +80,17 @@ public class PredicatesTest {
         log.info(TestUtils.getOperationCountInformation(targetInstance));
     }
 
-    @Warmup(global = false)
+    //configured true to prevent map size changes from number of clients and members' effect.
+    @Warmup(global = true)
     public void warmup() throws InterruptedException {
         Random random = new Random();
         for (int k = 0; k < keyCount; k++) {
             int id = random.nextInt();
             String key = StringUtils.generateString(keyLength);
-            Employee value = createEmployee(id);
+            EmployeeImpl value = createEmployee(id);
             map.put(key, value);
         }
         log.info("Map size is:" + map.size());
-//        log.info("Map localKeySet size is: " + map.localKeySet().size());
-//        causes problem client side
     }
 
     @Run
@@ -95,19 +113,43 @@ public class PredicatesTest {
             long iteration = 0;
             Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
             SqlPredicate sqlPredicate = new SqlPredicate(sqlQuery);
-            Predicate predicate = new AgePredicate(56);
+            PredicateType type = selector.select();
             while (!testContext.isStopped()) {
                 metronome.waitForNext();
                 if (customPredicate == true) {
-                    search.started();
-                    map.values(predicate);
-                    search.done();
+                    switch (type){
+                        case AGE:
+                            AgePredicate agePredicate = new AgePredicate(30);
+                            search.started();
+                            map.values(agePredicate);
+                            search.done();
+                            break;
+                        case NAME:
+                            NamePredicate namePredicate = new NamePredicate("aaa");
+                            search.started();
+                            map.values(namePredicate);
+                            search.done();
+                            break;
+                        case ACTIVE:
+                            ActivePredicate activePredicate = new ActivePredicate(true);
+                            search.started();
+                            map.values(activePredicate);
+                            search.done();
+                            break;
+                        case SALARY:
+                            SalaryPredicate salaryPredicate = new SalaryPredicate(700.0);
+                            search.started();
+                            map.values(salaryPredicate);
+                            search.done();
+                            break;
+                    }
                 } else {
                     search.started();
                     map.values(sqlPredicate);
                     search.done();
                 }
 
+                iteration++;
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
@@ -115,15 +157,14 @@ public class PredicatesTest {
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
-                iteration++;
-            }
 
-            //operations.set(iteration);
+            }
+            operations.addAndGet(iteration % performanceUpdateFrequency);
         }
     }
 
     //Serialization Types
-    public Employee createEmployee(int id) {
+    public EmployeeImpl createEmployee(int id) {
         switch (serializationStrategy) {
             case DATA_SERIALIZABLE:
                 return new DataSerializableEmployee(id);
@@ -144,20 +185,9 @@ public class PredicatesTest {
         PORTABLE
     }
 
-
-    public interface Employee {
-        public String getName();
-
-        public int getAge();
-
-        public double getSalary();
-
-        public boolean isActive();
-    }
-
     //Custom Predicates
     //bigger less !!
-    private static class NamePredicate implements Predicate<String, Employee> {
+    private static class NamePredicate implements Predicate<String, EmployeeImpl> {
         private final String name;
 
         private NamePredicate(String name) {
@@ -165,12 +195,12 @@ public class PredicatesTest {
         }
 
         @Override
-        public boolean apply(Map.Entry<String, Employee> entry) {
-            return entry.getValue().getName() == name;
+        public boolean apply(Map.Entry<String, EmployeeImpl> entry) {
+            return entry.getValue().getName().equals(name);
         }
     }
 
-    private static class AgePredicate implements Predicate<String, Employee> {
+    private static class AgePredicate implements Predicate<String, EmployeeImpl> {
         private final int age;
 
         public AgePredicate(int age) {
@@ -178,12 +208,12 @@ public class PredicatesTest {
         }
 
         @Override
-        public boolean apply(IMap.Entry<String, Employee> entry) {
+        public boolean apply(IMap.Entry<String, EmployeeImpl> entry) {
             return entry.getValue().getAge() == age;
         }
     }
 
-    private static class SalaryPredicate implements Predicate<String, Employee> {
+    private static class SalaryPredicate implements Predicate<String, EmployeeImpl> {
         private final double salary;
 
         private SalaryPredicate(double salary) {
@@ -191,12 +221,12 @@ public class PredicatesTest {
         }
 
         @Override
-        public boolean apply(IMap.Entry<String, Employee> entry) {
+        public boolean apply(IMap.Entry<String, EmployeeImpl> entry) {
             return entry.getValue().getSalary() == salary;
         }
     }
 
-    private static class ActivePredicate implements Predicate<String, Employee> {
+    private static class ActivePredicate implements Predicate<String, EmployeeImpl> {
         private final boolean active;
 
         private ActivePredicate(boolean active) {
@@ -204,12 +234,12 @@ public class PredicatesTest {
         }
 
         @Override
-        public boolean apply(IMap.Entry<String, Employee> entry) {
+        public boolean apply(IMap.Entry<String, EmployeeImpl> entry) {
             return entry.getValue().isActive() == active;
         }
     }
 
-    public static class DataSerializableEmployee implements DataSerializable, Employee {
+    public abstract static class EmployeeImpl {
 
         public static final int MAX_AGE = 75;
         public static final int MIN_AGE = 18;
@@ -219,32 +249,13 @@ public class PredicatesTest {
         public static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
         public static Random random = new Random();
 
-        private int id;
-        private String name;
-        private int age;
-        private boolean active;
-        private double salary;
+        protected int id;
+        protected String name;
+        protected int age;
+        protected boolean active;
+        protected double salary;
 
-        public DataSerializableEmployee(String name, int age, boolean live, double salary) {
-            this.name = name;
-            this.age = age;
-            this.active = live;
-            this.salary = salary;
-        }
-
-        public DataSerializableEmployee(int id) {
-            this.id = id;
-            randomizeProperties();
-        }
-
-        public DataSerializableEmployee() {
-        }
-
-        public void randomizeProperties() {
-            name = names[random.nextInt(names.length)];
-            age = MIN_AGE + random.nextInt(MAX_AGE);
-            active = random.nextBoolean();
-            salary = MIN_SALARY + random.nextDouble() * MAX_SALARY;
+        public EmployeeImpl() {
         }
 
         public int getId() {
@@ -265,6 +276,32 @@ public class PredicatesTest {
 
         public boolean isActive() {
             return active;
+        }
+
+        public void randomizeProperties() {
+            name = names[random.nextInt(names.length)];
+            age = MIN_AGE + random.nextInt(MAX_AGE);
+            active = random.nextBoolean();
+            salary = MIN_SALARY + random.nextDouble() * MAX_SALARY;
+        }
+
+        @Override
+        public String toString() {
+            return "EmployeeImpl{" +
+                    "id=" + id +
+                    ", name='" + name + '\'' +
+                    ", age=" + age +
+                    ", active=" + active +
+                    ", salary=" + salary +
+                    '}';
+        }
+    }
+
+    public static class DataSerializableEmployee extends EmployeeImpl implements DataSerializable {
+
+        public DataSerializableEmployee(int id) {
+            this.id = id;
+            randomizeProperties();
         }
 
         @Override
@@ -284,75 +321,12 @@ public class PredicatesTest {
             active = objectDataInput.readBoolean();
             salary = objectDataInput.readDouble();
         }
-
-        @Override
-        public String toString() {
-            return "Employee{" +
-                    "id=" + id +
-                    ", name='" + name + '\'' +
-                    ", age=" + age +
-                    ", active=" + active +
-                    ", salary=" + salary +
-                    '}';
-        }
     }
 
-    public static class IdentifiedDataSerializableEmployee implements IdentifiedDataSerializable, Employee {
-
-        public static final int MAX_AGE = 75;
-        public static final int MIN_AGE = 18;
-        public static final double MAX_SALARY = 1000.0;
-        public static final double MIN_SALARY = 1.0;
-
-        public static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
-        public static Random random = new Random();
-
-        private int id;
-        private String name;
-        private int age;
-        private boolean active;
-        private double salary;
-
-        public IdentifiedDataSerializableEmployee(String name, int age, boolean live, double salary) {
-            this.name = name;
-            this.age = age;
-            this.active = live;
-            this.salary = salary;
-        }
-
+    public static class IdentifiedDataSerializableEmployee extends EmployeeImpl implements IdentifiedDataSerializable{
         public IdentifiedDataSerializableEmployee(int id) {
             this.id = id;
             randomizeProperties();
-        }
-
-        public IdentifiedDataSerializableEmployee() {
-        }
-
-        public void randomizeProperties() {
-            name = names[random.nextInt(names.length)];
-            age = MIN_AGE + random.nextInt(MAX_AGE);
-            active = random.nextBoolean();
-            salary = MIN_SALARY + random.nextDouble() * MAX_SALARY;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getAge() {
-            return age;
-        }
-
-        public double getSalary() {
-            return salary;
-        }
-
-        public boolean isActive() {
-            return active;
         }
 
         @Override
@@ -377,147 +351,23 @@ public class PredicatesTest {
             active = objectDataInput.readBoolean();
             salary = objectDataInput.readDouble();
         }
-
-        @Override
-        public String toString() {
-            return "Employee{" +
-                    "id=" + id +
-                    ", name='" + name + '\'' +
-                    ", age=" + age +
-                    ", active=" + active +
-                    ", salary=" + salary +
-                    '}';
-        }
     }
 
-    public static class SerializableEmployee implements Serializable, Employee {
-
-        public static final int MAX_AGE = 75;
-        public static final int MIN_AGE = 18;
-        public static final double MAX_SALARY = 1000.0;
-        public static final double MIN_SALARY = 1.0;
-
-        public static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
-        public static Random random = new Random();
-
-        private int id;
-        private String name;
-        private int age;
-        private boolean active;
-        private double salary;
-
-        public SerializableEmployee(String name, int age, boolean live, double salary) {
-            this.name = name;
-            this.age = age;
-            this.active = live;
-            this.salary = salary;
-        }
+    public static class SerializableEmployee extends EmployeeImpl implements Serializable {
 
         public SerializableEmployee(int id) {
             this.id = id;
             randomizeProperties();
         }
 
-        public SerializableEmployee() {
-        }
-
-        public void randomizeProperties() {
-            name = names[random.nextInt(names.length)];
-            age = MIN_AGE + random.nextInt(MAX_AGE);
-            active = random.nextBoolean();
-            salary = MIN_SALARY + random.nextDouble() * MAX_SALARY;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getAge() {
-            return age;
-        }
-
-        public double getSalary() {
-            return salary;
-        }
-
-        public boolean isActive() {
-            return active;
-        }
-
-        @Override
-        public String toString() {
-            return "Employee{" +
-                    "id=" + id +
-                    ", name='" + name + '\'' +
-                    ", age=" + age +
-                    ", active=" + active +
-                    ", salary=" + salary +
-                    '}';
-        }
     }
 
-    public static class PortableEmployee implements Portable, Employee {
-
-        public static final int MAX_AGE = 75;
-        public static final int MIN_AGE = 18;
-        public static final double MAX_SALARY = 1000.0;
-        public static final double MIN_SALARY = 1.0;
-
-        public static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
-        public static Random random = new Random();
-
-        private int id;
-        private String name;
-        private int age;
-        private boolean active;
-        private double salary;
-
-        public PortableEmployee(String name, int age, boolean live, double salary) {
-            this.name = name;
-            this.age = age;
-            this.active = live;
-            this.salary = salary;
-        }
+    public static class PortableEmployee extends EmployeeImpl implements Portable {
 
         public PortableEmployee(int id) {
             this.id = id;
             randomizeProperties();
         }
-
-        public PortableEmployee() {
-        }
-
-        public void randomizeProperties() {
-            name = names[random.nextInt(names.length)];
-            age = MIN_AGE + random.nextInt(MAX_AGE);
-            active = random.nextBoolean();
-            salary = MIN_SALARY + random.nextDouble() * MAX_SALARY;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getAge() {
-            return age;
-        }
-
-        public double getSalary() {
-            return salary;
-        }
-
-        public boolean isActive() {
-            return active;
-        }
-
 
         @Override
         public int getFactoryId() {
@@ -545,17 +395,6 @@ public class PredicatesTest {
             age = portableReader.readInt("age");
             active = portableReader.readBoolean("active");
             salary = portableReader.readDouble("salary");
-        }
-
-        @Override
-        public String toString() {
-            return "Employee{" +
-                    "id=" + id +
-                    ", name='" + name + '\'' +
-                    ", age=" + age +
-                    ", active=" + active +
-                    ", salary=" + salary +
-                    '}';
         }
     }
 }
