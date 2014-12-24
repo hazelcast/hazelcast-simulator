@@ -10,7 +10,6 @@ import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
-import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.RefSpec;
 
 import java.io.File;
@@ -29,7 +28,7 @@ public class GitSupport {
 
     private final BuildSupport buildSupport;
     private final File baseDir;
-    private final Set<String> customRepositories;
+    private final Set<GitRepository> customRepositories;
 
     public GitSupport(BuildSupport buildSupport) {
         this(buildSupport, null);
@@ -58,16 +57,17 @@ public class GitSupport {
         return buildCache.listFiles();
     }
 
-    private Set<String> getCustomRepositories(String customRepositories) {
+    private Set<GitRepository> getCustomRepositories(String customRepositories) {
         if (customRepositories == null || customRepositories.isEmpty()) {
             return Collections.emptySet();
         }
         String[] repositoriesArray = customRepositories.split(",");
-        Set<String> repositories = new HashSet<String>(repositoriesArray.length);
+        Set<GitRepository> repositories = new HashSet<GitRepository>(repositoriesArray.length);
         for (String repository : repositoriesArray) {
             String normalized = repository.trim();
             if (!normalized.isEmpty()) {
-                repositories.add(normalized);
+                GitRepository repo = GitRepository.fromString(normalized);
+                repositories.add(repo);
             }
         }
         return Collections.unmodifiableSet(repositories);
@@ -80,34 +80,40 @@ public class GitSupport {
 
     private void syncRemoteRepositories(Git git) throws IOException {
         StoredConfig config = git.getRepository().getConfig();
-        Set<String> customRepositoriesCopy = new HashSet<String>(customRepositories);
+        Set<GitRepository> customRepositoriesCopy = new HashSet<GitRepository>(customRepositories);
 
-        Set<String> existingRemoteRepoName = config.getSubsections("remote");
-        int customRepositoriesCounter = 0;
-        for (String remoteName : existingRemoteRepoName) {
+        Set<String> existingRemoteRepoNames = config.getSubsections("remote");
+        for (String remoteName : existingRemoteRepoNames) {
             String url = config.getString("remote", remoteName, "url");
-            customRepositoriesCopy.remove(url);
-            if (isCustomRepository(remoteName)) {
-                customRepositoriesCounter++;
+            boolean isConfigured = customRepositoriesCopy.remove(new GitRepository(remoteName, url));
+            if (!isConfigured && isCustomRepository(remoteName)) {
+                removeRepository(config, remoteName);
             }
         }
 
-        for (String url : customRepositoriesCopy) {
-            String repositoryName = CUSTOM_REPOSITORY_PREFIX + customRepositoriesCounter;
-            log.info("Adding a new custom repository " + url);
-
-            customRepositoriesCounter++;
-            config.setString("remote", repositoryName, "url", url);
-            RefSpec refSpec = new RefSpec()
-                    .setForceUpdate(true)
-                    .setSourceDestination(Constants.R_HEADS + "*", Constants.R_REMOTES + repositoryName + "/*");
-            config.setString("remote", repositoryName, "fetch", refSpec.toString());
+        for (GitRepository repository : customRepositoriesCopy) {
+            addRepository(config, repository);
         }
         config.save();
     }
 
+    private void addRepository(StoredConfig config, GitRepository repository) {
+        String url = repository.getUrl();
+        String name = repository.getName();
+        log.info("Adding a new custom repository " + url);
+        config.setString("remote", name, "url", url);
+        RefSpec refSpec = new RefSpec()
+                .setForceUpdate(true)
+                .setSourceDestination(Constants.R_HEADS + "*", Constants.R_REMOTES + name + "/*");
+        config.setString("remote", name, "fetch", refSpec.toString());
+    }
+
+    private void removeRepository(StoredConfig config, String remoteName) {
+        config.unsetSection("remote", remoteName);
+    }
+
     private boolean isCustomRepository(String remoteName) {
-        return remoteName.startsWith(CUSTOM_REPOSITORY_PREFIX);
+        return !remoteName.equals("origin");
     }
 
     private String fetchSources(File path, String revision) {

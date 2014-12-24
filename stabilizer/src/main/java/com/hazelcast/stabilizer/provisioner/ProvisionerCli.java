@@ -15,10 +15,12 @@ public class ProvisionerCli {
     public final OptionParser parser = new OptionParser();
 
     private final OptionSpec<String> gitSpec = parser.accepts("git",
-            "Override the HAZELCAST_VERSION_SPEC property and force Provisioner to build " +
+            "Overrides the HAZELCAST_VERSION_SPEC property and forces Provisioner to build " +
                     "Hazelcast JARs from a given GIT version. This makes it easier to run a test " +
                     "with different versions of Hazelcast. \n " +
-                    "E.g. --git f0288f713 will use the Git revision f0288f713.")
+                    "E.g. --git f0288f713                to use the Git revision f0288f713 \n" +
+                    "     --git myRepository/myBranch    to use branch myBranch from a repository myRepository. " +
+                    "You can specify custom repositories in stabilizer.properties.")
             .withRequiredArg().ofType(String.class);
 
     public final OptionSpec restartSpec = parser.accepts("restart",
