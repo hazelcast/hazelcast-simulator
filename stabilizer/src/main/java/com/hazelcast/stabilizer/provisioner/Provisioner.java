@@ -8,6 +8,9 @@ import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.GitInfo;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
+import com.hazelcast.stabilizer.provisioner.git.BuildSupport;
+import com.hazelcast.stabilizer.provisioner.git.GitSupport;
+import com.hazelcast.stabilizer.provisioner.git.HazelcastJARFinder;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
@@ -62,12 +65,22 @@ public class Provisioner {
         }
         addresses.addAll(AgentsFile.load(agentsFile));
         bash = new Bash(props);
-        hazelcastJars = new HazelcastJars(bash, props.getHazelcastVersionSpec());
+
+        GitSupport gitSupport = createGitSupport();
+        hazelcastJars = new HazelcastJars(bash, gitSupport, props.getHazelcastVersionSpec());
 
         initScript = new File("init.sh");
         if (!initScript.exists()) {
             initScript = new File(CONF_DIR + "/init.sh");
         }
+    }
+
+    private GitSupport createGitSupport() {
+        String mvnExec = props.get("MVN_EXECUTABLE");
+        BuildSupport buildSupport = new BuildSupport(bash, new HazelcastJARFinder(), mvnExec);
+        String gitBuildDirectory = props.get("GIT_BUILD_DIR");
+        String customGitRepositories = props.get("GIT_CUSTOM_REPOSITORIES");
+        return new GitSupport(buildSupport, customGitRepositories, gitBuildDirectory);
     }
 
     void installAgent(String ip) {

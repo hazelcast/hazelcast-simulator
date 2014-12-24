@@ -3,6 +3,7 @@ package com.hazelcast.stabilizer.provisioner;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.provisioner.git.GitSupport;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,6 +12,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static java.lang.String.format;
 
 /**
@@ -20,13 +22,15 @@ public class HazelcastJars {
 
     private final static ILogger log = Logger.getLogger(HazelcastJars.class);
     private final Bash bash;
+    private final GitSupport gitSupport;
     private final String versionSpec;
 
     private File hazelcastJarsDir;
 
-    public HazelcastJars(Bash bash, String versionSpec) {
+    public HazelcastJars(Bash bash, GitSupport gitSupport, String versionSpec) {
         this.bash = bash;
         this.versionSpec = versionSpec;
+        this.gitSupport = gitSupport;
     }
 
     public String getAbsolutePath() {
@@ -46,20 +50,30 @@ public class HazelcastJars {
             //we don't need to do anything
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);
-
-            if(eejars){
+            if (eejars) {
                 mavenRetrieve("hazelcast-enterprise", version);
                 mavenRetrieve("hazelcast-enterprise-client", version);
-            }else{
+            } else {
                 mavenRetrieve("hazelcast", version);
                 mavenRetrieve("hazelcast-client", version);
             }
-
+        } else if (versionSpec.startsWith("git=")) {
+            if (eejars) {
+                exitWithError(log, "Hazelcast Enterprise is currently not supported when HAZELCAST_VERSION_SPEC is set to GIT.");
+            }
+            String revision = versionSpec.substring("git=".length());
+            gitRetrieve(revision);
         } else {
             log.severe("Unrecognized version spec:" + versionSpec);
             System.exit(1);
         }
     }
+
+    private void gitRetrieve(String revision) {
+        File[] files = gitSupport.checkout(revision);
+        Utils.copyFilesToDirectory(files, hazelcastJarsDir.getAbsoluteFile());
+    }
+
 
     private void mavenRetrieve(String artifact, String version) {
         File userhome = new File(System.getProperty("user.home"));
