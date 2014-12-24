@@ -14,6 +14,13 @@ public class ProvisionerCli {
 
     public final OptionParser parser = new OptionParser();
 
+    private final OptionSpec<String> gitSpec = parser.accepts("git",
+            "Override the HAZELCAST_VERSION_SPEC property and force Provisioner to build " +
+                    "Hazelcast JARs from a given GIT version. This makes it easier to run a test " +
+                    "with different versions of Hazelcast. \n " +
+                    "E.g. --git f0288f713 will use the Git revision f0288f713.")
+            .withRequiredArg().ofType(String.class);
+
     public final OptionSpec restartSpec = parser.accepts("restart",
             "Restarts all agents");
 
@@ -48,7 +55,7 @@ public class ProvisionerCli {
     ).withRequiredArg().ofType(String.class);
 
     private final OptionSpec<Boolean> enterpriseEnabledSpec = parser.accepts("enterpriseEnabled",
-            "use hazelcast enterprise edition jars")
+            "Use hazelcast enterprise edition JARs.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     private final Provisioner provisioner;
@@ -72,8 +79,13 @@ public class ProvisionerCli {
         }
 
         provisioner.props.init(getPropertiesFile());
-        provisioner.init();
 
+        if (options.has(gitSpec)) {
+            String git = options.valueOf(gitSpec);
+            provisioner.props.forceGit(git);
+        }
+
+        provisioner.init();
         if (options.has(restartSpec)) {
             boolean enterpriseEnabled = options.valueOf(enterpriseEnabledSpec);
             provisioner.restart(enterpriseEnabled);

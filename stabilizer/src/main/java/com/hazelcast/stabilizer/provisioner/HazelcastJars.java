@@ -19,6 +19,8 @@ import static java.lang.String.format;
  * Responsible for uploading the correct Hazelcast jars to the agents/workers.
  */
 public class HazelcastJars {
+    public static final String GIT_VERSION_PREFIX = "git=";
+    public static final String MAVEN_VERSION_PREFIX = "maven=";
 
     private final static ILogger log = Logger.getLogger(HazelcastJars.class);
     private final Bash bash;
@@ -48,8 +50,8 @@ public class HazelcastJars {
             //we don't need to do anything.
         } else if (versionSpec.equals("bringmyown")) {
             //we don't need to do anything
-        } else if (versionSpec.startsWith("maven=")) {
-            String version = versionSpec.substring(6);
+        } else if (versionSpec.startsWith(MAVEN_VERSION_PREFIX)) {
+            String version = versionSpec.substring(MAVEN_VERSION_PREFIX.length());
             if (eejars) {
                 mavenRetrieve("hazelcast-enterprise", version);
                 mavenRetrieve("hazelcast-enterprise-client", version);
@@ -57,11 +59,11 @@ public class HazelcastJars {
                 mavenRetrieve("hazelcast", version);
                 mavenRetrieve("hazelcast-client", version);
             }
-        } else if (versionSpec.startsWith("git=")) {
+        } else if (versionSpec.startsWith(GIT_VERSION_PREFIX)) {
             if (eejars) {
                 exitWithError(log, "Hazelcast Enterprise is currently not supported when HAZELCAST_VERSION_SPEC is set to GIT.");
             }
-            String revision = versionSpec.substring("git=".length());
+            String revision = versionSpec.substring(GIT_VERSION_PREFIX.length());
             gitRetrieve(revision);
         } else {
             log.severe("Unrecognized version spec:" + versionSpec);
