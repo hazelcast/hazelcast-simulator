@@ -317,7 +317,7 @@ public class PredicatesTest {
         }
     }
 
-    public class EmployeeDataSerializableFactory implements DataSerializableFactory{
+    public static class EmployeeDataSerializableFactory implements DataSerializableFactory{
 
         public static final int FACTORY_ID = 3000;
 
@@ -377,7 +377,7 @@ public class PredicatesTest {
 
     }
 
-    public class PortableEmployeeFactory implements PortableFactory {
+    public static class PortableEmployeeFactory implements PortableFactory {
 
         public static final int FACTORY_ID = 300000;
 

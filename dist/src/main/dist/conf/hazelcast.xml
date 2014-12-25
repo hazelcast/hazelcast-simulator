@@ -48,7 +48,7 @@
         <portable-version>1</portable-version>
         <data-serializable-factories>
             <data-serializable-factory factory-id="3000">
-                com.hazelcast.stabilizer.tests.map.PredicatesTest.EmployeeDataSerializableFactory
+                com.hazelcast.stabilizer.tests.map.PredicatesTest$EmployeeDataSerializableFactory
             </data-serializable-factory>
             <data-serializable-factory factory-id="2000">
                 com.hazelcast.stabilizer.tests.backpressure.SyntheticSerializableFactory
@@ -59,7 +59,7 @@
                 com.hazelcast.stabilizer.tests.backpressure.SyntheticRequestPortableFactory
             </portable-factory>
             <portable-factory factory-id="300000">
-                com.hazelcast.stabilizer.tests.map.PredicatesTest.PortableEmployeeFactory
+                com.hazelcast.stabilizer.tests.map.PredicatesTest$PortableEmployeeFactory
             </portable-factory>
         </portable-factories>
     </serialization>
