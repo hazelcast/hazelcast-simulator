@@ -1,5 +1,7 @@
 package com.hazelcast.stabilizer.tests.map;
 
+import com.hazelcast.config.Config;
+import com.hazelcast.config.SerializationConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
@@ -11,6 +13,7 @@ import com.hazelcast.query.Predicate;
 import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.tests.TestRunner;
 import com.hazelcast.stabilizer.tests.annotations.*;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.TestUtils;
@@ -249,7 +252,7 @@ public class PredicatesTest {
         public EmployeeImpl() {
         }
 
-        public int getId() {
+        public int getEmployeeId() {
             return id;
         }
 
@@ -314,7 +317,22 @@ public class PredicatesTest {
         }
     }
 
+    public class EmployeeDataSerializableFactory implements DataSerializableFactory{
+
+        public static final int FACTORY_ID = 3000;
+
+        @Override
+        public IdentifiedDataSerializable create(int i) {
+                return new IdentifiedDataSerializableEmployee();
+        }
+    }
+
+
     public static class IdentifiedDataSerializableEmployee extends EmployeeImpl implements IdentifiedDataSerializable{
+
+        public IdentifiedDataSerializableEmployee() {
+        }
+
         public IdentifiedDataSerializableEmployee(int id) {
             this.id = id;
             randomizeProperties();
@@ -322,8 +340,14 @@ public class PredicatesTest {
 
         @Override
         public int getFactoryId() {
+            return EmployeeDataSerializableFactory.FACTORY_ID;
+        }
+
+        @Override
+        public int getId() {
             return 0;
         }
+
 
         @Override
         public void writeData(ObjectDataOutput objectDataOutput) throws IOException {
@@ -353,7 +377,21 @@ public class PredicatesTest {
 
     }
 
+    public class PortableEmployeeFactory implements PortableFactory {
+
+        public static final int FACTORY_ID = 300000;
+
+        @Override
+        public PortableEmployee create(int i){
+            return new PortableEmployee();
+        }
+    }
+
+
     public static class PortableEmployee extends EmployeeImpl implements Portable {
+
+        public PortableEmployee() {
+        }
 
         public PortableEmployee(int id) {
             this.id = id;
@@ -362,7 +400,7 @@ public class PredicatesTest {
 
         @Override
         public int getFactoryId() {
-            return 0;
+            return PortableEmployeeFactory.FACTORY_ID;
         }
 
         @Override
@@ -387,5 +425,10 @@ public class PredicatesTest {
             active = portableReader.readBoolean("active");
             salary = portableReader.readDouble("salary");
         }
+    }
+
+    public static void main(String[] args) throws Throwable {
+        PredicatesTest test = new PredicatesTest();
+        new TestRunner<PredicatesTest>(test).run();
     }
 }
