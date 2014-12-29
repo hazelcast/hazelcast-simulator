@@ -142,6 +142,8 @@ public class PredicatesTest {
                         case SALARY:
                             map.values(salaryPredicate);
                             break;
+                        default:
+                            log.severe("There is no predicate type like this");
                     }
                 } else {
                     map.values(sqlPredicate);
@@ -186,7 +188,8 @@ public class PredicatesTest {
 
         @Override
         public boolean apply(Map.Entry<String, EmployeeImpl> entry) {
-            return entry.getValue().getName().equals(name);
+            EmployeeImpl value = entry.getValue();
+            return value.getName().equals(name);
         }
     }
 
@@ -199,7 +202,8 @@ public class PredicatesTest {
 
         @Override
         public boolean apply(IMap.Entry<String, EmployeeImpl> entry) {
-            return entry.getValue().getAge() == age;
+            EmployeeImpl value = entry.getValue();
+            return value.getAge() == age;
         }
     }
 
@@ -212,7 +216,8 @@ public class PredicatesTest {
 
         @Override
         public boolean apply(IMap.Entry<String, EmployeeImpl> entry) {
-            return entry.getValue().getSalary() == salary;
+            EmployeeImpl value = entry.getValue();
+            return value.getSalary() == salary;
         }
     }
 
@@ -225,7 +230,8 @@ public class PredicatesTest {
 
         @Override
         public boolean apply(IMap.Entry<String, EmployeeImpl> entry) {
-            return entry.getValue().isActive() == active;
+            EmployeeImpl value = entry.getValue();
+            return value.isActive() == active;
         }
     }
 
