@@ -344,7 +344,7 @@ public class PredicatesTest {
 
         @Override
         public int getId() {
-            return 1;
+            return 0;
         }
 
         @Override
@@ -403,7 +403,7 @@ public class PredicatesTest {
 
         @Override
         public int getClassId() {
-            return 0;
+            return 1;
         }
 
         @Override
