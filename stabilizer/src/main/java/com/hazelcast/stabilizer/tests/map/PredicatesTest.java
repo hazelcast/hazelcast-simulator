@@ -44,7 +44,7 @@ public class PredicatesTest {
     public int keyCount = 10000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1;
-    
+
     //default
     /**
     DATA_SERIALIZABLE = 1
@@ -289,6 +289,9 @@ public class PredicatesTest {
 
     public static class DataSerializableEmployee extends EmployeeImpl implements DataSerializable {
 
+        public DataSerializableEmployee() {
+        }
+
         public DataSerializableEmployee(int id) {
             this.id = id;
             randomizeProperties();
@@ -341,9 +344,8 @@ public class PredicatesTest {
 
         @Override
         public int getId() {
-            return 0;
+            return 1;
         }
-
 
         @Override
         public void writeData(ObjectDataOutput objectDataOutput) throws IOException {
