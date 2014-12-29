@@ -1,7 +1,5 @@
 package com.hazelcast.stabilizer.tests.map;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.SerializationConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
@@ -21,7 +19,6 @@ import com.hazelcast.stabilizer.tests.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.worker.Metronome;
 import com.hazelcast.stabilizer.worker.OperationSelector;
 import com.hazelcast.stabilizer.worker.SimpleMetronome;
-import sun.security.pkcs11.wrapper.PKCS11RuntimeException;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -47,8 +44,15 @@ public class PredicatesTest {
     public int keyCount = 10000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1;
+    
     //default
-    public SerializationStrategy serializationStrategy = SerializationStrategy.IDENTIFIED_DATA_SERIALIZABLE;
+    /**
+    DATA_SERIALIZABLE = 1
+    JAVA_SERIALIZABLE = 2
+    IDENTIFIED_DATA_SERIALIZABLE = 3
+    PORTABLE = 4
+    */
+    public int serializationStrategyWithNumber = 3;
     public boolean customPredicate = false;
     public String sqlQuery = "age = 30 AND active = true";
     public double nameProb= 0.0;
@@ -158,26 +162,18 @@ public class PredicatesTest {
         }
     }
 
-    //Serialization Types
     public EmployeeImpl createEmployee(int id) {
-        switch (serializationStrategy) {
-            case DATA_SERIALIZABLE:
+        switch (serializationStrategyWithNumber) {
+            case 1:
                 return new DataSerializableEmployee(id);
-            case JAVA_SERIALIZABLE:
+            case 2:
                 return new SerializableEmployee(id);
-            case IDENTIFIED_DATA_SERIALIZABLE:
+            case 3:
                 return new IdentifiedDataSerializableEmployee(id);
-            case PORTABLE:
+            case 4:
                 return new PortableEmployee(id);
         }
         return null;
-    }
-
-    private static enum SerializationStrategy {
-        DATA_SERIALIZABLE,
-        JAVA_SERIALIZABLE,
-        IDENTIFIED_DATA_SERIALIZABLE,
-        PORTABLE
     }
 
     //Custom Predicates
