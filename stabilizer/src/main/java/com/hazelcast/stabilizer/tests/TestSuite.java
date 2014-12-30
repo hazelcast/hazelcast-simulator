@@ -16,6 +16,7 @@
 package com.hazelcast.stabilizer.tests;
 
 import com.hazelcast.stabilizer.TestCase;
+import com.hazelcast.stabilizer.Utils;
 
 import java.io.File;
 import java.io.Serializable;
@@ -53,6 +54,12 @@ public class TestSuite implements Serializable {
 
             TestCase testCase = testcases.get(testCaseId);
             if (testCase == null) {
+                if (!testCaseId.isEmpty() && !Utils.isValidFileName(testCaseId)) {
+                    throw new IllegalArgumentException(format(
+                            "Can't create TestCase: testId [%s] is an invalid filename for performance log", testCaseId
+                    ));
+                }
+
                 testCase = new TestCase();
                 testCase.id = testCaseId;
                 testcases.put(testCaseId, testCase);
@@ -73,13 +80,13 @@ public class TestSuite implements Serializable {
 
             if (testcase.getClassname() == null) {
                 if ("".equals(testcaseId)) {
-                    throw new BindException(format("There is no class set for the in property file [%s]. " +
-                                    "Add class=YourTestClass",
+                    throw new BindException(format(
+                            "There is no class set for the in property file [%s]. Add class=YourTestClass",
                             file.getAbsolutePath()
                     ));
                 } else {
-                    throw new BindException(format("There is no class set for test [%s] in property file [%s]. " +
-                                    "Add %s.class=YourTestClass",
+                    throw new BindException(format(
+                            "There is no class set for test [%s] in property file [%s]. Add %s.class=YourTestClass",
                             testcaseId, file.getAbsolutePath(), testcaseId
                     ));
                 }
@@ -95,7 +102,7 @@ public class TestSuite implements Serializable {
         overrideProperties = overrideProperties.trim();
 
         Map<String, String> result = new HashMap<String, String>();
-        if(overrideProperties.isEmpty()){
+        if (overrideProperties.isEmpty()){
             return result;
         }
 

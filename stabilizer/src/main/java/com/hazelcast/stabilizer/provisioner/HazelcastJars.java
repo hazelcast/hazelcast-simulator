@@ -33,7 +33,7 @@ public class HazelcastJars {
         return hazelcastJarsDir.getAbsolutePath();
     }
 
-    public void prepare() {
+    public void prepare(boolean eejars) {
         File tmpDir = new File(System.getProperty("java.io.tmpdir"));
         hazelcastJarsDir = new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString());
         hazelcastJarsDir.mkdirs();
@@ -46,8 +46,15 @@ public class HazelcastJars {
             //we don't need to do anything
         } else if (versionSpec.startsWith("maven=")) {
             String version = versionSpec.substring(6);
-            mavenRetrieve("hazelcast", version);
-            mavenRetrieve("hazelcast-client", version);
+
+            if(eejars){
+                mavenRetrieve("hazelcast-enterprise", version);
+                mavenRetrieve("hazelcast-enterprise-client", version);
+            }else{
+                mavenRetrieve("hazelcast", version);
+                mavenRetrieve("hazelcast-client", version);
+            }
+
         } else {
             log.severe("Unrecognized version spec:" + versionSpec);
             System.exit(1);
