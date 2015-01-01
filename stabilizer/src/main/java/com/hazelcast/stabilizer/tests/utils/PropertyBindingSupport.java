@@ -163,6 +163,13 @@ public final class PropertyBindingSupport {
                 } else {
                     field.set(object, Double.parseDouble(value));
                 }
+            }else if (field.getType().isAssignableFrom(Class.class)) {
+                // class
+                if ("null".equals(value)) {
+                    field.set(object, null);
+                } else {
+                    field.set(object, PropertyBindingSupport.class.getClassLoader().loadClass(value));
+                }
             } else if (String.class.equals(field.getType())) {
                 //string
                 if ("null".equals(value)) {

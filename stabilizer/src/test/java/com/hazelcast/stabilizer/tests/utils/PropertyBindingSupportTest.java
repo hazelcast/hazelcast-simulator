@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport.bindProperty;
@@ -23,6 +24,17 @@ public class PropertyBindingSupportTest {
 
         bindProperty(someObject, "stringField", "foo");
         assertEquals(someObject.stringField, "foo");
+    }
+
+    @Test
+    public void bindProperty_class() throws IllegalAccessException {
+        SomeObject someObject = new SomeObject();
+
+        bindProperty(someObject, "clazz", "null");
+        assertNull(someObject.clazz);
+
+        bindProperty(someObject, "clazz", ArrayList.class.getName());
+        assertEquals(someObject.clazz, ArrayList.class);
     }
 
     @Test
@@ -120,6 +132,7 @@ public class PropertyBindingSupportTest {
         private Object objectField;
         public OtherObject otherObject = new OtherObject();
         public OtherObject nullOtherObject;
+        public Class clazz;
     }
 
     class OtherObject {
