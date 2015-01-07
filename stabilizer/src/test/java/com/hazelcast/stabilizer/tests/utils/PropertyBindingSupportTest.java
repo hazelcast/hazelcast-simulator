@@ -94,13 +94,6 @@ public class PropertyBindingSupportTest {
         bindProperty(someObject, "notexist", "null");
     }
 
-    @Test(expected = BindException.class)
-    public void bindProperty_unhandeledType() throws IllegalAccessException {
-        SomeObject someObject = new SomeObject();
-
-        bindProperty(someObject, "objectField", "null");
-    }
-
     @Test
     public void bindProperty_withPath() throws IllegalAccessException {
         SomeObject someObject = new SomeObject();
