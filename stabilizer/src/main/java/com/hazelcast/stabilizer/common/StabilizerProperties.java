@@ -3,6 +3,7 @@ package com.hazelcast.stabilizer.common;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.provisioner.HazelcastJars;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,11 +24,13 @@ public class StabilizerProperties {
     private final static ILogger log = Logger.getLogger(StabilizerProperties.class);
 
     private final Properties properties = new Properties();
+    private String hazelcastVersionSpec = "outofthebox";
 
     public StabilizerProperties() {
         File defaultPropsFile = newFile(getStablizerHome(), "conf", "stabilizer.properties");
         log.finest("Loading default stabilizer.properties from: " + defaultPropsFile.getAbsolutePath());
         load(defaultPropsFile);
+        hazelcastVersionSpec = get("HAZELCAST_VERSION_SPEC", "outofthebox");
     }
 
     public String getUser() {
@@ -39,7 +42,14 @@ public class StabilizerProperties {
     }
 
     public String getHazelcastVersionSpec() {
-        return get("HAZELCAST_VERSION_SPEC", "outofthebox");
+        return hazelcastVersionSpec;
+    }
+
+    public void forceGit(String gitRevision) {
+        if (gitRevision != null && !gitRevision.isEmpty()) {
+            hazelcastVersionSpec = HazelcastJars.GIT_VERSION_PREFIX + gitRevision;
+            log.info("Overriding Hazelcast version to GIT revision " + gitRevision);
+        }
     }
 
     /**

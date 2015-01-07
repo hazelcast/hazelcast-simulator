@@ -15,6 +15,7 @@
  */
 package com.hazelcast.stabilizer;
 
+import com.google.common.io.Files;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
@@ -534,6 +535,11 @@ public final class Utils {
         System.exit(1);
     }
 
+    public static void exitWithError(ILogger logger, String msg, Throwable t) {
+        String throwableString = throwableToString(t);
+        exitWithError(log, msg + "\n" + throwableString);
+    }
+
 
     private Utils() {
     }
@@ -647,5 +653,22 @@ public final class Utils {
         }
 
         return files;
+    }
+
+    public static void copyFilesToDirectory(File[] sourceFiles, File targetDirectory) {
+        for (File sourceFile : sourceFiles) {
+            copyFileToDirectory(sourceFile, targetDirectory);
+        }
+    }
+
+    public static void copyFileToDirectory(File sourceFile, File targetDirectory) {
+        File targetFile = Utils.newFile(targetDirectory, sourceFile.getName());
+        try {
+            Files.copy(sourceFile, targetFile);
+        } catch (IOException e) {
+            String errorMessage = format("Error while copying file from %s to %s",
+                    sourceFile.getAbsolutePath(), targetFile.getAbsolutePath());
+            exitWithError(log, errorMessage, e);
+        }
     }
 }
