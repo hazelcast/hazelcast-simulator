@@ -13,6 +13,7 @@ import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.*;
+import com.hazelcast.stabilizer.tests.map.helpers.Employee;
 import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
@@ -114,7 +115,7 @@ public class SqlPredicateTest {
         }
     }
 
-    private static class FalsePredicate implements Predicate, DataSerializable{
+    private static class FalsePredicate implements Predicate<Integer,Employee>, DataSerializable{
         @Override
         public void writeData(ObjectDataOutput out) throws IOException {
 
@@ -126,7 +127,8 @@ public class SqlPredicateTest {
         }
 
         @Override
-        public boolean apply(Map.Entry mapEntry) {
+        public boolean apply(Map.Entry<Integer,Employee> mapEntry) {
+            mapEntry.getValue();
             return false;
         }
     }
