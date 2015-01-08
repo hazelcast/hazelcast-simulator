@@ -50,6 +50,8 @@ public class MapPredicateTest {
     public double destroyProb = 0.1;
     public int pageSize = 5;
 
+
+    private IMap<Integer, Employee> map;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private OperationSelector<Operation> selector = new OperationSelector<Operation>();
@@ -64,6 +66,7 @@ public class MapPredicateTest {
                 .addOperation(Operation.PAGING_PREDICATE, pagePred)
                 .addOperation(Operation.UPDATE_EMPLOYEE, updateEmployee)
                 .addOperation(Operation.DESTROY, destroyProb);
+        map = targetInstance.getMap(basename);
     }
 
     @Warmup(global = true)
@@ -72,7 +75,6 @@ public class MapPredicateTest {
     }
 
     private void initMap() {
-        IMap map = targetInstance.getMap(basename);
 
         for (int i = 0; i < keyCount; i++) {
             Employee e = new Employee(i);
@@ -105,6 +107,8 @@ public class MapPredicateTest {
                             final int age = random.nextInt(Employee.MAX_AGE);
                             final String name = Employee.names[random.nextInt(Employee.names.length)];
 
+                            // TODO: This is still broken because it relies on reflection and that is dog slow.
+                            // So you need to make of an explicit AgeNamePredicate.
                             EntryObject entryObject = new PredicateBuilder().getEntryObject();
                             Predicate predicate1 = entryObject.get("age").lessThan(age);
                             Predicate predicate = entryObject.get("name").equal(name).and(predicate1);
@@ -184,5 +188,7 @@ public class MapPredicateTest {
         }
         log.info(basename + " " + total + " from " + counters.size()+" worker threads");
     }
+
+
 
 }
