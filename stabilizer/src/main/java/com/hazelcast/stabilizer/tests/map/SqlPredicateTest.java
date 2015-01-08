@@ -6,14 +6,11 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.DataSerializable;
-import com.hazelcast.query.Predicate;
 import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.tests.TestContext;
 import com.hazelcast.stabilizer.tests.annotations.*;
-import com.hazelcast.stabilizer.tests.map.helpers.Employee;
 import com.hazelcast.stabilizer.tests.map.helpers.KeyUtils;
 import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
 import com.hazelcast.stabilizer.tests.utils.KeyLocality;
@@ -23,7 +20,6 @@ import com.hazelcast.stabilizer.worker.Metronome;
 import com.hazelcast.stabilizer.worker.SimpleMetronome;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -93,7 +89,7 @@ public class SqlPredicateTest {
         public void run() {
             long iteration = 0;
             Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
-            FalsePredicate sqlPredicate = new FalsePredicate();
+            SqlPredicate sqlPredicate = new SqlPredicate(sql);
 
             while (!testContext.isStopped()) {
                 metronome.waitForNext();
@@ -112,24 +108,6 @@ public class SqlPredicateTest {
             }
 
             //operations.set(iteration);
-        }
-    }
-
-    private static class FalsePredicate implements Predicate<Integer,Employee>, DataSerializable{
-        @Override
-        public void writeData(ObjectDataOutput out) throws IOException {
-
-        }
-
-        @Override
-        public void readData(ObjectDataInput in) throws IOException {
-
-        }
-
-        @Override
-        public boolean apply(Map.Entry<Integer,Employee> mapEntry) {
-            mapEntry.getValue();
-            return false;
         }
     }
 
