@@ -15,7 +15,7 @@
  */
 package com.hazelcast.stabilizer.worker.commands;
 
-import com.hazelcast.stabilizer.TestCase;
+import com.hazelcast.stabilizer.test.TestCase;
 
 public class InitCommand extends Command {
 

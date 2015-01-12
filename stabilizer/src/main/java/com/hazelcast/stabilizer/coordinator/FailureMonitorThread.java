@@ -2,7 +2,7 @@ package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.Failure;
+import com.hazelcast.stabilizer.test.Failure;
 
 import java.io.File;
 import java.util.List;

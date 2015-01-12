@@ -1,9 +1,9 @@
 package com.hazelcast.stabilizer.worker;
 
-import com.hazelcast.stabilizer.TestCase;
+import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.tests.BindException;
-import com.hazelcast.stabilizer.tests.TestSuite;
+import com.hazelcast.stabilizer.test.exceptions.BindException;
+import com.hazelcast.stabilizer.test.TestSuite;
 import org.junit.Test;
 
 import java.io.File;
