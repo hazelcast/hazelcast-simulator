@@ -24,6 +24,11 @@ import static com.hazelcast.stabilizer.test.utils.TestUtils.isMemberNode;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
 
+/**
+ * This test operates on a map which has a MapStore Configured.
+ * we use map operations such as put, get delete with some proablity distribution to trigger mapStore methods.
+ * we verify that the the key values in the map are also "persisted" into the mapStore
+ */
 public class MapStoreTest {
 
     private final static ILogger log = Logger.getLogger(MapStoreTest.class);
@@ -182,7 +187,7 @@ public class MapStoreTest {
                     }
 
                 }
-            }, 120);
+            });
         }
     }
 
