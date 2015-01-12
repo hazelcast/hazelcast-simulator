@@ -23,6 +23,7 @@ import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.HazelcastInstanceImpl;
 import com.hazelcast.instance.HazelcastInstanceProxy;
+import com.hazelcast.instance.MemberImpl;
 import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -176,6 +177,10 @@ public class TestUtils {
         }
 
         Map<Member, Long> result = new HashMap<Member, Long>();
+        for(Member member: futures.keySet()){
+            result.put(member, 0l);
+        }
+
         for (Map.Entry<Member, Future<Long>> entry : futures.entrySet()) {
             try {
                 Member member = entry.getKey();
