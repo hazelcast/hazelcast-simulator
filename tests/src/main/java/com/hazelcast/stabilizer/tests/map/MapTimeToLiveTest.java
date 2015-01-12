@@ -21,6 +21,8 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
+import com.hazelcast.stabilizer.test.utils.AssertTask;
+import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
@@ -28,10 +30,12 @@ import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import junit.framework.Assert;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 
 public class MapTimeToLiveTest {
@@ -114,7 +118,6 @@ public class MapTimeToLiveTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        Thread.sleep(maxTTLExpireyMs * 10);
 
         IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
         MapOperationsCount total = new MapOperationsCount();
@@ -125,15 +128,12 @@ public class MapTimeToLiveTest {
 
         final IMap map = targetInstance.getMap(basename);
 
-        for (int i = 0; i < 10; i++) {
-            if (map.size() != 0) {
-                log.info(basename + ": map size=" + map.size());
-                // todo: why this huge sleep
-                Thread.sleep(9000);
+        TestUtils.assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                assertEquals(basename + ": Map Size not 0, some TTL events not processed", 0, map.size());
             }
-        }
-
-        assertEquals(basename + ": Map Size not 0, some TTL events not processed", 0, map.size());
+        }, 300);
     }
 
 
