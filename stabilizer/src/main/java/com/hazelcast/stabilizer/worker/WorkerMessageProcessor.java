@@ -7,7 +7,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
-import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.test.TestContext;
 
 import java.util.Iterator;
 import java.util.Random;

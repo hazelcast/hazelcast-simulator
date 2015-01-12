@@ -8,8 +8,8 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.messaging.Message;
-import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.tests.TestSuite;
+import com.hazelcast.stabilizer.test.Failure;
+import com.hazelcast.stabilizer.test.TestSuite;
 import com.hazelcast.stabilizer.worker.commands.Command;
 import org.apache.log4j.Logger;
 

@@ -4,8 +4,8 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.tests.TestSuite;
+import com.hazelcast.stabilizer.test.Failure;
+import com.hazelcast.stabilizer.test.TestSuite;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -20,7 +20,7 @@ import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getFile;
 import static com.hazelcast.stabilizer.Utils.getFileAsTextFromWorkingDirOrStabilizerHome;
 import static com.hazelcast.stabilizer.Utils.newFile;
-import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
+import static com.hazelcast.stabilizer.test.TestSuite.loadTestSuite;
 import static java.lang.String.format;
 
 public class CoordinatorCli {

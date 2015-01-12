@@ -3,7 +3,7 @@ package com.hazelcast.stabilizer.worker;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.test.TestContext;
 
 import java.io.File;
 import java.text.SimpleDateFormat;

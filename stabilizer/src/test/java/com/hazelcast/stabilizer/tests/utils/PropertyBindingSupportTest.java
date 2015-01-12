@@ -1,7 +1,7 @@
 package com.hazelcast.stabilizer.tests.utils;
 
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.tests.BindException;
+import com.hazelcast.stabilizer.test.exceptions.BindException;
 import org.junit.Test;
 
 import java.io.File;
@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport.bindProperty;
+import static com.hazelcast.stabilizer.test.utils.PropertyBindingSupport.bindProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
