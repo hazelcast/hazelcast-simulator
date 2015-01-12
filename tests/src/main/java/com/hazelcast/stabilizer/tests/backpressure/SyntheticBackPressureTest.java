@@ -146,7 +146,7 @@ public class SyntheticBackPressureTest {
 
         @Override
         public void onResponse(Object response) {
-            operations.addAndGet(performanceUpdateFrequency);
+            operations.addAndGet(1);
         }
 
         @Override
