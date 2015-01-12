@@ -177,14 +177,13 @@ public class TestUtils {
         }
 
         Map<Member, Long> result = new HashMap<Member, Long>();
-        for(Member member: futures.keySet()){
-            result.put(member, 0l);
-        }
-
         for (Map.Entry<Member, Future<Long>> entry : futures.entrySet()) {
             try {
                 Member member = entry.getKey();
                 Long value = entry.getValue().get();
+                if(value == null){
+                    value = 0l;
+                }
                 result.put(member, value);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
