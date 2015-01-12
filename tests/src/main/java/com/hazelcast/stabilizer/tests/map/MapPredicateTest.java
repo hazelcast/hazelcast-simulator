@@ -27,6 +27,13 @@ import java.util.Random;
 
 import static org.junit.Assert.assertTrue;
 
+
+/**
+ * In this test we are using different predicate methods to execute a query on a map of Employee objects.
+ * this test also concurrently updates and modifies the employee objects in the map while the predicate queries are
+ * executing,  the test also destroys the map while while predicate are executing.  we also verify the result of every
+ * query to ensure that the objects returned fit the requirements of the query
+ */
 public class MapPredicateTest {
 
     private static enum Operation {
@@ -188,7 +195,4 @@ public class MapPredicateTest {
         }
         log.info(basename + " " + total + " from " + counters.size()+" worker threads");
     }
-
-
-
 }

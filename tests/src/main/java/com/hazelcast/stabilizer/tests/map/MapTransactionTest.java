@@ -20,6 +20,12 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * In this test we execute a TransactionalTask to control the access to a TransactionalMap.
+ * there are a total of keyCount keys stored in a map which are initialized to zero,
+ * we concurrently increment the value of a random key.  We keep track of all increments to each key and verify
+ * the value in the map for each key is equal to the total increments done on each key.
+ */
 public class MapTransactionTest {
 
     private final static ILogger log = Logger.getLogger(MapTransactionTest.class);

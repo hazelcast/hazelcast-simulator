@@ -37,6 +37,13 @@ import java.util.Random;
 import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
 import static org.junit.Assert.assertEquals;
 
+/**
+ * This test is using a map to generate map entry Events,  we use an EntryListener implementation to count the received
+ * events.  The event we are generation and counting are:  add  remove  update  evict
+ * as currently the event system of hazelcast is on a "best effort" basis  it is possible that  the number of generated
+ * events for will not equals the number of events received, In the future the hz event system could change.  for now
+ * we can say the number of events received can not be greater that an the number of events generated
+ */
 public class MapEntryListenerTest {
     private final static ILogger log = Logger.getLogger(MapEntryListenerTest.class);
 
@@ -194,7 +201,6 @@ public class MapEntryListenerTest {
             results.add(eventCount);
         }
     }
-
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
