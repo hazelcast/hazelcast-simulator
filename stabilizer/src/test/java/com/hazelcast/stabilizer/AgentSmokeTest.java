@@ -28,10 +28,11 @@ import java.util.concurrent.TimeoutException;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 @Ignore
 public class AgentSmokeTest {
+
+    private static final String AGENT_IP_ADDRESS = System.getProperty("agentIpAddress", "192.168.1.105");
 
     private AgentsClient client;
 
@@ -45,6 +46,7 @@ public class AgentSmokeTest {
     public void testSuccess() throws Exception {
         TestCase testCase = new TestCase();
         testCase.setProperty("class", SuccessTest.class.getName());
+        testCase.id = "testSuccess";
         test(testCase);
     }
 
@@ -52,6 +54,7 @@ public class AgentSmokeTest {
     public void testThrowingFailures() throws Exception {
         TestCase testCase = new TestCase();
         testCase.setProperty("class", FailingTest.class.getName());
+        testCase.id = "testThrowingFailures";
         test(testCase);
 
         cooldown();
@@ -124,11 +127,13 @@ public class AgentSmokeTest {
         workerJvmSettings.profiler = "";
         workerJvmSettings.vmOptions = "";
         workerJvmSettings.workerStartupTimeout = 60000;
-        workerJvmSettings.clientHzConfig = Utils.fileAsText("/java/projects/Hazelcast/hazelcast-stabilizer/dist/src/main/dist/conf/client-hazelcast.xml");
-        workerJvmSettings.hzConfig = Utils.fileAsText("/java/projects/Hazelcast/hazelcast-stabilizer/dist/src/main/dist/conf/hazelcast.xml");
+        workerJvmSettings.clientHzConfig = Utils.fileAsText("./stabilizer/src/test/resources/client-hazelcast.xml");
+        workerJvmSettings.hzConfig = Utils.fileAsText("./stabilizer/src/test/resources/hazelcast.xml");
+        workerJvmSettings.log4jConfig = Utils.fileAsText("./stabilizer/src/test/resources/log4j.xml");
 
         AgentMemberLayout agentLayout = new AgentMemberLayout(workerJvmSettings);
         agentLayout.memberSettings.memberWorkerCount = 1;
+        agentLayout.publicIp = AGENT_IP_ADDRESS;
 
         client.spawnWorkers(asList(agentLayout),true);
     }
@@ -150,7 +155,7 @@ public class AgentSmokeTest {
     private AgentsClient getClient() throws IOException {
         File agentFile = File.createTempFile("agents", "txt");
         agentFile.deleteOnExit();
-        Utils.writeText("192.168.1.105", agentFile);
+        Utils.writeText(AGENT_IP_ADDRESS, agentFile);
         List<AgentAddress> agentAddresses = AgentsFile.load(agentFile);
         return new AgentsClient(agentAddresses);
     }

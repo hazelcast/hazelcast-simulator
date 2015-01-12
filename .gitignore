@@ -15,6 +15,7 @@ target/
 Foo.java
 agents.txt
 vtune/
+workers/
 stabilizer/workers/*
 stabilizer/logs/*
 stabilizer-git.properties
