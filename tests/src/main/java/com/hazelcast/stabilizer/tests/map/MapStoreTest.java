@@ -182,7 +182,7 @@ public class MapStoreTest {
                     }
 
                 }
-            }, 120);
+            });
         }
     }
 

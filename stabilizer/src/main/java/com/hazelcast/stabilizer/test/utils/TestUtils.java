@@ -48,6 +48,12 @@ public class TestUtils {
 
     private static final ILogger log = Logger.getLogger(TestUtils.class);
 
+    public static final int ASSERT_TRUE_EVENTUALLY_TIMEOUT;
+
+    static {
+        ASSERT_TRUE_EVENTUALLY_TIMEOUT = Integer.parseInt(System.getProperty("hazelcast.assertTrueEventually.timeout", "300"));
+    }
+
     // we don't want instances
     private TestUtils() {
     }
@@ -96,6 +102,10 @@ public class TestUtils {
             sleepMillis(sleepMillis);
             sleepMillis *= 1.5;
         }
+    }
+
+    public static void assertTrueEventually(AssertTask task) {
+        assertTrueEventually(task, ASSERT_TRUE_EVENTUALLY_TIMEOUT);
     }
 
     /**

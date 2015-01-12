@@ -133,7 +133,7 @@ public class MapTimeToLiveTest {
             public void run() throws Exception {
                 assertEquals(basename + ": Map Size not 0, some TTL events not processed", 0, map.size());
             }
-        }, 300);
+        });
     }
 
 
