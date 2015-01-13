@@ -29,8 +29,8 @@ public class MapAsyncOpsTest {
     public int keyCount = 10;
 
     //check these add up to 1
-    public double PutAsyncProb = 0.2;
-    public double PutAsyncTTLProb = 0.2;
+    public double putAsyncProb = 0.2;
+    public double putAsyncTTLProb = 0.2;
     public double getAsyncProb = 0.2;
     public double removeAsyncProb = 0.2;
     public double destroyProb = 0.2;
@@ -56,8 +56,8 @@ public class MapAsyncOpsTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
 
-        selector.addOperation(PUT_ASYNC, PutAsyncProb)
-                .addOperation(PUT_ASYNC_TTL, PutAsyncTTLProb)
+        selector.addOperation(PUT_ASYNC, putAsyncProb)
+                .addOperation(PUT_ASYNC_TTL, putAsyncTTLProb)
                 .addOperation(GET_ASYNC, getAsyncProb)
                 .addOperation(REMOVE_ASYNC, removeAsyncProb)
                 .addOperation(DESTROY, destroyProb);

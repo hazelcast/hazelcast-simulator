@@ -51,7 +51,7 @@ public class TestCaseRunner {
 
     public boolean run() throws Exception {
         log.info("--------------------------------------------------------------\n" +
-                format("Running Test : %s\n%s", testCase.getId(), testCase) + "\n" +
+                format("Running Test : %s%n%s%n", testCase.getId(), testCase) +
                 "--------------------------------------------------------------");
 
         int oldFailureCount = coordinator.failureList.size();

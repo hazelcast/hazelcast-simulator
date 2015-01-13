@@ -176,7 +176,7 @@ public class ListenerICacheTest {
     }
 
     @Verify(global = false)
-    public void Verify() throws Exception {
+    public void verify() throws Exception {
         log.info(basename + ": listener " + listener);
         log.info(basename + ": filter " + filter);
     }

@@ -136,7 +136,7 @@ public class WorkerJvmFailureMonitor {
         }
     }
 
-    public class HProfExtFilter implements FilenameFilter {
+    public static class HProfExtFilter implements FilenameFilter {
 
         public boolean accept(File dir, String name) {
             return name.endsWith(".hprof");

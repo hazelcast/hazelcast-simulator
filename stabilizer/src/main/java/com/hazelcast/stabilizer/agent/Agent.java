@@ -114,7 +114,7 @@ public class Agent {
         log.info("Stabilizer Agent");
         log.info(format("Version: %s, Commit: %s, Build Time: %s",
                 getVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
-        log.info(format("STABILIZER_HOME: %s\n", STABILIZER_HOME));
+        log.info(format("STABILIZER_HOME: %s%n", STABILIZER_HOME));
         logInterestingSystemProperties();
 
         try {

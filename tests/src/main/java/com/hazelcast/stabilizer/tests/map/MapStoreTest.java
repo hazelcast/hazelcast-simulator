@@ -73,8 +73,7 @@ public class MapStoreTest {
         putTTlKeyDomain = keyCount;
         putTTlKeyRange = keyCount;
 
-        MapStoreWithCounter.maxDelayMs = mapStoreMaxDelayMs;
-        MapStoreWithCounter.minDelayMs = mapStoreMinDelayMs;
+        MapStoreWithCounter.setMinMaxDelayMs(mapStoreMinDelayMs, mapStoreMaxDelayMs);
     }
 
     @Run

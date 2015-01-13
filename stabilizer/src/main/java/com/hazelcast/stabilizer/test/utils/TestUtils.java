@@ -126,7 +126,7 @@ public class TestUtils {
             return;
         }
 
-        long randomValue = Math.abs(random.nextLong());
+        long randomValue = Math.abs(random.nextLong() + 1);
         long delayNanos = randomValue % maxDelayNanos;
         LockSupport.parkNanos(delayNanos);
     }
@@ -151,7 +151,7 @@ public class TestUtils {
         }
         try {
             Thread.sleep(delayMs);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
         }
     }
 }

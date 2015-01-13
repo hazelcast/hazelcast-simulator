@@ -10,18 +10,19 @@ import static com.hazelcast.stabilizer.Utils.appendText;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
 class FailureMonitorThread extends Thread {
-    private final Coordinator coordinator;
     private final Logger log = Logger.getLogger(FailureMonitorThread.class);
     private final File file;
+    private final Coordinator coordinator;
 
     public FailureMonitorThread(Coordinator coordinator) {
         super("FailureMonitorThread");
 
-        file = new File("failures-" + coordinator.testSuite.id + ".txt");
-
         if (coordinator == null) {
             throw new NullPointerException();
         }
+
+        file = new File("failures-" + coordinator.testSuite.id + ".txt");
+
         this.coordinator = coordinator;
         this.setDaemon(true);
     }

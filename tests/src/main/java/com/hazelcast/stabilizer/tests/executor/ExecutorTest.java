@@ -139,6 +139,9 @@ public class ExecutorTest {
     }
 
     private static class Task implements Runnable, Serializable, HazelcastInstanceAware {
+
+        private static final long serialVersionUID = 8301151618785236415L;
+
         private transient HazelcastInstance hz;
         private final String testId;
 

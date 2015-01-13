@@ -239,8 +239,7 @@ public class SyntheticTest {
                 return 0;
             }
 
-            long d = Math.abs(random.nextLong());
-            return d % backupDelayNanos;
+            return Math.abs(random.nextLong() + 1) % backupDelayNanos;
         }
     }
 
