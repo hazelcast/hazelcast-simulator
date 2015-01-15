@@ -17,7 +17,11 @@ import java.util.Random;
 
 import static junit.framework.Assert.assertTrue;
 
-
+/**
+ * In this test we are doing map put / get operation on a map which is configured with a max size policy
+ * with some proablity distribution we are doing put, putAsync, get and verification operations on the map
+ * we verify during the test and as the end that the map has not exceeded its max configured size.
+ */
 public class MapMaxSizeTest {
 
     private final static ILogger log = Logger.getLogger(MapMaxSizeTest.class);

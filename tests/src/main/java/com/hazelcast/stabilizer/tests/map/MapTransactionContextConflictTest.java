@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 /*
 * Testing transaction context with multi keys.
 * a number of map key's (maxKeysPerTxn) are chosen at random to take part in the transaction
-* as maxKeysPerTxn increases in proportion to keyCount,  more conflict will occur between the transaction,
+* as maxKeysPerTxn increases as a proportion of keyCount,  more conflict will occur between the transaction,
 * less transactions will be committed successfully,  more transactions are rolledBack
 * */
 public class MapTransactionContextConflictTest {

@@ -38,6 +38,11 @@ import java.util.concurrent.TimeUnit;
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 
+/**
+ * In this test we are using map put methods with an Expire time.
+ * we put keys at random into the map using sync and async methods with some proablity distribution
+ * in the end we verify that the map is empty and all key value pairs have expired out of the map
+ */
 public class MapTimeToLiveTest {
 
     private final static ILogger log = Logger.getLogger(MapTimeToLiveTest.class);
