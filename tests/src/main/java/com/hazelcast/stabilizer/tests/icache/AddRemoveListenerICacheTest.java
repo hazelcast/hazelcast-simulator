@@ -29,6 +29,8 @@ import java.util.Random;
 /**
  * In This test we concurrently add remove cache listeners while putting and getting from the cache
  * this test is out side of normal usage, however has found problems where put operations hang
+ * this type of test could uncover memory leaks in the process of adding and removing listeners
+ * The max size of the cache used in this test is keyCount int key/value pairs,
  * **/
 public class AddRemoveListenerICacheTest {
 

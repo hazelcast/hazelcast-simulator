@@ -25,8 +25,10 @@ import java.io.Serializable;
 import java.util.Random;
 
 /**
- * In This tests we intentionally creating destroying closing and using, cache managers and there caches
- * this type of cache usage well out side normal usage however we did find 2 bugs with this test
+ * In This tests we are intentionally creating destroying closing and using, cache managers and there caches
+ * this type of cache usage is well out side normal usage however we did find 2 bugs with this test.  This
+ * test could high light memory leeks when repeatedly creating an destroying cache's / managers, some thing
+ * that regular test would not normalcy find.
  */
 public class MangleICacheTest {
 
