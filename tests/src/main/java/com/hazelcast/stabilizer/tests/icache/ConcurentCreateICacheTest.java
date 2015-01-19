@@ -38,6 +38,8 @@ import static junit.framework.Assert.assertEquals;
 
 /**
  * In This tests we concurrently call createCache, from multi clients/members we expect no exceptions
+ * in the setup phase of this test we count the number of CacheExceptions thrown when creating the cache
+ * form multi members and clients,  and at verification we assert 0 exceptions where thrown
  */
 public class ConcurentCreateICacheTest {
 
