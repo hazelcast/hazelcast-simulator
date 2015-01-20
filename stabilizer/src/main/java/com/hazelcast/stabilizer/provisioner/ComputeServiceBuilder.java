@@ -1,10 +1,9 @@
 package com.hazelcast.stabilizer.provisioner;
 
 import com.google.inject.AbstractModule;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
+import org.apache.log4j.Logger;
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
@@ -16,16 +15,14 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.newFile;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
 
 public class ComputeServiceBuilder {
 
-    private final static ILogger log = Logger.getLogger(ComputeServiceBuilder.class);
+    private final static Logger log = Logger.getLogger(ComputeServiceBuilder.class);
 
     private final StabilizerProperties props;
 
@@ -43,8 +40,8 @@ public class ComputeServiceBuilder {
         String identity = props.get("CLOUD_IDENTITY");
         String credential = props.get("CLOUD_CREDENTIAL");
 
-        if (log.isFinestEnabled()) {
-            log.finest("Using CLOUD_PROVIDER: " + cloudProvider);
+        if (log.isDebugEnabled()) {
+            log.debug("Using CLOUD_PROVIDER: " + cloudProvider);
         }
 
         ContextBuilder contextBuilder = newContextBuilder(cloudProvider);

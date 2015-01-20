@@ -42,8 +42,8 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.test.utils.TestUtils.humanReadableByteCount;
-import static com.hazelcast.stabilizer.test.utils.TestUtils.isMemberNode;
 import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 
 public class ExpiryICacheTest {
 

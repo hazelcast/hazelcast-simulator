@@ -15,7 +15,6 @@ import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.worker.OperationSelector;
 
@@ -25,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static junit.framework.Assert.fail;
 
 /*
@@ -76,7 +76,7 @@ public class EvictionICacheTest {
         random.nextBytes(value);
 
         CacheManager cacheManager;
-        if (TestUtils.isMemberNode(targetInstance)) {
+        if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);

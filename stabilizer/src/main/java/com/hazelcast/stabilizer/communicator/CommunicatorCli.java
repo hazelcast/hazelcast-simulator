@@ -1,7 +1,5 @@
 package com.hazelcast.stabilizer.communicator;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
@@ -11,6 +9,7 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,7 +17,7 @@ import java.util.List;
 import static com.hazelcast.stabilizer.Utils.getFile;
 
 public class CommunicatorCli {
-    private final static ILogger log = Logger.getLogger(CommunicatorCli.class);
+    private final static Logger log = Logger.getLogger(CommunicatorCli.class);
 
     private final Communicator communicator;
 

@@ -1,7 +1,5 @@
 package com.hazelcast.stabilizer.worker;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
@@ -41,8 +39,6 @@ import static java.lang.String.format;
  * @param <T>
  */
 public class TestContainer<T extends TestContext> {
-
-    private final static ILogger log = Logger.getLogger(TestContainer.class);
 
     private final Object testObject;
     private final Class<? extends Object> clazz;

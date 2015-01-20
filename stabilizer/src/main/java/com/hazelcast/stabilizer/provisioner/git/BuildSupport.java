@@ -1,9 +1,8 @@
 package com.hazelcast.stabilizer.provisioner.git;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.provisioner.Bash;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 
@@ -11,7 +10,7 @@ import static com.hazelcast.stabilizer.Utils.exitWithError;
 import static java.lang.String.format;
 
 public class BuildSupport {
-    private final static ILogger log = Logger.getLogger(BuildSupport.class);
+    private final static Logger log = Logger.getLogger(BuildSupport.class);
 
     private final Bash bash;
     private final HazelcastJARFinder jarFinder;

@@ -133,8 +133,8 @@ class MessagesFactory {
             noAttributeConstructors.put(spec, constructor);
             return true;
         } catch (NoSuchMethodException e) {
-            log.error("Error while searching for message types. Does the "
-                    +clazz.getName()+" have a constructor with "+MessageAddress.class.getName()+" as an argument?", e);
+            log.error("Error while searching for message types. Does the " + clazz.getName()
+                    + " have a constructor with " + MessageAddress.class.getName() + " as an argument?", e);
             return false;
         }
     }

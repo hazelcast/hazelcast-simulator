@@ -17,7 +17,6 @@ import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.icache.helpers.MyCacheEntryEventFilter;
 import com.hazelcast.stabilizer.tests.icache.helpers.MyCacheEntryListener;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import javax.cache.Cache;
@@ -25,6 +24,8 @@ import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
 import java.io.Serializable;
 import java.util.Random;
+
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 
 /**
  * In This test we concurrently add remove cache listeners while putting and getting from the cache
@@ -63,7 +64,7 @@ public class AddRemoveListenerICacheTest {
         targetInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
 
-        if (TestUtils.isMemberNode(targetInstance)) {
+        if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         } else {

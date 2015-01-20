@@ -1,9 +1,8 @@
 package com.hazelcast.stabilizer.common;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.provisioner.HazelcastJars;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,14 +20,14 @@ import static java.lang.String.format;
  * is configured, it will override the properties from the default.
  */
 public class StabilizerProperties {
-    private final static ILogger log = Logger.getLogger(StabilizerProperties.class);
+    private final static Logger log = Logger.getLogger(StabilizerProperties.class);
 
     private final Properties properties = new Properties();
     private String forcedHazelcastVersionSpec;
 
     public StabilizerProperties() {
         File defaultPropsFile = newFile(getStablizerHome(), "conf", "stabilizer.properties");
-        log.finest("Loading default stabilizer.properties from: " + defaultPropsFile.getAbsolutePath());
+        log.debug("Loading default stabilizer.properties from: " + defaultPropsFile.getAbsolutePath());
         load(defaultPropsFile);
     }
 
@@ -68,7 +67,7 @@ public class StabilizerProperties {
             if (fallbackPropsFile.exists()) {
                 file = fallbackPropsFile;
             } else {
-                log.warning(format("%s is not found, relying on defaults", fallbackPropsFile));
+                log.warn(format("%s is not found, relying on defaults", fallbackPropsFile));
             }
         }
 
@@ -151,8 +150,8 @@ public class StabilizerProperties {
             Utils.exitWithError(log, format("Can't find %s file %s", property, value));
         }
 
-        if (log.isFinestEnabled()) {
-            log.finest("Loading " + property + " from file: " + file.getAbsolutePath());
+        if (log.isDebugEnabled()) {
+            log.debug("Loading " + property + " from file: " + file.getAbsolutePath());
         }
         return fileAsText(file).trim();
     }

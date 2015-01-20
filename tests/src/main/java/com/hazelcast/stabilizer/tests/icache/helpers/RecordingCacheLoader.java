@@ -20,7 +20,7 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
     @Override
     public K load(final K key) {
 
-        if(loadDelayMs>0){
+        if (loadDelayMs > 0) {
             sleepMs(loadDelayMs);
         }
 
@@ -36,7 +36,7 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
     @Override
     public Map<K, K> loadAll(Iterable<? extends K> keys) {
 
-        if(loadAllDelayMs>0){
+        if (loadAllDelayMs > 0) {
             sleepMs(loadAllDelayMs);
         }
 

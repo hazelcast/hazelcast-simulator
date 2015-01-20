@@ -30,7 +30,6 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.tests.icache.helpers.RecordingCacheLoader;
 import com.hazelcast.stabilizer.tests.icache.helpers.RecordingCacheWriter;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import javax.cache.Cache;
@@ -39,6 +38,7 @@ import javax.cache.configuration.MutableConfiguration;
 import java.io.Serializable;
 import java.util.Random;
 
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -75,7 +75,7 @@ public class ReadWriteICacheTest {
         targetInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
 
-        if (TestUtils.isMemberNode(targetInstance)) {
+        if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
         } else {

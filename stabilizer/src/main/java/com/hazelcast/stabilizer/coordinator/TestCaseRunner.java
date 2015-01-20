@@ -1,7 +1,5 @@
 package com.hazelcast.stabilizer.coordinator;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
@@ -15,6 +13,7 @@ import com.hazelcast.stabilizer.worker.commands.GetBenchmarkResultsCommand;
 import com.hazelcast.stabilizer.worker.commands.InitCommand;
 import com.hazelcast.stabilizer.worker.commands.RunCommand;
 import com.hazelcast.stabilizer.worker.commands.StopCommand;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.HashMap;
@@ -31,7 +30,7 @@ import static java.lang.String.format;
  * by having multiple TestCaseRunners  in parallel.
  */
 public class TestCaseRunner {
-    private final static ILogger log = Logger.getLogger(TestCaseRunner.class);
+    private final static Logger log = Logger.getLogger(TestCaseRunner.class);
 
     private final TestCase testCase;
     private final Coordinator coordinator;
@@ -118,7 +117,7 @@ public class TestCaseRunner {
 
             return coordinator.failureList.size() == oldFailureCount;
         } catch (Exception e) {
-            log.severe("Failed", e);
+            log.fatal("Failed", e);
             return false;
         }
     }
@@ -146,7 +145,7 @@ public class TestCaseRunner {
         try {
             agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
         } catch (TimeoutException e) {
-            log.severe("A timeout happened while retrieving the benchmark results");
+            log.fatal("A timeout happened while retrieving the benchmark results");
             return combinedResults;
         }
         for (List<Map<String, R>> agentProbeResults : agentsProbeResults) {
@@ -160,7 +159,7 @@ public class TestCaseRunner {
                             combinedValue = currentResult.combine(combinedValue);
                             combinedResults.put(probeName, combinedValue);
                         } else {
-                            log.warning("Probe " + probeName + " has null value for some member. This should not happen.");
+                            log.warn("Probe " + probeName + " has null value for some member. This should not happen.");
                         }
                     }
                 }
@@ -232,7 +231,7 @@ public class TestCaseRunner {
         try {
             agentsClient.echo(prefix + msg);
         } catch (TimeoutException e) {
-            log.warning("Failed to echo message due to timeout");
+            log.warn("Failed to echo message due to timeout");
         }
         log.info(prefix + msg);
     }

@@ -1,7 +1,5 @@
 package com.hazelcast.stabilizer.coordinator;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.test.Failure;
@@ -10,6 +8,7 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.List;
@@ -25,7 +24,7 @@ import static java.lang.String.format;
 
 public class CoordinatorCli {
 
-    private final static ILogger log = Logger.getLogger(CoordinatorCli.class);
+    private final static Logger log = Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
 

@@ -22,8 +22,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
@@ -45,6 +43,7 @@ import com.hazelcast.stabilizer.worker.commands.MessageCommand;
 import com.hazelcast.stabilizer.worker.commands.RunCommand;
 import com.hazelcast.stabilizer.worker.commands.StopCommand;
 import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.ObjectInputStream;
@@ -75,7 +74,7 @@ import static java.util.Arrays.asList;
 public class MemberWorker {
 
     private static final String DASHES = "---------------------------";
-    private static final ILogger log = Logger.getLogger(MemberWorker.class);
+    private static final Logger log = Logger.getLogger(MemberWorker.class);
 
     private final ConcurrentMap<String, Command> commands = new ConcurrentHashMap<String, Command>();
     private final ConcurrentMap<String, TestContainer<TestContext>> tests
@@ -378,7 +377,7 @@ public class MemberWorker {
 
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
-                    log.warning("Failed to process command: " + command + " no test with testId" + testId + " is found");
+                    log.warn("Failed to process command: " + command + " no test with testId" + testId + " is found");
                     return;
                 }
 
@@ -396,7 +395,7 @@ public class MemberWorker {
                                 test.run();
                                 log.info(format("%s Completed %s.run() %s", DASHES, testName, DASHES));
                             } catch (InvocationTargetException e) {
-                                log.severe(format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES), e.getCause());
+                                log.fatal(format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES), e.getCause());
                                 throw e.getCause();
                             }
                         }
@@ -404,7 +403,7 @@ public class MemberWorker {
                 };
                 commandThread.start();
             } catch (Exception e) {
-                log.severe("Failed to start test", e);
+                log.fatal("Failed to start test", e);
                 throw e;
             }
         }
@@ -418,7 +417,7 @@ public class MemberWorker {
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
                     // we log a warning: it could be that it is a newly created machine from mama-monkey.
-                    log.warning("Failed to process command: " + command + " no test with " +
+                    log.warn("Failed to process command: " + command + " no test with " +
                             "testId " + testId + " is found");
                     return;
                 }
@@ -433,7 +432,7 @@ public class MemberWorker {
                             method.invoke(test);
                             log.info(format("%s Finished %s.%s() %s", DASHES, testName, methodName, DASHES));
                         } catch (InvocationTargetException e) {
-                            log.severe(format("%s Failed %s.%s() %s", DASHES, testName, methodName, DASHES));
+                            log.fatal(format("%s Failed %s.%s() %s", DASHES, testName, methodName, DASHES));
                             throw e.getCause();
                         } finally {
                             if ("localTeardown".equals(methodName)) {
@@ -444,7 +443,7 @@ public class MemberWorker {
                 };
                 commandThread.start();
             } catch (Exception e) {
-                log.severe(format("Failed to execute test.%s()", methodName), e);
+                log.fatal(format("Failed to execute test.%s()", methodName), e);
                 throw e;
             }
         }
@@ -479,7 +478,7 @@ public class MemberWorker {
                     serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE + ":" + testCase.id, testObject);
                 }
             } catch (Throwable e) {
-                log.severe("Failed to init Test", e);
+                log.fatal("Failed to init Test", e);
                 throw e;
             }
         }
@@ -490,14 +489,14 @@ public class MemberWorker {
                 final String testName = "".equals(testId) ? "test" : testId;
                 TestContainer<TestContext> test = tests.get(command.testId);
                 if (test == null) {
-                    log.warning("Can't stop test, test with id " + command.testId + " does not exist");
+                    log.warn("Can't stop test, test with id " + command.testId + " does not exist");
                     return;
                 }
 
                 log.info(format("%s %s.stop() %s", DASHES, testName, DASHES));
                 test.getTestContext().stop();
             } catch (Exception e) {
-                log.severe("Failed to execute test.stop", e);
+                log.fatal("Failed to execute test.stop", e);
                 throw e;
             }
         }

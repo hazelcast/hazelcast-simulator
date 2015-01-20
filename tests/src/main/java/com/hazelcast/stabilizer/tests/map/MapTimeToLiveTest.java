@@ -22,7 +22,6 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.test.utils.AssertTask;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
@@ -30,12 +29,11 @@ import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
-import junit.framework.Assert;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static junit.framework.Assert.assertNull;
+import static com.hazelcast.stabilizer.test.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -133,7 +131,7 @@ public class MapTimeToLiveTest {
 
         final IMap map = targetInstance.getMap(basename);
 
-        TestUtils.assertTrueEventually(new AssertTask() {
+        assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
                 assertEquals(basename + ": Map Size not 0, some TTL events not processed", 0, map.size());

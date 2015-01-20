@@ -40,8 +40,8 @@ import javax.cache.CacheManager;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.isMemberNode;
-import static com.hazelcast.stabilizer.test.utils.TestUtils.waitClusterSize;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.stabilizer.tests.helpers.KeyUtils.generateStringKeys;
 
 public class StringICacheTest {

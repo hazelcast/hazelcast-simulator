@@ -1,7 +1,5 @@
 package com.hazelcast.stabilizer.coordinator.remoting;
 
-
-import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
@@ -14,6 +12,7 @@ import com.hazelcast.stabilizer.test.Failure;
 import com.hazelcast.stabilizer.test.TestSuite;
 import com.hazelcast.stabilizer.worker.commands.Command;
 import com.hazelcast.stabilizer.worker.commands.IsPhaseCompletedCommand;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,7 +44,7 @@ import static java.util.Arrays.asList;
 
 public class AgentsClient {
 
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentsClient.class);
+    private final static Logger log = Logger.getLogger(AgentsClient.class);
 
     private final List<AgentClient> agents = new LinkedList<AgentClient>();
 
@@ -92,7 +91,7 @@ public class AgentsClient {
                     log.info("Connect to agent " + agent.publicAddress + " OK");
                 } catch (Exception e) {
                     log.info("Connect to agent " + agent.publicAddress + " FAILED");
-                    log.finest(e);
+                    log.debug(e);
                 }
             }
 
@@ -106,9 +105,7 @@ public class AgentsClient {
         agents.removeAll(unchecked);
 
         if (agents.isEmpty()) {
-            log.info("--------------------------------------------------------------");
             Utils.exitWithError(log, "There are no reachable agents");
-            log.info("--------------------------------------------------------------");
         }
 
         if (unchecked.isEmpty()) {
@@ -124,9 +121,9 @@ public class AgentsClient {
             sb.append("\t").append(agent.publicAddress).append("\n");
         }
 
-        log.info("--------------------------------------------------------------");
-        log.warning(sb.toString());
-        log.info("--------------------------------------------------------------");
+        log.warn("--------------------------------------------------------------");
+        log.warn(sb.toString());
+        log.warn("--------------------------------------------------------------");
     }
 
     public int getAgentCount() {
@@ -167,11 +164,11 @@ public class AgentsClient {
                 List<Failure> c = f.get(30, TimeUnit.SECONDS);
                 result.addAll(c);
             } catch (InterruptedException e) {
-                log.severe(e);
+                log.fatal(e);
             } catch (ExecutionException e) {
-                log.severe(e);
+                log.fatal(e);
             } catch (TimeoutException e) {
-                log.severe(e);
+                log.fatal(e);
             }
         }
         return result;
@@ -326,13 +323,13 @@ public class AgentsClient {
                         settings = spawnPlan.memberSettings;
                         if (spawnPlan.memberSettings.clientWorkerCount > 0) {
                             //todo: remove
-                            log.severe("Found clients during member startup");
+                            log.fatal("Found clients during member startup");
                         }
                     } else {
                         settings = spawnPlan.clientSettings;
                         if (spawnPlan.clientSettings.memberWorkerCount > 0) {
                             //todo: remove
-                            log.severe("Found members during client startup");
+                            log.fatal("Found members during client startup");
                         }
                     }
 
@@ -407,8 +404,11 @@ public class AgentsClient {
                     try {
                         return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
                     } catch (RuntimeException t) {
-                        log.severe(t.getMessage());
-                        log.finest(t.getMessage(), t);
+                        if (log.isDebugEnabled()) {
+                            log.debug(t.getMessage(), t);
+                        } else {
+                            log.fatal(t.getMessage());
+                        }
                         throw t;
                     }
                 }
@@ -430,7 +430,7 @@ public class AgentsClient {
                     try {
                         return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
                     } catch (RuntimeException t) {
-                        log.severe(t);
+                        log.fatal(t);
                         throw t;
                     }
                 }

@@ -1,14 +1,14 @@
 package com.hazelcast.stabilizer.provisioner.git;
 
-import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.Utils;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 
 import static com.hazelcast.stabilizer.Utils.exitWithError;
 
 public class HazelcastJARFinder {
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(HazelcastJARFinder.class);
+    private final static Logger log = Logger.getLogger(HazelcastJARFinder.class);
 
     public File[] find(File path) {
         File memberPath = Utils.newFile(path, "hazelcast", "target");

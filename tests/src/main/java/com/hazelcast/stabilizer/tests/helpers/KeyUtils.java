@@ -8,7 +8,7 @@ import com.hazelcast.core.PartitionService;
 import java.util.Random;
 
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
-import static com.hazelcast.stabilizer.test.utils.TestUtils.isClient;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isClient;
 
 public class KeyUtils {
 
