@@ -85,8 +85,8 @@ public class MemberWorker {
     private final BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
     private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
 
-    private HazelcastInstance serverInstance;
-    private HazelcastInstance clientInstance;
+    private HazelcastInstance serverInstance=null;
+    private HazelcastInstance clientInstance=null;
 
     private String hzFile;
     private String clientHzFile;
@@ -94,23 +94,28 @@ public class MemberWorker {
     private String workerMode;
     private String workerId;
 
+    private boolean autoCreateHazelcastInstance=true;
+
     public void start() throws Exception {
-        if ("server".equals(workerMode)) {
+
+        if(autoCreateHazelcastInstance){
+            if ("server".equals(workerMode)) {
+                log.info("------------------------------------------------------------------------");
+                log.info("             member mode");
+                log.info("------------------------------------------------------------------------");
+                this.serverInstance = createServerHazelcastInstance();
+                TestUtils.warmupPartitions(log, serverInstance);
+            } else if ("client".equals(workerMode)) {
+                log.info("------------------------------------------------------------------------");
+                log.info("             client mode");
+                log.info("------------------------------------------------------------------------");
+                this.clientInstance = createClientHazelcastInstance();
+                TestUtils.warmupPartitions(log, clientInstance);
+            } else {
+                throw new IllegalStateException("Unknown worker mode:" + workerMode);
+            }
             log.info("------------------------------------------------------------------------");
-            log.info("             member mode");
-            log.info("------------------------------------------------------------------------");
-            this.serverInstance = createServerHazelcastInstance();
-            TestUtils.warmupPartitions(log, serverInstance);
-        } else if ("client".equals(workerMode)) {
-            log.info("------------------------------------------------------------------------");
-            log.info("             client mode");
-            log.info("------------------------------------------------------------------------");
-            this.clientInstance = createClientHazelcastInstance();
-            TestUtils.warmupPartitions(log, clientInstance);
-        } else {
-            throw new IllegalStateException("Unknown worker mode:" + workerMode);
         }
-        log.info("------------------------------------------------------------------------");
 
         workerMessageProcessor.setHazelcastServerInstance(serverInstance);
         workerMessageProcessor.setHazelcastClientInstance(clientInstance);
@@ -202,11 +207,20 @@ public class MemberWorker {
             String workerMode = System.getProperty("workerMode");
             log.info("Worker mode:" + workerMode);
 
+            String autoCreateHZInstances = System.getProperty("autoCreateHZInstances");
+            log.info("autoCreateHZInstances :" + autoCreateHZInstances);
+
+
             MemberWorker worker = new MemberWorker();
             worker.workerId = workerId;
             worker.hzFile = workerHzFile;
             worker.clientHzFile = clientHzFile;
             worker.workerMode = workerMode;
+
+            if("false".equals(autoCreateHZInstances)){
+                worker.autoCreateHazelcastInstance=false;
+            }
+
             worker.start();
 
             log.info("Successfully started Hazelcast Stabilizer Worker:" + workerId);
