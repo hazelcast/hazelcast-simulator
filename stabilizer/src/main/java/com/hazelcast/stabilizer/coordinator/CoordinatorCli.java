@@ -45,6 +45,10 @@ public class CoordinatorCli {
             "Number of Cluster Client Worker JVMs")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
+    private final OptionSpec<Boolean> autoCreateHZInstancesSpec  = parser.accepts("autoCreateHzInstances",
+            "auto create Hazelcast Instance's default to true")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
     private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
             "Controls the number of dedicated member machines. For example when there are 4 machines" +
                     "and 2 servers and 9 clients, and there is 1 dedicated member machine, then " +
@@ -182,6 +186,8 @@ public class CoordinatorCli {
         workerJvmSettings.clientVmOptions = options.valueOf(clientWorkerVmOptionsSpec);
         workerJvmSettings.memberWorkerCount = options.valueOf(memberWorkerCountSpec);
         workerJvmSettings.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
+        workerJvmSettings.autoCreateHZInstances = options.valueOf(autoCreateHZInstancesSpec);
+
         workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
         workerJvmSettings.hzConfig = loadHzConfig();
         workerJvmSettings.clientHzConfig = loadClientHzConfig();
