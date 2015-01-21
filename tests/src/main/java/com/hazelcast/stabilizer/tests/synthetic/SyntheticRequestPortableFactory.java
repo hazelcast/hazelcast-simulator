@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.backpressure;
+package com.hazelcast.stabilizer.tests.synthetic;
 
 import com.hazelcast.nio.serialization.Portable;
 import com.hazelcast.nio.serialization.PortableFactory;

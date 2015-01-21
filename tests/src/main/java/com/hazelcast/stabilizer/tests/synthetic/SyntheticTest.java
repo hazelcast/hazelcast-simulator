@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.backpressure;
+package com.hazelcast.stabilizer.tests.synthetic;
 
 import com.hazelcast.client.impl.HazelcastClientProxy;
 import com.hazelcast.client.proxy.PartitionServiceProxy;
@@ -57,8 +57,8 @@ import static com.hazelcast.stabilizer.test.utils.TestUtils.isClient;
  * if the system can be flooded with too many request. Normal sync operations don't cause that many problems because there is a
  * natural balance between the number of threads and the number of pending invocations.
  */
-public class SyntheticBackPressureTest {
-    private final static ILogger log = Logger.getLogger(SyntheticBackPressureTest.class);
+public class SyntheticTest {
+    private final static ILogger log = Logger.getLogger(SyntheticTest.class);
 
     //props
     public boolean syncInvocation = true;
@@ -197,6 +197,7 @@ public class SyntheticBackPressureTest {
                 if (iteration % logFrequency == 0) {
                     log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
+
                 if (iteration % performanceUpdateFrequency == 0) {
                     if (syncInvocation) {
                         operations.addAndGet(performanceUpdateFrequency);
@@ -209,7 +210,7 @@ public class SyntheticBackPressureTest {
         private ICompletableFuture invoke(int partitionId) throws Exception {
             ICompletableFuture f;
             if (isClient) {
-                SyntheticRequest request = new SyntheticRequest(syncBackupCount, asyncBackupCount, backupDelayNanos);
+                SyntheticRequest request = new SyntheticRequest(syncBackupCount, asyncBackupCount, backupDelayNanos, null);
                 request.setPartitionId(partitionId);
                 Address target = clientPartitionService.getPartitionOwner(partitionId);
                 f = clientInvocationService.invokeOnTarget(request, target);
@@ -244,7 +245,7 @@ public class SyntheticBackPressureTest {
     }
 
     public static void main(String[] args) throws Throwable {
-        SyntheticBackPressureTest test = new SyntheticBackPressureTest();
-        new TestRunner<SyntheticBackPressureTest>(test).withDuration(10).run();
+        SyntheticTest test = new SyntheticTest();
+        new TestRunner<SyntheticTest>(test).withDuration(10).run();
     }
 }
