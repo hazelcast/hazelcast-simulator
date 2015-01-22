@@ -4,7 +4,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -45,11 +44,10 @@ public class StringStringSyntheticMapTest {
     // probes
     public IntervalProbe putLatency;
     public IntervalProbe getLatency;
-    public SimpleProbe throughput;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private TestContext testContext;
+    private HazelcastInstance hazelcastInstance;
     private SyntheticMap<String, String> map;
 
     private String[] keys;
@@ -57,22 +55,25 @@ public class StringStringSyntheticMapTest {
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
-        this.testContext = testContext;
+        hazelcastInstance = testContext.getTargetInstance();
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + testContext.getTestId());
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
+
+        operationSelectorBuilder
+                .addOperation(Operation.PUT, putProb)
+                .addDefaultOperation(Operation.GET);
     }
 
     @Teardown
     public void tearDown() throws Exception {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
+        LOGGER.info(getOperationCountInformation(hazelcastInstance));
     }
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
-        keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
+        waitClusterSize(LOGGER, hazelcastInstance, minNumberOfMembers);
+        keys = generateStringKeys(keyCount, keyLength, keyLocality, hazelcastInstance);
         values = generateStrings(valueCount, valueLength);
 
         Random random = new Random();
@@ -112,8 +113,6 @@ public class StringStringSyntheticMapTest {
                 default:
                     throw new UnsupportedOperationException();
             }
-
-            throughput.done();
         }
 
         private String randomKey() {
