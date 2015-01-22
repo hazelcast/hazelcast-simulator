@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.backpressure;
+package com.hazelcast.stabilizer.tests.synthetic;
 
 import com.hazelcast.client.impl.client.PartitionClientRequest;
 import com.hazelcast.nio.serialization.PortableReader;
@@ -13,14 +13,16 @@ public class SyntheticRequest extends PartitionClientRequest {
     private int syncBackupCount;
     private int asyncBackupCount;
     private long backupDelayNanos;
+    private String serviceName;
 
     public SyntheticRequest() {
     }
 
-    public SyntheticRequest(int syncBackupCount, int asyncBackupCount, long backupDelayNanos) {
+    public SyntheticRequest(int syncBackupCount, int asyncBackupCount, long backupDelayNanos, String serviceName) {
         this.syncBackupCount = syncBackupCount;
         this.asyncBackupCount = asyncBackupCount;
         this.backupDelayNanos = backupDelayNanos;
+        this.serviceName = serviceName;
     }
 
     public void setPartitionId(int partitionId) {
@@ -67,6 +69,7 @@ public class SyntheticRequest extends PartitionClientRequest {
         writer.writeInt("asyncBackupCount", asyncBackupCount);
         writer.writeLong("backupDelayNanos", backupDelayNanos);
         writer.writeInt("partitionId", partitionId);
+        writer.writeUTF("serviceName",serviceName);
     }
 
     @Override
@@ -77,5 +80,6 @@ public class SyntheticRequest extends PartitionClientRequest {
         asyncBackupCount = reader.readInt("asyncBackupCount");
         backupDelayNanos = reader.readLong("backupDelayNanos");
         partitionId = reader.readInt("partitionId");
+        serviceName = reader.readUTF("serviceName");
     }
 }

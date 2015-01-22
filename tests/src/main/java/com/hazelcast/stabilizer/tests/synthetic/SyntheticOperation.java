@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.backpressure;
+package com.hazelcast.stabilizer.tests.synthetic;
 
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
@@ -27,6 +27,11 @@ public class SyntheticOperation extends AbstractOperation
     }
 
     @Override
+    public String getServiceName() {
+        return null;
+    }
+
+    @Override
     public boolean shouldBackup() {
         return true;
     }
@@ -43,9 +48,9 @@ public class SyntheticOperation extends AbstractOperation
 
     @Override
     public Operation getBackupOperation() {
-        SyntheticBackupOperation syntheticBackupOperation = new SyntheticBackupOperation(backupOperationDelayNanos);
-        syntheticBackupOperation.setPartitionId(getPartitionId());
-        return syntheticBackupOperation;
+        SyntheticBackupOperation backupOperation = new SyntheticBackupOperation(backupOperationDelayNanos);
+        backupOperation.setPartitionId(getPartitionId());
+        return backupOperation;
     }
 
     @Override

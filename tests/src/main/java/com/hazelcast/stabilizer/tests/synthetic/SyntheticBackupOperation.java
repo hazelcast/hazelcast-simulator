@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.backpressure;
+package com.hazelcast.stabilizer.tests.synthetic;
 
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
@@ -20,6 +20,11 @@ public class SyntheticBackupOperation extends AbstractOperation
 
     public SyntheticBackupOperation(long delayNs) {
         this.delayNs = delayNs;
+    }
+
+    @Override
+    public String getServiceName() {
+        return null;
     }
 
     @Override
