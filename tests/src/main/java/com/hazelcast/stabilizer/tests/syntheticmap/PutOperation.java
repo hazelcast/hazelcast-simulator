@@ -9,12 +9,14 @@ import com.hazelcast.spi.PartitionAwareOperation;
 
 import java.io.IOException;
 
-public class PutOperation extends AbstractOperation implements PartitionAwareOperation, IdentifiedDataSerializable{
+public class PutOperation extends AbstractOperation implements PartitionAwareOperation, IdentifiedDataSerializable {
+
     private String mapName;
     private Data key;
     private Data value;
 
-    public PutOperation(){}
+    public PutOperation() {
+    }
 
     public PutOperation(String mapName, Data key, Data value){
         this.mapName = mapName;

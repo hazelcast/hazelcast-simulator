@@ -24,7 +24,6 @@ public class SyntheticMapService implements ManagedService, RemoteService {
 
     @Override
     public void destroyDistributedObject(String objectName) {
-
     }
 
     @Override
@@ -32,8 +31,8 @@ public class SyntheticMapService implements ManagedService, RemoteService {
         this.nodeEngine = nodeEngine;
         int partitionCount = nodeEngine.getPartitionService().getPartitionCount();
         partitions = new Partition[partitionCount];
-        for (int k = 0; k < partitionCount; k++) {
-            partitions[k] = new Partition();
+        for (int i = 0; i < partitionCount; i++) {
+            partitions[i] = new Partition();
         }
     }
 
@@ -62,7 +61,7 @@ public class SyntheticMapService implements ManagedService, RemoteService {
     private static class Partition {
         private Map<String,RecordStore> stores = new HashMap<String, RecordStore>();
 
-        public RecordStore get(String name){
+        public RecordStore get(String name) {
             RecordStore store = stores.get(name);
             if(store == null){
                 store = new RecordStore();

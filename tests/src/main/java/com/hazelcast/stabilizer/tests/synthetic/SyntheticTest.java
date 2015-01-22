@@ -13,17 +13,16 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
 import com.hazelcast.spi.OperationService;
-import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
 import com.hazelcast.stabilizer.test.annotations.Performance;
 import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
+import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
 import com.hazelcast.stabilizer.utils.ExceptionReporter;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.utils.ReflectionUtils;
 
 import java.util.ArrayList;
@@ -37,7 +36,7 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getParti
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isClient;
 
 /**
- * The SyntheticBackPressureTest tests back pressure.
+ * The SyntheticTest can be used to test features like back pressure.
  * <p/>
  * It can be configured with:
  * - sync invocation
@@ -46,21 +45,21 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isClient
  * - number of async backups
  * - delay of back pressing.
  * <p/>
- * This test doesn't make use of any normal data-structures like an IMap; but uses the SPI directly to execute operations
- * and backups. This gives a lot of control on the behavior.
+ * This test doesn't make use of any normal data-structures like an {@link com.hazelcast.core.IMap}, but uses the SPI directly to
+ * execute operations and backups. This gives a lot of control on the behavior.
  * <p/>
- * If for example we want to test back pressure on async backups; just set the asyncBackupCount to a value larger than 0 and
- * if you want to simulate a slow down, also set the backupDelayNanos. If this is set to a high value, on the backup you will
- * get a pileup of back up commands which eventually can lead to an OOME.
+ * If for example we want to test back pressure on async backups, just set the asyncBackupCount to a value larger than 0 and if
+ * you want to simulate a slow down, also set the backupDelayNanos. If this is set to a high value, on the backup you will get a
+ * pileup of back up commands which eventually can lead to an OOME.
  * <p/>
- * Another interesting scenario to test is a normal async invocation of a readonly operation (so no async/sync-backups) and see
- * if the system can be flooded with too many request. Normal sync operations don't cause that many problems because there is a
+ * Another interesting scenario to test is a normal async invocation of a readonly operation (so no async/sync-backups) and see if
+ * the system can be flooded with too many request. Normal sync operations don't cause that many problems because there is a
  * natural balance between the number of threads and the number of pending invocations.
  */
 public class SyntheticTest {
-    private final static ILogger log = Logger.getLogger(SyntheticTest.class);
+    private static final ILogger log = Logger.getLogger(SyntheticTest.class);
 
-    //props
+    // properties
     public boolean syncInvocation = true;
     public byte syncBackupCount = 0;
     public byte asyncBackupCount = 1;
@@ -70,18 +69,20 @@ public class SyntheticTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
     public KeyLocality keyLocality = KeyLocality.Random;
+    public int keyCount = 1000;
     public int syncFrequency = 1;
     public String serviceName;
 
-    private AtomicLong operations = new AtomicLong();
-    private TestContext context;
+    private final AtomicLong operations = new AtomicLong();
+
+    private TestContext testContext;
     private HazelcastInstance targetInstance;
-    public IntervalProbe latency;
+    //private IntervalProbe probe;
 
     @Setup
-    public void setup(TestContext context) throws Exception {
-        this.context = context;
-        this.targetInstance = context.getTargetInstance();
+    public void setup(TestContext testContext) throws Exception {
+        this.testContext = testContext;
+        targetInstance = testContext.getTargetInstance();
     }
 
     @Teardown
@@ -90,55 +91,57 @@ public class SyntheticTest {
         log.info(getPartitionDistributionInformation(targetInstance));
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(context.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
     @Performance
     public long getOperationCount() {
         return operations.get();
     }
 
-    private class Worker implements Runnable, ExecutionCallback {
+    @Run
+    public void run() {
+        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+        for (int i = 0; i < threadCount; i++) {
+            spawner.spawn(new Worker());
+        }
+        spawner.awaitCompletion();
+    }
+
+    private class Worker implements Runnable, ExecutionCallback<Object> {
         private final ArrayList<Integer> partitionSequence = new ArrayList<Integer>();
+        private final ArrayList<ICompletableFuture> futureList = new ArrayList<ICompletableFuture>(syncFrequency);
         private final Random random = new Random();
-        private final OperationService operationService;
+
         private final boolean isClient;
+        private final OperationService operationService;
         private final ClientInvocationService clientInvocationService;
         private final ClientPartitionService clientPartitionService;
-        private final ArrayList<ICompletableFuture> futureList = new ArrayList<ICompletableFuture>(syncFrequency);
-        int partitionIndex = 0;
+
+        private int partitionIndex = 0;
 
         public Worker() {
             isClient = isClient(targetInstance);
+
             if (isClient) {
                 HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy) targetInstance;
-                operationService = null;
                 PartitionServiceProxy partitionService = (PartitionServiceProxy) hazelcastClientProxy.client.getPartitionService();
-                clientPartitionService = ReflectionUtils.getObjectFromField(partitionService, "partitionService");
+
+                operationService = null;
                 clientInvocationService = hazelcastClientProxy.client.getInvocationService();
+                clientPartitionService = ReflectionUtils.getObjectFromField(partitionService, "partitionService");
             } else {
+                Node node = getNode(targetInstance);
+
+                operationService = node.getNodeEngine().getOperationService();
                 clientInvocationService = null;
                 clientPartitionService = null;
-                Node node = getNode(context.getTargetInstance());
-                node.getPartitionService().getPartitionCount();
-                operationService = node.getNodeEngine().getOperationService();
             }
 
-            if (isClient) {
-                if (keyLocality == KeyLocality.Local)
-                    throw new IllegalStateException("A KeyLocality has been set to Local, but test is running on a client. " +
-                            "It doesn't make sense as no keys are stored on clients. ");
+            if (isClient && keyLocality == KeyLocality.Local) {
+                throw new IllegalStateException("A KeyLocality has been set to Local, but test is running on a client."
+                        + " It doesn't make sense as no keys are stored on clients. ");
             }
 
-            int keys = 1000;
-            for (int k = 0; k < keys; k++) {
-                Integer key = KeyUtils.generateIntKey(keys, keyLocality, targetInstance);
+            for (int i = 0; i < keyCount; i++) {
+                Integer key = KeyUtils.generateIntKey(keyCount, keyLocality, targetInstance);
                 Partition partition = targetInstance.getPartitionService().getPartition(key);
                 partitionSequence.add(partition.getPartitionId());
             }
@@ -152,7 +155,7 @@ public class SyntheticTest {
 
         @Override
         public void onFailure(Throwable t) {
-            ExceptionReporter.report(context.getTestId(), t);
+            ExceptionReporter.report(testContext.getTestId(), t);
         }
 
         @Override
@@ -166,37 +169,36 @@ public class SyntheticTest {
             }
         }
 
-        public void doRun() throws Exception {
+        private void doRun() throws Exception {
             long iteration = 0;
 
-            while (!context.isStopped()) {
-
+            while (!testContext.isStopped()) {
                 int partitionId = nextPartitionId();
+                //probe.started();
 
-                ICompletableFuture f = invoke(partitionId);
-                //latency.started();
+                ICompletableFuture<Object> future = invoke(partitionId);
 
                 if (syncInvocation) {
                     if (syncFrequency == 1) {
-                        f.get();
+                        future.get();
                     } else {
                         if (iteration > 0 && iteration % syncFrequency == 0) {
-                            for (ICompletableFuture future : futureList) {
-                                future.get();
+                            for (ICompletableFuture innerFuture : futureList) {
+                                innerFuture.get();
                             }
                             futureList.clear();
                         } else {
-                            futureList.add(f);
+                            futureList.add(future);
                         }
                     }
                 } else {
-                    f.andThen(this);
+                    future.andThen(this);
                 }
-                //latency.done();
+                //probe.done();
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    log.info(Thread.currentThread().getName() + " at iteration: " + iteration);
                 }
 
                 if (iteration % performanceUpdateFrequency == 0) {
@@ -208,18 +210,18 @@ public class SyntheticTest {
             operations.addAndGet(iteration % performanceUpdateFrequency);
         }
 
-        private ICompletableFuture invoke(int partitionId) throws Exception {
-            ICompletableFuture f;
+        private ICompletableFuture<Object> invoke(int partitionId) throws Exception {
+            ICompletableFuture<Object> future;
             if (isClient) {
                 SyntheticRequest request = new SyntheticRequest(syncBackupCount, asyncBackupCount, backupDelayNanos, null);
                 request.setPartitionId(partitionId);
                 Address target = clientPartitionService.getPartitionOwner(partitionId);
-                f = clientInvocationService.invokeOnTarget(request, target);
+                future = clientInvocationService.invokeOnTarget(request, target);
             } else {
                 SyntheticOperation operation = new SyntheticOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
-                f = operationService.invokeOnPartition(serviceName, operation, partitionId);
+                future = operationService.invokeOnPartition(serviceName, operation, partitionId);
             }
-            return f;
+            return future;
         }
 
         private int nextPartitionId() {

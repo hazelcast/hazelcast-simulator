@@ -6,11 +6,11 @@ import com.hazelcast.spi.InternalCompletableFuture;
 import com.hazelcast.spi.NodeEngine;
 import com.hazelcast.spi.OperationService;
 
-public class SyntheticMapProxy<K,V> extends AbstractDistributedObject implements SyntheticMap<K,V> {
+public class SyntheticMapProxy<K, V> extends AbstractDistributedObject<SyntheticMapService> implements SyntheticMap<K, V> {
 
     private final String name;
 
-    public SyntheticMapProxy(String name, NodeEngine nodeEngine, SyntheticMapService service){
+    public SyntheticMapProxy(String name, NodeEngine nodeEngine, SyntheticMapService service) {
         super(nodeEngine, service);
         this.name = name;
     }
@@ -27,8 +27,8 @@ public class SyntheticMapProxy<K,V> extends AbstractDistributedObject implements
         int partitionId = nodeEngine.getPartitionService().getPartitionId(key);
         OperationService operationService = nodeEngine.getOperationService();
         GetOperation op = new GetOperation(name, keyData);
-        InternalCompletableFuture f = operationService.invokeOnPartition(SyntheticMapService.SERVICE_NAME, op, partitionId);
-        return (V)f.getSafely();
+        InternalCompletableFuture<V> f = operationService.invokeOnPartition(SyntheticMapService.SERVICE_NAME, op, partitionId);
+        return f.getSafely();
     }
 
     @Override
