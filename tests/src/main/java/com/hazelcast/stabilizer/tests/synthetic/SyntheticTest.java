@@ -173,7 +173,7 @@ public class SyntheticTest {
                 int partitionId = nextPartitionId();
 
                 ICompletableFuture f = invoke(partitionId);
-                latency.started();
+                //latency.started();
 
                 if (syncInvocation) {
                     if (syncFrequency == 1) {
@@ -191,7 +191,7 @@ public class SyntheticTest {
                 } else {
                     f.andThen(this);
                 }
-                latency.done();
+                //latency.done();
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
