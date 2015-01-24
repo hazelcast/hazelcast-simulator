@@ -193,6 +193,7 @@ public class CoordinatorCli {
         workerJvmSettings.refreshJvm = options.valueOf(workerRefreshSpec);
         workerJvmSettings.profiler = coordinator.props.get("PROFILER", "none");
         workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
+        workerJvmSettings.flightrecorderSettings = coordinator.props.get("FLIGHTRECORDER_SETTINGS");
         workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS", "");
         workerJvmSettings.perfSettings = coordinator.props.get("PERF_SETTINGS", "");
         workerJvmSettings.vtuneSettings = coordinator.props.get("VTUNE_SETTINGS", "");
