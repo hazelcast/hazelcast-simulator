@@ -15,23 +15,21 @@
  */
 package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
+import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.utils.ThreadSpawner;
-
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
@@ -41,51 +39,38 @@ public class AtomicLongTest {
 
     private static final ILogger LOGGER = Logger.getLogger(AtomicLongTest.class);
 
+    private enum Operation {
+        PUT,
+        GET
+    }
+
     // properties
-    public int countersLength = 1000;
-    public int threadCount = 10;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 1000;
-    public String basename = "atomiclong";
+    public String basename = AtomicLongTest.class.getSimpleName();
     public KeyLocality keyLocality = KeyLocality.RANDOM;
-    public int writePercentage = 100;
+    public int countersLength = 1000;
     public int warmupIterations = 100;
 
+    public double writeProb = 1.0;
+
+    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
+
+    private HazelcastInstance targetInstance;
     private IAtomicLong totalCounter;
     private IAtomicLong[] counters;
-    private AtomicLong operations = new AtomicLong();
-    private TestContext context;
-    private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext context) throws Exception {
-        this.context = context;
-
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
         targetInstance = context.getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
+        totalCounter = targetInstance.getAtomicLong("TotalCounter:" + context.getTestId());
         counters = new IAtomicLong[countersLength];
-        for (int k = 0; k < counters.length; k++) {
-            String key = generateStringKey(8, keyLocality, targetInstance);
-            counters[k] = targetInstance.getAtomicLong(key);
+        for (int i = 0; i < counters.length; i++) {
+            String key = basename + generateStringKey(8, keyLocality, targetInstance);
+            counters[i] = targetInstance.getAtomicLong(key);
         }
-    }
 
-    @Warmup
-    public void warmup() {
-        for (int k = 0; k < warmupIterations; k++) {
-            for (IAtomicLong counter : counters) {
-                counter.get();
-            }
-        }
+        builder.addOperation(Operation.PUT, writeProb)
+                .addDefaultOperation(Operation.GET);
     }
 
     @Teardown
@@ -97,72 +82,67 @@ public class AtomicLongTest {
         LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(context.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
+    @Warmup
+    public void warmup() {
+        for (int i = 0; i < warmupIterations; i++) {
+            for (IAtomicLong counter : counters) {
+                counter.get();
+            }
         }
-        spawner.awaitCompletion();
     }
 
     @Verify
     public void verify() {
-        long expected = totalCounter.get();
+        String serviceName = totalCounter.getServiceName();
+
         long actual = 0;
-        for (IAtomicLong counter : counters) {
-            actual += counter.get();
+        for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
+            String key = distributedObject.getName();
+            if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(basename)) {
+                actual += targetInstance.getAtomicLong(key).get();
+            }
         }
 
-        assertEquals(expected, actual);
+        assertEquals(totalCounter.get(), actual);
     }
 
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
     }
 
-    private class Worker implements Runnable {
-        private final Random random = new Random();
+    private class Worker extends AbstractWorker<Operation> {
+
+        private int increments;
+
+        public Worker() {
+            super(builder);
+        }
 
         @Override
-        public void run() {
-            long iteration = 0;
-            long increments = 0;
+        protected void timeStep(Operation operation) {
+            IAtomicLong counter = getRandomCounter();
 
-            while (!context.isStopped()) {
-                IAtomicLong counter = getRandomCounter();
-                if (isWrite()) {
+            switch (operation) {
+                case PUT:
                     increments++;
                     counter.incrementAndGet();
-                } else {
+                    break;
+                case GET:
                     counter.get();
-                }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
             }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
+        }
+
+        @Override
+        protected void afterRun() {
             totalCounter.addAndGet(increments);
         }
 
-        private boolean isWrite() {
-            if (writePercentage == 100) {
-                return true;
-            } else if (writePercentage == 0) {
-                return false;
-            } else {
-                return random.nextInt(100) <= writePercentage;
-            }
-        }
-
         private IAtomicLong getRandomCounter() {
-            int index = random.nextInt(counters.length);
+            int index = randomInt(counters.length);
             return counters[index];
         }
     }

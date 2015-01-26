@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
 import com.hazelcast.core.AsyncAtomicLong;
-import com.hazelcast.core.ExecutionCallback;
+import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ICompletableFuture;
@@ -24,180 +24,177 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.AssertTask;
-import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.metronome.Metronome;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.tasks.AbstractAsyncWorker;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
+import static com.hazelcast.simulator.worker.metronome.SimpleMetronome.withFixedIntervalMs;
 import static org.junit.Assert.assertEquals;
 
 public class AsyncAtomicLongTest {
 
     private static final ILogger LOGGER = Logger.getLogger(AsyncAtomicLongTest.class);
 
+    private enum Operation {
+        PUT,
+        GET
+    }
+
     // properties
-    public int countersLength = 1000;
-    public int threadCount = 10;
-    public int logFrequency = 10000;
-    public String basename = "atomiclong";
+    public String basename = AsyncAtomicLongTest.class.getSimpleName();
     public KeyLocality keyLocality = KeyLocality.RANDOM;
-    public int writePercentage = 100;
+    public int countersLength = 1000;
+    private int metronomeIntervalMs = (int) TimeUnit.SECONDS.toMillis(1);
     public int assertEventuallySeconds = 300;
     public int batchSize = -1;
 
+    public double writeProb = 1.0;
+
+    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
+
     private IAtomicLong totalCounter;
     private AsyncAtomicLong[] counters;
-    private AtomicLong operations = new AtomicLong();
-    private TestContext context;
     private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext context) throws Exception {
-        this.context = context;
-
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
         targetInstance = context.getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
-        counters = new AsyncAtomicLong[countersLength];
-        for (int k = 0; k < counters.length; k++) {
-            String key = generateStringKey(8, keyLocality, targetInstance);
-            counters[k] = (AsyncAtomicLong) targetInstance.getAtomicLong(key);
+        totalCounter = targetInstance.getAtomicLong("TotalCounter:" + context.getTestId());
+        if (isMemberNode(targetInstance)) {
+            counters = new AsyncAtomicLong[countersLength];
+            for (int i = 0; i < counters.length; i++) {
+                String key = basename + generateStringKey(8, keyLocality, targetInstance);
+                counters[i] = (AsyncAtomicLong) targetInstance.getAtomicLong(key);
+            }
         }
+
+        builder.addOperation(Operation.PUT, writeProb)
+                .addDefaultOperation(Operation.GET);
     }
 
     @Teardown
     public void teardown() throws Exception {
-        for (IAtomicLong counter : counters) {
-            counter.destroy();
+        if (isMemberNode(targetInstance)) {
+            for (IAtomicLong counter : counters) {
+                counter.destroy();
+            }
         }
         totalCounter.destroy();
         LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(context.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
     @Verify
     public void verify() {
+        if (isClient(targetInstance)) {
+            return;
+        }
+
+        final String serviceName = totalCounter.getServiceName();
         final long expected = totalCounter.get();
 
         // since the operations are asynchronous, we have no idea when they complete
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                // hack to prevent overloading the system with get calls. Else it is done many times a second
+                // hack to prevent overloading the system with get calls, else it is done many times a second
                 sleepSeconds(10);
 
                 long actual = 0;
-                for (IAtomicLong counter : counters) {
-                    actual += counter.get();
+                for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
+                    String key = distributedObject.getName();
+                    if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(basename)) {
+                        actual += targetInstance.getAtomicLong(key).get();
+                    }
                 }
+
                 assertEquals(expected, actual);
             }
         }, assertEventuallySeconds);
     }
 
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
     }
 
-    private class Worker implements Runnable, ExecutionCallback {
-        private final Random random = new Random();
+    private class Worker extends AbstractAsyncWorker<Operation, Long> {
+
+        private final List<ICompletableFuture> batch = new LinkedList<ICompletableFuture>();
+        private final Metronome metronome = withFixedIntervalMs(metronomeIntervalMs);
+
+        private long increments;
+
+        public Worker() {
+            super(builder);
+        }
 
         @Override
-        public void run() {
-            long iteration = 0;
-            long increments = 0;
+        protected void timeStep(Operation operation) {
+            if (isClient(targetInstance)) {
+                return;
+            }
 
-            List<ICompletableFuture> batch = new LinkedList<ICompletableFuture>();
-            while (!context.isStopped()) {
-                AsyncAtomicLong counter = getRandomCounter();
-                ICompletableFuture<Long> future;
-                if (shouldWrite(iteration)) {
+            AsyncAtomicLong counter = getRandomCounter();
+
+            ICompletableFuture<Long> future;
+            switch (operation) {
+                case PUT:
                     increments++;
                     future = counter.asyncIncrementAndGet();
-                } else {
+                    break;
+                case GET:
                     future = counter.asyncGet();
-                }
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+            future.andThen(this);
 
-                future.andThen(this);
+            if (batchSize > 0) {
+                batch.add(future);
 
-                if (batchSize > 0) {
-                    batch.add(future);
-
-                    if (batch.size() == batchSize) {
-                        for (ICompletableFuture f : batch) {
-                            try {
-                                f.get();
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            } catch (ExecutionException e) {
-                                throw new RuntimeException(e);
-                            }
+                if (batch.size() == batchSize) {
+                    for (ICompletableFuture batchFuture : batch) {
+                        try {
+                            batchFuture.get();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        } catch (ExecutionException e) {
+                            throw new RuntimeException(e);
                         }
                     }
-                }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    batch.clear();
                 }
             }
+
+            metronome.waitForNext();
+        }
+
+        @Override
+        protected void afterRun() {
             totalCounter.addAndGet(increments);
         }
 
-        @Override
-        public void onResponse(Object response) {
-            operations.addAndGet(1);
-        }
-
-        @Override
-        public void onFailure(Throwable t) {
-            ExceptionReporter.report(context.getTestId(), t);
-        }
-
-        private boolean shouldWrite(long iteration) {
-            if (writePercentage == 0) {
-                return false;
-            } else if (writePercentage == 100) {
-                return true;
-            } else {
-                return random.nextInt(100) <= writePercentage;
-            }
-        }
-
         private AsyncAtomicLong getRandomCounter() {
-            int index = random.nextInt(counters.length);
+            int index = randomInt(counters.length);
             return counters[index];
         }
     }
