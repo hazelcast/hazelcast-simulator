@@ -35,24 +35,27 @@ import static java.lang.String.format;
  * A utility class to run a test locally. This is purely meant for developing purposes; when you are writing a test
  * you want to see quickly if it works at all without needing to deploy it through an agent on a worker.
  *
- * @param <E>
+ * @param <E>    class of the test
  */
+@SuppressWarnings("unused")
 public class TestRunner<E> {
 
     private final static Logger log = Logger.getLogger(TestRunner.class);
     private final E test;
+    private final TestContextImpl testContext;
     private final TestContainer testInvoker;
 
     private HazelcastInstance hazelcastInstance;
     private int durationSeconds = 60;
-    private final TestContextImpl testContext = new TestContextImpl();
 
     public TestRunner(E test) {
         if (test == null) {
             throw new NullPointerException("test can't be null");
         }
+
         this.test = test;
-        this.testInvoker = new TestContainer(test, testContext, new ProbesConfiguration());
+        this.testContext = new TestContextImpl();
+        this.testInvoker = new TestContainer<TestContext>(test, testContext, new ProbesConfiguration());
     }
 
     public E getTest() {
@@ -67,6 +70,7 @@ public class TestRunner<E> {
         if (hz == null) {
             throw new NullPointerException("hz can't be null");
         }
+
         this.hazelcastInstance = hz;
         return this;
     }
@@ -84,16 +88,18 @@ public class TestRunner<E> {
         try {
             Config config = new XmlConfigBuilder(fis).build();
             hazelcastInstance = Hazelcast.newHazelcastInstance(config);
-            return this;
         } finally {
             Utils.closeQuietly(fis);
         }
+
+        return this;
     }
 
     public TestRunner withDuration(int durationSeconds) {
         if (durationSeconds < 0) {
             throw new IllegalArgumentException("Duration can't be smaller than 0");
         }
+
         this.durationSeconds = durationSeconds;
         return this;
     }
@@ -123,7 +129,7 @@ public class TestRunner<E> {
         testContext.stopped = false;
         new StopThread().start();
         testInvoker.run();
-        log.info("Finshed run");
+        log.info("Finished run");
 
         //log.info(test.getOperationCount().toHumanString());
 
@@ -143,12 +149,11 @@ public class TestRunner<E> {
         testInvoker.localTeardown();
         log.info("Finished local teardown");
 
-       // hazelcastInstance.shutdown();
+        //hazelcastInstance.shutdown();
         log.info("Finished");
     }
 
     private class StopThread extends Thread {
-
         @Override
         public void run() {
             int period = 5;
@@ -161,9 +166,8 @@ public class TestRunner<E> {
                 final float percentage = (100f * elapsed) / durationSeconds;
                 String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, durationSeconds, percentage);
                 log.info(msg);
-                //log.info("Performance"+test.getOperationCount());
+                //log.info("Performance" + test.getOperationCount());
             }
-
 
             Utils.sleepSeconds(small);
             log.info("Notified test to stop");
