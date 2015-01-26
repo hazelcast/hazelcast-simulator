@@ -15,144 +15,87 @@
  */
 package com.hazelcast.stabilizer.tests.concurrent.atomiclong;
 
+import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
-import com.hazelcast.stabilizer.test.annotations.Performance;
-import com.hazelcast.stabilizer.test.annotations.Run;
-import com.hazelcast.stabilizer.test.annotations.Setup;
-import com.hazelcast.stabilizer.test.annotations.Teardown;
-import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.tests.StabilizerAbstractTest;
 
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static org.junit.Assert.assertEquals;
 
-public class AtomicLongTest {
+public class AtomicLongTest extends StabilizerAbstractTest {
 
-    private final static ILogger log = Logger.getLogger(AtomicLongTest.class);
+    private static final String KEY_PREFIX = "AtomicLongTest";
 
-    //props
+    // Properties
     public int countersLength = 1000;
-    public int threadCount = 10;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 1000;
-    public String basename = "atomiclong";
+    public String basename = "atomicLong";
     public KeyLocality keyLocality = KeyLocality.Random;
-    public int writePercentage = 100;
+    public double writeProb = 1.0;
 
-    private IAtomicLong totalCounter;
     private IAtomicLong[] counters;
-    private AtomicLong operations = new AtomicLong();
-    private TestContext context;
-    private HazelcastInstance targetInstance;
+    private String serviceName;
 
-    @Setup
-    public void setup(TestContext context) throws Exception {
-        this.context = context;
-
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
-        targetInstance = context.getTargetInstance();
-
-        totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
+    @Override
+    protected void afterSetup(HazelcastInstance hazelcastInstance) throws Exception {
         counters = new IAtomicLong[countersLength];
-        for (int k = 0; k < counters.length; k++) {
-            String key = KeyUtils.generateStringKey(8, keyLocality, targetInstance);
-            counters[k] = targetInstance.getAtomicLong(key);
+        for (int i = 0; i < counters.length; i++) {
+            String key = KEY_PREFIX + KeyUtils.generateStringKey(8, keyLocality, hazelcastInstance);
+            counters[i] = hazelcastInstance.getAtomicLong(key);
         }
+        serviceName = counters[0].getServiceName();
+
+        addOperation(BaseOperation.PUT, writeProb);
+        addOperationRemainingProbability(BaseOperation.GET);
     }
 
-    @Teardown
-    public void teardown() throws Exception {
+    @Override
+    protected void beforeTeardown() throws Exception {
         for (IAtomicLong counter : counters) {
             counter.destroy();
         }
-        totalCounter.destroy();
-        log.info(getOperationCountInformation(targetInstance));
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(context.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
-    @Verify
-    public void verify() {
-        long expected = totalCounter.get();
+    @Override
+    protected void doVerify(HazelcastInstance hazelcastInstance, long verifyCounter) throws Exception {
         long actual = 0;
-        for (IAtomicLong counter : counters) {
-            actual += counter.get();
-        }
-
-        assertEquals(expected, actual);
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
-    }
-
-    private class Worker implements Runnable {
-        private final Random random = new Random();
-
-        @Override
-        public void run() {
-            long iteration = 0;
-            long increments = 0;
-
-            while (!context.isStopped()) {
-                IAtomicLong counter = getRandomCounter();
-                if (isWrite()) {
-                    increments++;
-                    counter.incrementAndGet();
-                } else {
-                    counter.get();
-                }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
+        for (DistributedObject distributedObject : hazelcastInstance.getDistributedObjects()) {
+            String key = distributedObject.getName();
+            if ((distributedObject.getServiceName().equals(serviceName) && key.startsWith(KEY_PREFIX))) {
+                actual += hazelcastInstance.getAtomicLong(key).get();
             }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
-            totalCounter.addAndGet(increments);
         }
 
-        private boolean isWrite() {
-            if (writePercentage == 100) {
-                return true;
-            } else if (writePercentage == 0) {
-                return false;
-            } else {
-                return random.nextInt(100) <= writePercentage;
+        assertEquals(verifyCounter, actual);
+    }
+
+    @Override
+    protected BaseWorker createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends BaseWorker {
+        @Override
+        protected void doRun(BaseOperation baseOperation) {
+            IAtomicLong counter = getRandomCounter();
+
+            switch (baseOperation) {
+                case PUT:
+                    incrementVerifyCounter();
+                    counter.incrementAndGet();
+                    break;
+                case GET:
+                    counter.get();
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
             }
         }
 
         private IAtomicLong getRandomCounter() {
-            int index = random.nextInt(counters.length);
-            return counters[index];
+            return counters[getRandomInt(counters.length)];
         }
     }
 
@@ -161,4 +104,3 @@ public class AtomicLongTest {
         new TestRunner<AtomicLongTest>(test).withDuration(10).run();
     }
 }
-
