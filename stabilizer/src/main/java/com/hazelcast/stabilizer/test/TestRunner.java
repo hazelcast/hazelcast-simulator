@@ -19,11 +19,10 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.worker.TestContainer;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,7 +39,7 @@ import static java.lang.String.format;
  */
 public class TestRunner<E> {
 
-    private final static ILogger log = Logger.getLogger(TestRunner.class);
+    private final static Logger log = Logger.getLogger(TestRunner.class);
     private final E test;
     private final TestContainer testInvoker;
 

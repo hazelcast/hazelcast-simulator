@@ -1,11 +1,10 @@
 package com.hazelcast.stabilizer.coordinator;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentClient;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.List;
@@ -20,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class PerformanceMonitor {
     private static final AtomicBoolean performanceWritten = new AtomicBoolean();
-    private static final ILogger log = Logger.getLogger(PerformanceMonitor.class);
+    private static final Logger log = Logger.getLogger(PerformanceMonitor.class);
 
     private final AgentsClient client;
     private final Coordinator coordinator;
@@ -54,9 +53,9 @@ public class PerformanceMonitor {
                 try {
                     checkPerformance();
                 } catch (TimeoutException e) {
-                    log.warning("There was a timeout retrieving performance information from the members.");
+                    log.warn("There was a timeout retrieving performance information from the members.");
                 } catch (Throwable cause) {
-                    log.severe(cause);
+                    log.fatal(cause);
                 }
             }
         }

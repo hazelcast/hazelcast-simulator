@@ -3,11 +3,10 @@ package com.hazelcast.stabilizer.worker;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.Member;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.test.TestContext;
+import org.apache.log4j.Logger;
 
 import java.util.Iterator;
 import java.util.Random;
@@ -20,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class WorkerMessageProcessor {
-    private static final ILogger log = Logger.getLogger(WorkerMessageProcessor.class);
+    private static final Logger log = Logger.getLogger(WorkerMessageProcessor.class);
     private static final int TIMEOUT = 60;
 
     private final ConcurrentMap<String, TestContainer<TestContext>> tests;
@@ -63,7 +62,7 @@ public class WorkerMessageProcessor {
             try {
                 processTestMessage(message);
             } catch (Throwable throwable) {
-                log.severe("Error while processing message", throwable);
+                log.fatal("Error while processing message", throwable);
             }
         }
     }
@@ -110,8 +109,8 @@ public class WorkerMessageProcessor {
             } else if (hazelcastClientInstance != null) {
                 ((HazelcastInstanceAware) message).setHazelcastInstance(hazelcastClientInstance);
             } else {
-                log.warning("Message "+message.getClass().getName()+" implements "
-                        +HazelcastInstanceAware.class+" interface, but no instance is currently running in this worker.");
+                log.warn("Message " + message.getClass().getName() + " implements " + HazelcastInstanceAware.class
+                        + " interface, but no instance is currently running in this worker.");
             }
         }
     }
@@ -125,7 +124,7 @@ public class WorkerMessageProcessor {
         } else if (MessageAddress.RANDOM.equals(testAddress)) {
             TestContainer<?> randomTestContainer = getRandomTestContainerOrNull();
             if (randomTestContainer == null) {
-                log.warning("No test container is known to this worker. Is it a race-condition?");
+                log.warn("No test container is known to this worker. Is it a race-condition?");
             } else {
                 randomTestContainer.sendMessage(message);
             }

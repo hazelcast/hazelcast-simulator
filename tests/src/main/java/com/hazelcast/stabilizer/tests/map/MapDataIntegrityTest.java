@@ -13,12 +13,12 @@ import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import java.util.Random;
 import java.util.Set;
 
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 
@@ -58,7 +58,7 @@ public class MapDataIntegrityTest {
         Random random = new Random();
         random.nextBytes(value);
 
-        if(mapLoad && TestUtils.isMemberNode(targetInstance)){
+        if(mapLoad && isMemberNode(targetInstance)){
 
             PartitionService partitionService = targetInstance.getPartitionService();
             final Set<Partition> partitionSet = partitionService.getPartitions();
@@ -135,7 +135,7 @@ public class MapDataIntegrityTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
-        if(TestUtils.isMemberNode(targetInstance)){
+        if(isMemberNode(targetInstance)){
             log.info(id + ": cluster size =" + targetInstance.getCluster().getMembers().size());
         }
 

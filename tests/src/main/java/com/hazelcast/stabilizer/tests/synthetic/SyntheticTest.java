@@ -31,10 +31,10 @@ import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.getNode;
-import static com.hazelcast.stabilizer.test.utils.TestUtils.getOperationCountInformation;
-import static com.hazelcast.stabilizer.test.utils.TestUtils.getPartitionDistributionInformation;
-import static com.hazelcast.stabilizer.test.utils.TestUtils.isClient;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getNode;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isClient;
 
 /**
  * The SyntheticBackPressureTest tests back pressure.

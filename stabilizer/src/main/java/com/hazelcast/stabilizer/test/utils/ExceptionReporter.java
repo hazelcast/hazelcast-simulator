@@ -1,7 +1,6 @@
 package com.hazelcast.stabilizer.test.utils;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +17,7 @@ public class ExceptionReporter {
     public static final int MAX_EXCEPTION_COUNT = 1000;
 
     private final static AtomicLong FAILURE_ID = new AtomicLong(0);
-    private final static ILogger log = Logger.getLogger(ExceptionReporter.class);
+    private final static Logger log = Logger.getLogger(ExceptionReporter.class);
 
     /**
      * Writes the cause to file.
@@ -29,19 +28,19 @@ public class ExceptionReporter {
      */
     public static void report(String testId, Throwable cause) {
         if (cause == null) {
-            log.severe("Can't call report with a null exception");
+            log.fatal("Can't call report with a null exception");
             return;
         }
 
         long exceptionCount = FAILURE_ID.incrementAndGet();
 
         if (exceptionCount > MAX_EXCEPTION_COUNT) {
-            log.warning("Exception #" + exceptionCount + " detected. The maximum number of exceptions has been" +
+            log.warn("Exception #" + exceptionCount + " detected. The maximum number of exceptions has been" +
                     "exceeded, so it won't be reported to the agent.", cause);
             return;
         }
 
-        log.warning("Exception #" + exceptionCount + " detected", cause);
+        log.warn("Exception #" + exceptionCount + " detected", cause);
 
         String targetFileName = exceptionCount + ".exception";
 
@@ -53,7 +52,7 @@ public class ExceptionReporter {
                 throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath() + " file already exists.");
             }
         } catch (IOException e) {
-            log.severe("Could not report exception; this means that this exception is not visible to the coordinator", e);
+            log.fatal("Could not report exception; this means that this exception is not visible to the coordinator", e);
             return;
         }
 
@@ -62,7 +61,7 @@ public class ExceptionReporter {
         final File file = new File(targetFileName);
 
         if (!tmpFile.renameTo(file)) {
-            log.severe("Failed to rename tmp file:" + tmpFile + " to " + file);
+            log.fatal("Failed to rename tmp file:" + tmpFile + " to " + file);
         }
     }
 

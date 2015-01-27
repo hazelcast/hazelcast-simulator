@@ -17,8 +17,6 @@ package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
@@ -31,6 +29,7 @@ import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.provisioner.Bash;
 import com.hazelcast.stabilizer.test.Failure;
 import com.hazelcast.stabilizer.test.TestSuite;
+import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -53,7 +52,7 @@ import static java.lang.String.format;
 public class Coordinator {
 
     public final static File STABILIZER_HOME = getStablizerHome();
-    private final static ILogger log = Logger.getLogger(Coordinator.class);
+    private final static Logger log = Logger.getLogger(Coordinator.class);
 
     //options.
     public boolean monitorPerformance;
@@ -275,7 +274,7 @@ public class Coordinator {
                 echo("Skipping client startup, since no clients are configured");
             }
         } catch (SpawnWorkerFailedException e) {
-            log.severe(e.getMessage());
+            log.fatal(e.getMessage());
             System.exit(1);
         }
 
@@ -368,7 +367,7 @@ public class Coordinator {
         try {
             agentsClient.echo(msg);
         } catch (TimeoutException e) {
-            log.warning("Failed to send echo message to agents due to timeout");
+            log.warn("Failed to send echo message to agents due to timeout");
         }
         log.info(msg);
     }
@@ -442,7 +441,7 @@ public class Coordinator {
             coordinator.run();
             System.exit(0);
         } catch (Exception e) {
-            log.severe("Failed to run testsuite", e);
+            log.fatal("Failed to run testsuite", e);
             System.exit(1);
         }
     }

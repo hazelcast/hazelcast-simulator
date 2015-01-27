@@ -1,9 +1,8 @@
 package com.hazelcast.stabilizer.provisioner;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.provisioner.git.GitSupport;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,7 +21,7 @@ public class HazelcastJars {
     public static final String GIT_VERSION_PREFIX = "git=";
     public static final String MAVEN_VERSION_PREFIX = "maven=";
 
-    private final static ILogger log = Logger.getLogger(HazelcastJars.class);
+    private final static Logger log = Logger.getLogger(HazelcastJars.class);
     private final Bash bash;
     private final GitSupport gitSupport;
     private final String versionSpec;
@@ -66,7 +65,7 @@ public class HazelcastJars {
             String revision = versionSpec.substring(GIT_VERSION_PREFIX.length());
             gitRetrieve(revision);
         } else {
-            log.severe("Unrecognized version spec:" + versionSpec);
+            log.fatal("Unrecognized version spec:" + versionSpec);
             System.exit(1);
         }
     }
@@ -93,20 +92,20 @@ public class HazelcastJars {
             if (version.endsWith("-SNAPSHOT")) {
                 String baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
                 String mavenMetadataUrl = format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
-                log.finest("Loading: " + mavenMetadataUrl);
+                log.debug("Loading: " + mavenMetadataUrl);
                 String mavenMetadata = null;
                 try {
                     mavenMetadata = Utils.getText(mavenMetadataUrl);
                 } catch (FileNotFoundException e) {
-                    log.severe("Failed to load " + artifact + "-" + version + ", because :"
+                    log.fatal("Failed to load " + artifact + "-" + version + ", because :"
                             + mavenMetadataUrl + " was not found");
                     System.exit(1);
                 } catch (IOException e) {
-                    log.severe("Could not load:" + mavenMetadataUrl);
+                    log.fatal("Could not load:" + mavenMetadataUrl);
                     System.exit(1);
                 }
 
-                log.finest(mavenMetadata);
+                log.debug(mavenMetadata);
                 String timestamp = getTagValue(mavenMetadata, "timestamp");
                 String buildnumber = getTagValue(mavenMetadata, "buildNumber");
                 String shortVersion = version.replace("-SNAPSHOT", "");

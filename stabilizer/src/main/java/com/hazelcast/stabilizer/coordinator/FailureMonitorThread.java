@@ -1,8 +1,7 @@
 package com.hazelcast.stabilizer.coordinator;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.Failure;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.List;
@@ -12,7 +11,7 @@ import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
 class FailureMonitorThread extends Thread {
     private final Coordinator coordinator;
-    private final ILogger log = Logger.getLogger(FailureMonitorThread.class);
+    private final Logger log = Logger.getLogger(FailureMonitorThread.class);
     private final File file;
 
     public FailureMonitorThread(Coordinator coordinator) {
@@ -34,7 +33,7 @@ class FailureMonitorThread extends Thread {
                 sleepSeconds(1);
                 scan();
             } catch (Throwable e) {
-                log.severe(e);
+                log.fatal(e);
             }
         }
     }
@@ -43,7 +42,7 @@ class FailureMonitorThread extends Thread {
         List<Failure> failures = coordinator.agentsClient.getFailures();
         for (Failure failure : failures) {
             coordinator.failureList.add(failure);
-            log.warning(buildMessage(failure));
+            log.warn(buildMessage(failure));
             appendText(failure.toString() + "\n", file);
         }
     }

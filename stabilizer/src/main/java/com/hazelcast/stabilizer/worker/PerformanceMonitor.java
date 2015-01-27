@@ -1,9 +1,8 @@
 package com.hazelcast.stabilizer.worker;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.test.TestContext;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -14,7 +13,7 @@ import java.util.HashMap;
 import static java.lang.String.format;
 
 class PerformanceMonitor extends Thread {
-    private static final ILogger log = Logger.getLogger(PerformanceMonitor.class);
+    private static final Logger log = Logger.getLogger(PerformanceMonitor.class);
 
     private final File globalPerformanceFile = new File("performance.txt");
     private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -41,7 +40,7 @@ class PerformanceMonitor extends Thread {
                 Thread.sleep(5000);
                 writeStatsToFiles();
             } catch (Throwable t) {
-                log.severe("Failed to run performance monitor", t);
+                log.fatal("Failed to run performance monitor", t);
             }
         }
     }

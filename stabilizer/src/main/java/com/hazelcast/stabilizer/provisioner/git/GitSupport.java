@@ -1,8 +1,7 @@
 package com.hazelcast.stabilizer.provisioner.git;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import org.apache.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -23,7 +22,7 @@ import static com.hazelcast.stabilizer.Utils.exitWithError;
 
 public class GitSupport {
     private static final String HAZELCAST_MAIN_REPO_URL = "https://github.com/hazelcast/hazelcast.git";
-    private final static ILogger log = Logger.getLogger(GitSupport.class);
+    private final static Logger log = Logger.getLogger(GitSupport.class);
     public static final String CUSTOM_REPOSITORY_PREFIX = "custom";
 
     private final BuildSupport buildSupport;

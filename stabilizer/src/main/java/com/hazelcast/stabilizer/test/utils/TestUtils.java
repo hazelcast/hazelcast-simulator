@@ -16,27 +16,11 @@
 package com.hazelcast.stabilizer.test.utils;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.core.IExecutorService;
-import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
-import com.hazelcast.instance.HazelcastInstanceImpl;
-import com.hazelcast.instance.HazelcastInstanceProxy;
-import com.hazelcast.instance.MemberImpl;
-import com.hazelcast.instance.Node;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
-import com.hazelcast.spi.OperationService;
-import com.hazelcast.stabilizer.Utils;
+import org.apache.log4j.Logger;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
@@ -46,17 +30,38 @@ import static java.lang.String.format;
 public class TestUtils {
 
     public static final String TEST_INSTANCE = "testInstance";
-
-    private static final ILogger log = Logger.getLogger(TestUtils.class);
-
     public static final int ASSERT_TRUE_EVENTUALLY_TIMEOUT;
 
     static {
-        ASSERT_TRUE_EVENTUALLY_TIMEOUT = Integer.parseInt(System.getProperty("hazelcast.assertTrueEventually.timeout", "300"));
+        ASSERT_TRUE_EVENTUALLY_TIMEOUT = Integer.parseInt(System.getProperty(
+                "hazelcast.assertTrueEventually.timeout", "300"));
     }
 
     // we don't want instances
     private TestUtils() {
+    }
+
+    public static void warmupPartitions(Logger logger, HazelcastInstance hz) {
+        logger.info("Waiting for partition warmup");
+
+        PartitionService partitionService = hz.getPartitionService();
+        long startTime = System.currentTimeMillis();
+        for (Partition partition : partitionService.getPartitions()) {
+            if (System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
+                throw new IllegalStateException("Partition warmup timeout. Partitions didn't get an owner in time");
+            }
+
+            while (partition.getOwner() == null) {
+                logger.debug("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        logger.info("Partitions are warmed up successfully");
     }
 
     /**
@@ -65,8 +70,8 @@ public class TestUtils {
      * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
      * more times it fails the less frequent the task is going to be retried.
      *
-     * @param task
-     * @param timeoutSeconds
+     * @param task AssertTask to execute
+     * @param timeoutSeconds timeout for assert in seconds
      * @throws java.lang.NullPointerException if task is null.
      */
     public static void assertTrueEventually(AssertTask task, long timeoutSeconds) {
@@ -132,149 +137,6 @@ public class TestUtils {
         return result;
     }
 
-    public static String getPartitionDistributionInformation(HazelcastInstance hz) {
-        Map<Member, Integer> partitionCountMap = new HashMap<Member, Integer>();
-        int totalPartitions = 0;
-        for(Partition partition: hz.getPartitionService().getPartitions()){
-            totalPartitions++;
-            Member member = partition.getOwner();
-            Integer count = partitionCountMap.get(member);
-            if(count == null){
-                count = 0;
-            }
-
-            count++;
-            partitionCountMap.put(member,count);
-        }
-
-        StringBuffer sb = new StringBuffer();
-        sb.append("total partitions:").append(totalPartitions).append("\n");
-        for (Map.Entry<Member, Integer> entry : partitionCountMap.entrySet()) {
-            Member member = entry.getKey();
-            long count = entry.getValue();
-            double percentage = count * 100d / totalPartitions;
-            sb.append(member).append(" total=").append(count).append(" percentage=").append(percentage).append("%\n");
-        }
-        return sb.toString();
-    }
-
-    public static String getOperationCountInformation(HazelcastInstance hz) {
-        Map<Member, Long> operationCountMap = getOperationCount(hz);
-
-        long total = 0;
-        for (Long count : operationCountMap.values()) {
-            total += count;
-        }
-
-        StringBuffer sb = new StringBuffer();
-        sb.append("total operations:").append(total).append("\n");
-        for (Map.Entry<Member, Long> entry : operationCountMap.entrySet()) {
-            Member member = entry.getKey();
-            long count = entry.getValue();
-            double percentage = count * 100d / total;
-            sb.append(member).append(" total=").append(count).append(" percentage=").append(percentage).append("%\n");
-        }
-        return sb.toString();
-    }
-
-    public static Map<Member, Long> getOperationCount(HazelcastInstance hz) {
-        IExecutorService executorService = hz.getExecutorService("operationCountExecutor");
-
-        Map<Member, Future<Long>> futures = new HashMap<Member, Future<Long>>();
-        for (Member member : hz.getCluster().getMembers()) {
-            Future<Long> future = executorService.submitToMember(new GetOperationCount(), member);
-            futures.put(member, future);
-        }
-
-        Map<Member, Long> result = new HashMap<Member, Long>();
-        for (Map.Entry<Member, Future<Long>> entry : futures.entrySet()) {
-            try {
-                Member member = entry.getKey();
-                Long value = entry.getValue().get();
-                if(value == null){
-                    value = 0l;
-                }
-                result.put(member, value);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            } catch (ExecutionException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return result;
-    }
-
-    public final static class GetOperationCount implements Callable<Long>, HazelcastInstanceAware, Serializable {
-        private transient HazelcastInstance hz;
-
-        @Override
-        public Long call() throws Exception {
-            try {
-                Node node = getNode(hz);
-                OperationService operationService = node.getNodeEngine().getOperationService();
-                return operationService.getExecutedOperationCount();
-            } catch (NoSuchMethodError e) {
-                log.warning(e);
-                return -1l;
-            }
-        }
-
-        @Override
-        public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
-            this.hz = hazelcastInstance;
-        }
-    }
-
-    public static void warmupPartitions(ILogger logger, HazelcastInstance hz) {
-        logger.info("Waiting for partition warmup");
-
-        PartitionService partitionService = hz.getPartitionService();
-        long startTime = System.currentTimeMillis();
-        for (Partition partition : partitionService.getPartitions()) {
-            if (System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
-                throw new IllegalStateException("Partition warmup timeout. Partitions didn't get an owner in time");
-            }
-
-            while (partition.getOwner() == null) {
-                logger.finest("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        logger.info("Partitions are warmed up successfully");
-    }
-
-    public static void waitClusterSize(ILogger logger, HazelcastInstance hz, int clusterSize) throws InterruptedException {
-        for (; ; ) {
-            if (hz.getCluster().getMembers().size() >= clusterSize) {
-                return;
-            }
-
-            logger.info("waiting cluster == " + clusterSize);
-            Thread.sleep(1000);
-        }
-    }
-
-    public static Node getNode(HazelcastInstance hz) {
-        HazelcastInstanceImpl impl = getHazelcastInstanceImpl(hz);
-        return impl != null ? impl.node : null;
-    }
-
-    public static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
-        HazelcastInstanceImpl impl = null;
-        if (hz instanceof HazelcastInstanceProxy) {
-            return PropertyBindingSupport.getField(hz, "original");
-        } else if (hz instanceof HazelcastInstanceImpl) {
-            impl = (HazelcastInstanceImpl) hz;
-        }
-        return impl;
-    }
-
     public static String humanReadableByteCount(long bytes, boolean si) {
         int unit = si ? 1000 : 1024;
         if (bytes < unit) return bytes + " B";
@@ -291,25 +153,5 @@ public class TestUtils {
             Thread.sleep(delayMs);
         } catch (InterruptedException e) {
         }
-    }
-
-    public static long nextKeyOwnedBy(long key, HazelcastInstance instance) {
-        final Member localMember = instance.getCluster().getLocalMember();
-        final PartitionService partitionService = instance.getPartitionService();
-        for (; ; ) {
-            Partition partition = partitionService.getPartition(key);
-            if (localMember.equals(partition.getOwner())) {
-                return key;
-            }
-            key++;
-        }
-    }
-
-    public static boolean isMemberNode(HazelcastInstance instance) {
-        return instance instanceof HazelcastInstanceProxy;
-    }
-
-    public static boolean isClient(HazelcastInstance instance) {
-        return !isMemberNode(instance);
     }
 }

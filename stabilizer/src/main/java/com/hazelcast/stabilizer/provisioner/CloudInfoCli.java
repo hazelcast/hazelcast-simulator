@@ -1,17 +1,17 @@
 package com.hazelcast.stabilizer.provisioner;
 
-import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.Utils;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 
 public class CloudInfoCli {
 
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(ProvisionerCli.class);
+    private final static Logger log = Logger.getLogger(ProvisionerCli.class);
 
     public final OptionParser parser = new OptionParser();
 

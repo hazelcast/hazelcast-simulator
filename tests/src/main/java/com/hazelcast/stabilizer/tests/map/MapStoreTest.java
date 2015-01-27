@@ -8,7 +8,6 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.test.utils.AssertTask;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.test.TestContext;
@@ -20,7 +19,8 @@ import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.isMemberNode;
+import static com.hazelcast.stabilizer.test.utils.TestUtils.assertTrueEventually;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
 
@@ -172,7 +172,7 @@ public class MapStoreTest {
             log.info(basename + ": map size  =" + map.size());
             log.info(basename + ": " + mapStore);
 
-            TestUtils.assertTrueEventually(new AssertTask() {
+            assertTrueEventually(new AssertTask() {
                 @Override
                 public void run() throws Exception {
 

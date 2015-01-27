@@ -11,7 +11,7 @@ import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.waitClusterSize;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static org.junit.Assert.assertEquals;
 
 public class SplitClusterDataTest {

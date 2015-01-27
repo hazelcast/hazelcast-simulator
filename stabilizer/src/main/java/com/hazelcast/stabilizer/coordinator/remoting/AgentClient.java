@@ -1,10 +1,9 @@
 package com.hazelcast.stabilizer.coordinator.remoting;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
 import com.hazelcast.stabilizer.common.AgentAddress;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -18,7 +17,7 @@ import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
 public class AgentClient {
 
-    private final static ILogger log = Logger.getLogger(AgentClient.class);
+    private final static Logger log = Logger.getLogger(AgentClient.class);
 
     final String publicAddress;
     final String privateIp;
@@ -72,9 +71,9 @@ public class AgentClient {
             } catch (ConnectException e) {
                 if (k < 10) {
                     // it can happen that when a machine is under a lot of pressure, the connection can't be established
-                    log.finest("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
+                    log.debug("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
                 } else {
-                    log.warning("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
+                    log.warn("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
                 }
                 sleepSeconds(1);
                 connectException = e;

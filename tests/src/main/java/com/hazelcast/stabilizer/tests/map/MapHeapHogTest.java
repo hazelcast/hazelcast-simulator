@@ -15,8 +15,8 @@ import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.stabilizer.test.utils.TestUtils.humanReadableByteCount;
-import static com.hazelcast.stabilizer.test.utils.TestUtils.isMemberNode;
-import static com.hazelcast.stabilizer.test.utils.TestUtils.nextKeyOwnedBy;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.nextKeyOwnedBy;
 
 public class MapHeapHogTest {
 

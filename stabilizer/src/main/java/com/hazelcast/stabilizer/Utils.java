@@ -16,12 +16,11 @@
 package com.hazelcast.stabilizer;
 
 import com.google.common.io.Files;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.log4j.Logger;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -75,7 +74,7 @@ public final class Utils {
     private static final String DEFAULT_DELIMITER = ", ";
     private static final String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
     private static final String USER_HOME = System.getProperty("user.home");
-    private static final ILogger log = Logger.getLogger(Utils.class);
+    private static final Logger log = Logger.getLogger(Utils.class);
 
     private static volatile String hostAddress;
 
@@ -530,16 +529,15 @@ public final class Utils {
         LockSupport.parkNanos(nanos);
     }
 
-    public static void exitWithError(ILogger logger, String msg) {
-        logger.severe(msg);
+    public static void exitWithError(Logger logger, String msg) {
+        logger.fatal(msg);
         System.exit(1);
     }
 
-    public static void exitWithError(ILogger logger, String msg, Throwable t) {
+    public static void exitWithError(Logger logger, String msg, Throwable t) {
         String throwableString = throwableToString(t);
-        exitWithError(log, msg + "\n" + throwableString);
+        exitWithError(logger, msg + "\n" + throwableString);
     }
-
 
     private Utils() {
     }

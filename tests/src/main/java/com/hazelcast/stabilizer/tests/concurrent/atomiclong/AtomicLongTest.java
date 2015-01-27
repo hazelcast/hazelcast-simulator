@@ -28,12 +28,12 @@ import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static org.junit.Assert.assertEquals;
 
 public class AtomicLongTest {
@@ -83,7 +83,7 @@ public class AtomicLongTest {
             counter.destroy();
         }
         totalCounter.destroy();
-        log.info(TestUtils.getOperationCountInformation(targetInstance));
+        log.info(getOperationCountInformation(targetInstance));
     }
 
     @Run

@@ -31,7 +31,6 @@ import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.worker.OperationSelector;
 
@@ -45,6 +44,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -91,7 +91,7 @@ public class ExpiryTest {
         targetInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
 
-        if (TestUtils.isMemberNode(targetInstance)) {
+        if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);

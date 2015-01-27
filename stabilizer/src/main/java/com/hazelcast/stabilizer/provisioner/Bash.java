@@ -1,8 +1,5 @@
 package com.hazelcast.stabilizer.provisioner;
 
-
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.NativeUtils;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 
@@ -12,8 +9,6 @@ import static com.hazelcast.stabilizer.Utils.getVersion;
 import static java.lang.String.format;
 
 public class Bash {
-    private final static ILogger log = Logger.getLogger(Bash.class);
-
     private final String sshOptions;
     private final String user;
 

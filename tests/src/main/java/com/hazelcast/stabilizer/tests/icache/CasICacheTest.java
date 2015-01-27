@@ -19,13 +19,13 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import javax.cache.CacheException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -63,7 +63,7 @@ public class CasICacheTest {
         resultsPerWorker = targetInstance.getList(basename);
 
 
-        if (TestUtils.isMemberNode(targetInstance)) {
+        if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);

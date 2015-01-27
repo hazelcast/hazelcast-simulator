@@ -34,7 +34,6 @@ import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
 import com.hazelcast.stabilizer.test.utils.AssertTask;
 import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import java.util.LinkedList;
@@ -44,6 +43,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.test.utils.TestUtils.assertTrueEventually;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static org.junit.Assert.assertEquals;
 
 public class AsyncAtomicLongTest {
@@ -94,7 +94,7 @@ public class AsyncAtomicLongTest {
             counter.destroy();
         }
         totalCounter.destroy();
-        log.info(TestUtils.getOperationCountInformation(targetInstance));
+        log.info(getOperationCountInformation(targetInstance));
     }
 
     @Run

@@ -15,7 +15,6 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.utils.AssertTask;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import java.util.LinkedList;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.test.utils.TestUtils.assertTrueEventually;
 import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepRandomNanos;
 import static org.junit.Assert.assertEquals;
 
@@ -95,7 +95,7 @@ public class ITopicTest {
 
         final long expectedCount = totalExpectedCounter.get();
 
-        TestUtils.assertTrueEventually(new AssertTask() {
+        assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
                 long actualCount = 0;

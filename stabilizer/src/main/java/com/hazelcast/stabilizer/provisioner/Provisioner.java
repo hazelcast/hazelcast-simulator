@@ -1,8 +1,6 @@
 package com.hazelcast.stabilizer.provisioner;
 
 import com.google.common.base.Predicate;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
@@ -11,6 +9,7 @@ import com.hazelcast.stabilizer.common.StabilizerProperties;
 import com.hazelcast.stabilizer.provisioner.git.BuildSupport;
 import com.hazelcast.stabilizer.provisioner.git.GitSupport;
 import com.hazelcast.stabilizer.provisioner.git.HazelcastJARFinder;
+import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
@@ -40,7 +39,7 @@ import static java.lang.String.format;
 //https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
 //https://github.com/jclouds/jclouds-examples/blob/master/minecraft-compute/src/main/java/org/jclouds/examples/minecraft/NodeManager.java
 public class Provisioner {
-    private final static ILogger log = Logger.getLogger(Provisioner.class);
+    private final static Logger log = Logger.getLogger(Provisioner.class);
 
     public final StabilizerProperties props = new StabilizerProperties();
 
@@ -252,7 +251,7 @@ public class Provisioner {
             try {
                 f.get();
             } catch (ExecutionException e) {
-                log.severe("Failed provision", e);
+                log.fatal("Failed provision", e);
                 System.exit(1);
             }
         }
@@ -432,7 +431,7 @@ public class Provisioner {
             cli.run(args);
             System.exit(0);
         } catch (Throwable e) {
-            log.severe(e);
+            log.fatal(e);
             System.exit(1);
         }
     }

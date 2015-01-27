@@ -31,13 +31,15 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.worker.Metronome;
 import com.hazelcast.stabilizer.worker.SimpleMetronome;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.waitClusterSize;
 
 public class StringMapTest {
 
@@ -90,12 +92,12 @@ public class StringMapTest {
     @Teardown
     public void teardown() throws Exception {
         map.destroy();
-        log.info(TestUtils.getOperationCountInformation(targetInstance));
+        log.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        TestUtils.waitClusterSize(log, targetInstance, minNumberOfMembers);
+        waitClusterSize(log, targetInstance, minNumberOfMembers);
         keys = KeyUtils.generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = StringUtils.generateStrings(valueCount, valueLength);
 

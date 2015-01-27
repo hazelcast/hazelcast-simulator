@@ -29,11 +29,11 @@ import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 
 import javax.cache.CacheException;
 import java.io.Serializable;
 
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static junit.framework.Assert.assertEquals;
 
 /**
@@ -56,7 +56,7 @@ public class ConcurentCreateICacheTest {
         targetInstance = testContext.getTargetInstance();
         baseName = testContext.getTestId();
 
-        if (TestUtils.isMemberNode(targetInstance)) {
+        if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
             cacheManager = new HazelcastServerCacheManager(
                     hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);

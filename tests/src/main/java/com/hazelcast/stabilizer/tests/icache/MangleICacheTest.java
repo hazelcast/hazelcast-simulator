@@ -13,7 +13,6 @@ import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.worker.OperationSelector;
 
@@ -23,6 +22,8 @@ import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
 import java.io.Serializable;
 import java.util.Random;
+
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 
 /**
  * In This tests we are intentionally creating destroying closing and using, cache managers and there caches
@@ -210,7 +211,7 @@ public class MangleICacheTest {
                 currentCachingProvider = cacheManager.getCachingProvider();
                 cacheManager.close();
             }
-            if (TestUtils.isMemberNode(targetInstance)) {
+            if (isMemberNode(targetInstance)) {
                 HazelcastServerCachingProvider hcp = (HazelcastServerCachingProvider) currentCachingProvider;
                 if (hcp == null) {
                     hcp = new HazelcastServerCachingProvider();

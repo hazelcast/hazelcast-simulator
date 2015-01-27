@@ -1,7 +1,7 @@
 package com.hazelcast.stabilizer.common;
 
-import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.Utils;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -26,7 +26,7 @@ import static java.lang.String.format;
  */
 public class AgentsFile {
 
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(AgentsFile.class);
+    private final static Logger log = Logger.getLogger(AgentsFile.class);
 
     public static void save(File agentsFile, List<AgentAddress> addresses) {
         StringBuffer sb = new StringBuffer();
@@ -70,8 +70,8 @@ public class AgentsFile {
                     pairs.add(new AgentAddress(chunks[0], chunks[1]));
                     break;
                 default:
-                    log.severe(format("Line %s of file %s is invalid, it should contain 1 or 2 addresses separated by a comma, " +
-                            "but contains %s", lineNumber, agentFile, chunks.length));
+                    log.fatal(format("Line %s of file %s is invalid, it should contain 1 or 2 addresses separated by a "
+                            + "comma, but contains %s", lineNumber, agentFile, chunks.length));
                     System.exit(1);
                     break;
             }

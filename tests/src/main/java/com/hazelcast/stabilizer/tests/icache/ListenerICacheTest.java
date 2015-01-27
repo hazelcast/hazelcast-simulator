@@ -33,8 +33,8 @@ import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.isMemberNode;
 import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
+import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static junit.framework.Assert.assertEquals;
 
 /*
