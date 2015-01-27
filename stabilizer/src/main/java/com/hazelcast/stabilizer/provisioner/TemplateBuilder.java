@@ -1,11 +1,10 @@
 package com.hazelcast.stabilizer.provisioner;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
+import org.apache.log4j.Logger;
 import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
 import org.jclouds.compute.ComputeService;
@@ -21,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 public class TemplateBuilder {
-    private final static ILogger log = Logger.getLogger(Provisioner.class);
+    private final static Logger log = Logger.getLogger(Provisioner.class);
 
     private final ComputeService compute;
     private final StabilizerProperties props;
@@ -79,7 +78,7 @@ public class TemplateBuilder {
                     .from(spec)
                     .build();
         } catch (IllegalArgumentException e) {
-            log.finest(e);
+            log.debug(e);
             Utils.exitWithError(log, e.getMessage());
             return null;
         }

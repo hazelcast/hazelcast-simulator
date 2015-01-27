@@ -21,7 +21,7 @@ import com.hazelcast.stabilizer.agent.CommandFuture;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
-import com.hazelcast.stabilizer.tests.Failure;
+import com.hazelcast.stabilizer.test.Failure;
 import com.hazelcast.stabilizer.worker.TerminateWorkerException;
 import com.hazelcast.stabilizer.worker.commands.Command;
 import com.hazelcast.stabilizer.worker.commands.CommandRequest;

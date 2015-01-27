@@ -6,13 +6,13 @@ import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.coordinator.AgentMemberLayout;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
-import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.TestSuite;
-import com.hazelcast.stabilizer.tests.annotations.Run;
-import com.hazelcast.stabilizer.tests.annotations.Setup;
-import com.hazelcast.stabilizer.tests.annotations.Warmup;
-import com.hazelcast.stabilizer.tests.map.MapRaceTest;
+import com.hazelcast.stabilizer.test.Failure;
+import com.hazelcast.stabilizer.test.TestCase;
+import com.hazelcast.stabilizer.test.TestContext;
+import com.hazelcast.stabilizer.test.TestSuite;
+import com.hazelcast.stabilizer.test.annotations.Run;
+import com.hazelcast.stabilizer.test.annotations.Setup;
+import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
 import com.hazelcast.stabilizer.worker.commands.InitCommand;
 import com.hazelcast.stabilizer.worker.commands.RunCommand;
@@ -27,10 +27,12 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 
 @Ignore
 public class AgentSmokeTest {
+
+    private static final String AGENT_IP_ADDRESS = System.getProperty("agentIpAddress", "192.168.1.105");
 
     private AgentsClient client;
 
@@ -43,20 +45,22 @@ public class AgentSmokeTest {
     @Test
     public void testSuccess() throws Exception {
         TestCase testCase = new TestCase();
-        testCase.setProperty("class", FooTest.class.getName());
+        testCase.setProperty("class", SuccessTest.class.getName());
+        testCase.id = "testSuccess";
         test(testCase);
     }
 
     @Test
     public void testThrowingFailures() throws Exception {
         TestCase testCase = new TestCase();
-        testCase.setProperty("class", MapRaceTest.class.getName());
+        testCase.setProperty("class", FailingTest.class.getName());
+        testCase.id = "testThrowingFailures";
         test(testCase);
 
         cooldown();
 
         List<Failure> failures = client.getFailures();
-        assertFalse("No failures found", failures.isEmpty());
+        assertEquals("Expected 1 failure!", 1, failures.size());
     }
 
     private void cooldown() {
@@ -123,11 +127,13 @@ public class AgentSmokeTest {
         workerJvmSettings.profiler = "";
         workerJvmSettings.vmOptions = "";
         workerJvmSettings.workerStartupTimeout = 60000;
-        workerJvmSettings.clientHzConfig = Utils.fileAsText("/java/projects/Hazelcast/hazelcast-stabilizer/dist/src/main/dist/conf/client-hazelcast.xml");
-        workerJvmSettings.hzConfig = Utils.fileAsText("/java/projects/Hazelcast/hazelcast-stabilizer/dist/src/main/dist/conf/hazelcast.xml");
+        workerJvmSettings.clientHzConfig = Utils.fileAsText("./stabilizer/src/test/resources/client-hazelcast.xml");
+        workerJvmSettings.hzConfig = Utils.fileAsText("./stabilizer/src/test/resources/hazelcast.xml");
+        workerJvmSettings.log4jConfig = Utils.fileAsText("./stabilizer/src/test/resources/log4j.xml");
 
         AgentMemberLayout agentLayout = new AgentMemberLayout(workerJvmSettings);
         agentLayout.memberSettings.memberWorkerCount = 1;
+        agentLayout.publicIp = AGENT_IP_ADDRESS;
 
         client.spawnWorkers(asList(agentLayout),true);
     }
@@ -149,12 +155,13 @@ public class AgentSmokeTest {
     private AgentsClient getClient() throws IOException {
         File agentFile = File.createTempFile("agents", "txt");
         agentFile.deleteOnExit();
-        Utils.writeText("192.168.1.105", agentFile);
+        Utils.writeText(AGENT_IP_ADDRESS, agentFile);
         List<AgentAddress> agentAddresses = AgentsFile.load(agentFile);
         return new AgentsClient(agentAddresses);
     }
 
-    public static class FooTest {
+    @SuppressWarnings("unused")
+    public static class SuccessTest {
         private TestContext context;
 
         @Run
@@ -162,6 +169,32 @@ public class AgentSmokeTest {
             while (!context.isStopped()) {
                 Utils.sleepSeconds(1);
                 System.out.println("Running");
+            }
+        }
+
+        @Warmup
+        void warmup() {
+            Utils.sleepSeconds(10);
+        }
+
+        @Setup
+        void setup(TestContext context) {
+            this.context = context;
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public static class FailingTest {
+        private TestContext context;
+
+        @Run
+        void run() {
+            if (!context.isStopped()) {
+                System.out.println("Running");
+                Utils.sleepSeconds(1);
+
+                System.out.println("Failing");
+                throw new RuntimeException("This test should fail");
             }
         }
 

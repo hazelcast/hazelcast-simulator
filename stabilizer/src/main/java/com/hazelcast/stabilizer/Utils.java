@@ -15,12 +15,12 @@
  */
 package com.hazelcast.stabilizer;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
+import com.google.common.io.Files;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.log4j.Logger;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -49,6 +49,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Formatter;
@@ -59,6 +60,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.locks.LockSupport;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -68,10 +70,11 @@ import static java.lang.String.format;
 public final class Utils {
     public static final String NEW_LINE = System.getProperty("line.separator");
 
+    private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-_]+$");
     private static final String DEFAULT_DELIMITER = ", ";
     private static final String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
     private static final String USER_HOME = System.getProperty("user.home");
-    private static final ILogger log = Logger.getLogger(Utils.class);
+    private static final Logger log = Logger.getLogger(Utils.class);
 
     private static volatile String hostAddress;
 
@@ -82,6 +85,10 @@ public final class Utils {
         newStackTrace[remoteStackTrace.length] = new StackTraceElement(EXCEPTION_SEPARATOR, "", null, -1);
         System.arraycopy(localSideStackTrace, 1, newStackTrace, remoteStackTrace.length + 1, localSideStackTrace.length - 1);
         remoteCause.setStackTrace(newStackTrace);
+    }
+
+    public static boolean isValidFileName(String fileName) {
+        return VALID_FILE_NAME_PATTERN.matcher(fileName).matches();
     }
 
     /**
@@ -120,6 +127,15 @@ public final class Utils {
             return argument;
         }
         return String.format("%" + length + "s", argument);
+    }
+
+    public static String fillString(int length, char charToFill) {
+        if (length == 0) {
+            return "";
+        }
+        char[] array = new char[length];
+        Arrays.fill(array, charToFill);
+        return new String(array);
     }
 
     public static File newFile(String path) {
@@ -194,37 +210,46 @@ public final class Utils {
     public static void writeObject(Object o, File file) {
         File tmpFile = new File(file.getParent(), file.getName() + ".tmp");
 
+        FileOutputStream fileOutputStream = null;
         try {
-            final FileOutputStream fous = new FileOutputStream(tmpFile);
+            fileOutputStream = new FileOutputStream(tmpFile);
+            ObjectOutputStream objectOutputStream = null;
             try {
-                ObjectOutput output = new ObjectOutputStream(fous);
-                output.writeObject(o);
+                objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                objectOutputStream.writeObject(o);
             } finally {
-                Utils.closeQuietly(fous);
+                Utils.closeQuietly(objectOutputStream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            Utils.closeQuietly(fileOutputStream);
         }
 
         if (!tmpFile.renameTo(file)) {
-            throw new RuntimeException(format("Could not rename [%s] to [%s]",
-                    tmpFile.getAbsolutePath(), file.getAbsolutePath()));
+            throw new RuntimeException(
+                    format("Could not rename [%s] to [%s]", tmpFile.getAbsolutePath(), file.getAbsolutePath())
+            );
         }
     }
 
     public static <E> E readObject(File file) {
+        FileInputStream fileInputStream = null;
         try {
-            FileInputStream fis = new FileInputStream(file);
+            fileInputStream = new FileInputStream(file);
+            ObjectInputStream objectInputStream = null;
             try {
-                ObjectInputStream in = new ObjectInputStream(fis);
-                return (E) in.readObject();
+                objectInputStream = new ObjectInputStream(fileInputStream);
+                return (E) objectInputStream.readObject();
             } finally {
-                Utils.closeQuietly(fis);
+                Utils.closeQuietly(objectInputStream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
+        } finally {
+            Utils.closeQuietly(fileInputStream);
         }
     }
 
@@ -257,11 +282,11 @@ public final class Utils {
 
     public static void appendText(String text, File file) {
         if (text == null) {
-            throw new NullPointerException("text can't be null");
+            throw new NullPointerException("Text can't be null");
         }
 
         if (file == null) {
-            throw new NullPointerException("file can't be null");
+            throw new NullPointerException("File can't be null");
         }
 
         try {
@@ -287,10 +312,12 @@ public final class Utils {
     }
 
     public static String fileAsText(File file) {
+        FileInputStream stream = null;
         try {
-            FileInputStream stream = new FileInputStream(file);
+            stream = new FileInputStream(file);
+            Reader reader = null;
             try {
-                Reader reader = new BufferedReader(new InputStreamReader(stream));
+                reader = new BufferedReader(new InputStreamReader(stream));
                 StringBuilder builder = new StringBuilder();
                 char[] buffer = new char[8192];
                 int read;
@@ -299,10 +326,12 @@ public final class Utils {
                 }
                 return builder.toString();
             } finally {
-                closeQuietly(stream);
+                closeQuietly(reader);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            closeQuietly(stream);
         }
     }
 
@@ -513,11 +542,15 @@ public final class Utils {
         LockSupport.parkNanos(nanos);
     }
 
-    public static void exitWithError(ILogger logger, String msg) {
-        logger.severe(msg);
+    public static void exitWithError(Logger logger, String msg) {
+        logger.fatal(msg);
         System.exit(1);
     }
 
+    public static void exitWithError(Logger logger, String msg, Throwable t) {
+        String throwableString = throwableToString(t);
+        exitWithError(logger, msg + "\n" + throwableString);
+    }
 
     private Utils() {
     }
@@ -584,7 +617,7 @@ public final class Utils {
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
-            exitWithError(log, format("%s [%s] does not exist\n", desc, file));
+            exitWithError(log, format("%s [%s] does not exist%n", desc, file));
         }
         return file;
     }
@@ -595,7 +628,7 @@ public final class Utils {
             file = newFile(Coordinator.STABILIZER_HOME + File.separator + "conf" + File.separator + fileName);
         }
         if (!file.exists()) {
-            exitWithError(log, format("%s [%s] does not exist\n", desc, file.getAbsolutePath()));
+            exitWithError(log, format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
         }
         log.info("Loading " + desc + ": " + file.getAbsolutePath());
 
@@ -631,5 +664,22 @@ public final class Utils {
         }
 
         return files;
+    }
+
+    public static void copyFilesToDirectory(File[] sourceFiles, File targetDirectory) {
+        for (File sourceFile : sourceFiles) {
+            copyFileToDirectory(sourceFile, targetDirectory);
+        }
+    }
+
+    public static void copyFileToDirectory(File sourceFile, File targetDirectory) {
+        File targetFile = Utils.newFile(targetDirectory, sourceFile.getName());
+        try {
+            Files.copy(sourceFile, targetFile);
+        } catch (IOException e) {
+            String errorMessage = format("Error while copying file from %s to %s",
+                    sourceFile.getAbsolutePath(), targetFile.getAbsolutePath());
+            exitWithError(log, errorMessage, e);
+        }
     }
 }

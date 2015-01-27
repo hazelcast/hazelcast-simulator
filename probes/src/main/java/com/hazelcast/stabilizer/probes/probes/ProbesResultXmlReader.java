@@ -109,9 +109,9 @@ public class ProbesResultXmlReader {
                             Histogram histogram = Histogram.decodeFromCompressedByteBuffer(ByteBuffer.wrap(bytes), 0);
                             return new HdrLatencyProbeResult(histogram);
                         } catch (IOException e) {
-                            new RuntimeException(e);
+                            throw new RuntimeException(e);
                         } catch (DataFormatException e) {
-                            new RuntimeException(e);
+                            throw new RuntimeException(e);
                         }
                     } else {
                         throw new XMLStreamException("Unexpected end element data.");

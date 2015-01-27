@@ -22,17 +22,15 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.TestCase;
+import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.probes.probes.Result;
-import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.utils.ExceptionReporter;
-import com.hazelcast.stabilizer.tests.utils.TestUtils;
+import com.hazelcast.stabilizer.test.TestContext;
+import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
+import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.worker.commands.Command;
 import com.hazelcast.stabilizer.worker.commands.CommandRequest;
 import com.hazelcast.stabilizer.worker.commands.CommandResponse;
@@ -45,6 +43,7 @@ import com.hazelcast.stabilizer.worker.commands.MessageCommand;
 import com.hazelcast.stabilizer.worker.commands.RunCommand;
 import com.hazelcast.stabilizer.worker.commands.StopCommand;
 import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.ObjectInputStream;
@@ -55,8 +54,6 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -69,15 +66,15 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getHostAddress;
 import static com.hazelcast.stabilizer.Utils.writeObject;
-import static com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport.bindProperties;
-import static com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport.parseProbeConfiguration;
+import static com.hazelcast.stabilizer.test.utils.PropertyBindingSupport.bindProperties;
+import static com.hazelcast.stabilizer.test.utils.PropertyBindingSupport.parseProbeConfiguration;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 public class MemberWorker {
 
     private static final String DASHES = "---------------------------";
-    private static final ILogger log = Logger.getLogger(MemberWorker.class);
+    private static final Logger log = Logger.getLogger(MemberWorker.class);
 
     private final ConcurrentMap<String, Command> commands = new ConcurrentHashMap<String, Command>();
     private final ConcurrentMap<String, TestContainer<TestContext>> tests
@@ -120,7 +117,7 @@ public class MemberWorker {
 
         new CommandRequestProcessingThread().start();
         new SocketThread().start();
-        new PerformanceMonitorThread().start();
+        new PerformanceMonitor(tests.values()).start();
 
         // the last thing we do is to signal to the agent we have started.
         signalStartToAgent();
@@ -364,7 +361,10 @@ public class MemberWorker {
             long result = 0;
 
             for (TestContainer testContainer : tests.values()) {
-                result += testContainer.getOperationCount();
+                long operationCount = testContainer.getOperationCount();
+                if (operationCount > 0) {
+                    result += operationCount;
+                }
             }
 
             return result;
@@ -377,7 +377,7 @@ public class MemberWorker {
 
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
-                    log.warning("Failed to process command: " + command + " no test with testId" + testId + " is found");
+                    log.warn("Failed to process command: " + command + " no test with testId" + testId + " is found");
                     return;
                 }
 
@@ -395,7 +395,7 @@ public class MemberWorker {
                                 test.run();
                                 log.info(format("%s Completed %s.run() %s", DASHES, testName, DASHES));
                             } catch (InvocationTargetException e) {
-                                log.severe(format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES), e.getCause());
+                                log.fatal(format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES), e.getCause());
                                 throw e.getCause();
                             }
                         }
@@ -403,7 +403,7 @@ public class MemberWorker {
                 };
                 commandThread.start();
             } catch (Exception e) {
-                log.severe("Failed to start test", e);
+                log.fatal("Failed to start test", e);
                 throw e;
             }
         }
@@ -417,7 +417,7 @@ public class MemberWorker {
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
                     // we log a warning: it could be that it is a newly created machine from mama-monkey.
-                    log.warning("Failed to process command: " + command + " no test with " +
+                    log.warn("Failed to process command: " + command + " no test with " +
                             "testId " + testId + " is found");
                     return;
                 }
@@ -432,7 +432,7 @@ public class MemberWorker {
                             method.invoke(test);
                             log.info(format("%s Finished %s.%s() %s", DASHES, testName, methodName, DASHES));
                         } catch (InvocationTargetException e) {
-                            log.severe(format("%s Failed %s.%s() %s", DASHES, testName, methodName, DASHES));
+                            log.fatal(format("%s Failed %s.%s() %s", DASHES, testName, methodName, DASHES));
                             throw e.getCause();
                         } finally {
                             if ("localTeardown".equals(methodName)) {
@@ -443,7 +443,7 @@ public class MemberWorker {
                 };
                 commandThread.start();
             } catch (Exception e) {
-                log.severe(format("Failed to execute test.%s()", methodName), e);
+                log.fatal(format("Failed to execute test.%s()", methodName), e);
                 throw e;
             }
         }
@@ -453,17 +453,22 @@ public class MemberWorker {
                 TestCase testCase = command.testCase;
                 String testId = testCase.getId();
                 if (tests.containsKey(testId)) {
-                    throw new IllegalStateException("Can't init testcase: " + command + ", another test with [" + testId +
-                            "] testId already exists");
+                    throw new IllegalStateException(format(
+                            "Can't init TestCase: %s, another test with testId [%s] already exists", command, testId
+                    ));
+                }
+                if (!testId.isEmpty() && !Utils.isValidFileName(testId)) {
+                    throw new IllegalArgumentException(format(
+                            "Can't init TestCase: %s, testId [%s] is an invalid filename", command, testId
+                    ));
                 }
 
-                log.info(format("%s Initializing test %s %s\n%s", DASHES, testId, testCase, DASHES));
+                log.info(format("%s Initializing test %s %s%n%s", DASHES, testId, testCase, DASHES));
 
                 String clazzName = testCase.getClassname();
                 Object testObject = InitCommand.class.getClassLoader().loadClass(clazzName).newInstance();
                 bindProperties(testObject, testCase);
                 ProbesConfiguration probesConfiguration = parseProbeConfiguration(testCase);
-
 
                 TestContextImpl testContext = new TestContextImpl(testCase.id);
                 TestContainer<TestContext> testContainer = new TestContainer<TestContext>(testObject, testContext, probesConfiguration);
@@ -473,7 +478,7 @@ public class MemberWorker {
                     serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE + ":" + testCase.id, testObject);
                 }
             } catch (Throwable e) {
-                log.severe("Failed to init Test", e);
+                log.fatal("Failed to init Test", e);
                 throw e;
             }
         }
@@ -484,14 +489,14 @@ public class MemberWorker {
                 final String testName = "".equals(testId) ? "test" : testId;
                 TestContainer<TestContext> test = tests.get(command.testId);
                 if (test == null) {
-                    log.warning("Can't stop test, test with id " + command.testId + " does not exist");
+                    log.warn("Can't stop test, test with id " + command.testId + " does not exist");
                     return;
                 }
 
                 log.info(format("%s %s.stop() %s", DASHES, testName, DASHES));
                 test.getTestContext().stop();
             } catch (Exception e) {
-                log.severe("Failed to execute test.stop", e);
+                log.fatal("Failed to execute test.stop", e);
                 throw e;
             }
         }
@@ -556,69 +561,6 @@ public class MemberWorker {
         @Override
         public void stop() {
             stopped = true;
-        }
-    }
-
-    class PerformanceMonitorThread extends Thread {
-        private final File performanceFile = new File("performance.txt");
-        private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-
-        private long oldCount;
-        private long oldTimeMillis = System.currentTimeMillis();
-
-        public PerformanceMonitorThread() {
-            super("PerformanceMonitorThread");
-            setDaemon(true);
-
-            Utils.appendText("Timestamp                      Ops (sum)     Ops/s (interval)\n", performanceFile);
-            Utils.appendText("-------------------------------------------------------------\n", performanceFile);
-        }
-
-        @Override
-        public void run() {
-            for (; ; ) {
-                try {
-                    Thread.sleep(5000);
-                    singleRun();
-                } catch (Throwable t) {
-                    log.severe("Failed to run performance monitor", t);
-                }
-            }
-        }
-
-        private void singleRun() {
-            long currentCount = getCount();
-            long delta = currentCount - oldCount;
-
-            long currentTimeMs = System.currentTimeMillis();
-            long durationMs = currentTimeMs - oldTimeMillis;
-
-            double performance = (delta * 1000d) / durationMs;
-
-            oldCount = currentCount;
-            oldTimeMillis = currentTimeMs;
-
-            Utils.appendText(format("[%s] %s ops %s ops/s\n",
-                            simpleDateFormat.format(new Date()),
-                            Utils.formatLong(currentCount, 14),
-                            Utils.formatDouble(performance, 14)
-                    ), performanceFile
-            );
-        }
-
-        private long getCount() {
-            long operationCount = 0;
-            for (TestContainer container : tests.values()) {
-                try {
-                    long testOperationCount = container.getOperationCount();
-                    if (testOperationCount >= 0) {
-                        operationCount += testOperationCount;
-                    }
-                } catch (Throwable ignored) {
-                }
-            }
-
-            return operationCount;
         }
     }
 }

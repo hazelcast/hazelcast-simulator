@@ -50,7 +50,7 @@ public class HdrLatencyProbeResult implements Result<HdrLatencyProbeResult> {
             writer.writeCData(encodedData);
             writer.writeEndElement();
         } catch (XMLStreamException e) {
-            new RuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 

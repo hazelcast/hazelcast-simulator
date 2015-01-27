@@ -1,14 +1,15 @@
 package com.hazelcast.stabilizer.tests.utils;
 
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.tests.BindException;
+import com.hazelcast.stabilizer.test.exceptions.BindException;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.tests.utils.PropertyBindingSupport.bindProperty;
+import static com.hazelcast.stabilizer.test.utils.PropertyBindingSupport.bindProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -23,6 +24,17 @@ public class PropertyBindingSupportTest {
 
         bindProperty(someObject, "stringField", "foo");
         assertEquals(someObject.stringField, "foo");
+    }
+
+    @Test
+    public void bindProperty_class() throws IllegalAccessException {
+        SomeObject someObject = new SomeObject();
+
+        bindProperty(someObject, "clazz", "null");
+        assertNull(someObject.clazz);
+
+        bindProperty(someObject, "clazz", ArrayList.class.getName());
+        assertEquals(someObject.clazz, ArrayList.class);
     }
 
     @Test
@@ -82,13 +94,6 @@ public class PropertyBindingSupportTest {
         bindProperty(someObject, "notexist", "null");
     }
 
-    @Test(expected = BindException.class)
-    public void bindProperty_unhandeledType() throws IllegalAccessException {
-        SomeObject someObject = new SomeObject();
-
-        bindProperty(someObject, "objectField", "null");
-    }
-
     @Test
     public void bindProperty_withPath() throws IllegalAccessException {
         SomeObject someObject = new SomeObject();
@@ -120,6 +125,7 @@ public class PropertyBindingSupportTest {
         private Object objectField;
         public OtherObject otherObject = new OtherObject();
         public OtherObject nullOtherObject;
+        public Class clazz;
     }
 
     class OtherObject {

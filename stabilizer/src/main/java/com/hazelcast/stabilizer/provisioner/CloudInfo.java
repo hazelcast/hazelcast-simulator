@@ -1,8 +1,7 @@
 package com.hazelcast.stabilizer.provisioner;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
+import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.Image;
@@ -18,7 +17,7 @@ import static java.lang.String.format;
  * Commandline tool to retrieve various cloud info.
  */
 public class CloudInfo {
-    private final static ILogger log = Logger.getLogger(CloudInfo.class);
+    private final static Logger log = Logger.getLogger(CloudInfo.class);
 
     public StabilizerProperties props = new StabilizerProperties();
 
@@ -107,7 +106,7 @@ public class CloudInfo {
             cli.run(args);
             System.exit(0);
         } catch (Throwable e) {
-            log.severe(e);
+            log.fatal(e);
             System.exit(1);
         }
     }

@@ -1,15 +1,14 @@
 package com.hazelcast.stabilizer.coordinator;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.tests.TestSuite;
+import com.hazelcast.stabilizer.test.Failure;
+import com.hazelcast.stabilizer.test.TestSuite;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.List;
@@ -20,12 +19,12 @@ import static com.hazelcast.stabilizer.Utils.fileAsText;
 import static com.hazelcast.stabilizer.Utils.getFile;
 import static com.hazelcast.stabilizer.Utils.getFileAsTextFromWorkingDirOrStabilizerHome;
 import static com.hazelcast.stabilizer.Utils.newFile;
-import static com.hazelcast.stabilizer.tests.TestSuite.loadTestSuite;
+import static com.hazelcast.stabilizer.test.TestSuite.loadTestSuite;
 import static java.lang.String.format;
 
 public class CoordinatorCli {
 
-    private final static ILogger log = Logger.getLogger(CoordinatorCli.class);
+    private final static Logger log = Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -193,6 +192,7 @@ public class CoordinatorCli {
         workerJvmSettings.refreshJvm = options.valueOf(workerRefreshSpec);
         workerJvmSettings.profiler = coordinator.props.get("PROFILER", "none");
         workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
+        workerJvmSettings.flightrecorderSettings = coordinator.props.get("FLIGHTRECORDER_SETTINGS");
         workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS", "");
         workerJvmSettings.perfSettings = coordinator.props.get("PERF_SETTINGS", "");
         workerJvmSettings.vtuneSettings = coordinator.props.get("VTUNE_SETTINGS", "");

@@ -22,7 +22,7 @@ import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.GitInfo;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
-import com.hazelcast.stabilizer.tests.TestSuite;
+import com.hazelcast.stabilizer.test.TestSuite;
 import joptsimple.OptionException;
 import org.apache.log4j.Logger;
 
@@ -114,7 +114,7 @@ public class Agent {
         log.info("Stabilizer Agent");
         log.info(format("Version: %s, Commit: %s, Build Time: %s",
                 getVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
-        log.info(format("STABILIZER_HOME: %s\n", STABILIZER_HOME));
+        log.info(format("STABILIZER_HOME: %s%n", STABILIZER_HOME));
         logInterestingSystemProperties();
 
         try {

@@ -1,8 +1,7 @@
 package com.hazelcast.stabilizer.coordinator;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.Failure;
+import com.hazelcast.stabilizer.test.Failure;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.List;
@@ -11,18 +10,19 @@ import static com.hazelcast.stabilizer.Utils.appendText;
 import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 
 class FailureMonitorThread extends Thread {
-    private final Coordinator coordinator;
-    private final ILogger log = Logger.getLogger(FailureMonitorThread.class);
+    private final Logger log = Logger.getLogger(FailureMonitorThread.class);
     private final File file;
+    private final Coordinator coordinator;
 
     public FailureMonitorThread(Coordinator coordinator) {
         super("FailureMonitorThread");
 
-        file = new File("failures-" + coordinator.testSuite.id + ".txt");
-
         if (coordinator == null) {
             throw new NullPointerException();
         }
+
+        file = new File("failures-" + coordinator.testSuite.id + ".txt");
+
         this.coordinator = coordinator;
         this.setDaemon(true);
     }
@@ -34,7 +34,7 @@ class FailureMonitorThread extends Thread {
                 sleepSeconds(1);
                 scan();
             } catch (Throwable e) {
-                log.severe(e);
+                log.fatal(e);
             }
         }
     }
@@ -43,7 +43,7 @@ class FailureMonitorThread extends Thread {
         List<Failure> failures = coordinator.agentsClient.getFailures();
         for (Failure failure : failures) {
             coordinator.failureList.add(failure);
-            log.warning(buildMessage(failure));
+            log.warn(buildMessage(failure));
             appendText(failure.toString() + "\n", file);
         }
     }

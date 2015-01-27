@@ -1,21 +1,19 @@
 package com.hazelcast.stabilizer.coordinator;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.TestCase;
+import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.probes.probes.ProbesResultXmlWriter;
 import com.hazelcast.stabilizer.probes.probes.Result;
-import com.hazelcast.stabilizer.tests.Failure;
-import com.hazelcast.stabilizer.tests.TestSuite;
-import com.hazelcast.stabilizer.tests.map.helpers.StringUtils;
+import com.hazelcast.stabilizer.test.Failure;
+import com.hazelcast.stabilizer.test.TestSuite;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
 import com.hazelcast.stabilizer.worker.commands.GetBenchmarkResultsCommand;
 import com.hazelcast.stabilizer.worker.commands.InitCommand;
 import com.hazelcast.stabilizer.worker.commands.RunCommand;
 import com.hazelcast.stabilizer.worker.commands.StopCommand;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.HashMap;
@@ -32,7 +30,7 @@ import static java.lang.String.format;
  * by having multiple TestCaseRunners  in parallel.
  */
 public class TestCaseRunner {
-    private final static ILogger log = Logger.getLogger(TestCaseRunner.class);
+    private final static Logger log = Logger.getLogger(TestCaseRunner.class);
 
     private final TestCase testCase;
     private final Coordinator coordinator;
@@ -53,7 +51,7 @@ public class TestCaseRunner {
 
     public boolean run() throws Exception {
         log.info("--------------------------------------------------------------\n" +
-                format("Running Test : %s\n%s", testCase.getId(), testCase) + "\n" +
+                format("Running Test : %s%n%s%n", testCase.getId(), testCase) +
                 "--------------------------------------------------------------");
 
         int oldFailureCount = coordinator.failureList.size();
@@ -119,7 +117,7 @@ public class TestCaseRunner {
 
             return coordinator.failureList.size() == oldFailureCount;
         } catch (Exception e) {
-            log.severe("Failed", e);
+            log.fatal("Failed", e);
             return false;
         }
     }
@@ -147,7 +145,7 @@ public class TestCaseRunner {
         try {
             agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
         } catch (TimeoutException e) {
-            log.severe("A timeout happened while retrieving the benchmark results");
+            log.fatal("A timeout happened while retrieving the benchmark results");
             return combinedResults;
         }
         for (List<Map<String, R>> agentProbeResults : agentsProbeResults) {
@@ -161,7 +159,7 @@ public class TestCaseRunner {
                             combinedValue = currentResult.combine(combinedValue);
                             combinedResults.put(probeName, combinedValue);
                         } else {
-                            log.warning("Probe " + probeName + " has null value for some member. This should not happen.");
+                            log.warn("Probe " + probeName + " has null value for some member. This should not happen.");
                         }
                     }
                 }
@@ -208,8 +206,8 @@ public class TestCaseRunner {
                     msg += ", performance not available";
                 } else {
                     msg += String.format("%s ops/s %s ops",
-                            Utils.formatDouble(coordinator.performance, 14),
-                            Utils.formatLong(coordinator.operationCount, 14)
+                            Utils.formatDouble(coordinator.performance, 18),
+                            Utils.formatLong(coordinator.operationCount, 18)
                     );
                 }
             }
@@ -233,7 +231,7 @@ public class TestCaseRunner {
         try {
             agentsClient.echo(prefix + msg);
         } catch (TimeoutException e) {
-            log.warning("Failed to echo message due to timeout");
+            log.warn("Failed to echo message due to timeout");
         }
         log.info(prefix + msg);
     }

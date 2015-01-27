@@ -1,13 +1,15 @@
 package com.hazelcast.stabilizer.provisioner;
 
 import com.google.common.base.Predicate;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.GitInfo;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
+import com.hazelcast.stabilizer.provisioner.git.BuildSupport;
+import com.hazelcast.stabilizer.provisioner.git.GitSupport;
+import com.hazelcast.stabilizer.provisioner.git.HazelcastJARFinder;
+import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
@@ -37,7 +39,7 @@ import static java.lang.String.format;
 //https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
 //https://github.com/jclouds/jclouds-examples/blob/master/minecraft-compute/src/main/java/org/jclouds/examples/minecraft/NodeManager.java
 public class Provisioner {
-    private final static ILogger log = Logger.getLogger(Provisioner.class);
+    private final static Logger log = Logger.getLogger(Provisioner.class);
 
     public final StabilizerProperties props = new StabilizerProperties();
 
@@ -62,12 +64,22 @@ public class Provisioner {
         }
         addresses.addAll(AgentsFile.load(agentsFile));
         bash = new Bash(props);
-        hazelcastJars = new HazelcastJars(bash, props.getHazelcastVersionSpec());
+
+        GitSupport gitSupport = createGitSupport();
+        hazelcastJars = new HazelcastJars(bash, gitSupport, props.getHazelcastVersionSpec());
 
         initScript = new File("init.sh");
         if (!initScript.exists()) {
             initScript = new File(CONF_DIR + "/init.sh");
         }
+    }
+
+    private GitSupport createGitSupport() {
+        String mvnExec = props.get("MVN_EXECUTABLE");
+        BuildSupport buildSupport = new BuildSupport(bash, new HazelcastJARFinder(), mvnExec);
+        String gitBuildDirectory = props.get("GIT_BUILD_DIR");
+        String customGitRepositories = props.get("GIT_CUSTOM_REPOSITORIES");
+        return new GitSupport(buildSupport, customGitRepositories, gitBuildDirectory);
     }
 
     void installAgent(String ip) {
@@ -239,7 +251,7 @@ public class Provisioner {
             try {
                 f.get();
             } catch (ExecutionException e) {
-                log.severe("Failed provision", e);
+                log.fatal("Failed provision", e);
                 System.exit(1);
             }
         }
@@ -322,7 +334,7 @@ public class Provisioner {
         for (AgentAddress address : addresses) {
             echo("Downloading from %s", address.publicAddress);
 
-            String syncCommand = format("rsync --copy-links  -av -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers/* "+dir,
+            String syncCommand = format("rsync --copy-links  -avv -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers/* "+dir,
                     props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getVersion());
 
             bash.executeQuiet(syncCommand);
@@ -419,7 +431,7 @@ public class Provisioner {
             cli.run(args);
             System.exit(0);
         } catch (Throwable e) {
-            log.severe(e);
+            log.fatal(e);
             System.exit(1);
         }
     }

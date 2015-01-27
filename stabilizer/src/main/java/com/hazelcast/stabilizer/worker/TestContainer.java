@@ -1,23 +1,21 @@
 package com.hazelcast.stabilizer.worker;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.probes.probes.Result;
 import com.hazelcast.stabilizer.probes.probes.SimpleProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.DisabledResult;
-import com.hazelcast.stabilizer.tests.IllegalTestException;
-import com.hazelcast.stabilizer.tests.TestContext;
-import com.hazelcast.stabilizer.tests.annotations.Name;
-import com.hazelcast.stabilizer.tests.annotations.Performance;
-import com.hazelcast.stabilizer.tests.annotations.Receive;
-import com.hazelcast.stabilizer.tests.annotations.Run;
-import com.hazelcast.stabilizer.tests.annotations.Setup;
-import com.hazelcast.stabilizer.tests.annotations.Teardown;
-import com.hazelcast.stabilizer.tests.annotations.Verify;
-import com.hazelcast.stabilizer.tests.annotations.Warmup;
+import com.hazelcast.stabilizer.test.exceptions.IllegalTestException;
+import com.hazelcast.stabilizer.test.TestContext;
+import com.hazelcast.stabilizer.test.annotations.Name;
+import com.hazelcast.stabilizer.test.annotations.Performance;
+import com.hazelcast.stabilizer.test.annotations.Receive;
+import com.hazelcast.stabilizer.test.annotations.Run;
+import com.hazelcast.stabilizer.test.annotations.Setup;
+import com.hazelcast.stabilizer.test.annotations.Teardown;
+import com.hazelcast.stabilizer.test.annotations.Verify;
+import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.util.Clock;
 
 import java.lang.annotation.Annotation;
@@ -41,8 +39,6 @@ import static java.lang.String.format;
  * @param <T>
  */
 public class TestContainer<T extends TestContext> {
-
-    private final static ILogger log = Logger.getLogger(TestContainer.class);
 
     private final Object testObject;
     private final Class<? extends Object> clazz;

@@ -1,12 +1,13 @@
 package com.hazelcast.stabilizer.tests;
 
+import com.hazelcast.stabilizer.test.Failure;
 import org.junit.Test;
 
 import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static com.hazelcast.stabilizer.tests.Failure.Type.*;
+import static com.hazelcast.stabilizer.test.Failure.Type.*;
 
 public class TypeTest {
 

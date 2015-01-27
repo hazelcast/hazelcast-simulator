@@ -1,18 +1,27 @@
 package com.hazelcast.stabilizer.provisioner;
 
-import com.hazelcast.logging.ILogger;
 import com.hazelcast.stabilizer.Utils;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 
 public class ProvisionerCli {
-    private final static ILogger log = com.hazelcast.logging.Logger.getLogger(ProvisionerCli.class);
+    private final static Logger log = Logger.getLogger(ProvisionerCli.class);
 
     public final OptionParser parser = new OptionParser();
+
+    private final OptionSpec<String> gitSpec = parser.accepts("git",
+            "Overrides the HAZELCAST_VERSION_SPEC property and forces Provisioner to build " +
+                    "Hazelcast JARs from a given GIT version. This makes it easier to run a test " +
+                    "with different versions of Hazelcast. \n " +
+                    "E.g. --git f0288f713                to use the Git revision f0288f713 \n" +
+                    "     --git myRepository/myBranch    to use branch myBranch from a repository myRepository. " +
+                    "You can specify custom repositories in stabilizer.properties.")
+            .withRequiredArg().ofType(String.class);
 
     public final OptionSpec restartSpec = parser.accepts("restart",
             "Restarts all agents");
@@ -48,7 +57,7 @@ public class ProvisionerCli {
     ).withRequiredArg().ofType(String.class);
 
     private final OptionSpec<Boolean> enterpriseEnabledSpec = parser.accepts("enterpriseEnabled",
-            "use hazelcast enterprise edition jars")
+            "Use hazelcast enterprise edition JARs.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     private final Provisioner provisioner;
@@ -72,8 +81,13 @@ public class ProvisionerCli {
         }
 
         provisioner.props.init(getPropertiesFile());
-        provisioner.init();
 
+        if (options.has(gitSpec)) {
+            String git = options.valueOf(gitSpec);
+            provisioner.props.forceGit(git);
+        }
+
+        provisioner.init();
         if (options.has(restartSpec)) {
             boolean enterpriseEnabled = options.valueOf(enterpriseEnabledSpec);
             provisioner.restart(enterpriseEnabled);

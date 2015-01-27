@@ -17,7 +17,7 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 
 
 import com.hazelcast.stabilizer.agent.Agent;
-import com.hazelcast.stabilizer.tests.Failure;
+import com.hazelcast.stabilizer.test.Failure;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -136,7 +136,7 @@ public class WorkerJvmFailureMonitor {
         }
     }
 
-    public class HProfExtFilter implements FilenameFilter {
+    public static class HProfExtFilter implements FilenameFilter {
 
         public boolean accept(File dir, String name) {
             return name.endsWith(".hprof");

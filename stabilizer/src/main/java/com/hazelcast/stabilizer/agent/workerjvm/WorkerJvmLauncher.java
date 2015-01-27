@@ -183,6 +183,9 @@ public class WorkerJvmLauncher {
         } else if ("hprof".equals(profiler)) {
             args.add("java");
             args.add(settings.hprofSettings);
+        } else if ("flightrecorder".equals(profiler)) {
+            args.add("java");
+            args.add(settings.flightrecorderSettings);
         } else {
             args.add("java");
         }

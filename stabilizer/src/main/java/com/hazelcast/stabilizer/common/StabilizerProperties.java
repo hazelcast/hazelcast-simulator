@@ -1,8 +1,8 @@
 package com.hazelcast.stabilizer.common;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.provisioner.HazelcastJars;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,13 +20,14 @@ import static java.lang.String.format;
  * is configured, it will override the properties from the default.
  */
 public class StabilizerProperties {
-    private final static ILogger log = Logger.getLogger(StabilizerProperties.class);
+    private final static Logger log = Logger.getLogger(StabilizerProperties.class);
 
     private final Properties properties = new Properties();
+    private String forcedHazelcastVersionSpec;
 
     public StabilizerProperties() {
         File defaultPropsFile = newFile(getStablizerHome(), "conf", "stabilizer.properties");
-        log.finest("Loading default stabilizer.properties from: " + defaultPropsFile.getAbsolutePath());
+        log.debug("Loading default stabilizer.properties from: " + defaultPropsFile.getAbsolutePath());
         load(defaultPropsFile);
     }
 
@@ -39,7 +40,18 @@ public class StabilizerProperties {
     }
 
     public String getHazelcastVersionSpec() {
-        return get("HAZELCAST_VERSION_SPEC", "outofthebox");
+        if (forcedHazelcastVersionSpec == null) {
+            return get("HAZELCAST_VERSION_SPEC", "outofthebox");
+        } else {
+            return forcedHazelcastVersionSpec;
+        }
+    }
+
+    public void forceGit(String gitRevision) {
+        if (gitRevision != null && !gitRevision.isEmpty()) {
+            forcedHazelcastVersionSpec = HazelcastJars.GIT_VERSION_PREFIX + gitRevision;
+            log.info("Overriding Hazelcast version to GIT revision " + gitRevision);
+        }
     }
 
     /**
@@ -55,7 +67,7 @@ public class StabilizerProperties {
             if (fallbackPropsFile.exists()) {
                 file = fallbackPropsFile;
             } else {
-                log.warning(format("%s is not found, relying on defaults", fallbackPropsFile));
+                log.warn(format("%s is not found, relying on defaults", fallbackPropsFile));
             }
         }
 
@@ -67,12 +79,13 @@ public class StabilizerProperties {
 
     private void load(File file) {
         if (!file.exists()) {
-            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
+            Utils.exitWithError(log, "Could not find stabilizer.properties file: " + file.getAbsolutePath());
             return;
         }
 
+        FileInputStream inputStream = null;
         try {
-            FileInputStream inputStream = new FileInputStream(file);
+            inputStream = new FileInputStream(file);
             try {
                 properties.load(inputStream);
             } catch (IOException e) {
@@ -80,6 +93,8 @@ public class StabilizerProperties {
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            Utils.closeQuietly(inputStream);
         }
     }
 
@@ -138,8 +153,8 @@ public class StabilizerProperties {
             Utils.exitWithError(log, format("Can't find %s file %s", property, value));
         }
 
-        if (log.isFinestEnabled()) {
-            log.finest("Loading " + property + " from file: " + file.getAbsolutePath());
+        if (log.isDebugEnabled()) {
+            log.debug("Loading " + property + " from file: " + file.getAbsolutePath());
         }
         return fileAsText(file).trim();
     }

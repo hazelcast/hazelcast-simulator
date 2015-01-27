@@ -44,7 +44,7 @@ public class Model {
         }
     }
 
-    public class BenchmarkedChanged extends EventObject {
+    public static class BenchmarkedChanged extends EventObject {
         private final String name;
 
         public BenchmarkedChanged(Object source, String name) {

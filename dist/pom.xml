@@ -11,12 +11,16 @@
         <version>0.4-SNAPSHOT</version>
     </parent>
 
-
     <dependencies>
         <dependency>
             <groupId>com.hazelcast.stabilizer</groupId>
             <artifactId>stabilizer</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.hazelcast.stabilizer</groupId>
+            <artifactId>stabilizer-tests</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 

@@ -1,11 +1,10 @@
 package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.stabilizer.AssertTask;
-import com.hazelcast.stabilizer.TestSupport;
 import com.hazelcast.stabilizer.common.messaging.DummyRunnableMessage;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.common.messaging.MessageAddress;
-import com.hazelcast.stabilizer.tests.TestContext;
+import com.hazelcast.stabilizer.test.TestContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.exceptions.verification.WantedButNotInvoked;
