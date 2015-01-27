@@ -15,6 +15,7 @@
  */
 package com.hazelcast.stabilizer.tests.concurrent.atomiclong;
 
+import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
@@ -29,6 +30,7 @@ import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.OperationSelector;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,43 +40,47 @@ import static org.junit.Assert.assertEquals;
 
 public class AtomicLongTest {
 
-    private final static ILogger log = Logger.getLogger(AtomicLongTest.class);
+    private static final String KEY_PREFIX = "AtomicLongTest";
 
-    //props
+    private static final ILogger log = Logger.getLogger(AtomicLongTest.class);
+
+    private enum Operation {
+        PUT,
+        GET
+    }
+
+    // Properties
     public int countersLength = 1000;
     public int threadCount = 10;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
-    public String basename = "atomiclong";
+    public String basename = "atomicLong";
     public KeyLocality keyLocality = KeyLocality.Random;
-    public int writePercentage = 100;
+    public double writeProb = 1.0;
 
     private IAtomicLong totalCounter;
     private IAtomicLong[] counters;
     private AtomicLong operations = new AtomicLong();
     private TestContext context;
     private HazelcastInstance targetInstance;
+    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
 
     @Setup
     public void setup(TestContext context) throws Exception {
         this.context = context;
 
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
         targetInstance = context.getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
+        totalCounter = targetInstance.getAtomicLong("TotalCounter:" + context.getTestId());
         counters = new IAtomicLong[countersLength];
-        for (int k = 0; k < counters.length; k++) {
-            String key = KeyUtils.generateStringKey(8, keyLocality, targetInstance);
-            counters[k] = targetInstance.getAtomicLong(key);
+        for (int i = 0; i < counters.length; i++) {
+            String key = KEY_PREFIX + KeyUtils.generateStringKey(8, keyLocality, targetInstance);
+            counters[i] = targetInstance.getAtomicLong(key);
         }
+
+        selector
+                .addOperation(Operation.PUT, writeProb)
+                .addOperationRemainingProbability(Operation.GET);
     }
 
     @Teardown
@@ -89,7 +95,7 @@ public class AtomicLongTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(context.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
@@ -97,10 +103,14 @@ public class AtomicLongTest {
 
     @Verify
     public void verify() {
+        String serviceName = totalCounter.getServiceName();
         long expected = totalCounter.get();
         long actual = 0;
-        for (IAtomicLong counter : counters) {
-            actual += counter.get();
+        for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
+            String key = distributedObject.getName();
+            if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(KEY_PREFIX)) {
+                actual += targetInstance.getAtomicLong(key).get();
+            }
         }
 
         assertEquals(expected, actual);
@@ -121,11 +131,17 @@ public class AtomicLongTest {
 
             while (!context.isStopped()) {
                 IAtomicLong counter = getRandomCounter();
-                if (isWrite()) {
-                    increments++;
-                    counter.incrementAndGet();
-                } else {
-                    counter.get();
+
+                switch (selector.select()) {
+                    case PUT:
+                        increments++;
+                        counter.incrementAndGet();
+                        break;
+                    case GET:
+                        counter.get();
+                        break;
+                    default:
+                        throw new UnsupportedOperationException();
                 }
 
                 iteration++;
@@ -138,16 +154,6 @@ public class AtomicLongTest {
             }
             operations.addAndGet(iteration % performanceUpdateFrequency);
             totalCounter.addAndGet(increments);
-        }
-
-        private boolean isWrite() {
-            if (writePercentage == 100) {
-                return true;
-            } else if (writePercentage == 0) {
-                return false;
-            } else {
-                return random.nextInt(100) <= writePercentage;
-            }
         }
 
         private IAtomicLong getRandomCounter() {
