@@ -119,8 +119,8 @@ public class SqlPredicateTest {
         public static final int MAX_AGE = 75;
         public static final double MAX_SALARY = 1000.0;
 
-        public static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
-        public static Random random = new Random();
+        private static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
+        private static final Random random = new Random();
 
         private int id;
         private String name;

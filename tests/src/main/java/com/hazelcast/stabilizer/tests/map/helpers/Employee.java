@@ -8,14 +8,22 @@ public class Employee implements Serializable, Comparable<Employee> {
     public static final int MAX_AGE = 75;
     public static final double MAX_SALARY = 1000.0;
 
-    public static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
-    public static Random random = new Random();
+    private static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
+    private static final Random random = new Random();
 
     private int id;
     private String name;
     private int age;
     private boolean active;
     private double salary;
+
+    public Employee() {
+    }
+
+    public Employee(int id) {
+        this.id = id;
+        randomizeProperties();
+    }
 
     public Employee(String name, int age, boolean live, double salary) {
         this.name = name;
@@ -24,12 +32,8 @@ public class Employee implements Serializable, Comparable<Employee> {
         this.salary = salary;
     }
 
-    public Employee(int id) {
-        this.id = id;
-        randomizeProperties();
-    }
-
-    public Employee() {
+    public static String getRandomName() {
+        return Employee.names[random.nextInt(Employee.names.length)];
     }
 
     public void randomizeProperties() {

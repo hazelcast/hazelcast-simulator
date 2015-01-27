@@ -103,7 +103,7 @@ class PerformanceMonitor extends Thread {
         if (isGlobal) {
             columns += " Number of tests";
         }
-        Utils.appendText(format("%s\n%s\n", columns, Utils.fillString(columns.length(), '-')), file);
+        Utils.appendText(format("%s%n%s%n", columns, Utils.fillString(columns.length(), '-')), file);
     }
 
     private void writeStatsToFile(String timestamp, long opsSum, long opsDelta, double opsPerSecDelta,
@@ -122,7 +122,7 @@ class PerformanceMonitor extends Thread {
         );
     }
 
-    private class TestStats {
+    private static class TestStats {
         public final File performanceFile;
 
         public long lastOpsCount = 0;

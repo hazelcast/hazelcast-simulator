@@ -118,8 +118,7 @@ public class MapMaxSizeTest {
         try {
             MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
             log.info(basename + ": " + maxSizeConfig);
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
-
 }

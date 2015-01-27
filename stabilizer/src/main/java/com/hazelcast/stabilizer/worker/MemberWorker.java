@@ -463,7 +463,7 @@ public class MemberWorker {
                     ));
                 }
 
-                log.info(format("%s Initializing test %s %s\n%s", DASHES, testId, testCase, DASHES));
+                log.info(format("%s Initializing test %s %s%n%s", DASHES, testId, testCase, DASHES));
 
                 String clazzName = testCase.getClassname();
                 Object testObject = InitCommand.class.getClassLoader().loadClass(clazzName).newInstance();

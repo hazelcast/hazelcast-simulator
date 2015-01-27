@@ -15,8 +15,8 @@ import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
 public class MapStoreWithCounter implements MapStore<Object, Object> {
     private Random random = new Random();
 
-    public static int minDelayMs = 0;
-    public static int maxDelayMs = 0;
+    private static int minDelayMs = 0;
+    private static int maxDelayMs = 0;
 
     public final Map store = new ConcurrentHashMap();
     public AtomicInteger storeCount = new AtomicInteger(0);
@@ -24,6 +24,11 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
     public AtomicInteger countLoad = new AtomicInteger(0);
 
     public MapStoreWithCounter() {
+    }
+
+    public static void setMinMaxDelayMs(int minDelayMs, int maxDelayMs) {
+        MapStoreWithCounter.minDelayMs = minDelayMs;
+        MapStoreWithCounter.maxDelayMs = maxDelayMs;
     }
 
     @Override

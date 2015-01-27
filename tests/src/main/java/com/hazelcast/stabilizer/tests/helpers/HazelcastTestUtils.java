@@ -118,6 +118,9 @@ public class HazelcastTestUtils {
     }
 
     public final static class GetOperationCount implements Callable<Long>, HazelcastInstanceAware, Serializable {
+
+        private static final long serialVersionUID = 2875034360565495907L;
+
         private transient HazelcastInstance hz;
 
         @Override

@@ -25,12 +25,12 @@ import static junit.framework.Assert.assertNotNull;
 public class MapDataIntegrityTest {
     private final static ILogger log = Logger.getLogger(MapDataIntegrityTest.class);
 
-    public int MapIntegrityThreadCount=8;
-    public int stressThreadCount=8;
-    public int totalIntegritiyKeys=10000;
-    public int totalStressKeys=1000;
-    public int valueSize=1000;
-    public boolean mapLoad=true;
+    public int mapIntegrityThreadCount = 8;
+    public int stressThreadCount = 8;
+    public int totalIntegritiyKeys = 10000;
+    public int totalStressKeys = 1000;
+    public int valueSize = 1000;
+    public boolean mapLoad = true;
     public boolean doRunAsserts = true;
     public String basename = this.getClass().getCanonicalName();
 
@@ -43,7 +43,6 @@ public class MapDataIntegrityTest {
 
     MapIntegrityThread[] integrityThreads;
 
-
     @Setup
     public void setup(TestContext testContex) throws Exception {
         this.testContext = testContex;
@@ -52,7 +51,7 @@ public class MapDataIntegrityTest {
         integrityMap = targetInstance.getMap(basename+"Integrity");
         stressMap = targetInstance.getMap(basename+"Stress");
 
-        integrityThreads = new MapIntegrityThread[MapIntegrityThreadCount];
+        integrityThreads = new MapIntegrityThread[mapIntegrityThreadCount];
 
         value = new byte[valueSize];
         Random random = new Random();
@@ -87,7 +86,7 @@ public class MapDataIntegrityTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for(int i=0; i<MapIntegrityThreadCount; i++){
+        for(int i=0; i< mapIntegrityThreadCount; i++){
             integrityThreads[i]=new MapIntegrityThread();
             spawner.spawn( integrityThreads[i] );
         }

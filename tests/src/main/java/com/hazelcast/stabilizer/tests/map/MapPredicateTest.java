@@ -112,7 +112,7 @@ public class MapPredicateTest {
                     switch (operation) {
                         case PREDICATE_BUILDER: {
                             final int age = random.nextInt(Employee.MAX_AGE);
-                            final String name = Employee.names[random.nextInt(Employee.names.length)];
+                            final String name = Employee.getRandomName();
 
                             // TODO: This is still broken because it relies on reflection and that is dog slow.
                             // So you need to make of an explicit AgeNamePredicate.

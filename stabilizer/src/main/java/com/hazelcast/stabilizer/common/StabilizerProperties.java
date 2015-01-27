@@ -79,12 +79,13 @@ public class StabilizerProperties {
 
     private void load(File file) {
         if (!file.exists()) {
-            Utils.exitWithError(log, "Could not find stabilizer.properties file:  " + file.getAbsolutePath());
+            Utils.exitWithError(log, "Could not find stabilizer.properties file: " + file.getAbsolutePath());
             return;
         }
 
+        FileInputStream inputStream = null;
         try {
-            FileInputStream inputStream = new FileInputStream(file);
+            inputStream = new FileInputStream(file);
             try {
                 properties.load(inputStream);
             } catch (IOException e) {
@@ -92,6 +93,8 @@ public class StabilizerProperties {
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            Utils.closeQuietly(inputStream);
         }
     }
 

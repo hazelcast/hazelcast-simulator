@@ -210,37 +210,46 @@ public final class Utils {
     public static void writeObject(Object o, File file) {
         File tmpFile = new File(file.getParent(), file.getName() + ".tmp");
 
+        FileOutputStream fileOutputStream = null;
         try {
-            final FileOutputStream fous = new FileOutputStream(tmpFile);
+            fileOutputStream = new FileOutputStream(tmpFile);
+            ObjectOutputStream objectOutputStream = null;
             try {
-                ObjectOutput output = new ObjectOutputStream(fous);
-                output.writeObject(o);
+                objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                objectOutputStream.writeObject(o);
             } finally {
-                Utils.closeQuietly(fous);
+                Utils.closeQuietly(objectOutputStream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            Utils.closeQuietly(fileOutputStream);
         }
 
         if (!tmpFile.renameTo(file)) {
-            throw new RuntimeException(format("Could not rename [%s] to [%s]",
-                    tmpFile.getAbsolutePath(), file.getAbsolutePath()));
+            throw new RuntimeException(
+                    format("Could not rename [%s] to [%s]", tmpFile.getAbsolutePath(), file.getAbsolutePath())
+            );
         }
     }
 
     public static <E> E readObject(File file) {
+        FileInputStream fileInputStream = null;
         try {
-            FileInputStream fis = new FileInputStream(file);
+            fileInputStream = new FileInputStream(file);
+            ObjectInputStream objectInputStream = null;
             try {
-                ObjectInputStream in = new ObjectInputStream(fis);
-                return (E) in.readObject();
+                objectInputStream = new ObjectInputStream(fileInputStream);
+                return (E) objectInputStream.readObject();
             } finally {
-                Utils.closeQuietly(fis);
+                Utils.closeQuietly(objectInputStream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
+        } finally {
+            Utils.closeQuietly(fileInputStream);
         }
     }
 
@@ -273,11 +282,11 @@ public final class Utils {
 
     public static void appendText(String text, File file) {
         if (text == null) {
-            throw new NullPointerException("text can't be null");
+            throw new NullPointerException("Text can't be null");
         }
 
         if (file == null) {
-            throw new NullPointerException("file can't be null");
+            throw new NullPointerException("File can't be null");
         }
 
         try {
@@ -303,10 +312,12 @@ public final class Utils {
     }
 
     public static String fileAsText(File file) {
+        FileInputStream stream = null;
         try {
-            FileInputStream stream = new FileInputStream(file);
+            stream = new FileInputStream(file);
+            Reader reader = null;
             try {
-                Reader reader = new BufferedReader(new InputStreamReader(stream));
+                reader = new BufferedReader(new InputStreamReader(stream));
                 StringBuilder builder = new StringBuilder();
                 char[] buffer = new char[8192];
                 int read;
@@ -315,10 +326,12 @@ public final class Utils {
                 }
                 return builder.toString();
             } finally {
-                closeQuietly(stream);
+                closeQuietly(reader);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            closeQuietly(stream);
         }
     }
 
@@ -604,7 +617,7 @@ public final class Utils {
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
-            exitWithError(log, format("%s [%s] does not exist\n", desc, file));
+            exitWithError(log, format("%s [%s] does not exist%n", desc, file));
         }
         return file;
     }
@@ -615,7 +628,7 @@ public final class Utils {
             file = newFile(Coordinator.STABILIZER_HOME + File.separator + "conf" + File.separator + fileName);
         }
         if (!file.exists()) {
-            exitWithError(log, format("%s [%s] does not exist\n", desc, file.getAbsolutePath()));
+            exitWithError(log, format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
         }
         log.info("Loading " + desc + ": " + file.getAbsolutePath());
 
