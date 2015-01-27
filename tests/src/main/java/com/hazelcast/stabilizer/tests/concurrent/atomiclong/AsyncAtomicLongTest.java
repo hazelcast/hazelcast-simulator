@@ -16,189 +16,129 @@
 package com.hazelcast.stabilizer.tests.concurrent.atomiclong;
 
 import com.hazelcast.core.AsyncAtomicLong;
-import com.hazelcast.core.ExecutionCallback;
+import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
-import com.hazelcast.stabilizer.test.annotations.Performance;
-import com.hazelcast.stabilizer.test.annotations.Run;
-import com.hazelcast.stabilizer.test.annotations.Setup;
-import com.hazelcast.stabilizer.test.annotations.Teardown;
-import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
 import com.hazelcast.stabilizer.test.utils.AssertTask;
-import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.tests.StabilizerAbstractTest;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.test.utils.TestUtils.assertTrueEventually;
-import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static org.junit.Assert.assertEquals;
 
-public class AsyncAtomicLongTest {
+public class AsyncAtomicLongTest extends StabilizerAbstractTest {
 
-    private final static ILogger log = Logger.getLogger(AsyncAtomicLongTest.class);
+    private static final String KEY_PREFIX = "AsyncAtomicLongTest";
 
-    //props
+    // Properties
     public int countersLength = 1000;
-    public int threadCount = 10;
-    public int logFrequency = 10000;
-    public String basename = "atomiclong";
+    public String basename = "atomicLong";
     public KeyLocality keyLocality = KeyLocality.Random;
-    public int writePercentage = 100;
+    public double writeProb = 1.0;
     public int assertEventuallySeconds = 300;
     public int batchSize = -1;
 
-    private IAtomicLong totalCounter;
     private AsyncAtomicLong[] counters;
-    private AtomicLong operations = new AtomicLong();
-    private TestContext context;
-    private HazelcastInstance targetInstance;
+    private String serviceName;
 
-    @Setup
-    public void setup(TestContext context) throws Exception {
-        this.context = context;
-
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
-        targetInstance = context.getTargetInstance();
-
-        totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
+    @Override
+    public void afterSetup(HazelcastInstance hazelcastInstance) throws Exception {
         counters = new AsyncAtomicLong[countersLength];
-        for (int k = 0; k < counters.length; k++) {
-            String key = KeyUtils.generateStringKey(8, keyLocality, targetInstance);
-            counters[k] = (AsyncAtomicLong) targetInstance.getAtomicLong(key);
+        for (int i = 0; i < counters.length; i++) {
+            String key = KEY_PREFIX + KeyUtils.generateStringKey(8, keyLocality, hazelcastInstance);
+            counters[i] = (AsyncAtomicLong) hazelcastInstance.getAtomicLong(key);
         }
+        serviceName = counters[0].getServiceName();
+
+        addOperation(BaseOperation.PUT, writeProb);
+        addOperationRemainingProbability(BaseOperation.GET);
     }
 
-    @Teardown
-    public void teardown() throws Exception {
+    @Override
+    public void beforeTeardown() throws Exception {
         for (IAtomicLong counter : counters) {
             counter.destroy();
         }
-        totalCounter.destroy();
-        log.info(getOperationCountInformation(targetInstance));
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(context.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
-    @Verify
-    public void verify() {
-        final long expected = totalCounter.get();
-
-        // since the operations are asynchronous, we have no idea when they complete.
+    @Override
+    public void doVerify(final HazelcastInstance hazelcastInstance, final long verifyCounter) {
+        // since the operations are asynchronous, we have no idea when they complete
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                //hack to prevent overloading the system with get calls. Else it is done many times a second.
+                // hack to prevent overloading the system with get calls. Else it is done many times a second
                 Utils.sleepSeconds(10);
 
                 long actual = 0;
-                for (IAtomicLong counter : counters) {
-                    actual += counter.get();
+                for (DistributedObject distributedObject : hazelcastInstance.getDistributedObjects()) {
+                    String key = distributedObject.getName();
+                    if ((distributedObject.getServiceName().equals(serviceName) && key.startsWith(KEY_PREFIX))) {
+                        actual += hazelcastInstance.getAtomicLong(key).get();
+                    }
                 }
-                assertEquals(expected, actual);
+                assertEquals(verifyCounter, actual);
             }
         }, assertEventuallySeconds);
     }
 
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
+    @Override
+    public BaseWorker createWorker() {
+        return new Worker();
     }
 
-    private class Worker implements Runnable, ExecutionCallback {
-        private final Random random = new Random();
+    private class Worker extends AsyncBaseWorker<Long> {
+        private final List<ICompletableFuture<Long>> batch = new LinkedList<ICompletableFuture<Long>>();
 
         @Override
-        public void run() {
-            long iteration = 0;
-            long increments = 0;
+        protected void doRun(BaseOperation baseOperation) {
+            AsyncAtomicLong counter = getRandomCounter();
 
-            List<ICompletableFuture> batch = new LinkedList<ICompletableFuture>();
-            while (!context.isStopped()) {
-                AsyncAtomicLong counter = getRandomCounter();
-                ICompletableFuture<Long> future;
-                if (shouldWrite(iteration)) {
-                    increments++;
+            ICompletableFuture<Long> future;
+            switch (baseOperation) {
+                case PUT:
+                    incrementVerifyCounter();
                     future = counter.asyncIncrementAndGet();
-                } else {
+                    break;
+                case GET:
                     future = counter.asyncGet();
-                }
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+            future.andThen(this);
 
-                future.andThen(this);
+            if (batchSize > 0) {
+                batch.add(future);
 
-                if (batchSize > 0) {
-                    batch.add(future);
-
-                    if (batch.size() == batchSize) {
-                        for (ICompletableFuture f : batch) {
-                            try {
-                                f.get();
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            } catch (ExecutionException e) {
-                                throw new RuntimeException(e);
-                            }
+                if (batch.size() == batchSize) {
+                    for (ICompletableFuture batchFuture : batch) {
+                        try {
+                            batchFuture.get();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        } catch (ExecutionException e) {
+                            throw new RuntimeException(e);
                         }
                     }
                 }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
             }
-            totalCounter.addAndGet(increments);
         }
 
         @Override
-        public void onResponse(Object response) {
-            operations.addAndGet(1);
-        }
-
-        @Override
-        public void onFailure(Throwable t) {
-            ExceptionReporter.report(context.getTestId(), t);
-        }
-
-        private boolean shouldWrite(long iteration) {
-            if (writePercentage == 0) {
-                return false;
-            } else if (writePercentage == 100) {
-                return true;
-            } else {
-                return random.nextInt(100) <= writePercentage;
-            }
+        protected void onAsyncResponse(Long type) {
         }
 
         private AsyncAtomicLong getRandomCounter() {
-            int index = random.nextInt(counters.length);
-            return counters[index];
+            return counters[getRandomInt(counters.length)];
         }
     }
 

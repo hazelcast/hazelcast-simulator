@@ -41,7 +41,7 @@ import static java.lang.String.format;
 public class TestContainer<T extends TestContext> {
 
     private final Object testObject;
-    private final Class<? extends Object> clazz;
+    private final Class<?> clazz;
     private final T testContext;
     private final ProbesConfiguration probesConfiguration;
 
@@ -117,7 +117,7 @@ public class TestContainer<T extends TestContext> {
 
     public long getOperationCount() throws Throwable {
         Long count = invoke(operationCountMethod);
-        return count == null ? -1 : count;
+        return (count == null ? -1 : count);
     }
 
     public void run() throws Throwable {
@@ -164,6 +164,7 @@ public class TestContainer<T extends TestContext> {
         invoke(messageConsumerMethod, message);
     }
 
+    @SuppressWarnings("unchecked")
     private <E> E invoke(Method method, Object... args) throws Throwable {
         if (method == null) {
             return null;
@@ -250,19 +251,19 @@ public class TestContainer<T extends TestContext> {
         }
     }
 
-    private <T extends SimpleProbe> T getOrCreateProbe(String probeName, Class<T> probeType) {
+    @SuppressWarnings("unchecked")
+    private <P extends SimpleProbe> P getOrCreateProbe(String probeName, Class<P> probeType) {
         SimpleProbe<?, ?> probe = probeMap.get(probeName);
         if (probe == null) {
             probe = Probes.createProbe(probeType, probeName, probesConfiguration);
             probeMap.put(probeName, probe);
-            return (T) probe;
+            return (P) probe;
         }
         if (probeType.isAssignableFrom(probe.getClass())) {
-            return (T) probe;
+            return (P) probe;
         }
         throw new IllegalArgumentException("Can't create a probe " + probeName + " of type " + probeType.getName() + " as " +
                 "there is already a probe " + probe.getClass() + " with the same name");
-
     }
 
     private String getProbeName(Annotation[] parameterType, int i) {
@@ -285,9 +286,9 @@ public class TestContainer<T extends TestContext> {
 
         Method method = methods.get(0);
         method.setAccessible(true);
+        assertReturnType(method, Long.TYPE);
         assertNotStatic(method);
         assertNoArgs(method);
-        assertReturnType(method, Long.TYPE);
         operationCountMethod = method;
     }
 
@@ -390,8 +391,8 @@ public class TestContainer<T extends TestContext> {
     private void initLocalWarmupMethod() {
         List<Method> methods = findMethod(Warmup.class, new Filter<Warmup>() {
             @Override
-            public boolean allowed(Warmup t) {
-                return !t.global();
+            public boolean allowed(Warmup warmup) {
+                return !warmup.global();
             }
         });
 
@@ -411,8 +412,8 @@ public class TestContainer<T extends TestContext> {
     private void initGlobalWarmupMethod() {
         List<Method> methods = findMethod(Warmup.class, new Filter<Warmup>() {
             @Override
-            public boolean allowed(Warmup t) {
-                return t.global();
+            public boolean allowed(Warmup warmup) {
+                return warmup.global();
             }
         });
 
@@ -442,14 +443,12 @@ public class TestContainer<T extends TestContext> {
         assertNotStatic(method);
         assertArguments(method, Message.class);
         messageConsumerMethod = method;
-
     }
 
     private void assertNotStatic(Method method) {
         if (Modifier.isStatic(method.getModifiers())) {
             throw new IllegalTestException(
                     format("Method  %s can't be static", method.getName()));
-
         }
     }
 
@@ -503,12 +502,12 @@ public class TestContainer<T extends TestContext> {
         if (methods.size() == 0) {
             throw new IllegalTestException(
                     format("No method annotated with %s found on class %s", annotation.getName(), clazz.getName()));
-        } else if (methods.size() == 1) {
-            return;
-        } else {
-            throw new IllegalTestException(
-                    format("Too many methods on class %s with annotation %s", clazz.getName(), annotation.getName()));
         }
+        if (methods.size() == 1) {
+            return;
+        }
+        throw new IllegalTestException(
+                format("Too many methods on class %s with annotation %s", clazz.getName(), annotation.getName()));
     }
 
     private void assertAtMostOne(List<Method> methods, Class<? extends Annotation> annotation) {
@@ -537,23 +536,36 @@ public class TestContainer<T extends TestContext> {
     private List<Method> findMethod(Class<? extends Annotation> annotation, Filter filter) {
         List<Method> methods = new LinkedList<Method>();
 
-        for (Method method : clazz.getDeclaredMethods()) {
-            Annotation found = method.getAnnotation(annotation);
-            if (found != null && filter.allowed(found)) {
-                methods.add(method);
-            }
+        // search in base class
+        findMethod(clazz, annotation, filter, methods);
+
+        Class<?> searchClass = clazz;
+        while (methods.size() == 0 && searchClass.getSuperclass() != null) {
+            // search in super class
+            searchClass = searchClass.getSuperclass();
+            findMethod(searchClass, annotation, filter, methods);
         }
 
         return methods;
     }
 
+    @SuppressWarnings("unchecked")
+    private void findMethod(Class<?> searchClass, Class<? extends Annotation> annotation, Filter filter, List<Method> methods) {
+        for (Method method : searchClass.getDeclaredMethods()) {
+            Annotation found = method.getAnnotation(annotation);
+            if (found != null && filter.allowed(found)) {
+                methods.add(method);
+            }
+        }
+    }
+
     private interface Filter<A extends Annotation> {
-        boolean allowed(A m);
+        boolean allowed(A annotation);
     }
 
     private class AlwaysFilter implements Filter {
         @Override
-        public boolean allowed(Annotation m) {
+        public boolean allowed(Annotation annotation) {
             return true;
         }
     }
