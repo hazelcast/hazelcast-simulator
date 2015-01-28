@@ -19,8 +19,19 @@
     <serialization>
         <portable-version>1</portable-version>
         <portable-factories>
-            <portable-factory factory-id="10000000">com.hazelcast.stabilizer.tests.synthetic.SyntheticRequestPortableFactory</portable-factory>
+            <portable-factory factory-id="10000000">
+                com.hazelcast.stabilizer.tests.synthetic.SyntheticRequestPortableFactory
+            </portable-factory>
+            <portable-factory factory-id="300000">
+                com.hazelcast.stabilizer.tests.map.PredicatesTest$PortableEmployeeFactory
+            </portable-factory>
         </portable-factories>
+        <data-serializable-factories>
+            <data-serializable-factory factory-id="30">
+                com.hazelcast.stabilizer.tests.map.PredicatesTest$EmployeeDataSerializableFactory
+            </data-serializable-factory>
+        </data-serializable-factories>
     </serialization>
+
 
 </hazelcast-client>
