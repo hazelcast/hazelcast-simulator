@@ -27,7 +27,7 @@ import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.OperationService;
-import com.hazelcast.stabilizer.test.utils.PropertyBindingSupport;
+import com.hazelcast.stabilizer.utils.ReflectionUtils;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -160,7 +160,7 @@ public class HazelcastTestUtils {
     public static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
         HazelcastInstanceImpl impl = null;
         if (hz instanceof HazelcastInstanceProxy) {
-            return PropertyBindingSupport.getField(hz, "original");
+            return ReflectionUtils.getObjectFromField(hz, "original");
         } else if (hz instanceof HazelcastInstanceImpl) {
             impl = (HazelcastInstanceImpl) hz;
         }

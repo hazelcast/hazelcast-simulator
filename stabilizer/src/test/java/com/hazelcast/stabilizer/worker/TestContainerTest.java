@@ -6,6 +6,7 @@ import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.probes.probes.SimpleProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.DisabledProbe;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.test.exceptions.IllegalTestException;
@@ -16,6 +17,8 @@ import com.hazelcast.stabilizer.test.annotations.Receive;
 import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
+import com.hazelcast.stabilizer.test.utils.TestUtils;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -53,6 +56,22 @@ public class TestContainerTest {
     }
 
     @Test(expected = IllegalTestException.class)
+    public void testTooManyMixedRunAnnotations() throws Throwable {
+        new TestContainer<DummyTestContext>(new TooManyMixedRunAnnotationsTest(), testContext, probesConfiguration);
+    }
+
+    private static class TooManyMixedRunAnnotationsTest {
+        @Run
+        public void run() {
+        }
+
+        @RunWithWorker
+        public AbstractWorkerTask createBaseWorker() {
+            return null;
+        }
+    }
+
+    @Test(expected = IllegalTestException.class)
     public void testDuplicateSetupAnnotation() {
         new TestContainer<DummyTestContext>(new DuplicateSetupAnnotationTest(), testContext, probesConfiguration);
     }
@@ -69,16 +88,9 @@ public class TestContainerTest {
     }
 
     @Test
-    public void testSimpleTest() throws Throwable {
-        DummyTest test = new DummyTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
-        invoker.run();
-
-        assertTrue(test.runCalled);
-    }
-
-    @Test
     public void testSetupAnnotationInheritance() throws Throwable {
+        // @Setup method will be called from child class, not from dummy class
+        // @Run method will be called from dummy class, not from child class
         ChildWithOwnSetupMethodTest test = new ChildWithOwnSetupMethodTest();
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         invoker.setup();
@@ -101,6 +113,8 @@ public class TestContainerTest {
 
     @Test
     public void testRunAnnotationInheritance() throws Throwable {
+        // @Setup method will be called from dummy class, not from child class
+        // @Run method will be called from child class, not from dummy class
         ChildWithOwnRunMethodTest test = new ChildWithOwnRunMethodTest();
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         invoker.setup();
@@ -131,6 +145,46 @@ public class TestContainerTest {
         invoker.run();
 
         assertTrue(test.runCalled);
+    }
+
+    @Test
+    public void testRunWithBaseWorker() throws Throwable {
+        RunWithBaseWorkerTest test = new RunWithBaseWorkerTest();
+        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                TestUtils.sleepMs(50);
+                testContext.stop();
+            }
+        }.start();
+        invoker.run();
+
+        assertTrue(test.runWithWorkerCalled);
+    }
+
+    private static class RunWithBaseWorkerTest {
+        static enum Operation {
+            NOP
+        }
+
+        boolean runWithWorkerCalled;
+
+        @RunWithWorker
+        AbstractWorkerTask<Operation> createBaseWorker() {
+            return new AbstractWorkerTask<Operation>() {
+                @Override
+                protected OperationSelector<Operation> createOperationSelector() {
+                    return new OperationSelector<Operation>().addOperationRemainingProbability(Operation.NOP);
+                }
+
+                @Override
+                protected void doRun(Operation operation) {
+                    runWithWorkerCalled = true;
+                }
+            };
+        }
     }
 
     // ==================================================
@@ -496,6 +550,8 @@ public class TestContainerTest {
     }
 
     private static class DummyTestContext implements TestContext {
+        volatile boolean isStopped = false;
+
         @Override
         public HazelcastInstance getTargetInstance() {
             return null;
@@ -508,12 +564,12 @@ public class TestContainerTest {
 
         @Override
         public boolean isStopped() {
-            return false;
+            return isStopped;
         }
 
         @Override
         public void stop() {
-            throw new UnsupportedOperationException("Not implemented");
+            isStopped = true;
         }
     }
 }

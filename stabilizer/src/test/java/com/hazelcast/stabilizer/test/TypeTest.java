@@ -1,6 +1,5 @@
-package com.hazelcast.stabilizer.tests;
+package com.hazelcast.stabilizer.test;
 
-import com.hazelcast.stabilizer.test.Failure;
 import org.junit.Test;
 
 import java.util.Set;
@@ -22,7 +21,6 @@ public class TypeTest {
         Set<Failure.Type> types = fromPropertyValue("");
         assertThat(types, is(empty()));
     }
-
 
     @Test
     public void testFromPropertyValue_singleValue() throws Exception {
@@ -52,6 +50,4 @@ public class TypeTest {
             assertTrue(idsAsString.contains(type.getId()));
         }
     }
-
-
 }

@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.worker.utils;
+package com.hazelcast.stabilizer.utils;
 
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;

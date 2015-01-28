@@ -23,8 +23,8 @@ import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
 import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
-import com.hazelcast.stabilizer.test.utils.PropertyBindingSupport;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.utils.ReflectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -119,7 +119,7 @@ public class SyntheticTest {
                 HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy) targetInstance;
                 operationService = null;
                 PartitionServiceProxy partitionService = (PartitionServiceProxy) hazelcastClientProxy.client.getPartitionService();
-                clientPartitionService = PropertyBindingSupport.getField(partitionService, "partitionService");
+                clientPartitionService = ReflectionUtils.getObjectFromField(partitionService, "partitionService");
                 clientInvocationService = hazelcastClientProxy.client.getInvocationService();
             } else {
                 clientInvocationService = null;
