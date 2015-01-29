@@ -15,6 +15,7 @@ import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,6 +55,7 @@ public class Provisioner {
     private Bash bash;
     private HazelcastJars hazelcastJars;
     private File initScript;
+    public String uploadPath;
 
     public Provisioner() {
     }
@@ -341,6 +343,40 @@ public class Provisioner {
         }
 
         echoImportant("Finished Downloading Artifacts of %s machines", addresses.size());
+    }
+
+    public List<String> getPublicAdresses(List<AgentAddress> addresses){
+        List<String> result = new LinkedList<String>();
+        for(int i = 0; i < addresses.size(); i++){
+            result.add(addresses.get(i).publicAddress);
+        }
+        return result;
+    }
+
+    public void upload() throws IOException {
+        if(uploadPath != null){
+            log.info(format("Copying file '%s' to agents", uploadPath));
+            List<File> upload = Utils.getFilesFromClassPath(uploadPath);
+            List<String> publicAddresses = getPublicAdresses(addresses);
+            for(String ip : publicAddresses){
+                for (File file : upload){
+                    String syncCommand =
+                            format("rsync --ignore-existing -av -e \"ssh %s\" %s %s@%s:hazelcast-stabilizer-%s/workers/resources/",
+                                    props.get("SSH_OPTIONS", ""),
+                                    file.getAbsolutePath(),
+                                    props.get("USER"),
+                                    ip,
+                                    getVersion()
+                            );
+                    bash.execute(syncCommand);
+                }
+                log.info("    " + ip + " copied");
+            }
+            log.info(format("Finished copying file path '%s' to agents", uploadPath));
+        }
+        else{
+            log.info("Could not upload files");
+        }
     }
 
     public void clean() {
