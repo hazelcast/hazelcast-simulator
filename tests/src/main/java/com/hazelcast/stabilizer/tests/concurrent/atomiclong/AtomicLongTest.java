@@ -27,9 +27,9 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
+import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -49,6 +49,7 @@ public class AtomicLongTest {
     public String basename = "atomiclong";
     public KeyLocality keyLocality = KeyLocality.Random;
     public int writePercentage = 100;
+    public int warmupIterations = 100;
 
     private IAtomicLong totalCounter;
     private IAtomicLong[] counters;
@@ -79,9 +80,9 @@ public class AtomicLongTest {
     }
 
     @Warmup
-    public void warmup(){
-        for(int k=0;k<100;k++){
-            for(IAtomicLong counter: counters){
+    public void warmup() {
+        for (int k = 0; k < warmupIterations; k++) {
+            for (IAtomicLong counter : counters) {
                 counter.get();
             }
         }
