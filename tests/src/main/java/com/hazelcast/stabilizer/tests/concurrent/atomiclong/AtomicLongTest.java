@@ -26,6 +26,7 @@ import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
+import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
@@ -74,6 +75,15 @@ public class AtomicLongTest {
         for (int k = 0; k < counters.length; k++) {
             String key = KeyUtils.generateStringKey(8, keyLocality, targetInstance);
             counters[k] = targetInstance.getAtomicLong(key);
+        }
+    }
+
+    @Warmup
+    public void warmup(){
+        for(int k=0;k<100;k++){
+            for(IAtomicLong counter: counters){
+                counter.get();
+            }
         }
     }
 
