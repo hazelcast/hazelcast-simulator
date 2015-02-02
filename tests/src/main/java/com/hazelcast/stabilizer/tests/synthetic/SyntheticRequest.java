@@ -31,7 +31,7 @@ public class SyntheticRequest extends PartitionClientRequest {
 
     @Override
     protected Operation prepareOperation() {
-        SyntheticOperation op = new SyntheticOperation(syncBackupCount, asyncBackupCount, backupDelayNanos);
+        SyntheticOperation op = new SyntheticOperation((byte)syncBackupCount, (byte)asyncBackupCount, backupDelayNanos);
         op.setPartitionId(partitionId);
         return op;
     }
