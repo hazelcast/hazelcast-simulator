@@ -31,6 +31,11 @@ public class ProvisionerCli {
             "To delete all worker directories, run with --clean"
     ).withOptionalArg().defaultsTo("workers").ofType(String.class);
 
+    private final OptionSpec<String> uploadPathSpec = parser.accepts("upload",
+            "Upload files in this path to workers." +
+                    "i.e. resources file."
+    ).withRequiredArg().ofType(String.class);
+    
     public final OptionSpec cleanSpec = parser.accepts("clean",
             "Cleans the workers directories.");
 
@@ -97,7 +102,10 @@ public class ProvisionerCli {
         } else if (options.has(downloadSpec)) {
             String dir = options.valueOf(downloadSpec);
             provisioner.download(dir);
-        } else if (options.has(cleanSpec)) {
+        }else if (options.has(uploadPathSpec)) {
+            provisioner.uploadPath = options.valueOf(uploadPathSpec);
+            provisioner.upload();
+        }else if (options.has(cleanSpec)) {
             provisioner.clean();
         } else if (options.has(terminateSpec)) {
             provisioner.terminate();
