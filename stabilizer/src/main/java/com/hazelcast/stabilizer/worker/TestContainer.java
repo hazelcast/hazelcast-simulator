@@ -2,54 +2,100 @@ package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
+import com.hazelcast.stabilizer.probes.probes.Probes;
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.probes.probes.Result;
 import com.hazelcast.stabilizer.probes.probes.SimpleProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.DisabledResult;
-import com.hazelcast.stabilizer.test.exceptions.IllegalTestException;
+import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.test.TestContext;
-import com.hazelcast.stabilizer.test.annotations.Name;
 import com.hazelcast.stabilizer.test.annotations.Performance;
 import com.hazelcast.stabilizer.test.annotations.Receive;
 import com.hazelcast.stabilizer.test.annotations.Run;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
+import com.hazelcast.stabilizer.test.exceptions.IllegalTestException;
+import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.utils.AnnotationFilter.TeardownFilter;
+import com.hazelcast.stabilizer.utils.AnnotationFilter.VerifyFilter;
+import com.hazelcast.stabilizer.utils.AnnotationFilter.WarmupFilter;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 import com.hazelcast.util.Clock;
+import org.apache.log4j.Logger;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import com.hazelcast.stabilizer.probes.probes.Probes;
+import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.stabilizer.test.utils.PropertyBindingSupport.bindOptionalProperty;
+import static com.hazelcast.stabilizer.utils.ReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
+import static com.hazelcast.stabilizer.utils.ReflectionUtils.getField;
+import static com.hazelcast.stabilizer.utils.ReflectionUtils.getValueFromNameAnnotation;
+import static com.hazelcast.stabilizer.utils.ReflectionUtils.getValueFromNameAnnotations;
+import static com.hazelcast.stabilizer.utils.ReflectionUtils.getAtMostOneMethodWithoutArgs;
+import static com.hazelcast.stabilizer.utils.ReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck;
+import static com.hazelcast.stabilizer.utils.ReflectionUtils.injectObjectToInstance;
+import static com.hazelcast.stabilizer.utils.ReflectionUtils.invokeMethod;
 import static java.lang.String.format;
 
 /**
  * Since the test is based on annotations, there is no API we can call very easily.
  * That is the task of this test container.
  *
- * @param <T>
+ * @param <T> Class of type {@link com.hazelcast.stabilizer.test.TestContext}
  */
 public class TestContainer<T extends TestContext> {
 
-    private final Object testObject;
-    private final Class<? extends Object> clazz;
+    /**
+     * List of optional test properties, which are allowed to be defined in the properties file, but not in the test class.
+     */
+    public static final Set<String> OPTIONAL_TEST_PROPERTIES = new HashSet<String>();
+
+    private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
+
+    private static enum OptionalTestProperties {
+        THREAD_COUNT("threadCount"),
+        LOG_FREQUENCY("logFrequency"),
+        PERFORMANCE_UPDATE_FREQUENCY("performanceUpdateFrequency");
+
+        private final String propertyName;
+
+        OptionalTestProperties(String propertyName) {
+            this.propertyName = propertyName;
+        }
+    }
+
+    static {
+        for (OptionalTestProperties optionalTestProperties : OptionalTestProperties.values()) {
+            OPTIONAL_TEST_PROPERTIES.add(optionalTestProperties.propertyName);
+        }
+    }
+
+    // Properties
+    int threadCount = 10;
+
+    private final Object testClassInstance;
+    private final Class testClassType;
     private final T testContext;
     private final ProbesConfiguration probesConfiguration;
+    private final TestCase testCase;
+
+    private final Map<String, SimpleProbe<?, ?>> probeMap = new ConcurrentHashMap<String, SimpleProbe<?, ?>>();
 
     private Method runMethod;
-    private Method setupMethod;
+    private Method runWithWorkerTaskMethod;
 
-    private Method localTeardownMethod;
-    private Method globalTeardownMethod;
+    private Method setupMethod;
+    private Object[] setupArguments;
 
     private Method localWarmupMethod;
     private Method globalWarmupMethod;
@@ -57,13 +103,19 @@ public class TestContainer<T extends TestContext> {
     private Method localVerifyMethod;
     private Method globalVerifyMethod;
 
+    private Method localTeardownMethod;
+    private Method globalTeardownMethod;
+
     private Method operationCountMethod;
     private Method messageConsumerMethod;
 
-    private Map<String, SimpleProbe<?, ?>> probeMap = new ConcurrentHashMap<String, SimpleProbe<?, ?>>();
-    private Object[] setupArguments;
+    private AbstractWorkerTask operationCountWorkerTaskInstance;
 
     public TestContainer(Object testObject, T testContext, ProbesConfiguration probesConfiguration) {
+        this(testObject, testContext, probesConfiguration, null);
+    }
+
+    public TestContainer(Object testObject, T testContext, ProbesConfiguration probesConfiguration, TestCase testCase) {
         if (testObject == null) {
             throw new NullPointerException();
         }
@@ -71,10 +123,11 @@ public class TestContainer<T extends TestContext> {
             throw new NullPointerException();
         }
 
+        this.testClassInstance = testObject;
+        this.testClassType = testObject.getClass();
         this.testContext = testContext;
-        this.testObject = testObject;
-        this.clazz = testObject.getClass();
         this.probesConfiguration = probesConfiguration;
+        this.testCase = testCase;
 
         initMethods();
     }
@@ -92,32 +145,8 @@ public class TestContainer<T extends TestContext> {
         return results;
     }
 
-    private void initMethods() {
-        initRunMethod();
-        initSetupMethod();
-
-        initLocalTeardownMethod();
-        initGlobalTeardownMethod();
-
-        initLocalWarmupMethod();
-        initGlobalWarmupMethod();
-
-        initLocalVerifyMethod();
-        initGlobalVerifyMethod();
-
-        initGetOperationCountMethod();
-
-        initMessageConsumerMethod();
-        injectDependencies();
-    }
-
     public T getTestContext() {
         return testContext;
-    }
-
-    public long getOperationCount() throws Throwable {
-        Long count = invoke(operationCountMethod);
-        return count == null ? -1 : count;
     }
 
     public void run() throws Throwable {
@@ -125,7 +154,11 @@ public class TestContainer<T extends TestContext> {
         for (SimpleProbe probe : probeMap.values()) {
             probe.startProbing(now);
         }
-        invoke(runMethod);
+        if (runWithWorkerTaskMethod != null) {
+            invokeRunWithWorkerTaskMethod();
+        } else {
+            invokeMethod(testClassInstance, runMethod);
+        }
         now = Clock.currentTimeMillis();
         for (SimpleProbe probe : probeMap.values()) {
             probe.stopProbing(now);
@@ -133,428 +166,211 @@ public class TestContainer<T extends TestContext> {
     }
 
     public void setup() throws Throwable {
-        invoke(setupMethod, setupArguments);
-    }
-
-    public void globalTeardown() throws Throwable {
-        invoke(globalTeardownMethod);
-    }
-
-    public void localTeardown() throws Throwable {
-        invoke(localTeardownMethod);
-    }
-
-    public void localVerify() throws Throwable {
-        invoke(localVerifyMethod);
-    }
-
-    public void globalVerify() throws Throwable {
-        invoke(globalVerifyMethod);
+        invokeMethod(testClassInstance, setupMethod, setupArguments);
     }
 
     public void localWarmup() throws Throwable {
-        invoke(localWarmupMethod);
+        invokeMethod(testClassInstance, localWarmupMethod);
     }
 
     public void globalWarmup() throws Throwable {
-        invoke(globalWarmupMethod);
+        invokeMethod(testClassInstance, globalWarmupMethod);
+    }
+
+    public void localVerify() throws Throwable {
+        invokeMethod(testClassInstance, localVerifyMethod);
+    }
+
+    public void globalVerify() throws Throwable {
+        invokeMethod(testClassInstance, globalVerifyMethod);
+    }
+
+    public void globalTeardown() throws Throwable {
+        invokeMethod(testClassInstance, globalTeardownMethod);
+    }
+
+    public void localTeardown() throws Throwable {
+        invokeMethod(testClassInstance, localTeardownMethod);
+    }
+
+    public long getOperationCount() throws Throwable {
+        Long count = invokeMethod(
+                (operationCountWorkerTaskInstance != null) ? operationCountWorkerTaskInstance : testClassInstance,
+                operationCountMethod);
+        return (count == null ? -1 : count);
     }
 
     public void sendMessage(Message message) throws Throwable {
-        invoke(messageConsumerMethod, message);
+        invokeMethod(testClassInstance, messageConsumerMethod, message);
     }
 
-    private <E> E invoke(Method method, Object... args) throws Throwable {
-        if (method == null) {
-            return null;
-        }
-
+    private void initMethods() {
         try {
-            return (E) method.invoke(testObject, args);
-        } catch (InvocationTargetException e) {
-            throw e.getCause();
-        }
-    }
-
-    private void initSetupMethod() {
-        List<Method> methods = findMethod(Setup.class);
-        assertAtMostOne(methods, Setup.class);
-
-        if (methods.isEmpty()) {
-            return;
-        }
-
-        Method method = methods.get(0);
-        method.setAccessible(true);
-        assertNotStatic(method);
-        assertVoidReturnType(method);
-        assertSetupArguments(method);
-
-        initSetupArguments(method);
-        setupMethod = method;
-    }
-
-    private void injectDependencies() {
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
-            String name = getProbeName(field);
-            if (SimpleProbe.class.equals(field.getType())) {
-                SimpleProbe probe = getOrCreateProbe(name, SimpleProbe.class);
-                injectObjectToTest(field, probe);
-            } else if (IntervalProbe.class.equals(field.getType())) {
-                IntervalProbe probe = getOrCreateProbe(name, IntervalProbe.class);
-                injectObjectToTest(field, probe);
+            runMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Run.class);
+            runWithWorkerTaskMethod = getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, AbstractWorkerTask.class);
+            if (!(runMethod == null ^ runWithWorkerTaskMethod == null)) {
+                throw new IllegalTestException(
+                        format("Test must contain either %s or %s method", Run.class, RunWithWorker.class));
             }
-        }
-    }
 
-    private String getProbeName(Field field) {
-        Name nameAnnotation = field.getAnnotation(Name.class);
-        if (nameAnnotation != null) {
-            return nameAnnotation.value();
-        }
-        return field.getName();
-    }
-
-    private void injectObjectToTest(Field field, Object object) {
-        field.setAccessible(true);
-        try {
-            field.set(testObject, object);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void initSetupArguments(Method method) {
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-        setupArguments = new Object[parameterTypes.length];
-        for (int i = 0; i < parameterTypes.length; i++) {
-            Class<?> parameterType = parameterTypes[i];
-            initSetupArgument(i, parameterType, parameterAnnotations[i]);
-        }
-    }
-
-    private void initSetupArgument(int i, Class<?> parameterType, Annotation[] parameterAnnotations) {
-        if (parameterType.equals(IntervalProbe.class)) {
-            String probeName = getProbeName(parameterAnnotations, i);
-            IntervalProbe probe = getOrCreateProbe(probeName, IntervalProbe.class);
-            setupArguments[i] = probe;
-        } else if (parameterType.equals(SimpleProbe.class)) {
-            String probeName = getProbeName(parameterAnnotations, i);
-            SimpleProbe probe = getOrCreateProbe(probeName, SimpleProbe.class);
-            probeMap.put(probeName, probe);
-            setupArguments[i] = probe;
-        } else if (parameterType.isAssignableFrom(TestContext.class)) {
-            setupArguments[i] = testContext;
-        }
-    }
-
-    private <T extends SimpleProbe> T getOrCreateProbe(String probeName, Class<T> probeType) {
-        SimpleProbe<?, ?> probe = probeMap.get(probeName);
-        if (probe == null) {
-            probe = Probes.createProbe(probeType, probeName, probesConfiguration);
-            probeMap.put(probeName, probe);
-            return (T) probe;
-        }
-        if (probeType.isAssignableFrom(probe.getClass())) {
-            return (T) probe;
-        }
-        throw new IllegalArgumentException("Can't create a probe " + probeName + " of type " + probeType.getName() + " as " +
-                "there is already a probe " + probe.getClass() + " with the same name");
-
-    }
-
-    private String getProbeName(Annotation[] parameterType, int i) {
-        for (Annotation annotation : parameterType) {
-            if (annotation.annotationType().equals(Name.class)) {
-                Name name = (Name) annotation;
-                return name.value();
+            setupMethod = getAtMostOneVoidMethodSkipArgsCheck(testClassType, Setup.class);
+            if (setupMethod != null) {
+                assertSetupArguments(setupMethod);
+                setupArguments = getSetupArguments(setupMethod);
             }
-        }
-        return "Probe" + i;
-    }
 
-    private void initGetOperationCountMethod() {
-        List<Method> methods = findMethod(Performance.class);
-        assertAtMostOne(methods, Performance.class);
+            localWarmupMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Warmup.class, new WarmupFilter(false));
+            globalWarmupMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Warmup.class, new WarmupFilter(true));
 
-        if (methods.isEmpty()) {
-            return;
-        }
+            localVerifyMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Verify.class, new VerifyFilter(false));
+            globalVerifyMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Verify.class, new VerifyFilter(true));
 
-        Method method = methods.get(0);
-        method.setAccessible(true);
-        assertNotStatic(method);
-        assertNoArgs(method);
-        assertReturnType(method, Long.TYPE);
-        operationCountMethod = method;
-    }
+            localTeardownMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new TeardownFilter(false));
+            globalTeardownMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new TeardownFilter(true));
 
-    private void initRunMethod() {
-        List<Method> methods = findMethod(Run.class);
-        assertExactlyOne(methods, Run.class);
-
-        Method method = methods.get(0);
-        method.setAccessible(true);
-        assertVoidReturnType(method);
-        assertNotStatic(method);
-        assertNoArgs(method);
-        runMethod = method;
-    }
-
-    private void initLocalVerifyMethod() {
-        List<Method> methods = findMethod(Verify.class, new Filter<Verify>() {
-            @Override
-            public boolean allowed(Verify t) {
-                return !t.global();
+            operationCountMethod = getAtMostOneMethodWithoutArgs(testClassType, Performance.class, Long.TYPE);
+            messageConsumerMethod = getAtMostOneVoidMethodSkipArgsCheck(testClassType, Receive.class);
+            if (messageConsumerMethod != null) {
+                assertArguments(messageConsumerMethod, Message.class);
             }
-        });
-
-        if (methods.isEmpty()) {
-            return;
+        } catch (Exception e) {
+            throw new IllegalTestException(e.getMessage());
         }
 
-        assertAtMostOne(methods, Verify.class);
-        Method method = methods.get(0);
-        method.setAccessible(true);
-        assertVoidReturnType(method);
-        assertNotStatic(method);
-        assertNoArgs(method);
-        localVerifyMethod = method;
-    }
-
-    private void initGlobalVerifyMethod() {
-        List<Method> methods = findMethod(Verify.class, new Filter<Verify>() {
-            @Override
-            public boolean allowed(Verify t) {
-                return t.global();
-            }
-        });
-
-        if (methods.isEmpty()) {
-            return;
-        }
-
-        assertAtMostOne(methods, Verify.class);
-        Method method = methods.get(0);
-        method.setAccessible(true);
-        assertVoidReturnType(method);
-        assertNotStatic(method);
-        assertNoArgs(method);
-        globalVerifyMethod = method;
-    }
-
-    private void initLocalTeardownMethod() {
-        List<Method> methods = findMethod(Teardown.class, new Filter<Teardown>() {
-            @Override
-            public boolean allowed(Teardown t) {
-                return !t.global();
-            }
-        });
-
-        if (methods.isEmpty()) {
-            return;
-        }
-
-        assertAtMostOne(methods, Teardown.class);
-        Method method = methods.get(0);
-        method.setAccessible(true);
-        assertVoidReturnType(method);
-        assertNotStatic(method);
-        assertNoArgs(method);
-        localTeardownMethod = method;
-    }
-
-    private void initGlobalTeardownMethod() {
-        List<Method> methods = findMethod(Teardown.class, new Filter<Teardown>() {
-            @Override
-            public boolean allowed(Teardown t) {
-                return t.global();
-            }
-        });
-
-        if (methods.isEmpty()) {
-            return;
-        }
-
-        assertAtMostOne(methods, Teardown.class);
-        Method method = methods.get(0);
-        method.setAccessible(true);
-        assertVoidReturnType(method);
-        assertNotStatic(method);
-        assertNoArgs(method);
-        globalTeardownMethod = method;
-    }
-
-    private void initLocalWarmupMethod() {
-        List<Method> methods = findMethod(Warmup.class, new Filter<Warmup>() {
-            @Override
-            public boolean allowed(Warmup t) {
-                return !t.global();
-            }
-        });
-
-        if (methods.isEmpty()) {
-            return;
-        }
-
-        assertAtMostOne(methods, Warmup.class);
-        Method method = methods.get(0);
-        method.setAccessible(true);
-        assertVoidReturnType(method);
-        assertNotStatic(method);
-        assertNoArgs(method);
-        localWarmupMethod = method;
-    }
-
-    private void initGlobalWarmupMethod() {
-        List<Method> methods = findMethod(Warmup.class, new Filter<Warmup>() {
-            @Override
-            public boolean allowed(Warmup t) {
-                return t.global();
-            }
-        });
-
-        if (methods.isEmpty()) {
-            return;
-        }
-
-        assertAtMostOne(methods, Warmup.class);
-        Method method = methods.get(0);
-        method.setAccessible(true);
-        assertVoidReturnType(method);
-        assertNotStatic(method);
-        assertNoArgs(method);
-        globalWarmupMethod = method;
-    }
-
-    private void initMessageConsumerMethod() {
-        List<Method> methods = findMethod(Receive.class);
-        if (methods.isEmpty()) {
-            return;
-        }
-
-        assertAtMostOne(methods, Receive.class);
-        Method method = methods.get(0);
-        method.setAccessible(true);
-        assertVoidReturnType(method);
-        assertNotStatic(method);
-        assertArguments(method, Message.class);
-        messageConsumerMethod = method;
-
-    }
-
-    private void assertNotStatic(Method method) {
-        if (Modifier.isStatic(method.getModifiers())) {
-            throw new IllegalTestException(
-                    format("Method  %s can't be static", method.getName()));
-
-        }
-    }
-
-    private void assertNoArgs(Method method) {
-        if (method.getParameterTypes().length == 0) {
-            return;
-        }
-
-        throw new IllegalTestException(format("Method '%s' can't have any args", method));
+        injectDependencies();
     }
 
     private void assertSetupArguments(Method method) {
-        Class<?>[] parameterTypes = method.getParameterTypes();
+        Class[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length < 1) {
             return;
         }
 
         boolean testContextFound = false;
+        boolean illegalArgumentFound = false;
         for (Class<?> parameterType : parameterTypes) {
-            if (parameterType.isAssignableFrom(TestContext.class)) {
+            boolean isObject = parameterType.isAssignableFrom(Object.class);
+            if (!isObject && parameterType.isAssignableFrom(TestContext.class)) {
                 testContextFound = true;
-            } else if (!parameterType.isAssignableFrom(IntervalProbe.class)) {
-                throw new IllegalTestException("Method " + clazz + "." + method + " must have argument of type "
-                        + TestContext.class + " and zero or more arguments of type " + SimpleProbe.class);
+            } else if (!parameterType.isAssignableFrom(IntervalProbe.class) || isObject) {
+                illegalArgumentFound = true;
+                break;
             }
         }
-        if (!testContextFound) {
-            throw new IllegalTestException("Method " + clazz + "." + method + " must have argument of type " + TestContext.class
-                    + " and zero or more arguments of type " + SimpleProbe.class);
+        if (!testContextFound || illegalArgumentFound) {
+            throw new IllegalTestException(
+                    format("Method %s.%s must have argument of type %s and zero or more arguments of type %s", testClassType,
+                            method, TestContext.class, SimpleProbe.class));
         }
     }
 
-    private void assertArguments(Method method, Class<?>... arguments) {
+    private void assertArguments(Method method, Class... arguments) {
         Class<?>[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length != arguments.length) {
             throw new IllegalTestException(
-                    format("Method %s must have %s arguments, but %s arguments found",
-                            method, arguments.length, parameterTypes.length));
+                    format("Method %s must have %s arguments, but %s arguments found", method, arguments.length,
+                            parameterTypes.length));
         }
 
         for (int i = 0; i < arguments.length; i++) {
             if (!parameterTypes[i].isAssignableFrom(arguments[i])) {
                 throw new IllegalTestException(
-                        format("Method %s has %s. argument of type %s where type %s is expected",
-                                method, i + 1, parameterTypes[i], arguments[i]));
+                        format("Method %s has argument of type %s at index %d where type %s is expected", method,
+                                parameterTypes[i], i + 1, arguments[i]));
             }
         }
     }
 
-    private void assertExactlyOne(List<Method> methods, Class<? extends Annotation> annotation) {
-        if (methods.size() == 0) {
-            throw new IllegalTestException(
-                    format("No method annotated with %s found on class %s", annotation.getName(), clazz.getName()));
-        } else if (methods.size() == 1) {
-            return;
-        } else {
-            throw new IllegalTestException(
-                    format("Too many methods on class %s with annotation %s", clazz.getName(), annotation.getName()));
+    private Object[] getSetupArguments(Method setupMethod) {
+        Class[] parameterTypes = setupMethod.getParameterTypes();
+        Annotation[][] parameterAnnotations = setupMethod.getParameterAnnotations();
+
+        Object[] arguments = new Object[parameterTypes.length];
+        for (int i = 0; i < parameterTypes.length; i++) {
+            arguments[i] = getSetupArgumentForParameterType(parameterTypes[i], parameterAnnotations[i], i);
         }
+        return arguments;
     }
 
-    private void assertAtMostOne(List<Method> methods, Class<? extends Annotation> annotation) {
-        if (methods.size() > 1) {
-            throw new IllegalTestException(
-                    format("Too many methods on class %s with annotation %s", clazz.getName(), annotation.getName()));
+    private Object getSetupArgumentForParameterType(Class<?> parameterType, Annotation[] parameterAnnotations, int index) {
+        if (parameterType.isAssignableFrom(TestContext.class)) {
+            return testContext;
         }
-    }
-
-    private void assertVoidReturnType(Method method) {
-        assertReturnType(method, Void.TYPE);
-    }
-
-    private void assertReturnType(Method method, Class expectedType) {
-        if (expectedType.equals(method.getReturnType())) {
-            return;
+        String probeName = getValueFromNameAnnotations(parameterAnnotations, "Probe" + index);
+        if (parameterType.equals(IntervalProbe.class)) {
+            return getOrCreateProbe(probeName, IntervalProbe.class);
         }
-
-        throw new IllegalTestException("Method " + clazz + "." + method + " should have returnType: " + expectedType);
+        if (parameterType.equals(SimpleProbe.class)) {
+            SimpleProbe probe = getOrCreateProbe(probeName, SimpleProbe.class);
+            probeMap.put(probeName, probe);
+            return probe;
+        }
+        throw new IllegalTestException(format("Unknown parameter type %s at index %s in setup method", parameterType, index));
     }
 
-    private List<Method> findMethod(Class<? extends Annotation> annotation) {
-        return findMethod(annotation, new AlwaysFilter());
-    }
-
-    private List<Method> findMethod(Class<? extends Annotation> annotation, Filter filter) {
-        List<Method> methods = new LinkedList<Method>();
-
-        for (Method method : clazz.getDeclaredMethods()) {
-            Annotation found = method.getAnnotation(annotation);
-            if (found != null && filter.allowed(found)) {
-                methods.add(method);
+    private void injectDependencies() {
+        Field[] fields = testClassType.getDeclaredFields();
+        for (Field field : fields) {
+            String name = getValueFromNameAnnotation(field);
+            if (SimpleProbe.class.equals(field.getType())) {
+                SimpleProbe probe = getOrCreateProbe(name, SimpleProbe.class);
+                injectObjectToInstance(testClassInstance, field, probe);
+            } else if (IntervalProbe.class.equals(field.getType())) {
+                IntervalProbe probe = getOrCreateProbe(name, IntervalProbe.class);
+                injectObjectToInstance(testClassInstance, field, probe);
             }
         }
-
-        return methods;
     }
 
-    private interface Filter<A extends Annotation> {
-        boolean allowed(A m);
-    }
-
-    private class AlwaysFilter implements Filter {
-        @Override
-        public boolean allowed(Annotation m) {
-            return true;
+    @SuppressWarnings("unchecked")
+    private <P extends SimpleProbe> P getOrCreateProbe(String probeName, Class<P> probeType) {
+        SimpleProbe<?, ?> probe = probeMap.get(probeName);
+        if (probe == null) {
+            probe = Probes.createProbe(probeType, probeName, probesConfiguration);
+            probeMap.put(probeName, probe);
+            return (P) probe;
         }
+        if (probeType.isAssignableFrom(probe.getClass())) {
+            return (P) probe;
+        }
+        throw new IllegalArgumentException(
+                format("Can't create a probe %s of type %s as there is already a probe %s with the same name", probeName,
+                        probeType.getName(), probe.getClass()));
+    }
+
+    private void invokeRunWithWorkerTaskMethod() throws Throwable {
+        bindOptionalProperty(this, testCase, OptionalTestProperties.THREAD_COUNT.propertyName);
+        LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
+
+        // create one operation counter per test and inject it in all BaseWorkerTask instances of the test
+        AtomicLong operationCount = new AtomicLong(0);
+        operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorkerTask.class, Performance.class, Long.TYPE);
+
+        Field testContextField = getFieldFromBaseWorkerTask("testContext", TestContext.class);
+        Field operationCountField = getFieldFromBaseWorkerTask("operationCount", AtomicLong.class);
+
+        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+        for (int i = 0; i < threadCount; i++) {
+            AbstractWorkerTask abstractWorkerTask = invokeMethod(testClassInstance, runWithWorkerTaskMethod);
+
+            injectObjectToInstance(abstractWorkerTask, testContextField, testContext);
+            injectObjectToInstance(abstractWorkerTask, operationCountField, operationCount);
+
+            bindOptionalProperty(abstractWorkerTask, testCase, OptionalTestProperties.LOG_FREQUENCY.propertyName);
+            bindOptionalProperty(abstractWorkerTask, testCase, OptionalTestProperties.PERFORMANCE_UPDATE_FREQUENCY.propertyName);
+
+            operationCountWorkerTaskInstance = abstractWorkerTask;
+
+            spawner.spawn(abstractWorkerTask);
+        }
+        spawner.awaitCompletion();
+    }
+
+    private Field getFieldFromBaseWorkerTask(String fieldName, Class fieldType) {
+        Field field = getField(AbstractWorkerTask.class, fieldName, fieldType);
+        if (field == null) {
+            throw new RuntimeException(format("Could not find %s field in BaseWorkerTask", fieldName));
+        }
+        return field;
     }
 }

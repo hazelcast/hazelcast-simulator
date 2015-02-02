@@ -1,11 +1,8 @@
-package com.hazelcast.stabilizer.tests.utils;
+package com.hazelcast.stabilizer.test.utils;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.test.exceptions.BindException;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -117,7 +114,8 @@ public class PropertyBindingSupportTest {
         bindProperty(someObject, "notexist.stringField", "newvalue");
     }
 
-    class SomeObject {
+    @SuppressWarnings("unused")
+    private class SomeObject {
         private String stringField;
         private TimeUnit enumField;
         private int intField;
@@ -128,16 +126,8 @@ public class PropertyBindingSupportTest {
         public Class clazz;
     }
 
-    class OtherObject {
+    private class OtherObject {
         public String stringField;
 
-    }
-
-
-    public static File writeToTempFile(String text) throws IOException {
-        File file = File.createTempFile("test", "test");
-        file.deleteOnExit();
-        Utils.writeText(text, file);
-        return file;
     }
 }
