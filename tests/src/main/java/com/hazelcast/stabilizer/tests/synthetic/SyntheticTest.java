@@ -231,6 +231,10 @@ public class SyntheticTest {
         }
 
         private long getBackupDelayNanos() {
+            if (syncBackupCount == 0 && asyncBackupCount == 0) {
+                return 0;
+            }
+
             if (!randomizeBackupDelay) {
                 return backupDelayNanos;
             }
