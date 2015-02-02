@@ -71,6 +71,7 @@ public class SyntheticTest {
     public int performanceUpdateFrequency = 1000;
     public KeyLocality keyLocality = KeyLocality.Random;
     public int syncFrequency = 1;
+    public String serviceName;
 
     private AtomicLong operations = new AtomicLong();
     private TestContext context;
@@ -216,7 +217,7 @@ public class SyntheticTest {
                 f = clientInvocationService.invokeOnTarget(request, target);
             } else {
                 SyntheticOperation operation = new SyntheticOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
-                f = operationService.invokeOnPartition(null, operation, partitionId);
+                f = operationService.invokeOnPartition(serviceName, operation, partitionId);
             }
             return f;
         }
