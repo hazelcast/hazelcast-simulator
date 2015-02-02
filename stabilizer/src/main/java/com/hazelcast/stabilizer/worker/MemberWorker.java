@@ -22,12 +22,12 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.probes.probes.Result;
+import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.test.utils.TestUtils;
@@ -77,8 +77,7 @@ public class MemberWorker {
     private static final Logger log = Logger.getLogger(MemberWorker.class);
 
     private final ConcurrentMap<String, Command> commands = new ConcurrentHashMap<String, Command>();
-    private final ConcurrentMap<String, TestContainer<TestContext>> tests
-            = new ConcurrentHashMap<String, TestContainer<TestContext>>();
+    private final ConcurrentMap<String, TestContainer<TestContext>> tests = new ConcurrentHashMap<String, TestContainer<TestContext>>();
 
     private final WorkerMessageProcessor workerMessageProcessor = new WorkerMessageProcessor(tests);
 
@@ -453,29 +452,26 @@ public class MemberWorker {
                 TestCase testCase = command.testCase;
                 String testId = testCase.getId();
                 if (tests.containsKey(testId)) {
-                    throw new IllegalStateException(format(
-                            "Can't init TestCase: %s, another test with testId [%s] already exists", command, testId
-                    ));
+                    throw new IllegalStateException(
+                            format("Can't init TestCase: %s, another test with testId [%s] already exists", command, testId));
                 }
                 if (!testId.isEmpty() && !Utils.isValidFileName(testId)) {
-                    throw new IllegalArgumentException(format(
-                            "Can't init TestCase: %s, testId [%s] is an invalid filename", command, testId
-                    ));
+                    throw new IllegalArgumentException(
+                            format("Can't init TestCase: %s, testId [%s] is an invalid filename", command, testId));
                 }
 
                 log.info(format("%s Initializing test %s %s%n%s", DASHES, testId, testCase, DASHES));
 
-                String clazzName = testCase.getClassname();
-                Object testObject = InitCommand.class.getClassLoader().loadClass(clazzName).newInstance();
-                bindProperties(testObject, testCase);
+                Object testInstance = InitCommand.class.getClassLoader().loadClass(testCase.getClassname()).newInstance();
+                bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
+                TestContextImpl testContext = new TestContextImpl(testCase.id);
                 ProbesConfiguration probesConfiguration = parseProbeConfiguration(testCase);
 
-                TestContextImpl testContext = new TestContextImpl(testCase.id);
-                TestContainer<TestContext> testContainer = new TestContainer<TestContext>(testObject, testContext, probesConfiguration);
-                tests.put(testContext.getTestId(), testContainer);
+                tests.put(testContext.getTestId(),
+                        new TestContainer<TestContext>(testInstance, testContext, probesConfiguration, testCase));
 
                 if (serverInstance != null) {
-                    serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE + ":" + testCase.id, testObject);
+                    serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE + ":" + testCase.id, testInstance);
                 }
             } catch (Throwable e) {
                 log.fatal("Failed to init Test", e);

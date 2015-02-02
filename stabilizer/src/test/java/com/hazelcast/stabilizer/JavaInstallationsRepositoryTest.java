@@ -2,10 +2,10 @@ package com.hazelcast.stabilizer;
 
 import com.hazelcast.stabilizer.agent.JavaInstallation;
 import com.hazelcast.stabilizer.agent.JavaInstallationsRepository;
-import com.hazelcast.stabilizer.tests.utils.PropertyBindingSupportTest;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -16,7 +16,7 @@ public class JavaInstallationsRepositoryTest {
     @Test
     public void test() throws Exception {
         JavaInstallationsRepository repository = new JavaInstallationsRepository();
-        File file = PropertyBindingSupportTest.writeToTempFile("" +
+        File file = writeToTempFile("" +
                         "1.vendor=sun\n" +
                         "1.version=1.5\n" +
                         "1.javaHome=/tmp\n" +
@@ -43,5 +43,12 @@ public class JavaInstallationsRepositoryTest {
 
         installation = repository.get("openjdk", "1.0");
         assertNull(installation);
+    }
+
+    private static File writeToTempFile(String text) throws IOException {
+        File file = File.createTempFile("test", "test");
+        file.deleteOnExit();
+        Utils.writeText(text, file);
+        return file;
     }
 }

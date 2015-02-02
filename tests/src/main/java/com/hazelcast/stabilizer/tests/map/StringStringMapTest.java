@@ -28,6 +28,7 @@ import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
+import com.hazelcast.stabilizer.tests.helpers.StringUtils;
 import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 import com.hazelcast.stabilizer.worker.OperationSelector;
 
@@ -36,9 +37,9 @@ import java.util.Random;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.waitClusterSize;
 
-public class IntIntMapTest {
+public class StringStringMapTest {
 
-    private static final ILogger log = Logger.getLogger(IntIntMapTest.class);
+    private static final ILogger log = Logger.getLogger(StringStringMapTest.class);
 
     private static enum Operation {
         PUT,
@@ -50,7 +51,7 @@ public class IntIntMapTest {
     public int valueLength = 10;
     public int keyCount = 10000;
     public int valueCount = 10000;
-    public String basename = "intIntMap";
+    public String basename = "stringStringMap";
     public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
 
@@ -62,8 +63,9 @@ public class IntIntMapTest {
     public IntervalProbe getLatency;
     public SimpleProbe throughput;
 
-    private IMap<Integer, Integer> map;
-    private int[] keys;
+    private IMap<String, String> map;
+    private String[] keys;
+    private String[] values;
 
     private TestContext testContext;
 
@@ -82,11 +84,12 @@ public class IntIntMapTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         waitClusterSize(log, testContext.getTargetInstance(), minNumberOfMembers);
-        keys = KeyUtils.generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
+        keys = KeyUtils.generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
+        values = StringUtils.generateStrings(valueCount, valueLength);
 
         Random random = new Random();
-        for (int key : keys) {
-            int value = random.nextInt(Integer.MAX_VALUE);
+        for (String key : keys) {
+            String value = values[random.nextInt(valueCount)];
             map.put(key, value);
         }
     }
@@ -106,11 +109,11 @@ public class IntIntMapTest {
 
         @Override
         protected void doRun(Operation operation) {
-            int key = randomKey();
+            String key = randomKey();
 
             switch (operation) {
                 case PUT:
-                    int value = randomValue();
+                    String value = randomValue();
                     putLatency.started();
                     if (useSet) {
                         map.set(key, value);
@@ -131,17 +134,17 @@ public class IntIntMapTest {
             throughput.done();
         }
 
-        private int randomKey() {
+        private String randomKey() {
             return keys[nextInt(keys.length)];
         }
 
-        private int randomValue() {
-            return nextInt(Integer.MAX_VALUE);
+        private String randomValue() {
+            return values[nextInt(values.length)];
         }
     }
 
     public static void main(String[] args) throws Throwable {
-        IntIntMapTest test = new IntIntMapTest();
-        new TestRunner<IntIntMapTest>(test).run();
+        StringStringMapTest test = new StringStringMapTest();
+        new TestRunner<StringStringMapTest>(test).run();
     }
 }
