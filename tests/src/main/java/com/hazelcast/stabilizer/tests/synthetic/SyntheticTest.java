@@ -62,8 +62,8 @@ public class SyntheticTest {
 
     //props
     public boolean syncInvocation = true;
-    public int syncBackupCount = 0;
-    public int asyncBackupCount = 1;
+    public byte syncBackupCount = 0;
+    public byte asyncBackupCount = 1;
     public long backupDelayNanos = 1000 * 1000;
     public boolean randomizeBackupDelay = true;
     public int threadCount = 10;
