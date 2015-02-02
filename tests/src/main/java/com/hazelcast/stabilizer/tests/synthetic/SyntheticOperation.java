@@ -13,14 +13,14 @@ import java.io.IOException;
 public class SyntheticOperation extends AbstractOperation
         implements BackupAwareOperation, PartitionAwareOperation, IdentifiedDataSerializable {
 
-    private int syncBackupCount;
-    private int asyncBackupCount;
+    private byte syncBackupCount;
+    private byte asyncBackupCount;
     private long backupOperationDelayNanos;
 
     public SyntheticOperation() {
     }
 
-    public SyntheticOperation(int syncBackupCount, int asyncBackupCount, long backupOperationDelayNanos) {
+    public SyntheticOperation(byte syncBackupCount, byte asyncBackupCount, long backupOperationDelayNanos) {
         this.syncBackupCount = syncBackupCount;
         this.asyncBackupCount = asyncBackupCount;
         this.backupOperationDelayNanos = backupOperationDelayNanos;
@@ -71,17 +71,16 @@ public class SyntheticOperation extends AbstractOperation
     @Override
     protected void writeInternal(ObjectDataOutput out) throws IOException {
         super.writeInternal(out);
-        out.writeInt(syncBackupCount);
-        out.writeInt(asyncBackupCount);
+        out.writeByte(syncBackupCount);
+        out.writeByte(asyncBackupCount);
         out.writeLong(backupOperationDelayNanos);
     }
 
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
-
-        syncBackupCount = in.readInt();
-        asyncBackupCount = in.readInt();
+        syncBackupCount = in.readByte();
+        asyncBackupCount = in.readByte();
         backupOperationDelayNanos = in.readLong();
     }
 }
