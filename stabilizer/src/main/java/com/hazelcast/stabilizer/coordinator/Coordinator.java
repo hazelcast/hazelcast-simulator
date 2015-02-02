@@ -52,6 +52,7 @@ import static java.lang.String.format;
 public class Coordinator {
 
     public final static File STABILIZER_HOME = getStablizerHome();
+    public final static String RESOURCES_HOME = STABILIZER_HOME.getAbsolutePath() + "/resources";
     private final static Logger log = Logger.getLogger(Coordinator.class);
 
     //options.
@@ -123,6 +124,7 @@ public class Coordinator {
 
         agentsClient.initTestSuite(testSuite);
 
+        uploadResourcesToWorkers();
         uploadWorkerClassPath();
         //todo: copy the hazelcast jars
         uploadYourKitIfNeeded();
@@ -371,6 +373,29 @@ public class Coordinator {
         }
         log.info(msg);
     }
+
+    private void uploadResourcesToWorkers() throws IOException {
+        if(RESOURCES_HOME == null){
+            log.info("Resource files does not exist");
+        }
+        log.info("RESOURCES_HOME:" + RESOURCES_HOME);
+        List<File> files = Utils.getFilesFromClassPath(RESOURCES_HOME);
+        for (String ip : agentsClient.getPublicAddresses()){
+            for (File file : files){
+                String syncCommand = format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-stabilizer-%s/workers/%s/",
+                        props.get("SSH_OPTIONS", ""),
+                        file ,
+                        props.get("USER"),
+                        ip,
+                        getVersion(),
+                        testSuite.id);
+                bash.execute(syncCommand);
+            }
+            log.info("    " + ip + " copied");
+        }
+        log.info(format("Finished copying resources file '%s' to agents", RESOURCES_HOME));
+    }
+
 
     private void uploadWorkerClassPath() throws IOException {
         if (workerClassPath != null) {
