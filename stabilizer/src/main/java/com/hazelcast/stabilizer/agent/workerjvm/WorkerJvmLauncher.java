@@ -3,6 +3,8 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
+import com.hazelcast.stabilizer.common.StabilizerProperties;
+import com.hazelcast.stabilizer.provisioner.Bash;
 import com.hazelcast.stabilizer.worker.ClientWorker;
 import com.hazelcast.stabilizer.worker.MemberWorker;
 import org.apache.log4j.Logger;
@@ -34,8 +36,11 @@ public class WorkerJvmLauncher {
     private final static File STABILIZER_HOME = getStablizerHome();
     private final static String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
     private final static AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
+    private final String workersPath = "/home/users/stabilizer/hazelcast-stabilizer-0.4-SNAPSHOT/workers";
 
     private final WorkerJvmSettings settings;
+    private StabilizerProperties props = new StabilizerProperties();
+    private Bash bash = new Bash(props);
     private final Agent agent;
     private final ConcurrentMap<String, WorkerJvm> workerJVMs;
     private File hzFile;
@@ -124,8 +129,25 @@ public class WorkerJvmLauncher {
         new WorkerJvmProcessOutputGobbler(process.getInputStream(), new FileOutputStream(logFile)).start();
         workerJvm.process = process;
         workerJvm.mode = WorkerJvm.Mode.valueOf(mode.toUpperCase());
+        uploadResourcesToWorker(workerId);
         workerJVMs.put(workerId, workerJvm);
         return workerJvm;
+    }
+
+    private void uploadResourcesToWorker(String workerId) throws IOException {
+        final String testSuiteId = agent.getTestSuite().id;
+        if(!new File(workersPath + testSuiteId + "/resources/").exists()){
+            log.info("Resources files are not in the agent");
+            return;
+        }
+        String cpCommand = format("cp -rfv %s/%s/resources/* %s/%s/%s/",
+                workersPath,
+                testSuiteId,
+                workersPath,
+                testSuiteId,
+                workerId);
+        bash.execute(cpCommand);
+        log.info(format("Finished copying resource files from agent to worker"));
     }
 
     private void generateWorkerStartScript(String mode, WorkerJvm workerJvm) {

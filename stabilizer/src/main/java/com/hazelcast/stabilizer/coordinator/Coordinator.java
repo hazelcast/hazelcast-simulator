@@ -124,7 +124,7 @@ public class Coordinator {
 
         agentsClient.initTestSuite(testSuite);
 
-        uploadResourcesToWorkers();
+        uploadResourcesToAgents();
         uploadWorkerClassPath();
         //todo: copy the hazelcast jars
         uploadYourKitIfNeeded();
@@ -374,11 +374,12 @@ public class Coordinator {
         log.info(msg);
     }
 
-    private void uploadResourcesToWorkers() throws IOException {
-        if(RESOURCES_HOME == null){
+    private void uploadResourcesToAgents() throws IOException {
+        if(!new File(RESOURCES_HOME).exists()){
             log.info("Resource files does not exist");
+            return;
         }
-        log.info("RESOURCES_HOME:" + RESOURCES_HOME);
+        log.info("RESOURCES HOME:" + RESOURCES_HOME);
         List<File> files = Utils.getFilesFromClassPath(RESOURCES_HOME);
         for (String ip : agentsClient.getPublicAddresses()){
             for (File file : files){
