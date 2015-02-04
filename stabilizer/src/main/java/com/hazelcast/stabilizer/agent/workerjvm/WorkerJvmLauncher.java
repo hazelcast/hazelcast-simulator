@@ -8,6 +8,7 @@ import com.hazelcast.stabilizer.provisioner.Bash;
 import com.hazelcast.stabilizer.worker.ClientWorker;
 import com.hazelcast.stabilizer.worker.MemberWorker;
 import org.apache.log4j.Logger;
+import sun.security.ssl.Debug;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,10 +37,10 @@ public class WorkerJvmLauncher {
     private final static File STABILIZER_HOME = getStablizerHome();
     private final static String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
     private final static AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
-    private final String workersPath = "/home/users/stabilizer/hazelcast-stabilizer-0.4-SNAPSHOT/workers";
+    private final static String WORKERS_PATH = "/home/users/stabilizer/hazelcast-stabilizer-0.4-SNAPSHOT/workers";
 
     private final WorkerJvmSettings settings;
-    private StabilizerProperties props = new StabilizerProperties();
+    private final StabilizerProperties props = new StabilizerProperties();
     private Bash bash = new Bash(props);
     private final Agent agent;
     private final ConcurrentMap<String, WorkerJvm> workerJVMs;
@@ -129,25 +130,21 @@ public class WorkerJvmLauncher {
         new WorkerJvmProcessOutputGobbler(process.getInputStream(), new FileOutputStream(logFile)).start();
         workerJvm.process = process;
         workerJvm.mode = WorkerJvm.Mode.valueOf(mode.toUpperCase());
-        uploadResourcesToWorker(workerId);
+        copyResourcesToWorkerId(workerId);
         workerJVMs.put(workerId, workerJvm);
         return workerJvm;
     }
 
-    private void uploadResourcesToWorker(String workerId) throws IOException {
+    private void copyResourcesToWorkerId(String workerId) throws IOException {
         final String testSuiteId = agent.getTestSuite().id;
-        if(!new File(workersPath + "/" + testSuiteId + "/resources/").exists()){
-            log.info("Resources files are not in the agent");
-            return;
-        }
-        String cpCommand = format("cp -rfv %s/%s/resources/* %s/%s/%s/",
-                workersPath,
+        String cpCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
+                WORKERS_PATH,
                 testSuiteId,
-                workersPath,
+                WORKERS_PATH,
                 testSuiteId,
                 workerId);
         bash.execute(cpCommand);
-        log.info(format("Finished copying resource files from agent to worker"));
+        log.info(format("Finished copying resources file '%s' to worker", WORKERS_PATH));
     }
 
     private void generateWorkerStartScript(String mode, WorkerJvm workerJvm) {
