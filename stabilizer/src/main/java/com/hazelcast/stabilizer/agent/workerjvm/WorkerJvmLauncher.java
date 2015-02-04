@@ -136,7 +136,7 @@ public class WorkerJvmLauncher {
 
     private void uploadResourcesToWorker(String workerId) throws IOException {
         final String testSuiteId = agent.getTestSuite().id;
-        if(!new File(workersPath + testSuiteId + "/resources/").exists()){
+        if(!new File(workersPath + "/" + testSuiteId + "/resources/").exists()){
             log.info("Resources files are not in the agent");
             return;
         }
