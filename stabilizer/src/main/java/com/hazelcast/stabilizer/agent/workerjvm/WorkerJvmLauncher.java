@@ -137,6 +137,10 @@ public class WorkerJvmLauncher {
 
     private void copyResourcesToWorkerId(String workerId) throws IOException {
         final String testSuiteId = agent.getTestSuite().id;
+        if (!new File(WORKERS_PATH + testSuiteId + "/upload/").exists()) {
+            log.info("Skipping copy, since no copy file at the agent");
+            return;
+        }
         String cpCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
                 WORKERS_PATH,
                 testSuiteId,

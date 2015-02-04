@@ -375,6 +375,10 @@ public class Coordinator {
     }
 
     private void uploadResourcesToAgents() throws IOException {
+        if (!new File(UPLOAD_HOME).exists()) {
+            log.info("Skipping upload, since no upload file in working directory");
+            return;
+        }
         log.info("UPLOAD HOME:" + UPLOAD_HOME);
         List<File> files = Utils.getFilesFromClassPath(UPLOAD_HOME);
         for (String ip : agentsClient.getPublicAddresses()){
