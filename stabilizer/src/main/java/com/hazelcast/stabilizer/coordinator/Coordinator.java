@@ -52,7 +52,9 @@ import static java.lang.String.format;
 public class Coordinator {
 
     public final static File STABILIZER_HOME = getStablizerHome();
-    public final static String UPLOAD_HOME = STABILIZER_HOME.getAbsolutePath() + "/upload";
+    public final static String WORKING_DIRECTORY = new String(System.getProperty("user.dir"));
+    public final static File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
+    public final static String UPLOAD_HOME = UPLOAD_DIRECTORY.getAbsolutePath();
     private final static Logger log = Logger.getLogger(Coordinator.class);
 
     //options.
@@ -124,7 +126,7 @@ public class Coordinator {
 
         agentsClient.initTestSuite(testSuite);
 
-        uploadResourcesToAgents();
+        copyUploadDirectoryToAgents();
         uploadWorkerClassPath();
         //todo: copy the hazelcast jars
         uploadYourKitIfNeeded();
@@ -374,12 +376,13 @@ public class Coordinator {
         log.info(msg);
     }
 
-    private void uploadResourcesToAgents() throws IOException {
-        if (!new File(UPLOAD_HOME).exists()) {
-            log.info("Skipping upload, since no upload file in working directory");
+    private void copyUploadDirectoryToAgents() throws IOException {
+        log.info("WORKING DIRECTORY:" + WORKING_DIRECTORY);
+        if (!UPLOAD_DIRECTORY.exists()) {
+            log.debug("Skipping upload, since no upload file in working directory");
             return;
         }
-        log.info("UPLOAD HOME:" + UPLOAD_HOME);
+        log.info("UPLOAD DIRECTORY:" + UPLOAD_HOME);
         List<File> files = Utils.getFilesFromClassPath(UPLOAD_HOME);
         for (String ip : agentsClient.getPublicAddresses()){
             for (File file : files){
@@ -394,7 +397,7 @@ public class Coordinator {
             }
             log.info("    " + ip + " copied");
         }
-        log.info(format("Finished copying resources file '%s' to agents", UPLOAD_HOME));
+        log.info(format("Finished copying '+%s+' to agents", UPLOAD_HOME));
     }
 
 

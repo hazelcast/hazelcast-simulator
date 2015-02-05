@@ -137,8 +137,8 @@ public class WorkerJvmLauncher {
 
     private void copyResourcesToWorkerId(String workerId) throws IOException {
         final String testSuiteId = agent.getTestSuite().id;
-        if (!new File(WORKERS_PATH + testSuiteId + "/upload/").exists()) {
-            log.info("Skipping copy, since no copy file at the agent");
+        if (!new File(WORKERS_PATH + "/" + testSuiteId + "/upload/").exists()) {
+            log.debug("Skipping copy, since no copy file at the agent");
             return;
         }
         String cpCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
@@ -148,7 +148,7 @@ public class WorkerJvmLauncher {
                 testSuiteId,
                 workerId);
         bash.execute(cpCommand);
-        log.info(format("Finished copying resources file '%s' to worker", WORKERS_PATH));
+        log.info(format("Finished copying '+%s+' to worker", WORKERS_PATH));
     }
 
     private void generateWorkerStartScript(String mode, WorkerJvm workerJvm) {
