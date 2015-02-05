@@ -15,7 +15,6 @@
  */
 package com.hazelcast.stabilizer.agent.workerjvm;
 
-import com.hazelcast.stabilizer.NoWorkerAvailableException;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.CommandFuture;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
@@ -54,9 +53,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.Utils.getHostAddress;
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
-import static com.hazelcast.stabilizer.Utils.throwableToString;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getHostAddress;
+import static com.hazelcast.stabilizer.utils.CommonUtils.throwableToString;
+import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
 
 public class WorkerJvmManager {
 
@@ -167,7 +166,7 @@ public class WorkerJvmManager {
     private void preprocessMessage(Message message, Collection<WorkerJvm> workerJvmList) {
         for (WorkerJvm workerJvm : new ArrayList<WorkerJvm>(workerJvmList)) {
             if (message.removeFromAgentList()) {
-                while (workerJvms.values().remove(workerJvm)) ; //remove worker
+                while (workerJvms.values().remove(workerJvm)); //remove worker
             } else if (message.disableMemberFailureDetection()) {
                 workerJvm.detectFailure = false;
             }

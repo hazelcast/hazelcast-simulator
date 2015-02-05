@@ -1,7 +1,5 @@
 package com.hazelcast.stabilizer.agent.remoting;
 
-
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvm;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
@@ -19,6 +17,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
 
 class ClientSocketTask implements Runnable {
     private final static Logger log = Logger.getLogger(ClientSocketTask.class);
@@ -48,13 +48,15 @@ class ClientSocketTask implements Runnable {
                 log.fatal(e);
                 result = e;
             }
-            out.writeObject(result);
-            out.flush();
+            if (out != null) {
+                out.writeObject(result);
+                out.flush();
+            }
         } catch (Throwable e) {
             log.fatal(e);
         } finally {
-            Utils.closeQuietly(in, out);
-            Utils.closeQuietly(clientSocket);
+            closeQuietly(in, out);
+            closeQuietly(clientSocket);
         }
     }
 

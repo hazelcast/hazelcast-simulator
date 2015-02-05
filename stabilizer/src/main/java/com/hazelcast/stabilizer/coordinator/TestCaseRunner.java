@@ -1,12 +1,11 @@
 package com.hazelcast.stabilizer.coordinator;
 
-import com.hazelcast.stabilizer.test.TestCase;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.probes.probes.ProbesResultXmlWriter;
 import com.hazelcast.stabilizer.probes.probes.Result;
 import com.hazelcast.stabilizer.test.Failure;
+import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.test.TestSuite;
 import com.hazelcast.stabilizer.worker.commands.GenericCommand;
 import com.hazelcast.stabilizer.worker.commands.GetBenchmarkResultsCommand;
@@ -22,7 +21,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.stabilizer.Utils.secondsToHuman;
+import static com.hazelcast.stabilizer.utils.CommonUtils.formatDouble;
+import static com.hazelcast.stabilizer.utils.CommonUtils.formatLong;
+import static com.hazelcast.stabilizer.utils.CommonUtils.padRight;
+import static com.hazelcast.stabilizer.utils.CommonUtils.secondsToHuman;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 
 /**
@@ -45,7 +48,7 @@ public class TestCaseRunner {
         this.coordinator = coordinator;
         this.testSuite = testSuite;
         this.agentsClient = coordinator.agentsClient;
-        this.prefix = (testCase.id.isEmpty() ? "" : Utils.padRight(testCase.id, maxTextCaseIdLength + 1));
+        this.prefix = (testCase.id.isEmpty() ? "" : padRight(testCase.id, maxTextCaseIdLength + 1));
         this.nonCriticalFailures = testSuite.tolerableFailures;
     }
 
@@ -80,7 +83,7 @@ public class TestCaseRunner {
             echo("Completed Test start");
 
             echo(format("Test will run for %s", secondsToHuman(testSuite.duration)));
-            sleepSeconds(testSuite.duration);
+            sleep(testSuite.duration);
             echo("Test finished running");
 
             echo("Starting Test stop");
@@ -185,7 +188,7 @@ public class TestCaseRunner {
         agentsClient.executeOnAllWorkers(runCommand);
     }
 
-    public void sleepSeconds(int seconds) {
+    private void sleep(int seconds) {
         int period = 30;
         int big = seconds / period;
         int small = seconds % period;
@@ -196,7 +199,7 @@ public class TestCaseRunner {
                 return;
             }
 
-            Utils.sleepSeconds(period);
+            sleepSeconds(period);
             final int elapsed = period * k;
             final float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s %6.2f%% complete", secondsToHuman(elapsed), percentage);
@@ -206,8 +209,8 @@ public class TestCaseRunner {
                     msg += ", performance not available";
                 } else {
                     msg += String.format("%s ops/s %s ops",
-                            Utils.formatDouble(coordinator.performance, 18),
-                            Utils.formatLong(coordinator.operationCount, 18)
+                            formatDouble(coordinator.performance, 18),
+                            formatLong(coordinator.operationCount, 18)
                     );
                 }
             }
@@ -215,7 +218,7 @@ public class TestCaseRunner {
             log.info(prefix + msg);
         }
 
-        Utils.sleepSeconds(small);
+        sleepSeconds(small);
     }
 
     private boolean shouldTerminate() {

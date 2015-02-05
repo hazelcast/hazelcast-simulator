@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.provisioner;
 
-import com.hazelcast.stabilizer.Utils;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -8,6 +7,9 @@ import joptsimple.OptionSpec;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
+import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
 
 public class ProvisionerCli {
     private final static Logger log = Logger.getLogger(ProvisionerCli.class);
@@ -71,8 +73,8 @@ public class ProvisionerCli {
         try {
             options = parser.parse(args);
         } catch (OptionException e) {
-            Utils.exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
-            return;//
+            exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
+            return;
         }
 
         if (options.has(helpSpec)) {
@@ -114,8 +116,8 @@ public class ProvisionerCli {
 
     private File getPropertiesFile() {
         if (options.has(propertiesFileSpec)) {
-            //a file was explicitly configured
-            return Utils.newFile(options.valueOf(propertiesFileSpec));
+            // a file was explicitly configured
+            return newFile(options.valueOf(propertiesFileSpec));
         } else {
             return null;
         }

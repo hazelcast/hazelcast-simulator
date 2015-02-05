@@ -1,7 +1,6 @@
 package com.hazelcast.stabilizer.provisioner;
 
 import com.google.common.base.Predicate;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.GitInfo;
@@ -29,10 +28,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import static com.hazelcast.stabilizer.Utils.appendText;
-import static com.hazelcast.stabilizer.Utils.fileAsText;
-import static com.hazelcast.stabilizer.Utils.getVersion;
-import static com.hazelcast.stabilizer.Utils.secondsToHuman;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
+import static com.hazelcast.stabilizer.utils.CommonUtils.secondsToHuman;
+import static com.hazelcast.stabilizer.utils.FileUtils.appendText;
+import static com.hazelcast.stabilizer.utils.FileUtils.fileAsText;
+import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
 import static java.lang.String.format;
 
 //https://jclouds.apache.org/start/compute/ good read
@@ -43,7 +43,7 @@ public class Provisioner {
 
     public final StabilizerProperties props = new StabilizerProperties();
 
-    private final static String STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath();
+    private final static String STABILIZER_HOME = getStablizerHome().getAbsolutePath();
     private final static String CONF_DIR = STABILIZER_HOME + "/conf";
 
     private final File agentsFile = new File("agents.txt");
@@ -118,13 +118,14 @@ public class Provisioner {
 
             if (!versionSpec.endsWith("bringmyown")) {
                 //copy the actual hazelcast jars that are going to be used by the worker.
-                bash.scpToRemote(ip, hazelcastJars.getAbsolutePath() + "/*.jar", format("hazelcast-stabilizer-%s/lib", getVersion()));
+                bash.scpToRemote(ip, hazelcastJars.getAbsolutePath() + "/*.jar",
+                        format("hazelcast-stabilizer-%s/lib", getVersion()));
             }
         }
     }
 
     private String loadInitScript() {
-        String script = Utils.fileAsText(initScript);
+        String script = fileAsText(initScript);
 
         script = script.replaceAll(Pattern.quote("${user}"), props.getUser());
         script = script.replaceAll(Pattern.quote("${version}"), getVersion());
@@ -143,9 +144,10 @@ public class Provisioner {
         for (AgentAddress address : addresses) {
             echo("Starting Agent %s", address.publicAddress);
 
-            bash.ssh(address.publicAddress, format(
-                    "nohup hazelcast-stabilizer-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s> agent.out 2> agent.err < /dev/null &",
-                    getVersion(), props.get("CLOUD_PROVIDER"), props.get("CLOUD_IDENTITY"), props.get("CLOUD_CREDENTIAL")));
+            bash.ssh(address.publicAddress,
+                    format("nohup hazelcast-stabilizer-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s> agent.out 2> agent.err < /dev/null &",
+                            getVersion(), props.get("CLOUD_PROVIDER"), props.get("CLOUD_IDENTITY"),
+                            props.get("CLOUD_CREDENTIAL")));
         }
 
         echoImportant("Successfully started %s Agents", addresses.size());
@@ -153,8 +155,9 @@ public class Provisioner {
 
     void startAgent(String ip) {
         bash.ssh(ip, "killall -9 java || true");
-        bash.ssh(ip, format("nohup hazelcast-stabilizer-%s/bin/agent -cloudProvider %s --cloudIdentity %s --cloudCredential %s> agent.out 2> agent.err < /dev/null &",
-                getVersion(), props.get("CLOUD_PROVIDER"), props.get("CLOUD_IDENTITY"), props.get("CLOUD_CREDENTIAL")));
+        bash.ssh(ip,
+                format("nohup hazelcast-stabilizer-%s/bin/agent -cloudProvider %s --cloudIdentity %s --cloudCredential %s> agent.out 2> agent.err < /dev/null &",
+                        getVersion(), props.get("CLOUD_PROVIDER"), props.get("CLOUD_IDENTITY"), props.get("CLOUD_CREDENTIAL")));
     }
 
     void killAgents() {
@@ -201,7 +204,7 @@ public class Provisioner {
         echo("GroupName: " + groupName);
         echo("Username: " + props.getUser());
 
-        log.info("Using init script:"+initScript.getAbsolutePath());
+        log.info("Using init script:" + initScript.getAbsolutePath());
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -261,8 +264,7 @@ public class Provisioner {
 
         long durationMs = System.currentTimeMillis() - startTimeMs;
         echo("Duration: " + secondsToHuman(TimeUnit.MILLISECONDS.toSeconds(durationMs)));
-        echoImportant(format("Successfully provisioned %s %s machines",
-                delta, props.get("CLOUD_PROVIDER")));
+        echoImportant(format("Successfully provisioned %s %s machines", delta, props.get("CLOUD_PROVIDER")));
     }
 
     public void listAgents() {
@@ -329,12 +331,12 @@ public class Provisioner {
     public void download(String dir) {
         echoImportant("Download artifacts of %s machines", addresses.size());
 
-        bash.execute("mkdir -p "+dir);
+        bash.execute("mkdir -p " + dir);
 
         for (AgentAddress address : addresses) {
             echo("Downloading from %s", address.publicAddress);
 
-            String syncCommand = format("rsync --copy-links  -avv -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers/* "+dir,
+            String syncCommand = format("rsync --copy-links  -avv -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers/* " + dir,
                     props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getVersion());
 
             bash.executeQuiet(syncCommand);
@@ -385,13 +387,12 @@ public class Provisioner {
 
         long durationSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startMs);
         echo("Duration: " + secondsToHuman(durationSeconds));
-        echoImportant("Finished terminating %s %s machines, %s machines remaining.",
-                count, props.get("CLOUD_PROVIDER"), addresses.size());
+        echoImportant("Finished terminating %s %s machines, %s machines remaining.", count, props.get("CLOUD_PROVIDER"),
+                addresses.size());
     }
 
     private void destroyNodes(ComputeService compute, final Map<String, AgentAddress> terminateMap) {
-        compute.destroyNodesMatching(
-                new Predicate<NodeMetadata>() {
+        compute.destroyNodesMatching(new Predicate<NodeMetadata>() {
                     @Override
                     public boolean apply(NodeMetadata nodeMetadata) {
                         for (String publicAddress : nodeMetadata.getPublicAddresses()) {
@@ -404,10 +405,8 @@ public class Provisioner {
                         }
                         return false;
                     }
-                }
-        );
+                });
     }
-
 
     private void echo(String s, Object... args) {
         log.info(s == null ? "null" : String.format(s, args));
@@ -421,8 +420,8 @@ public class Provisioner {
 
     public static void main(String[] args) {
         log.info("Hazelcast Stabilizer Provisioner");
-        log.info(format("Version: %s, Commit: %s, Build Time: %s",
-                getVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
+        log.info(format("Version: %s, Commit: %s, Build Time: %s", getVersion(), GitInfo.getCommitIdAbbrev(),
+                GitInfo.getBuildTime()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         try {

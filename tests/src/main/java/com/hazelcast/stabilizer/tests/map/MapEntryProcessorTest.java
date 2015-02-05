@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 
 public class MapEntryProcessorTest {
@@ -125,8 +125,8 @@ public class MapEntryProcessorTest {
                 incrementLocalStats(key, increment);
             }
 
-            //sleep to give time for the last EntryProcessor tasks to complete.
-            sleepMs(maxProcessorDelayMs * 2);
+            // sleep to give time for the last EntryProcessor tasks to complete.
+            sleepMillis(maxProcessorDelayMs * 2);
             resultsPerWorker.add(result);
         }
 
@@ -153,16 +153,16 @@ public class MapEntryProcessorTest {
 
     private static class IncrementEntryProcessor extends AbstractEntryProcessor<Integer, Long> {
         private final long increment;
-        private final long delayMs;
+        private final int delayMs;
 
-        private IncrementEntryProcessor(long increment, long delayMs) {
+        private IncrementEntryProcessor(long increment, int delayMs) {
             this.increment = increment;
             this.delayMs = delayMs;
         }
 
         @Override
         public Object process(Map.Entry<Integer, Long> entry) {
-            sleepMs(delayMs);
+            sleepMillis(delayMs);
             long newValue = entry.getValue() + increment;
             entry.setValue(newValue);
             return null;

@@ -1,13 +1,13 @@
 package com.hazelcast.stabilizer.agent.workerjvm;
 
-import com.hazelcast.stabilizer.Utils;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+
+import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
 
 public class WorkerJvmProcessOutputGobbler extends Thread {
 
@@ -22,16 +22,14 @@ public class WorkerJvmProcessOutputGobbler extends Thread {
     @Override
     public void run() {
         try {
-
             String line;
             while ((line = reader.readLine()) != null) {
-                writer.append(line + "\n");
+                writer.append(line).append("\n");
             }
-        } catch (IOException ioException) {
-            //LOGGER.warn("System command stream gobbler error", ioException);
+        } catch (IOException ignored) {
         } finally {
-            Utils.closeQuietly(writer);
-            Utils.closeQuietly(reader);
+            closeQuietly(writer);
+            closeQuietly(reader);
         }
     }
 }

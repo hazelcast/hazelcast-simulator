@@ -8,26 +8,26 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 
 public class RecordingCacheWriter<K, V> implements CacheWriter<K, V>, Serializable {
 
-    public ConcurrentHashMap<K, V> writtenKeys = new ConcurrentHashMap();
-    public ConcurrentHashMap<K, V> deletedEntries = new ConcurrentHashMap();
+    public ConcurrentHashMap<K, V> writtenKeys = new ConcurrentHashMap<K, V>();
+    public ConcurrentHashMap<K, V> deletedEntries = new ConcurrentHashMap<K, V>();
 
-    public AtomicLong writeCount =  new AtomicLong();
-    public AtomicLong deleteCount =  new AtomicLong();
+    public AtomicLong writeCount = new AtomicLong();
+    public AtomicLong deleteCount = new AtomicLong();
 
     public int writeDelayMs = 0;
-    public int writeAllDelayMs =0;
+    public int writeAllDelayMs = 0;
     public int deleteDelayMs = 0;
-    public int deleteAllDelayMs =0;
+    public int deleteAllDelayMs = 0;
 
     @Override
     public void write(Cache.Entry<? extends K, ? extends V> entry) {
 
-        if ( writeDelayMs > 0 ) {
-            sleepMs(writeDelayMs);
+        if (writeDelayMs > 0) {
+            sleepMillis(writeDelayMs);
         }
 
         writtenKeys.put(entry.getKey(), entry.getValue());
@@ -37,27 +37,27 @@ public class RecordingCacheWriter<K, V> implements CacheWriter<K, V>, Serializab
     @Override
     public void writeAll(Collection<Cache.Entry<? extends K, ? extends V>> entries) {
 
-        if ( writeAllDelayMs > 0 ) {
-            sleepMs(writeAllDelayMs);
+        if (writeAllDelayMs > 0) {
+            sleepMillis(writeAllDelayMs);
         }
 
-
-        Iterator<Cache.Entry<? extends K, ? extends V>> iterator = entries.iterator();
-        while (iterator.hasNext()) {
-            write(iterator.next());
+        for (Cache.Entry<? extends K, ? extends V> entry : entries) {
+            write(entry);
         }
     }
 
     @Override
-    public void delete(Object key) {
+    @SuppressWarnings("unchecked")
+    public void delete(Object object) {
 
-        if ( deleteDelayMs > 0 ) {
-            sleepMs(deleteDelayMs);
+        if (deleteDelayMs > 0) {
+            sleepMillis(deleteDelayMs);
         }
 
-        V value = writtenKeys.remove((K)key);
+        K key = (K) object;
+        V value = writtenKeys.remove(key);
         if (value != null) {
-            deletedEntries.put((K) key, value);
+            deletedEntries.put(key, value);
         }
         deleteCount.incrementAndGet();
     }
@@ -65,8 +65,8 @@ public class RecordingCacheWriter<K, V> implements CacheWriter<K, V>, Serializab
     @Override
     public void deleteAll(Collection<?> entries) {
 
-        if ( deleteAllDelayMs > 0 ) {
-            sleepMs(deleteAllDelayMs);
+        if (deleteAllDelayMs > 0) {
+            sleepMillis(deleteAllDelayMs);
         }
 
         for (Iterator<?> keys = entries.iterator(); keys.hasNext(); ) {

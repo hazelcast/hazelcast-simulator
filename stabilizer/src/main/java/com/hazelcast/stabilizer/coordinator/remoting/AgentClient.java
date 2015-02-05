@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.coordinator.remoting;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import org.apache.log4j.Logger;
@@ -12,8 +11,9 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 
-import static com.hazelcast.stabilizer.Utils.closeQuietly;
-import static com.hazelcast.stabilizer.Utils.sleepSeconds;
+import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.stabilizer.utils.CommonUtils.fixRemoteStackTrace;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSecondsThrowException;
 
 public class AgentClient {
 
@@ -51,7 +51,7 @@ public class AgentClient {
 
             if (response instanceof Exception) {
                 Exception exception = (Exception) response;
-                Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
+                fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
                 throw exception;
             }
             return response;
@@ -75,7 +75,7 @@ public class AgentClient {
                 } else {
                     log.warn("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
                 }
-                sleepSeconds(1);
+                sleepSecondsThrowException(1);
                 connectException = e;
             } catch (IOException e) {
                 throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, e);

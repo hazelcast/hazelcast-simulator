@@ -9,8 +9,8 @@ import org.jclouds.domain.Location;
 
 import java.util.Set;
 
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
-import static com.hazelcast.stabilizer.Utils.getVersion;
+import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
 import static java.lang.String.format;
 
 /**

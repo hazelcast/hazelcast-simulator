@@ -33,7 +33,7 @@ import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static junit.framework.Assert.assertEquals;
 
@@ -44,7 +44,9 @@ import static junit.framework.Assert.assertEquals;
 * */
 public class ListenerICacheTest {
 
-    private final static ILogger log = Logger.getLogger(ListenerICacheTest.class);
+    private static final int PAUSE_FOR_LAST_EVENTS_SECONDS = 10;
+
+    private static final ILogger log = Logger.getLogger(ListenerICacheTest.class);
 
     public int threadCount = 3;
     public int maxExpiryDurationMs = 500;
@@ -69,8 +71,6 @@ public class ListenerICacheTest {
     private MyCacheEntryListener<Integer, Long> listener;
     private MyCacheEntryEventFilter<Integer, Long> filter;
 
-    private int paussForLastEvents=1000 * 10;
-
     @Setup
     public void setup(TestContext textConTx) {
         testContext = textConTx;
@@ -86,9 +86,9 @@ public class ListenerICacheTest {
         }
 
         config.setName(basename);
-        try{
+        try {
             cacheManager.createCache(basename, config);
-        }catch(CacheException e){
+        } catch (CacheException ignored) {
         }
     }
 
@@ -115,7 +115,7 @@ public class ListenerICacheTest {
         }
         spawner.awaitCompletion();
 
-        sleepMs(paussForLastEvents);
+        sleepSeconds(PAUSE_FOR_LAST_EVENTS_SECONDS);
 
         targetInstance.getList(basename+"listeners").add(listener);
     }
@@ -147,7 +147,7 @@ public class ListenerICacheTest {
                     counter.putAsyncExpiry++;
 
                 } else if ((chance -= getExpiry) < 0) {
-                    Long value = cache.get(k, expiryPolicy);
+                    cache.get(k, expiryPolicy);
                     counter.getExpiry++;
 
                 } else if ((chance -= getAsyncExpiry) < 0) {

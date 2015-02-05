@@ -1,12 +1,11 @@
-package com.hazelcast.stabilizer.test.utils;
+package com.hazelcast.stabilizer.utils;
 
-import com.hazelcast.stabilizer.test.exceptions.BindException;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.test.utils.PropertyBindingSupport.bindProperty;
+import static com.hazelcast.stabilizer.utils.PropertyBindingSupport.bindProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 

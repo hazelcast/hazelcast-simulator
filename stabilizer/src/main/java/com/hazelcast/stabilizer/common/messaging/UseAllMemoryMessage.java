@@ -53,13 +53,13 @@ public class UseAllMemoryMessage extends RunnableMessage {
                 while (!interrupted()) {
                     byte[] buff = new byte[bufferSize];
                     list.add(buff);
-                    sleepMs(delay);
+                    sleepMillisInterruptThread(delay);
                 }
             }
 
-            private void sleepMs(int delay) {
+            private void sleepMillisInterruptThread(int sleepMillis) {
                 try {
-                    TimeUnit.MILLISECONDS.sleep(delay);
+                    TimeUnit.MILLISECONDS.sleep(sleepMillis);
                 } catch (InterruptedException e) {
                     log.warn("Interrupted during sleep.");
                     Thread.currentThread().interrupt();

@@ -1,12 +1,13 @@
 package com.hazelcast.stabilizer.common;
 
-import com.hazelcast.stabilizer.Utils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.hazelcast.stabilizer.utils.FileUtils.fileAsText;
+import static com.hazelcast.stabilizer.utils.FileUtils.writeText;
 import static java.lang.String.format;
 
 /**
@@ -41,11 +42,11 @@ public class AgentsFile {
                         .append('\n');
             }
         }
-        Utils.writeText(sb.toString(), agentsFile);
+        writeText(sb.toString(), agentsFile);
     }
 
     public static List<AgentAddress> load(File agentFile) {
-        String content = Utils.fileAsText(agentFile);
+        String content = fileAsText(agentFile);
 
         String[] addresses = content.split("\n");
         int lineNumber = 1;

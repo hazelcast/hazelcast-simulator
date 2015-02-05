@@ -1,7 +1,7 @@
 package com.hazelcast.stabilizer.worker.tasks;
 
 import com.hazelcast.core.ExecutionCallback;
-import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
+import com.hazelcast.stabilizer.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
 /**

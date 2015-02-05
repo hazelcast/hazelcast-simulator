@@ -34,7 +34,7 @@ import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import java.util.Random;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -45,6 +45,9 @@ import static org.junit.Assert.assertEquals;
  * we can say the number of events received can not be greater that an the number of events generated
  */
 public class MapEntryListenerTest {
+
+    private static final int SLEEP_MS_CATCH_EVENTS = 8000;
+
     private final static ILogger log = Logger.getLogger(MapEntryListenerTest.class);
 
     public String basename = this.getClass().getName();
@@ -72,7 +75,6 @@ public class MapEntryListenerTest {
     private HazelcastInstance targetInstance;
     private EntryListenerImpl listener;
     private ScrambledZipfianGenerator kesyZipfian = new ScrambledZipfianGenerator(keyCount);
-    private int sleepMs_CatchEvents = 8000;
     private IMap<Object, Object> map;
 
     @Setup
@@ -110,9 +112,8 @@ public class MapEntryListenerTest {
         }
         spawner.awaitCompletion();
 
-        //Wait, so that our entery listenter implementation can catch the last
-        //incoming events from other members / clients
-        sleepMs(sleepMs_CatchEvents);
+        // wait, so that our entry listener implementation can catch the last incoming events from other members / clients
+        sleepMillis(SLEEP_MS_CATCH_EVENTS);
 
         IList listeners = targetInstance.getList(basename + "listeners");
         listeners.add(listener);

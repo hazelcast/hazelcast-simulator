@@ -6,18 +6,16 @@ import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.probes.probes.SimpleProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.DisabledProbe;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
+import com.hazelcast.stabilizer.test.annotations.Teardown;
+import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.annotations.Name;
 import com.hazelcast.stabilizer.test.annotations.Performance;
 import com.hazelcast.stabilizer.test.annotations.Receive;
 import com.hazelcast.stabilizer.test.annotations.Run;
-import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
-import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
-import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.exceptions.IllegalTestException;
-import com.hazelcast.stabilizer.test.utils.TestUtils;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 import org.junit.Before;
@@ -26,6 +24,7 @@ import org.mockito.Mockito;
 
 import java.util.Map;
 
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -156,7 +155,7 @@ public class TestContainerTest {
             @Override
             public void run() {
                 super.run();
-                TestUtils.sleepMs(50);
+                sleepMillis(50);
                 testContext.stop();
             }
         }.start();

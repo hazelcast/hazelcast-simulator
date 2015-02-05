@@ -1,8 +1,7 @@
-package com.hazelcast.stabilizer.test.utils;
+package com.hazelcast.stabilizer.utils;
 
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.test.TestCase;
-import com.hazelcast.stabilizer.test.exceptions.BindException;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;

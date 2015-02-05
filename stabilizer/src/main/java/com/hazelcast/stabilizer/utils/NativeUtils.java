@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.utils;
 
 import org.apache.log4j.Logger;
 
@@ -9,11 +9,14 @@ import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 
+import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
+
 public class NativeUtils {
 
     private static final Logger log = Logger.getLogger(NativeUtils.class);
 
-    private NativeUtils() { }
+    private NativeUtils() {
+    }
 
     //see http://stackoverflow.com/questions/35842/how-can-a-java-program-get-its-own-process-id
     public static Integer getPIDorNull() {
@@ -22,9 +25,9 @@ public class NativeUtils {
     }
 
     public static void kill(int pid) {
-        log.info("Sending -9 signal to PID "+pid);
+        log.info("Sending -9 signal to PID " + pid);
         try {
-            Runtime.getRuntime().exec("/bin/kill -9 "+pid+" >/dev/null");
+            Runtime.getRuntime().exec("/bin/kill -9 " + pid + " >/dev/null");
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -87,7 +90,7 @@ public class NativeUtils {
             sun.management.VMManagement mgmt = (sun.management.VMManagement) jvm.get(runtime);
             java.lang.reflect.Method pid_method = mgmt.getClass().getDeclaredMethod("getProcessId");
             pid_method.setAccessible(true);
-            return  (Integer) pid_method.invoke(mgmt);
+            return (Integer) pid_method.invoke(mgmt);
         } catch (IllegalAccessException e) {
             log.warn(e);
             return null;
@@ -120,9 +123,9 @@ public class NativeUtils {
                     stringBuffer.append(line).append("\n");
                 }
             } catch (IOException ioException) {
-                //LOGGER.warn("System command stream gobbler error", ioException);
+                //log.warn("System command stream gobbler error", ioException);
             } finally {
-                Utils.closeQuietly(reader);
+                closeQuietly(reader);
             }
         }
     }

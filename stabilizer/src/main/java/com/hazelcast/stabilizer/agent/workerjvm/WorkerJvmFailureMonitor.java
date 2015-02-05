@@ -15,7 +15,6 @@
  */
 package com.hazelcast.stabilizer.agent.workerjvm;
 
-
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.test.Failure;
 import org.apache.log4j.Logger;
@@ -27,9 +26,9 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.hazelcast.stabilizer.Utils.fileAsText;
-import static com.hazelcast.stabilizer.Utils.getHostAddress;
-import static com.hazelcast.stabilizer.Utils.sleepSeconds;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getHostAddress;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.stabilizer.utils.FileUtils.fileAsText;
 
 public class WorkerJvmFailureMonitor {
     private final static Logger log = Logger.getLogger(WorkerJvmFailureMonitor.class);

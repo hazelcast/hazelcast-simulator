@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
 // TODO: We need to deal with exception logging; they are logged but not visible to stabilizer.
@@ -139,7 +139,7 @@ public class LockConflictTest {
                             }
                         }
                     }
-                    sleepMs(1000);
+                    sleepSeconds(1);
 
                     if (++unlockAttempts > 5) {
                         log.info(basename + ": Cant unlock=" + locked + " unlockAttempts=" + unlockAttempts);

@@ -15,8 +15,6 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-import com.hazelcast.stabilizer.Utils;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -26,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
 import static java.lang.String.format;
 
 public class JavaInstallationsRepository {
@@ -100,7 +99,7 @@ public class JavaInstallationsRepository {
             try {
                 properties.load(fis);
             } finally {
-                Utils.closeQuietly(fis);
+                closeQuietly(fis);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

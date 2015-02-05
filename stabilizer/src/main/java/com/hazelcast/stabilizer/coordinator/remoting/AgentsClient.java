@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.coordinator.remoting;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.AgentAddress;
@@ -30,7 +29,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.stabilizer.Utils.sleepSeconds;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_ECHO;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_EXECUTE_ALL_WORKERS;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_EXECUTE_SINGLE_WORKER;
@@ -40,6 +38,10 @@ import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_PROCESS_MESSAGE;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_SPAWN_WORKERS;
 import static com.hazelcast.stabilizer.agent.remoting.AgentRemoteService.Service.SERVICE_TERMINATE_WORKERS;
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
+import static com.hazelcast.stabilizer.utils.CommonUtils.fixRemoteStackTrace;
+import static com.hazelcast.stabilizer.utils.CommonUtils.secondsToHuman;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
 import static java.util.Arrays.asList;
 
 public class AgentsClient {
@@ -105,7 +107,7 @@ public class AgentsClient {
         agents.removeAll(unchecked);
 
         if (agents.isEmpty()) {
-            Utils.exitWithError(log, "There are no reachable agents");
+            exitWithError(log, "There are no reachable agents");
         }
 
         if (unchecked.isEmpty()) {
@@ -198,8 +200,8 @@ public class AgentsClient {
             }
 
             long durationMs = System.currentTimeMillis() - startTimeMs;
-            log.info(prefix + "Waiting for " + phaseName + " completion: " + Utils.secondsToHuman(durationMs / 1000));
-            Utils.sleepSeconds(5);
+            log.info(prefix + "Waiting for " + phaseName + " completion: " + secondsToHuman(durationMs / 1000));
+            sleepSeconds(5);
         }
     }
 
@@ -208,7 +210,7 @@ public class AgentsClient {
         return getAllFutures(futures, TimeUnit.SECONDS.toMillis(value));
     }
 
-    //todo: probably we don't want to throw exceptions to make sure that don't abort when a agent goes down.
+    // TODO: probably we don't want to throw exceptions to make sure that don't abort when a agent goes down
     private <E> List<E> getAllFutures(Collection<Future> futures, long timeoutMs) throws TimeoutException {
         CountdownWatch watch = CountdownWatch.started(timeoutMs);
         List result = new LinkedList();
@@ -217,27 +219,26 @@ public class AgentsClient {
                 Object o = future.get(watch.getRemainingMs(), TimeUnit.MILLISECONDS);
                 result.add(o);
             } catch (TimeoutException e) {
-//                Failure failure = new Failure();
-//                failure.message = "Timeout waiting for remote operation to complete";
-//                failure.agentAddress = getHostAddress();
-//                failure.testRecipe = console.getTestRecipe();
-//                failure.cause = e;
-//                console.statusTopic.publish(failure);
-
+                //Failure failure = new Failure();
+                //failure.message = "Timeout waiting for remote operation to complete";
+                //failure.agentAddress = getHostAddress();
+                //failure.testRecipe = console.getTestRecipe();
+                //failure.cause = e;
+                //console.statusTopic.publish(failure);
 
                 throw e;
             } catch (ExecutionException e) {
                 Throwable cause = e.getCause();
 
                 if (!(cause instanceof FailureAlreadyThrownRuntimeException)) {
-//                    Failure failure = new Failure();
-//                    failure.agentAddress = getHostAddress();
-//                    failure.testRecipe = console.getTestRecipe();
-//                    failure.cause = e;
-//                    console.statusTopic.publish(failure);
+                    //Failure failure = new Failure();
+                    //failure.agentAddress = getHostAddress();
+                    //failure.testRecipe = console.getTestRecipe();
+                    //failure.cause = e;
+                    //console.statusTopic.publish(failure);
                 }
 
-                Utils.fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
+                fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
 
                 if (cause instanceof TimeoutException) {
                     throw (TimeoutException) cause;

@@ -22,9 +22,9 @@ import org.apache.log4j.Logger;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 
-import static com.hazelcast.stabilizer.Utils.sleepMillis;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillisThrowException;
 import static java.lang.String.format;
 
 public class TestUtils {
@@ -88,7 +88,7 @@ public class TestUtils {
         long expirationMs = System.currentTimeMillis() + timeoutMs;
         int sleepMillis = 100;
 
-        for (; ; ) {
+        for (;;) {
             try {
                 try {
                     task.run();
@@ -100,35 +100,18 @@ public class TestUtils {
                 error = e;
             }
 
-            // there is a timeout, so we are done.
+            // there is a timeout, so we are done
             if (System.currentTimeMillis() > expirationMs) {
                 throw error;
             }
 
-            sleepMillis(sleepMillis);
+            sleepMillisThrowException(sleepMillis);
             sleepMillis *= 1.5;
         }
     }
 
     public static void assertTrueEventually(AssertTask task) {
         assertTrueEventually(task, ASSERT_TRUE_EVENTUALLY_TIMEOUT);
-    }
-
-    /**
-     * Sleeps a random amount of time.
-     *
-     * @param random        the Random used to randomize
-     * @param maxDelayNanos the maximum sleeping period in nano seconds. If maxDelayNanos equals or smaller than zero,
-     *                      the call is ignored.
-     */
-    public static void sleepRandomNanos(Random random, long maxDelayNanos) {
-        if (maxDelayNanos <= 0) {
-            return;
-        }
-
-        long randomValue = Math.abs(random.nextLong() + 1);
-        long delayNanos = randomValue % maxDelayNanos;
-        LockSupport.parkNanos(delayNanos);
     }
 
     public static byte[] randomByteArray(Random random, int length) {
@@ -143,15 +126,5 @@ public class TestUtils {
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
         return format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
-    }
-
-    public static void sleepMs(long delayMs) {
-        if (delayMs < 0) {
-            return;
-        }
-        try {
-            Thread.sleep(delayMs);
-        } catch (InterruptedException ignored) {
-        }
     }
 }

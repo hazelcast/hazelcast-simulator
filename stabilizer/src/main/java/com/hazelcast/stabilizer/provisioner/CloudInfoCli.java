@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.provisioner;
 
-import com.hazelcast.stabilizer.Utils;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -8,6 +7,8 @@ import joptsimple.OptionSpec;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
 
 public class CloudInfoCli {
 
@@ -50,7 +51,7 @@ public class CloudInfoCli {
         try {
             options = parser.parse(args);
         } catch (OptionException e) {
-            Utils.exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
+            exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
             return;
         }
 

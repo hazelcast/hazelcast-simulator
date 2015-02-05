@@ -2,6 +2,8 @@ package com.hazelcast.stabilizer;
 
 import java.util.Map;
 
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
+
 public class TestSupport {
 
     public static final int TIMEOUT = 1000;
@@ -45,13 +47,6 @@ public class TestSupport {
             for (StackTraceElement aTrace : trace) {
                 System.err.println("\tat " + aTrace);
             }
-        }
-    }
-
-    public static void sleepMillis(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
         }
     }
 }

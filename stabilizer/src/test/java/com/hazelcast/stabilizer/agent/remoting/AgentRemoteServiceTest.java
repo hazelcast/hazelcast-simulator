@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.agent.remoting;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.messaging.DummyRunnableMessage;
@@ -17,8 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.stabilizer.utils.CommonUtils.getHostAddress;
 import static org.mockito.Mockito.*;
-
 
 public class AgentRemoteServiceTest {
 
@@ -33,7 +32,7 @@ public class AgentRemoteServiceTest {
         agentMessageProcessorMock = mock(AgentMessageProcessor.class);
         agentRemoteService = new AgentRemoteService(agentMock, agentMessageProcessorMock);
         agentRemoteService.start();
-        InetAddress localInetAddress = InetAddress.getByName(Utils.getHostAddress());
+        InetAddress localInetAddress = InetAddress.getByName(getHostAddress());
         String addressString = localInetAddress.getHostAddress();
         List<AgentAddress> addresses = Arrays.asList(new AgentAddress(addressString, addressString));
         client = new AgentsClient(addresses);
@@ -43,7 +42,6 @@ public class AgentRemoteServiceTest {
     public void tearDown() throws IOException {
         agentRemoteService.stop();
     }
-
 
     @Test
     public void testEcho() throws IOException, TimeoutException {
@@ -59,6 +57,4 @@ public class AgentRemoteServiceTest {
         client.sendMessage(message);
         verify(agentMessageProcessorMock).submit(any(Message.class));
     }
-
-
 }

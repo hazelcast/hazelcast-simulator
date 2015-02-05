@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.provisioner;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.provisioner.git.GitSupport;
 import org.apache.log4j.Logger;
 
@@ -11,7 +10,10 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.hazelcast.stabilizer.Utils.exitWithError;
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
+import static com.hazelcast.stabilizer.utils.FileUtils.copyFilesToDirectory;
+import static com.hazelcast.stabilizer.utils.FileUtils.getText;
+import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
 /**
@@ -72,15 +74,13 @@ public class HazelcastJars {
 
     private void gitRetrieve(String revision) {
         File[] files = gitSupport.checkout(revision);
-        Utils.copyFilesToDirectory(files, hazelcastJarsDir.getAbsoluteFile());
+        copyFilesToDirectory(files, hazelcastJarsDir.getAbsoluteFile());
     }
-
 
     private void mavenRetrieve(String artifact, String version) {
         File userhome = new File(System.getProperty("user.home"));
-        File repositoryDir = Utils.newFile(userhome, ".m2", "repository");
-        File artifactFile = Utils.newFile(repositoryDir, "com", "hazelcast",
-                artifact, version, format("%s-%s.jar", artifact, version));
+        File repositoryDir = newFile(userhome, ".m2", "repository");
+        File artifactFile = newFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
 
         if (artifactFile.exists()) {
             log.info("Using artifact: " + artifactFile + " from local maven repository");
@@ -95,7 +95,7 @@ public class HazelcastJars {
                 log.debug("Loading: " + mavenMetadataUrl);
                 String mavenMetadata = null;
                 try {
-                    mavenMetadata = Utils.getText(mavenMetadataUrl);
+                    mavenMetadata = getText(mavenMetadataUrl);
                 } catch (FileNotFoundException e) {
                     log.fatal("Failed to load " + artifact + "-" + version + ", because :"
                             + mavenMetadataUrl + " was not found");

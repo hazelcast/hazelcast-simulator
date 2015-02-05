@@ -1,19 +1,4 @@
-/*
- * Copyright (c) 2008-2013, Hazelcast, Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.hazelcast.stabilizer;
+package com.hazelcast.stabilizer.utils;
 
 import com.google.common.io.Files;
 import com.hazelcast.stabilizer.coordinator.Coordinator;
@@ -22,13 +7,10 @@ import joptsimple.OptionSpec;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.log4j.Logger;
 
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,105 +19,38 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.Reader;
-import java.io.StringWriter;
 import java.io.Writer;
-import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.Formatter;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.locks.LockSupport;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
 import static java.lang.String.format;
 
-public final class Utils {
-    public static final String NEW_LINE = System.getProperty("line.separator");
+public class FileUtils {
 
     private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-_]+$");
-    private static final String DEFAULT_DELIMITER = ", ";
-    private static final String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
     private static final String USER_HOME = System.getProperty("user.home");
-    private static final Logger log = Logger.getLogger(Utils.class);
-
-    private static volatile String hostAddress;
-
-    public static void fixRemoteStackTrace(Throwable remoteCause, StackTraceElement[] localSideStackTrace) {
-        StackTraceElement[] remoteStackTrace = remoteCause.getStackTrace();
-        StackTraceElement[] newStackTrace = new StackTraceElement[localSideStackTrace.length + remoteStackTrace.length];
-        System.arraycopy(remoteStackTrace, 0, newStackTrace, 0, remoteStackTrace.length);
-        newStackTrace[remoteStackTrace.length] = new StackTraceElement(EXCEPTION_SEPARATOR, "", null, -1);
-        System.arraycopy(localSideStackTrace, 1, newStackTrace, remoteStackTrace.length + 1, localSideStackTrace.length - 1);
-        remoteCause.setStackTrace(newStackTrace);
-    }
+    private static final Logger LOGGER = Logger.getLogger(FileUtils.class);
 
     public static boolean isValidFileName(String fileName) {
         return VALID_FILE_NAME_PATTERN.matcher(fileName).matches();
-    }
-
-    /**
-     * Formats a number and adds padding to the left.
-     * It is very inefficient; but a lot easier to deal with the formatting API.
-     *
-     * @param number    number to format
-     * @param length    width of padding
-     * @return formatted number
-     */
-    public static String formatDouble(double number, int length) {
-        StringBuffer sb = new StringBuffer();
-        Formatter f = new Formatter(sb);
-        f.format("%,.2f", number);
-
-        return padLeft(sb.toString(), length);
-    }
-
-    public static String formatLong(long number, int length) {
-        StringBuffer sb = new StringBuffer();
-        Formatter f = new Formatter(sb);
-        f.format("%,d", number);
-
-        return padLeft(sb.toString(), length);
-    }
-
-    public static String padRight(String argument, int length) {
-        if (length <= 0) {
-            return argument;
-        }
-        return String.format("%-" + length + "s", argument);
-    }
-
-    public static String padLeft(String argument, int length) {
-        if (length <= 0) {
-            return argument;
-        }
-        return String.format("%" + length + "s", argument);
-    }
-
-    public static String fillString(int length, char charToFill) {
-        if (length == 0) {
-            return "";
-        }
-        char[] array = new char[length];
-        Arrays.fill(array, charToFill);
-        return new String(array);
     }
 
     public static File newFile(String path) {
@@ -161,8 +76,9 @@ public final class Utils {
             StringBuilder response = new StringBuilder();
             String inputLine;
 
-            while ((inputLine = in.readLine()) != null)
+            while ((inputLine = in.readLine()) != null) {
                 response.append(inputLine);
+            }
 
             in.close();
 
@@ -187,26 +103,6 @@ public final class Utils {
         return file;
     }
 
-    public static String getHostAddress() {
-        if (hostAddress != null) {
-            return hostAddress;
-        }
-
-        synchronized (Utils.class) {
-            try {
-                if (hostAddress != null) {
-                    return hostAddress;
-                }
-                Socket s = new Socket("google.com", 80);
-                hostAddress = s.getLocalAddress().getHostAddress();
-                s.close();
-                return hostAddress;
-            } catch (IOException io) {
-                throw new RuntimeException(io);
-            }
-        }
-    }
-
     public static void writeObject(Object o, File file) {
         File tmpFile = new File(file.getParent(), file.getName() + ".tmp");
 
@@ -218,21 +114,21 @@ public final class Utils {
                 objectOutputStream = new ObjectOutputStream(fileOutputStream);
                 objectOutputStream.writeObject(o);
             } finally {
-                Utils.closeQuietly(objectOutputStream);
+                closeQuietly(objectOutputStream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            Utils.closeQuietly(fileOutputStream);
+            closeQuietly(fileOutputStream);
         }
 
         if (!tmpFile.renameTo(file)) {
             throw new RuntimeException(
-                    format("Could not rename [%s] to [%s]", tmpFile.getAbsolutePath(), file.getAbsolutePath())
-            );
+                    format("Could not rename [%s] to [%s]", tmpFile.getAbsolutePath(), file.getAbsolutePath()));
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static <E> E readObject(File file) {
         FileInputStream fileInputStream = null;
         try {
@@ -242,14 +138,14 @@ public final class Utils {
                 objectInputStream = new ObjectInputStream(fileInputStream);
                 return (E) objectInputStream.readObject();
             } finally {
-                Utils.closeQuietly(objectInputStream);
+                closeQuietly(objectInputStream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
-            Utils.closeQuietly(fileInputStream);
+            closeQuietly(fileInputStream);
         }
     }
 
@@ -335,19 +231,19 @@ public final class Utils {
         }
     }
 
-    public static void delete(File f) throws IOException {
-        if (!f.exists()) {
+    public static void delete(File file) throws IOException {
+        if (!file.exists()) {
             return;
         }
 
-        if (f.isDirectory()) {
-            for (File c : f.listFiles()) {
-                delete(c);
+        if (file.isDirectory()) {
+            for (File fileInDirectory : file.listFiles()) {
+                delete(fileInDirectory);
             }
         }
 
-        if (!f.delete()) {
-            throw new FileNotFoundException("Failed to delete file: " + f);
+        if (!file.delete()) {
+            throw new FileNotFoundException("Failed to delete file: " + file);
         }
     }
 
@@ -365,14 +261,10 @@ public final class Utils {
         }
     }
 
-    public static String getVersion() {
-        return Utils.class.getPackage().getImplementationVersion();
-    }
-
     public static byte[] zip(List<File> roots) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
         Deque<File> queue = new LinkedList<File>();
-        ZipOutputStream zout = new ZipOutputStream(out);
 
         Set<String> names = new HashSet<String>();
 
@@ -386,14 +278,13 @@ public final class Utils {
                         continue;
                     }
 
-//                    log.finest("Zipping: " + file.getAbsolutePath());
-
+                    //LOGGER.finest("Zipping: " + file.getAbsolutePath());
                     if (file.isDirectory()) {
                         String name = base.relativize(file.toURI()).getPath();
                         name = name.endsWith("/") ? name : name + "/";
 
                         if (names.add(name)) {
-                            zout.putNextEntry(new ZipEntry(name));
+                            zipOutputStream.putNextEntry(new ZipEntry(name));
                         }
 
                         for (File kid : file.listFiles()) {
@@ -401,17 +292,17 @@ public final class Utils {
                         }
                     } else {
                         String name = base.relativize(file.toURI()).getPath();
-                        zout.putNextEntry(new ZipEntry(name));
-                        copy(file, zout);
-                        zout.closeEntry();
+                        zipOutputStream.putNextEntry(new ZipEntry(name));
+                        copy(file, zipOutputStream);
+                        zipOutputStream.closeEntry();
                     }
                 }
             }
         } finally {
-            zout.close();
+            zipOutputStream.close();
         }
 
-        return out.toByteArray();
+        return outputStream.toByteArray();
     }
 
     private static void copy(InputStream in, OutputStream out) throws IOException {
@@ -434,12 +325,6 @@ public final class Utils {
         }
     }
 
-    public static String throwableToString(Throwable t) {
-        StringWriter sw = new StringWriter();
-        t.printStackTrace(new PrintWriter(sw));
-        return sw.toString();
-    }
-
     public static void unzip(byte[] content, final File destinationDir) throws IOException {
         byte[] buffer = new byte[1024];
 
@@ -447,11 +332,10 @@ public final class Utils {
         ZipEntry zipEntry = zis.getNextEntry();
 
         while (zipEntry != null) {
-
             String fileName = zipEntry.getName();
             File file = new File(destinationDir + File.separator + fileName);
 
-//            log.finest("Unzipping: " + file.getAbsolutePath());
+            //LOGGER.finest("Unzipping: " + file.getAbsolutePath());
 
             if (zipEntry.isDirectory()) {
                 file.mkdirs();
@@ -485,106 +369,13 @@ public final class Utils {
         }
     }
 
-    public static void closeQuietly(Socket socket) {
-        if (socket == null) {
-            return;
-        }
-
-        try {
-            socket.close();
-        } catch (IOException ignore) {
-        }
-    }
-
-    public static void closeQuietly(Closeable... closeables) {
-        for (Closeable c : closeables) {
-            closeQuietly(c);
-        }
-    }
-
-    public static void closeQuietly(Closeable c) {
-        if (c == null) return;
-        try {
-            c.close();
-        } catch (IOException ignore) {
-        }
-    }
-
-    public static void closeQuietly(XMLStreamWriter c) {
-        if (c == null) return;
-        try {
-            c.close();
-        } catch (XMLStreamException ignore) {
-        }
-    }
-
-    public static void sleepSeconds(int seconds) {
-        try {
-            Thread.sleep(seconds * 1000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void sleepMillis(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void sleepNanos(long nanos) {
-        if (nanos <= 0) {
-            return;
-        }
-
-        LockSupport.parkNanos(nanos);
-    }
-
-    public static void exitWithError(Logger logger, String msg) {
-        logger.fatal(msg);
-        System.exit(1);
-    }
-
-    public static void exitWithError(Logger logger, String msg, Throwable t) {
-        String throwableString = throwableToString(t);
-        exitWithError(logger, msg + "\n" + throwableString);
-    }
-
-    private Utils() {
-    }
-
-    public static String secondsToHuman(long seconds) {
-        long time = seconds;
-
-        long s = time % 60;
-
-        time = time / 60;
-        long m = time % 60;
-
-        time = time / 60;
-        long h = time % 24;
-
-        time = time / 24;
-        long days = time;
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(format("%02d", days)).append("d ")
-                .append(format("%02d", h)).append("h ")
-                .append(format("%02d", m)).append("m ")
-                .append(format("%02d", s)).append("s");
-
-        return sb.toString();
-    }
-
     public static Properties loadProperties(File file) {
         Properties properties = new Properties();
         final FileInputStream in;
         try {
             in = new FileInputStream(file);
         } catch (FileNotFoundException e) {
-            //should not be thrown since it is already verified that the property file exist.
+            // should not be thrown since it is already verified that the property file exist
             throw new RuntimeException(e);
         }
         try {
@@ -593,31 +384,14 @@ public final class Utils {
         } catch (IOException e) {
             throw new RuntimeException(format("Failed to load testsuite property file [%s]", file.getAbsolutePath()), e);
         } finally {
-            Utils.closeQuietly(in);
+            closeQuietly(in);
         }
-    }
-
-    public static String join(Iterable<?> collection) {
-        return join(collection, DEFAULT_DELIMITER);
-    }
-
-    public static String join(Iterable<?> collection, String delimiter) {
-        StringBuilder builder = new StringBuilder();
-        Iterator<?> iterator = collection.iterator();
-        while (iterator.hasNext()) {
-            Object o = iterator.next();
-            builder.append(o);
-            if (iterator.hasNext()) {
-                builder.append(delimiter);
-            }
-        }
-        return builder.toString();
     }
 
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
-            exitWithError(log, format("%s [%s] does not exist%n", desc, file));
+            exitWithError(LOGGER, format("%s [%s] does not exist%n", desc, file));
         }
         return file;
     }
@@ -628,9 +402,9 @@ public final class Utils {
             file = newFile(Coordinator.STABILIZER_HOME + File.separator + "conf" + File.separator + fileName);
         }
         if (!file.exists()) {
-            exitWithError(log, format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
+            exitWithError(LOGGER, format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
         }
-        log.info("Loading " + desc + ": " + file.getAbsolutePath());
+        LOGGER.info("Loading " + desc + ": " + file.getAbsolutePath());
 
         return fileAsText(file);
     }
@@ -659,7 +433,7 @@ public final class Utils {
             } else if (file.exists()) {
                 files.add(file);
             } else {
-                Utils.exitWithError(log, format("Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
+                exitWithError(LOGGER, format("Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
             }
         }
 
@@ -673,13 +447,13 @@ public final class Utils {
     }
 
     public static void copyFileToDirectory(File sourceFile, File targetDirectory) {
-        File targetFile = Utils.newFile(targetDirectory, sourceFile.getName());
+        File targetFile = newFile(targetDirectory, sourceFile.getName());
         try {
             Files.copy(sourceFile, targetFile);
         } catch (IOException e) {
-            String errorMessage = format("Error while copying file from %s to %s",
-                    sourceFile.getAbsolutePath(), targetFile.getAbsolutePath());
-            exitWithError(log, errorMessage, e);
+            String errorMessage = format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
+                    targetFile.getAbsolutePath());
+            exitWithError(LOGGER, errorMessage, e);
         }
     }
 }
