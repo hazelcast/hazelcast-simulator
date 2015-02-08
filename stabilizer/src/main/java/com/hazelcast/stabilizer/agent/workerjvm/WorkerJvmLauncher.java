@@ -37,11 +37,11 @@ public class WorkerJvmLauncher {
     private final static File STABILIZER_HOME = getStablizerHome();
     private final static String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
     private final static AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
-    private final static String WORKERS_PATH = "/home/users/stabilizer/hazelcast-stabilizer-0.4-SNAPSHOT/workers";
+    private final static String WORKERS_PATH = getStablizerHome().getAbsolutePath() + "/workers";
 
     private final WorkerJvmSettings settings;
     private final StabilizerProperties props = new StabilizerProperties();
-    private Bash bash = new Bash(props);
+    private final Bash bash = new Bash(props);
     private final Agent agent;
     private final ConcurrentMap<String, WorkerJvm> workerJVMs;
     private File hzFile;
@@ -138,7 +138,7 @@ public class WorkerJvmLauncher {
     private void copyResourcesToWorkerId(String workerId) throws IOException {
         final String testSuiteId = agent.getTestSuite().id;
         if (!new File(WORKERS_PATH + "/" + testSuiteId + "/upload/").exists()) {
-            log.debug("Skipping copy, since no copy file at the agent");
+            log.debug("Skip copying upload directory to workers since no upload directory was found");
             return;
         }
         String cpCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",

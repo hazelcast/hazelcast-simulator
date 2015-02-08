@@ -52,9 +52,8 @@ import static java.lang.String.format;
 public class Coordinator {
 
     public final static File STABILIZER_HOME = getStablizerHome();
-    public final static String WORKING_DIRECTORY = new String(System.getProperty("user.dir"));
+    public final static File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
     public final static File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
-    public final static String UPLOAD_HOME = UPLOAD_DIRECTORY.getAbsolutePath();
     private final static Logger log = Logger.getLogger(Coordinator.class);
 
     //options.
@@ -377,14 +376,15 @@ public class Coordinator {
     }
 
     private void copyUploadDirectoryToAgents() throws IOException {
-        log.info("WORKING DIRECTORY:" + WORKING_DIRECTORY);
+        log.info("WORKING DIRECTORY:" + WORKING_DIRECTORY.getAbsolutePath());
         if (!UPLOAD_DIRECTORY.exists()) {
             log.debug("Skipping upload, since no upload file in working directory");
             return;
         }
-        log.info("UPLOAD DIRECTORY:" + UPLOAD_HOME);
-        List<File> files = Utils.getFilesFromClassPath(UPLOAD_HOME);
+        log.info(format("Starting uploading '+%s+' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
+        List<File> files = Utils.getFilesFromClassPath(UPLOAD_DIRECTORY.getAbsolutePath());
         for (String ip : agentsClient.getPublicAddresses()){
+            log.info(format(" Uploading '+%s+' to agent %s", UPLOAD_DIRECTORY.getAbsolutePath(), ip));
             for (File file : files){
                 String syncCommand = format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-stabilizer-%s/workers/%s/",
                         props.get("SSH_OPTIONS", ""),
@@ -397,7 +397,7 @@ public class Coordinator {
             }
             log.info("    " + ip + " copied");
         }
-        log.info(format("Finished copying '+%s+' to agents", UPLOAD_HOME));
+        log.info(format("Finished uploading '+%s+' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
     }
 
 
