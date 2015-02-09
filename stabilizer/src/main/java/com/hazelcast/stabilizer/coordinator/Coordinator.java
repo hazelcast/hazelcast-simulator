@@ -376,7 +376,6 @@ public class Coordinator {
     }
 
     private void copyUploadDirectoryToAgents() throws IOException {
-        log.info("WORKING DIRECTORY:" + WORKING_DIRECTORY.getAbsolutePath());
         if (!UPLOAD_DIRECTORY.exists()) {
             log.debug("Skipping upload, since no upload file in working directory");
             return;

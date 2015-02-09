@@ -8,7 +8,6 @@ import com.hazelcast.stabilizer.provisioner.Bash;
 import com.hazelcast.stabilizer.worker.ClientWorker;
 import com.hazelcast.stabilizer.worker.MemberWorker;
 import org.apache.log4j.Logger;
-import sun.security.ssl.Debug;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -137,7 +136,8 @@ public class WorkerJvmLauncher {
 
     private void copyResourcesToWorkerId(String workerId) throws IOException {
         final String testSuiteId = agent.getTestSuite().id;
-        if (!new File(WORKERS_PATH + "/" + testSuiteId + "/upload/").exists()) {
+        File uploadDirectory = new File(WORKERS_PATH + "/" + testSuiteId + "/upload/");
+        if (!uploadDirectory.exists()) {
             log.debug("Skip copying upload directory to workers since no upload directory was found");
             return;
         }
