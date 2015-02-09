@@ -3,6 +3,8 @@ package com.hazelcast.stabilizer.agent.workerjvm;
 import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
+import com.hazelcast.stabilizer.common.StabilizerProperties;
+import com.hazelcast.stabilizer.provisioner.Bash;
 import com.hazelcast.stabilizer.worker.ClientWorker;
 import com.hazelcast.stabilizer.worker.MemberWorker;
 import org.apache.log4j.Logger;
@@ -34,8 +36,11 @@ public class WorkerJvmLauncher {
     private final static File STABILIZER_HOME = getStablizerHome();
     private final static String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
     private final static AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
+    private final static String WORKERS_PATH = getStablizerHome().getAbsolutePath() + "/workers";
 
     private final WorkerJvmSettings settings;
+    private final StabilizerProperties props = new StabilizerProperties();
+    private final Bash bash = new Bash(props);
     private final Agent agent;
     private final ConcurrentMap<String, WorkerJvm> workerJVMs;
     private File hzFile;
@@ -124,8 +129,26 @@ public class WorkerJvmLauncher {
         new WorkerJvmProcessOutputGobbler(process.getInputStream(), new FileOutputStream(logFile)).start();
         workerJvm.process = process;
         workerJvm.mode = WorkerJvm.Mode.valueOf(mode.toUpperCase());
+        copyResourcesToWorkerId(workerId);
         workerJVMs.put(workerId, workerJvm);
         return workerJvm;
+    }
+
+    private void copyResourcesToWorkerId(String workerId) throws IOException {
+        final String testSuiteId = agent.getTestSuite().id;
+        File uploadDirectory = new File(WORKERS_PATH + "/" + testSuiteId + "/upload/");
+        if (!uploadDirectory.exists()) {
+            log.debug("Skip copying upload directory to workers since no upload directory was found");
+            return;
+        }
+        String cpCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
+                WORKERS_PATH,
+                testSuiteId,
+                WORKERS_PATH,
+                testSuiteId,
+                workerId);
+        bash.execute(cpCommand);
+        log.info(format("Finished copying '+%s+' to worker", WORKERS_PATH));
     }
 
     private void generateWorkerStartScript(String mode, WorkerJvm workerJvm) {
