@@ -22,10 +22,12 @@ import org.apache.log4j.Logger;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillisThrowException;
 import static java.lang.String.format;
+import static junit.framework.TestCase.assertEquals;
 
 public class TestUtils {
 
@@ -112,6 +114,30 @@ public class TestUtils {
 
     public static void assertTrueEventually(AssertTask task) {
         assertTrueEventually(task, ASSERT_TRUE_EVENTUALLY_TIMEOUT);
+    }
+
+    public static void assertEqualsByteArray(byte[] expected,byte[] current){
+        assertEquals("Byte arrays' lengths not the same", expected.length , current.length);
+        for(int k = 0; k < expected.length; k++){
+            assertEquals(k + "th index not equal" , expected[k] , current[k]);
+        }
+    }
+
+    /**
+     * Sleeps a random amount of time.
+     *
+     * @param random        the Random used to randomize
+     * @param maxDelayNanos the maximum sleeping period in nano seconds. If maxDelayNanos equals or smaller than zero,
+     *                      the call is ignored.
+     */
+    public static void sleepRandomNanos(Random random, long maxDelayNanos) {
+        if (maxDelayNanos <= 0) {
+            return;
+        }
+
+        long randomValue = Math.abs(random.nextLong() + 1);
+        long delayNanos = randomValue % maxDelayNanos;
+        LockSupport.parkNanos(delayNanos);
     }
 
     public static byte[] randomByteArray(Random random, int length) {
