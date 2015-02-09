@@ -12,36 +12,42 @@ import com.hazelcast.stabilizer.test.annotations.Performance;
 import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
-import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
-import com.hazelcast.stabilizer.worker.OperationSelector;
+import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
+import com.hazelcast.stabilizer.worker.selector.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.tests.map.MapAsyncOpsTest.Operation.*;
-
 public class MapAsyncOpsTest {
+
+    private enum Operation {
+        PUT_ASYNC,
+        PUT_ASYNC_TTL,
+        GET_ASYNC,
+        REMOVE_ASYNC,
+        DESTROY
+    }
+
     private final static ILogger log = Logger.getLogger(MapAsyncOpsTest.class);
 
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 10;
+    public int maxTTLExpirySeconds = 3;
 
-    //check these add up to 1
     public double putAsyncProb = 0.2;
     public double putAsyncTTLProb = 0.2;
     public double getAsyncProb = 0.2;
     public double removeAsyncProb = 0.2;
     public double destroyProb = 0.2;
-    //
-    public int maxTTLExpirySeconds = 3;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private MapOperationsCount count = new MapOperationsCount();
 
-    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+    private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     public MapAsyncOpsTest() {
     }
@@ -56,11 +62,11 @@ public class MapAsyncOpsTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
 
-        selector.addOperation(PUT_ASYNC, putAsyncProb)
-                .addOperation(PUT_ASYNC_TTL, putAsyncTTLProb)
-                .addOperation(GET_ASYNC, getAsyncProb)
-                .addOperation(REMOVE_ASYNC, removeAsyncProb)
-                .addOperation(DESTROY, destroyProb);
+        operationSelectorBuilder.addOperation(Operation.PUT_ASYNC, putAsyncProb)
+                                .addOperation(Operation.PUT_ASYNC_TTL, putAsyncTTLProb)
+                                .addOperation(Operation.GET_ASYNC, getAsyncProb)
+                                .addOperation(Operation.REMOVE_ASYNC, removeAsyncProb)
+                                .addOperation(Operation.DESTROY, destroyProb);
     }
 
     @Run
@@ -71,11 +77,12 @@ public class MapAsyncOpsTest {
         }
         spawner.awaitCompletion();
 
-        IList results = targetInstance.getList(basename + "report");
+        IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
         results.add(count);
     }
 
     private class Worker implements Runnable {
+        private final OperationSelector<Operation> selector = operationSelectorBuilder.build();
         private final Random random = new Random();
 
         @Override
@@ -83,7 +90,7 @@ public class MapAsyncOpsTest {
             while (!testContext.isStopped()) {
                 try {
                     final int key = random.nextInt(keyCount);
-                    final IMap map = targetInstance.getMap(basename);
+                    final IMap<Integer, Object> map = targetInstance.getMap(basename);
                     switch (selector.select()) {
                         case PUT_ASYNC:
                             Object value = random.nextInt();
@@ -109,7 +116,7 @@ public class MapAsyncOpsTest {
                             count.destroyCount.incrementAndGet();
                             break;
                     }
-                } catch (DistributedObjectDestroyedException e) {
+                } catch (DistributedObjectDestroyedException ignored) {
                 }
             }
         }
@@ -135,13 +142,5 @@ public class MapAsyncOpsTest {
 
     public static void main(String[] args) throws Throwable {
         new TestRunner<MapAsyncOpsTest>(new MapAsyncOpsTest()).run();
-    }
-
-    static enum Operation {
-        PUT_ASYNC,
-        PUT_ASYNC_TTL,
-        GET_ASYNC,
-        REMOVE_ASYNC,
-        DESTROY
     }
 }

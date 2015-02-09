@@ -13,7 +13,8 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
-import com.hazelcast.stabilizer.worker.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -21,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ExampleTest {
 
-    private static enum Operation {
+    private enum Operation {
         PUT,
         GET
     }
@@ -32,8 +33,7 @@ public class ExampleTest {
     public int threadCount = 1;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public double putProbability = 0.2;
-    public double getProbability = 0.8;
+    public double putProb = 0.2;
 
     // probes
     public IntervalProbe putLatencyProbe;
@@ -44,7 +44,7 @@ public class ExampleTest {
     private IAtomicLong counter;
     private TestContext testContext;
 
-    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+    private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -54,8 +54,7 @@ public class ExampleTest {
         totalCounter = targetInstance.getAtomicLong("totalCounter");
         counter = targetInstance.getAtomicLong("counter");
 
-        selector.addOperation(Operation.PUT, putProbability)
-                .addOperation(Operation.GET, getProbability);
+        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }
 
     @Run
@@ -87,6 +86,8 @@ public class ExampleTest {
     }
 
     private class Worker implements Runnable {
+        private final OperationSelector<Operation> selector = operationSelectorBuilder.build();
+
         @Override
         public void run() {
             long iteration = 0;
@@ -127,4 +128,3 @@ public class ExampleTest {
         new TestRunner<ExampleTest>(test).run();
     }
 }
-

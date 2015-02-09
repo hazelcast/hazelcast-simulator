@@ -1,9 +1,6 @@
 package com.hazelcast.stabilizer.tests.icache;
 
-
 import com.hazelcast.cache.ICache;
-
-import javax.cache.CacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -21,9 +18,11 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
-import com.hazelcast.stabilizer.worker.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
 import javax.cache.CacheException;
+import javax.cache.CacheManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -35,11 +34,16 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMember
  * This test demonstrates effect of batching. It uses async methods to invoke operation and wait for future
  * to complete every {@code batchSize} invocations. Hence setting batchSize to 1 is effectively the same as
  * using sync operations.
- *
+ * <p/>
  * {@code batchSize > 1} causes batch-effect to kick-in, pipe-lines are utilized better
  * and overall throughput goes up.
  */
 public class BatchingICacheTest {
+
+    private enum Operation {
+        PUT,
+        GET,
+    }
 
     private final static ILogger log = Logger.getLogger(PerformanceICacheTest.class);
 
@@ -49,29 +53,28 @@ public class BatchingICacheTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
     public String basename = getClass().getSimpleName().toLowerCase();
-    public double writeProbability = 0.1;
+    public double writeProb = 0.1;
     public int batchSize = 1;
 
     private ICache<Object, Object> cache;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
-    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+    private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
 
-        targetInstance = testContext.getTargetInstance();
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
         CacheManager cacheManager;
         if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         } else {
             HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         }
 
         CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
@@ -80,13 +83,12 @@ public class BatchingICacheTest {
         try {
             cacheManager.createCache(basename, config);
         } catch (CacheException hack) {
-            //temp hack to deal with multiple nodes wanting to make the same cache.
+            // temp hack to deal with multiple nodes wanting to make the same cache
             log.severe(hack);
         }
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
 
-        selector.addOperation(Operation.PUT, writeProbability)
-                .empty(Operation.GET);
+        operationSelectorBuilder.addOperation(Operation.PUT, writeProb).addDefaultOperation(Operation.GET);
     }
 
     @Teardown
@@ -120,6 +122,7 @@ public class BatchingICacheTest {
     }
 
     private class Worker implements Runnable {
+        private final OperationSelector<Operation> selector = operationSelectorBuilder.build();
         private final Random random = new Random();
         private final List<ICompletableFuture<?>> futureList = new ArrayList<ICompletableFuture<?>>(batchSize);
 
@@ -176,10 +179,5 @@ public class BatchingICacheTest {
     public static void main(String[] args) throws Throwable {
         PerformanceICacheTest test = new PerformanceICacheTest();
         new TestRunner<PerformanceICacheTest>(test).run();
-    }
-
-    static enum Operation {
-        PUT,
-        GET,
     }
 }

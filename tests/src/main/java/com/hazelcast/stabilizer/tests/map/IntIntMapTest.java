@@ -22,14 +22,14 @@ import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.probes.probes.SimpleProbe;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
-import com.hazelcast.stabilizer.worker.OperationSelector;
 
 import java.util.Random;
 
@@ -40,7 +40,7 @@ public class IntIntMapTest {
 
     private static final ILogger log = Logger.getLogger(IntIntMapTest.class);
 
-    private static enum Operation {
+    private enum Operation {
         PUT,
         GET
     }
@@ -62,15 +62,19 @@ public class IntIntMapTest {
     public IntervalProbe getLatency;
     public SimpleProbe throughput;
 
-    private IMap<Integer, Integer> map;
-    private int[] keys;
+    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private TestContext testContext;
+    private IMap<Integer, Integer> map;
+
+    private int[] keys;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
+
+        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }
 
     @Teardown
@@ -98,10 +102,8 @@ public class IntIntMapTest {
 
     private class WorkerTask extends AbstractWorkerTask<Operation> {
 
-        @Override
-        protected OperationSelector<Operation> createOperationSelector() {
-            return new OperationSelector<Operation>().addOperation(Operation.PUT, putProb)
-                                                     .addOperationRemainingProbability(Operation.GET);
+        public WorkerTask() {
+            super(operationSelectorBuilder);
         }
 
         @Override

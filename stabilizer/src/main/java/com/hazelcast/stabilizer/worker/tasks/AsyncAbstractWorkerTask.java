@@ -2,20 +2,21 @@ package com.hazelcast.stabilizer.worker.tasks;
 
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
 /**
  * Asynchronous version of {@link AbstractWorkerTask}.
  * <p/>
  * The operation counter is automatically increased after call of {@link com.hazelcast.core.ExecutionCallback#onResponse}.
  *
- * @param <O> Type of Enum used by the {@link com.hazelcast.stabilizer.worker.OperationSelector}
+ * @param <O> Type of Enum used by the {@link com.hazelcast.stabilizer.worker.selector.OperationSelector}
  * @param <V> Type of {@link com.hazelcast.core.ExecutionCallback}
  */
 public abstract class AsyncAbstractWorkerTask<O extends Enum<O>, V> extends AbstractWorkerTask<O>
         implements ExecutionCallback<V> {
 
-    public AsyncAbstractWorkerTask() {
-        super();
+    public AsyncAbstractWorkerTask(OperationSelectorBuilder<O> operationSelectorBuilder) {
+        super(operationSelectorBuilder);
     }
 
     @Override

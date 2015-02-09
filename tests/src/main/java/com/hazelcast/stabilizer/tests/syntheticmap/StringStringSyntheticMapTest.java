@@ -14,7 +14,7 @@ import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
 import com.hazelcast.stabilizer.tests.helpers.StringUtils;
-import com.hazelcast.stabilizer.worker.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 
 import java.util.Random;
@@ -26,7 +26,7 @@ public class StringStringSyntheticMapTest {
 
     private static final ILogger log = Logger.getLogger(StringStringSyntheticMapTest.class);
 
-    private static enum Operation {
+    private enum Operation {
         PUT,
         GET
     }
@@ -47,17 +47,20 @@ public class StringStringSyntheticMapTest {
     public IntervalProbe getLatency;
     public SimpleProbe throughput;
 
-    private SyntheticMap<String, String> map;
-    private String[] keys;
-    private String[] values;
+    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private TestContext testContext;
+    private SyntheticMap<String, String> map;
+
+    private String[] keys;
+    private String[] values;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + testContext.getTestId());
+        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }
 
     @Teardown
@@ -86,10 +89,8 @@ public class StringStringSyntheticMapTest {
 
     private class WorkerTask extends AbstractWorkerTask<Operation> {
 
-        @Override
-        protected OperationSelector<Operation> createOperationSelector() {
-            return new OperationSelector<Operation>().addOperation(Operation.PUT, putProb)
-                    .addOperationRemainingProbability(Operation.GET);
+        public WorkerTask() {
+            super(operationSelectorBuilder);
         }
 
         @Override

@@ -17,7 +17,7 @@ import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
-import com.hazelcast.stabilizer.worker.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 
 import java.lang.reflect.Method;
@@ -39,7 +39,7 @@ import static org.junit.Assert.fail;
 public class SlowOperationMapTest {
     private static final ILogger log = Logger.getLogger(SlowOperationMapTest.class);
 
-    private static enum Operation {
+    private enum Operation {
         PUT,
         GET
     }
@@ -55,6 +55,7 @@ public class SlowOperationMapTest {
     public double putProb = 0.5;
     public int recursionDepth = 10;
 
+    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     private final AtomicLong putCounter = new AtomicLong(0);
     private final AtomicLong getCounter = new AtomicLong(0);
 
@@ -67,6 +68,9 @@ public class SlowOperationMapTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
+
+        operationSelectorBuilder.addOperation(Operation.PUT, putProb)
+                                .addDefaultOperation(Operation.GET);
 
         // try to find the getSlowOperationLogs method (since Hazelcast 3.5)
         getSlowOperationLogsMethod = getMethodByName(InternalOperationService.class, "getSlowOperationLogs");
@@ -127,10 +131,8 @@ public class SlowOperationMapTest {
 
     private class WorkerTask extends AbstractWorkerTask<Operation> {
 
-        @Override
-        protected OperationSelector<Operation> createOperationSelector() {
-            return new OperationSelector<Operation>().addOperation(Operation.PUT, putProb)
-                                                     .addOperationRemainingProbability(Operation.GET);
+        public WorkerTask() {
+            super(operationSelectorBuilder);
         }
 
         @Override

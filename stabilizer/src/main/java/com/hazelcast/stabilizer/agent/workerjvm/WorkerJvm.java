@@ -46,7 +46,7 @@ public class WorkerJvm {
                 '}';
     }
 
-    public static enum Mode {
+    public enum Mode {
         SERVER,
         CLIENT,
         MIXED
