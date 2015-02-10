@@ -46,16 +46,29 @@
 
     <serialization>
         <portable-version>1</portable-version>
+
         <data-serializable-factories>
             <data-serializable-factory factory-id="2000">
                 com.hazelcast.stabilizer.tests.synthetic.SyntheticSerializableFactory
             </data-serializable-factory>
-        </data-serializable-factories>  <portable-factories>
+            <data-serializable-factory factory-id="3000">
+                com.hazelcast.stabilizer.tests.syntheticmap.SyntheticMapSerializableFactory
+            </data-serializable-factory>
+        </data-serializable-factories>
+
+        <portable-factories>
             <portable-factory factory-id="10000000">
                 com.hazelcast.stabilizer.tests.synthetic.SyntheticRequestPortableFactory
             </portable-factory>
         </portable-factories>
     </serialization>
+
+    <services>
+        <service enabled="true">
+            <name>hz:impl:syntheticMapService</name>
+            <class-name>com.hazelcast.stabilizer.tests.syntheticmap.SyntheticMapService</class-name>
+        </service>
+    </services>
 
     <cache name="maxCachSmall*">
         <eviction max-size-policy="ENTRY_COUNT" size="271" eviction-policy="LFU"/>
