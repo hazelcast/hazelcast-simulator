@@ -22,6 +22,8 @@ tests act as an Application TCK.
 
 * [Writing tests](docs/TESTS.md)
 
+* [Setup Machine Manually](docs/MANUALSETUP.md)
+
 ### Mail Group
 
 Please join the mail group if you are interested in using or developing Hazelcast.
