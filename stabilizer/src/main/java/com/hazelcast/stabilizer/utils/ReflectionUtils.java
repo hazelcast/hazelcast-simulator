@@ -87,6 +87,22 @@ public class ReflectionUtils {
     }
 
     /**
+     * Searches a method by name.
+     *
+     * @param classType     Class to scan
+     * @param methodName    Name of the method
+     * @return the found method or <tt>null</tt> if no method was found
+     */
+    public static Method getMethodByName(Class classType, String methodName) {
+        for (Method method : classType.getDeclaredMethods()) {
+            if (method.getName().equals(methodName)) {
+                return method;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Searches for an optional void method of the given annotation type and skips the arguments check.
      *
      * @param classType      Class to scan
