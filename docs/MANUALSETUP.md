@@ -5,7 +5,7 @@ Manual Machine Setup
 
 2. Change the "USER" in the ```stabilizer.properties``` , if you want to use different user name than 'stabilizer'.
     
-3. Create an password-less rsa key pair , if you don't have one.    
+3. Create a RSA key pair or use an existing one. The usage of the key should not require to enter the pass-phrase manually. A key with pass-phrase and ssh-agent-forwarding is strongly recommended, but a pass-phrase-less key will also work.
     
 4. Copy the public key into the ```~/.ssh/authorized_keys``` file on the remote machines.
 
