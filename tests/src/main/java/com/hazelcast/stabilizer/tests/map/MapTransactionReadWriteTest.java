@@ -39,7 +39,7 @@ public class MapTransactionReadWriteTest {
     public int keyCount = 10000;
     public int valueCount = 10000;
     public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 10000;
+    public int performanceUpdateFrequency = 1;
     public String basename = "txintIntMap";
     public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
