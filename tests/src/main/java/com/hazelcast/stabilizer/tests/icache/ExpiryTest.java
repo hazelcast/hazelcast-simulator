@@ -32,7 +32,8 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
-import com.hazelcast.stabilizer.worker.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
 import javax.cache.CacheManager;
 import javax.cache.expiry.CreatedExpiryPolicy;
@@ -55,7 +56,7 @@ import static org.junit.Assert.assertFalse;
  */
 public class ExpiryTest {
 
-    private static enum Operation {
+    private enum Operation {
         PUT,
         PUT_ASYNC,
         GET,
@@ -68,16 +69,16 @@ public class ExpiryTest {
     public int expiryDuration = 500;
     public int keyCount = 1000;
 
-    public double putExpiry = 0.4;
-    public double putAsyncExpiry = 0.3;
-    public double getExpiry = 0.2;
-    public double getAsyncExpiry = 0.1;
+    public double putProb = 0.4;
+    public double putAsyncProb = 0.3;
+    public double getProb = 0.2;
+    public double getAsyncProb = 0.1;
 
     public int performanceUpdateFrequency = 10000;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+    private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     private AtomicLong operations = new AtomicLong();
     private CacheManager cacheManager;
     private String basename;
@@ -93,21 +94,19 @@ public class ExpiryTest {
 
         if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         } else {
             HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         }
         expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
 
         config.setName(basename);
 
-        selector.addOperation(Operation.PUT, putExpiry)
-                .addOperation(Operation.PUT_ASYNC, putAsyncExpiry)
-                .addOperation(Operation.GET, getExpiry)
-                .addOperation(Operation.GET_ASYNC, getAsyncExpiry);
+        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addOperation(Operation.PUT_ASYNC, putAsyncProb)
+                                .addOperation(Operation.GET, getProb).addOperation(Operation.GET_ASYNC, getAsyncProb);
     }
 
     @Warmup(global = true)
@@ -125,10 +124,11 @@ public class ExpiryTest {
     }
 
     private class Worker implements Runnable {
-        private Random random = new Random();
-        private Counter counter = new Counter();
+        private final OperationSelector<Operation> selector = operationSelectorBuilder.build();
+        private final Random random = new Random();
+        private final Counter counter = new Counter();
         @SuppressWarnings("unchecked")
-        private ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
+        private final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
 
         public void run() {
             long iteration = 0;
@@ -186,8 +186,7 @@ public class ExpiryTest {
         }
         log.info(basename + ": " + totalCounter + " from " + results.size() + " worker Threads");
 
-        @SuppressWarnings("unchecked")
-        final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
+        @SuppressWarnings("unchecked") final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
 
         for (int i = 0; i < keyCount; i++) {
             assertFalse(basename + ": cache should not contain any keys ", cache.containsKey(i));

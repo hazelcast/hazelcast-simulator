@@ -17,16 +17,16 @@ import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
+import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.map.helpers.Employee;
 import com.hazelcast.stabilizer.tests.map.helpers.OppCounterIdxTest;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
-import com.hazelcast.stabilizer.worker.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
 import java.util.Collection;
 import java.util.Random;
 
 import static org.junit.Assert.assertTrue;
-
 
 /**
  * In this test we are using different predicate methods to execute a query on a map of Employee objects.
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class MapPredicateTest {
 
-    private static enum Operation {
+    private enum Operation {
         PREDICATE_BUILDER,
         SQL_STRING,
         PAGING_PREDICATE,
@@ -49,30 +49,29 @@ public class MapPredicateTest {
     public String basename = this.getClass().getName();
     public int threadCount = 3;
     public int keyCount = 100;
-
-    public double predicateBuilder = 0.2;
-    public double sqlString = 0.2;
-    public double pagePred = 0.2;
-    public double updateEmployee = 0.3;
-    public double destroyProb = 0.1;
     public int pageSize = 5;
 
+    public double predicateBuilderProb = 0.2;
+    public double sqlStringProb = 0.2;
+    public double pagePredicateProb = 0.2;
+    public double updateEmployeeProb = 0.3;
+    public double destroyProb = 0.1;
 
     private IMap<Integer, Employee> map;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+    private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
 
-        selector.addOperation(Operation.PREDICATE_BUILDER, predicateBuilder)
-                .addOperation(Operation.SQL_STRING, sqlString)
-                .addOperation(Operation.PAGING_PREDICATE, pagePred)
-                .addOperation(Operation.UPDATE_EMPLOYEE, updateEmployee)
-                .addOperation(Operation.DESTROY, destroyProb);
+        operationSelectorBuilder.addOperation(Operation.PREDICATE_BUILDER, predicateBuilderProb)
+                                .addOperation(Operation.SQL_STRING, sqlStringProb)
+                                .addOperation(Operation.PAGING_PREDICATE, pagePredicateProb)
+                                .addOperation(Operation.UPDATE_EMPLOYEE, updateEmployeeProb)
+                                .addOperation(Operation.DESTROY, destroyProb);
         map = targetInstance.getMap(basename);
     }
 
@@ -99,9 +98,9 @@ public class MapPredicateTest {
     }
 
     private class Worker implements Runnable {
-
+        private final OperationSelector<Operation> selector = operationSelectorBuilder.build();
         private final Random random = new Random();
-        private OppCounterIdxTest counter = new OppCounterIdxTest();
+        private final OppCounterIdxTest counter = new OppCounterIdxTest();
 
         @Override
         public void run() {
@@ -178,7 +177,7 @@ public class MapPredicateTest {
                             break;
                         }
                     }
-                } catch (DistributedObjectDestroyedException e) {
+                } catch (DistributedObjectDestroyedException ignored) {
                 }
             }
             targetInstance.getList(basename + "report").add(counter);
@@ -193,6 +192,6 @@ public class MapPredicateTest {
         for (OppCounterIdxTest c : counters) {
             total.add(c);
         }
-        log.info(basename + " " + total + " from " + counters.size()+" worker threads");
+        log.info(basename + " " + total + " from " + counters.size() + " worker threads");
     }
 }

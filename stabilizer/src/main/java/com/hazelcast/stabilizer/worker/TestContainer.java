@@ -62,7 +62,7 @@ public class TestContainer<T extends TestContext> {
 
     private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
 
-    private static enum OptionalTestProperties {
+    private enum OptionalTestProperties {
         THREAD_COUNT("threadCount"),
         LOG_FREQUENCY("logFrequency"),
         PERFORMANCE_UPDATE_FREQUENCY("performanceUpdateFrequency");

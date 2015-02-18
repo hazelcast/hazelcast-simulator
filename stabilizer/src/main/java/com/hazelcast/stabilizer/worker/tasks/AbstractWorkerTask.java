@@ -4,7 +4,8 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.annotations.Performance;
-import com.hazelcast.stabilizer.worker.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -16,14 +17,14 @@ import java.util.concurrent.atomic.AtomicLong;
  * Implicitly logs and measures performance. The related properties can be overwritten with the properties of the test.
  * The Operation counter is automatically increased after each doRun() call.
  *
- * @param <O> Type of Enum used by the {@link com.hazelcast.stabilizer.worker.OperationSelector}
+ * @param <O> Type of Enum used by the {@link com.hazelcast.stabilizer.worker.selector.OperationSelector}
  */
 public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable {
 
     final static ILogger LOGGER = Logger.getLogger(AbstractWorkerTask.class);
 
+    final Random random = new Random();
     final OperationSelector<O> selector;
-    final Random random;
 
     // these fields will be injected by the TestContainer
     TestContext testContext;
@@ -36,9 +37,8 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
     // local variables
     long iteration = 0;
 
-    public AbstractWorkerTask() {
-        this.selector = createOperationSelector();
-        this.random = new Random();
+    public AbstractWorkerTask(OperationSelectorBuilder<O> operationSelectorBuilder) {
+        this.selector = operationSelectorBuilder.build();
     }
 
     @Override
@@ -55,8 +55,6 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
     public long getOperationCount() {
         return operationCount.get();
     }
-
-    protected abstract OperationSelector<O> createOperationSelector();
 
     protected abstract void doRun(O operation);
 

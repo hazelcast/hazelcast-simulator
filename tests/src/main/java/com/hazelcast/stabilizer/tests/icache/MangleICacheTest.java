@@ -14,7 +14,8 @@ import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
-import com.hazelcast.stabilizer.worker.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
@@ -33,7 +34,7 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMember
  */
 public class MangleICacheTest {
 
-    public static enum Operation {
+    public enum Operation {
         CLOSE_CACHING_PROVIDER,
 
         CREATE_CACHE_MANAGER,
@@ -51,20 +52,19 @@ public class MangleICacheTest {
     public int threadCount = 3;
     public int maxCaches = 100;
 
-    public double createCacheManager=0.1;
-    public double cacheManagerClose=0.1;
-    public double cachingProviderClose=0.1;
-
-    public double createCacheProb=0.1;
-    public double destroyCacheProb=0.2;
-    public double putCacheProb=0.3;
-    public double closeCacheProb=0.1;
+    public double createCacheManagerProb = 0.1;
+    public double cacheManagerCloseProb = 0.1;
+    public double cachingProviderCloseProb = 0.1;
+    public double createCacheProb = 0.1;
+    public double destroyCacheProb = 0.2;
+    public double putCacheProb = 0.3;
+    public double closeCacheProb = 0.1;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
     private String basename;
 
-    private OperationSelector<Operation> selector;
+    private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -72,14 +72,13 @@ public class MangleICacheTest {
         targetInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
 
-        selector = new OperationSelector<Operation>();
-        selector.addOperation(Operation.CLOSE_CACHING_PROVIDER, cachingProviderClose)
-                .addOperation(Operation.CREATE_CACHE_MANAGER, createCacheManager)
-                .addOperation(Operation.CLOSE_CACHE_MANAGER, cacheManagerClose)
-                .addOperation(Operation.CREATE_CACHE, createCacheProb)
-                .addOperation(Operation.CLOSE_CACHE, closeCacheProb)
-                .addOperation(Operation.DESTROY_CACHE, destroyCacheProb)
-                .addOperation(Operation.PUT, putCacheProb);
+        operationSelectorBuilder.addOperation(Operation.CREATE_CACHE_MANAGER, createCacheManagerProb)
+                                .addOperation(Operation.CLOSE_CACHE_MANAGER, cacheManagerCloseProb)
+                                .addOperation(Operation.CLOSE_CACHING_PROVIDER, cachingProviderCloseProb)
+                                .addOperation(Operation.CREATE_CACHE, createCacheProb)
+                                .addOperation(Operation.DESTROY_CACHE, destroyCacheProb)
+                                .addOperation(Operation.PUT, putCacheProb)
+                                .addOperation(Operation.CLOSE_CACHE, closeCacheProb);
     }
 
     @Run
@@ -92,10 +91,12 @@ public class MangleICacheTest {
     }
 
     private class Worker implements Runnable {
+        private final OperationSelector<Operation> selector = operationSelectorBuilder.build();
         private final Random random = new Random();
         private final CacheConfig config = new CacheConfig();
         private final Counter counter = new Counter();
-        private CacheManager cacheManager=null;
+
+        private CacheManager cacheManager = null;
 
         public void run() {
             config.setName(basename);
@@ -185,7 +186,7 @@ public class MangleICacheTest {
                         break;
                     }
                     case PUT: {
-                        Cache cache = getCacheIfExists(cacheNumber);
+                        Cache<Integer, Integer> cache = getCacheIfExists(cacheNumber);
                         try {
                             if (cache != null) {
                                 cache.put(random.nextInt(), random.nextInt());
@@ -205,7 +206,7 @@ public class MangleICacheTest {
             targetInstance.getList(basename).add(counter);
         }
 
-        public void createCacheManager(){
+        public void createCacheManager() {
             CachingProvider currentCachingProvider = null;
             if (cacheManager != null) {
                 currentCachingProvider = cacheManager.getCachingProvider();
@@ -216,28 +217,28 @@ public class MangleICacheTest {
                 if (hcp == null) {
                     hcp = new HazelcastServerCachingProvider();
                 }
-                cacheManager = new HazelcastServerCacheManager(
-                        hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+                cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(),
+                        hcp.getDefaultClassLoader(), null);
             } else {
                 HazelcastClientCachingProvider hcp = (HazelcastClientCachingProvider) currentCachingProvider;
                 if (hcp == null) {
                     hcp = new HazelcastClientCachingProvider();
                 }
-                cacheManager = new HazelcastClientCacheManager(
-                        hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+                cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(),
+                        hcp.getDefaultClassLoader(), null);
             }
         }
 
-        public Cache getCacheIfExists(int cacheNumber){
-            try{
-                Cache cache = cacheManager.getCache(basename + cacheNumber);
+        public Cache<Integer, Integer> getCacheIfExists(int cacheNumber) {
+            try {
+                Cache<Integer, Integer> cache = cacheManager.getCache(basename + cacheNumber);
                 counter.getCache++;
                 return cache;
 
-            } catch (CacheException e){
+            } catch (CacheException e) {
                 counter.getCacheException++;
 
-            } catch (IllegalStateException e){
+            } catch (IllegalStateException e) {
                 counter.getCacheException++;
 
             }
@@ -249,7 +250,7 @@ public class MangleICacheTest {
     public void verify() throws Exception {
         IList<Counter> counters = targetInstance.getList(basename);
         Counter total = new Counter();
-        for(Counter c : counters){
+        for (Counter c : counters) {
             total.add(c);
         }
         log.info(basename + ": " + total + " from " + counters.size() + " worker threads");
@@ -272,11 +273,11 @@ public class MangleICacheTest {
         public long destroyException = 0;
         public long cacheCloseException = 0;
 
-        public long cacheManagerClose=0;
-        public long cachingProviderClose=0;
+        public long cacheManagerClose = 0;
+        public long cachingProviderClose = 0;
 
-        public long cacheManagerCloseException=0;
-        public long cachingProviderCloseException=0;
+        public long cacheManagerCloseException = 0;
+        public long cachingProviderCloseException = 0;
 
         public void add(Counter c) {
 
