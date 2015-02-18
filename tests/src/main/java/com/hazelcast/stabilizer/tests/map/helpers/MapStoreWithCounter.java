@@ -85,9 +85,17 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
     }
 
     private void delay() {
-        if (maxDelayMs != 0) {
-            sleepMs(minDelayMs + random.nextInt(maxDelayMs));
+        if (getMaxDelayMs() != 0) {
+            sleepMs(getMinDelayMs() + random.nextInt(getMaxDelayMs()));
         }
+    }
+
+    protected int getMaxDelayMs() {
+        return maxDelayMs;
+    }
+
+    protected int getMinDelayMs() {
+        return minDelayMs;
     }
 
     @Override
