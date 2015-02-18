@@ -34,6 +34,20 @@ public class ProvisionerCli {
     public final OptionSpec cleanSpec = parser.accepts("clean",
             "Cleans the workers directories.");
 
+
+    public final OptionSpec<String> makeLBSpec = parser.accepts("makeLB",
+            "takes the name of a load balancer to create.  Makes an AWS load balancer with a given name, if it dose not exist (AWS only)."
+    ).withRequiredArg().ofType(String.class);
+
+    public final OptionSpec<String> agentsToLB = parser.accepts("agentsToLB",
+            "given the name of a load balancer adds the ips in Agents.txt file to the named balancer (AWS only)."
+    ).withRequiredArg().ofType(String.class);
+
+    public final OptionSpec<String> withKeySpec = parser.accepts("awsWithKey",
+            "find aws instances with key name, if jclouds times but instances are created, this utils helps to reclame them (aws only)."
+    ).withRequiredArg().ofType(String.class);;
+
+
     public final OptionSpec<Integer> scaleSpec = parser.accepts("scale",
             "Number of agent machines to scale to. If the number of machines already exists, the call is ignored. If the " +
                     "desired number of machines is smaller than the actual number of machines, machines are terminated."
@@ -107,6 +121,18 @@ public class ProvisionerCli {
             provisioner.scale(size, enterpriseEnabled);
         } else if (options.has(listAgentsSpec)) {
             provisioner.listAgents();
+        }else if (options.has(makeLBSpec)) {
+            String name = options.valueOf(makeLBSpec);
+            AwsProvisioner aws = new AwsProvisioner();
+            aws.createLoadBalancer(name);
+        }else if (options.has(agentsToLB)) {
+            String name = options.valueOf(agentsToLB);
+            AwsProvisioner aws = new AwsProvisioner();
+            aws.addAgentsToLoadBalancer(name);
+        }else if (options.has(withKeySpec)) {
+            String name = options.valueOf(withKeySpec);
+            AwsProvisioner aws = new AwsProvisioner();
+            aws.findAwsInstanceWithKeyName(name);
         } else {
             parser.printHelpOn(System.out);
         }
