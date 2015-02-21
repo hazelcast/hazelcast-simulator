@@ -1,13 +1,13 @@
 package com.hazelcast.stabilizer.worker;
 
 import com.hazelcast.stabilizer.test.TestCase;
-import com.hazelcast.stabilizer.Utils;
-import com.hazelcast.stabilizer.test.exceptions.BindException;
+import com.hazelcast.stabilizer.utils.BindException;
 import com.hazelcast.stabilizer.test.TestSuite;
 import org.junit.Test;
 
 import java.io.File;
 
+import static com.hazelcast.stabilizer.utils.FileUtils.writeText;
 import static org.junit.Assert.assertEquals;
 
 public class TestSuiteTest {
@@ -69,7 +69,7 @@ public class TestSuiteTest {
     private TestSuite load(String txt) throws Exception {
         File file = File.createTempFile("stabilizer", "properties");
         file.deleteOnExit();
-        Utils.writeText(txt, file);
+        writeText(txt, file);
 
         return TestSuite.loadTestSuite(file, "");
     }

@@ -7,6 +7,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 
+import static com.hazelcast.stabilizer.utils.FileUtils.writeText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -48,7 +49,7 @@ public class JavaInstallationsRepositoryTest {
     private static File writeToTempFile(String text) throws IOException {
         File file = File.createTempFile("test", "test");
         file.deleteOnExit();
-        Utils.writeText(text, file);
+        writeText(text, file);
         return file;
     }
 }

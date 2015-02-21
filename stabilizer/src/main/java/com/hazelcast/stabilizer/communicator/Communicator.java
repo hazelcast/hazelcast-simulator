@@ -1,11 +1,8 @@
 package com.hazelcast.stabilizer.communicator;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.messaging.Message;
-import com.hazelcast.stabilizer.common.messaging.MessageAddress;
-import com.hazelcast.stabilizer.common.messaging.UseAllMemoryMessage;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import org.apache.log4j.Logger;
 
@@ -13,12 +10,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static com.hazelcast.stabilizer.Utils.getVersion;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
+import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
 import static java.lang.String.format;
 
 public class Communicator {
     private final static Logger log = Logger.getLogger(Communicator.class.getName());
-    private final static String STABILIZER_HOME = Utils.getStablizerHome().getAbsolutePath();
+    private final static String STABILIZER_HOME = getStablizerHome().getAbsolutePath();
 
     public File agentsFile;
     protected AgentsClient agentsClient;

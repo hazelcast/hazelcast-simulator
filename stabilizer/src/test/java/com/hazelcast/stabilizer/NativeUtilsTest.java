@@ -1,8 +1,9 @@
 package com.hazelcast.stabilizer;
 
+import com.hazelcast.stabilizer.utils.NativeUtils;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 public class NativeUtilsTest {
 
@@ -11,5 +12,4 @@ public class NativeUtilsTest {
         Integer pid = NativeUtils.getPIDorNull();
         assertNotNull(pid);
     }
-
 }

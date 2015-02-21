@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.agent.workerjvm;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
@@ -21,9 +20,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.Utils.getHostAddress;
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
-import static com.hazelcast.stabilizer.Utils.writeText;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getHostAddress;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.stabilizer.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
+import static com.hazelcast.stabilizer.utils.FileUtils.readObject;
+import static com.hazelcast.stabilizer.utils.FileUtils.writeText;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
@@ -94,6 +96,7 @@ public class WorkerJvmLauncher {
         return tmpXmlFile;
     }
 
+    @SuppressWarnings("unused")
     private String getJavaHome(String javaVendor, String javaVersion) {
         String javaHome = System.getProperty("java.home");
         if (javaHomePrinted.compareAndSet(false, true)) {
@@ -106,7 +109,7 @@ public class WorkerJvmLauncher {
     private WorkerJvm startWorkerJvm(String mode) throws IOException {
         String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet() + "-" + mode;
         File workerHome = new File(testSuiteDir, workerId);
-        Utils.ensureExistingDirectory(workerHome);
+        ensureExistingDirectory(workerHome);
 
         String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
 
@@ -162,7 +165,7 @@ public class WorkerJvmLauncher {
         //sb.append(" > sysout.log");
         sb.append("\n");
 
-        Utils.writeText(sb.toString(), startScript);
+        writeText(sb.toString(), startScript);
     }
 
     private String getClasspath() {
@@ -274,7 +277,7 @@ public class WorkerJvmLauncher {
                 return;
             }
 
-            Utils.sleepSeconds(1);
+            sleepSeconds(1);
         }
 
         workerTimeout(workerTimeoutSec, todo);
@@ -301,7 +304,7 @@ public class WorkerJvmLauncher {
             return null;
         }
 
-        String address = Utils.readObject(file);
+        String address = readObject(file);
         file.delete();
         return address;
     }

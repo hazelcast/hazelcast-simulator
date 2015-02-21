@@ -1,9 +1,6 @@
 package com.hazelcast.stabilizer.common.messaging;
 
-import com.hazelcast.stabilizer.NativeUtils;
-import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
-
-import java.io.Serializable;
+import com.hazelcast.stabilizer.utils.NativeUtils;
 
 @MessageSpec(value = "blockHzTraffic", description = "configures iptables to block all incoming " +
         "traffic to TCP port range "+BlockTrafficMessage.ports +
@@ -20,5 +17,4 @@ public class BlockTrafficMessage extends RunnableMessage {
         String command = String.format("sudo /sbin/iptables -p tcp --dport %s -A INPUT -i eth0 -j REJECT", ports);
         NativeUtils.execute(command);
     }
-
 }

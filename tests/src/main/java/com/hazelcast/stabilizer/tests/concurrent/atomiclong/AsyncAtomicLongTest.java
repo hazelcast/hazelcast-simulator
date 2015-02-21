@@ -22,7 +22,6 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
 import com.hazelcast.stabilizer.test.annotations.Performance;
@@ -33,7 +32,7 @@ import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
 import com.hazelcast.stabilizer.test.utils.AssertTask;
-import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
+import com.hazelcast.stabilizer.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import java.util.LinkedList;
@@ -44,6 +43,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.test.utils.TestUtils.assertTrueEventually;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
 public class AsyncAtomicLongTest {
@@ -110,12 +110,12 @@ public class AsyncAtomicLongTest {
     public void verify() {
         final long expected = totalCounter.get();
 
-        // since the operations are asynchronous, we have no idea when they complete.
+        // since the operations are asynchronous, we have no idea when they complete
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                //hack to prevent overloading the system with get calls. Else it is done many times a second.
-                Utils.sleepSeconds(10);
+                // hack to prevent overloading the system with get calls. Else it is done many times a second
+                sleepSeconds(10);
 
                 long actual = 0;
                 for (IAtomicLong counter : counters) {

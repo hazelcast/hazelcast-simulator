@@ -1,12 +1,11 @@
 package com.hazelcast.stabilizer.common.messaging;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.KeyValuePair;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
+
+import static com.hazelcast.stabilizer.utils.CommonUtils.NEW_LINE;
 
 public abstract class Message implements Serializable {
     private MessageAddress messageAddress;
@@ -25,7 +24,7 @@ public abstract class Message implements Serializable {
             builder.append(spec)
                     .append(" - ")
                     .append(MessagesFactory.getMessageDescription(spec))
-                    .append(Utils.NEW_LINE);
+                    .append(NEW_LINE);
         }
         return builder.toString();
     }

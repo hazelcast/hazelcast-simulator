@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.common;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.provisioner.HazelcastJars;
 import org.apache.log4j.Logger;
 
@@ -9,9 +8,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import static com.hazelcast.stabilizer.Utils.fileAsText;
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
-import static com.hazelcast.stabilizer.Utils.newFile;
+import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
+import static com.hazelcast.stabilizer.utils.FileUtils.fileAsText;
+import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
+import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
 /**
@@ -79,7 +80,7 @@ public class StabilizerProperties {
 
     private void load(File file) {
         if (!file.exists()) {
-            Utils.exitWithError(log, "Could not find stabilizer.properties file: " + file.getAbsolutePath());
+            exitWithError(log, "Could not find stabilizer.properties file: " + file.getAbsolutePath());
             return;
         }
 
@@ -89,12 +90,12 @@ public class StabilizerProperties {
             try {
                 properties.load(inputStream);
             } catch (IOException e) {
-                Utils.closeQuietly(inputStream);
+                closeQuietly(inputStream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            Utils.closeQuietly(inputStream);
+            closeQuietly(inputStream);
         }
     }
 
@@ -150,7 +151,7 @@ public class StabilizerProperties {
     private String load(String property, String value) {
         File file = newFile(value);
         if (!file.exists()) {
-            Utils.exitWithError(log, format("Can't find %s file %s", property, value));
+            exitWithError(log, format("Can't find %s file %s", property, value));
         }
 
         if (log.isDebugEnabled()) {

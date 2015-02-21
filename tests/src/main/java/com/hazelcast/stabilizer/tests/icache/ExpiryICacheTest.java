@@ -42,8 +42,8 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.test.utils.TestUtils.humanReadableByteCount;
-import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
 
 public class ExpiryICacheTest {
 
@@ -133,7 +133,7 @@ public class ExpiryICacheTest {
                 if (usedPercentage >= maxHeapUsagePercentage) {
                     log.info("heap used: " + usedPercentage + " % map.size:" + cache.size());
 
-                    sleepMs(10000);
+                    sleepSeconds(10);
                 } else {
                     for (int k = 0; k < 1000; k++) {
                         iteration++;

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 
 public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable {
 
@@ -21,7 +21,7 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
     public K load(final K key) {
 
         if (loadDelayMs > 0) {
-            sleepMs(loadDelayMs);
+            sleepMillis(loadDelayMs);
         }
 
         if (key == null) {
@@ -37,7 +37,7 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
     public Map<K, K> loadAll(Iterable<? extends K> keys) {
 
         if (loadAllDelayMs > 0) {
-            sleepMs(loadAllDelayMs);
+            sleepMillis(loadAllDelayMs);
         }
 
         Map<K, K> map = new HashMap<K, K>();

@@ -1,7 +1,6 @@
 package com.hazelcast.stabilizer.provisioner;
 
 import com.google.inject.AbstractModule;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 import org.apache.log4j.Logger;
 import org.jclouds.ContextBuilder;
@@ -15,7 +14,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-import static com.hazelcast.stabilizer.Utils.newFile;
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
+import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
 import static java.util.Arrays.asList;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
@@ -57,7 +57,7 @@ public class ComputeServiceBuilder {
         try {
             return ContextBuilder.newBuilder(cloudProvider);
         } catch (NoSuchElementException e) {
-            Utils.exitWithError(log, "Unrecognized cloud-provider [" + cloudProvider + "]");
+            exitWithError(log, "Unrecognized cloud-provider [" + cloudProvider + "]");
             return null;
         }
     }
@@ -69,13 +69,13 @@ public class ComputeServiceBuilder {
     private void ensurePublicPrivateKeyExist() {
         File publicKey = newFile("~", ".ssh", "id_rsa.pub");
         if (!publicKey.exists()) {
-            Utils.exitWithError(log, "Could not found public key: " + publicKey.getAbsolutePath() + "\n" +
+            exitWithError(log, "Could not found public key: " + publicKey.getAbsolutePath() + "\n" +
                     "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
 
         File privateKey = newFile("~", ".ssh", "id_rsa");
         if (!privateKey.exists()) {
-            Utils.exitWithError(log, "Public key " + publicKey.getAbsolutePath() + " was found," +
+            exitWithError(log, "Public key " + publicKey.getAbsolutePath() + " was found," +
                     " but private key: " + privateKey.getAbsolutePath() + " is missing\n" +
                     "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }

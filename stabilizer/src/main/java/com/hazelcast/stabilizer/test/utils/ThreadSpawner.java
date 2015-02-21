@@ -1,5 +1,7 @@
 package com.hazelcast.stabilizer.test.utils;
 
+import com.hazelcast.stabilizer.utils.ExceptionReporter;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Responsible for spawning threads. You can use your own threads, but make sure that you detect exceptions thrown
- * and report them to the {@link com.hazelcast.stabilizer.test.utils.ExceptionReporter}.
+ * and report them to the {@link com.hazelcast.stabilizer.utils.ExceptionReporter}.
  */
 public class ThreadSpawner {
 
@@ -34,7 +36,6 @@ public class ThreadSpawner {
     public ThreadSpawner(String testId) {
         this.testId = testId;
     }
-
 
     public Thread spawn(Runnable runnable) {
         return spawn("Thread", runnable);

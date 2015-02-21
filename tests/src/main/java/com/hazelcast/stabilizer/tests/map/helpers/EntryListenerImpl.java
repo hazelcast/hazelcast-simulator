@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 
 public class EntryListenerImpl implements DataSerializable, EntryListener<Object, Object> {
 
@@ -25,9 +25,8 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
     public int minDelayMs;
     public int maxDelayMs;
 
-    //Default Needed
+    @SuppressWarnings("unused")
     public EntryListenerImpl() {
-
     }
 
     public EntryListenerImpl(int minDelayMs, int maxDelayMs) {
@@ -71,7 +70,7 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
 
     private void delay() {
         if (maxDelayMs != 0) {
-            sleepMs(minDelayMs + random.nextInt(maxDelayMs));
+            sleepMillis(minDelayMs + random.nextInt(maxDelayMs));
         }
     }
 

@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.coordinator;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.test.Failure;
 import com.hazelcast.stabilizer.test.TestSuite;
@@ -14,12 +13,12 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.Utils.exitWithError;
-import static com.hazelcast.stabilizer.Utils.fileAsText;
-import static com.hazelcast.stabilizer.Utils.getFile;
-import static com.hazelcast.stabilizer.Utils.getFileAsTextFromWorkingDirOrStabilizerHome;
-import static com.hazelcast.stabilizer.Utils.newFile;
 import static com.hazelcast.stabilizer.test.TestSuite.loadTestSuite;
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
+import static com.hazelcast.stabilizer.utils.FileUtils.fileAsText;
+import static com.hazelcast.stabilizer.utils.FileUtils.getFile;
+import static com.hazelcast.stabilizer.utils.FileUtils.getFileAsTextFromWorkingDirOrStabilizerHome;
+import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
 public class CoordinatorCli {
@@ -152,7 +151,7 @@ public class CoordinatorCli {
         try {
             options = parser.parse(args);
         } catch (OptionException e) {
-            Utils.exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
+            exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
             return;
         }
 
@@ -200,7 +199,7 @@ public class CoordinatorCli {
         if (options.has(dedicatedMemberMachinesSpec)) {
             int dedicatedMemberCount = dedicatedMemberMachinesSpec.value(options);
             if (dedicatedMemberCount < 0) {
-                Utils.exitWithError(log, "dedicatedMemberCount can't be smaller than 0");
+                exitWithError(log, "dedicatedMemberCount can't be smaller than 0");
             }
             coordinator.dedicatedMemberMachineCount = dedicatedMemberCount;
         }
@@ -255,7 +254,7 @@ public class CoordinatorCli {
         File testSuiteFile = new File(testsuiteFileName);
         log.info("Loading testsuite file: " + testSuiteFile.getAbsolutePath());
         if (!testSuiteFile.exists()) {
-            Utils.exitWithError(log, format("Can't find testsuite file [%s]", testSuiteFile));
+            exitWithError(log, format("Can't find testsuite file [%s]", testSuiteFile));
         }
         return testSuiteFile;
     }

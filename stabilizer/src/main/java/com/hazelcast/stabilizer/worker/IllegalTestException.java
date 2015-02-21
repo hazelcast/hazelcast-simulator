@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.test.exceptions;
+package com.hazelcast.stabilizer.worker;
 
 /**
  * Exception thrown when a Test is not valid, e.g. it has no method with a @Run annotation.

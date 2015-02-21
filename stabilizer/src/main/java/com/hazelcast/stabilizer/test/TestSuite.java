@@ -15,8 +15,7 @@
  */
 package com.hazelcast.stabilizer.test;
 
-import com.hazelcast.stabilizer.test.exceptions.BindException;
-import com.hazelcast.stabilizer.Utils;
+import com.hazelcast.stabilizer.utils.BindException;
 
 import java.io.File;
 import java.io.Serializable;
@@ -30,7 +29,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import static com.hazelcast.stabilizer.Utils.loadProperties;
+import static com.hazelcast.stabilizer.utils.FileUtils.isValidFileName;
+import static com.hazelcast.stabilizer.utils.FileUtils.loadProperties;
 import static java.lang.String.format;
 
 public class TestSuite implements Serializable {
@@ -54,7 +54,7 @@ public class TestSuite implements Serializable {
 
             TestCase testCase = testcases.get(testCaseId);
             if (testCase == null) {
-                if (!testCaseId.isEmpty() && !Utils.isValidFileName(testCaseId)) {
+                if (!testCaseId.isEmpty() && !isValidFileName(testCaseId)) {
                     throw new IllegalArgumentException(format(
                             "Can't create TestCase: testId [%s] is an invalid filename for performance log", testCaseId
                     ));

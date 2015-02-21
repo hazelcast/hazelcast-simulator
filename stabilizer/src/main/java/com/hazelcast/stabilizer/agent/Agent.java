@@ -15,7 +15,6 @@
  */
 package com.hazelcast.stabilizer.agent;
 
-
 import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.remoting.AgentMessageProcessor;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmFailureMonitor;
@@ -29,9 +28,9 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 
-import static com.hazelcast.stabilizer.Utils.ensureExistingDirectory;
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
-import static com.hazelcast.stabilizer.Utils.getVersion;
+import static com.hazelcast.stabilizer.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
 import static com.hazelcast.stabilizer.agent.AgentCli.init;
 import static java.lang.String.format;
 

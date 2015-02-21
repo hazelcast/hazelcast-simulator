@@ -1,12 +1,12 @@
 package com.hazelcast.stabilizer.provisioner.git;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.provisioner.Bash;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 
-import static com.hazelcast.stabilizer.Utils.exitWithError;
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
+import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
 public class BuildSupport {
@@ -35,7 +35,7 @@ public class BuildSupport {
                 exitWithError(log, "Specified path " + pathToMaven + " to Maven doesn't exist.");
             }
             if (maven.isDirectory()) {
-                maven = Utils.newFile(pathToMaven, "mvn");
+                maven = newFile(pathToMaven, "mvn");
             }
             checkIsValidMavenExecutable(pathToMaven, maven);
             return maven.getAbsolutePath();

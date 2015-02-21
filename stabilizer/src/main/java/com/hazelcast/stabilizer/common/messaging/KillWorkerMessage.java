@@ -1,6 +1,6 @@
 package com.hazelcast.stabilizer.common.messaging;
 
-import com.hazelcast.stabilizer.NativeUtils;
+import com.hazelcast.stabilizer.utils.NativeUtils;
 import org.apache.log4j.Logger;
 
 @MessageSpec(value = "kill", description = "it causes process to kill itself by sending SIGKILL signal to itself.")

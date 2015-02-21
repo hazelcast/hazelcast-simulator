@@ -1,11 +1,11 @@
 package com.hazelcast.stabilizer.provisioner;
 
-import com.hazelcast.stabilizer.NativeUtils;
+import com.hazelcast.stabilizer.utils.NativeUtils;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
 
 import java.io.File;
 
-import static com.hazelcast.stabilizer.Utils.getVersion;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
 import static java.lang.String.format;
 
 public class Bash {

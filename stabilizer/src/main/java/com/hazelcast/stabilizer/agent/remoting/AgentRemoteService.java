@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.agent.remoting;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.Agent;
 import org.apache.log4j.Logger;
 
@@ -10,6 +9,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import static com.hazelcast.stabilizer.utils.CommonUtils.getHostAddress;
 
 public class AgentRemoteService {
 
@@ -42,7 +43,7 @@ public class AgentRemoteService {
     }
 
     public void start() throws IOException {
-        serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(Utils.getHostAddress()));
+        serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(getHostAddress()));
         log.info("Started Agent Remote Service on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
         acceptorThread = new AcceptorThread();
         acceptorThread.start();

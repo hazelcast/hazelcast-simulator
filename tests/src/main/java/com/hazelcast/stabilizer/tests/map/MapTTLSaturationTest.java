@@ -32,8 +32,8 @@ import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.stabilizer.test.utils.TestUtils.humanReadableByteCount;
-import static com.hazelcast.stabilizer.test.utils.TestUtils.sleepMs;
 
 public class MapTTLSaturationTest {
 
@@ -94,7 +94,7 @@ public class MapTTLSaturationTest {
                 if (usedPercentage >= maxHeapUsagePercentage) {
                     log.info("heap used: " + usedPercentage + " % map.size:" + map.size());
 
-                    sleepMs(10000);
+                    sleepMillis(10000);
                 } else {
                     for (int k = 0; k < 1000; k++) {
                         counter++;

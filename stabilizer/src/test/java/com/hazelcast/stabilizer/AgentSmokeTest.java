@@ -26,6 +26,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.stabilizer.utils.FileUtils.fileAsText;
+import static com.hazelcast.stabilizer.utils.FileUtils.writeText;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
@@ -65,7 +68,7 @@ public class AgentSmokeTest {
 
     private void cooldown() {
         System.out.println("Cooldown");
-        Utils.sleepSeconds(10);
+        sleepSeconds(10);
         System.out.println("Finished cooldown");
     }
 
@@ -96,7 +99,7 @@ public class AgentSmokeTest {
         client.executeOnAllWorkers(runCommand);
 
         System.out.println("Running for 30 seconds");
-        Utils.sleepSeconds(30);
+        sleepSeconds(30);
         System.out.println("Finished running");
 
         System.out.println("stop");
@@ -127,9 +130,9 @@ public class AgentSmokeTest {
         workerJvmSettings.profiler = "";
         workerJvmSettings.vmOptions = "";
         workerJvmSettings.workerStartupTimeout = 60000;
-        workerJvmSettings.clientHzConfig = Utils.fileAsText("./stabilizer/src/test/resources/client-hazelcast.xml");
-        workerJvmSettings.hzConfig = Utils.fileAsText("./stabilizer/src/test/resources/hazelcast.xml");
-        workerJvmSettings.log4jConfig = Utils.fileAsText("./stabilizer/src/test/resources/log4j.xml");
+        workerJvmSettings.clientHzConfig = fileAsText("./stabilizer/src/test/resources/client-hazelcast.xml");
+        workerJvmSettings.hzConfig = fileAsText("./stabilizer/src/test/resources/hazelcast.xml");
+        workerJvmSettings.log4jConfig = fileAsText("./stabilizer/src/test/resources/log4j.xml");
 
         AgentMemberLayout agentLayout = new AgentMemberLayout(workerJvmSettings);
         agentLayout.memberSettings.memberWorkerCount = 1;
@@ -155,7 +158,7 @@ public class AgentSmokeTest {
     private AgentsClient getClient() throws IOException {
         File agentFile = File.createTempFile("agents", "txt");
         agentFile.deleteOnExit();
-        Utils.writeText(AGENT_IP_ADDRESS, agentFile);
+        writeText(AGENT_IP_ADDRESS, agentFile);
         List<AgentAddress> agentAddresses = AgentsFile.load(agentFile);
         return new AgentsClient(agentAddresses);
     }
@@ -167,14 +170,14 @@ public class AgentSmokeTest {
         @Run
         void run() {
             while (!context.isStopped()) {
-                Utils.sleepSeconds(1);
+                sleepSeconds(1);
                 System.out.println("Running");
             }
         }
 
         @Warmup
         void warmup() {
-            Utils.sleepSeconds(10);
+            sleepSeconds(10);
         }
 
         @Setup
@@ -191,7 +194,7 @@ public class AgentSmokeTest {
         void run() {
             if (!context.isStopped()) {
                 System.out.println("Running");
-                Utils.sleepSeconds(1);
+                sleepSeconds(1);
 
                 System.out.println("Failing");
                 throw new RuntimeException("This test should fail");
@@ -200,7 +203,7 @@ public class AgentSmokeTest {
 
         @Warmup
         void warmup() {
-            Utils.sleepSeconds(10);
+            sleepSeconds(10);
         }
 
         @Setup

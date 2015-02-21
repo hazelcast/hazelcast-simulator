@@ -22,15 +22,14 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.messaging.Message;
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.probes.probes.Result;
 import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.test.TestContext;
-import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.test.utils.TestUtils;
+import com.hazelcast.stabilizer.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.worker.commands.Command;
 import com.hazelcast.stabilizer.worker.commands.CommandRequest;
 import com.hazelcast.stabilizer.worker.commands.CommandResponse;
@@ -63,11 +62,14 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.Utils.fileAsText;
-import static com.hazelcast.stabilizer.Utils.getHostAddress;
-import static com.hazelcast.stabilizer.Utils.writeObject;
-import static com.hazelcast.stabilizer.test.utils.PropertyBindingSupport.bindProperties;
-import static com.hazelcast.stabilizer.test.utils.PropertyBindingSupport.parseProbeConfiguration;
+import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.stabilizer.utils.CommonUtils.fixRemoteStackTrace;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getHostAddress;
+import static com.hazelcast.stabilizer.utils.FileUtils.fileAsText;
+import static com.hazelcast.stabilizer.utils.FileUtils.isValidFileName;
+import static com.hazelcast.stabilizer.utils.FileUtils.writeObject;
+import static com.hazelcast.stabilizer.utils.PropertyBindingSupport.bindProperties;
+import static com.hazelcast.stabilizer.utils.PropertyBindingSupport.parseProbeConfiguration;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
@@ -286,13 +288,13 @@ public class MemberWorker {
 
                 if (response instanceof Exception) {
                     Exception exception = (Exception) response;
-                    Utils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
+                    fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
                     throw exception;
                 }
 
                 return (E) response;
             } finally {
-                Utils.closeQuietly(socket);
+                closeQuietly(socket);
             }
         }
     }
@@ -356,6 +358,7 @@ public class MemberWorker {
             workerMessageProcessor.submit(message);
         }
 
+        @SuppressWarnings("unused")
         private Long process(GetOperationCountCommand command) throws Throwable {
             long result = 0;
 
@@ -455,7 +458,7 @@ public class MemberWorker {
                     throw new IllegalStateException(
                             format("Can't init TestCase: %s, another test with testId [%s] already exists", command, testId));
                 }
-                if (!testId.isEmpty() && !Utils.isValidFileName(testId)) {
+                if (!testId.isEmpty() && !isValidFileName(testId)) {
                     throw new IllegalArgumentException(
                             format("Can't init TestCase: %s, testId [%s] is an invalid filename", command, testId));
                 }

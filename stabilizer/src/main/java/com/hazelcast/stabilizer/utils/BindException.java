@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.test.exceptions;
+package com.hazelcast.stabilizer.utils;
 
 /**
  * Exception thrown when a property can't be bound to a test.

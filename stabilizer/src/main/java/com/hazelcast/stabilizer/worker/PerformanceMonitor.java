@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.worker;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.test.TestContext;
 import org.apache.log4j.Logger;
 
@@ -10,6 +9,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 
+import static com.hazelcast.stabilizer.utils.CommonUtils.fillString;
+import static com.hazelcast.stabilizer.utils.CommonUtils.formatDouble;
+import static com.hazelcast.stabilizer.utils.CommonUtils.formatLong;
+import static com.hazelcast.stabilizer.utils.FileUtils.appendText;
 import static java.lang.String.format;
 
 class PerformanceMonitor extends Thread {
@@ -103,7 +106,7 @@ class PerformanceMonitor extends Thread {
         if (isGlobal) {
             columns += " Number of tests";
         }
-        Utils.appendText(format("%s%n%s%n", columns, Utils.fillString(columns.length(), '-')), file);
+        appendText(format("%s%n%s%n", columns, fillString(columns.length(), '-')), file);
     }
 
     private void writeStatsToFile(String timestamp, long opsSum, long opsDelta, double opsPerSecDelta,
@@ -112,14 +115,8 @@ class PerformanceMonitor extends Thread {
         if (numberOfTests != -1) {
             dataString += " %s";
         }
-        Utils.appendText(format(dataString + "\n",
-                        timestamp,
-                        Utils.formatLong(opsSum, 14),
-                        Utils.formatLong(opsDelta, 14),
-                        Utils.formatDouble(opsPerSecDelta, 14),
-                        Utils.formatLong(numberOfTests, 15)
-                ), file
-        );
+        appendText(format(dataString + "\n", timestamp, formatLong(opsSum, 14), formatLong(opsDelta, 14),
+                formatDouble(opsPerSecDelta, 14), formatLong(numberOfTests, 15)), file);
     }
 
     private static class TestStats {

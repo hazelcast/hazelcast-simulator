@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.test.utils;
+package com.hazelcast.stabilizer.utils;
 
 import org.apache.log4j.Logger;
 
@@ -6,8 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.Utils.throwableToString;
-import static com.hazelcast.stabilizer.Utils.writeText;
+import static com.hazelcast.stabilizer.utils.CommonUtils.throwableToString;
+import static com.hazelcast.stabilizer.utils.FileUtils.writeText;
 
 /**
  * Responsible for writing an Exception to file. Every exception-file will have a unique name.

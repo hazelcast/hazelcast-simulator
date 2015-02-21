@@ -1,11 +1,12 @@
 package com.hazelcast.stabilizer.common;
 
-import com.hazelcast.stabilizer.Utils;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+
+import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
 
 public final class GitInfo {
     private static final String GIT_INFO_FILE = "stabilizer-git.properties";
@@ -56,7 +57,7 @@ public final class GitInfo {
             log.warn("Error while loading Git properties.", e);
             properties = new DummyProperties();
         } finally {
-            Utils.closeQuietly(gitPropsStream);
+            closeQuietly(gitPropsStream);
         }
         return properties;
     }

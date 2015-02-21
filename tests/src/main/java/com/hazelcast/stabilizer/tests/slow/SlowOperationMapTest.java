@@ -6,7 +6,6 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.map.MapInterceptor;
 import com.hazelcast.spi.impl.InternalOperationService;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
 import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
@@ -14,9 +13,9 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
+import com.hazelcast.stabilizer.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 
@@ -28,6 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getNode;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.waitClusterSize;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.stabilizer.utils.ReflectionUtils.getMethodByName;
 import static com.hazelcast.stabilizer.utils.ReflectionUtils.invokeMethod;
 import static org.junit.Assert.assertTrue;
@@ -200,7 +200,7 @@ public class SlowOperationMapTest {
 
         private void sleepRecursion(int recursionDepth, int sleepSeconds) {
             if (recursionDepth == 0) {
-                Utils.sleepSeconds(sleepSeconds);
+                sleepSeconds(sleepSeconds);
                 return;
             }
             sleepRecursion(recursionDepth - 1, sleepSeconds);

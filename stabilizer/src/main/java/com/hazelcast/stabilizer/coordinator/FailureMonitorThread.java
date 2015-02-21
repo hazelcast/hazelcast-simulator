@@ -6,8 +6,8 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.List;
 
-import static com.hazelcast.stabilizer.Utils.appendText;
-import static com.hazelcast.stabilizer.Utils.sleepSeconds;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.stabilizer.utils.FileUtils.appendText;
 
 class FailureMonitorThread extends Thread {
     private final Logger log = Logger.getLogger(FailureMonitorThread.class);

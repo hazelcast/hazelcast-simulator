@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.provisioner.git;
 
-import com.hazelcast.stabilizer.Utils;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
@@ -17,13 +16,15 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.hazelcast.stabilizer.Utils.exitWithError;
-
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
+import static com.hazelcast.stabilizer.utils.FileUtils.copyFilesToDirectory;
+import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
 
 public class GitSupport {
-    private static final String HAZELCAST_MAIN_REPO_URL = "https://github.com/hazelcast/hazelcast.git";
-    private final static Logger log = Logger.getLogger(GitSupport.class);
     public static final String CUSTOM_REPOSITORY_PREFIX = "custom";
+
+    private static final String HAZELCAST_MAIN_REPO_URL = "https://github.com/hazelcast/hazelcast.git";
+    private static final Logger log = Logger.getLogger(GitSupport.class);
 
     private final BuildSupport buildSupport;
     private final File baseDir;
@@ -74,7 +75,7 @@ public class GitSupport {
 
     private File getDefaultBaseDir() {
         File homeDir = new File(System.getProperty("user.home"));
-        return Utils.newFile(homeDir, ".hazelcast-build");
+        return newFile(homeDir, ".hazelcast-build");
     }
 
     private void syncRemoteRepositories(Git git) throws IOException {
@@ -173,11 +174,11 @@ public class GitSupport {
     }
 
     private File getCacheDirectory(String fullSha1) {
-        return Utils.newFile(baseDir, "build-cache", fullSha1);
+        return newFile(baseDir, "build-cache", fullSha1);
     }
 
     private File getOrCreateSourceDirectory() {
-        File src = Utils.newFile(baseDir, "src");
+        File src = newFile(baseDir, "src");
         src.mkdirs();
         return src;
     }
@@ -194,7 +195,7 @@ public class GitSupport {
     private void buildAndCache(File src, File buildCache) {
         File[] files = buildSupport.build(src);
         buildCache.mkdirs();
-        Utils.copyFilesToDirectory(files, buildCache);
+        copyFilesToDirectory(files, buildCache);
     }
 
     private Git cloneIfNecessary(File src) throws GitAPIException, IOException {

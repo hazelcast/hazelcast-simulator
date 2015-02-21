@@ -4,7 +4,7 @@ import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
 import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
-import com.hazelcast.stabilizer.test.utils.ExceptionReporter;
+import com.hazelcast.stabilizer.utils.ExceptionReporter;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -31,7 +31,7 @@ public class FailingTest {
             for (; ; ) {
                 try {
                     list.add(new byte[100 * 1000 * 1000]);
-                } catch (OutOfMemoryError error) {
+                } catch (OutOfMemoryError ignored) {
                 }
             }
         } else if (failure.equals("Exit")) {

@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.provisioner;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.remoting.AgentRemoteService;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
@@ -18,6 +17,8 @@ import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
 
 public class TemplateBuilder {
     private final static Logger log = Logger.getLogger(Provisioner.class);
@@ -42,9 +43,7 @@ public class TemplateBuilder {
 
         spec = TemplateBuilderSpec.parse(machineSpec);
 
-
         Template template = buildTemplate();
-
 
         log.info("Created template");
 
@@ -79,7 +78,7 @@ public class TemplateBuilder {
                     .build();
         } catch (IllegalArgumentException e) {
             log.debug(e);
-            Utils.exitWithError(log, e.getMessage());
+            exitWithError(log, e.getMessage());
             return null;
         }
     }
@@ -105,10 +104,8 @@ public class TemplateBuilder {
             return;
         }
 
-        //in case of AWS, we are going to create the security group, if it doesn't exist.
-
+        // in case of AWS, we are going to create the security group, if it doesn't exist
         AWSEC2Api ec2Api = compute.getContext().unwrapApi(AWSEC2Api.class);
-
         SecurityGroupApi securityGroupApi = ec2Api.getSecurityGroupApi().get();
         String region = spec.getLocationId();
         if (region == null) {
@@ -125,10 +122,9 @@ public class TemplateBuilder {
 
         securityGroupApi.createSecurityGroupInRegion(region, securityGroup, securityGroup);
 
-        //this duplication of ports is ugly since we already do it in 'inboundPorts method'
+        // this duplication of ports is ugly since we already do it in 'inboundPorts method'
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 22, 22, "0.0.0.0/0");
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 9000, 9001, "0.0.0.0/0");
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
     }
-
 }

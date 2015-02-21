@@ -17,8 +17,6 @@ package com.hazelcast.stabilizer.coordinator;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.stabilizer.test.TestCase;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.agent.SpawnWorkerFailedException;
 import com.hazelcast.stabilizer.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.stabilizer.common.AgentAddress;
@@ -28,6 +26,7 @@ import com.hazelcast.stabilizer.common.StabilizerProperties;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.provisioner.Bash;
 import com.hazelcast.stabilizer.test.Failure;
+import com.hazelcast.stabilizer.test.TestCase;
 import com.hazelcast.stabilizer.test.TestSuite;
 import org.apache.log4j.Logger;
 
@@ -44,9 +43,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.stabilizer.Utils.getStablizerHome;
-import static com.hazelcast.stabilizer.Utils.getVersion;
-import static com.hazelcast.stabilizer.Utils.secondsToHuman;
+import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
+import static com.hazelcast.stabilizer.utils.CommonUtils.secondsToHuman;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.stabilizer.utils.FileUtils.getFilesFromClassPath;
+import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
 import static java.lang.String.format;
 
 public class Coordinator {
@@ -132,7 +134,7 @@ public class Coordinator {
     }
 
     private List<File> createUpload() throws IOException {
-        return Utils.getFilesFromClassPath(workerClassPath);
+        return getFilesFromClassPath(workerClassPath);
     }
 
     private void initHzConfig(WorkerJvmSettings settings) throws Exception {
@@ -186,7 +188,7 @@ public class Coordinator {
 
         //the coordinator needs to sleep some to make sure that it will get failures if they are there.
         log.info("Starting cool down (10 sec)");
-        Utils.sleepSeconds(10);
+        sleepSeconds(10);
         log.info("Finished cool down");
 
         long elapsedMs = System.currentTimeMillis() - startMs;
@@ -292,13 +294,13 @@ public class Coordinator {
         int agentCount = agentsClient.getAgentCount();
 
         if (dedicatedMemberMachineCount > agentCount) {
-            Utils.exitWithError(log, "dedicatedMemberMachineCount can't be larger than number of agents. " +
+            exitWithError(log, "dedicatedMemberMachineCount can't be larger than number of agents. " +
                     "dedicatedMemberMachineCount is " + dedicatedMemberMachineCount + ", number of agents is: " + agentCount);
         }
 
         if (workerJvmSettings.clientWorkerCount > 0) {
             if (dedicatedMemberMachineCount > agentCount - 1) {
-                Utils.exitWithError(log, "dedicatedMemberMachineCount is too big. There are no machines left for clients.");
+                exitWithError(log, "dedicatedMemberMachineCount is too big. There are no machines left for clients.");
             }
         }
 
@@ -381,7 +383,7 @@ public class Coordinator {
             return;
         }
         log.info(format("Starting uploading '+%s+' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
-        List<File> files = Utils.getFilesFromClassPath(UPLOAD_DIRECTORY.getAbsolutePath());
+        List<File> files = getFilesFromClassPath(UPLOAD_DIRECTORY.getAbsolutePath());
         for (String ip : agentsClient.getPublicAddresses()){
             log.info(format(" Uploading '+%s+' to agent %s", UPLOAD_DIRECTORY.getAbsolutePath(), ip));
             for (File file : files){

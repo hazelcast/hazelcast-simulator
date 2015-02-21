@@ -1,6 +1,5 @@
 package com.hazelcast.stabilizer.coordinator;
 
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentClient;
 import com.hazelcast.stabilizer.coordinator.remoting.AgentsClient;
 import com.hazelcast.stabilizer.worker.commands.GetOperationCountCommand;
@@ -13,6 +12,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.hazelcast.stabilizer.utils.CommonUtils.formatDouble;
+import static com.hazelcast.stabilizer.utils.CommonUtils.formatLong;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.stabilizer.utils.FileUtils.appendText;
 
 /**
  * Responsible for collecting performance metrics from the agents and logging/storing it.
@@ -47,8 +51,8 @@ public class PerformanceMonitor {
 
         @Override
         public void run() {
-            for (; ; ) {
-                Utils.sleepSeconds(10);
+            for (;;) {
+                sleepSeconds(10);
 
                 try {
                     checkPerformance();
@@ -99,14 +103,14 @@ public class PerformanceMonitor {
             log.info("Operation-count: not available");
             log.info("Performance: not available");
         } else {
-            log.info("Operation-count: " + Utils.formatLong(operationCount, 0));
+            log.info("Operation-count: " + formatLong(operationCount, 0));
             double performance = (operationCount * 1.0d) / duration;
-            log.info("Performance: " + Utils.formatDouble(performance, 0) + " ops/s");
+            log.info("Performance: " + formatDouble(performance, 0) + " ops/s");
         }
 
         if (performanceWritten.compareAndSet(false, true)) {
             double performance = (operationCount * 1.0d) / duration;
-            Utils.appendText("" + performance + "\n", new File("performance.txt"));
+            appendText("" + performance + "\n", new File("performance.txt"));
         }
 
         for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
@@ -114,9 +118,9 @@ public class PerformanceMonitor {
             long operationCountPerAgent = entry.getValue();
             double percentage = 100 * (operationCountPerAgent * 1.0d) / operationCount;
             double performance = (operationCountPerAgent * 1.0d) / duration;
-            log.info("    Agent " + client.getPublicAddress() + " " + Utils.formatLong(operationCountPerAgent, 15) + " ops "
-                    + Utils.formatDouble(performance, 15)
-                    + " ops/s " + Utils.formatDouble(percentage, 5) + "%");
+            log.info("    Agent " + client.getPublicAddress() + " " + formatLong(operationCountPerAgent, 15) + " ops "
+                    + formatDouble(performance, 15)
+                    + " ops/s " + formatDouble(percentage, 5) + "%");
         }
     }
 }

@@ -17,7 +17,6 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.exceptions.IllegalTestException;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.stabilizer.utils.AnnotationFilter.VerifyFilter;
@@ -36,7 +35,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.stabilizer.test.utils.PropertyBindingSupport.bindOptionalProperty;
+import static com.hazelcast.stabilizer.utils.PropertyBindingSupport.bindOptionalProperty;
 import static com.hazelcast.stabilizer.utils.ReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
 import static com.hazelcast.stabilizer.utils.ReflectionUtils.getField;
 import static com.hazelcast.stabilizer.utils.ReflectionUtils.getValueFromNameAnnotation;

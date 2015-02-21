@@ -19,7 +19,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.stabilizer.Utils;
 import com.hazelcast.stabilizer.probes.probes.ProbesConfiguration;
 import com.hazelcast.stabilizer.worker.TestContainer;
 import org.apache.log4j.Logger;
@@ -29,6 +28,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.UUID;
 
+import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 
 /**
@@ -89,7 +90,7 @@ public class TestRunner<E> {
             Config config = new XmlConfigBuilder(fis).build();
             hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         } finally {
-            Utils.closeQuietly(fis);
+            closeQuietly(fis);
         }
 
         return this;
@@ -161,7 +162,7 @@ public class TestRunner<E> {
             int small = durationSeconds % period;
 
             for (int k = 1; k <= big; k++) {
-                Utils.sleepSeconds(period);
+                sleepSeconds(period);
                 final int elapsed = period * k;
                 final float percentage = (100f * elapsed) / durationSeconds;
                 String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, durationSeconds, percentage);
@@ -169,7 +170,7 @@ public class TestRunner<E> {
                 //log.info("Performance" + test.getOperationCount());
             }
 
-            Utils.sleepSeconds(small);
+            sleepSeconds(small);
             log.info("Notified test to stop");
             testContext.stopped = true;
         }
