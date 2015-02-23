@@ -17,7 +17,8 @@ import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
-import com.hazelcast.stabilizer.worker.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
@@ -59,7 +60,7 @@ public class MapTransactionReadWriteTest {
 
     private HazelcastInstance targetInstance;
 
-    private OperationSelector<Operation> selector = new OperationSelector<Operation>();
+    private OperationSelector<Operation> selector;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -67,8 +68,11 @@ public class MapTransactionReadWriteTest {
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
 
-        selector.addOperation(Operation.PUT, putProb)
-                .addOperationRemainingProbability(Operation.GET);
+        OperationSelectorBuilder builder = new OperationSelectorBuilder();
+        builder.addOperation(Operation.PUT, putProb)
+                .addDefaultOperation(Operation.GET);
+
+        selector = builder.build();
     }
 
     @Teardown
