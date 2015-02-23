@@ -29,8 +29,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.waitClusterSize;
 
-
 public class MapTransactionReadWriteTest {
+
+    enum Operation {
+        PUT,
+        GET
+    }
+
     private final static ILogger log = Logger.getLogger(MapTransactionReadWriteTest.class);
 
     // properties
@@ -53,14 +58,13 @@ public class MapTransactionReadWriteTest {
     public IntervalProbe getLatency;
     public SimpleProbe throughput;
 
+    private final AtomicLong operations = new AtomicLong();
+    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
+
+    private TestContext testContext;
+    private HazelcastInstance targetInstance;
     private IMap<Integer, Integer> map;
     private int[] keys;
-    private final AtomicLong operations = new AtomicLong();
-    private TestContext testContext;
-
-    private HazelcastInstance targetInstance;
-
-    private OperationSelector<Operation> selector;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -68,11 +72,7 @@ public class MapTransactionReadWriteTest {
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
 
-        OperationSelectorBuilder builder = new OperationSelectorBuilder();
-        builder.addOperation(Operation.PUT, putProb)
-                .addDefaultOperation(Operation.GET);
-
-        selector = builder.build();
+        builder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }
 
     @Teardown
@@ -84,7 +84,7 @@ public class MapTransactionReadWriteTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         waitClusterSize(log, targetInstance, minNumberOfMembers);
-        keys = KeyUtils.generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
+        keys = KeyUtils.generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, targetInstance);
 
         Random random = new Random();
         for (int key : keys) {
@@ -108,6 +108,7 @@ public class MapTransactionReadWriteTest {
     }
 
     private class Worker implements Runnable {
+        private final OperationSelector<Operation> selector = builder.build();
         private final Random random = new Random();
 
         @Override
@@ -124,7 +125,7 @@ public class MapTransactionReadWriteTest {
                         targetInstance.executeTransaction(new TransactionalTask<Object>() {
                             @Override
                             public Object execute(TransactionalTaskContext transactionalTaskContext) throws TransactionException {
-                                TransactionalMap txMap = transactionalTaskContext.getMap(map.getName());
+                                TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
                                 if (useSet) {
                                     txMap.set(key, value);
                                 } else {
@@ -140,7 +141,7 @@ public class MapTransactionReadWriteTest {
                         targetInstance.executeTransaction(new TransactionalTask<Object>() {
                             @Override
                             public Object execute(TransactionalTaskContext transactionalTaskContext) throws TransactionException {
-                                TransactionalMap txMap = transactionalTaskContext.getMap(map.getName());
+                                TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
                                 txMap.put(key, value);
                                 return null;
                             }
@@ -178,10 +179,5 @@ public class MapTransactionReadWriteTest {
     public static void main(String[] args) throws Throwable {
         MapTransactionReadWriteTest test = new MapTransactionReadWriteTest();
         new TestRunner<MapTransactionReadWriteTest>(test).run();
-    }
-
-    static enum Operation {
-        PUT,
-        GET
     }
 }
