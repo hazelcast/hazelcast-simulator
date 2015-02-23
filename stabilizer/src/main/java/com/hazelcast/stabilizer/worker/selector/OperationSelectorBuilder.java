@@ -102,8 +102,9 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
         for (Map.Entry<T, Double> entry : operations.entrySet()) {
             T operation = entry.getKey();
             for (int i = 0; i < Math.round(entry.getValue() * arraySize); i++) {
-                if (++index < arraySize) {
+                if (index < arraySize) {
                     operationsArray[index] = operation;
+                    index++;
                 }
             }
         }
