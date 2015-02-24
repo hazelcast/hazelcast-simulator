@@ -15,14 +15,14 @@ import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 import java.util.Random;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class GrowingMapTest {
-
     private final static ILogger log = Logger.getLogger(GrowingMapTest.class);
 
-    //props.
+    // properties
     public int threadCount = 10;
     public int growCount = 10000;
     public boolean usePut = true;
@@ -30,26 +30,25 @@ public class GrowingMapTest {
     public int logFrequency = 10000;
     public boolean removeOnStop = true;
     public boolean readValidation = true;
-    public String basename = "growningmap";
+    public String basename = "growingMap";
 
-    private IMap<Long, Long> map;
-    private IdGenerator idGenerator;
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
+    private IdGenerator idGenerator;
+    private IMap<Long, Long> map;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
 
-        targetInstance = testContext.getTargetInstance();
-        idGenerator = targetInstance.getIdGenerator(testContext.getTestId() + ":IdGenerator");
-        map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        idGenerator = hazelcastInstance.getIdGenerator(testContext.getTestId() + ":IdGenerator");
+        map = hazelcastInstance.getMap(basename + "-" + testContext.getTestId());
     }
 
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
@@ -69,84 +68,83 @@ public class GrowingMapTest {
     }
 
     private class Worker implements Runnable {
+        private final Random random = new Random();
+
+        private final long[] keys = new long[growCount];
+        private final long[] values = new long[growCount];
+
         @Override
         public void run() {
-            long insertIteration = 0;
-            long deleteIteration = 0;
-            long readIteration = 0;
-
-            long[] keys = new long[growCount];
-            long[] values = new long[growCount];
-
-            Random random = new Random();
-
             while (!testContext.isStopped()) {
-                int keyIndex = -1;
-                for (int k = 0; k < growCount; k++) {
-                    if (testContext.isStopped()) {
-                        break;
-                    }
-
-                    long key = idGenerator.newId();
-                    long value = random.nextLong();
-                    keyIndex = k;
-                    keys[keyIndex] = key;
-                    values[keyIndex] = value;
-
-                    if (usePut) {
-                        map.put(key, value);
-                    } else {
-                        map.set(key, value);
-                    }
-
-                    insertIteration++;
-                    if (insertIteration % logFrequency == 0) {
-                        log.info(Thread.currentThread().getName() + " At insert iteration: " + insertIteration);
-                    }
-                }
-
+                int keyIndex = insert();
                 if (readValidation) {
-                    for (int k = 0; k <= keyIndex; k++) {
-                        if (testContext.isStopped()) {
-                            break;
-                        }
+                    read(keyIndex);
+                }
+                delete(keyIndex);
+            }
+        }
 
-                        long key = keys[k];
-                        long value = values[k];
+        private int insert() {
+            int insertIteration = 0;
+            while (!testContext.isStopped() && insertIteration < growCount) {
+                long key = idGenerator.newId();
+                long value = random.nextLong();
 
-                        long found = map.get(key);
-                        if (found != value) {
-                            throw new RuntimeException("Unexpected value found");
-                        }
+                keys[insertIteration] = key;
+                values[insertIteration] = value;
 
-                        readIteration++;
-                        if (readIteration % logFrequency == 0) {
-                            log.info(Thread.currentThread().getName() + " At read iteration: " + readIteration);
-                        }
-                    }
+                if (usePut) {
+                    map.put(key, value);
+                } else {
+                    map.set(key, value);
                 }
 
-                for (int k = 0; k <= keyIndex; k++) {
-                    if (testContext.isStopped() && !removeOnStop) {
-                        break;
-                    }
+                insertIteration++;
+                if (insertIteration % logFrequency == 0) {
+                    log.info(Thread.currentThread().getName() + " At insert iteration: " + insertIteration);
+                }
+            }
 
-                    long key = keys[k];
-                    long value = values[k];
+            log.info(Thread.currentThread().getName() + " Inserted " + insertIteration + " key/value pairs");
+            return insertIteration;
+        }
 
-                    if (useRemove) {
-                        long found = map.remove(key);
-                        if (found != value) {
-                            throw new RuntimeException("Unexpected value found");
-                        }
-                    } else {
-                        map.delete(key);
-                    }
+        private void read(int keyIndex) {
+            int readIteration = 0;
+            while (!testContext.isStopped() && readIteration < keyIndex) {
+                long key = keys[readIteration];
+                long value = values[readIteration];
 
-                    deleteIteration++;
-                    if (deleteIteration % logFrequency == 0) {
-                        log.info(Thread.currentThread().getName() + " At delete iteration: " + deleteIteration);
+                long found = map.get(key);
+                if (found != value) {
+                    throw new RuntimeException("Unexpected value found");
+                }
+
+                readIteration++;
+                if (readIteration % logFrequency == 0) {
+                    log.info(Thread.currentThread().getName() + " At read iteration: " + readIteration);
+                }
+            }
+        }
+
+        private void delete(int keyIndex) {
+            int deleteIteration = 0;
+            while ((!testContext.isStopped() || removeOnStop) && deleteIteration < keyIndex) {
+                long key = keys[deleteIteration];
+                long value = values[deleteIteration];
+
+                if (useRemove) {
+                    long found = map.remove(key);
+                    if (found != value) {
+                        throw new RuntimeException(format("Expected: %d, but was %d", value, found));
                     }
+                } else {
+                    map.delete(key);
+                }
+
+                deleteIteration++;
+                if (deleteIteration % logFrequency == 0) {
+                    log.info(Thread.currentThread().getName() + " At delete iteration: " + deleteIteration);
                 }
             }
         }
@@ -154,6 +152,6 @@ public class GrowingMapTest {
 
     public static void main(String[] args) throws Throwable {
         GrowingMapTest test = new GrowingMapTest();
-        new TestRunner<GrowingMapTest>(test).run();
+        new TestRunner<GrowingMapTest>(test).withDuration(30).run();
     }
 }
