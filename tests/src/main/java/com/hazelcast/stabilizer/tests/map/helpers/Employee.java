@@ -1,5 +1,6 @@
 package com.hazelcast.stabilizer.tests.map.helpers;
 
+import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Random;
 
@@ -17,6 +18,7 @@ public class Employee implements Serializable, Comparable<Employee> {
     private boolean active;
     private double salary;
 
+    @SuppressWarnings("unused")
     public Employee() {
     }
 
@@ -25,6 +27,7 @@ public class Employee implements Serializable, Comparable<Employee> {
         randomizeProperties();
     }
 
+    @SuppressWarnings("unused")
     public Employee(String name, int age, boolean live, double salary) {
         this.name = name;
         this.age = age;
@@ -65,17 +68,17 @@ public class Employee implements Serializable, Comparable<Employee> {
 
     @Override
     public String toString() {
-        return "Employee{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", age=" + age +
-                ", active=" + active +
-                ", salary=" + salary +
-                '}';
+        return "Employee{"
+                + "id=" + id
+                + ", name='" + name + '\''
+                + ", age=" + age
+                + ", active=" + active
+                + ", salary=" + salary
+                + '}';
     }
 
     @Override
-    public int compareTo(Employee employee) {
+    public int compareTo(@Nonnull Employee employee) {
         return id - employee.id;
     }
 }

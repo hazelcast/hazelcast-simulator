@@ -13,15 +13,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 
 public class MapStoreWithCounter implements MapStore<Object, Object> {
-    private Random random = new Random();
-
     private static int minDelayMs = 0;
     private static int maxDelayMs = 0;
 
-    public final Map store = new ConcurrentHashMap();
-    public AtomicInteger storeCount = new AtomicInteger(0);
-    public AtomicInteger deleteCount = new AtomicInteger(0);
-    public AtomicInteger countLoad = new AtomicInteger(0);
+    private final Random random = new Random();
+    private final Map<Object, Object> store = new ConcurrentHashMap<Object, Object>();
+    private final AtomicInteger storeCount = new AtomicInteger(0);
+    private final AtomicInteger deleteCount = new AtomicInteger(0);
+    private final AtomicInteger countLoad = new AtomicInteger(0);
 
     public MapStoreWithCounter() {
     }
@@ -29,6 +28,14 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
     public static void setMinMaxDelayMs(int minDelayMs, int maxDelayMs) {
         MapStoreWithCounter.minDelayMs = minDelayMs;
         MapStoreWithCounter.maxDelayMs = maxDelayMs;
+    }
+
+    public Object get(Object key) {
+        return store.get(key);
+    }
+
+    public Set<Map.Entry<Object, Object>> entrySet() {
+        return store.entrySet();
     }
 
     @Override
@@ -68,7 +75,7 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
 
     @Override
     public Map<Object, Object> loadAll(Collection<Object> keys) {
-        Map result = new HashMap();
+        Map<Object, Object> result = new HashMap<Object, Object>();
         for (Object key : keys) {
             final Object v = load(key);
             if (v != null) {
@@ -92,12 +99,12 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
 
     @Override
     public String toString() {
-        return "MapStoreWithCounter{" +
-                "minDelayMs=" + minDelayMs +
-                ", maxDelayMs=" + maxDelayMs +
-                ", storeCount=" + storeCount +
-                ", deleteCount=" + deleteCount +
-                ", countLoad=" + countLoad +
-                '}';
+        return "MapStoreWithCounter{"
+                + "minDelayMs=" + minDelayMs
+                + ", maxDelayMs=" + maxDelayMs
+                + ", storeCount=" + storeCount
+                + ", deleteCount=" + deleteCount
+                + ", countLoad=" + countLoad
+                + '}';
     }
 }

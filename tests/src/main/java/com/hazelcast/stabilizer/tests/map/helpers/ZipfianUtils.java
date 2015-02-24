@@ -22,6 +22,7 @@ import java.util.Random;
 /**
  * Utility functions for zipfian generators.
  */
+@SuppressWarnings("unused")
 class ZipfianUtils {
     private static final Random rand = new Random();
     private static final ThreadLocal<Random> rng = new ThreadLocal<Random>();
@@ -57,7 +58,7 @@ class ZipfianUtils {
      * Hash an integer value.
      */
     public static long hash(long val) {
-        return FNVhash64(val);
+        return FNVHash64(val);
     }
 
     public static final int FNV_offset_basis_32 = 0x811c9dc5;
@@ -69,19 +70,19 @@ class ZipfianUtils {
      * @param val The value to hash.
      * @return The hash value
      */
-    public static int FNVhash32(int val) {
-        //from http://en.wikipedia.org/wiki/Fowler_Noll_Vo_hash
-        int hashval = FNV_offset_basis_32;
+    public static int FNVHash32(int val) {
+        // from http://en.wikipedia.org/wiki/Fowler_Noll_Vo_hash
+        int hashVal = FNV_offset_basis_32;
 
         for (int i = 0; i < 4; i++) {
             int octet = val & 0x00ff;
             val = val >> 8;
 
-            hashval = hashval ^ octet;
-            hashval = hashval * FNV_prime_32;
-            //hashval = hashval ^ octet;
+            hashVal = hashVal ^ octet;
+            hashVal = hashVal * FNV_prime_32;
+            //hashVal = hashVal ^ octet;
         }
-        return Math.abs(hashval);
+        return Math.abs(hashVal);
     }
 
     public static final long FNV_offset_basis_64 = 0xCBF29CE484222325L;
@@ -93,18 +94,18 @@ class ZipfianUtils {
      * @param val The value to hash.
      * @return The hash value
      */
-    public static long FNVhash64(long val) {
-        //from http://en.wikipedia.org/wiki/Fowler_Noll_Vo_hash
-        long hashval = FNV_offset_basis_64;
+    public static long FNVHash64(long val) {
+        // from http://en.wikipedia.org/wiki/Fowler_Noll_Vo_hash
+        long hashVal = FNV_offset_basis_64;
 
         for (int i = 0; i < 8; i++) {
             long octet = val & 0x00ff;
             val = val >> 8;
 
-            hashval = hashval ^ octet;
-            hashval = hashval * FNV_prime_64;
-            //hashval = hashval ^ octet;
+            hashVal = hashVal ^ octet;
+            hashVal = hashVal * FNV_prime_64;
+            //hashVal = hashVal ^ octet;
         }
-        return Math.abs(hashval);
+        return Math.abs(hashVal);
     }
 }

@@ -8,7 +8,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.test.utils.AssertTask;
-import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
+import com.hazelcast.stabilizer.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.annotations.Run;
@@ -87,7 +87,7 @@ public class MapStoreTest {
 
 
     private class Worker implements Runnable {
-        private MapOperationsCount count = new MapOperationsCount();
+        private MapOperationCounter count = new MapOperationCounter();
         private final Random random = new Random();
 
         @Override
@@ -148,9 +148,9 @@ public class MapStoreTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
-        MapOperationsCount total = new MapOperationsCount();
-        for (MapOperationsCount i : results) {
+        IList<MapOperationCounter> results = targetInstance.getList(basename + "report");
+        MapOperationCounter total = new MapOperationCounter();
+        for (MapOperationCounter i : results) {
             total.add(i);
         }
         log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
@@ -174,12 +174,11 @@ public class MapStoreTest {
             assertTrueEventually(new AssertTask() {
                 @Override
                 public void run() throws Exception {
-
                     for (Object k : map.localKeySet()) {
-                        assertEquals(map.get(k), mapStore.store.get(k));
+                        assertEquals(map.get(k), mapStore.get(k));
                     }
 
-                    assertEquals("sets should be equals", map.getAll(map.localKeySet()).entrySet(), mapStore.store.entrySet());
+                    assertEquals("sets should be equals", map.getAll(map.localKeySet()).entrySet(), mapStore.entrySet());
 
                     for (int k = putTTlKeyDomain; k < putTTlKeyDomain + putTTlKeyRange; k++) {
                         assertNull(basename + ": TTL key should not be in the map", map.get(k));

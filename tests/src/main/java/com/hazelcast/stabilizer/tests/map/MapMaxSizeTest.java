@@ -6,7 +6,7 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.map.helpers.OppCounterMapMaxSizeTest;
+import com.hazelcast.stabilizer.tests.map.helpers.MapMaxSizeOperationCounter;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
@@ -61,7 +61,7 @@ public class MapMaxSizeTest {
     }
 
     private class Worker implements Runnable {
-        private OppCounterMapMaxSizeTest count = new OppCounterMapMaxSizeTest();
+        private MapMaxSizeOperationCounter count = new MapMaxSizeOperationCounter();
         private final Random random = new Random();
 
         @Override
@@ -99,9 +99,9 @@ public class MapMaxSizeTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        IList<OppCounterMapMaxSizeTest> results = targetInstance.getList(basename + "report");
-        OppCounterMapMaxSizeTest total = new OppCounterMapMaxSizeTest();
-        for (OppCounterMapMaxSizeTest i : results) {
+        IList<MapMaxSizeOperationCounter> results = targetInstance.getList(basename + "report");
+        MapMaxSizeOperationCounter total = new MapMaxSizeOperationCounter();
+        for (MapMaxSizeOperationCounter i : results) {
             total.add(i);
         }
         log.info(basename + ": " + total + " from " + results.size() + " workers");
