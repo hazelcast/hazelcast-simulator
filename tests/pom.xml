@@ -34,5 +34,12 @@
             <artifactId>cache-api</artifactId>
             <version>${jsr107.api.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>${metrics.version}</version>
+        </dependency>
     </dependencies>
+
 </project>

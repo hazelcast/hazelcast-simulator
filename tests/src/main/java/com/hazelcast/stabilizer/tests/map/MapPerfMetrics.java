@@ -64,7 +64,6 @@ public class MapPerfMetrics {
 
     @Run
     public void run() {
-
         MetricRegistry metrics = new MetricRegistry();
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
@@ -72,12 +71,10 @@ public class MapPerfMetrics {
             spawner.spawn(new LoadProducer(metrics));
         }
 
-
         ConsoleReporter reporter = ConsoleReporter.forRegistry(metrics).build();
-        CsvReporter csv = CsvReporter.forRegistry(metrics).build(cvsDir);
+        CsvReporter csvReporter = CsvReporter.forRegistry(metrics).build(cvsDir);
 
-
-        csv.report(reportSecondsInterval, TimeUnit.SECONDS);
+        csvReporter.start(reportSecondsInterval, TimeUnit.SECONDS);
 
         spawner.awaitCompletion();
 
