@@ -60,12 +60,10 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
 
     @Override
     public void mapEvicted(MapEvent mapEvent) {
-
     }
 
     @Override
     public void mapCleared(MapEvent mapEvent) {
-
     }
 
     private void delay() {
@@ -96,29 +94,28 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
 
     @Override
     public String toString() {
-        return "EntryCounter{" +
-                "addCount=" + addCount +
-                ", removeCount=" + removeCount +
-                ", updateCount=" + updateCount +
-                ", evictCount=" + evictCount +
-                '}';
+        return "EntryCounter{"
+                + "addCount=" + addCount
+                + ", removeCount=" + removeCount
+                + ", updateCount=" + updateCount
+                + ", evictCount=" + evictCount
+                + '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == null) return false;
-        if (!(o instanceof EntryListenerImpl)) return false;
+        if (o == null) {
+            return false;
+        }
+        if (!(o instanceof EntryListenerImpl)) {
+            return false;
+        }
 
         EntryListenerImpl that = (EntryListenerImpl) o;
-
-        if (addCount.get() == that.addCount.get() &&
+        return addCount.get() == that.addCount.get() &&
                 evictCount.get() == that.evictCount.get() &&
                 removeCount.get() == that.removeCount.get() &&
-                updateCount.get() == that.updateCount.get()) {
-
-            return true;
-        }
-        return false;
+                updateCount.get() == that.updateCount.get();
     }
 
     @Override

@@ -46,8 +46,7 @@ public class EventCount implements DataSerializable {
                 localEvictCount.get();
     }
 
-    public long absDiffrence(EntryListenerImpl e) {
-
+    public long absDifference(EntryListenerImpl e) {
         long countTotal = total();
 
         Long listenerTotal = e.addCount.get() +
@@ -59,16 +58,14 @@ public class EventCount implements DataSerializable {
     }
 
     public boolean sameEventCount(EntryListenerImpl listener) {
-        return absDiffrence(listener) == 0;
+        return absDifference(listener) == 0;
     }
 
-
-    public void waiteWhileListenerEventsIncrease(EntryListenerImpl listener, int maxItterationNoChange) throws InterruptedException {
-
+    public void waiteWhileListenerEventsIncrease(EntryListenerImpl listener, int maxIterationNoChange) throws InterruptedException {
         int noChange = 0;
         long prev = 0;
         do {
-            long diff = absDiffrence(listener);
+            long diff = absDifference(listener);
 
             if (diff >= prev) {
                 noChange++;
@@ -79,8 +76,7 @@ public class EventCount implements DataSerializable {
 
             Thread.sleep(2000);
 
-        } while (!sameEventCount(listener) && noChange < maxItterationNoChange);
-
+        } while (!sameEventCount(listener) && noChange < maxIterationNoChange);
     }
 
     public long calculateMapSize() {
@@ -91,23 +87,21 @@ public class EventCount implements DataSerializable {
         return listener.addCount.get() - (listener.evictCount.get() + listener.removeCount.get());
     }
 
-
     public void assertEventsEquals(EntryListenerImpl listener) {
-        assertEquals(" Add Events ", localAddCount.get(), listener.addCount.get());
-        assertEquals(" Update Events ", localUpdateCount.get(), listener.updateCount.get());
-        assertEquals(" Remove Events ", localRemoveCount.get(), listener.removeCount.get());
-        assertEquals(" Evict Events ", localEvictCount.get(), listener.evictCount.get());
-        assertEquals(" calculated Map size", calculateMapSize(), calculateMapSize(listener));
+        assertEquals("Add Events ", localAddCount.get(), listener.addCount.get());
+        assertEquals("Update Events ", localUpdateCount.get(), listener.updateCount.get());
+        assertEquals("Remove Events ", localRemoveCount.get(), listener.removeCount.get());
+        assertEquals("Evict Events ", localEvictCount.get(), listener.evictCount.get());
+        assertEquals("calculated Map size", calculateMapSize(), calculateMapSize(listener));
     }
-
 
     @Override
     public String toString() {
-        return "Count{" +
-                "putCount=" + localAddCount +
-                ", putTransientCount=" + localRemoveCount +
-                ", putIfAbsentCount=" + localUpdateCount +
-                ", replaceCount=" + localEvictCount +
-                '}';
+        return "Count{"
+                + "putCount=" + localAddCount
+                + ", putTransientCount=" + localRemoveCount
+                + ", putIfAbsentCount=" + localUpdateCount
+                + ", replaceCount=" + localEvictCount
+                + '}';
     }
 }

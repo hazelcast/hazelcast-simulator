@@ -19,7 +19,7 @@ import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.tests.map.helpers.Employee;
-import com.hazelcast.stabilizer.tests.map.helpers.OppCounterIdxTest;
+import com.hazelcast.stabilizer.tests.map.helpers.PredicateOperationCounter;
 import com.hazelcast.stabilizer.worker.selector.OperationSelector;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
@@ -100,7 +100,7 @@ public class MapPredicateTest {
     private class Worker implements Runnable {
         private final OperationSelector<Operation> selector = operationSelectorBuilder.build();
         private final Random random = new Random();
-        private final OppCounterIdxTest counter = new OppCounterIdxTest();
+        private final PredicateOperationCounter counter = new PredicateOperationCounter();
 
         @Override
         public void run() {
@@ -156,7 +156,7 @@ public class MapPredicateTest {
                                 pagingPredicate.nextPage();
                             } while (!employees.isEmpty());
 
-                            counter.pagePredCount++;
+                            counter.pagePredicateCount++;
                             break;
                         }
                         case UPDATE_EMPLOYEE: {
@@ -165,7 +165,7 @@ public class MapPredicateTest {
                             if (e != null) {
                                 e.randomizeProperties();
                                 map.put(key, e);
-                                counter.updateEmployeCount++;
+                                counter.updateEmployeeCount++;
                             }
 
                             break;
@@ -186,10 +186,10 @@ public class MapPredicateTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        IList<OppCounterIdxTest> counters = targetInstance.getList(basename + "report");
+        IList<PredicateOperationCounter> counters = targetInstance.getList(basename + "report");
 
-        OppCounterIdxTest total = new OppCounterIdxTest();
-        for (OppCounterIdxTest c : counters) {
+        PredicateOperationCounter total = new PredicateOperationCounter();
+        for (PredicateOperationCounter c : counters) {
             total.add(c);
         }
         log.info(basename + " " + total + " from " + counters.size() + " worker threads");

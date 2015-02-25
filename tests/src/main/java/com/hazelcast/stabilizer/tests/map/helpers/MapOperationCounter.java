@@ -7,7 +7,7 @@ import com.hazelcast.nio.serialization.DataSerializable;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MapOperationsCount implements DataSerializable {
+public class MapOperationCounter implements DataSerializable {
 
     public AtomicLong putCount = new AtomicLong(0);
     public AtomicLong putAsyncCount = new AtomicLong(0);
@@ -29,7 +29,7 @@ public class MapOperationsCount implements DataSerializable {
     public AtomicLong deleteCount = new AtomicLong(0);
     public AtomicLong destroyCount = new AtomicLong(0);
 
-    public MapOperationsCount() {
+    public MapOperationCounter() {
     }
 
     public long getTotalNoOfOps() {
@@ -42,7 +42,7 @@ public class MapOperationsCount implements DataSerializable {
                 + deleteCount.get() + destroyCount.get();
     }
 
-    public void add(MapOperationsCount c) {
+    public void add(MapOperationCounter c) {
         putCount.addAndGet(c.putCount.get());
         putAsyncCount.addAndGet(c.putAsyncCount.get());
 
@@ -87,7 +87,6 @@ public class MapOperationsCount implements DataSerializable {
     }
 
     public void readData(ObjectDataInput in) throws IOException {
-
         putCount = in.readObject();
         putAsyncCount = in.readObject();
 
@@ -111,20 +110,20 @@ public class MapOperationsCount implements DataSerializable {
 
     @Override
     public String toString() {
-        return "MapOperationsCount{" +
-                "putCount=" + putCount +
-                ", putAsyncCount=" + putAsyncCount +
-                ", putTTLCount=" + putTTLCount +
-                ", putAsyncTTLCount=" + putAsyncTTLCount +
-                ", putTransientCount=" + putTransientCount +
-                ", putIfAbsentCount=" + putIfAbsentCount +
-                ", replaceCount=" + replaceCount +
-                ", getCount=" + getCount +
-                ", getAsyncCount=" + getAsyncCount +
-                ", removeCount=" + removeCount +
-                ", removeAsyncCount=" + removeAsyncCount +
-                ", deleteCount=" + deleteCount +
-                ", destroyCount=" + destroyCount +
-                '}';
+        return "MapOperationCounter{"
+                + "putCount=" + putCount
+                + ", putAsyncCount=" + putAsyncCount
+                + ", putTTLCount=" + putTTLCount
+                + ", putAsyncTTLCount=" + putAsyncTTLCount
+                + ", putTransientCount=" + putTransientCount
+                + ", putIfAbsentCount=" + putIfAbsentCount
+                + ", replaceCount=" + replaceCount
+                + ", getCount=" + getCount
+                + ", getAsyncCount=" + getAsyncCount
+                + ", removeCount=" + removeCount
+                + ", removeAsyncCount=" + removeAsyncCount
+                + ", deleteCount=" + deleteCount
+                + ", destroyCount=" + destroyCount
+                + '}';
     }
 }

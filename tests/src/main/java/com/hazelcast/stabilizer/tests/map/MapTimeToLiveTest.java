@@ -22,7 +22,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.stabilizer.test.utils.AssertTask;
-import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
+import com.hazelcast.stabilizer.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
 import com.hazelcast.stabilizer.test.annotations.Run;
@@ -79,7 +79,7 @@ public class MapTimeToLiveTest {
     }
 
     private class Worker implements Runnable {
-        private MapOperationsCount count = new MapOperationsCount();
+        private MapOperationCounter count = new MapOperationCounter();
         private final Random random = new Random();
 
         @Override
@@ -114,7 +114,7 @@ public class MapTimeToLiveTest {
                 } catch (DistributedObjectDestroyedException e) {
                 }
             }
-            IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
+            IList<MapOperationCounter> results = targetInstance.getList(basename + "report");
             results.add(count);
         }
     }
@@ -122,9 +122,9 @@ public class MapTimeToLiveTest {
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
-        IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
-        MapOperationsCount total = new MapOperationsCount();
-        for (MapOperationsCount i : results) {
+        IList<MapOperationCounter> results = targetInstance.getList(basename + "report");
+        MapOperationCounter total = new MapOperationCounter();
+        for (MapOperationCounter i : results) {
             total.add(i);
         }
         log.info(basename + ": " + total + " total of " + results.size());

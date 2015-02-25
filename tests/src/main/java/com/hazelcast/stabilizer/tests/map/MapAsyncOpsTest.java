@@ -13,7 +13,7 @@ import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
-import com.hazelcast.stabilizer.tests.map.helpers.MapOperationsCount;
+import com.hazelcast.stabilizer.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.stabilizer.worker.selector.OperationSelector;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
@@ -45,7 +45,7 @@ public class MapAsyncOpsTest {
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private MapOperationsCount count = new MapOperationsCount();
+    private MapOperationCounter count = new MapOperationCounter();
 
     private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
@@ -77,7 +77,7 @@ public class MapAsyncOpsTest {
         }
         spawner.awaitCompletion();
 
-        IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
+        IList<MapOperationCounter> results = targetInstance.getList(basename + "report");
         results.add(count);
     }
 
@@ -124,9 +124,9 @@ public class MapAsyncOpsTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        IList<MapOperationsCount> results = targetInstance.getList(basename + "report");
-        MapOperationsCount total = new MapOperationsCount();
-        for (MapOperationsCount i : results) {
+        IList<MapOperationCounter> results = targetInstance.getList(basename + "report");
+        MapOperationCounter total = new MapOperationCounter();
+        for (MapOperationCounter i : results) {
             total.add(i);
         }
         log.info(basename + ": " + total + " total of " + results.size());
