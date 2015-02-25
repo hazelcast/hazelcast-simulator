@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * methods.
  * <p/>
  * Implicitly logs and measures performance. The related properties can be overwritten with the properties of the test.
- * The Operation counter is automatically increased after each {@link #doIteration(Enum)} call.
+ * The Operation counter is automatically increased after each {@link #timeStep(Enum)} call.
  *
  * @param <O> Type of Enum used by the {@link com.hazelcast.stabilizer.worker.selector.OperationSelector}
  */
@@ -41,12 +41,19 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
         this.selector = operationSelectorBuilder.build();
     }
 
+    /**
+     * This constructor is just for child classes who also override the {@link #run()} method.
+     */
+    AbstractWorkerTask() {
+        this.selector = null;
+    }
+
     @Override
     public void run() {
         beforeRun();
 
         while (!testContext.isStopped()) {
-            doIteration(selector.select());
+            timeStep(selector.select());
 
             increaseIteration();
         }
@@ -80,12 +87,12 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
      *
      * @param operation The selected operation for this iteration
      */
-    protected abstract void doIteration(O operation);
+    protected abstract void timeStep(O operation);
 
     /**
      * Override this method if you need to execute code after {@link #run()} is called.
      * <p/>
-     * Won't be called if an error occurs in {@link #beforeRun()} or {@link #doIteration(Enum)}.
+     * Won't be called if an error occurs in {@link #beforeRun()} or {@link #timeStep(Enum)}.
      */
     protected void afterRun() {
     }

@@ -2,56 +2,45 @@ package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
-import com.hazelcast.stabilizer.test.annotations.Performance;
-import com.hazelcast.stabilizer.test.annotations.Run;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractMonotonicWorkerTask;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * This tests the cas method: replace. So for optimistic concurrency control.
  * <p/>
- * We have a bunch of predefined keys, and we are going to concurrently increment the value
- * and we protect ourselves against lost updates using cas method replace.
+ * We have a bunch of predefined keys, and we are going to concurrently increment the value and we protect ourselves against lost
+ * updates using cas method replace.
  * <p/>
- * Locally we keep track of all increments, and if the sum of these local increments matches the
- * global increment, we are done
+ * Locally we keep track of all increments, and if the sum of these local increments matches the global increment, we are done.
  */
 public class MapCasTest {
 
-    private final static ILogger log = Logger.getLogger(MapCasTest.class);
-
-    //props
+    // properties
     public int threadCount = 10;
     public int keyCount = 1000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "mapcas";
+    public String basename = "mapCas";
 
     private IMap<Integer, Long> map;
-    private final AtomicLong operations = new AtomicLong();
     private IMap<String, Map<Integer, Long>> resultsPerWorker;
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
         resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
     }
@@ -64,22 +53,9 @@ public class MapCasTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0l);
+        for (int i = 0; i < keyCount; i++) {
+            map.put(i, 0L);
         }
-    }
-
-    @Run
-    public void run() {
-        if (map.size() != keyCount) {
-            throw new RuntimeException("warmup has not run since the map is not filled correctly, found size:" + map.size());
-        }
-
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
     }
 
     @Verify
@@ -93,9 +69,9 @@ public class MapCasTest {
         }
 
         int failures = 0;
-        for (int k = 0; k < keyCount; k++) {
-            long expected = amount[k];
-            long found = map.get(k);
+        for (int i = 0; i < keyCount; i++) {
+            long expected = amount[i];
+            long found = map.get(i);
             if (expected != found) {
                 failures++;
             }
@@ -104,44 +80,40 @@ public class MapCasTest {
         assertEquals("There should not be any data races", 0, failures);
     }
 
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
+    @RunWithWorker
+    public AbstractWorkerTask createWorker() {
+        return new WorkerTask();
     }
 
-    private class Worker implements Runnable {
-        private final Random random = new Random();
+    private class WorkerTask extends AbstractMonotonicWorkerTask {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
+        protected void beforeRun() {
+            if (map.size() != keyCount) {
+                throw new RuntimeException("Warmup has not run since the map is not filled correctly, found size: " + map.size());
+            }
+
+            for (int i = 0; i < keyCount; i++) {
+                result.put(i, 0L);
+            }
+        }
+
         @Override
-        public void run() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
-            }
+        protected void timeStep() {
+            Integer key = nextInt(keyCount);
+            long incrementValue = nextInt(100);
 
-            long iteration = 0;
-            while (!testContext.isStopped()) {
-                Integer key = random.nextInt(keyCount);
-                long increment = random.nextInt(100);
-
-                for (; ; ) {
-                    Long current = map.get(key);
-                    Long update = current + increment;
-                    if (map.replace(key, current, update)) {
-                        increment(key, increment);
-                        break;
-                    }
-                }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
+            for (;;) {
+                Long current = map.get(key);
+                Long update = current + incrementValue;
+                if (map.replace(key, current, update)) {
+                    increment(key, incrementValue);
+                    break;
                 }
             }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
+        }
+
+        protected void afterRun() {
             resultsPerWorker.put(UUID.randomUUID().toString(), result);
         }
 

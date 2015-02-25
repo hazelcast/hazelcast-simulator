@@ -110,7 +110,7 @@ public class StringStringMapTest {
         }
 
         @Override
-        protected void doIteration(Operation operation) {
+        protected void timeStep(Operation operation) {
             String key = randomKey();
 
             switch (operation) {
