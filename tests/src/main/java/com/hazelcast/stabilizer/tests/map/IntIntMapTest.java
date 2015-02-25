@@ -96,7 +96,7 @@ public class IntIntMapTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask<Operation> createBaseWorker() {
+    public AbstractWorkerTask<Operation> createWorker() {
         return new WorkerTask();
     }
 
@@ -107,7 +107,7 @@ public class IntIntMapTest {
         }
 
         @Override
-        protected void doRun(Operation operation) {
+        protected void doIteration(Operation operation) {
             int key = randomKey();
 
             switch (operation) {
@@ -134,11 +134,11 @@ public class IntIntMapTest {
         }
 
         private int randomKey() {
-            return keys[nextInt(keys.length)];
+            return keys[randomInt(keys.length)];
         }
 
         private int randomValue() {
-            return nextInt(Integer.MAX_VALUE);
+            return randomInt(Integer.MAX_VALUE);
         }
     }
 

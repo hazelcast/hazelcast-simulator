@@ -66,7 +66,7 @@ public class TestContainerTest {
         }
 
         @RunWithWorker
-        public AbstractWorkerTask createBaseWorker() {
+        public AbstractWorkerTask createWorker() {
             return null;
         }
     }
@@ -175,10 +175,10 @@ public class TestContainerTest {
         boolean runWithWorkerCalled;
 
         @RunWithWorker
-        AbstractWorkerTask<Operation> createBaseWorker() {
+        AbstractWorkerTask<Operation> createWorker() {
             return new AbstractWorkerTask<Operation>(builder) {
                 @Override
-                protected void doRun(Operation operation) {
+                protected void doIteration(Operation operation) {
                     runWithWorkerCalled = true;
                 }
             };

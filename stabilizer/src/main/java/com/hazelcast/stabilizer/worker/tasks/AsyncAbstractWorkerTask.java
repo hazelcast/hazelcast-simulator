@@ -22,7 +22,7 @@ public abstract class AsyncAbstractWorkerTask<O extends Enum<O>, V> extends Abst
     @Override
     public void run() {
         while (!testContext.isStopped()) {
-            doRun(selector.select());
+            doIteration(selector.select());
         }
         operationCount.addAndGet(iteration % performanceUpdateFrequency);
     }
@@ -41,7 +41,16 @@ public abstract class AsyncAbstractWorkerTask<O extends Enum<O>, V> extends Abst
         handleFailure(t);
     }
 
+    /**
+     * Will be called on {@link ExecutionCallback#onResponse(Object)} after the iteration has been increased.
+     *
+     * @param response the result of the successful execution
+     */
     protected abstract void handleResponse(V response);
 
+    /**
+     * Will be called on {@link ExecutionCallback#onFailure(Throwable)} after the throwable has been reported.
+     * @param t the exception that is thrown
+     */
     protected abstract void handleFailure(Throwable t);
 }
