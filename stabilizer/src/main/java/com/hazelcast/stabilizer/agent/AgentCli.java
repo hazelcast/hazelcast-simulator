@@ -13,13 +13,13 @@ public class AgentCli {
 
     private final OptionSpec<String> cloudIdentitySpec = parser.accepts("cloudIdentity",
             "Cloud identity")
-            .withOptionalArg().ofType(String.class);
+            .withRequiredArg().ofType(String.class);
     private final OptionSpec<String> cloudCredentialSpec = parser.accepts("cloudCredential",
             "Cloud credential")
-            .withOptionalArg().ofType(String.class);
+            .withRequiredArg().ofType(String.class);
     private final OptionSpec<String> cloudProviderSpec = parser.accepts("cloudProvider",
             "Cloud provider")
-            .withOptionalArg().ofType(String.class);
+            .withRequiredArg().ofType(String.class);
 
 
     public static void init(Agent agent, String[] args) throws IOException {
