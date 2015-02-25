@@ -44,7 +44,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
-import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getStabilizerVersion;
 import static com.hazelcast.stabilizer.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.stabilizer.utils.FileUtils.getFilesFromClassPath;
@@ -392,7 +392,7 @@ public class Coordinator {
                         file ,
                         props.get("USER"),
                         ip,
-                        getVersion(),
+                        getStabilizerVersion(),
                         testSuite.id);
                 bash.execute(syncCommand);
             }
@@ -416,7 +416,7 @@ public class Coordinator {
                                     file.getAbsolutePath(),
                                     props.get("USER"),
                                     ip,
-                                    getVersion(),
+                                    getStabilizerVersion(),
                                     testSuite.id);
 
                     bash.execute(syncCommand);
@@ -434,10 +434,10 @@ public class Coordinator {
 
             //todo: in the future we'll only upload the right yourkit library 32 vs 64
             for (String ip : agentsClient.getPublicAddresses()) {
-                bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s/yourkit", getVersion()));
+                bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s/yourkit", getStabilizerVersion()));
 
                 String syncCommand = format("rsync --ignore-existing -avv -e \"ssh %s\" %s/yourkit %s@%s:hazelcast-stabilizer-%s/",
-                        props.get("SSH_OPTIONS", ""), getStablizerHome().getAbsolutePath(), props.get("USER"), ip, getVersion());
+                        props.get("SSH_OPTIONS", ""), getStablizerHome().getAbsolutePath(), props.get("USER"), ip, getStabilizerVersion());
 
                 bash.execute(syncCommand);
             }
@@ -457,7 +457,7 @@ public class Coordinator {
     public static void main(String[] args) throws Exception {
         log.info("Hazelcast Stabilizer Coordinator");
         log.info(format("Version: %s, Commit: %s, Build Time: %s",
-                getVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
+                getStabilizerVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         Coordinator coordinator = new Coordinator();

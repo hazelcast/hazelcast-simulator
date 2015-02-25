@@ -30,7 +30,7 @@ import java.io.IOException;
 
 import static com.hazelcast.stabilizer.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
-import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getStabilizerVersion;
 import static com.hazelcast.stabilizer.agent.AgentCli.init;
 import static java.lang.String.format;
 
@@ -112,7 +112,7 @@ public class Agent {
     public static void main(String[] args) throws Exception {
         log.info("Stabilizer Agent");
         log.info(format("Version: %s, Commit: %s, Build Time: %s",
-                getVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
+                getStabilizerVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
         log.info(format("STABILIZER_HOME: %s%n", STABILIZER_HOME));
         logInterestingSystemProperties();
 

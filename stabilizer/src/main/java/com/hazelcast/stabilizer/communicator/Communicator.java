@@ -10,7 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getStabilizerVersion;
 import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
 import static java.lang.String.format;
 
@@ -25,7 +25,7 @@ public class Communicator {
 
     public static void main(String[] args) throws IOException {
         log.info("Stabilizer Communicator");
-        log.info(format("Version: %s", getVersion()));
+        log.info(format("Version: %s", getStabilizerVersion()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
         Communicator communicator = new Communicator();
