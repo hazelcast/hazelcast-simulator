@@ -19,46 +19,48 @@ import java.util.Random;
 import java.util.Set;
 
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class MapDataIntegrityTest {
     private final static ILogger log = Logger.getLogger(MapDataIntegrityTest.class);
 
+    // properties
     public int mapIntegrityThreadCount = 8;
     public int stressThreadCount = 8;
-    public int totalIntegritiyKeys = 10000;
+    public int totalIntegrityKeys = 10000;
     public int totalStressKeys = 1000;
     public int valueSize = 1000;
     public boolean mapLoad = true;
     public boolean doRunAsserts = true;
     public String basename = this.getClass().getCanonicalName();
 
-    private String id;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+    private String testId;
+
     private IMap<Integer, byte[]> integrityMap;
     private IMap<Integer, byte[]> stressMap;
+
+    private MapIntegrityThread[] integrityThreads;
     private byte[] value;
 
-    MapIntegrityThread[] integrityThreads;
-
     @Setup
-    public void setup(TestContext testContex) throws Exception {
-        this.testContext = testContex;
+    public void setup(TestContext testContext) throws Exception {
+        this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-        id=testContex.getTestId();
-        integrityMap = targetInstance.getMap(basename+"Integrity");
-        stressMap = targetInstance.getMap(basename+"Stress");
+        testId = testContext.getTestId();
+
+        integrityMap = targetInstance.getMap(basename + "Integrity");
+        stressMap = targetInstance.getMap(basename + "Stress");
 
         integrityThreads = new MapIntegrityThread[mapIntegrityThreadCount];
-
         value = new byte[valueSize];
+
         Random random = new Random();
         random.nextBytes(value);
 
-        if(mapLoad && isMemberNode(targetInstance)){
-
+        if (mapLoad && isMemberNode(targetInstance)) {
             PartitionService partitionService = targetInstance.getPartitionService();
             final Set<Partition> partitionSet = partitionService.getPartitions();
             for (Partition partition : partitionSet) {
@@ -66,54 +68,78 @@ public class MapDataIntegrityTest {
                     Thread.sleep(1000);
                 }
             }
-            log.info(id + ": "+partitionSet.size() + " partitions");
+            log.info(testId + ": " + partitionSet.size() + " partitions");
 
             Member localMember = targetInstance.getCluster().getLocalMember();
-            for(int i=0; i< totalIntegritiyKeys; i++){
+            for (int i = 0; i < totalIntegrityKeys; i++) {
                 Partition partition = partitionService.getPartition(i);
                 if (localMember.equals(partition.getOwner())) {
                     integrityMap.put(i, value);
                 }
             }
-            log.info(id + ": integrityMap=" + integrityMap.getName() + " size=" + integrityMap.size());
+            log.info(testId + ": integrityMap=" + integrityMap.getName() + " size=" + integrityMap.size());
 
             Config config = targetInstance.getConfig();
             MapConfig mapConfig = config.getMapConfig(integrityMap.getName());
-            log.info(id+": "+mapConfig);
+            log.info(testId + ": " + mapConfig);
         }
+    }
+
+    @Verify(global = false)
+    public void verify() throws Exception {
+        if (isMemberNode(targetInstance)) {
+            log.info(testId + ": cluster size =" + targetInstance.getCluster().getMembers().size());
+        }
+
+        log.info(testId + ": integrityMap=" + integrityMap.getName() + " size=" + integrityMap.size());
+        int totalErrorCount = 0;
+        int totalNullValueCount = 0;
+        for (MapIntegrityThread integrityThread : integrityThreads) {
+            totalErrorCount += integrityThread.sizeErrorCount;
+            totalNullValueCount += integrityThread.nullValueCount;
+        }
+        log.info(testId + ": total integrityMapSizeErrorCount=" + totalErrorCount);
+        log.info(testId + ": total integrityMapNullValueCount=" + totalNullValueCount);
+
+        assertEquals(testId + ": (verify) integrityMap=" + integrityMap.getName() + " map size ", totalIntegrityKeys,
+                integrityMap.size());
+        assertEquals(testId + ": (verify) integrityMapSizeErrorCount=", 0, totalErrorCount);
+        assertEquals(testId + ": (verify) integrityMapNullValueCount=", 0, totalNullValueCount);
     }
 
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for(int i=0; i< mapIntegrityThreadCount; i++){
-            integrityThreads[i]=new MapIntegrityThread();
-            spawner.spawn( integrityThreads[i] );
+        for (int i = 0; i < mapIntegrityThreadCount; i++) {
+            integrityThreads[i] = new MapIntegrityThread();
+            spawner.spawn(integrityThreads[i]);
         }
-        for(int i=0; i<stressThreadCount; i++){
-            spawner.spawn( new StressThread() );
+        for (int i = 0; i < stressThreadCount; i++) {
+            spawner.spawn(new StressThread());
         }
         spawner.awaitCompletion();
     }
 
     private class MapIntegrityThread implements Runnable {
-        Random random = new Random();
-        int nullValueCount=0;
-        int sizeErrorCount=0;
+        private final Random random = new Random();
+
+        private int nullValueCount = 0;
+        private int sizeErrorCount = 0;
+
         public void run() {
             while (!testContext.isStopped()) {
 
-                int key = random.nextInt(totalIntegritiyKeys);
+                int key = random.nextInt(totalIntegrityKeys);
                 byte[] val = integrityMap.get(key);
-                int actualSize= integrityMap.size();
-                if(doRunAsserts){
-                    assertNotNull(id + ": integrityMap=" + integrityMap.getName() + " key " + key + " == null", val);
-                    assertEquals(id + ": integrityMap=" + integrityMap.getName() + " map size ", totalIntegritiyKeys, actualSize);
-                }else{
-                    if(val==null){
+                int actualSize = integrityMap.size();
+                if (doRunAsserts) {
+                    assertNotNull(testId + ": integrityMap=" + integrityMap.getName() + " key " + key + " == null", val);
+                    assertEquals(testId + ": integrityMap=" + integrityMap.getName() + " map size ", totalIntegrityKeys, actualSize);
+                } else {
+                    if (val == null) {
                         nullValueCount++;
                     }
-                    if(actualSize != totalIntegritiyKeys){
+                    if (actualSize != totalIntegrityKeys) {
                         sizeErrorCount++;
                     }
                 }
@@ -122,7 +148,7 @@ public class MapDataIntegrityTest {
     }
 
     private class StressThread implements Runnable {
-        Random random = new Random();
+        private final Random random = new Random();
 
         public void run() {
             while (!testContext.isStopped()) {
@@ -130,26 +156,5 @@ public class MapDataIntegrityTest {
                 stressMap.put(key, value);
             }
         }
-    }
-
-    @Verify(global = false)
-    public void verify() throws Exception {
-        if(isMemberNode(targetInstance)){
-            log.info(id + ": cluster size =" + targetInstance.getCluster().getMembers().size());
-        }
-
-        log.info( id + ": integrityMap=" + integrityMap.getName() + " size=" + integrityMap.size());
-        int totalErrorCount=0;
-        int totalNullValueCount=0;
-        for(int i=0; i<integrityThreads.length; i++){
-            totalErrorCount += integrityThreads[i].sizeErrorCount;
-            totalNullValueCount += integrityThreads[i].nullValueCount;
-        }
-        log.info( id + ": total integrityMapSizeErrorCount=" + totalErrorCount);
-        log.info( id + ": total integrityMapNullValueCount=" + totalNullValueCount);
-
-        assertEquals(id + ": (verify) integrityMap=" + integrityMap.getName() + " map size ", totalIntegritiyKeys, integrityMap.size());
-        assertEquals(id + ": (verify) integrityMapSizeErrorCount=", 0, totalErrorCount);
-        assertEquals(id + ": (verify) integrityMapNullValueCount=", 0, totalNullValueCount);
     }
 }
