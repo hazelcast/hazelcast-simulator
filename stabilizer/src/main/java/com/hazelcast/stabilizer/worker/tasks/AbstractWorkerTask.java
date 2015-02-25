@@ -32,7 +32,7 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
 
     // these fields will be injected by test.properties of the test
     long logFrequency = 10000;
-    long performanceUpdateFrequency = 10000;
+    long performanceUpdateFrequency = 10;
 
     // local variables
     long iteration = 0;
@@ -54,6 +54,13 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
     @Performance
     public long getOperationCount() {
         return operationCount.get();
+    }
+
+    protected void setPerformanceUpdateFrequency(long performanceUpdateFrequency) {
+        if (performanceUpdateFrequency <= 0) {
+            throw new IllegalArgumentException("performanceUpdateFrequency must be a positive number!");
+        }
+        this.performanceUpdateFrequency = performanceUpdateFrequency;
     }
 
     protected abstract void doRun(O operation);
