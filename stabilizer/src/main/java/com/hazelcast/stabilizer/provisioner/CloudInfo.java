@@ -10,7 +10,7 @@ import org.jclouds.domain.Location;
 import java.util.Set;
 
 import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
-import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getStabilizerVersion;
 import static java.lang.String.format;
 
 /**
@@ -71,7 +71,7 @@ public class CloudInfo {
             } else {
                 StringBuilder sb = new StringBuilder(image.getId());
                 sb.append(" OS: ").append(image.getOperatingSystem());
-                //    sb.append(" Version: ").append(image.getVersion());
+                //    sb.append(" Version: ").append(image.getStabilizerVersion());
                 System.out.println(sb.toString());
             }
         }
@@ -97,7 +97,7 @@ public class CloudInfo {
 
     public static void main(String[] args) {
         log.info("Hazelcast Stabilizer CloudInfo");
-        log.info(format("Version: %s", getVersion()));
+        log.info(format("Version: %s", getStabilizerVersion()));
         log.info(format("STABILIZER_HOME: %s", getStablizerHome()));
 
         try {

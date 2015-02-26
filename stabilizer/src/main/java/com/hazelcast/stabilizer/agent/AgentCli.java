@@ -14,7 +14,6 @@ public class AgentCli {
     private final OptionSpec<String> cloudIdentitySpec = parser.accepts("cloudIdentity",
             "Cloud identity")
             .withRequiredArg().ofType(String.class);
-
     private final OptionSpec<String> cloudCredentialSpec = parser.accepts("cloudCredential",
             "Cloud credential")
             .withRequiredArg().ofType(String.class);
@@ -33,8 +32,17 @@ public class AgentCli {
             System.exit(0);
         }
 
-        agent.cloudIdentity = options.valueOf(agentOptionSpec.cloudIdentitySpec);
-        agent.cloudCredential = options.valueOf(agentOptionSpec.cloudCredentialSpec);
-        agent.cloudProvider = options.valueOf(agentOptionSpec.cloudProviderSpec);
+        if (options.has(agentOptionSpec.cloudIdentitySpec)){
+            agent.cloudIdentity = options.valueOf(agentOptionSpec.cloudIdentitySpec);
+        }
+        
+        if(options.has(agentOptionSpec.cloudCredentialSpec)){
+            agent.cloudCredential = options.valueOf(agentOptionSpec.cloudCredentialSpec);
+        }
+
+        if(options.has(agentOptionSpec.cloudProviderSpec)){
+            agent.cloudProvider = options.valueOf(agentOptionSpec.cloudProviderSpec);
+        }
+        
     }
 }

@@ -5,7 +5,7 @@ import com.hazelcast.stabilizer.common.StabilizerProperties;
 
 import java.io.File;
 
-import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getStabilizerVersion;
 import static java.lang.String.format;
 
 public class Bash {
@@ -46,7 +46,7 @@ public class Bash {
 
     public void copyToAgentStabilizerDir(String ip, String src, String target) {
         String syncCommand = format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-stabilizer-%s/%s",
-                sshOptions, src, user, ip, getVersion(), target);
+                sshOptions, src, user, ip, getStabilizerVersion(), target);
 
         execute(syncCommand);
     }

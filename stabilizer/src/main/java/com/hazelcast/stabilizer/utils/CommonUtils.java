@@ -149,7 +149,7 @@ public final class CommonUtils {
         }
     }
 
-    public static String getVersion() {
+    public static String getStabilizerVersion() {
         return CommonUtils.class.getPackage().getImplementationVersion();
     }
 

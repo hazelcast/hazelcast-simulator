@@ -28,7 +28,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import static com.hazelcast.stabilizer.utils.CommonUtils.getVersion;
+import static com.hazelcast.stabilizer.utils.CommonUtils.getStabilizerVersion;
 import static com.hazelcast.stabilizer.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.stabilizer.utils.FileUtils.appendText;
 import static com.hazelcast.stabilizer.utils.FileUtils.fileAsText;
@@ -83,10 +83,10 @@ public class Provisioner {
     }
 
     void installAgent(String ip) {
-        bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s", getVersion()));
+        bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s", getStabilizerVersion()));
 
         //first we remove the old lib files to prevent different versions of the same jar to bite us.
-        bash.sshQuiet(ip, format("rm -fr hazelcast-stabilizer-%s/lib", getVersion()));
+        bash.sshQuiet(ip, format("rm -fr hazelcast-stabilizer-%s/lib", getStabilizerVersion()));
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/bin/", "bin");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/conf/", "conf");
         bash.copyToAgentStabilizerDir(ip, STABILIZER_HOME + "/jdk-install/", "jdk-install");
@@ -114,12 +114,12 @@ public class Provisioner {
             //todo: in the future we can improve this; we upload the hz jars, to delete them again.
 
             //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
-            bash.ssh(ip, format("rm -fr hazelcast-stabilizer-%s/lib/hazelcast-*.jar", getVersion()));
+            bash.ssh(ip, format("rm -fr hazelcast-stabilizer-%s/lib/hazelcast-*.jar", getStabilizerVersion()));
 
             if (!versionSpec.endsWith("bringmyown")) {
                 //copy the actual hazelcast jars that are going to be used by the worker.
                 bash.scpToRemote(ip, hazelcastJars.getAbsolutePath() + "/*.jar",
-                        format("hazelcast-stabilizer-%s/lib", getVersion()));
+                        format("hazelcast-stabilizer-%s/lib", getStabilizerVersion()));
             }
         }
     }
@@ -128,36 +128,40 @@ public class Provisioner {
         String script = fileAsText(initScript);
 
         script = script.replaceAll(Pattern.quote("${user}"), props.getUser());
-        script = script.replaceAll(Pattern.quote("${version}"), getVersion());
+        script = script.replaceAll(Pattern.quote("${version}"), getStabilizerVersion());
 
         return script;
     }
 
     public void startAgents() {
         echoImportant("Starting %s Agents", addresses.size());
-
+        
         for (AgentAddress address : addresses) {
-            echo("Killing Agent %s", address.publicAddress);
-            bash.ssh(address.publicAddress, "killall -9 java || true");
+            startAgent(address.publicAddress);
         }
 
-        for (AgentAddress address : addresses) {
-            echo("Starting Agent %s", address.publicAddress);
-
-            bash.ssh(address.publicAddress,
-                    format("nohup hazelcast-stabilizer-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s > agent.out 2> agent.err < /dev/null &",
-                            getVersion(), props.get("CLOUD_PROVIDER"), props.get("CLOUD_IDENTITY"),
-                            props.get("CLOUD_CREDENTIAL")));
-        }
-
-        echoImportant("Successfully started %s Agents", addresses.size());
+        echoImportant("Successfully started agents on %s boxes", addresses.size());
     }
 
     void startAgent(String ip) {
+        echo("Killing Agent on: %s", ip);
         bash.ssh(ip, "killall -9 java || true");
-        bash.ssh(ip,
-                format("nohup hazelcast-stabilizer-%s/bin/agent -cloudProvider %s --cloudIdentity %s --cloudCredential %s > agent.out 2> agent.err < /dev/null &",
-                        getVersion(), props.get("CLOUD_PROVIDER"), props.get("CLOUD_IDENTITY"), props.get("CLOUD_CREDENTIAL")));
+        
+        echo("Starting Agent on: %s", ip);
+        
+        if(props.isEc2()){
+            bash.ssh(ip, format(
+                    "nohup hazelcast-stabilizer-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s > agent.out 2> agent.err < /dev/null &",
+                    getStabilizerVersion(),
+                    props.get("CLOUD_PROVIDER"),
+                    props.get("CLOUD_IDENTITY"),
+                    props.get("CLOUD_CREDENTIAL")));
+            
+        }else {
+            bash.ssh(ip, format(
+                    "nohup hazelcast-stabilizer-%s/bin/agent > agent.out 2> agent.err < /dev/null &",
+                    getStabilizerVersion()));
+        }
     }
 
     void killAgents() {
@@ -337,7 +341,7 @@ public class Provisioner {
             echo("Downloading from %s", address.publicAddress);
 
             String syncCommand = format("rsync --copy-links  -avv -e \"ssh %s\" %s@%s:hazelcast-stabilizer-%s/workers/* " + dir,
-                    props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getVersion());
+                    props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getStabilizerVersion());
 
             bash.executeQuiet(syncCommand);
         }
@@ -350,7 +354,7 @@ public class Provisioner {
 
         for (AgentAddress address : addresses) {
             echo("Cleaning %s", address.publicAddress);
-            bash.ssh(address.publicAddress, format("rm -fr hazelcast-stabilizer-%s/workers/*", getVersion()));
+            bash.ssh(address.publicAddress, format("rm -fr hazelcast-stabilizer-%s/workers/*", getStabilizerVersion()));
         }
 
         echoImportant("Finished cleaning worker homes of %s machines", addresses.size());
@@ -420,7 +424,7 @@ public class Provisioner {
 
     public static void main(String[] args) {
         log.info("Hazelcast Stabilizer Provisioner");
-        log.info(format("Version: %s, Commit: %s, Build Time: %s", getVersion(), GitInfo.getCommitIdAbbrev(),
+        log.info(format("Version: %s, Commit: %s, Build Time: %s", getStabilizerVersion(), GitInfo.getCommitIdAbbrev(),
                 GitInfo.getBuildTime()));
         log.info(format("STABILIZER_HOME: %s", STABILIZER_HOME));
 
