@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.worker;
+package com.hazelcast.stabilizer.worker.metronome;
 
 import org.junit.Test;
 
