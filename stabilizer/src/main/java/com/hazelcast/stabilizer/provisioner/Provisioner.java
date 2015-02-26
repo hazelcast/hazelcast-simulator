@@ -5,6 +5,7 @@ import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.GitInfo;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
+import com.hazelcast.stabilizer.probes.probes.util.Utils;
 import com.hazelcast.stabilizer.provisioner.git.BuildSupport;
 import com.hazelcast.stabilizer.provisioner.git.GitSupport;
 import com.hazelcast.stabilizer.provisioner.git.HazelcastJARFinder;
@@ -364,7 +365,7 @@ public class Provisioner {
         terminate(Integer.MAX_VALUE);
     }
 
-    public void terminate(int count) {
+    public void terminate(int count){
         if (count > addresses.size()) {
             count = addresses.size();
         }
@@ -377,12 +378,13 @@ public class Provisioner {
 
         ComputeService compute = new ComputeServiceBuilder(props).build();
 
+        int destroyedCount=0;
         for (int batchSize : calcBatches(count)) {
             final Map<String, AgentAddress> terminateMap = new HashMap<String, AgentAddress>();
             for (AgentAddress address : addresses.subList(0, batchSize)) {
                 terminateMap.put(address.publicAddress, address);
             }
-            destroyNodes(compute, terminateMap);
+            destroyedCount += destroyNodes(compute, terminateMap);
         }
 
         log.info("Updating " + agentsFile.getAbsolutePath());
@@ -391,25 +393,36 @@ public class Provisioner {
 
         long durationSeconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startMs);
         echo("Duration: " + secondsToHuman(durationSeconds));
-        echoImportant("Finished terminating %s %s machines, %s machines remaining.", count, props.get("CLOUD_PROVIDER"),
-                addresses.size());
+        echoImportant("Terminated %s of %s, remaining=%s", destroyedCount, count, addresses.size());
+
+        if(destroyedCount!=count){
+            throw new IllegalStateException("Terminated "+destroyedCount+" of "+count+
+                    "\n1) You are trying to terminate physical hardware that you own (unsupported feature)"+
+                    "\n2) if and only if you are using AWS,  our Harakiri Monitor might have terminated them"+
+                    "\n3) You have not payed you bill and your instances have been terminated by your provider"+
+                    "\n4) You have terminated our own instances perhaps vai some console interface"+
+                    "\n5) Someone else has terminated your instances"+
+                    "\n5) elves ?"+
+                    "\n5) try again");
+        }
     }
 
-    private void destroyNodes(ComputeService compute, final Map<String, AgentAddress> terminateMap) {
-        compute.destroyNodesMatching(new Predicate<NodeMetadata>() {
-                    @Override
-                    public boolean apply(NodeMetadata nodeMetadata) {
-                        for (String publicAddress : nodeMetadata.getPublicAddresses()) {
-                            AgentAddress address = terminateMap.remove(publicAddress);
-                            if (address != null) {
-                                echo(format("    %s Terminating", publicAddress));
-                                addresses.remove(address);
-                                return true;
-                            }
-                        }
-                        return false;
+    private int destroyNodes(ComputeService compute, final Map<String, AgentAddress> terminateMap) {
+        Set destroyedSet = compute.destroyNodesMatching(new Predicate<NodeMetadata>() {
+            @Override
+            public boolean apply(NodeMetadata nodeMetadata) {
+                for (String publicAddress : nodeMetadata.getPublicAddresses()) {
+                    AgentAddress address = terminateMap.remove(publicAddress);
+                    if (address != null) {
+                        echo(format("    %s Terminating", publicAddress));
+                        addresses.remove(address);
+                        return true;
                     }
-                });
+                }
+                return false;
+            }
+        });
+        return destroyedSet.size();
     }
 
     private void echo(String s, Object... args) {
