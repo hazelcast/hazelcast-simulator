@@ -47,7 +47,7 @@ import static com.hazelcast.stabilizer.utils.ReflectionUtils.invokeMethod;
 import static java.lang.String.format;
 
 /**
- * Since the test is based on annotations, there is no API we can call very easily.
+ * Since the test is based on annotations there is no API we can call easily.
  * That is the task of this test container.
  *
  * @param <T> Class of type {@link com.hazelcast.stabilizer.test.TestContext}
@@ -79,7 +79,7 @@ public class TestContainer<T extends TestContext> {
         }
     }
 
-    // Properties
+    // properties
     int threadCount = 10;
 
     private final Object testClassInstance;
