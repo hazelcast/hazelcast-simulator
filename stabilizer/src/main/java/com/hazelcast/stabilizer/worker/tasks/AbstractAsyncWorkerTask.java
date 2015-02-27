@@ -12,30 +12,30 @@ import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
  * @param <O> Type of Enum used by the {@link com.hazelcast.stabilizer.worker.selector.OperationSelector}
  * @param <V> Type of {@link com.hazelcast.core.ExecutionCallback}
  */
-public abstract class AsyncAbstractWorkerTask<O extends Enum<O>, V> extends AbstractWorkerTask<O>
+public abstract class AbstractAsyncWorkerTask<O extends Enum<O>, V> extends AbstractWorkerTask<O>
         implements ExecutionCallback<V> {
 
-    public AsyncAbstractWorkerTask(OperationSelectorBuilder<O> operationSelectorBuilder) {
+    public AbstractAsyncWorkerTask(OperationSelectorBuilder<O> operationSelectorBuilder) {
         super(operationSelectorBuilder);
     }
 
     @Override
-    public void run() {
+    public final void run() {
         while (!testContext.isStopped()) {
-            doIteration(selector.select());
+            timeStep(selector.select());
         }
         operationCount.addAndGet(iteration % performanceUpdateFrequency);
     }
 
     @Override
-    public void onResponse(V response) {
+    public final void onResponse(V response) {
         increaseIteration();
 
         handleResponse(response);
     }
 
     @Override
-    public void onFailure(Throwable t) {
+    public final void onFailure(Throwable t) {
         ExceptionReporter.report(testContext.getTestId(), t);
 
         handleFailure(t);

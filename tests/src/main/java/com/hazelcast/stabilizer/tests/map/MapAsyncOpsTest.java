@@ -86,7 +86,7 @@ public class MapAsyncOpsTest {
         }
 
         @Override
-        protected void doIteration(Operation operation) {
+        protected void timeStep(Operation operation) {
             int key = randomInt(keyCount);
             switch (operation) {
                 case PUT_ASYNC:

@@ -107,7 +107,7 @@ public class IntIntMapTest {
         }
 
         @Override
-        protected void doIteration(Operation operation) {
+        protected void timeStep(Operation operation) {
             int key = randomKey();
 
             switch (operation) {

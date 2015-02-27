@@ -178,7 +178,7 @@ public class TestContainerTest {
         AbstractWorkerTask<Operation> createWorker() {
             return new AbstractWorkerTask<Operation>(builder) {
                 @Override
-                protected void doIteration(Operation operation) {
+                protected void timeStep(Operation operation) {
                     runWithWorkerCalled = true;
                 }
             };
