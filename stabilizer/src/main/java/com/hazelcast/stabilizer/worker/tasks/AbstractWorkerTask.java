@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * methods.
  * <p/>
  * Implicitly logs and measures performance. The related properties can be overwritten with the properties of the test.
- * The Operation counter is automatically increased after each doRun() call.
+ * The Operation counter is automatically increased after each {@link #doIteration(Enum)} call.
  *
  * @param <O> Type of Enum used by the {@link com.hazelcast.stabilizer.worker.selector.OperationSelector}
  */
@@ -43,12 +43,16 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
 
     @Override
     public void run() {
+        beforeRun();
+
         while (!testContext.isStopped()) {
-            doRun(selector.select());
+            doIteration(selector.select());
 
             increaseIteration();
         }
         operationCount.addAndGet(iteration % performanceUpdateFrequency);
+
+        afterRun();
     }
 
     @Performance
@@ -63,9 +67,45 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
         this.performanceUpdateFrequency = performanceUpdateFrequency;
     }
 
-    protected abstract void doRun(O operation);
+    /**
+     * Override this method if you need to execute code before {@link #run()} is called.
+     */
+    protected void beforeRun() {
+    }
 
-    protected int nextInt(int upperBond) {
+    /**
+     * This method is called for each iteration of {@link #run()}.
+     * <p/>
+     * Won't be called if an error occurs in {@link #beforeRun()}.
+     *
+     * @param operation The selected operation for this iteration
+     */
+    protected abstract void doIteration(O operation);
+
+    /**
+     * Override this method if you need to execute code after {@link #run()} is called.
+     * <p/>
+     * Won't be called if an error occurs in {@link #beforeRun()} or {@link #doIteration(Enum)}.
+     */
+    protected void afterRun() {
+    }
+
+    /**
+     * Calls {@link Random#nextInt()} on an internal Random instance.
+     *
+     * @return the next pseudo random, uniformly distributed {@code int} value from this random number generator's sequence
+     */
+    protected int randomInt() {
+        return random.nextInt();
+    }
+
+    /**
+     * Calls {@link Random#nextInt(int)} on an internal Random instance.
+     *
+     * @return the next pseudo random, uniformly distributed {@code int} value between {@code 0} (inclusive) and {@code n}
+     * (exclusive) from this random number generator's sequence
+     */
+    protected int randomInt(int upperBond) {
         return random.nextInt(upperBond);
     }
 

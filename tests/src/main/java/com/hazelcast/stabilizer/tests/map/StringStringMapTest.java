@@ -99,7 +99,7 @@ public class StringStringMapTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask<Operation> createBaseWorker() {
+    public AbstractWorkerTask<Operation> createWorker() {
         return new WorkerTask();
     }
 
@@ -110,7 +110,7 @@ public class StringStringMapTest {
         }
 
         @Override
-        protected void doRun(Operation operation) {
+        protected void doIteration(Operation operation) {
             String key = randomKey();
 
             switch (operation) {
@@ -137,11 +137,11 @@ public class StringStringMapTest {
         }
 
         private String randomKey() {
-            return keys[nextInt(keys.length)];
+            return keys[randomInt(keys.length)];
         }
 
         private String randomValue() {
-            return values[nextInt(values.length)];
+            return values[randomInt(values.length)];
         }
     }
 
