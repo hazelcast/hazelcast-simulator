@@ -363,6 +363,9 @@ public class TestContainer<T extends TestContext> {
             spawner.spawn(abstractWorkerTask);
         }
         spawner.awaitCompletion();
+
+        // call the afterCompletion method on a single instance of the worker
+        operationCountWorkerTaskInstance.afterCompletion();
     }
 
     private Field getFieldFromBaseWorkerTask(String fieldName, Class fieldType) {

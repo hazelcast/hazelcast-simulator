@@ -4,6 +4,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.annotations.Performance;
+import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.worker.selector.OperationSelector;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
@@ -75,7 +76,7 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
     }
 
     /**
-     * Override this method if you need to execute code before {@link #run()} is called.
+     * Override this method if you need to execute code on each worker before {@link #run()} is called.
      */
     protected void beforeRun() {
     }
@@ -90,11 +91,19 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
     protected abstract void timeStep(O operation);
 
     /**
-     * Override this method if you need to execute code after {@link #run()} is called.
+     * Override this method if you need to execute code on each worker after {@link #run()} is called.
      * <p/>
      * Won't be called if an error occurs in {@link #beforeRun()} or {@link #timeStep(Enum)}.
      */
     protected void afterRun() {
+    }
+
+    /**
+     * Override this method if you need to execute code once after all workers have finished their run phase.
+     * <p/>
+     * Will be executed after {@link ThreadSpawner#awaitCompletion()} on a single worker instance.
+     */
+    public void afterCompletion() {
     }
 
     /**
