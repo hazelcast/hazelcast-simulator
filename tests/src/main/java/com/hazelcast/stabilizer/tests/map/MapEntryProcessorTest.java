@@ -7,52 +7,49 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
-import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
-import com.hazelcast.stabilizer.test.annotations.Run;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
+import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.tasks.AbstractMonotonicWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 
 public class MapEntryProcessorTest {
 
-    private final static ILogger log = Logger.getLogger(MapEntryProcessorTest.class);
+    private static final ILogger log = Logger.getLogger(MapEntryProcessorTest.class);
 
-    //props
+    // properties
     public String basename = this.getClass().getName();
     public int threadCount = 10;
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
     public int maxProcessorDelayMs = 0;
     public KeyLocality keyLocality = KeyLocality.Random;
+    public IntervalProbe latency;
 
+    private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;
     private IList<Map<Integer, Long>> resultsPerWorker;
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
-
-    private IntervalProbe latency;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         if (minProcessorDelayMs > maxProcessorDelayMs) {
             throw new IllegalArgumentException("minProcessorDelayMs has to be >= maxProcessorDelayMs. " +
-                    "Current settings: minProcessorDelayMs = "+minProcessorDelayMs +
-                    " maxProcessorDelayMs = "+maxProcessorDelayMs);
+                    "Current settings: minProcessorDelayMs = " + minProcessorDelayMs +
+                    " maxProcessorDelayMs = " + maxProcessorDelayMs);
         }
 
-        this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
         resultsPerWorker = targetInstance.getList(basename + "ResultMap" + testContext.getTestId());
@@ -66,19 +63,10 @@ public class MapEntryProcessorTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0l);
+        for (int i = 0; i < keyCount; i++) {
+            map.put(i, 0l);
         }
         log.info(basename + " map size ==>" + map.size());
-    }
-
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
     }
 
     @Verify
@@ -103,29 +91,35 @@ public class MapEntryProcessorTest {
         assertEquals(0, failures);
     }
 
-    private class Worker implements Runnable {
-        private final Random random = new Random();
+    @RunWithWorker
+    public AbstractWorkerTask createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractMonotonicWorkerTask {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
-        public Worker() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
+        @Override
+        protected void beforeRun() {
+            for (int i = 0; i < keyCount; i++) {
+                result.put(i, 0L);
             }
         }
 
         @Override
-        public void run() {
-            while (!testContext.isStopped()) {
-                long increment = calculateIncrement();
-                int delayMs = calculateDelay();
-                int key = calculateKey();
-                latency.started();
-                map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
-                latency.done();
-                incrementLocalStats(key, increment);
-            }
+        public void timeStep() {
+            int key = calculateKey();
+            long increment = calculateIncrement();
+            int delayMs = calculateDelay();
+            latency.started();
+            map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
+            latency.done();
+            incrementLocalStats(key, increment);
+        }
 
-            // sleep to give time for the last EntryProcessor tasks to complete.
+        @Override
+        public void afterCompletion() {
+            // sleep to give time for the last EntryProcessor tasks to complete
             sleepMillis(maxProcessorDelayMs * 2);
             resultsPerWorker.add(result);
         }
@@ -135,13 +129,13 @@ public class MapEntryProcessorTest {
         }
 
         private int calculateIncrement() {
-            return random.nextInt(100);
+            return randomInt(100);
         }
 
         private int calculateDelay() {
             int delayMs = 0;
-            if (maxProcessorDelayMs != 0) {
-                delayMs = minProcessorDelayMs + random.nextInt(maxProcessorDelayMs - minProcessorDelayMs + 1);
+            if (minProcessorDelayMs >= 0 && maxProcessorDelayMs > 0) {
+                delayMs = minProcessorDelayMs + randomInt(1 + maxProcessorDelayMs - minProcessorDelayMs);
             }
             return delayMs;
         }
