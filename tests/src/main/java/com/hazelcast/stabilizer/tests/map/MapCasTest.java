@@ -100,8 +100,8 @@ public class MapCasTest {
 
         @Override
         protected void timeStep() {
-            Integer key = nextInt(keyCount);
-            long incrementValue = nextInt(100);
+            Integer key = randomInt(keyCount);
+            long incrementValue = randomInt(100);
 
             for (;;) {
                 Long current = map.get(key);
