@@ -8,6 +8,7 @@ import com.hazelcast.stabilizer.common.messaging.MessageAddress;
 import com.hazelcast.stabilizer.test.TestContext;
 import org.apache.log4j.Logger;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -18,32 +19,35 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class WorkerMessageProcessor {
-    private static final Logger log = Logger.getLogger(WorkerMessageProcessor.class);
+import static java.lang.String.format;
+
+/**
+ * Processes {@link Message} instances on {@link MemberWorker} and {@link ClientWorker} instances.
+ */
+class WorkerMessageProcessor {
     private static final int TIMEOUT = 60;
+    private static final Logger log = Logger.getLogger(WorkerMessageProcessor.class);
 
     private final ConcurrentMap<String, TestContainer<TestContext>> tests;
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
-
-    private Random random = new Random();
+    private final Random random = new Random();
 
     private HazelcastInstance hazelcastServerInstance;
     private HazelcastInstance hazelcastClientInstance;
 
-
-    public WorkerMessageProcessor(ConcurrentMap<String, TestContainer<TestContext>> tests) {
+    WorkerMessageProcessor(ConcurrentMap<String, TestContainer<TestContext>> tests) {
         this.tests = tests;
     }
 
-    public void setHazelcastServerInstance(HazelcastInstance hazelcastServerInstance) {
+    void setHazelcastServerInstance(HazelcastInstance hazelcastServerInstance) {
         this.hazelcastServerInstance = hazelcastServerInstance;
     }
 
-    public void setHazelcastClientInstance(HazelcastInstance hazelcastClientInstance) {
+    void setHazelcastClientInstance(HazelcastInstance hazelcastClientInstance) {
         this.hazelcastClientInstance = hazelcastClientInstance;
     }
 
-    public void submit(final Message message) {
+    void submit(final Message message) {
         executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -55,7 +59,7 @@ public class WorkerMessageProcessor {
     }
 
     private void process(Message message) {
-        injectHazecastInstance(message);
+        injectHazelcastInstance(message);
         if (message.getMessageAddress().getTestAddress() == null) {
             processLocalMessage(message);
         } else {
@@ -76,7 +80,8 @@ public class WorkerMessageProcessor {
         }
     }
 
-    private boolean isMaster() { //TODO: This should be really factored out
+    // TODO: This should be really factored out
+    private boolean isMaster() {
         if (hazelcastServerInstance == null || !isOldestMember()) {
             return false;
         }
@@ -98,19 +103,18 @@ public class WorkerMessageProcessor {
 
     private boolean isOldestMember() {
         Iterator<Member> memberIterator = hazelcastServerInstance.getCluster().getMembers().iterator();
-        boolean master = memberIterator.hasNext() && memberIterator.next().equals(hazelcastServerInstance.getLocalEndpoint());
-        return master;
+        return memberIterator.hasNext() && memberIterator.next().equals(hazelcastServerInstance.getLocalEndpoint());
     }
 
-    private void injectHazecastInstance(Message message) {
+    private void injectHazelcastInstance(Message message) {
         if (message instanceof HazelcastInstanceAware) {
             if (hazelcastServerInstance != null) {
                 ((HazelcastInstanceAware) message).setHazelcastInstance(hazelcastServerInstance);
             } else if (hazelcastClientInstance != null) {
                 ((HazelcastInstanceAware) message).setHazelcastInstance(hazelcastClientInstance);
             } else {
-                log.warn("Message " + message.getClass().getName() + " implements " + HazelcastInstanceAware.class
-                        + " interface, but no instance is currently running in this worker.");
+                log.warn(format("Message %s implements %s interface, but no instance is currently running in this worker.",
+                        message.getClass().getName(), HazelcastInstanceAware.class));
             }
         }
     }
@@ -140,17 +144,18 @@ public class WorkerMessageProcessor {
     }
 
     private void processLocalRunnableMessage(Runnable message) {
-        log.info("Processing local runnable message: "+message.getClass().getName());
-        Runnable executable = message;
-        executable.run();
+        log.info("Processing local runnable message: " + message.getClass().getName());
+        message.run();
     }
 
-    public TestContainer<?> getRandomTestContainerOrNull() {
-        TestContainer<?>[] testContainers = tests.values().toArray(new TestContainer<?>[]{});
-        if (testContainers.length == 0) {
+    private TestContainer<?> getRandomTestContainerOrNull() {
+        Collection<TestContainer<TestContext>> testContainers = tests.values();
+        int size = testContainers.size();
+        if (size == 0) {
             return null;
         }
-        TestContainer<?> randomTestContainer = testContainers[random.nextInt(testContainers.length)];
-        return randomTestContainer;
+
+        TestContainer<?>[] testContainerArray = testContainers.toArray(new TestContainer<?>[size]);
+        return testContainerArray[random.nextInt(size)];
     }
 }
