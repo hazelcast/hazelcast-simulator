@@ -13,9 +13,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 
-public class EntryListenerImpl implements DataSerializable, EntryListener<Object, Object> {
+public class EntryListenerImpl<K, V> implements EntryListener<K, V>, DataSerializable {
 
-    private Random random = new Random();
+    private final Random random = new Random();
 
     public AtomicLong addCount = new AtomicLong();
     public AtomicLong removeCount = new AtomicLong();
@@ -30,30 +30,34 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
     }
 
     public EntryListenerImpl(int minDelayMs, int maxDelayMs) {
+        if (minDelayMs < 0 || maxDelayMs < 0) {
+            throw new IllegalArgumentException("minDelayMS and maxDelayMS must be greater or equal 0!");
+        }
+
         this.minDelayMs = minDelayMs;
         this.maxDelayMs = maxDelayMs;
     }
 
     @Override
-    public void entryAdded(EntryEvent<Object, Object> objectObjectEntryEvent) {
+    public void entryAdded(EntryEvent<K, V> objectObjectEntryEvent) {
         delay();
         addCount.incrementAndGet();
     }
 
     @Override
-    public void entryRemoved(EntryEvent<Object, Object> objectObjectEntryEvent) {
+    public void entryRemoved(EntryEvent<K, V> objectObjectEntryEvent) {
         delay();
         removeCount.incrementAndGet();
     }
 
     @Override
-    public void entryUpdated(EntryEvent<Object, Object> objectObjectEntryEvent) {
+    public void entryUpdated(EntryEvent<K, V> objectObjectEntryEvent) {
         delay();
         updateCount.incrementAndGet();
     }
 
     @Override
-    public void entryEvicted(EntryEvent<Object, Object> objectObjectEntryEvent) {
+    public void entryEvicted(EntryEvent<K, V> objectObjectEntryEvent) {
         delay();
         evictCount.incrementAndGet();
     }
@@ -67,29 +71,9 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
     }
 
     private void delay() {
-        if (maxDelayMs != 0) {
+        if (maxDelayMs > 0) {
             sleepMillis(minDelayMs + random.nextInt(maxDelayMs));
         }
-    }
-
-    public void writeData(ObjectDataOutput out) throws IOException {
-        out.writeObject(addCount);
-        out.writeObject(removeCount);
-        out.writeObject(updateCount);
-        out.writeObject(evictCount);
-
-        out.writeInt(minDelayMs);
-        out.writeInt(maxDelayMs);
-    }
-
-    public void readData(ObjectDataInput in) throws IOException {
-        addCount = in.readObject();
-        removeCount = in.readObject();
-        updateCount = in.readObject();
-        evictCount = in.readObject();
-
-        minDelayMs = in.readInt();
-        maxDelayMs = in.readInt();
     }
 
     @Override
@@ -125,5 +109,27 @@ public class EntryListenerImpl implements DataSerializable, EntryListener<Object
         result = 31 * result + (updateCount != null ? updateCount.hashCode() : 0);
         result = 31 * result + (evictCount != null ? evictCount.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeData(ObjectDataOutput out) throws IOException {
+        out.writeObject(addCount);
+        out.writeObject(removeCount);
+        out.writeObject(updateCount);
+        out.writeObject(evictCount);
+
+        out.writeInt(minDelayMs);
+        out.writeInt(maxDelayMs);
+    }
+
+    @Override
+    public void readData(ObjectDataInput in) throws IOException {
+        addCount = in.readObject();
+        removeCount = in.readObject();
+        updateCount = in.readObject();
+        evictCount = in.readObject();
+
+        minDelayMs = in.readInt();
+        maxDelayMs = in.readInt();
     }
 }
