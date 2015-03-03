@@ -16,230 +16,244 @@ import com.hazelcast.mapreduce.KeyValueSource;
 import com.hazelcast.mapreduce.Mapper;
 import com.hazelcast.mapreduce.Reducer;
 import com.hazelcast.mapreduce.ReducerFactory;
-import com.hazelcast.stabilizer.tests.map.helpers.Employee;
 import com.hazelcast.stabilizer.test.TestContext;
-import com.hazelcast.stabilizer.test.annotations.Run;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.tests.map.helpers.Employee;
+import com.hazelcast.stabilizer.tests.map.helpers.MapReduceOperationCounter;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import static org.junit.Assert.assertTrue;
 
 public class MapReduceTest {
 
-    private final static ILogger log = Logger.getLogger(MapReduceTest.class);
+    private enum Operation {
+        MAP_REDUCE,
+        GET_MAP_ENTRY,
+        MODIFY_MAP_ENTRY
+    }
 
-    public int threadCount = 1;
+    private static final ILogger log = Logger.getLogger(MapReduceTest.class);
+
+    // properties
+    public String baseName = MapReduceTest.class.getSimpleName();
     public int keyCount = 1000;
 
-    public double mapReduceProb=0.5;
-    public double getMapEntryProb=0;
-    public double modifyEntryProb=0;
+    public double mapReduceProb = 0.5;
+    public double getMapEntryProb = 0.25;
+    public double modifyEntryProb = 0.25;
 
-    private TestContext testContext;
+    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
+
     private HazelcastInstance targetInstance;
-    private String baseName = null;
+    private IMap<Integer, Employee> map;
+    private IList<MapReduceOperationCounter> operationCounterList;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-        baseName = testContext.getTestId();
+
+        map = targetInstance.getMap(baseName);
+        operationCounterList = targetInstance.getList(baseName + "OperationCounter");
+
+        operationSelectorBuilder.addOperation(Operation.MAP_REDUCE, mapReduceProb)
+                                .addOperation(Operation.GET_MAP_ENTRY, getMapEntryProb)
+                                .addOperation(Operation.MODIFY_MAP_ENTRY, modifyEntryProb);
     }
 
     @Warmup(global = true)
     public void warmup() throws InterruptedException {
-        Map map = targetInstance.getMap(baseName);
         for (int id = 0; id < keyCount; id++) {
             map.put(id, new Employee(id));
         }
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int i = 0; i < threadCount; i++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
-    private class Worker implements Runnable {
-        private Random random = new Random();
-        private Counter counter = new Counter();
-
-        public void run() {
-            while (!testContext.isStopped()) {
-
-                double chance = random.nextDouble();
-                if ((chance -= mapReduceProb) < 0) {
-
-                    IMap<Integer, Employee> map = targetInstance.getMap(baseName);
-                    JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + baseName);
-                    Job<Integer, Employee> job = tracker.newJob(KeyValueSource.fromMap(map));
-
-                    ICompletableFuture< Map< Integer, Set<Employee>> > future = job
-                            .mapper( new ModIdMapper(2) )
-                            .combiner(new RangeIdCombinerFactory(10, 30))
-                            .reducer(new IdReducerFactory(10,20,30))
-                            .submit();
-
-                    try {
-                        Map<Integer, Set<Employee>> result = future.get();
-
-                        for(Set<Employee> s : result.values() ){
-                            for(Employee e : s ){
-
-                                assertTrue(e.getId() % 2 == 0);
-                                assertTrue(e.getId() >= 10 && e.getId() <= 30);
-                                assertTrue(e.getId() != 10);
-                                assertTrue(e.getId() != 20);
-                                assertTrue(e.getId() != 30);
-                            }
-                        }
-                    } catch (Exception e) { throw new RuntimeException(e);}
-
-                    counter.mapReduce++;
-                }
-                else if ((chance -= getMapEntryProb) < 0) {
-                    IMap<Integer, Employee> map = targetInstance.getMap(baseName);
-                    map.get(random.nextInt(keyCount));
-
-                    counter.getMapEntry++;
-                }
-                else if ((chance -= modifyEntryProb) < 0) {
-                    IMap<Integer, Employee> map = targetInstance.getMap(baseName);
-
-                    Employee e = map.get(random.nextInt(keyCount));
-                    e.randomizeProperties();
-                    map.put(e.getId(), e);
-                    counter.modifyMapEntry++;
-                }
-            }
-            targetInstance.getList(baseName).add(counter);
-        }
-    }
-
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        IList<Counter> results = targetInstance.getList(baseName);
-        Counter total = new Counter();
-        for (Counter i : results) {
-            total.add(i);
+        MapReduceOperationCounter total = new MapReduceOperationCounter();
+        for (MapReduceOperationCounter operationCounter : operationCounterList) {
+            total.add(operationCounter);
         }
-        log.info(baseName + ": " + total + " from " + results.size() + " worker Threads");
+        log.info(baseName + ": " + total + " from " + operationCounterList.size() + " worker threads");
     }
 
-    public static class Counter implements Serializable {
-        public long mapReduce = 0;
-        public long getMapEntry=0;
-        public long modifyMapEntry = 0;
+    @RunWithWorker
+    public AbstractWorkerTask<Operation> createWorker() {
+        return new Worker();
+    }
 
-        public void add(Counter o) {
-            mapReduce += o.mapReduce;
-            getMapEntry += o.getMapEntry;
-            modifyMapEntry += o.modifyMapEntry;
+    private class Worker extends AbstractWorkerTask<Operation> {
+        private final MapReduceOperationCounter operationCounter = new MapReduceOperationCounter();
+
+        public Worker() {
+            super(operationSelectorBuilder);
         }
 
         @Override
-        public String toString() {
-            return "Counter{" +
-                    "mapReduce=" + mapReduce +
-                    ", getMapEntry=" + getMapEntry +
-                    ", modifyMapEntry=" + modifyMapEntry +
-                    '}';
+        protected void timeStep(Operation operation) {
+            switch (operation) {
+                case MAP_REDUCE:
+                    mapReduce();
+                    break;
+                case GET_MAP_ENTRY:
+                    getMapEntry();
+                    break;
+                case MODIFY_MAP_ENTRY:
+                    modifyMapEntry();
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
+
+        private void mapReduce() {
+            JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + baseName);
+            Job<Integer, Employee> job = tracker.newJob(KeyValueSource.fromMap(map));
+
+            ICompletableFuture<Map<Integer, Set<Employee>>> future = job
+                    .mapper(new ModIdMapper(2))
+                    .combiner(new RangeIdCombinerFactory(10, 30))
+                    .reducer(new IdReducerFactory(10, 20, 30))
+                    .submit();
+
+            try {
+                Map<Integer, Set<Employee>> result = future.get();
+
+                for (Set<Employee> set : result.values()) {
+                    for (Employee employee : set) {
+
+                        assertTrue(employee.getId() % 2 == 0);
+                        assertTrue(employee.getId() >= 10 && employee.getId() <= 30);
+                        assertTrue(employee.getId() != 10);
+                        assertTrue(employee.getId() != 20);
+                        assertTrue(employee.getId() != 30);
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            operationCounter.mapReduce++;
+        }
+
+        private void getMapEntry() {
+            map.get(randomInt(keyCount));
+
+            operationCounter.getMapEntry++;
+        }
+
+        private void modifyMapEntry() {
+            Employee employee = map.get(randomInt(keyCount));
+            employee.randomizeProperties();
+            map.put(employee.getId(), employee);
+
+            operationCounter.modifyMapEntry++;
+        }
+
+        @Override
+        protected void afterRun() {
+            operationCounterList.add(operationCounter);
         }
     }
 
-    public static class ModIdMapper implements Mapper<Integer, Employee, Integer, Employee> {
-        private int mod=0;
+    private static class ModIdMapper implements Mapper<Integer, Employee, Integer, Employee> {
+        private int mod = 0;
 
-        public ModIdMapper(int mod){
-            this.mod=mod;
+        private ModIdMapper(int mod) {
+            this.mod = mod;
         }
 
-        public void map(Integer key, Employee e, Context<Integer, Employee> context) {
-            if(e.getId()%mod==0){
-                context.emit(key, e);
+        @Override
+        public void map(Integer key, Employee employee, Context<Integer, Employee> context) {
+            if (employee.getId() % mod == 0) {
+                context.emit(key, employee);
             }
         }
     }
 
-    public static class RangeIdCombinerFactory implements CombinerFactory<Integer, Employee, Set<Employee>> {
-        private int min=0, max=0;
+    private static class RangeIdCombinerFactory implements CombinerFactory<Integer, Employee, Set<Employee>> {
+        private final int min;
+        private final int max;
 
-        public RangeIdCombinerFactory(int min, int max){
-            this.min=min;
-            this.max=max;
+        private RangeIdCombinerFactory(int min, int max) {
+            this.min = min;
+            this.max = max;
         }
 
+        @Override
         public Combiner<Employee, Set<Employee>> newCombiner(Integer key) {
-            return new  EmployeeCombiner();
+            return new EmployeeCombiner();
         }
 
-        private class  EmployeeCombiner extends Combiner<Employee, Set<Employee> >{
+        private class EmployeeCombiner extends Combiner<Employee, Set<Employee>> {
             private Set<Employee> passed = new HashSet<Employee>();
 
-            public void combine(Employee e) {
-                if(e.getId() >= min && e.getId() <= max){
-                    passed.add(e);
+            @Override
+            public void combine(Employee employee) {
+                if (employee.getId() >= min && employee.getId() <= max) {
+                    passed.add(employee);
                 }
             }
 
+            @Override
             public Set<Employee> finalizeChunk() {
-                if(passed.isEmpty()){
+                if (passed.isEmpty()) {
                     return null;
                 }
                 return passed;
             }
 
+            @Override
             public void reset() {
                 passed = new HashSet<Employee>();
             }
         }
     }
 
-    public static class IdReducerFactory implements ReducerFactory<Integer, Set<Employee>, Set<Employee>> {
+    private static class IdReducerFactory implements ReducerFactory<Integer, Set<Employee>, Set<Employee>> {
 
-        private int[] removeIds=null;
+        private int[] removeIds = null;
 
-        public IdReducerFactory(int... removeIds){
-            this.removeIds=removeIds;
+        public IdReducerFactory(int... removeIds) {
+            this.removeIds = removeIds;
         }
 
+        @Override
         public Reducer<Set<Employee>, Set<Employee>> newReducer(Integer key) {
             return new EmployeeReducer();
         }
 
-        private class EmployeeReducer extends Reducer<Set<Employee>, Set<Employee> >{
+        private class EmployeeReducer extends Reducer<Set<Employee>, Set<Employee>> {
 
             private volatile Set<Employee> passed = new HashSet<Employee>();
 
+            @Override
             public void reduce(Set<Employee> set) {
-                for(Employee e : set){
-                    boolean add=true;
-                    for(int id : removeIds){
-                        if(e.getId()==id){
-                            add=false;
+                for (Employee employee : set) {
+                    boolean add = true;
+                    for (int id : removeIds) {
+                        if (employee.getId() == id) {
+                            add = false;
                             break;
                         }
                     }
-                    if(add){
-                        passed.add(e);
+                    if (add) {
+                        passed.add(employee);
                     }
                 }
             }
 
+            @Override
             public Set<Employee> finalizeReduce() {
-                if(passed.isEmpty()){
+                if (passed.isEmpty()) {
                     return null;
                 }
                 return passed;
@@ -247,13 +261,13 @@ public class MapReduceTest {
         }
     }
 
-    public static class EmployeeCollator implements Collator<Map.Entry<Integer, Set<Employee>>, Map<Integer, Set<Employee>> > {
-
-        public Map<Integer, Set<Employee>> collate( Iterable< Map.Entry<Integer, Set<Employee>> > values) {
-            Map<Integer, Set<Employee>> result = new HashMap();
+    public static class EmployeeCollator implements Collator<Map.Entry<Integer, Set<Employee>>, Map<Integer, Set<Employee>>> {
+        @Override
+        public Map<Integer, Set<Employee>> collate(Iterable<Map.Entry<Integer, Set<Employee>>> values) {
+            Map<Integer, Set<Employee>> result = new HashMap<Integer, Set<Employee>>();
             for (Map.Entry<Integer, Set<Employee>> entry : values) {
-                for (Employee e : entry.getValue()) {
-                    result.put(e.getId(), entry.getValue());
+                for (Employee employee : entry.getValue()) {
+                    result.put(employee.getId(), entry.getValue());
                 }
             }
             return result;
