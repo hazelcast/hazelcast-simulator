@@ -47,14 +47,14 @@ import static org.junit.Assert.assertEquals;
  */
 public class MapEntryListenerTest {
 
-    private enum Operation {
+    private enum MapOperation {
         PUT,
         EVICT,
         REMOVE,
         DELETE
     }
 
-    private enum PutOperation {
+    private enum MapPutOperation {
         PUT,
         PUT_IF_ABSENT,
         REPLACE
@@ -82,9 +82,9 @@ public class MapEntryListenerTest {
     public double putUsingReplaceProb = 0.25;
 
     private final ScrambledZipfianGenerator keysZipfian = new ScrambledZipfianGenerator(keyCount);
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
-    private final OperationSelectorBuilder<PutOperation> putOperationSelectorBuilder
-            = new OperationSelectorBuilder<PutOperation>();
+    private final OperationSelectorBuilder<MapOperation> mapOperationSelectorBuilder = new OperationSelectorBuilder<MapOperation>();
+    private final OperationSelectorBuilder<MapPutOperation> mapPutOperationSelectorBuilder
+            = new OperationSelectorBuilder<MapPutOperation>();
 
     private String[] values;
     private EntryListenerImpl<Integer, String> listener;
@@ -105,16 +105,16 @@ public class MapEntryListenerTest {
         map = targetInstance.getMap(basename);
         map.addEntryListener(listener, true);
 
-        operationSelectorBuilder
-                .addOperation(Operation.PUT, putProb)
-                .addOperation(Operation.EVICT, evictProb)
-                .addOperation(Operation.REMOVE, removeProb)
-                .addOperation(Operation.DELETE, deleteProb);
+        mapOperationSelectorBuilder
+                .addOperation(MapOperation.PUT, putProb)
+                .addOperation(MapOperation.EVICT, evictProb)
+                .addOperation(MapOperation.REMOVE, removeProb)
+                .addOperation(MapOperation.DELETE, deleteProb);
 
-        putOperationSelectorBuilder
-                .addOperation(PutOperation.PUT_IF_ABSENT, putUsingPutIfAbsentProb)
-                .addOperation(PutOperation.REPLACE, putUsingReplaceProb)
-                .addDefaultOperation(PutOperation.PUT);
+        mapPutOperationSelectorBuilder
+                .addOperation(MapPutOperation.PUT_IF_ABSENT, putUsingPutIfAbsentProb)
+                .addOperation(MapPutOperation.REPLACE, putUsingReplaceProb)
+                .addDefaultOperation(MapPutOperation.PUT);
     }
 
     @Warmup(global = true)
@@ -162,21 +162,21 @@ public class MapEntryListenerTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask<Operation> createWorker() {
+    public AbstractWorkerTask<MapOperation> createWorker() {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorkerTask<Operation> {
+    private class Worker extends AbstractWorkerTask<MapOperation> {
 
         private final EventCount eventCount = new EventCount();
-        private final OperationSelector<PutOperation> putSelector = putOperationSelectorBuilder.build();
+        private final OperationSelector<MapPutOperation> mapPutSelector = mapPutOperationSelectorBuilder.build();
 
         public Worker() {
-            super(operationSelectorBuilder);
+            super(mapOperationSelectorBuilder);
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(MapOperation mapOperation) {
             int key;
 
             if (randomDistributionUniform) {
@@ -185,11 +185,11 @@ public class MapEntryListenerTest {
                 key = keysZipfian.nextInt();
             }
 
-            switch (operation) {
+            switch (mapOperation) {
                 case PUT:
                     String value = values[randomInt(values.length)];
 
-                    switch (putSelector.select()) {
+                    switch (mapPutSelector.select()) {
                         case PUT:
                             map.lock(key);
                             try {

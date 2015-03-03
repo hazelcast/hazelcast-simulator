@@ -101,6 +101,7 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
     /**
      * Override this method if you need to execute code once after all workers have finished their run phase.
      * <p/>
+     * Will always be called by the {@link com.hazelcast.stabilizer.worker.TestContainer}, regardless of errors in the run phase.
      * Will be executed after {@link ThreadSpawner#awaitCompletion()} on a single worker instance.
      */
     public void afterCompletion() {
