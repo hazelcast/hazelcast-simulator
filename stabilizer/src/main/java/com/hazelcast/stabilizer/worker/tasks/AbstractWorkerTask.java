@@ -126,6 +126,15 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
         return random.nextInt(upperBond);
     }
 
+    /**
+     * Returns the inner {@link Random} instance to call methods which are not implemented.
+     *
+     * @return the {@link Random} instance of the worker
+     */
+    protected Random getRandom() {
+        return random;
+    }
+
     void increaseIteration() {
         iteration++;
         if (iteration % logFrequency == 0) {
