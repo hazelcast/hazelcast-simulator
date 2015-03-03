@@ -1,68 +1,54 @@
 package com.hazelcast.stabilizer.tests.map;
 
-
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.probes.probes.SimpleProbe;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
 import com.hazelcast.stabilizer.test.annotations.Name;
-import com.hazelcast.stabilizer.test.annotations.Performance;
-import com.hazelcast.stabilizer.test.annotations.Run;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 
 public class MapLongPerformanceTest {
 
-    private final static ILogger log = Logger.getLogger(MapLongPerformanceTest.class);
+    private enum Operation {
+        PUT,
+        GET
+    }
 
-    //props
+    // properties
+    public String basename = MapLongPerformanceTest.class.getSimpleName();
     public int threadCount = 10;
     public int keyCount = 1000000;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 10000;
-    public String basename = "maplong";
-    public int writePercentage = 10;
+    public double writeProb = 0.1;
+
+    // probes
+    private SimpleProbe setProbe;
+    private IntervalProbe intervalProbe;
+    private SimpleProbe getProbe;
+
+    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private IMap<Integer, Long> map;
-    private final AtomicLong operations = new AtomicLong();
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
-
-    private SimpleProbe setProbe;
-    private SimpleProbe getProbe;
-    private IntervalProbe intervalProbe;
 
     @Setup
-    public void setup(TestContext testContext,
-                      @Name("set") SimpleProbe setProbe,
-                      @Name("get") SimpleProbe getProbe,
-                      @Name("latencyProbe")IntervalProbe intervalProbe) throws Exception {
+    public void setup(TestContext testContext, @Name("latencyProbe")IntervalProbe intervalProbe,
+                      @Name("set") SimpleProbe setProbe, @Name("get") SimpleProbe getProbe) {
+        this.intervalProbe = intervalProbe;
         this.setProbe = setProbe;
         this.getProbe = getProbe;
-        this.intervalProbe = intervalProbe;
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
 
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        map = hazelcastInstance.getMap(basename + "-" + testContext.getTestId());
 
-        this.testContext = testContext;
-
-        targetInstance = testContext.getTargetInstance();
-        map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+        operationSelectorBuilder
+                .addOperation(Operation.PUT, writeProb)
+                .addDefaultOperation(Operation.GET);
     }
 
     @Teardown
@@ -72,39 +58,28 @@ public class MapLongPerformanceTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0l);
+        for (int i = 0; i < keyCount; i++) {
+            map.put(i, 0l);
         }
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
+    @RunWithWorker
+    public AbstractWorkerTask<Operation> createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractWorkerTask<Operation> {
+
+        public Worker() {
+            super(operationSelectorBuilder);
         }
-        spawner.awaitCompletion();
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
-    }
-
-    private class Worker implements Runnable {
-        private final Random random = new Random();
-        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         @Override
-        public void run() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
-            }
+        public void timeStep(Operation operation) {
+            Integer key = randomInt(keyCount);
 
-            long iteration = 0;
-            while (!testContext.isStopped()) {
-                Integer key = random.nextInt(keyCount);
-                if (shouldWrite(iteration)) {
+            switch (operation) {
+                case PUT:
                     intervalProbe.started();
                     try {
                         map.set(key, System.currentTimeMillis());
@@ -112,7 +87,8 @@ public class MapLongPerformanceTest {
                         intervalProbe.done();
                     }
                     setProbe.done();
-                } else {
+                    break;
+                case GET:
                     intervalProbe.started();
                     try {
                         map.get(key);
@@ -120,26 +96,9 @@ public class MapLongPerformanceTest {
                         intervalProbe.done();
                     }
                     getProbe.done();
-                }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
-            }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
-        }
-
-        private boolean shouldWrite(long iteration) {
-            if (writePercentage == 0) {
-                return false;
-            } else if (writePercentage == 100) {
-                return true;
-            } else {
-                return (iteration % 100) < writePercentage;
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
             }
         }
     }
