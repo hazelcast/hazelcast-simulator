@@ -2,91 +2,71 @@ package com.hazelcast.stabilizer.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
-import com.hazelcast.stabilizer.test.annotations.Performance;
-import com.hazelcast.stabilizer.test.annotations.Run;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.tasks.AbstractMonotonicWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * This test verifies that there are race problems if the IMap is not used correctly.
+ * This test verifies that there are race problems if the {@link IMap} is not used correctly.
+ * <p/>
+ * This test is expected to fail.
  */
 public class MapRaceTest {
 
-    private final static ILogger log = Logger.getLogger(MapRaceTest.class);
-
-    //props
+    // properties
     public int threadCount = 10;
+    public String basename = MapRaceTest.class.getSimpleName();
     public int keyCount = 1000;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 10000;
-    public String basename = "maprace";
 
     private IMap<Integer, Long> map;
-    private final AtomicLong operations = new AtomicLong();
-    private IMap<String, Map<Integer, Long>> resultsPerWorker;
-    private TestContext testContext;
+    private IMap<String, Map<Integer, Long>> resultMap;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
-        resultsPerWorker = targetInstance.getMap(basename + "ResultMap" + testContext.getTestId());
+        resultMap = targetInstance.getMap(basename + "ResultMap" + testContext.getTestId());
     }
 
     @Teardown
     public void teardown() throws Exception {
         map.destroy();
-        resultsPerWorker.destroy();
+        resultMap.destroy();
     }
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0l);
+        for (int i = 0; i < keyCount; i++) {
+            map.put(i, 0l);
         }
-    }
-
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
     }
 
     @Verify
     public void verify() throws Exception {
-        long[] amount = new long[keyCount];
-
-        for (Map<Integer, Long> map : resultsPerWorker.values()) {
-            for (Map.Entry<Integer, Long> entry : map.entrySet()) {
-                amount[entry.getKey()] += entry.getValue();
+        long[] expected = new long[keyCount];
+        for (Map<Integer, Long> result : resultMap.values()) {
+            for (Map.Entry<Integer, Long> increments : result.entrySet()) {
+                expected[increments.getKey()] += increments.getValue();
             }
         }
 
         int failures = 0;
-        for (int k = 0; k < keyCount; k++) {
-            long expected = amount[k];
-            long found = map.get(k);
-            if (expected != found) {
+        for (int i = 0; i < keyCount; i++) {
+            long actual = map.get(i);
+            if (expected[i] != actual) {
                 failures++;
             }
         }
@@ -94,47 +74,37 @@ public class MapRaceTest {
         assertEquals("There should not be any data races", 0, failures);
     }
 
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
+    @RunWithWorker
+    public AbstractWorkerTask createWorker() {
+        return new Worker();
     }
 
-    private class Worker implements Runnable {
-        private final Random random = new Random();
+    private class Worker extends AbstractMonotonicWorkerTask {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         @Override
-        public void run() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
+        protected void beforeRun() {
+            for (int i = 0; i < keyCount; i++) {
+                result.put(i, 0L);
             }
-
-            long iteration = 0;
-
-            while (!testContext.isStopped()) {
-                Integer key = random.nextInt(keyCount);
-                long increment = random.nextInt(100);
-
-                Long current = map.get(key);
-                Long update = current + increment;
-                map.put(key, update);
-
-                increment(key, increment);
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
-            }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
-            resultsPerWorker.put(UUID.randomUUID().toString(), result);
         }
 
-        private void increment(int key, long increment) {
-            result.put(key, result.get(key) + increment);
+        @Override
+        public void timeStep() {
+            Integer key = randomInt(keyCount);
+            long increment = randomInt(100);
+
+            incrementMap(map, key, increment);
+            incrementMap(result, key, increment);
+        }
+
+        @Override
+        protected void afterRun() {
+            resultMap.put(UUID.randomUUID().toString(), result);
+        }
+
+        private void incrementMap(Map<Integer, Long> map, Integer key, long increment) {
+            map.put(key, map.get(key) + increment);
         }
     }
 
