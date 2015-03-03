@@ -6,100 +6,97 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.TestContext;
-import com.hazelcast.stabilizer.test.annotations.Run;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.worker.tasks.AbstractMonotonicWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 
-import java.util.Random;
-
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
 /**
- * This tests the map.lock(key) method.
- * we use map.lock(key) to control concurrent access to map key value pairs.
- * there are a total of keyCount keys stored in a map which are initialized to zero, we concurrently increment the value
- * of a random key.  We keep track of all increments to each key and verify the value in the map for each key is equal
- * to the total increments done on each key.
+ * Test for the {@link IMap#lock(Object)} method.
+ * <p/>
+ * We use {@link IMap#lock(Object)} to control concurrent access to map key/value pairs. There are a total of {@link #keyCount}
+ * keys stored in a map which are initialized to zero, we concurrently increment the value of a random key. We keep track of all
+ * increments to each key and verify the value in the map for each key is equal to the total increments done on each key.
  */
 public class MapLockTest {
 
     private final static ILogger log = Logger.getLogger(MapLockTest.class);
 
-    public String basename = this.getClass().getName();
+    // properties
+    public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;
     public int keyCount = 1000;
 
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
+    private IMap<Integer, Long> map;
+    private IList<long[]> incrementsList;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
+
+        map = targetInstance.getMap(basename);
+        incrementsList = targetInstance.getList(basename);
     }
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        IMap map = targetInstance.getMap(basename);
-        for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0l);
-        }
-    }
-
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
-    private class Worker implements Runnable {
-        private final Random random = new Random();
-        private long[] increments = new long[keyCount];
-
-        public void run() {
-            while (!testContext.isStopped()) {
-
-                IMap<Integer, Long> map = targetInstance.getMap(basename);
-                int key = random.nextInt(keyCount);
-                map.lock(key);
-                try {
-                    long current = map.get(key);
-                    long increment = random.nextInt(100);
-
-                    map.put(key, current + increment);
-                    increments[key]+=increment;
-                } finally {
-                    map.unlock(key);
-                }
-            }
-            targetInstance.getList(basename).add(increments);
+        for (int i = 0; i < keyCount; i++) {
+            map.put(i, 0l);
         }
     }
 
     @Verify(global = true)
     public void verify() throws Exception {
-        long[] total = new long[keyCount];
+        long[] expected = new long[keyCount];
 
-        IList<long[]> allIncrements = targetInstance.getList(basename);
-        for (long[] increments : allIncrements) {
-            for(int i=0; i<keyCount; i++){
-                total[i]+=increments[i];
+        for (long[] increments : incrementsList) {
+            for (int i = 0; i < keyCount; i++) {
+                expected[i] += increments[i];
             }
         }
-        log.info(basename + ": collected increments from " + allIncrements.size() + " worker threads");
+        log.info(format("%s: collected increments from %d worker threads", basename, incrementsList.size()));
 
-        IMap<Integer, Long> map = targetInstance.getMap(basename);
         int failures = 0;
         for (int i = 0; i < keyCount; i++) {
-            if (total[i] != map.get(i)) {
+            if (expected[i] != map.get(i)) {
                 failures++;
             }
         }
-        assertEquals(basename + ": " + failures + " keys have been incremented unexpectedly out of " + keyCount + " keys", 0, failures);
+        assertEquals(format("%s: %d keys have been incremented unexpectedly out of %d keys", basename, failures, keyCount), 0,
+                failures);
+    }
+
+    @RunWithWorker
+    public AbstractWorkerTask createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractMonotonicWorkerTask {
+        private final long[] increments = new long[keyCount];
+
+        @Override
+        public void timeStep() {
+            int key = randomInt(keyCount);
+            long increment = randomInt(100);
+
+            map.lock(key);
+            try {
+                Long current = map.get(key);
+                map.put(key, current + increment);
+                increments[key] += increment;
+            } finally {
+                map.unlock(key);
+            }
+        }
+
+        @Override
+        protected void afterRun() {
+            incrementsList.add(increments);
+        }
     }
 }
