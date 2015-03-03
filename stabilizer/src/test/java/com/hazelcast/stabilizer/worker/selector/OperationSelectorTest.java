@@ -12,7 +12,7 @@ import static org.junit.Assert.assertTrue;
 public class OperationSelectorTest {
 
     private enum Operation {
-        OP1, OP2, OP3, DEFAULT
+        OP1, OP2, OP3, OP4, OP5, DEFAULT
     }
 
     private static final int ITERATIONS = 1000000;
@@ -28,60 +28,93 @@ public class OperationSelectorTest {
 
     @Test(expected = IllegalStateException.class)
     public void testAddOperations_sumOfProbabilitiesBelowLimit() {
-        builder.addOperation(Operation.OP1, 0.80).addOperation(Operation.OP2, 0.19).build();
+        builder.addOperation(Operation.OP1, 0.80)
+               .addOperation(Operation.OP2, 0.19)
+               .build();
     }
 
     @Test
     public void testAddOperations_sumOfProbabilitiesHitsLimit() {
-        builder.addOperation(Operation.OP1, 0.8).addOperation(Operation.OP2, 0.2).build();
+        builder.addOperation(Operation.OP1, 0.8)
+               .addOperation(Operation.OP2, 0.2)
+               .build();
     }
 
     @Test
     public void testAddOperation_zeroProbability() {
-        builder.addOperation(Operation.OP1, 1.0).addOperation(Operation.OP2, 0.0).build();
+        builder.addOperation(Operation.OP1, 1.0)
+               .addOperation(Operation.OP2, 0.0)
+               .build();
     }
 
     @Test
     public void testAddOperation_zeroProbabilityAfterDefaultOperation() {
-        builder.addDefaultOperation(Operation.DEFAULT).addOperation(Operation.OP1, 0.0).build();
+        builder.addDefaultOperation(Operation.DEFAULT)
+               .addOperation(Operation.OP1, 0.0)
+               .build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAddOperation_negativeProbability() {
-        builder.addOperation(Operation.OP1, -0.1).build();
+        builder.addOperation(Operation.OP1, -0.1)
+               .build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testAddOperations_sumOfProbabilitiesExceedsLimit_NormalPrecision() {
-        builder.addOperation(Operation.OP1, 0.8).addOperation(Operation.OP2, 0.21).build();
+        builder.addOperation(Operation.OP1, 0.8)
+               .addOperation(Operation.OP2, 0.21)
+               .build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testAddOperations_sumOfProbabilitiesExceedsLimit_MaximumPrecision() {
-        builder.addOperation(Operation.OP1, 0.8).addOperation(Operation.OP2, 0.2 + OperationSelectorBuilder.PROBABILITY_INTERVAL)
+        builder.addOperation(Operation.OP1, 0.8)
+               .addOperation(Operation.OP2, 0.2 + OperationSelectorBuilder.PROBABILITY_INTERVAL)
                .build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testAddOperations_sameOperationCannotBeAddedTwice() {
-        builder.addOperation(Operation.OP1, 0.1).addOperation(Operation.OP1, 0.1);
+        builder.addOperation(Operation.OP1, 0.1)
+               .addOperation(Operation.OP1, 0.1);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testAddOperations_operationCannotBeAddedTwiceAsDefaultOperation() {
-        builder.addOperation(Operation.OP1, 0.1).addDefaultOperation(Operation.OP1);
+        builder.addOperation(Operation.OP1, 0.1)
+               .addDefaultOperation(Operation.OP1);
     }
 
     @Test
     public void testAddOperations_maxPrecisionHitsLimit() {
-        builder.addOperation(Operation.OP1, OperationSelectorBuilder.PROBABILITY_INTERVAL).addDefaultOperation(Operation.DEFAULT)
+        builder.addOperation(Operation.OP1, OperationSelectorBuilder.PROBABILITY_INTERVAL)
+               .addDefaultOperation(Operation.DEFAULT)
                .build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAddOperations_maxPrecisionExceeded() {
         builder.addOperation(Operation.OP1, OperationSelectorBuilder.PROBABILITY_INTERVAL / 2)
-               .addDefaultOperation(Operation.DEFAULT).build();
+               .addDefaultOperation(Operation.DEFAULT)
+               .build();
+    }
+
+    @Test
+    public void testAddOperations_floatingPointMadness() {
+        // these probabilities add up to 1.0000000000000002
+        double prob1 = 0.4;
+        double prob2 = 0.2;
+        double prob3 = 0.15;
+        double prob4 = 0.2;
+        double prob5 = 0.05;
+
+        builder.addOperation(Operation.OP1, prob1)
+                .addOperation(Operation.OP2, prob2)
+                .addOperation(Operation.OP3, prob3)
+                .addOperation(Operation.OP4, prob4)
+                .addOperation(Operation.OP5, prob5)
+                .build();
     }
 
     @Test
@@ -100,8 +133,10 @@ public class OperationSelectorTest {
         double op1Probability = 0.1;
         double op2Probability = 0.1;
 
-        selector = builder.addOperation(Operation.OP1, op1Probability).addOperation(Operation.OP2, op2Probability)
-                          .addDefaultOperation(Operation.DEFAULT).build();
+        selector = builder.addOperation(Operation.OP1, op1Probability)
+                          .addOperation(Operation.OP2, op2Probability)
+                          .addDefaultOperation(Operation.DEFAULT)
+                          .build();
 
         Map<Operation, Integer> opsStats = exerciseSelector(selector);
         Integer op1Count = opsStats.get(Operation.OP1);
@@ -118,8 +153,10 @@ public class OperationSelectorTest {
         double op2Probability = 0.29;
         double op3Probability = 0.01;
 
-        selector = builder.addOperation(Operation.OP1, op1Probability).addOperation(Operation.OP2, op2Probability)
-                          .addOperation(Operation.OP3, op3Probability).build();
+        selector = builder.addOperation(Operation.OP1, op1Probability)
+                          .addOperation(Operation.OP2, op2Probability)
+                          .addOperation(Operation.OP3, op3Probability)
+                          .build();
 
         Map<Operation, Integer> opsStats = exerciseSelector(selector);
         Integer op1Count = opsStats.get(Operation.OP1);

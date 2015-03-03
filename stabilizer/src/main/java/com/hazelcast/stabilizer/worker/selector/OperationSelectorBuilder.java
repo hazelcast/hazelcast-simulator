@@ -53,7 +53,7 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
             throw new IllegalStateException("Operation " + operation + " has been already added to this selector");
         }
         probSum += probability;
-        if (probSum > 1.0) {
+        if (probSum - 1.0 > PROBABILITY_INTERVAL) {
             probabilityMismatch();
         }
         return this;
@@ -78,7 +78,7 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
      * @return instance of OperationSelector
      */
     public OperationSelector<T> build() {
-        if (1.0 - probSum > PROBABILITY_INTERVAL) {
+        if (Math.abs(probSum - 1.0) > PROBABILITY_INTERVAL) {
             probabilityMismatch();
         }
         if (operationsArray == null) {
