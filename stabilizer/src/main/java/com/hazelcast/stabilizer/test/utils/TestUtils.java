@@ -23,9 +23,9 @@ import org.apache.log4j.Logger;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillisThrowException;
 import static java.lang.String.format;
+import static org.junit.Assert.assertEquals;
 
 public class TestUtils {
 
@@ -62,6 +62,18 @@ public class TestUtils {
         }
 
         logger.info("Partitions are warmed up successfully");
+    }
+
+    /**
+     * This method executes the normal assertEquals with expected and actual values.
+     * In addition it formats the given string with those values to provide a good assert message.
+     *
+     * @param message     assert message which is formatted with expected and actual values
+     * @param expected    expected value which is used for assert
+     * @param actual      actual value which is used for assert
+     */
+    public static void assertEqualsStringFormat(String message, Object expected, Object actual) {
+        assertEquals(String.format(message, expected, actual), expected, actual);
     }
 
     /**
