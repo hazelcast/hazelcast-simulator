@@ -36,7 +36,7 @@ public class MapEntryProcessorTest {
     public int minProcessorDelayMs = 0;
     public int maxProcessorDelayMs = 0;
     public KeyLocality keyLocality = KeyLocality.Random;
-    public IntervalProbe latency;
+    public IntervalProbe probe;
 
     private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;
@@ -111,9 +111,9 @@ public class MapEntryProcessorTest {
             int key = calculateKey();
             long increment = calculateIncrement();
             int delayMs = calculateDelay();
-            latency.started();
+            probe.started();
             map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
-            latency.done();
+            probe.done();
             incrementLocalStats(key, increment);
         }
 
