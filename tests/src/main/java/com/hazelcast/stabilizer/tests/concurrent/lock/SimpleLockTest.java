@@ -22,7 +22,7 @@ public class SimpleLockTest {
 
     private final static ILogger log = Logger.getLogger(SimpleLockTest.class);
 
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     public int maxAccounts = 7;
     public int threadCount = 10;
 

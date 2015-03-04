@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static java.lang.String.format;
+
 class MessagesFactory {
     private final static Logger log = Logger.getLogger(MessagesFactory.class);
     private static final MessagesFactory instance = new MessagesFactory();
@@ -86,6 +88,7 @@ class MessagesFactory {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void findAndInitMessageTypes() {
         Reflections reflections = new Reflections("");
         Set<Class<?>> typesAnnotatedWith = reflections.getTypesAnnotatedWith(MessageSpec.class);
@@ -94,8 +97,8 @@ class MessagesFactory {
             if (Message.class.isAssignableFrom(clazz)) {
                 registerMessage((Class<? extends Message>) clazz);
             } else {
-                log.warn("Class "+clazz.getName()+" is annotated with "+MessageSpec.class.getName()+", however it does" +
-                        "not extend "+Message.class.getName()+".");
+                log.warn(format("Class %s is annotated with %s, however it does not extend %s", clazz.getName(),
+                        MessageSpec.class.getName(), Message.class.getName()));
             }
         }
     }
@@ -121,7 +124,7 @@ class MessagesFactory {
             attributeConstructors.put(spec, constructor);
             return true;
         } catch (NoSuchMethodException e) {
-            log.debug("Class "+clazz.getName()+" does not have a constructor accepting "+KeyValuePair.class.getName()+"+.");
+            log.debug(format("Class %s does not have a constructor accepting %s", clazz.getName(), KeyValuePair.class.getName()));
             return false;
         }
     }
@@ -133,8 +136,8 @@ class MessagesFactory {
             noAttributeConstructors.put(spec, constructor);
             return true;
         } catch (NoSuchMethodException e) {
-            log.error("Error while searching for message types. Does the " + clazz.getName()
-                    + " have a constructor with " + MessageAddress.class.getName() + " as an argument?", e);
+            log.error(format("Error while searching for message types. Does the %s have a constructor with %s as an argument?",
+                    clazz.getName(), MessageAddress.class.getName()), e);
             return false;
         }
     }

@@ -46,7 +46,7 @@ public class MapTimeToLiveTest {
     private final static ILogger log = Logger.getLogger(MapTimeToLiveTest.class);
 
     // properties
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;
     public int keyCount = 10;
 

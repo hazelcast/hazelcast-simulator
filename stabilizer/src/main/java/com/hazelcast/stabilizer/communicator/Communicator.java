@@ -15,7 +15,7 @@ import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
 import static java.lang.String.format;
 
 public class Communicator {
-    private final static Logger log = Logger.getLogger(Communicator.class.getName());
+    private final static Logger log = Logger.getLogger(Communicator.class);
     private final static String STABILIZER_HOME = getStablizerHome().getAbsolutePath();
 
     public File agentsFile;

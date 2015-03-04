@@ -18,7 +18,7 @@ public class SplitClusterDataTest {
 
     private final static ILogger log = Logger.getLogger(SplitClusterDataTest.class);
 
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     public int maxItems = 10000;
     public int clusterSize = -1;
     public int splitClusterSize = -1;

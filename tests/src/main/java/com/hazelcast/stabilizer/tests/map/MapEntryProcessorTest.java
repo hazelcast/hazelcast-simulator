@@ -30,7 +30,7 @@ public class MapEntryProcessorTest {
     private static final ILogger log = Logger.getLogger(MapEntryProcessorTest.class);
 
     // properties
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     public int threadCount = 10;
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;

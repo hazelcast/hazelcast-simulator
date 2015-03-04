@@ -23,7 +23,7 @@ public class MapHeapHogTest {
     private final static ILogger log = Logger.getLogger(MapHeapHogTest.class);
 
     // properties
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;
     public int ttlHours = 24;
     public double approxHeapUsageFactor = 0.9;

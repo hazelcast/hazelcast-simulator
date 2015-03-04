@@ -28,7 +28,7 @@ public class LockConflictTest {
     private final static ILogger log = Logger.getLogger(LockConflictTest.class);
 
     // properties.
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;
     public int keyCount = 50;
     public int maxKeysPerTxn = 5;
