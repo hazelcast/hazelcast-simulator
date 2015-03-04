@@ -12,6 +12,8 @@ import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
@@ -19,6 +21,8 @@ import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 
 public class MapPerfMetrics {
+
+    private final static ILogger log = Logger.getLogger(LoadMaps.class);
 
     public String cvsDirPath = "~/";
 
@@ -33,17 +37,20 @@ public class MapPerfMetrics {
     public double getProb= 0.0;
     public double setProb= 0.0;
 
+    public boolean fillMaps=false;
     public int reportSecondsInterval=5;
 
     private File cvsDir;
     private byte[] value;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
+    private String id;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+        id=testContext.getTestId();
 
         value = new byte[valueByteArraySize];
         Random random = new Random();
@@ -54,11 +61,21 @@ public class MapPerfMetrics {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for(int m =0; m<totalMaps; m++){
-            IMap map = targetInstance.getMap(baseMapName+m);
-            for (int k = 0; k < totalKeys; k++) {
-                map.put(k, value);
+        if(fillMaps){
+            for(int m =0; m<totalMaps; m++){
+                IMap map = targetInstance.getMap(baseMapName+m);
+                for (int k = 0; k < totalKeys; k++) {
+                    map.put(k, value);
+                }
             }
+        }
+        printMapInfo();
+    }
+
+    public void printMapInfo(){
+        for(int i=0; i< totalMaps; i++){
+            IMap map = targetInstance.getMap(baseMapName+i);
+            log.info(id + ": mapName=" + map.getName() + " size=" + map.size());
         }
     }
 
