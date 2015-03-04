@@ -2,8 +2,6 @@ package com.hazelcast.stabilizer.tests.syntheticmap;
 
 import com.hazelcast.nio.serialization.DataSerializableFactory;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
-import com.hazelcast.stabilizer.tests.synthetic.SyntheticBackupOperation;
-import com.hazelcast.stabilizer.tests.synthetic.SyntheticOperation;
 
 public class SyntheticMapSerializableFactory implements DataSerializableFactory {
 

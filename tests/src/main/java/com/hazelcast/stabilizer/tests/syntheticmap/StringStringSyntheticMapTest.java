@@ -49,7 +49,7 @@ public class StringStringSyntheticMapTest {
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private TestContext testContext;
+    private HazelcastInstance hazelcastInstance;
     private SyntheticMap<String, String> map;
 
     private String[] keys;
@@ -57,22 +57,24 @@ public class StringStringSyntheticMapTest {
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
-        map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + testContext.getTestId());
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
+        hazelcastInstance = testContext.getTargetInstance();
+        map = hazelcastInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + testContext.getTestId());
+
+        operationSelectorBuilder
+                .addOperation(Operation.PUT, putProb)
+                .addDefaultOperation(Operation.GET);
     }
 
     @Teardown
     public void teardown() throws Exception {
         map.destroy();
-        log.info(getOperationCountInformation(testContext.getTargetInstance()));
+        log.info(getOperationCountInformation(hazelcastInstance));
     }
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitClusterSize(log, testContext.getTargetInstance(), minNumberOfMembers);
-        keys = KeyUtils.generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
+        waitClusterSize(log, hazelcastInstance, minNumberOfMembers);
+        keys = KeyUtils.generateStringKeys(keyCount, keyLength, keyLocality, hazelcastInstance);
         values = StringUtils.generateStrings(valueCount, valueLength);
 
         Random random = new Random();
