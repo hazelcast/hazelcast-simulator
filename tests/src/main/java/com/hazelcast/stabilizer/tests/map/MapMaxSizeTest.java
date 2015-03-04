@@ -6,119 +6,160 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.tests.map.helpers.MapMaxSizeOperationCounter;
 import com.hazelcast.stabilizer.test.TestContext;
-import com.hazelcast.stabilizer.test.annotations.Run;
+import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.stabilizer.tests.map.helpers.MapMaxSizeOperationCounter;
+import com.hazelcast.stabilizer.utils.ExceptionReporter;
+import com.hazelcast.stabilizer.worker.selector.OperationSelector;
+import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
 
-import java.util.Random;
-
+import static com.hazelcast.config.MaxSizeConfig.MaxSizePolicy.PER_NODE;
+import static com.hazelcast.stabilizer.test.utils.TestUtils.assertEqualsStringFormat;
+import static java.lang.String.format;
 import static junit.framework.Assert.assertTrue;
 
 /**
- * In this test we are doing map put / get operation on a map which is configured with a max size policy
- * with some proablity distribution we are doing put, putAsync, get and verification operations on the map
- * we verify during the test and as the end that the map has not exceeded its max configured size.
+ * This tests runs {@link IMap#put(Object, Object)} and {@link IMap#get(Object)} operations on a map, which is configured with
+ * {@link MaxSizeConfig.MaxSizePolicy#PER_NODE}.
+ *
+ * With some probability distribution we are doing put, putAsync, get and verification operations on the map.
+ * We verify during the test and at the end that the map has not exceeded its max configured size.
  */
 public class MapMaxSizeTest {
 
-    private final static ILogger log = Logger.getLogger(MapMaxSizeTest.class);
+    private enum MapOperation {
+        PUT,
+        GET,
+        CHECK_SIZE
+    }
+
+    private enum MapPutOperation {
+        PUT_SYNC,
+        PUT_ASYNC
+    }
+
+    private static final ILogger log = Logger.getLogger(MapMaxSizeTest.class);
 
     // properties
-    public String basename = this.getClass().getName();
-    public int threadCount = 3;
+    public String basename = this.getClass().getSimpleName();
     public int keyCount = Integer.MAX_VALUE;
 
-    //check these add up to 1
-    public double writeProb = 0.5;
+    public double putProb = 0.5;
     public double getProb = 0.4;
-    public double checkSizeProb = 0.1;
+    public double checkProb = 0.1;
 
-    //check these add up to 1   (writeProb is split up into sub styles)
-    public double writeUsingPutProb = 0.8;
-    public double writeUsingPutAsyncProb = 0.2;
+    public double putUsingAsyncProb = 0.2;
 
-    private TestContext testContext;
+    private final OperationSelectorBuilder<MapOperation> mapOperationSelectorBuilder
+            = new OperationSelectorBuilder<MapOperation>();
+    private final OperationSelectorBuilder<MapPutOperation> mapPutOperationSelectorBuilder
+            = new OperationSelectorBuilder<MapPutOperation>();
+
     private HazelcastInstance targetInstance;
     private IMap<Object, Object> map;
+    private IList<MapMaxSizeOperationCounter> operationCounterList;
+    private int maxSizePerNode;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
-    }
+        operationCounterList = targetInstance.getList(basename + "OperationCounter");
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
+        mapOperationSelectorBuilder
+                .addOperation(MapOperation.PUT, putProb)
+                .addOperation(MapOperation.GET, getProb)
+                .addOperation(MapOperation.CHECK_SIZE, checkProb);
 
-    private class Worker implements Runnable {
-        private MapMaxSizeOperationCounter count = new MapMaxSizeOperationCounter();
-        private final Random random = new Random();
+        mapPutOperationSelectorBuilder
+                .addOperation(MapPutOperation.PUT_ASYNC, putUsingAsyncProb)
+                .addDefaultOperation(MapPutOperation.PUT_SYNC);
 
-        @Override
-        public void run() {
-            while (!testContext.isStopped()) {
-                final int key = random.nextInt(keyCount);
+        // check the map configuration
+        try {
+            MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
+            maxSizePerNode = maxSizeConfig.getSize();
+            assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s", PER_NODE, maxSizeConfig.getMaxSizePolicy());
+            assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE", maxSizePerNode < Integer.MAX_VALUE);
 
-                double chance = random.nextDouble();
-                if ((chance -= writeProb) < 0) {
-
-                    final Object value = random.nextInt();
-
-                    chance = random.nextDouble();
-                    if ((chance -= writeUsingPutProb) < 0) {
-                        map.put(key, value);
-                        count.put++;
-                    } else if ((chance -= writeUsingPutAsyncProb) < 0) {
-                        map.putAsync(key, value);
-                        count.putAsync++;
-                    }
-
-                } else if ((chance -= getProb) < 0) {
-                    map.get(key);
-                    count.get++;
-                } else if ((chance -= checkSizeProb) < 0) {
-                    int clusterSize = targetInstance.getCluster().getMembers().size();
-                    int size = map.size();
-                    assertTrue(basename + ": Map Over max Size " + size + " not less than " + clusterSize + "*" + 1000, size < clusterSize * 1000);
-                    count.verified++;
-                }
-            }
-            targetInstance.getList(basename + "report").add(count);
+            log.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
+        } catch (Exception e) {
+            ExceptionReporter.report(testContext.getTestId(), e);
+            throw e;
         }
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        IList<MapMaxSizeOperationCounter> results = targetInstance.getList(basename + "report");
         MapMaxSizeOperationCounter total = new MapMaxSizeOperationCounter();
-        for (MapMaxSizeOperationCounter i : results) {
-            total.add(i);
+        for (MapMaxSizeOperationCounter operationCounter : operationCounterList) {
+            total.add(operationCounter);
         }
-        log.info(basename + ": " + total + " from " + results.size() + " workers");
+        log.info(format("Operation counters from %s: %s", basename, total));
 
-        log.info(basename + ": Map size = " + map.size());
-
-        int clusterSize = targetInstance.getCluster().getMembers().size();
-        int size = map.size();
-        assertTrue(basename + ": Map Over max Size " + size + " not less than " + clusterSize + "*" + 1000, size < clusterSize * 1000);
+        assertMapMaxSize();
     }
 
-    @Verify(global = false)
-    public void verify() throws Exception {
-        try {
-            MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
-            log.info(basename + ": " + maxSizeConfig);
-        } catch (Exception ignored) {
+    private void assertMapMaxSize() {
+        int mapSize = map.size();
+        int clusterSize = targetInstance.getCluster().getMembers().size();
+        assertTrue(format("Size of map %s should be <= %d * %d, but was %d", basename, clusterSize, maxSizePerNode, mapSize),
+                mapSize <= clusterSize * maxSizePerNode);
+    }
+
+    @RunWithWorker
+    public AbstractWorkerTask<MapOperation> createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractWorkerTask<MapOperation> {
+        private final MapMaxSizeOperationCounter operationCounter = new MapMaxSizeOperationCounter();
+        private final OperationSelector<MapPutOperation> mapPutSelector = mapPutOperationSelectorBuilder.build();
+
+        public Worker() {
+            super(mapOperationSelectorBuilder);
+        }
+
+        @Override
+        public void timeStep(MapOperation operation) {
+            final int key = randomInt(keyCount);
+
+            switch (operation) {
+                case PUT:
+                    final Object value = randomInt();
+                    switch (mapPutSelector.select()) {
+                        case PUT_SYNC:
+                            map.put(key, value);
+                            operationCounter.put++;
+                            break;
+                        case PUT_ASYNC:
+                            map.putAsync(key, value);
+                            operationCounter.putAsync++;
+                            break;
+                        default:
+                            throw new UnsupportedOperationException();
+                    }
+
+                    break;
+                case GET:
+                    map.get(key);
+                    operationCounter.get++;
+                    break;
+                case CHECK_SIZE:
+                    assertMapMaxSize();
+                    operationCounter.verified++;
+                break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
+
+        @Override
+        protected void afterRun() {
+            operationCounterList.add(operationCounter);
         }
     }
 }
