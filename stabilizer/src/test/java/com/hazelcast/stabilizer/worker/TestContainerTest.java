@@ -17,7 +17,7 @@ import com.hazelcast.stabilizer.test.annotations.Run;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -66,7 +66,7 @@ public class TestContainerTest {
         }
 
         @RunWithWorker
-        public AbstractWorkerTask createWorker() {
+        public AbstractWorker createWorker() {
             return null;
         }
     }
@@ -148,8 +148,8 @@ public class TestContainerTest {
     }
 
     @Test
-    public void testRunWithBaseWorker() throws Throwable {
-        RunWithBaseWorkerTest test = new RunWithBaseWorkerTest();
+    public void testRunWithWorker() throws Throwable {
+        RunWithWorkerTest test = new RunWithWorkerTest();
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         new Thread() {
             @Override
@@ -164,7 +164,7 @@ public class TestContainerTest {
         assertTrue(test.runWithWorkerCalled);
     }
 
-    private static class RunWithBaseWorkerTest {
+    private static class RunWithWorkerTest {
         private enum Operation {
             NOP
         }
@@ -175,8 +175,8 @@ public class TestContainerTest {
         boolean runWithWorkerCalled;
 
         @RunWithWorker
-        AbstractWorkerTask<Operation> createWorker() {
-            return new AbstractWorkerTask<Operation>(builder) {
+        AbstractWorker<Operation> createWorker() {
+            return new AbstractWorker<Operation>(builder) {
                 @Override
                 protected void timeStep(Operation operation) {
                     runWithWorkerCalled = true;

@@ -5,17 +5,17 @@ import com.hazelcast.stabilizer.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 
 /**
- * Asynchronous version of {@link AbstractWorkerTask}.
+ * Asynchronous version of {@link AbstractWorker}.
  * <p/>
  * The operation counter is automatically increased after call of {@link com.hazelcast.core.ExecutionCallback#onResponse}.
  *
  * @param <O> Type of Enum used by the {@link com.hazelcast.stabilizer.worker.selector.OperationSelector}
  * @param <V> Type of {@link com.hazelcast.core.ExecutionCallback}
  */
-public abstract class AbstractAsyncWorkerTask<O extends Enum<O>, V> extends AbstractWorkerTask<O>
+public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends AbstractWorker<O>
         implements ExecutionCallback<V> {
 
-    public AbstractAsyncWorkerTask(OperationSelectorBuilder<O> operationSelectorBuilder) {
+    public AbstractAsyncWorker(OperationSelectorBuilder<O> operationSelectorBuilder) {
         super(operationSelectorBuilder);
     }
 

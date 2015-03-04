@@ -20,9 +20,9 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @param <O> Type of Enum used by the {@link com.hazelcast.stabilizer.worker.selector.OperationSelector}
  */
-public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable {
+public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
 
-    final static ILogger LOGGER = Logger.getLogger(AbstractWorkerTask.class);
+    final static ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
     final Random random = new Random();
     final OperationSelector<O> selector;
@@ -38,14 +38,14 @@ public abstract class AbstractWorkerTask<O extends Enum<O>> implements Runnable 
     // local variables
     long iteration = 0;
 
-    public AbstractWorkerTask(OperationSelectorBuilder<O> operationSelectorBuilder) {
+    public AbstractWorker(OperationSelectorBuilder<O> operationSelectorBuilder) {
         this.selector = operationSelectorBuilder.build();
     }
 
     /**
      * This constructor is just for child classes who also override the {@link #run()} method.
      */
-    AbstractWorkerTask() {
+    AbstractWorker() {
         this.selector = null;
     }
 

@@ -32,7 +32,7 @@ import com.hazelcast.stabilizer.tests.map.helpers.EntryListenerImpl;
 import com.hazelcast.stabilizer.tests.map.helpers.ScrambledZipfianGenerator;
 import com.hazelcast.stabilizer.worker.selector.OperationSelector;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.stabilizer.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
@@ -162,11 +162,11 @@ public class MapEntryListenerTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask<MapOperation> createWorker() {
+    public AbstractWorker<MapOperation> createWorker() {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorkerTask<MapOperation> {
+    private class Worker extends AbstractWorker<MapOperation> {
 
         private final EventCount eventCount = new EventCount();
         private final OperationSelector<MapPutOperation> mapPutSelector = mapPutOperationSelectorBuilder.build();
