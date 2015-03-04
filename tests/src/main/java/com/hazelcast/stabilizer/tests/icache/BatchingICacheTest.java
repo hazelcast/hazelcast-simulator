@@ -45,7 +45,7 @@ public class BatchingICacheTest {
         GET,
     }
 
-    private final static ILogger log = Logger.getLogger(PerformanceICacheTest.class);
+    private static final ILogger log = Logger.getLogger(PerformanceICacheTest.class);
 
     //props
     public int threadCount = 10;

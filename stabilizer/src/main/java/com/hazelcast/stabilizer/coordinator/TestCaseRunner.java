@@ -33,7 +33,7 @@ import static java.lang.String.format;
  * by having multiple TestCaseRunners  in parallel.
  */
 public class TestCaseRunner {
-    private final static Logger log = Logger.getLogger(TestCaseRunner.class);
+    private static final Logger log = Logger.getLogger(TestCaseRunner.class);
 
     private final TestCase testCase;
     private final Coordinator coordinator;

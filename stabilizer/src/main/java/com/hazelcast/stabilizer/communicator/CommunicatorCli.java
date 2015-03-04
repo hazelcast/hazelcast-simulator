@@ -17,7 +17,7 @@ import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
 import static com.hazelcast.stabilizer.utils.FileUtils.getFile;
 
 public class CommunicatorCli {
-    private final static Logger log = Logger.getLogger(CommunicatorCli.class);
+    private static final Logger log = Logger.getLogger(CommunicatorCli.class);
 
     private final Communicator communicator;
 

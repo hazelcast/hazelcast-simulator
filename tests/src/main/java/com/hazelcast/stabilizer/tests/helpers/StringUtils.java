@@ -3,8 +3,8 @@ package com.hazelcast.stabilizer.tests.helpers;
 import java.util.Random;
 
 public class StringUtils {
-    private final static String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
-    private final static Random random = new Random();
+    private static final String alphabet = "abcdefghijklmnopqrstuvwxyz1234567890";
+    private static final Random random = new Random();
 
     /**
      * Generates an array of strings.

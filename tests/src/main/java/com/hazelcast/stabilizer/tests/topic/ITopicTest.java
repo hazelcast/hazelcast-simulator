@@ -48,7 +48,7 @@ public class ITopicTest {
     public int maxVerificationTimeSeconds = 60;
     public String basename = "topic";
 
-    private final static ILogger log = Logger.getLogger(ITopicTest.class);
+    private static final ILogger log = Logger.getLogger(ITopicTest.class);
     private IAtomicLong totalExpectedCounter;
     private IAtomicLong totalFoundCounter;
     private ITopic[] topics;

@@ -34,7 +34,7 @@ public class ExampleTest {
         GET
     }
 
-    private final static ILogger log = Logger.getLogger(ExampleTest.class);
+    private static final ILogger log = Logger.getLogger(ExampleTest.class);
 
     // properties
     public int threadCount = 1;

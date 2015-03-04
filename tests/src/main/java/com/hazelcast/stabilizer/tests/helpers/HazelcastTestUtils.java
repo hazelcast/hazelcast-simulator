@@ -117,7 +117,7 @@ public class HazelcastTestUtils {
         return result;
     }
 
-    public final static class GetOperationCount implements Callable<Long>, HazelcastInstanceAware, Serializable {
+    public static final class GetOperationCount implements Callable<Long>, HazelcastInstanceAware, Serializable {
 
         private static final long serialVersionUID = 2875034360565495907L;
 

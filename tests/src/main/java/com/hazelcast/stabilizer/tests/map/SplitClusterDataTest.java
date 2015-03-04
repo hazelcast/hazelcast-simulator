@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 
 public class SplitClusterDataTest {
 
-    private final static ILogger log = Logger.getLogger(SplitClusterDataTest.class);
+    private static final ILogger log = Logger.getLogger(SplitClusterDataTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int maxItems = 10000;

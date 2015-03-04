@@ -35,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ProducerConsumerTest {
 
-    private final static ILogger log = Logger.getLogger(ProducerConsumerTest.class);
+    private static final ILogger log = Logger.getLogger(ProducerConsumerTest.class);
 
     //props
     public int producerCount = 4;

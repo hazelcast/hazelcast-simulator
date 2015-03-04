@@ -28,7 +28,7 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOpera
 
 public class SqlPredicateTest {
 
-    private final static ILogger log = Logger.getLogger(SqlPredicateTest.class);
+    private static final ILogger log = Logger.getLogger(SqlPredicateTest.class);
 
     // properties
     public int threadCount = 40;

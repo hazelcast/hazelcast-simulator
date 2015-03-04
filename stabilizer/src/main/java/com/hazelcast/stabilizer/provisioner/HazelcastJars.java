@@ -23,7 +23,7 @@ public class HazelcastJars {
     public static final String GIT_VERSION_PREFIX = "git=";
     public static final String MAVEN_VERSION_PREFIX = "maven=";
 
-    private final static Logger log = Logger.getLogger(HazelcastJars.class);
+    private static final Logger log = Logger.getLogger(HazelcastJars.class);
     private final Bash bash;
     private final GitSupport gitSupport;
     private final String versionSpec;

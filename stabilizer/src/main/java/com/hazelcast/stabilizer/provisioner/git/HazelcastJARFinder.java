@@ -8,7 +8,7 @@ import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
 import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
 
 public class HazelcastJARFinder {
-    private final static Logger log = Logger.getLogger(HazelcastJARFinder.class);
+    private static final Logger log = Logger.getLogger(HazelcastJARFinder.class);
 
     public File[] find(File path) {
         File memberPath = newFile(path, "hazelcast", "target");

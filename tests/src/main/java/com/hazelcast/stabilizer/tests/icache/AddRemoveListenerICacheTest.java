@@ -35,7 +35,7 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMember
  * **/
 public class AddRemoveListenerICacheTest {
 
-    private final static ILogger log = Logger.getLogger(AddRemoveListenerICacheTest.class);
+    private static final ILogger log = Logger.getLogger(AddRemoveListenerICacheTest.class);
 
     public int threadCount = 3;
     public int keyCount = 1000;

@@ -43,7 +43,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class MapTimeToLiveTest {
 
-    private final static ILogger log = Logger.getLogger(MapTimeToLiveTest.class);
+    private static final ILogger log = Logger.getLogger(MapTimeToLiveTest.class);
 
     // properties
     public String basename = this.getClass().getSimpleName();

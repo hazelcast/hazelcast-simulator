@@ -46,7 +46,7 @@ import static com.hazelcast.stabilizer.tests.helpers.KeyUtils.generateStringKeys
 
 public class StringICacheTest {
 
-    private final static ILogger log = Logger.getLogger(StringICacheTest.class);
+    private static final ILogger log = Logger.getLogger(StringICacheTest.class);
 
     //props
     public int writePercentage = 10;

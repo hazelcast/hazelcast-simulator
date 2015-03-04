@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class MapLockTest {
 
-    private final static ILogger log = Logger.getLogger(MapLockTest.class);
+    private static final ILogger log = Logger.getLogger(MapLockTest.class);
 
     // properties
     public String basename = this.getClass().getSimpleName();

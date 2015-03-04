@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class MapDataIntegrityTest {
-    private final static ILogger log = Logger.getLogger(MapDataIntegrityTest.class);
+    private static final ILogger log = Logger.getLogger(MapDataIntegrityTest.class);
 
     // properties
     public int mapIntegrityThreadCount = 8;

@@ -31,14 +31,14 @@ import static java.util.Arrays.asList;
 
 public class WorkerJvmLauncher {
 
-    private final static Logger log = Logger.getLogger(WorkerJvmLauncher.class);
+    private static final Logger log = Logger.getLogger(WorkerJvmLauncher.class);
 
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
-    private final static String CLASSPATH = System.getProperty("java.class.path");
-    private final static File STABILIZER_HOME = getStablizerHome();
-    private final static String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
-    private final static AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
-    private final static String WORKERS_PATH = getStablizerHome().getAbsolutePath() + "/workers";
+    private static final String CLASSPATH = System.getProperty("java.class.path");
+    private static final File STABILIZER_HOME = getStablizerHome();
+    private static final String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
+    private static final AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
+    private static final String WORKERS_PATH = getStablizerHome().getAbsolutePath() + "/workers";
 
     private final WorkerJvmSettings settings;
     private final StabilizerProperties props = new StabilizerProperties();

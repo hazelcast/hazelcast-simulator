@@ -47,7 +47,7 @@ public class MangleICacheTest {
         PUT
     }
 
-    private final static ILogger log = Logger.getLogger(MangleICacheTest.class);
+    private static final ILogger log = Logger.getLogger(MangleICacheTest.class);
 
     public int threadCount = 3;
     public int maxCaches = 100;

@@ -12,7 +12,7 @@ import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
 
 public class CloudInfoCli {
 
-    private final static Logger log = Logger.getLogger(ProvisionerCli.class);
+    private static final Logger log = Logger.getLogger(ProvisionerCli.class);
 
     public final OptionParser parser = new OptionParser();
 

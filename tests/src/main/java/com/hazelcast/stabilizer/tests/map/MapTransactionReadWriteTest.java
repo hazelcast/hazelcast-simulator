@@ -36,7 +36,7 @@ public class MapTransactionReadWriteTest {
         GET
     }
 
-    private final static ILogger log = Logger.getLogger(MapTransactionReadWriteTest.class);
+    private static final ILogger log = Logger.getLogger(MapTransactionReadWriteTest.class);
 
     // properties
     public int threadCount = 10;

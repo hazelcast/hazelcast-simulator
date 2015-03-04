@@ -20,7 +20,7 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.nextKeyO
 
 public class MapHeapHogTest {
 
-    private final static ILogger log = Logger.getLogger(MapHeapHogTest.class);
+    private static final ILogger log = Logger.getLogger(MapHeapHogTest.class);
 
     // properties
     public String basename = this.getClass().getSimpleName();

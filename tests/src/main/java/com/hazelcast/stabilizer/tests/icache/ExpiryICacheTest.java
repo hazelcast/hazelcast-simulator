@@ -47,7 +47,7 @@ import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
 
 public class ExpiryICacheTest {
 
-    private final static ILogger log = Logger.getLogger(ExpiryICacheTest.class);
+    private static final ILogger log = Logger.getLogger(ExpiryICacheTest.class);
 
     // properties
     public String basename = "ttlicachetest";

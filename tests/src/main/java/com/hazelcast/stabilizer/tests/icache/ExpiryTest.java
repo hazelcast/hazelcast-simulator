@@ -63,7 +63,7 @@ public class ExpiryTest {
         GET_ASYNC
     }
 
-    private final static ILogger log = Logger.getLogger(ExpiryTest.class);
+    private static final ILogger log = Logger.getLogger(ExpiryTest.class);
 
     public int threadCount = 3;
     public int expiryDuration = 500;

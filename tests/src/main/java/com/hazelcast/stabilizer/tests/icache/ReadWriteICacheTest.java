@@ -49,7 +49,7 @@ import static org.junit.Assert.assertNotNull;
  * */
 public class ReadWriteICacheTest {
 
-    private final static ILogger log = Logger.getLogger(ReadWriteICacheTest.class);
+    private static final ILogger log = Logger.getLogger(ReadWriteICacheTest.class);
 
     public int threadCount = 3;
     public int keyCount=10;

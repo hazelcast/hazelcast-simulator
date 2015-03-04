@@ -21,7 +21,7 @@ import java.util.Set;
 import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
 
 public class TemplateBuilder {
-    private final static Logger log = Logger.getLogger(Provisioner.class);
+    private static final Logger log = Logger.getLogger(Provisioner.class);
 
     private final ComputeService compute;
     private final StabilizerProperties props;

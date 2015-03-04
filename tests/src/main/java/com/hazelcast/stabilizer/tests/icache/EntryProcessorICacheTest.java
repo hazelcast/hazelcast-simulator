@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 
 public class EntryProcessorICacheTest {
 
-    private final static ILogger log = Logger.getLogger(EntryProcessorICacheTest.class);
+    private static final ILogger log = Logger.getLogger(EntryProcessorICacheTest.class);
 
     //props
     public String basename = this.getClass().getSimpleName();

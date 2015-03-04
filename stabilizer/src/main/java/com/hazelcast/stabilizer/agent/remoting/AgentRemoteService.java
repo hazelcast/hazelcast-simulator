@@ -29,7 +29,7 @@ public class AgentRemoteService {
         SERVICE_PROCESS_MESSAGE
     }
 
-    private final static Logger log = Logger.getLogger(AgentRemoteService.class);
+    private static final Logger log = Logger.getLogger(AgentRemoteService.class);
 
     final private Agent agent;
     final private AgentMessageProcessor agentMessageProcessor;

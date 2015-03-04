@@ -15,7 +15,7 @@ import java.util.Set;
 import static java.lang.String.format;
 
 class MessagesFactory {
-    private final static Logger log = Logger.getLogger(MessagesFactory.class);
+    private static final Logger log = Logger.getLogger(MessagesFactory.class);
     private static final MessagesFactory instance = new MessagesFactory();
 
     private final Map<String, Constructor<? extends Message>> noAttributeConstructors;

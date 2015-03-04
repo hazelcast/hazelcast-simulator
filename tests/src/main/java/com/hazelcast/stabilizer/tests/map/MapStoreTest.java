@@ -31,7 +31,7 @@ import static junit.framework.Assert.assertNull;
  */
 public class MapStoreTest {
 
-    private final static ILogger log = Logger.getLogger(MapStoreTest.class);
+    private static final ILogger log = Logger.getLogger(MapStoreTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;

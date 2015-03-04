@@ -17,7 +17,7 @@ import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSecondsThrowExcept
 
 public class AgentClient {
 
-    private final static Logger log = Logger.getLogger(AgentClient.class);
+    private static final Logger log = Logger.getLogger(AgentClient.class);
 
     final String publicAddress;
     final String privateIp;

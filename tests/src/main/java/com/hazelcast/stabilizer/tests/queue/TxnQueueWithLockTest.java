@@ -23,7 +23,7 @@ import static org.junit.Assert.assertFalse;
  */
 public class TxnQueueWithLockTest {
 
-    private final static ILogger log = Logger.getLogger(TxnQueueWithLockTest.class);
+    private static final ILogger log = Logger.getLogger(TxnQueueWithLockTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 5;

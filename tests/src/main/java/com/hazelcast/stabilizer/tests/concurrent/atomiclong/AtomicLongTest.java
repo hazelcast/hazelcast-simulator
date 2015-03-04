@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AtomicLongTest {
 
-    private final static ILogger log = Logger.getLogger(AtomicLongTest.class);
+    private static final ILogger log = Logger.getLogger(AtomicLongTest.class);
 
     //props
     public int countersLength = 1000;

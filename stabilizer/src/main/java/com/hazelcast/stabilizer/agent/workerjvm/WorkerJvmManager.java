@@ -59,12 +59,12 @@ import static com.hazelcast.stabilizer.utils.FileUtils.getStablizerHome;
 
 public class WorkerJvmManager {
 
-    public final static String SERVICE_POLL_WORK = "poll";
-    public final static String COMMAND_PUSH_RESPONSE = "push";
+    public static final String SERVICE_POLL_WORK = "poll";
+    public static final String COMMAND_PUSH_RESPONSE = "push";
     public static final int PORT = 9001;
-    public final static File WORKERS_HOME = new File(getStablizerHome(), "workers");
+    public static final File WORKERS_HOME = new File(getStablizerHome(), "workers");
 
-    private final static Logger log = Logger.getLogger(WorkerJvmManager.class);
+    private static final Logger log = Logger.getLogger(WorkerJvmManager.class);
     private static final int WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS = 10000;
 
     private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();

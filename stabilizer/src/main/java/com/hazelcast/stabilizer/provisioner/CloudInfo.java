@@ -17,7 +17,7 @@ import static java.lang.String.format;
  * Commandline tool to retrieve various cloud info.
  */
 public class CloudInfo {
-    private final static Logger log = Logger.getLogger(CloudInfo.class);
+    private static final Logger log = Logger.getLogger(CloudInfo.class);
 
     public StabilizerProperties props = new StabilizerProperties();
 
