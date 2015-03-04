@@ -151,7 +151,7 @@ public class MapMaxSizeTest {
                 case CHECK_SIZE:
                     assertMapMaxSize();
                     operationCounter.verified++;
-                break;
+                    break;
                 default:
                     throw new UnsupportedOperationException();
             }
