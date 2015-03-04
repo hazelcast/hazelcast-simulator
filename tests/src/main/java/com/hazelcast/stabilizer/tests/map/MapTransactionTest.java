@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class MapTransactionTest {
 
-    private final static ILogger log = Logger.getLogger(MapTransactionTest.class);
+    private static final ILogger log = Logger.getLogger(MapTransactionTest.class);
 
     // properties
     public String basename = this.getClass().getSimpleName();

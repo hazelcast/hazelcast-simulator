@@ -21,7 +21,7 @@ public final class GitInfo {
     private static final Logger log = Logger.getLogger(GitInfo.class);
 
     private final Properties properties;
-    private final static GitInfo INSTANCE = new GitInfo();
+    private static final GitInfo INSTANCE = new GitInfo();
 
     private GitInfo() {
         properties = loadGitProperties();

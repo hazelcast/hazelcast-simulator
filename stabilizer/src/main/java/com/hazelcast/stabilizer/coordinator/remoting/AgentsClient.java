@@ -46,7 +46,7 @@ import static java.util.Arrays.asList;
 
 public class AgentsClient {
 
-    private final static Logger log = Logger.getLogger(AgentsClient.class);
+    private static final Logger log = Logger.getLogger(AgentsClient.class);
 
     private final List<AgentClient> agents = new LinkedList<AgentClient>();
 

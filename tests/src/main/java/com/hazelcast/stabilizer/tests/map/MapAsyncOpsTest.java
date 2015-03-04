@@ -26,7 +26,7 @@ public class MapAsyncOpsTest {
         DESTROY
     }
 
-    private final static ILogger log = Logger.getLogger(MapAsyncOpsTest.class);
+    private static final ILogger log = Logger.getLogger(MapAsyncOpsTest.class);
 
     // properties
     public String basename = MapAsyncOpsTest.class.getSimpleName();

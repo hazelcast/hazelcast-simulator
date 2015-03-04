@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 @MessageSpec(value = "oom", description = "starts a new thread allocating memory in JVM heap indefinitely")
 public class UseAllMemoryMessage extends RunnableMessage {
-    private final static Logger log = Logger.getLogger(UseAllMemoryMessage.class);
+    private static final Logger log = Logger.getLogger(UseAllMemoryMessage.class);
 
     private final int bufferSize = 1000;
     private final int delay;

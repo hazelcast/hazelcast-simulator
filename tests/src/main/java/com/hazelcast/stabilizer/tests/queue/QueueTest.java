@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 
 public class QueueTest {
 
-    private final static ILogger log = Logger.getLogger(QueueTest.class);
+    private static final ILogger log = Logger.getLogger(QueueTest.class);
 
     private IAtomicLong totalCounter;
     private IQueue[] queues;

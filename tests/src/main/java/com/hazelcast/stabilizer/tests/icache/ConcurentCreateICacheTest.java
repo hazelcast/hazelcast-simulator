@@ -43,7 +43,7 @@ import static junit.framework.Assert.assertEquals;
  */
 public class ConcurentCreateICacheTest {
 
-    private final static ILogger log = Logger.getLogger(ConcurentCreateICacheTest.class);
+    private static final ILogger log = Logger.getLogger(ConcurentCreateICacheTest.class);
 
     private HazelcastInstance targetInstance;
     private CacheManager cacheManager;

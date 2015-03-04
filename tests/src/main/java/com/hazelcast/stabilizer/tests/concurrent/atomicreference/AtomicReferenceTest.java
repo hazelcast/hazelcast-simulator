@@ -38,7 +38,7 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.getOpera
 
 public class AtomicReferenceTest {
 
-    private final static ILogger log = Logger.getLogger(AtomicReferenceTest.class);
+    private static final ILogger log = Logger.getLogger(AtomicReferenceTest.class);
 
     //props
     public int countersLength = 1000;

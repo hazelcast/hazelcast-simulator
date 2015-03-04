@@ -53,10 +53,10 @@ import static java.lang.String.format;
 
 public class Coordinator {
 
-    public final static File STABILIZER_HOME = getStablizerHome();
-    public final static File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
-    public final static File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
-    private final static Logger log = Logger.getLogger(Coordinator.class);
+    public static final File STABILIZER_HOME = getStablizerHome();
+    public static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
+    public static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
+    private static final Logger log = Logger.getLogger(Coordinator.class);
 
     //options.
     public boolean monitorPerformance;

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 public class SimpleLockTest {
 
-    private final static ILogger log = Logger.getLogger(SimpleLockTest.class);
+    private static final ILogger log = Logger.getLogger(SimpleLockTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int maxAccounts = 7;

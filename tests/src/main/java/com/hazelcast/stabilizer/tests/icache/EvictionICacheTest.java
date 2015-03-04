@@ -43,7 +43,7 @@ public class EvictionICacheTest {
         PUT_ALL,
     }
 
-    private final static ILogger log = Logger.getLogger(EvictionICacheTest.class);
+    private static final ILogger log = Logger.getLogger(EvictionICacheTest.class);
 
     //number of threads each test participants will use to run the test
     public int threadCount = 3;

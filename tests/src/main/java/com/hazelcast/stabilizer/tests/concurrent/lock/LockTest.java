@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 public class LockTest {
 
-    private final static ILogger log = Logger.getLogger(LockTest.class);
+    private static final ILogger log = Logger.getLogger(LockTest.class);
 
     // properties
     public String basename = "lock";

@@ -53,7 +53,7 @@ import static junit.framework.Assert.assertTrue;
  * */
 public class CacheLoaderTest {
 
-    private final static ILogger log = Logger.getLogger(CacheLoaderTest.class);
+    private static final ILogger log = Logger.getLogger(CacheLoaderTest.class);
 
     public int threadCount = 3;
     public int keyCount = 10;

@@ -40,12 +40,12 @@ import static java.lang.String.format;
 //https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
 //https://github.com/jclouds/jclouds-examples/blob/master/minecraft-compute/src/main/java/org/jclouds/examples/minecraft/NodeManager.java
 public class Provisioner {
-    private final static Logger log = Logger.getLogger(Provisioner.class);
+    private static final Logger log = Logger.getLogger(Provisioner.class);
 
     public final StabilizerProperties props = new StabilizerProperties();
 
-    private final static String STABILIZER_HOME = getStablizerHome().getAbsolutePath();
-    private final static String CONF_DIR = STABILIZER_HOME + "/conf";
+    private static final String STABILIZER_HOME = getStablizerHome().getAbsolutePath();
+    private static final String CONF_DIR = STABILIZER_HOME + "/conf";
 
     private final File agentsFile = new File("agents.txt");
     //big number of threads, but they are used to offload ssh tasks. So there is no load on this machine..

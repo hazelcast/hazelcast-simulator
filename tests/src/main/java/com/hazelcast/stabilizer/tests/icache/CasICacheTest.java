@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class CasICacheTest {
 
-    private final static ILogger log = Logger.getLogger(CasICacheTest.class);
+    private static final ILogger log = Logger.getLogger(CasICacheTest.class);
 
     public int threadCount = 10;
     public int keyCount = 1000;

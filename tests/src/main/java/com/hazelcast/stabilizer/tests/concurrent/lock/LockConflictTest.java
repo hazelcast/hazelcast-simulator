@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 // TODO: We need to deal with exception logging; they are logged but not visible to stabilizer.
 public class LockConflictTest {
 
-    private final static ILogger log = Logger.getLogger(LockConflictTest.class);
+    private static final ILogger log = Logger.getLogger(LockConflictTest.class);
 
     // properties.
     public String basename = this.getClass().getSimpleName();

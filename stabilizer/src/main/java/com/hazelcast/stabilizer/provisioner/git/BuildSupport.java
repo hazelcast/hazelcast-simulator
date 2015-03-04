@@ -10,7 +10,7 @@ import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
 public class BuildSupport {
-    private final static Logger log = Logger.getLogger(BuildSupport.class);
+    private static final Logger log = Logger.getLogger(BuildSupport.class);
 
     private final Bash bash;
     private final HazelcastJARFinder jarFinder;

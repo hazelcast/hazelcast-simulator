@@ -58,7 +58,7 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isClient
  * natural balance between the number of threads and the number of pending invocations.
  */
 public class SyntheticTest {
-    private final static ILogger log = Logger.getLogger(SyntheticTest.class);
+    private static final ILogger log = Logger.getLogger(SyntheticTest.class);
 
     //props
     public boolean syncInvocation = true;

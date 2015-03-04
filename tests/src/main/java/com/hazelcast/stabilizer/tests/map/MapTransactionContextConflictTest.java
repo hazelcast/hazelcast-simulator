@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 * less transactions will be committed successfully,  more transactions are rolledBack
 * */
 public class MapTransactionContextConflictTest {
-    private final static ILogger log = Logger.getLogger(MapTransactionContextConflictTest.class);
+    private static final ILogger log = Logger.getLogger(MapTransactionContextConflictTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;

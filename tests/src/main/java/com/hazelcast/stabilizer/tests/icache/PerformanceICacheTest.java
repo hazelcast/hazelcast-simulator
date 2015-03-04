@@ -33,7 +33,7 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMember
  */
 public class PerformanceICacheTest {
 
-    private final static ILogger log = Logger.getLogger(PerformanceICacheTest.class);
+    private static final ILogger log = Logger.getLogger(PerformanceICacheTest.class);
 
     //props
     public int threadCount = 10;

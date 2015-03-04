@@ -45,7 +45,7 @@ import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMember
  */
 public class CreateDestroyICacheTest {
 
-    private final static ILogger log = Logger.getLogger(CreateDestroyICacheTest.class);
+    private static final ILogger log = Logger.getLogger(CreateDestroyICacheTest.class);
 
     public int threadCount = 3;
     public double createCacheProb=0.4;

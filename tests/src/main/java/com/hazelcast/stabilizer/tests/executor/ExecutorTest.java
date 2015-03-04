@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ExecutorTest {
 
-    private final static ILogger log = Logger.getLogger(ExecutorTest.class);
+    private static final ILogger log = Logger.getLogger(ExecutorTest.class);
 
     //props
     public int executorCount = 1;

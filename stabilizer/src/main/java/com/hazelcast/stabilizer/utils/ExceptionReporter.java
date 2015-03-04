@@ -16,8 +16,8 @@ public class ExceptionReporter {
 
     public static final int MAX_EXCEPTION_COUNT = 1000;
 
-    private final static AtomicLong FAILURE_ID = new AtomicLong(0);
-    private final static Logger log = Logger.getLogger(ExceptionReporter.class);
+    private static final AtomicLong FAILURE_ID = new AtomicLong(0);
+    private static final Logger log = Logger.getLogger(ExceptionReporter.class);
 
     /**
      * Writes the cause to file.

@@ -23,7 +23,7 @@ import static java.lang.String.format;
 
 public class CoordinatorCli {
 
-    private final static Logger log = Logger.getLogger(CoordinatorCli.class);
+    private static final Logger log = Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
 

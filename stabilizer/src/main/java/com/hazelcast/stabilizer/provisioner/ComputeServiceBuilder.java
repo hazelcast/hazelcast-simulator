@@ -22,7 +22,7 @@ import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIO
 
 public class ComputeServiceBuilder {
 
-    private final static Logger log = Logger.getLogger(ComputeServiceBuilder.class);
+    private static final Logger log = Logger.getLogger(ComputeServiceBuilder.class);
 
     private final StabilizerProperties props;
 

@@ -21,7 +21,7 @@ import static java.lang.String.format;
  * is configured, it will override the properties from the default.
  */
 public class StabilizerProperties {
-    private final static Logger log = Logger.getLogger(StabilizerProperties.class);
+    private static final Logger log = Logger.getLogger(StabilizerProperties.class);
 
     private final Properties properties = new Properties();
     private String forcedHazelcastVersionSpec;

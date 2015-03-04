@@ -41,7 +41,7 @@ import static java.lang.String.format;
 @SuppressWarnings("unused")
 public class TestRunner<E> {
 
-    private final static Logger log = Logger.getLogger(TestRunner.class);
+    private static final Logger log = Logger.getLogger(TestRunner.class);
     private final E test;
     private final TestContextImpl testContext;
     private final TestContainer testInvoker;

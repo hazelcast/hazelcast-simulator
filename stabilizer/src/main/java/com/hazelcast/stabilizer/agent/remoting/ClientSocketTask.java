@@ -21,7 +21,7 @@ import java.util.List;
 import static com.hazelcast.stabilizer.utils.CommonUtils.closeQuietly;
 
 class ClientSocketTask implements Runnable {
-    private final static Logger log = Logger.getLogger(ClientSocketTask.class);
+    private static final Logger log = Logger.getLogger(ClientSocketTask.class);
 
     private final Socket clientSocket;
     private final Agent agent;

@@ -12,7 +12,7 @@ import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
 import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
 
 public class ProvisionerCli {
-    private final static Logger log = Logger.getLogger(ProvisionerCli.class);
+    private static final Logger log = Logger.getLogger(ProvisionerCli.class);
 
     public final OptionParser parser = new OptionParser();
 

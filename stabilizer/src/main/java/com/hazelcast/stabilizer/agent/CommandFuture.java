@@ -9,7 +9,7 @@ import java.util.concurrent.TimeoutException;
 
 public class CommandFuture<E> implements Future<E> {
 
-    private final static Object NO_RESULT = new Object() {
+    private static final Object NO_RESULT = new Object() {
         public String toString() {
             return "NO_RESULT";
         }

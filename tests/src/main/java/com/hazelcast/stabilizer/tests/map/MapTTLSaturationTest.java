@@ -37,7 +37,7 @@ import static com.hazelcast.stabilizer.test.utils.TestUtils.humanReadableByteCou
 
 public class MapTTLSaturationTest {
 
-    private final static ILogger log = Logger.getLogger(MapTTLSaturationTest.class);
+    private static final ILogger log = Logger.getLogger(MapTTLSaturationTest.class);
 
     // properties
     public String basename = "mapttlsaturation";
