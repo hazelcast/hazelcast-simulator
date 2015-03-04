@@ -12,7 +12,7 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 
 public class MapLongPerformanceTest {
 
@@ -64,11 +64,11 @@ public class MapLongPerformanceTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask<Operation> createWorker() {
+    public AbstractWorker<Operation> createWorker() {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorkerTask<Operation> {
+    private class Worker extends AbstractWorker<Operation> {
 
         public Worker() {
             super(operationSelectorBuilder);

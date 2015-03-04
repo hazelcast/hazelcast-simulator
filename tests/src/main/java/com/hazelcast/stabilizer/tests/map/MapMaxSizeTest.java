@@ -14,7 +14,7 @@ import com.hazelcast.stabilizer.tests.map.helpers.MapMaxSizeOperationCounter;
 import com.hazelcast.stabilizer.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.worker.selector.OperationSelector;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.config.MaxSizeConfig.MaxSizePolicy.PER_NODE;
 import static com.hazelcast.stabilizer.test.utils.TestUtils.assertEqualsStringFormat;
@@ -111,11 +111,11 @@ public class MapMaxSizeTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask<MapOperation> createWorker() {
+    public AbstractWorker<MapOperation> createWorker() {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorkerTask<MapOperation> {
+    private class Worker extends AbstractWorker<MapOperation> {
         private final MapMaxSizeOperationCounter operationCounter = new MapMaxSizeOperationCounter();
         private final OperationSelector<MapPutOperation> mapPutSelector = mapPutOperationSelectorBuilder.build();
 

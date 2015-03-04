@@ -12,7 +12,7 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 
 import java.util.concurrent.TimeUnit;
 
@@ -76,12 +76,12 @@ public class MapAsyncOpsTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask<Operation> createWorker() {
-        return new WorkerTask();
+    public AbstractWorker<Operation> createWorker() {
+        return new Worker();
     }
 
-    private class WorkerTask extends AbstractWorkerTask<Operation> {
-        public WorkerTask() {
+    private class Worker extends AbstractWorker<Operation> {
+        public Worker() {
             super(operationSelectorBuilder);
         }
 

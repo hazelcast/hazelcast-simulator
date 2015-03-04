@@ -9,8 +9,8 @@ import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Teardown;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
-import com.hazelcast.stabilizer.worker.tasks.AbstractMonotonicWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
+import com.hazelcast.stabilizer.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -81,11 +81,11 @@ public class MapCasTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask createWorker() {
-        return new WorkerTask();
+    public AbstractWorker createWorker() {
+        return new Worker();
     }
 
-    private class WorkerTask extends AbstractMonotonicWorkerTask {
+    private class Worker extends AbstractMonotonicWorker {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         protected void beforeRun() {

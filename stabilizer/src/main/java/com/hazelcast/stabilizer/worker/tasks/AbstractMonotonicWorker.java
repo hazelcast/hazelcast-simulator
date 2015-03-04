@@ -1,12 +1,12 @@
 package com.hazelcast.stabilizer.worker.tasks;
 
 /**
- * Monotonic version of {@link AbstractWorkerTask}.
+ * Monotonic version of {@link AbstractWorker}.
  * <p/>
  * This worker provides no {@link com.hazelcast.stabilizer.worker.selector.OperationSelector}, just a simple {@link #timeStep()}
  * method without parameters.
  */
-public abstract class AbstractMonotonicWorkerTask extends AbstractWorkerTask {
+public abstract class AbstractMonotonicWorker extends AbstractWorker {
 
     @Override
     public final void run() {

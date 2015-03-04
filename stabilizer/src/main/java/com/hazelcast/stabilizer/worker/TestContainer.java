@@ -21,7 +21,7 @@ import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
 import com.hazelcast.stabilizer.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.stabilizer.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.stabilizer.utils.AnnotationFilter.WarmupFilter;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 import com.hazelcast.util.Clock;
 import org.apache.log4j.Logger;
 
@@ -91,7 +91,7 @@ public class TestContainer<T extends TestContext> {
     private final Map<String, SimpleProbe<?, ?>> probeMap = new ConcurrentHashMap<String, SimpleProbe<?, ?>>();
 
     private Method runMethod;
-    private Method runWithWorkerTaskMethod;
+    private Method runWithWorkerMethod;
 
     private Method setupMethod;
     private Object[] setupArguments;
@@ -108,7 +108,7 @@ public class TestContainer<T extends TestContext> {
     private Method operationCountMethod;
     private Method messageConsumerMethod;
 
-    private AbstractWorkerTask operationCountWorkerTaskInstance;
+    private AbstractWorker operationCountWorkerInstance;
 
     public TestContainer(Object testObject, T testContext, ProbesConfiguration probesConfiguration) {
         this(testObject, testContext, probesConfiguration, null);
@@ -153,8 +153,8 @@ public class TestContainer<T extends TestContext> {
         for (SimpleProbe probe : probeMap.values()) {
             probe.startProbing(now);
         }
-        if (runWithWorkerTaskMethod != null) {
-            invokeRunWithWorkerTaskMethod();
+        if (runWithWorkerMethod != null) {
+            invokeRunWithWorkerMethod();
         } else {
             invokeMethod(testClassInstance, runMethod);
         }
@@ -193,8 +193,7 @@ public class TestContainer<T extends TestContext> {
     }
 
     public long getOperationCount() throws Throwable {
-        Long count = invokeMethod(
-                (operationCountWorkerTaskInstance != null) ? operationCountWorkerTaskInstance : testClassInstance,
+        Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
                 operationCountMethod);
         return (count == null ? -1 : count);
     }
@@ -206,8 +205,8 @@ public class TestContainer<T extends TestContext> {
     private void initMethods() {
         try {
             runMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Run.class);
-            runWithWorkerTaskMethod = getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, AbstractWorkerTask.class);
-            if (!(runMethod == null ^ runWithWorkerTaskMethod == null)) {
+            runWithWorkerMethod = getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, AbstractWorker.class);
+            if (!(runMethod == null ^ runWithWorkerMethod == null)) {
                 throw new IllegalTestException(
                         format("Test must contain either %s or %s method", Run.class, RunWithWorker.class));
             }
@@ -337,41 +336,41 @@ public class TestContainer<T extends TestContext> {
                         probeType.getName(), probe.getClass()));
     }
 
-    private void invokeRunWithWorkerTaskMethod() throws Throwable {
+    private void invokeRunWithWorkerMethod() throws Throwable {
         bindOptionalProperty(this, testCase, OptionalTestProperties.THREAD_COUNT.propertyName);
         LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
 
-        // create one operation counter per test and inject it in all BaseWorkerTask instances of the test
+        // create one operation counter per test and inject it in all worker instances of the test
         AtomicLong operationCount = new AtomicLong(0);
-        operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorkerTask.class, Performance.class, Long.TYPE);
+        operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
 
-        Field testContextField = getFieldFromBaseWorkerTask("testContext", TestContext.class);
-        Field operationCountField = getFieldFromBaseWorkerTask("operationCount", AtomicLong.class);
+        Field testContextField = getFieldFromAbstractWorker("testContext", TestContext.class);
+        Field operationCountField = getFieldFromAbstractWorker("operationCount", AtomicLong.class);
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
-            AbstractWorkerTask abstractWorkerTask = invokeMethod(testClassInstance, runWithWorkerTaskMethod);
+            AbstractWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
 
-            injectObjectToInstance(abstractWorkerTask, testContextField, testContext);
-            injectObjectToInstance(abstractWorkerTask, operationCountField, operationCount);
+            injectObjectToInstance(worker, testContextField, testContext);
+            injectObjectToInstance(worker, operationCountField, operationCount);
 
-            bindOptionalProperty(abstractWorkerTask, testCase, OptionalTestProperties.LOG_FREQUENCY.propertyName);
-            bindOptionalProperty(abstractWorkerTask, testCase, OptionalTestProperties.PERFORMANCE_UPDATE_FREQUENCY.propertyName);
+            bindOptionalProperty(worker, testCase, OptionalTestProperties.LOG_FREQUENCY.propertyName);
+            bindOptionalProperty(worker, testCase, OptionalTestProperties.PERFORMANCE_UPDATE_FREQUENCY.propertyName);
 
-            operationCountWorkerTaskInstance = abstractWorkerTask;
+            operationCountWorkerInstance = worker;
 
-            spawner.spawn(abstractWorkerTask);
+            spawner.spawn(worker);
         }
         spawner.awaitCompletion();
 
         // call the afterCompletion method on a single instance of the worker
-        operationCountWorkerTaskInstance.afterCompletion();
+        operationCountWorkerInstance.afterCompletion();
     }
 
-    private Field getFieldFromBaseWorkerTask(String fieldName, Class fieldType) {
-        Field field = getField(AbstractWorkerTask.class, fieldName, fieldType);
+    private Field getFieldFromAbstractWorker(String fieldName, Class fieldType) {
+        Field field = getField(AbstractWorker.class, fieldName, fieldType);
         if (field == null) {
-            throw new RuntimeException(format("Could not find %s field in BaseWorkerTask", fieldName));
+            throw new RuntimeException(format("Could not find %s field in %s", fieldName, AbstractWorker.class.getSimpleName()));
         }
         return field;
     }

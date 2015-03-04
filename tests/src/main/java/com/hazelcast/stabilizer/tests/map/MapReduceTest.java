@@ -24,7 +24,7 @@ import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.map.helpers.Employee;
 import com.hazelcast.stabilizer.tests.map.helpers.MapReduceOperationCounter;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,11 +86,11 @@ public class MapReduceTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask<Operation> createWorker() {
+    public AbstractWorker<Operation> createWorker() {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorkerTask<Operation> {
+    private class Worker extends AbstractWorker<Operation> {
         private final MapReduceOperationCounter operationCounter = new MapReduceOperationCounter();
 
         public Worker() {

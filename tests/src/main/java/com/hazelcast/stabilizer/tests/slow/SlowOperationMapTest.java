@@ -17,7 +17,7 @@ import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
 import com.hazelcast.stabilizer.utils.ExceptionReporter;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -125,13 +125,13 @@ public class SlowOperationMapTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask<Operation> createWorker() {
-        return new WorkerTask();
+    public AbstractWorker<Operation> createWorker() {
+        return new Worker();
     }
 
-    private class WorkerTask extends AbstractWorkerTask<Operation> {
+    private class Worker extends AbstractWorker<Operation> {
 
-        public WorkerTask() {
+        public Worker() {
             super(operationSelectorBuilder);
         }
 

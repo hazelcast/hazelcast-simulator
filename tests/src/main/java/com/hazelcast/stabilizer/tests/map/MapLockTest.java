@@ -10,8 +10,8 @@ import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
 import com.hazelcast.stabilizer.test.annotations.Setup;
 import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
-import com.hazelcast.stabilizer.worker.tasks.AbstractMonotonicWorkerTask;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractMonotonicWorker;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
@@ -72,11 +72,11 @@ public class MapLockTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask createWorker() {
+    public AbstractWorker createWorker() {
         return new Worker();
     }
 
-    private class Worker extends AbstractMonotonicWorkerTask {
+    private class Worker extends AbstractMonotonicWorker {
         private final long[] increments = new long[keyCount];
 
         @Override

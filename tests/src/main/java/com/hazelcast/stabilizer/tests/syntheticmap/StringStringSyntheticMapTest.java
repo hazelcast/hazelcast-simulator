@@ -15,7 +15,7 @@ import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
 import com.hazelcast.stabilizer.tests.helpers.StringUtils;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 
 import java.util.Random;
 
@@ -83,13 +83,13 @@ public class StringStringSyntheticMapTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask<Operation> createWorker() {
-        return new WorkerTask();
+    public AbstractWorker<Operation> createWorker() {
+        return new Worker();
     }
 
-    private class WorkerTask extends AbstractWorkerTask<Operation> {
+    private class Worker extends AbstractWorker<Operation> {
 
-        public WorkerTask() {
+        public Worker() {
             super(operationSelectorBuilder);
         }
 

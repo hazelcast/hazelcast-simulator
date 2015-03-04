@@ -16,8 +16,8 @@ import com.hazelcast.stabilizer.test.annotations.Verify;
 import com.hazelcast.stabilizer.test.annotations.Warmup;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.KeyUtils;
-import com.hazelcast.stabilizer.worker.tasks.AbstractMonotonicWorkerTask;
-import com.hazelcast.stabilizer.worker.tasks.AbstractWorkerTask;
+import com.hazelcast.stabilizer.worker.tasks.AbstractMonotonicWorker;
+import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -92,11 +92,11 @@ public class MapEntryProcessorTest {
     }
 
     @RunWithWorker
-    public AbstractWorkerTask createWorker() {
+    public AbstractWorker createWorker() {
         return new Worker();
     }
 
-    private class Worker extends AbstractMonotonicWorkerTask {
+    private class Worker extends AbstractMonotonicWorker {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         @Override
