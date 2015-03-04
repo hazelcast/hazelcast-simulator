@@ -39,7 +39,7 @@ public class EntryProcessorICacheTest {
     private final static ILogger log = Logger.getLogger(EntryProcessorICacheTest.class);
 
     //props
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     public int threadCount = 10;
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;

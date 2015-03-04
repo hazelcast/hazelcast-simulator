@@ -12,7 +12,7 @@ import static java.lang.String.format;
  * Responsible for terminating ec2-instances if they are not used to prevent running into a big bill.
  */
 public class HarakiriMonitor extends Thread {
-    private final static Logger log = Logger.getLogger(HarakiriMonitor.class.getName());
+    private final static Logger log = Logger.getLogger(HarakiriMonitor.class);
     private final Agent agent;
 
     public HarakiriMonitor(Agent agent) {
@@ -47,7 +47,7 @@ public class HarakiriMonitor extends Thread {
                     log.info("harakiri command: " + cmd);
                     bash.execute(cmd);
                 } catch (RuntimeException e) {
-                    log.info("Failed to execute harikiri");
+                    log.info("Failed to execute Harakiri");
                 }
                 return;
             }

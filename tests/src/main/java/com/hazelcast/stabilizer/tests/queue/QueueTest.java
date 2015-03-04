@@ -43,7 +43,7 @@ public class QueueTest {
     public int queueLength = 100;
     public int threadsPerQueue = 1;
     public int messagesPerQueue = 1;
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     private TestContext testContext;
 
     @Setup

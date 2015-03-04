@@ -31,7 +31,7 @@ public class MapTransactionTest {
     private final static ILogger log = Logger.getLogger(MapTransactionTest.class);
 
     // properties
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     public int threadCount = 5;
     public int keyCount = 1000;
 

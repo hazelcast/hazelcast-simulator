@@ -36,7 +36,7 @@ import static java.lang.String.format;
 
 public class Agent {
 
-    private final static Logger log = Logger.getLogger(Coordinator.class.getName());
+    private final static Logger log = Logger.getLogger(Coordinator.class);
 
     public final static File STABILIZER_HOME = getStablizerHome();
 

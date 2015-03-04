@@ -33,7 +33,7 @@ public class MapStoreTest {
 
     private final static ILogger log = Logger.getLogger(MapStoreTest.class);
 
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;
     public int keyCount = 10;
 

@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 public class MapTransactionContextConflictTest {
     private final static ILogger log = Logger.getLogger(MapTransactionContextConflictTest.class);
 
-    public String basename = this.getClass().getName();
+    public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;
     public int keyCount = 50;
     public int maxKeysPerTxn = 5;
