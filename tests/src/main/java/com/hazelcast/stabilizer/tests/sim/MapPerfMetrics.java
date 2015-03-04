@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.map;
+package com.hazelcast.stabilizer.tests.sim;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
