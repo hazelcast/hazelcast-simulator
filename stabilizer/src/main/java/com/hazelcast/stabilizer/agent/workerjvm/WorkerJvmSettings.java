@@ -37,6 +37,7 @@ public class WorkerJvmSettings implements Serializable {
     public String perfSettings = "";
     public String vtuneSettings = "";
     public String flightrecorderSettings = "";
+    public String numaCtl = "none";
 
     public WorkerJvmSettings() {
     }
@@ -59,6 +60,7 @@ public class WorkerJvmSettings implements Serializable {
         this.perfSettings = settings.perfSettings;
         this.vtuneSettings = settings.vtuneSettings;
         this.flightrecorderSettings = settings.flightrecorderSettings;
+        this.numaCtl = settings.numaCtl;
     }
 
     public int totalWorkerCount() {
@@ -85,6 +87,7 @@ public class WorkerJvmSettings implements Serializable {
                 "\n, perfSettings='" + perfSettings + '\'' +
                 "\n, vtuneSettings='" + vtuneSettings + '\'' +
                 "\n, flightrecorderSettings='" + flightrecorderSettings + '\'' +
+                "\n, numaCtl='" + numaCtl + '\'' +
                 "\n}";
     }
 }
