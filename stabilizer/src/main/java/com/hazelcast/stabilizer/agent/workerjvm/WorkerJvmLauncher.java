@@ -191,6 +191,11 @@ public class WorkerJvmLauncher {
     private String[] buildArgs(WorkerJvm workerJvm, String mode) {
         List<String> args = new LinkedList<String>();
 
+        String numaCtl = settings.numaCtl;
+        if (!"none".equals(numaCtl)) {
+            args.add(numaCtl);
+        }
+
         String profiler = settings.profiler;
         if ("perf".equals(profiler)) {
             // perf command always need to be in front of the java command.
