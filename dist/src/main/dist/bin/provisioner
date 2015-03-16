@@ -7,7 +7,7 @@ fi
 export JAVA_OPTS="-server -Xms64m -Xmx1g ${JAVA_EXTRA_OPTS}"
 
 #echo PARAMETERS = $@
-#echo STABILIZER_HOME = ${STABILIZER_HOME}
+#echo SIMULATOR_HOME = ${SIMULATOR_HOME}
 #echo JAVA_VERSION = ${JAVA_VERSION}
 #echo JAVA_OPTS = ${JAVA_OPTS}
 
