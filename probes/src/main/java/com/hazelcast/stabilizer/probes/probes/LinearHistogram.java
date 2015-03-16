@@ -5,7 +5,10 @@ import com.hazelcast.stabilizer.probes.probes.impl.HistogramPart;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import static java.lang.String.format;
+
 public class LinearHistogram implements Serializable {
+
     private final int maxValue;
     private final int step;
 
@@ -17,10 +20,10 @@ public class LinearHistogram implements Serializable {
 
     private LinearHistogram(int maxValue, int step, int[] buckets) {
         if (maxValue <= 0) {
-            throw new IllegalArgumentException("Maximum value must be great then 0. Passed maximum value: "+maxValue);
+            throw new IllegalArgumentException("Maximum value must be great then 0. Passed maximum value: " + maxValue);
         }
         if (step <= 0) {
-            throw new IllegalArgumentException("Step must be great then 0. Passed step: "+step);
+            throw new IllegalArgumentException("Step must be great then 0. Passed step: " + step);
         }
         this.maxValue = maxValue;
         this.step = step;
@@ -64,7 +67,7 @@ public class LinearHistogram implements Serializable {
 
     public void addValue(int value) {
         if (value < 0) {
-            throw new IllegalArgumentException("Value cannot be a negative number. Passed value: "+value);
+            throw new IllegalArgumentException("Value cannot be a negative number. Passed value: " + value);
         }
         int bucket = calculateBucket(value);
         buckets[bucket]++;
@@ -72,7 +75,7 @@ public class LinearHistogram implements Serializable {
 
     public void addMultipleValues(int value, int times) {
         if (value < 0) {
-            throw new IllegalArgumentException("Value cannot be a negative number. Passed value: "+value);
+            throw new IllegalArgumentException("Value cannot be a negative number. Passed value: " + value);
         }
         int bucket = calculateBucket(value);
         buckets[bucket] += times;
@@ -95,14 +98,14 @@ public class LinearHistogram implements Serializable {
 
     private void validateBeforeCombining(LinearHistogram other) {
         if (maxValue != other.maxValue) {
-            throw new IllegalStateException("Cannot combine other "+this+" with "+other
-                    +" as this other has max. value set to "+maxValue+" and the other has max. value" +
-                    "set to "+other.maxValue);
+            throw new IllegalStateException(format(
+                    "Cannot combine other %s with %s as this other has max value set to %d and the other has max value set to %d",
+                    this, other, maxValue, other.maxValue));
         }
         if (step != other.step) {
-            throw new IllegalStateException("Cannot combine other "+this+" with "+other
-                    +" as this other has step set to "+step+" and the other has step" +
-                    "set to "+other.step);
+            throw new IllegalStateException(format(
+                    "Cannot combine other %s with %s as this other has step set to %d and the other has step set to %d",
+                    this, other, step, other.step));
         }
     }
 

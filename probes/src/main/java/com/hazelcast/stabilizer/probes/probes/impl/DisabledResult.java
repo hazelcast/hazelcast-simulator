@@ -5,6 +5,7 @@ import com.hazelcast.stabilizer.probes.probes.Result;
 import javax.xml.stream.XMLStreamWriter;
 
 public class DisabledResult implements Result<DisabledResult> {
+
     @Override
     public DisabledResult combine(DisabledResult other) {
         return this;
@@ -17,7 +18,6 @@ public class DisabledResult implements Result<DisabledResult> {
 
     @Override
     public void writeTo(XMLStreamWriter writer) {
-
     }
 
     @Override

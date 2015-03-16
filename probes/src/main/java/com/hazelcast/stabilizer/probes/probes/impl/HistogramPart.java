@@ -3,6 +3,7 @@ package com.hazelcast.stabilizer.probes.probes.impl;
 import java.io.Serializable;
 
 public class HistogramPart implements Serializable {
+
     private final int bucket;
     private final int values;
 

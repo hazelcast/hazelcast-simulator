@@ -1,5 +1,6 @@
 package com.hazelcast.stabilizer.probes.probes.impl;
 
+import com.hazelcast.stabilizer.probes.probes.ProbesResultXmlElements;
 import com.hazelcast.stabilizer.probes.probes.Result;
 import org.HdrHistogram.Histogram;
 import sun.misc.BASE64Encoder;
@@ -11,6 +12,9 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
 public class HdrLatencyProbeResult implements Result<HdrLatencyProbeResult> {
+
+    public static final String XML_TYPE = HdrLatencyProbeResult.class.getSimpleName();
+
     private final Histogram histogram;
 
     public HdrLatencyProbeResult(Histogram histogram) {
@@ -46,7 +50,7 @@ public class HdrLatencyProbeResult implements Result<HdrLatencyProbeResult> {
         BASE64Encoder encoder = new BASE64Encoder();
         String encodedData = encoder.encode(byteBuffer);
         try {
-            writer.writeStartElement("data");
+            writer.writeStartElement(ProbesResultXmlElements.HDR_LATENCY_DATA.string);
             writer.writeCData(encodedData);
             writer.writeEndElement();
         } catch (XMLStreamException e) {

@@ -8,29 +8,22 @@ import com.hazelcast.stabilizer.probes.probes.impl.DisabledProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.LatencyDistributionProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.OperationsPerSecProbe;
 
+import static java.lang.String.format;
+
 public class Probes {
 
-    private static <R extends Result<R>, T extends SimpleProbe<R, T>> ConcurrentSimpleProbe<R, T> wrapAsThreadLocal(T probe) {
-        return new ConcurrentSimpleProbe<R, T>(probe);
-    }
-
-    private static <R extends Result<R>, T extends IntervalProbe<R, T>> ConcurrentIntervalProbe<R, T> wrapAsThreadLocal(T probe) {
-        return new ConcurrentIntervalProbe<R, T>(probe);
-    }
-
+    @SuppressWarnings("unchecked")
     public static <T extends SimpleProbe> T createProbe(Class<T> type, String name, ProbesConfiguration probesConfiguration) {
         String config = probesConfiguration.getConfig(name);
-        if (type.equals(SimpleProbe.class)) {
+        if (SimpleProbe.class.equals(type)) {
             if (config == null) {
                 return (T) newDefaultSimpleProbe();
             } else if ("throughput".equals(config)) {
                 return (T) newOperationsPerSecProbe();
             } else if ("disabled".equals(config)) {
                 return (T) disabledProbe();
-            } else {
-                throw new IllegalArgumentException("Unknown probe " + config + " for probe type " + type.getName() + ".");
             }
-        } else if (type.equals(IntervalProbe.class)) {
+        } else if (IntervalProbe.class.equals(type)) {
             if (config == null) {
                 return (T) newDefaultIntervalProbe();
             } else if ("latency".equals(config)) {
@@ -41,40 +34,45 @@ public class Probes {
                 return (T) disabledProbe();
             } else if ("hdr".equals(config)) {
                 return (T) hdrProbe();
-            } else {
-                throw new IllegalArgumentException("Unknown probe " + config + " for probe type " + type.getName() + ".");
             }
-        } else {
-            throw new IllegalArgumentException("Unknown probe " + config + " for probe type " + type.getName() + ".");
         }
-    }
-
-    private static IntervalProbe hdrProbe() {
-        return Probes.wrapAsThreadLocal(new HdrLatencyDistributionProbe());
-    }
-
-    public static <T extends IntervalProbe> IntervalProbe newMaxLatencyProbe() {
-        return Probes.wrapAsThreadLocal(new MaxLatencyProbe());
-    }
-
-    public static SimpleProbe newOperationsPerSecProbe() {
-        return Probes.wrapAsThreadLocal(new OperationsPerSecProbe());
-    }
-
-    public static IntervalProbe newLatencyDistributionProbe() {
-        return Probes.wrapAsThreadLocal(new LatencyDistributionProbe());
-    }
-
-    public static IntervalProbe disabledProbe() {
-        return DisabledProbe.INSTANCE;
+        throw new IllegalArgumentException(format(
+                "Unknown probe %s for probe type %s.", config, (type != null) ? type.getName() : null));
     }
 
     private static SimpleProbe newDefaultSimpleProbe() {
         return disabledProbe();
     }
 
+    private static SimpleProbe newOperationsPerSecProbe() {
+        return wrapAsThreadLocal(new OperationsPerSecProbe());
+    }
+
     private static IntervalProbe newDefaultIntervalProbe() {
         return disabledProbe();
     }
 
+    private static IntervalProbe newLatencyDistributionProbe() {
+        return wrapAsThreadLocal(new LatencyDistributionProbe());
+    }
+
+    private static IntervalProbe newMaxLatencyProbe() {
+        return wrapAsThreadLocal(new MaxLatencyProbe());
+    }
+
+    private static IntervalProbe hdrProbe() {
+        return wrapAsThreadLocal(new HdrLatencyDistributionProbe());
+    }
+
+    private static IntervalProbe disabledProbe() {
+        return DisabledProbe.INSTANCE;
+    }
+
+    private static <R extends Result<R>, T extends SimpleProbe<R, T>> ConcurrentSimpleProbe<R, T> wrapAsThreadLocal(T probe) {
+        return new ConcurrentSimpleProbe<R, T>(probe);
+    }
+
+    private static <R extends Result<R>, T extends IntervalProbe<R, T>> ConcurrentIntervalProbe<R, T> wrapAsThreadLocal(T probe) {
+        return new ConcurrentIntervalProbe<R, T>(probe);
+    }
 }

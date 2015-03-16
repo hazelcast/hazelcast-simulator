@@ -2,7 +2,6 @@ package com.hazelcast.stabilizer.probes.probes;
 
 import com.hazelcast.stabilizer.probes.probes.impl.HdrLatencyDistributionProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.HdrLatencyProbeResult;
-import com.hazelcast.stabilizer.probes.probes.impl.LatencyDistributionProbe;
 import com.hazelcast.stabilizer.probes.probes.impl.LatencyDistributionResult;
 import com.hazelcast.stabilizer.probes.probes.impl.MaxLatencyResult;
 import org.HdrHistogram.Histogram;
@@ -16,33 +15,31 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-public class ProbesResultXmlWriterTest {
+public class ProbesResultXmlTest {
+
+    private Map<String, Result> resultMap = new HashMap<String, Result>();
 
     @Test
     public void testHdrLatencyProbeResult() throws Exception {
-        Map<String, Result> resultMap = new HashMap<String, Result>();
         Histogram histogram = new Histogram(HdrLatencyDistributionProbe.MAXIMUM_LATENCY, 4);
         HdrLatencyProbeResult originalResult = new HdrLatencyProbeResult(histogram);
-        resultMap.put("getLatency", originalResult);
+        resultMap.put("hdrLatency", originalResult);
         Map<String, Result> result = serializeAndDeserializeAgain(resultMap);
-        assertEquals(originalResult, result.get("getLatency"));
+        assertEquals(originalResult, result.get("hdrLatency"));
     }
 
     @Test
     public void testMaxLatencyResult() throws Exception {
-        Map<String, Result> resultMap = new HashMap<String, Result>();
         MaxLatencyResult originalResult = new MaxLatencyResult(1);
-        resultMap.put("getLatency", originalResult);
+        resultMap.put("maxLatency", originalResult);
 
         Map<String, Result> result = serializeAndDeserializeAgain(resultMap);
 
-        assertEquals(originalResult, result.get("getLatency"));
-
+        assertEquals(originalResult, result.get("maxLatency"));
     }
 
     @Test
     public void testLatencyDistributionResult() throws Exception {
-        Map<String, Result> resultMap = new HashMap<String, Result>();
         LatencyDistributionResult original = createLatencyDistribution();
         resultMap.put("latencyDistribution", original);
 
@@ -53,7 +50,6 @@ public class ProbesResultXmlWriterTest {
 
     @Test
     public void testMultipleProbes() throws Exception {
-        Map<String, Result> resultMap = new HashMap<String, Result>();
         LatencyDistributionResult result1 = createLatencyDistribution();
         resultMap.put("result1", result1);
 
@@ -70,18 +66,15 @@ public class ProbesResultXmlWriterTest {
         assertEquals(result3, read.get("result3"));
     }
 
-
-
-    private Map<String, Result> serializeAndDeserializeAgain(Map<String, Result> resultMap) {
+    private static Map<String, Result> serializeAndDeserializeAgain(Map<String, Result> resultMap) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ProbesResultXmlWriter probesResultXmlWriter = new ProbesResultXmlWriter();
-        probesResultXmlWriter.write(resultMap, outputStream);
+        ProbesResultXmlWriter.write(resultMap, outputStream);
         InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-        ProbesResultXmlReader reader = new ProbesResultXmlReader();
-        return reader.read(inputStream);
+
+        return ProbesResultXmlReader.read(inputStream);
     }
 
-    private LatencyDistributionResult createLatencyDistribution() {
+    private static LatencyDistributionResult createLatencyDistribution() {
         LinearHistogram histogram = new LinearHistogram(100, 1);
         histogram.addValue(0);
         histogram.addValue(1);

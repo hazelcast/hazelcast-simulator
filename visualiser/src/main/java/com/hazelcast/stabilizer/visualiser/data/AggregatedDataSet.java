@@ -7,14 +7,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AggregatedDataSet extends AbstractIntervalXYDataset implements IntervalXYDataset {
-    private int noOfSeries = 0;
-    private List<IntervalXYDataset> series = new ArrayList<IntervalXYDataset>();
-    private List<String> keys = new ArrayList<String>();
 
-    public void addNewSeries(IntervalXYDataset serie, String key) {
-        noOfSeries++;
-        series.add(serie);
+    private final List<IntervalXYDataset> series = new ArrayList<IntervalXYDataset>();
+    private final List<String> keys = new ArrayList<String>();
+
+    private int noOfSeries = 0;
+
+    public void addNewSeries(IntervalXYDataset dataSet, String key) {
+        series.add(dataSet);
         keys.add(key);
+
+        noOfSeries++;
     }
 
     @Override

@@ -5,9 +5,9 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.Closeable;
 import java.io.IOException;
 
-
-//this class can be removed once Utils methods are factored out from Stabilizer core
+// this class can be removed once util methods are in a separate module
 public class Utils {
+
     public static void closeQuietly(XMLStreamWriter c) {
         if (c == null) return;
         try {

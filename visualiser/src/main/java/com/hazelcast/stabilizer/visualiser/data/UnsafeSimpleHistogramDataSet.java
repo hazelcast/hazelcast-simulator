@@ -6,14 +6,14 @@ import org.jfree.data.statistics.SimpleHistogramDataset;
 import java.lang.reflect.Field;
 import java.util.List;
 
-public class UnsafeSimpleHistogramDataset extends SimpleHistogramDataset {
-    private final Field binsField;
+public class UnsafeSimpleHistogramDataSet extends SimpleHistogramDataset {
+
     private final List bins;
 
-    public UnsafeSimpleHistogramDataset(Comparable key) {
+    public UnsafeSimpleHistogramDataSet(Comparable key) {
         super(key);
         try {
-            binsField = SimpleHistogramDataset.class.getDeclaredField("bins");
+            Field binsField = SimpleHistogramDataset.class.getDeclaredField("bins");
             binsField.setAccessible(true);
             bins = (List) binsField.get(this);
         } catch (NoSuchFieldException e) {
@@ -23,10 +23,10 @@ public class UnsafeSimpleHistogramDataset extends SimpleHistogramDataset {
         }
     }
 
-
     @Override
+    @SuppressWarnings("unchecked")
     public void addBin(SimpleHistogramBin bin) {
+        //super.addBin(bin);
         bins.add(bin);
-//        super.addBin(bin);
     }
 }
