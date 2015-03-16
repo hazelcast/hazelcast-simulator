@@ -27,10 +27,10 @@ import java.util.Random;
 import static com.hazelcast.stabilizer.tests.helpers.HazelcastTestUtils.isMemberNode;
 
 /**
- * In This tests we are intentionally creating destroying closing and using, cache managers and there caches
- * this type of cache usage is well out side normal usage however we did find 2 bugs with this test.  This
- * test could high light memory leeks when repeatedly creating an destroying cache's / managers, some thing
- * that regular test would not normalcy find.
+ * In this tests we are intentionally creating, destroying, closing and using cache managers and their caches.
+ * <p/>
+ * This type of cache usage is well outside normal usage, however we found several bugs with this test. It could highlight memory
+ * leaks when repeatedly creating and destroying caches and/or managers, something that regular test would not find.
  */
 public class MangleICacheTest {
 

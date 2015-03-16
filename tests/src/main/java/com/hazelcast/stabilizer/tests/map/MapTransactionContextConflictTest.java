@@ -23,12 +23,13 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
-/*
+/**
 * Testing transaction context with multi keys.
-* a number of map key's (maxKeysPerTxn) are chosen at random to take part in the transaction
-* as maxKeysPerTxn increases as a proportion of keyCount,  more conflict will occur between the transaction,
-* less transactions will be committed successfully,  more transactions are rolledBack
-* */
+ * <p/>
+ * A number of map keys (maxKeysPerTxn) are chosen at random to take part in the transaction. As maxKeysPerTxn increases as a
+ * proportion of keyCount, more conflict will occur between the transactions, less transactions will be committed successfully and
+ * more transactions are rolled back.
+ */
 public class MapTransactionContextConflictTest {
     private static final ILogger log = Logger.getLogger(MapTransactionContextConflictTest.class);
 
@@ -41,7 +42,7 @@ public class MapTransactionContextConflictTest {
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
-    private static final int maxIntrement = 999;
+    private static final int maxIncrement = 999;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -78,7 +79,7 @@ public class MapTransactionContextConflictTest {
 
                 List<KeyIncrementPair> potentialIncrements = new ArrayList();
                 for (int i = 0; i < maxKeysPerTxn; i++) {
-                    KeyIncrementPair p = new KeyIncrementPair(random, keyCount, maxIntrement);
+                    KeyIncrementPair p = new KeyIncrementPair(random, keyCount, maxIncrement);
                     potentialIncrements.add(p);
                 }
 

@@ -5,7 +5,6 @@ import com.hazelcast.stabilizer.common.AgentAddress;
 import com.hazelcast.stabilizer.common.AgentsFile;
 import com.hazelcast.stabilizer.common.GitInfo;
 import com.hazelcast.stabilizer.common.StabilizerProperties;
-import com.hazelcast.stabilizer.probes.probes.util.Utils;
 import com.hazelcast.stabilizer.provisioner.git.BuildSupport;
 import com.hazelcast.stabilizer.provisioner.git.GitSupport;
 import com.hazelcast.stabilizer.provisioner.git.HazelcastJARFinder;
@@ -107,18 +106,18 @@ public class Provisioner {
         String script = loadInitScript();
         bash.ssh(ip, script);
 
-        //we don't copy yourkit; it will be copied when the coordinator runs and sees that the profiler is enabled.
-        //this is done to reduce the amount of data we need to upload.
+        // we don't copy YourKit; it will be copied when the coordinator runs and sees that the profiler is enabled.
+        // this is done to reduce the amount of data we need to upload.
 
         String versionSpec = props.getHazelcastVersionSpec();
         if (!versionSpec.equals("outofthebox")) {
-            //todo: in the future we can improve this; we upload the hz jars, to delete them again.
+            // TODO: in the future we can improve this; we upload the hz jars, to delete them again.
 
-            //remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
+            // remove the hazelcast jars, they will be copied from the 'hazelcastJarsDir'.
             bash.ssh(ip, format("rm -fr hazelcast-stabilizer-%s/lib/hazelcast-*.jar", getStabilizerVersion()));
 
             if (!versionSpec.endsWith("bringmyown")) {
-                //copy the actual hazelcast jars that are going to be used by the worker.
+                // copy the actual Hazelcast jars that are going to be used by the worker.
                 bash.scpToRemote(ip, hazelcastJars.getAbsolutePath() + "/*.jar",
                         format("hazelcast-stabilizer-%s/lib", getStabilizerVersion()));
             }

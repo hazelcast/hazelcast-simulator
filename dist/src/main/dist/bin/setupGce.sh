@@ -16,36 +16,36 @@ echo "
 # Cloud selection
 # =====================================================================
 #
-# currently configured for EC2, but can also be something else. For a complete listing of supported clouds,
-# check the following link: http://jclouds.apache.org/reference/providers/
+# Currently configured for EC2, but can also be something else:
 # aws-ec2 = Amazon EC2
 # google-compute-engine = The Google Compute Engine.
 #
+# For a complete listing of supported clouds, check the following link: http://jclouds.apache.org/reference/providers/
+#
 CLOUD_PROVIDER=google-compute-engine
-CLOUD_IDENTITY=${GCE_id}
 
 # =====================================================================
 # Cloud credentials
 # =====================================================================
 #
-# This can be either a string containing the credentials, or the path to a file. Although it is easier to
-# place the string, it makes it very dangerous to have the file flying around in a repository because it
-# would be very easy to get it committed and everyone can see it. So it is best to create a file outside
-# of the project. For ec2 e,g you could have 2 files in your home dir: ec2.identity and ec2.credential.
+# The path to a file containing the identity (aws access key). The login (and credentials) can't be directly
+# added to the value because it is too easy to commit them. These files you probably want to keep outside of
+# your project directly to prevent them from accidentally being committed or being zipped and send to someone.
 #
-# This can either be a string containing the credentials, or the path to a file (needed for google compute engine)
 #
-# Just like CLOUD_IDENTITY, it can be the string itself or a path to a file.
+CLOUD_IDENTITY=${GCE_id}
+#
+# The path to the file containing your credential (aws secret key).
 #
 CLOUD_CREDENTIAL=${thispath}/google.pem
 
 
 # =====================================================================
-# Cloud Tweaks
+# Cloud tweaks
 # =====================================================================
 #
-# Some clouds get overloaded with requests from jclouds, e.g. ec. With these settings you can control
-# how much load you are putting on the cloud api's.
+# Some clouds get overloaded with requests from jclouds, e.g. Amazon EC2. With these settings you can control how much load you
+# are putting on the cloud's API.
 #
 # time in milliseconds between cloud requests. default: 50
 #
@@ -57,7 +57,7 @@ CLOUD_POLL_INITIAL_PERIOD=50
 CLOUD_POLL_MAX_PERIOD=5000
 
 #
-# the number of machines started/terminated in 1 go. On ec2 20 seems a save amount.
+# the number of machines started/terminated in 1 go. On EC2 20 seems a save amount.
 #
 CLOUD_BATCH_SIZE=20
 
@@ -66,10 +66,54 @@ CLOUD_BATCH_SIZE=20
 # to be very careful using multiple group-names, because for every port and every group-name a firewall rule is
 # made and you can only have 100 firewall rules.
 #
+# If the name contains ${username}, this section will be replaced by the actual user that runs the
+# test. This makes it very easy to identity which user is owning a certain machine.
+#
 GROUP_NAME=stabilizer-agent
 
+#
+# The name of the user on your local machine.
+#
+# JClouds will automatically make a new user on the remote machine  with this name as loginname. It will also copy
+# the public key of your system to the remote machine and add it to the ~/.ssh/authorized_keys. So once the instance
+# is created, you can login with 'ssh USER@ip'.
+#
+# The default value 'stabilizer' is fine in most cases. So probably you don't want to change this.
+#
+USER=${me}
+
+#
+# The options added to SSH. Probably you don't need to change this.
+#
+SSH_OPTIONS=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no
+
+#
+# The name of the security group, the creates machines belong to.
+#
+# EC2:
+# If the security group doesn't exist, it will automatically be created. If you did not specify
+# a locationId in the MACHINES_SPEC, the location will be us-east-1. If it does exist, make sure
+# that port 22, 9000, 9001 and 5701..5751 are open. In most cases the default value is fine.
+#
+# GCE:
+# The value is not relevant.
+
+SECURITY_GROUP=stabilizer
+
+#
+# EC2:
+# You can specify VPC subnet ID. If SUBNET_ID is different than 'default' then machines are created in EC2 VPC and
+# the SECURITY_GROUP option is ignored.
+#
+# SUBNET_ID has to exist before it's used.
+#
+# GCE:
+# The value is not relevant
+#
+SUBNET_ID=default
+
 # =====================================================================
-# Hardware selection
+# Hardware and OS selection
 # =====================================================================
 #
 # For the options that can be set on the spec check the following link:
@@ -94,15 +138,16 @@ GROUP_NAME=stabilizer-agent
 #       imageId=us-east-1/ami-fb8e9292
 #
 # Warning:
-#   Don't select an amazon image with ec2-user as default user because then the stabilizer will have problems to
-#   log into that image. Will be fixed in the future.
+#       If you want to use RHEL, use the following ami us-east-1/ami-1b3b2472.
+#       The ones listed in EC2 are not working; jclouds messes up with the account initialization.
 #
 # Hardware can be selected e.g.
 # MACHINE_SPEC=minCores=2,minRam=2048
 #
-# You can also explicitly set hardware id, e.g. on ec2:
+# You can also explicitly set the hardware id, e.g. on EC2:
 # hardwareId=m1.small.
-# for a full listing of hardware id's on EC2, check the following link
+#
+# For a full listing of hardware ids on EC2, check the following link
 # http://docs.amazonwebservices.com/AWSEC2/latest/UserGuide/index.html?instance-types.html
 #
 # To set a specific region, use locationId, e.g. locationId=us-east-1a.
@@ -115,16 +160,9 @@ GROUP_NAME=stabilizer-agent
 # US West (Northern California) Region	us-west-1
 #
 # The default region is us-east-1
+# The default AMI is RHEL_6.5_x64
 #
 MACHINE_SPEC=osFamily=CENTOS,os64Bit=true
-
-
-SSH_OPTIONS=-o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o StrictHostKeyChecking=no
-
-USER=${me}
-
-#You need to make sure that the security-group exists.
-SECURITY_GROUP=open
 
 # =====================================================================
 # Hazelcast Version Configuration
@@ -134,8 +172,6 @@ SECURITY_GROUP=open
 # version provided by the stabilizer, but you can override it with a specific version.
 #
 # The Hazelcast version can be configured in different ways:
-#   none                    : if you worker is going to get maven installed through worker dependencies, for
-#                             for more information checkout out the --workerClassPath setting on the Controller.
 #   outofthebox             : if you are fine with the one provided by the Stabilizer itself.
 #   maven=version           : if you want to use a specific version from the maven repository, e.g.
 #                                   maven=3.2
@@ -145,14 +181,43 @@ SECURITY_GROUP=open
 #                             on the agent machine.
 #   bringmyown              : if you want to bring your own dependencies, for more information checkout out the
 #                             --workerClassPath setting on the Controller.
+#   git=version             : if you want Stabilizer to use a specific version of Hazelcast from GIT, e.g.:
+#                                   git=f0288f713    to build a specific revision
+#                                   git=v3.2.3       to build a version from a GIT tag
+#                                   git=myRepository/myBranch - to build a version from a branch in a specific repository.
+#   Use GIT_CUSTOM_REPOSITORIES to specify custom repositories. The main Hazelcast repository is always named "origin".
+#
 HAZELCAST_VERSION_SPEC=outofthebox
+
+# When HAZELCAST_VERSION_SPEC is set to GIT then it will download Hazelcast sources to this directory.
+#
+# Default value: $HOME/.hazelcast-build/
+#
+#
+#GIT_BUILD_DIR=/home/joe/.hazelcast-build/
+
+# Comma separated list of additional GIT repositories to be fetched when HAZELCAST_VERSION_SPEC is set to GIT.
+#
+# Stabilizer will always fetch https://github.com/hazelcast/hazelcast
+# This property specifies additional repositories. You can use both remote and local repositories.
+# Remote repositories must be accessible for anonymous, local repositories must be accessible for current user.
+#
+# Default value: empty, only the main Hazelcast repository is used by default.
+#
+#GIT_CUSTOM_REPOSITORIES=myFork=https://github.com/jerrinot/hazelcast.git,localRepo=/home/jara/devel/oss/hazelcast
+
+# Path to a local Maven installation to use when HAZELCAST_VERSION_SPEC is set to GIT.
+#
+# Default value: Stabilizer expects 'mvn' binary to be available on a PATH.
+#
+#MVN_EXECUTABLE=/usr/bin/mvn
 
 # =====================================================================
 # JDK Installation
 # =====================================================================
 #
 # Warning:
-#   Currently only 64 bit JVM's are going to be installed if you select something else then outofthebox.
+#   Currently only 64 bit JVMs are going to be installed if you select something else then outofthebox.
 #   So make sure that your OS is 64 bits! On option to select 32/64 bits will be added in the future.
 #
 # The following 4 flavors are available:
@@ -184,27 +249,107 @@ JDK_VERSION=7
 # Profiler configuration
 # =====================================================================
 #
-# Warning: Yourkit only works on 32/64 bit linux distro's for the time being. No support for windows
-# or mac.
+# Warning: YourKit only works on 64 bit Linux distros for the time being. No support for Windows or Mac OS.
 #
-# The worker can be configured with a profiler. The following options are
-# available:
+# The worker can be configured with a profiler. The following options are available:
 #   none
 #   yourkit
-# When Yourkit is enabled, a snapshot is created an put in the worker home directory. So when the artifacts
-# are downloaded, the snapshots are included and can be loaded with your Yourkit GUI.
+#   hprof
+#   perf
+#   vtune
+#   flightrecorder
 #
 PROFILER=none
 
 #
-# The settings for Yourkit agent
+# The settings for Oracle Flightrecorder
+#
+# For options see:
+# http://docs.oracle.com/cd/E15289_01/doc.40/e15062/optionxx.htm#BABIECII
+#
+FLIGHTRECORDER_SETTINGS=-XX:+UnlockCommercialFeatures -XX:+FlightRecorder -XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true
+
+#
+# The settings for YourKit agent.
+#
+# When YourKit is enabled, a snapshot is created an put in the worker home directory. So when the artifacts are downloaded, the
+# snapshots are included and can be loaded with your YourKit GUI.
 #
 # Make sure that the path matches the JVM 32/64 bits. In the future this will be automated.
 #
-# The libypagent.so files, which are included in Stabilizer, are for \"YourKit Java Profiler 2013\".
+# The libypagent.so files, which are included in Stabilizer, are for "YourKit Java Profiler 2013".
 #
-# For more information about the Yourkit setting, see:
+# For more information about the YourKit setting, see:
 #   http://www.yourkit.com/docs/java/help/agent.jsp
 #   http://www.yourkit.com/docs/java/help/startup_options.jsp
 #
-YOURKIT_SETTINGS=-agentpath:\${STABILIZER_HOME}/yourkit/linux-x86-64/libyjpagent.so=dir=\${WORKER_HOME},sampling,monitors" > stabilizer.properties
+YOURKIT_SETTINGS=-agentpath:${STABILIZER_HOME}/yourkit/linux-x86-64/libyjpagent.so=dir=${WORKER_HOME},sampling
+
+#
+# The settings for the HProf profiler which is part of the JDK.
+#
+# By default a 'java.hprof.txt' is created in the worker directory. Which can be downloaded with the
+# 'provisioner --download' command after the test has run.
+#
+# For configuration options see:
+#   http://docs.oracle.com/javase/7/docs/technotes/samples/hprof.html
+#
+HPROF_SETTINGS=-agentlib:hprof=cpu=samples,depth=10
+
+#
+# The settings for the 'perf' profiler; available for Linux.
+#
+# https://perf.wiki.kernel.org/index.php/Tutorial#Sampling_with_perf_record
+#
+# The settings is the full commandline for 'perf record' excluding the actual arguments for the java program
+# to start; these will be provided by the Agent. Once the coordinator completes, all the artifacts (including
+# the perf.data created by perf) can be downloaded with 'provisioner --download'. Another option is to log into
+# the agent machine and do a 'perf report' locally.
+#
+# TODO:
+# More work needed on documentation to get perf running correctly.
+#
+# If you get the following message:
+#           Kernel address maps (/proc/{kallsyms,modules}) were restricted.
+#           Check /proc/sys/kernel/kptr_restrict before running 'perf record'.
+# Apply the following under root:
+#           echo 0 > /proc/sys/kernel/kptr_restrict
+# To make it permanent, add it to /etc/rc.local
+#
+# If you get the following message while doing call graph analysis (-g)
+#            No permission to collect stats.
+#            Consider tweaking /proc/sys/kernel/perf_event_paranoid.
+# Apply the following under root:
+#           echo -1 > /proc/sys/kernel/perf_event_paranoid
+# To make it permanent, add it to /etc/rc.local
+#
+PERF_SETTINGS=perf record -o perf.data --quiet
+#PERF_SETTINGS=perf record -o perf.data --quiet -e cpu-cycles -e cpu-clock -e context-switches
+
+#
+# The settings for the 'Intel VTune' profiler.
+#
+# It requires Intel VTune to be installed on the system.
+#
+# The settings is the full commandline for the amplxe-cl excluding the actual arguments for the java program
+# to start; these will be provided by the Agent. Once the coordinator completes, all the artifacts can be downloaded with
+# 'provisioner --download'.
+#
+# To see within the JVM, make sure that you locally have the same Java version (under the same path) as the stabilizer. Else
+# VTune will not be able to see within the JVM.
+#
+# Reference to amplxe-cl commandline options:
+# https://software.intel.com/sites/products/documentation/doclib/iss/2013/amplifier/lin/ug_docs/GUID-09766DB6-3FA8-445B-8E70-5BC9A1BE7C55.htm#GUID-09766DB6-3FA8-445B-8E70-5BC9A1BE7C55
+#
+VTUNE_SETTINGS=/opt/intel/vtune_amplifier_xe/bin64/amplxe-cl -collect hotspots
+
+#
+# NUMA Control. It allows to start member with a specific numactl settings.
+# numactl binary has to be available on PATH
+#
+# Example: NUMA_CONTROL=numactl -m 0 -N 0
+# It will bind members to node 0.
+#
+# Default: none
+NUMA_CONTROL=none
+" > stabilizer.properties

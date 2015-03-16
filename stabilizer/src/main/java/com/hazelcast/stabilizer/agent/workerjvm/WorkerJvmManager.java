@@ -104,7 +104,7 @@ public class WorkerJvmManager {
     public Object executeOnSingleWorker(Command command) throws Exception {
         List<WorkerJvm> workers = new ArrayList<WorkerJvm>(workerJvms.values());
         if (workers.isEmpty()) {
-            throw new NoWorkerAvailableException("No worker JVM's found");
+            throw new NoWorkerAvailableException("No worker JVMs found");
         }
         workers = Collections.singletonList(workers.get(0));
         List results = executeOnWorkers(command, workers);

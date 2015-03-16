@@ -48,7 +48,7 @@ public class ExceptionReporter {
 
         try {
             if (!tmpFile.createNewFile()) {
-                // can't happen since id's are always incrementing. So just for safety reason this is added.
+                // Should not happen since IDs are always incrementing (so this is just for safety reasons)
                 throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath() + " file already exists.");
             }
         } catch (IOException e) {

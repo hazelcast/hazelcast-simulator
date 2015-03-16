@@ -37,12 +37,12 @@ public class CoordinatorCli {
             .withRequiredArg().ofType(String.class).defaultsTo("");
 
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
-            "Number of Cluster member Worker JVM's. If no value is specified and no mixed members are specified, " +
+            "Number of Cluster member Worker JVMs. If no value is specified and no mixed members are specified, " +
                     "then the number of cluster members will be equal to the number of machines in the agents file")
             .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
 
     private final OptionSpec<Integer> clientWorkerCountSpec = parser.accepts("clientWorkerCount",
-            "Number of Cluster Client Worker JVM's")
+            "Number of Cluster Client Worker JVMs")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
@@ -65,7 +65,7 @@ public class CoordinatorCli {
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<Boolean> workerRefreshSpec = parser.accepts("workerFresh",
-            "If the worker JVM's should be replaced after every testsuite")
+            "If the worker JVMs should be replaced after every testsuite")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",

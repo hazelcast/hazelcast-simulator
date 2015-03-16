@@ -122,7 +122,7 @@ INFO  08:43:37 Total number of Hazelcast mixed client & member workers: 0
 INFO  08:43:38 Copying workerClasspath '../target/*.jar' to agents
 INFO  08:43:49 Finished copying workerClasspath '../target/*.jar' to agents
 INFO  08:43:49 Starting workers
-INFO  08:44:03 Finished starting a grand total of 4 Workers JVM's after 14463 ms
+INFO  08:44:03 Finished starting a grand total of 4 Workers JVMs after 14463 ms
 INFO  08:44:04 Starting testsuite: 1405230216265
 INFO  08:44:04 Tests in testsuite: 1
 INFO  08:44:05 Running time per test: 00d 00h 05m 00s 

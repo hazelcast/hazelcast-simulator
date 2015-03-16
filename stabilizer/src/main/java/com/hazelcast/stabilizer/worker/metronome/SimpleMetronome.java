@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  * <p/>
  * The wait interval on the first {@link #waitForNext()} call is randomized.
  * <p/>
- * It's recommended to create a new instance for each worker thread, so they are clocked interleaved.
+ * It is recommended to create a new instance for each worker thread, so they are clocked interleaved.
  */
 public class SimpleMetronome implements Metronome {
     private final long intervalNanos;

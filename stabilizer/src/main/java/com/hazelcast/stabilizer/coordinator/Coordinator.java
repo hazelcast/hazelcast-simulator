@@ -284,7 +284,7 @@ public class Coordinator {
         }
 
         long durationMs = System.currentTimeMillis() - startMs;
-        log.info((format("Successfully started a grand total of %s Workers JVM's after %s ms",
+        log.info((format("Successfully started a grand total of %s Workers JVMs after %s ms",
                 workerJvmSettings.totalWorkerCount(), durationMs)));
 
         return startMs;
@@ -430,9 +430,9 @@ public class Coordinator {
 
     private void uploadYourKitIfNeeded() {
         if ("yourkit".equals(workerJvmSettings.profiler)) {
-            log.info("Ensuring Yourkit dependencies available on remote machines");
+            log.info("Ensuring YourKit dependencies available on remote machines");
 
-            //todo: in the future we'll only upload the right yourkit library 32 vs 64
+            //todo: in the future we'll only upload the requested YourKit library (32 or 64 bit)
             for (String ip : agentsClient.getPublicAddresses()) {
                 bash.ssh(ip, format("mkdir -p hazelcast-stabilizer-%s/yourkit", getStabilizerVersion()));
 

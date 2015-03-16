@@ -9,7 +9,7 @@ http://search.maven.org/remotecontent?filepath=com/hazelcast/stabilizer/hazelcas
 
 Download and unpack the tar.gz or zip file to e.g. the home directory.
 
-add to ~/.bashrc when using Linux or ~/.profile when using OSX:
+add to ~/.bashrc when using Linux or ~/.profile when using Mac OS:
 
 ```
 export STABILIZER_HOME=~/hazelcast-stabilizer-0.3
@@ -53,7 +53,7 @@ a password or explicit provided credentials.
 
 ### Install wget
 
-Make sure wget is installed. For Linux machines in most cases it is installed, but on OSX it isn't out of the box.
+Make sure wget is installed. For Linux machines in most cases it is installed, but on Mac OS it isn't out of the box.
 
 #### Set up on Google Compute Engine
 
