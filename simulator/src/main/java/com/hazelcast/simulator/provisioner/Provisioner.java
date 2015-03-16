@@ -92,6 +92,7 @@ public class Provisioner {
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/junit*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/log4j*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/simulator*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/commons-codec*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/commons-lang3*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/cache-api*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/probes-*", "lib");

@@ -1,82 +1,82 @@
 package com.hazelcast.simulator.probes.probes;
 
-import com.hazelcast.simulator.probes.probes.impl.ConcurrentIntervalProbe;
-import com.hazelcast.simulator.probes.probes.impl.ConcurrentSimpleProbe;
+import com.hazelcast.simulator.probes.probes.impl.ConcurrentProbe;
 import com.hazelcast.simulator.probes.probes.impl.DisabledProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionProbe;
-import com.hazelcast.simulator.probes.probes.impl.LatencyDistributionProbe;
-import com.hazelcast.simulator.probes.probes.impl.MaxLatencyProbe;
-import com.hazelcast.simulator.probes.probes.impl.OperationsPerSecProbe;
 
 import static java.lang.String.format;
 
+/**
+ * Factory class for probes.
+ */
 public final class Probes {
 
     private Probes() {
+    }
 
+    /**
+     * Creates a probe instance.
+     * <p/>
+     * If the configuration for the given name is <tt>null</tt> a {@link DisabledProbe} instance will be returned.
+     *
+     * @param probeName              name of the probe
+     * @param targetClassType        target class type the probe will be assigned to
+     * @param probesConfiguration    configuration of the probe, for allowed types see {@see ProbesType}
+     * @param <T>                    type of the probe which extends {@link SimpleProbe}
+     * @return instance of a probe
+     */
+    public static <T extends SimpleProbe> T createProbe(String probeName, Class<T> targetClassType,
+                                                        ProbesConfiguration probesConfiguration) {
+        return internalCreateProbe(probeName, targetClassType, probesConfiguration, false);
+    }
+
+    /**
+     * Creates a thread safe probe instance.
+     * <p/>
+     * If the configuration for the given name is <tt>null</tt> a {@link DisabledProbe} instance will be returned.
+     *
+     * @param probeName              name of the probe
+     * @param targetClassType        target class type the probe will be assigned to
+     * @param probesConfiguration    configuration of the probe, for allowed types see {@see ProbesType}
+     * @param <T>                    type of the probe which extends {@link SimpleProbe}
+     * @return thread safe instance of a probe
+     */
+    public static <T extends SimpleProbe> T createConcurrentProbe(String probeName, Class<T> targetClassType,
+                                                                  ProbesConfiguration probesConfiguration) {
+        return internalCreateProbe(probeName, targetClassType, probesConfiguration, true);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends SimpleProbe> T createProbe(Class<T> type, String name, ProbesConfiguration probesConfiguration) {
-        String config = probesConfiguration.getConfig(name);
-        if (SimpleProbe.class.equals(type)) {
-            if (config == null) {
-                return (T) newDefaultSimpleProbe();
-            } else if ("throughput".equals(config)) {
-                return (T) newOperationsPerSecProbe();
-            } else if ("disabled".equals(config)) {
-                return (T) disabledProbe();
-            }
-        } else if (IntervalProbe.class.equals(type)) {
-            if (config == null) {
-                return (T) newDefaultIntervalProbe();
-            } else if ("latency".equals(config)) {
-                return (T) newLatencyDistributionProbe();
-            } else if ("maxLatency".equals(config)) {
-                return (T) newMaxLatencyProbe();
-            } else if ("disabled".equals(config)) {
-                return (T) disabledProbe();
-            } else if ("hdr".equals(config)) {
-                return (T) hdrProbe();
-            }
+    private static <T extends SimpleProbe> T internalCreateProbe(String probeName, Class<T> targetClassType,
+                                                                             ProbesConfiguration probesConfiguration,
+                                                                             boolean createConcurrentProbe) {
+        String config = probesConfiguration.getConfig(probeName);
+        ProbesType probesType = (config == null) ? ProbesType.DISABLED : ProbesType.getProbeType(config);
+
+        if (probesType == null) {
+            throw new IllegalArgumentException(format("Probe \"%s\" has unknown configuration %s", probeName, config));
         }
-        throw new IllegalArgumentException(format(
-                "Unknown probe %s for probe type %s.", config, (type != null) ? type.getName() : null));
-    }
 
-    private static SimpleProbe newDefaultSimpleProbe() {
-        return disabledProbe();
-    }
+        // check if targetClassType is allowed
+        if (!probesType.isAssignableFrom(targetClassType)) {
+            throw new ClassCastException(format("Probe \"%s\" of type %s does not match requested probe type %s",
+                    probeName, probesType, targetClassType.getSimpleName()));
+        }
 
-    private static SimpleProbe newOperationsPerSecProbe() {
-        return wrapAsThreadLocal(new OperationsPerSecProbe());
-    }
+        try {
+            // return single instance for DISABLED probe
+            if (probesType == ProbesType.DISABLED) {
+                return (T) DisabledProbe.INSTANCE;
+            }
 
-    private static IntervalProbe newDefaultIntervalProbe() {
-        return disabledProbe();
-    }
+            // return concurrent probe
+            if (createConcurrentProbe) {
+                return (T) new ConcurrentProbe(probesType);
+            }
 
-    private static IntervalProbe newLatencyDistributionProbe() {
-        return wrapAsThreadLocal(new LatencyDistributionProbe());
-    }
-
-    private static IntervalProbe newMaxLatencyProbe() {
-        return wrapAsThreadLocal(new MaxLatencyProbe());
-    }
-
-    private static IntervalProbe hdrProbe() {
-        return wrapAsThreadLocal(new HdrLatencyDistributionProbe());
-    }
-
-    private static IntervalProbe disabledProbe() {
-        return DisabledProbe.INSTANCE;
-    }
-
-    private static <R extends Result<R>, T extends SimpleProbe<R, T>> ConcurrentSimpleProbe<R, T> wrapAsThreadLocal(T probe) {
-        return new ConcurrentSimpleProbe<R, T>(probe);
-    }
-
-    private static <R extends Result<R>, T extends IntervalProbe<R, T>> ConcurrentIntervalProbe<R, T> wrapAsThreadLocal(T probe) {
-        return new ConcurrentIntervalProbe<R, T>(probe);
+            // return new instance
+            return (T) probesType.createInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 }

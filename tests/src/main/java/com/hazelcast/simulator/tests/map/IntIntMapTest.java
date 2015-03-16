@@ -144,6 +144,6 @@ public class IntIntMapTest {
 
     public static void main(String[] args) throws Throwable {
         IntIntMapTest test = new IntIntMapTest();
-        new TestRunner<IntIntMapTest>(test).run();
+        new TestRunner<IntIntMapTest>(test).withDuration(10).run();
     }
 }

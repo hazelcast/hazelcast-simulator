@@ -26,7 +26,7 @@ public class MaxLatencyResult implements Result<MaxLatencyResult> {
 
     @Override
     public String toHumanString() {
-        return "Maximum latency: " + maxLatencyMs + " ms.";
+        return String.format("%s ms (maximum latency)", maxLatencyMs);
     }
 
     @Override

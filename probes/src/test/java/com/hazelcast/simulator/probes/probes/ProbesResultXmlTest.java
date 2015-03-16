@@ -1,9 +1,10 @@
 package com.hazelcast.simulator.probes.probes;
 
 import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyProbeResult;
+import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionResult;
 import com.hazelcast.simulator.probes.probes.impl.LatencyDistributionResult;
 import com.hazelcast.simulator.probes.probes.impl.MaxLatencyResult;
+import com.hazelcast.simulator.probes.probes.impl.OperationsPerSecResult;
 import org.HdrHistogram.Histogram;
 import org.junit.Test;
 
@@ -21,10 +22,11 @@ public class ProbesResultXmlTest {
 
     @Test
     public void testHdrLatencyProbeResult() throws Exception {
-        Histogram histogram = new Histogram(HdrLatencyDistributionProbe.MAXIMUM_LATENCY, 4);
-        HdrLatencyProbeResult originalResult = new HdrLatencyProbeResult(histogram);
+        HdrLatencyDistributionResult originalResult = createHdrLatencyDistribution();
         resultMap.put("hdrLatency", originalResult);
+
         Map<String, Result> result = serializeAndDeserializeAgain(resultMap);
+
         assertEquals(originalResult, result.get("hdrLatency"));
     }
 
@@ -49,6 +51,16 @@ public class ProbesResultXmlTest {
     }
 
     @Test
+    public void testOperationsPerSecResult() throws Exception {
+        OperationsPerSecResult original = new OperationsPerSecResult(100000, 1234.5);
+        resultMap.put("operationsPerSec", original);
+
+        Map<String, Result> read = serializeAndDeserializeAgain(resultMap);
+
+        assertEquals(original, read.get("operationsPerSec"));
+    }
+
+    @Test
     public void testMultipleProbes() throws Exception {
         LatencyDistributionResult result1 = createLatencyDistribution();
         resultMap.put("result1", result1);
@@ -66,12 +78,16 @@ public class ProbesResultXmlTest {
         assertEquals(result3, read.get("result3"));
     }
 
-    private static Map<String, Result> serializeAndDeserializeAgain(Map<String, Result> resultMap) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ProbesResultXmlWriter.write(resultMap, outputStream);
-        InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+    private static HdrLatencyDistributionResult createHdrLatencyDistribution() {
+        Histogram histogram = new Histogram(HdrLatencyDistributionProbe.MAXIMUM_LATENCY, 4);
+        histogram.recordValue(0);
+        histogram.recordValue(1);
+        histogram.recordValue(2);
+        histogram.recordValue(1);
+        histogram.recordValue(5);
+        histogram.recordValue(80);
 
-        return ProbesResultXmlReader.read(inputStream);
+        return new HdrLatencyDistributionResult(histogram);
     }
 
     private static LatencyDistributionResult createLatencyDistribution() {
@@ -84,5 +100,13 @@ public class ProbesResultXmlTest {
         histogram.addValue(80);
 
         return new LatencyDistributionResult(histogram);
+    }
+
+    private static Map<String, Result> serializeAndDeserializeAgain(Map<String, Result> resultMap) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ProbesResultXmlWriter.write(resultMap, outputStream);
+        InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+
+        return ProbesResultXmlReader.read(inputStream);
     }
 }

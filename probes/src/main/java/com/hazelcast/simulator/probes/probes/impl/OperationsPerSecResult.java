@@ -8,33 +8,42 @@ import javax.xml.stream.XMLStreamWriter;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-public class OperationsPerSecondResult implements Result<OperationsPerSecondResult> {
+import static java.lang.String.format;
 
-    public static final String XML_TYPE = OperationsPerSecondResult.class.getSimpleName();
+public class OperationsPerSecResult implements Result<OperationsPerSecResult> {
 
+    public static final String XML_TYPE = OperationsPerSecResult.class.getSimpleName();
+
+    private final long invocations;
     private final double operationsPerSecond;
 
-    public OperationsPerSecondResult(double operationsPerSecond) {
+    public OperationsPerSecResult(long invocations, double operationsPerSecond) {
+        this.invocations = invocations;
         this.operationsPerSecond = operationsPerSecond;
     }
 
     @Override
-    public OperationsPerSecondResult combine(OperationsPerSecondResult other) {
+    public OperationsPerSecResult combine(OperationsPerSecResult other) {
         if (other == null) {
             return this;
         }
-        return new OperationsPerSecondResult(operationsPerSecond + other.operationsPerSecond);
+        return new OperationsPerSecResult(
+                invocations + other.invocations,
+                operationsPerSecond + other.operationsPerSecond);
     }
 
     @Override
     public String toHumanString() {
-        NumberFormat floatFormat = NumberFormat.getInstance(Locale.US);
-        return "Operations / second: " + floatFormat.format(operationsPerSecond);
+        NumberFormat formatter = NumberFormat.getInstance(Locale.US);
+        return format("%15s ops %15s op/s", formatter.format(invocations), formatter.format(operationsPerSecond));
     }
 
     @Override
     public void writeTo(XMLStreamWriter writer) {
         try {
+            writer.writeStartElement(ProbesResultXmlElements.INVOCATIONS.string);
+            writer.writeCharacters(Long.toString(invocations));
+            writer.writeEndElement();
             writer.writeStartElement(ProbesResultXmlElements.OPERATIONS_PER_SECOND.string);
             writer.writeCharacters(Double.toString(operationsPerSecond));
             writer.writeEndElement();
@@ -52,8 +61,11 @@ public class OperationsPerSecondResult implements Result<OperationsPerSecondResu
             return false;
         }
 
-        OperationsPerSecondResult that = (OperationsPerSecondResult) o;
+        OperationsPerSecResult that = (OperationsPerSecResult) o;
 
+        if (that.invocations != invocations) {
+            return false;
+        }
         if (Double.compare(that.operationsPerSecond, operationsPerSecond) != 0) {
             return false;
         }
@@ -63,7 +75,8 @@ public class OperationsPerSecondResult implements Result<OperationsPerSecondResu
 
     @Override
     public int hashCode() {
-        long temp = Double.doubleToLongBits(operationsPerSecond);
-        return (int) (temp ^ (temp >>> 32));
+        long result = Double.doubleToLongBits(operationsPerSecond);
+        result = 31 * result + invocations;
+        return (int) (result ^ (result >>> 32));
     }
 }

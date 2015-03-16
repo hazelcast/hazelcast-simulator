@@ -2,6 +2,7 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.utils.ThreadSpawner;
@@ -9,7 +10,6 @@ import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Abstract worker class which is returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker} annotated test
@@ -29,11 +29,10 @@ public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
 
     // these fields will be injected by the TestContainer
     TestContext testContext;
-    AtomicLong operationCount;
+    IntervalProbe intervalProbe;
 
     // these fields will be injected by test.properties of the test
     long logFrequency = 10000;
-    long performanceUpdateFrequency = 10;
 
     // local variables
     long iteration;
@@ -54,25 +53,19 @@ public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
         beforeRun();
 
         while (!testContext.isStopped()) {
+            intervalProbe.started();
             timeStep(selector.select());
+            intervalProbe.done();
 
             increaseIteration();
         }
-        operationCount.addAndGet(iteration % performanceUpdateFrequency);
 
         afterRun();
     }
 
     @Performance
     public long getOperationCount() {
-        return operationCount.get();
-    }
-
-    protected void setPerformanceUpdateFrequency(long performanceUpdateFrequency) {
-        if (performanceUpdateFrequency <= 0) {
-            throw new IllegalArgumentException("performanceUpdateFrequency must be a positive number!");
-        }
-        this.performanceUpdateFrequency = performanceUpdateFrequency;
+        return intervalProbe.getInvocationCount();
     }
 
     /**
@@ -139,10 +132,6 @@ public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
         iteration++;
         if (iteration % logFrequency == 0) {
             LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-        }
-
-        if (iteration % performanceUpdateFrequency == 0) {
-            operationCount.addAndGet(performanceUpdateFrequency);
         }
     }
 }

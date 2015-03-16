@@ -4,6 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
+import com.hazelcast.simulator.probes.probes.ProbesType;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.probes.probes.impl.DisabledProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -76,7 +77,6 @@ public class TestContainerTest {
         new TestContainer<DummyTestContext>(new DuplicateSetupAnnotationTest(), testContext, probesConfiguration);
     }
 
-    @SuppressWarnings("unused")
     private static class DuplicateSetupAnnotationTest {
         @Setup
         void setup() {
@@ -280,7 +280,7 @@ public class TestContainerTest {
     @Test
     public void testProbeExplicitNameSetViaAnnotation() throws Throwable {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("explicitProbeName", "throughput");
+        probesConfiguration.addConfig("explicitProbeName", ProbesType.THROUGHPUT.string);
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         Map probeResults = invoker.getProbeResults();
 
@@ -290,7 +290,7 @@ public class TestContainerTest {
     @Test
     public void testProbeImplicitName() throws Throwable {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("Probe2", "throughput");
+        probesConfiguration.addConfig("Probe2", ProbesType.THROUGHPUT.string);
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         Map probeResults = invoker.getProbeResults();
 
@@ -300,7 +300,7 @@ public class TestContainerTest {
     @Test
     public void testProbeInjectSimpleProbeToField() {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("throughputProbe", "throughput");
+        probesConfiguration.addConfig("throughputProbe", ProbesType.THROUGHPUT.string);
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         Map probeResults = invoker.getProbeResults();
 
@@ -311,7 +311,7 @@ public class TestContainerTest {
     @Test
     public void testProbeInjectIntervalProbeToField() {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("latencyProbe", "latency");
+        probesConfiguration.addConfig("latencyProbe", ProbesType.LATENCY.string);
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         Map probeResults = invoker.getProbeResults();
 
@@ -322,7 +322,7 @@ public class TestContainerTest {
     @Test
     public void testProbeInjectExplicitlyNamedProbeToField() {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("explicitProbeInjectedToField", "throughput");
+        probesConfiguration.addConfig("explicitProbeInjectedToField", ProbesType.THROUGHPUT.string);
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         Map probeResults = invoker.getProbeResults();
 
@@ -561,7 +561,7 @@ public class TestContainerTest {
 
         @Override
         public String getTestId() {
-            return null;
+            return "";
         }
 
         @Override

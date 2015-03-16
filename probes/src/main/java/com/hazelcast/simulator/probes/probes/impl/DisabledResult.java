@@ -18,6 +18,7 @@ public class DisabledResult implements Result<DisabledResult> {
 
     @Override
     public void writeTo(XMLStreamWriter writer) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

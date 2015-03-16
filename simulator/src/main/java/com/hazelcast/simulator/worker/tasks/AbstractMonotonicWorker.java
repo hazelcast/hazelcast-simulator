@@ -13,11 +13,12 @@ public abstract class AbstractMonotonicWorker extends AbstractWorker {
         beforeRun();
 
         while (!testContext.isStopped()) {
+            intervalProbe.started();
             timeStep();
+            intervalProbe.done();
 
             increaseIteration();
         }
-        operationCount.addAndGet(iteration % performanceUpdateFrequency);
 
         afterRun();
     }

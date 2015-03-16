@@ -22,9 +22,10 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
     @Override
     public final void run() {
         while (!testContext.isStopped()) {
+            intervalProbe.started();
             timeStep(selector.select());
+            intervalProbe.done();
         }
-        operationCount.addAndGet(iteration % performanceUpdateFrequency);
     }
 
     @Override
