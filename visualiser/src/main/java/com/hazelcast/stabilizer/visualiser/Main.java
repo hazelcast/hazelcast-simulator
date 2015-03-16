@@ -16,14 +16,55 @@ import java.io.File;
 
 public class Main {
 
-    private JFrame frame;
-    private Chart chartPanel;
-    private Model model;
+    private final Model model;
+    private final JFrame frame;
 
     public Main() {
         model = new Model();
+        frame = new JFrame("Stabilizer Workbench");
+
         createUI();
         createMenu();
+    }
+
+    private void createUI() {
+        frame.setSize(600, 400);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setLocationByPlatform(true);
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        Container mainPane = frame.getContentPane();
+
+        ProbesCheckboxes checkBoxes = new ProbesCheckboxes(model);
+        model.addBenchmarkChangeListener(checkBoxes);
+
+        final Chart chartPanel = new Chart(model, checkBoxes);
+        mainPane.add(chartPanel, BorderLayout.CENTER);
+
+        JPanel westPanel = new JPanel();
+        westPanel.setLayout(new BorderLayout());
+
+        JPanel northWestPanel = new JPanel();
+        //northWestPanel.setMinimumSize(new Dimension(400, 1));
+        northWestPanel.setLayout(new BoxLayout(northWestPanel, BoxLayout.Y_AXIS));
+        northWestPanel.add(checkBoxes);
+        LoadedBenchmarks loadedBenchmarks = new LoadedBenchmarks();
+        model.addBenchmarkChangeListener(loadedBenchmarks);
+
+        northWestPanel.add(loadedBenchmarks);
+
+        JButton renderButton = new JButton("Render");
+        renderButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                chartPanel.updateChart();
+            }
+        });
+        westPanel.add(northWestPanel, BorderLayout.NORTH);
+        westPanel.add(renderButton, BorderLayout.SOUTH);
+
+        mainPane.add(westPanel, BorderLayout.WEST);
     }
 
     private void createMenu() {
@@ -36,7 +77,7 @@ public class Main {
         loadMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                final JFileChooser fc = new JFileChooser();
+                JFileChooser fc = new JFileChooser();
                 fc.setFileFilter(new ExtensionFileFilter("XML Files", "xml"));
                 int retVal = fc.showOpenDialog(null);
                 if (retVal == JFileChooser.APPROVE_OPTION) {
@@ -57,7 +98,6 @@ public class Main {
         menu.add(loadMenuItem);
         menu.add(exitMenuItem);
         frame.setJMenuBar(menuBar);
-
     }
 
     public static void main(String[] args) {
@@ -66,50 +106,5 @@ public class Main {
                 new Main();
             }
         });
-    }
-
-    private void createUI() {
-        frame = new JFrame("Stabilizer Workbench");
-
-        frame.setSize(600, 400);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocationByPlatform(true);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        Container mainPane = frame.getContentPane();
-
-
-
-        final ProbesCheckboxes checkBoxes = new ProbesCheckboxes(model);
-        model.addBenchmarkChangeListener(checkBoxes);
-
-        chartPanel = new Chart(model, checkBoxes);
-        mainPane.add(chartPanel, BorderLayout.CENTER);
-
-        JPanel westPanel = new JPanel();
-        westPanel.setLayout(new BorderLayout());
-
-        JPanel nortWestPanel = new JPanel();
-//        nortWestPanel.setMinimumSize(new Dimension(400, 1));
-        nortWestPanel.setLayout(new BoxLayout(nortWestPanel, BoxLayout.Y_AXIS));
-        nortWestPanel.add(checkBoxes);
-        LoadedBenchmarks loadedBenchmarks = new LoadedBenchmarks();
-        model.addBenchmarkChangeListener(loadedBenchmarks);
-
-        nortWestPanel.add(loadedBenchmarks);
-
-        JButton renderButton = new JButton("Render");
-        renderButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                chartPanel.updateChart();
-            }
-        });
-        westPanel.add(nortWestPanel, BorderLayout.NORTH);
-        westPanel.add(renderButton, BorderLayout.SOUTH);
-
-        mainPane.add(westPanel, BorderLayout.WEST);
-
     }
 }

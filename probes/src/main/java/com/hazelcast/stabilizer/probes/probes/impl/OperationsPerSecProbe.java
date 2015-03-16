@@ -3,6 +3,7 @@ package com.hazelcast.stabilizer.probes.probes.impl;
 import com.hazelcast.stabilizer.probes.probes.SimpleProbe;
 
 public class OperationsPerSecProbe implements SimpleProbe<OperationsPerSecondResult, OperationsPerSecProbe> {
+
     private long noOfOperations;
     private long started;
     private long stopped;

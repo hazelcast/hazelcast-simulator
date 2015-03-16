@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ProbesConfiguration implements Serializable {
+
     private final Map<String, String> config;
 
     public ProbesConfiguration() {

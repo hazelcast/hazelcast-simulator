@@ -128,8 +128,7 @@ public class TestCaseRunner {
     private void processProbeResults() {
         Map<String, ? extends Result> probesResult = getProbesResult();
         if (!probesResult.isEmpty()) {
-            ProbesResultXmlWriter xmlWriter = new ProbesResultXmlWriter();
-            xmlWriter.write(probesResult, new File("results-" + coordinator.testSuite.id + ".xml"));
+            ProbesResultXmlWriter.write(probesResult, new File("results-" + coordinator.testSuite.id + ".xml"));
             logProbesResultInHumanReadableFormat(probesResult);
         }
     }

@@ -9,9 +9,11 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractConcurrentProbe<R extends Result<R>, T extends SimpleProbe<R, T>> {
+
     private final ThreadLocal<T> threadLocalProbe;
     private final ConcurrentHashMap<Long, T> probeMap;
     private final ConstructorFunction<Long, T> constructorFunction;
+
     private long startedAt;
 
     public AbstractConcurrentProbe(ConstructorFunction<Long, T> constructorFunction) {
@@ -25,12 +27,14 @@ public abstract class AbstractConcurrentProbe<R extends Result<R>, T extends Sim
         if (!probeIterator.hasNext()) {
             return null;
         }
+
         R result = probeIterator.next().getResult();
         while (probeIterator.hasNext()) {
             T nextProbe = probeIterator.next();
             R nextData = nextProbe.getResult();
             result = result.combine(nextData);
         }
+
         return result;
     }
 
@@ -42,6 +46,7 @@ public abstract class AbstractConcurrentProbe<R extends Result<R>, T extends Sim
             probe.startProbing(startedAt);
             threadLocalProbe.set(probe);
         }
+
         return probe;
     }
 

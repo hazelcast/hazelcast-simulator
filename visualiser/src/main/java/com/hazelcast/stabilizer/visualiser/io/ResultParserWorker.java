@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class ResultParserWorker extends SwingWorker<BenchmarkResults, Void> {
+
     private final File file;
     private final Model model;
 
@@ -23,28 +24,27 @@ public class ResultParserWorker extends SwingWorker<BenchmarkResults, Void> {
 
     @Override
     protected BenchmarkResults doInBackground() throws Exception {
-        ProbesResultXmlReader reader = new ProbesResultXmlReader();
-        FileInputStream is = null;
+        FileInputStream fileInputStream = null;
         try {
-            is = new FileInputStream(file);
-            Map<String, Result> read = reader.read(is);
-            String filename = getName();
-            BenchmarkResults results = new BenchmarkResults(filename);
-            for (Map.Entry<String, Result> entry : read.entrySet()) {
-                results.addProbeData(entry.getKey(), entry.getValue());
+            fileInputStream = new FileInputStream(file);
+            Map<String, Result> probeResultMap = ProbesResultXmlReader.read(fileInputStream);
+            String filename = getFileName(file);
+
+            BenchmarkResults benchmarkResults = new BenchmarkResults(filename);
+            for (Map.Entry<String, Result> entry : probeResultMap.entrySet()) {
+                benchmarkResults.addProbeData(entry.getKey(), entry.getValue());
             }
-            return results;
+            return benchmarkResults;
         } finally {
-            Utils.closeQuietly(is);
+            Utils.closeQuietly(fileInputStream);
         }
     }
 
-    private String getName() {
-        String filename = removeExtension(file.getName());
-        return filename;
+    private static String getFileName(File file) {
+        return removeExtension(file.getName());
     }
 
-    private String removeExtension(String name) {
+    private static String removeExtension(String name) {
         int dotPos = name.lastIndexOf('.');
         if (dotPos != -1) {
             name = name.substring(0, dotPos);

@@ -23,5 +23,4 @@ public class ConcurrentSimpleProbe<R extends Result<R>, T extends SimpleProbe<R,
     public ConcurrentSimpleProbe<R, T> createNew(Long arg) {
         return new ConcurrentSimpleProbe<R, T>(constructorFunction);
     }
-
 }

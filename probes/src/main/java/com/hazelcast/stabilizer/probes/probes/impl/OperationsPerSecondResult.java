@@ -1,5 +1,6 @@
 package com.hazelcast.stabilizer.probes.probes.impl;
 
+import com.hazelcast.stabilizer.probes.probes.ProbesResultXmlElements;
 import com.hazelcast.stabilizer.probes.probes.Result;
 
 import javax.xml.stream.XMLStreamException;
@@ -8,7 +9,11 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 public class OperationsPerSecondResult implements Result<OperationsPerSecondResult> {
+
+    public static final String XML_TYPE = OperationsPerSecondResult.class.getSimpleName();
+
     private final double operationsPerSecond;
+
     public OperationsPerSecondResult(double operationsPerSecond) {
         this.operationsPerSecond = operationsPerSecond;
     }
@@ -30,7 +35,7 @@ public class OperationsPerSecondResult implements Result<OperationsPerSecondResu
     @Override
     public void writeTo(XMLStreamWriter writer) {
         try {
-            writer.writeStartElement("operations-per-second");
+            writer.writeStartElement(ProbesResultXmlElements.OPERATIONS_PER_SECOND.string);
             writer.writeCharacters(Double.toString(operationsPerSecond));
             writer.writeEndElement();
         } catch (XMLStreamException e) {

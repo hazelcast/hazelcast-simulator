@@ -7,7 +7,7 @@ import com.hazelcast.stabilizer.probes.probes.impl.LatencyDistributionResult;
 import com.hazelcast.stabilizer.visualiser.data.BenchmarkResults;
 import com.hazelcast.stabilizer.visualiser.data.Model;
 import com.hazelcast.stabilizer.visualiser.data.AggregatedDataSet;
-import com.hazelcast.stabilizer.visualiser.data.UnsafeSimpleHistogramDataset;
+import com.hazelcast.stabilizer.visualiser.data.UnsafeSimpleHistogramDataSet;
 import org.HdrHistogram.AbstractHistogram;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramIterationValue;
@@ -27,9 +27,9 @@ import java.util.*;
 import java.util.List;
 
 public class Chart extends JPanel {
-    public static final float ALPHA = 0.65f;
 
-    private final ChartPanel chartPanel;
+    private static final float ALPHA = 0.65f;
+
     private final JSlider mainHorizontalSlider;
     private final JSlider fineHorizontalSlider;
     private final JSlider verticalSlider;
@@ -37,7 +37,6 @@ public class Chart extends JPanel {
 
     private final Model model;
     private final ProbesCheckboxes probesCheckboxes;
-
 
     public Chart(Model model, ProbesCheckboxes probesCheckboxes) {
         this.model = model;
@@ -48,10 +47,10 @@ public class Chart extends JPanel {
         mainHorizontalSlider = new JSlider();
         fineHorizontalSlider = new JSlider();
         verticalSlider = new JSlider();
-        chartPanel = new ChartPanel(null);
 
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         verticalSlider.setOrientation(JSlider.VERTICAL);
+        ChartPanel chartPanel = new ChartPanel(null);
         add(chartPanel, BorderLayout.CENTER);
 
         JPanel horizontalSlidersPanel = new JPanel();
@@ -61,7 +60,6 @@ public class Chart extends JPanel {
 
         add(horizontalSlidersPanel, BorderLayout.SOUTH);
         add(verticalSlider, BorderLayout.EAST);
-
 
         JFreeChart chart = ChartFactory.createHistogram("Latency Distribution", "Latency (µs)", "Operations", null,
                 PlotOrientation.VERTICAL, true, true, true);
@@ -98,7 +96,7 @@ public class Chart extends JPanel {
     public void updateChart() {
         List<String> selectedProbes = probesCheckboxes.getEnabledProbes();
         AggregatedDataSet dataSet = calculateDataSet(selectedProbes);
-        updateDataset(dataSet);
+        updateDataSet(dataSet);
     }
 
     private AggregatedDataSet calculateDataSet(List<String> selectedProbes) {
@@ -123,7 +121,7 @@ public class Chart extends JPanel {
     }
 
     private SimpleHistogramDataset calculateSingleProbeDataset(HdrLatencyProbeResult probeData) {
-        UnsafeSimpleHistogramDataset simpleHistogramDataset = new UnsafeSimpleHistogramDataset("key");
+        UnsafeSimpleHistogramDataSet simpleHistogramDataset = new UnsafeSimpleHistogramDataSet("key");
         simpleHistogramDataset.setAdjustForBinSize(false);
         Histogram histogram = probeData.getHistogram();
         AbstractHistogram.LinearBucketValues histogramIterationValues = histogram.linearBucketValues(10);
@@ -138,7 +136,7 @@ public class Chart extends JPanel {
     }
 
     private SimpleHistogramDataset calculateSingleProbeDataset(LatencyDistributionResult probeData) {
-        UnsafeSimpleHistogramDataset simpleHistogramDataset = new UnsafeSimpleHistogramDataset("key");
+        UnsafeSimpleHistogramDataSet simpleHistogramDataset = new UnsafeSimpleHistogramDataSet("key");
         LinearHistogram histogram = probeData.getHistogram();
         int[] buckets = histogram.getBuckets();
         int step = histogram.getStep();
@@ -154,7 +152,7 @@ public class Chart extends JPanel {
         return simpleHistogramDataset;
     }
 
-    private void updateDataset(AggregatedDataSet dataSet) {
+    private void updateDataSet(AggregatedDataSet dataSet) {
         plot.getDomainAxis().setAutoRange(true);
         plot.getRangeAxis().setAutoRange(true);
         plot.setDataset(dataSet);

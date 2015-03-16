@@ -1,10 +1,8 @@
 package com.hazelcast.stabilizer.probes.probes.util;
 
-import com.hazelcast.stabilizer.probes.probes.util.ConstructorFunction;
-
 import java.util.concurrent.ConcurrentMap;
 
-//this class can be removed once Utils methods are factored out from Stabilizer core
+// this class can be removed once util methods are in a separate module
 public class ConcurrencyUtil {
     public static <K, V> V getOrPutIfAbsent(ConcurrentMap<K, V> map, K key, ConstructorFunction<K, V> func) {
         V value = map.get(key);
@@ -15,5 +13,4 @@ public class ConcurrencyUtil {
         }
         return value;
     }
-
 }

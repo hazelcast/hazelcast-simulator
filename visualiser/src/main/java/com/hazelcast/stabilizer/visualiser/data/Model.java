@@ -1,7 +1,5 @@
 package com.hazelcast.stabilizer.visualiser.data;
 
-import com.hazelcast.stabilizer.visualiser.data.BenchmarkResults;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EventListener;
@@ -12,13 +10,9 @@ import java.util.Map;
 import java.util.Set;
 
 public class Model {
-    private final Map<String, BenchmarkResults> benchmarks;
-    private final List<BenchmarkChangeListener> listeners;
 
-    public Model() {
-        benchmarks = new HashMap<String, BenchmarkResults>();
-        listeners = new ArrayList<BenchmarkChangeListener>();
-    }
+    private final Map<String, BenchmarkResults> benchmarks = new HashMap<String, BenchmarkResults>();
+    private final List<BenchmarkChangeListener> listeners = new ArrayList<BenchmarkChangeListener>();
 
     public void addBenchmarkResults(BenchmarkResults benchmarkResults) {
         String name = benchmarkResults.getName();
@@ -44,6 +38,10 @@ public class Model {
         }
     }
 
+    public interface BenchmarkChangeListener extends EventListener {
+        void benchmarkChanged(String benchmarkName);
+    }
+
     public static class BenchmarkedChanged extends EventObject {
         private final String name;
 
@@ -56,9 +54,4 @@ public class Model {
             return name;
         }
     }
-
-    public interface BenchmarkChangeListener extends EventListener {
-        void benchmarkChanged(String benchmarkName);
-    }
-
 }
