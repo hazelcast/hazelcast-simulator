@@ -5,7 +5,7 @@ will generate a project for you.
 
 ```
 mvn archetype:generate  \
-    -DarchetypeGroupId=com.hazelcast.stabilizer \
+    -DarchetypeGroupId=com.hazelcast.simulator \
     -DarchetypeArtifactId=archetype \
     -DarchetypeVersion=0.3 \
     -DgroupId=yourgroupid  \
