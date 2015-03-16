@@ -8,5 +8,5 @@ box=${array[2]}
 
 echo "${box}"
 
-scp block.sh stabilizer@${box}:~
-ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${box} "chmod +x block.sh; ./block.sh eth0"
+scp block.sh simulator@${box}:~
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no simulator@${box} "chmod +x block.sh; ./block.sh eth0"

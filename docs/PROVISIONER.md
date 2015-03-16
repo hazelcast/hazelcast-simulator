@@ -2,10 +2,10 @@ Provisioning
 ===========================
 
 The provisioner is responsible for provisioning (starting/stopping) instances in a cloud. It will start an Operating
-System instance, install Java, open firewall ports and install Stabilizer Agent.
+System instance, install Java, open firewall ports and install Simulator Agent.
 
 The behavior of the cluster like cloud, os, hardware, jvm version, Hazelcast version or region can be configured through
-the stabilizer.properties. 
+the simulator.properties.
 
 To start a cluster:
 
@@ -59,15 +59,15 @@ provisioner --clean
 
 ### Accessing the provisioned machine
 
-When a machine is provisioned, by default a user with the name 'stabilizer' is create on the remote machine and added
+When a machine is provisioned, by default a user with the name 'simulator' is create on the remote machine and added
 to the sudoers list. Also the public key of your local user is copied to the remote machine and added to
 ~/.ssh/authorized_keys. So you can login to that machine using:
 
 ```
-ssh stabilizer@ip
+ssh simulator@ip
 ```
 
-You can change name of the created user to something else in by setting the "USER=somename" property in the stabilizer
+You can change name of the created user to something else in by setting the "USER=somename" property in the simulator
 properties. Be careful not to pick a name that is used on the target image. E.g. if you use ec2-user/ubuntu, and the
 default user of that image is ec2-user/ubuntu, then you can run into authentication problems. So probably it is best
 not to change this value, unless you know what your are doing.

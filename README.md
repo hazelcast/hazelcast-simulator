@@ -1,20 +1,20 @@
-hazelcast-stabilizer
+hazelcast-simulator
 ===========================
 
 A production simulator for stress testing Hazelcast and Hazelcast based applications in clustered environments. This
-can be in a local machine, but can also be in a cloud like EC2 or Google Compute Engine. The Stabilizer makes use of
+can be in a local machine, but can also be in a cloud like EC2 or Google Compute Engine. The Simulator makes use of
 JClouds, so in theory we can roll out in any cloud.
 
-Stabilizer includes a test suite for our own stress simulation, but you can fork this repo, and add your own. 
+Simulator includes a test suite for our own stress simulation, but you can fork this repo, and add your own.
 
 Commercially we offer support agreements where we will integrate your tests into our runs for new releases so that your
 tests act as an Application TCK. 
 
 * [Hazelcast Structure](docs/STRUCTURE.md)
 
-* [Installing Stabilizer](docs/INSTALL.md)
+* [Installing Simulator](docs/INSTALL.md)
 
-* [Using the Stabilizer Archetype](docs/ARCHETYPE.md)
+* [Using the Simulator Archetype](docs/ARCHETYPE.md)
 
 * [Provisioning machines](docs/PROVISIONER.md)
 
@@ -32,7 +32,7 @@ Please join the mail group if you are interested in using or developing Hazelcas
 
 #### License
 
-Hazelcast Stabilizer is available under the Apache 2 License.
+Hazelcast Simulator is available under the Apache 2 License.
 
 #### Copyright
 

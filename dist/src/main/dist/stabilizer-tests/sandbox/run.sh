@@ -17,7 +17,7 @@ maxRuns=1
 
 for hzVersion in ${versions[@]}
 do
-  sed -i s/maven=.*/maven=$hzVersion/g stabilizer.properties
+  sed -i s/maven=.*/maven=$hzVersion/g simulator.properties
 
   for (( i=0; i<$maxRuns; i++ ))
   do

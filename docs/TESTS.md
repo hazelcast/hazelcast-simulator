@@ -1,7 +1,7 @@
 Writing a test
 ===========================
 
-A Stabilizer test is a bit like a JUnit test but there are some fundamental differences. Below you can see an example
+A Simulator test is a bit like a JUnit test but there are some fundamental differences. Below you can see an example
 test where some counter is being incremented.
 
 ```
@@ -11,17 +11,17 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
-import com.hazelcast.stabilizer.test.TestContext;
-import com.hazelcast.stabilizer.test.TestRunner;
-import com.hazelcast.stabilizer.test.annotations.Performance;
-import com.hazelcast.stabilizer.test.annotations.Run;
-import com.hazelcast.stabilizer.test.annotations.Setup;
-import com.hazelcast.stabilizer.test.annotations.Teardown;
-import com.hazelcast.stabilizer.test.annotations.Verify;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
-import com.hazelcast.stabilizer.worker.selector.OperationSelector;
-import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.Performance;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.selector.OperationSelector;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
 import java.util.concurrent.atomic.AtomicLong;
 
