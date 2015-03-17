@@ -165,7 +165,7 @@ public class StringICacheTest {
                 } else {
                     getLatency.started();
                     cache.get(key);
-                    getLatency.started();
+                    getLatency.done();
                 }
 
                 iteration++;
