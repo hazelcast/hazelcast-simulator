@@ -226,6 +226,7 @@ public class WorkerJvmLauncher {
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-DworkerId=" + workerJvm.id);
         args.add("-DworkerMode=" + mode);
+        args.add("-DautoCreateHZInstances="+settings.autoCreateHZInstances);
         args.add("-Dlog4j.configuration=file:" + log4jFile.getAbsolutePath());
         args.add("-classpath");
         args.add(getClasspath());

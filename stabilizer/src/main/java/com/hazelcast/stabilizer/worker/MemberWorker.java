@@ -56,6 +56,7 @@ public class MemberWorker {
 
     private String workerMode;
     private String workerId;
+    private boolean autoCreateHazelcastInstance=true;
 
     public static void main(String[] args) {
         log.info("Starting Stabilizer Worker");
@@ -78,11 +79,16 @@ public class MemberWorker {
             String workerMode = System.getProperty("workerMode");
             log.info("Worker mode: " + workerMode);
 
+            String autoCreateHZInstances = System.getProperty("autoCreateHZInstances","true");
+            log.info("autoCreateHZInstances :" + autoCreateHZInstances);
+
+
             MemberWorker worker = new MemberWorker();
             worker.workerId = workerId;
             worker.hzFile = workerHzFile;
             worker.clientHzFile = clientHzFile;
             worker.workerMode = workerMode;
+            worker.autoCreateHazelcastInstance = Boolean.parseBoolean(autoCreateHZInstances);
             worker.start();
 
             registerLog4jShutdownHandler(worker);
@@ -139,13 +145,14 @@ public class MemberWorker {
         HazelcastInstance serverInstance = null;
         HazelcastInstance clientInstance = null;
 
-        if ("server".equals(workerMode)) {
+
+        if (autoCreateHazelcastInstance && "server".equals(workerMode)) {
             log.info("------------------------------------------------------------------------");
             log.info("             member mode");
             log.info("------------------------------------------------------------------------");
             serverInstance = createServerHazelcastInstance();
             TestUtils.warmupPartitions(log, serverInstance);
-        } else if ("client".equals(workerMode)) {
+        } else if (autoCreateHazelcastInstance && "client".equals(workerMode)) {
             log.info("------------------------------------------------------------------------");
             log.info("             client mode");
             log.info("------------------------------------------------------------------------");
