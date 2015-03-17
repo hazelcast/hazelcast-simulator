@@ -23,6 +23,7 @@ import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.stabilizer.probes.probes.IntervalProbe;
 import com.hazelcast.stabilizer.tests.helpers.KeyLocality;
 import com.hazelcast.stabilizer.tests.helpers.StringUtils;
 import com.hazelcast.stabilizer.test.TestContext;
@@ -62,6 +63,8 @@ public class StringICacheTest {
     public String basename = "stringicache";
     public KeyLocality keyLocality = KeyLocality.Random;
     public int minNumberOfMembers = 0;
+    public IntervalProbe putLatency;
+    public IntervalProbe getLatency;
 
     private Cache<String, String> cache;
     private String[] keys;
@@ -148,18 +151,21 @@ public class StringICacheTest {
         public void run() {
             long iteration = 0;
             while (!testContext.isStopped()) {
-
                 String key = randomKey();
 
                 if (shouldWrite(iteration)) {
+                    putLatency.started();
                     String value = randomValue();
                     if (useGetAndPut) {
                         cache.getAndPut(key, value);
                     } else {
                         cache.put(key, value);
                     }
+                    putLatency.done();
                 } else {
+                    getLatency.started();
                     cache.get(key);
+                    getLatency.started();
                 }
 
                 iteration++;
