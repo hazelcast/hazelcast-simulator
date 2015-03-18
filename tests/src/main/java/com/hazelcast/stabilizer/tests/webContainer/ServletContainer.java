@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.webContainer;
+package com.hazelcast.simulator.tests.webContainer;
 
 /*
 * common methods to manipulate a ServletContainer

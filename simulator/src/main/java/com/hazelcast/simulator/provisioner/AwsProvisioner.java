@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.provisioner;
+package com.hazelcast.simulator.provisioner;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
@@ -23,9 +23,9 @@ import com.amazonaws.services.elasticloadbalancing.model.Listener;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerResult;
-import com.hazelcast.stabilizer.common.AgentAddress;
-import com.hazelcast.stabilizer.common.AgentsFile;
-import com.hazelcast.stabilizer.common.StabilizerProperties;
+import com.hazelcast.simulator.common.AgentAddress;
+import com.hazelcast.simulator.common.AgentsFile;
+import com.hazelcast.simulator.common.SimulatorProperties;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,8 +34,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.stabilizer.utils.FileUtils.appendText;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static java.lang.String.format;
 
 
@@ -62,7 +62,7 @@ public class AwsProvisioner{
     private AmazonEC2 ec2;
     private AmazonElasticLoadBalancingClient elb;
 
-    private StabilizerProperties props = new StabilizerProperties();
+    private SimulatorProperties props = new SimulatorProperties();
 
     private final File agentsFile = new File("agents.txt");
     private final File elbFile = new File(AWS_ELB_FILE_NAME);

@@ -1,6 +1,5 @@
-package com.hazelcast.stabilizer.provisioner;
+package com.hazelcast.simulator.provisioner;
 
-import com.hazelcast.stabilizer.probes.probes.util.Utils;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -9,8 +8,8 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 
-import static com.hazelcast.stabilizer.utils.FileUtils.newFile;
-import static com.hazelcast.stabilizer.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 
 public class AwsProvisionerCli {
     private final static Logger log = Logger.getLogger(AwsProvisionerCli.class);
@@ -30,8 +29,8 @@ public class AwsProvisionerCli {
     ).withRequiredArg().ofType(Integer.class);
 
     public final OptionSpec<String> propertiesFile = parser.accepts("propertiesFile",
-            "The file containing the stabilizer properties. If no file is explicitly configured, first the " +
-            "working directory is checked for a file 'stabilizer.properties'"
+            "The file containing the simulator properties. If no file is explicitly configured, first the " +
+            "working directory is checked for a file 'simulator.properties'"
     ).withRequiredArg().ofType(String.class);
 
     public final OptionSpec help = parser.accepts("help", "Show help").forHelp();

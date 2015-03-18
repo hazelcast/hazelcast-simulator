@@ -1,14 +1,14 @@
-package com.hazelcast.stabilizer.tests.webContainer;
+package com.hazelcast.simulator.tests.webContainer;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.test.TestContext;
-import com.hazelcast.stabilizer.test.annotations.Run;
-import com.hazelcast.stabilizer.test.annotations.Setup;
-import com.hazelcast.stabilizer.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.utils.ThreadSpawner;
 
-import com.hazelcast.stabilizer.worker.selector.OperationSelector;
-import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.selector.OperationSelector;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;

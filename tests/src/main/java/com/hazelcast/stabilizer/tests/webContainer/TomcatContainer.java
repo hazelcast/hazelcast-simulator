@@ -1,4 +1,4 @@
-package com.hazelcast.stabilizer.tests.webContainer;
+package com.hazelcast.simulator.tests.webContainer;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.Globals;
