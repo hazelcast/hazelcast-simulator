@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.coordinator.remoting;
 
 import com.hazelcast.simulator.agent.FailureAlreadyThrownRuntimeException;
+import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.CountdownWatch;
@@ -13,8 +14,8 @@ import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.IsPhaseCompletedCommand;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -42,15 +43,18 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static java.util.Arrays.asList;
 
 public class AgentsClient {
 
     private static final Logger log = Logger.getLogger(AgentsClient.class);
 
-    private final List<AgentClient> agents = new LinkedList<AgentClient>();
+    private static final long TEST_METHOD_TIMEOUT = TimeUnit.SECONDS.toMillis(Integer.parseInt(System.getProperty(
+            "worker.testmethod.timeout", "10000")));
 
     private final ExecutorService agentExecutor = Executors.newFixedThreadPool(100);
+    private final List<AgentClient> agents = new LinkedList<AgentClient>();
+
+    private Thread pokeThread;
 
     public AgentsClient(List<AgentAddress> agentAddresses) {
         for (AgentAddress address : agentAddresses) {
@@ -62,19 +66,28 @@ public class AgentsClient {
     public void start() {
         awaitAgentsReachable();
 
-        // Starts a poke thread; this will repeatedly poke the agents to make sure they
-        // are not going to terminate themselves.
-        new Thread() {
+        // starts a poke thread which will repeatedly poke the agents to make sure they are not going to terminate themselves
+        pokeThread = new Thread() {
             public void run() {
-                for (; ; ) {
-                    try {
-                        Thread.sleep(60 * 1000);
-                    } catch (InterruptedException e) {
-                    }
-                    poke();
+                for (;;) {
+                    sleepSeconds(60);
+                    asyncExecuteOnAllWorkers(SERVICE_POKE);
                 }
             }
-        }.start();
+        };
+        pokeThread.start();
+    }
+
+    public void stop() throws Exception {
+        terminateWorkers();
+
+        if (pokeThread != null) {
+            pokeThread.interrupt();
+            pokeThread.join();
+        }
+
+        agentExecutor.shutdown();
+        agentExecutor.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     private void awaitAgentsReachable() {
@@ -83,16 +96,16 @@ public class AgentsClient {
         log.info("--------------------------------------------------------------");
 
         List<AgentClient> unchecked = new LinkedList<AgentClient>(agents);
-        for (int k = 0; k < 12; k++) {
+        for (int i = 0; i < 12; i++) {
             Iterator<AgentClient> it = unchecked.iterator();
             while (it.hasNext()) {
                 AgentClient agent = it.next();
                 try {
                     agent.execute(SERVICE_ECHO, "livecheck");
                     it.remove();
-                    log.info("Connect to agent " + agent.publicAddress + " OK");
+                    log.info("Connect to agent " + agent.getPublicAddress() + " OK");
                 } catch (Exception e) {
-                    log.info("Connect to agent " + agent.publicAddress + " FAILED");
+                    log.info("Connect to agent " + agent.getPublicAddress() + " FAILED");
                     log.debug(e);
                 }
             }
@@ -117,10 +130,9 @@ public class AgentsClient {
             return;
         }
 
-        StringBuilder sb = new StringBuilder("The Coordinator has dropped the following " +
-                "agents because they are not reachable:\n");
+        StringBuilder sb = new StringBuilder("The Coordinator has dropped these agents because they are not reachable:\n");
         for (AgentClient agent : unchecked) {
-            sb.append("\t").append(agent.publicAddress).append("\n");
+            sb.append("\t").append(agent.getPublicAddress()).append("\n");
         }
 
         log.warn("--------------------------------------------------------------");
@@ -135,7 +147,7 @@ public class AgentsClient {
     public List<String> getPrivateAddresses() {
         List<String> result = new LinkedList<String>();
         for (AgentClient client : agents) {
-            result.add(client.privateIp);
+            result.add(client.getPrivateIp());
         }
         return result;
     }
@@ -143,28 +155,28 @@ public class AgentsClient {
     public List<String> getPublicAddresses() {
         List<String> result = new LinkedList<String>();
         for (AgentClient client : agents) {
-            result.add(client.publicAddress);
+            result.add(client.getPublicAddress());
         }
         return result;
     }
 
     public List<Failure> getFailures() {
-        List<Future> futures = new LinkedList<Future>();
+        List<Future<List<Failure>>> futures = new LinkedList<Future<List<Failure>>>();
         for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
+            Future<List<Failure>> future = agentExecutor.submit(new Callable<List<Failure>>() {
                 @Override
-                public Object call() throws Exception {
+                public List<Failure> call() throws Exception {
                     return agentClient.execute(SERVICE_GET_FAILURES);
                 }
             });
-            futures.add(f);
+            futures.add(future);
         }
 
         List<Failure> result = new LinkedList<Failure>();
-        for (Future<List<Failure>> f : futures) {
+        for (Future<List<Failure>> future : futures) {
             try {
-                List<Failure> c = f.get(30, TimeUnit.SECONDS);
-                result.addAll(c);
+                List<Failure> list = future.get(30, TimeUnit.SECONDS);
+                result.addAll(list);
             } catch (InterruptedException e) {
                 log.fatal(e);
             } catch (ExecutionException e) {
@@ -179,7 +191,7 @@ public class AgentsClient {
     public void waitForPhaseCompletion(String prefix, String testId, String phaseName) throws TimeoutException {
         long startTimeMs = System.currentTimeMillis();
         IsPhaseCompletedCommand command = new IsPhaseCompletedCommand(testId);
-        for (; ; ) {
+        for (;;) {
             List<List<Boolean>> allResults = executeOnAllWorkers(command);
             boolean complete = true;
             for (List<Boolean> resultsPerAgent : allResults) {
@@ -205,19 +217,208 @@ public class AgentsClient {
         }
     }
 
-    private <E> List<E> getAllFutures(Collection<Future> futures) throws TimeoutException {
-        int value = Integer.parseInt(System.getProperty("worker.testmethod.timeout", "10000"));
-        return getAllFutures(futures, TimeUnit.SECONDS.toMillis(value));
+    public void initTestSuite(final TestSuite testSuite) throws TimeoutException {
+        executeOnAllWorkers(SERVICE_INIT_TESTSUITE, testSuite);
     }
 
-    // TODO: probably we don't want to throw exceptions to make sure that don't abort when a agent goes down
-    private <E> List<E> getAllFutures(Collection<Future> futures, long timeoutMs) throws TimeoutException {
+    public void terminateWorkers() throws TimeoutException {
+        executeOnAllWorkers(SERVICE_TERMINATE_WORKERS);
+    }
+
+    public void spawnWorkers(List<AgentMemberLayout> agentLayouts, boolean member) throws TimeoutException {
+        List<Future<Object>> futures = new LinkedList<Future<Object>>();
+
+        for (AgentMemberLayout spawnPlan : agentLayouts) {
+            final AgentClient agentClient = getAgent(spawnPlan.publicIp);
+            if (agentClient == null) {
+                throw new RuntimeException("agentClient is null!");
+            }
+
+            final WorkerJvmSettings settings;
+            if (member) {
+                settings = spawnPlan.memberSettings;
+                if (spawnPlan.memberSettings.clientWorkerCount > 0) {
+                    // TODO: remove
+                    log.fatal("Found clients during member startup");
+                }
+            } else {
+                settings = spawnPlan.clientSettings;
+                if (spawnPlan.clientSettings.memberWorkerCount > 0) {
+                    // TODO: remove
+                    log.fatal("Found members during client startup");
+                }
+            }
+
+            Future<Object> future = agentExecutor.submit(new Callable<Object>() {
+                @Override
+                public Object call() throws Exception {
+                    agentClient.execute(SERVICE_SPAWN_WORKERS, settings);
+                    return null;
+                }
+            });
+            futures.add(future);
+        }
+
+        getAllFutures(futures);
+    }
+
+    private AgentClient getAgent(String publicIp) {
+        for (AgentClient client : agents) {
+            if (publicIp.equals(client.getPublicAddress())) {
+                return client;
+            }
+        }
+        return null;
+    }
+
+    public void sendMessage(final Message message) throws TimeoutException {
+        MessageAddress messageAddress = message.getMessageAddress();
+        log.info("Sending message '" + message + "' to address '" + messageAddress + "'");
+
+        if (MessageAddress.BROADCAST.equals(messageAddress.getAgentAddress())) {
+            sendMessageToAllAgents(message);
+        } else if (MessageAddress.RANDOM.equals(messageAddress.getAgentAddress())) {
+            sendMessageToRandomAgent(message);
+        } else {
+            throw new UnsupportedOperationException("Not Implemented yet");
+        }
+    }
+
+    private void sendMessageToAllAgents(Message message) throws TimeoutException {
+        executeOnAllWorkers(SERVICE_PROCESS_MESSAGE, message);
+    }
+
+    private void sendMessageToRandomAgent(final Message message) throws TimeoutException {
+        final AgentClient agentClient = getRandomAgentClientOrNull();
+        if (agentClient == null) {
+            throw new IllegalStateException("No agent exists. Is this a race condition?");
+        }
+        Future<Object> future = agentExecutor.submit(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                agentClient.execute(SERVICE_PROCESS_MESSAGE, message);
+                return null;
+            }
+        });
+        getAllFutures(Collections.singletonList(future));
+    }
+
+    private AgentClient getRandomAgentClientOrNull() {
+        if (agents.size() == 0) {
+            return null;
+        }
+        Random random = new Random();
+        return agents.get(random.nextInt(agents.size()));
+    }
+
+    public <E> List<E> executeOnAllWorkers(final Command command) throws TimeoutException {
+        List<Future<E>> futures = new LinkedList<Future<E>>();
+        for (final AgentClient agentClient : agents) {
+            Future<E> future = agentExecutor.submit(new Callable<E>() {
+                @Override
+                public E call() throws Exception {
+                    try {
+                        return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
+                    } catch (RuntimeException e) {
+                        if (log.isDebugEnabled()) {
+                            log.debug(e.getMessage(), e);
+                        } else {
+                            log.fatal(e.getMessage());
+                        }
+                        throw e;
+                    }
+                }
+            });
+            futures.add(future);
+        }
+
+        return getAllFutures(futures);
+    }
+
+    // a temporary hack to get the correct mapping between futures and their agents
+    public <E> Map<AgentClient, List<E>> executeOnAllWorkersDetailed(final Command command) throws TimeoutException {
+        Map<AgentClient, Future<List<E>>> futures = new HashMap<AgentClient, Future<List<E>>>();
+
+        for (final AgentClient agentClient : agents) {
+            Future<List<E>> future = agentExecutor.submit(new Callable<List<E>>() {
+                @Override
+                public List<E> call() throws Exception {
+                    try {
+                        return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
+                    } catch (RuntimeException e) {
+                        log.fatal(e);
+                        throw e;
+                    }
+                }
+            });
+            futures.put(agentClient, future);
+        }
+
+        Map<AgentClient, List<E>> resultMap = new HashMap<AgentClient, List<E>>();
+        for (Map.Entry<AgentClient, Future<List<E>>> entry : futures.entrySet()) {
+            AgentClient agentClient = entry.getKey();
+            Future<List<E>> future = entry.getValue();
+            List<List<E>> result = getAllFutures(Collections.singletonList(future));
+            resultMap.put(agentClient, result.get(0));
+        }
+
+        return resultMap;
+    }
+
+    public void executeOnSingleWorker(final Command command) {
+        if (agents.isEmpty()) {
+            return;
+        }
+
+        Future<Object> future = agentExecutor.submit(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                AgentClient agentClient = agents.get(0);
+                return agentClient.execute(SERVICE_EXECUTE_SINGLE_WORKER, command);
+            }
+        });
+
+        try {
+            getAllFutures(Collections.singletonList(future));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    public void echo(final String msg) throws TimeoutException {
+        executeOnAllWorkers(SERVICE_ECHO, msg);
+    }
+
+    private void executeOnAllWorkers(AgentRemoteService.Service service, Object... args) throws TimeoutException {
+        getAllFutures(asyncExecuteOnAllWorkers(service, args));
+    }
+
+    private List<Future<Object>> asyncExecuteOnAllWorkers(final AgentRemoteService.Service service, final Object... args) {
+        List<Future<Object>> futures = new LinkedList<Future<Object>>();
+        for (final AgentClient agentClient : agents) {
+            Future<Object> future = agentExecutor.submit(new Callable<Object>() {
+                @Override
+                public Object call() throws Exception {
+                    agentClient.execute(service, args);
+                    return null;
+                }
+            });
+            futures.add(future);
+        }
+        return futures;
+    }
+
+    private <E> List<E> getAllFutures(Collection<Future<E>> futures) throws TimeoutException {
+        return getAllFutures(futures, TEST_METHOD_TIMEOUT);
+    }
+
+    // TODO: probably we don't want to throw exceptions to make sure that don't abort when an agent goes down
+    private <E> List<E> getAllFutures(Collection<Future<E>> futures, long timeoutMs) throws TimeoutException {
         CountdownWatch watch = CountdownWatch.started(timeoutMs);
-        List result = new LinkedList();
-        for (Future future : futures) {
+        List<E> resultList = new LinkedList<E>();
+        for (Future<E> future : futures) {
             try {
-                Object o = future.get(watch.getRemainingMs(), TimeUnit.MILLISECONDS);
-                result.add(o);
+                E result = future.get(watch.getRemainingMs(), TimeUnit.MILLISECONDS);
+                resultList.add(result);
             } catch (TimeoutException e) {
                 //Failure failure = new Failure();
                 //failure.message = "Timeout waiting for remote operation to complete";
@@ -254,235 +455,6 @@ public class AgentsClient {
             }
         }
 
-        return result;
-    }
-
-    private void poke() {
-        for (final AgentClient agentClient : agents) {
-            agentExecutor.submit(new Callable<Object>() {
-                @Override
-                public Object call() throws Exception {
-                    agentClient.execute(SERVICE_POKE);
-                    return null;
-                }
-            });
-        }
-    }
-
-    public void initTestSuite(final TestSuite testSuite) throws TimeoutException {
-        List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    agentClient.execute(SERVICE_INIT_TESTSUITE, testSuite);
-                    return null;
-                }
-            });
-            futures.add(f);
-        }
-
-        getAllFutures(futures);
-    }
-
-    public void terminateWorkers() throws TimeoutException {
-        List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    agentClient.execute(SERVICE_TERMINATE_WORKERS);
-                    return null;
-                }
-            });
-            futures.add(f);
-        }
-
-        getAllFutures(futures);
-    }
-
-    private AgentClient getAgent(String publicIp) {
-        for (AgentClient client : agents) {
-            if (publicIp.equals(client.publicAddress)) {
-                return client;
-            }
-        }
-
-        return null;
-    }
-
-    public void spawnWorkers(final List<AgentMemberLayout> agentLayouts, final boolean member) throws TimeoutException {
-        List<Future> futures = new LinkedList<Future>();
-
-        for (final AgentMemberLayout spawnPlan : agentLayouts) {
-            final AgentClient agentClient = getAgent(spawnPlan.publicIp);
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    WorkerJvmSettings settings;
-                    if (member) {
-                        settings = spawnPlan.memberSettings;
-                        if (spawnPlan.memberSettings.clientWorkerCount > 0) {
-                            //todo: remove
-                            log.fatal("Found clients during member startup");
-                        }
-                    } else {
-                        settings = spawnPlan.clientSettings;
-                        if (spawnPlan.clientSettings.memberWorkerCount > 0) {
-                            //todo: remove
-                            log.fatal("Found members during client startup");
-                        }
-                    }
-
-                    agentClient.execute(SERVICE_SPAWN_WORKERS, settings);
-                    return null;
-                }
-            });
-            futures.add(f);
-        }
-
-        getAllFutures(futures);
-    }
-
-    public void sendMessage(final Message message) throws TimeoutException {
-        log.info("Sending message '" + message + "' to address '" + message.getMessageAddress() + "'");
-        MessageAddress messageAddress = message.getMessageAddress();
-        List<Future> futures;
-        if (MessageAddress.BROADCAST.equals(messageAddress.getAgentAddress())) {
-            futures = sendMessageToAllAgents(message);
-        } else if (MessageAddress.RANDOM.equals(messageAddress.getAgentAddress())) {
-            Future future = sendMessageToRandomAgent(message);
-            futures = asList(future);
-        } else {
-            throw new UnsupportedOperationException("Not Implemented yet");
-        }
-        getAllFutures(futures);
-    }
-
-    private Future<Object> sendMessageToRandomAgent(final Message message) {
-        Random random = new Random();
-        final AgentClient agentClient = getRandomAgentClientOrNull(random);
-        if (agentClient == null) {
-            throw new IllegalStateException("No agent exists. Is this a race condition?");
-        }
-        return agentExecutor.submit(new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-                agentClient.execute(SERVICE_PROCESS_MESSAGE, message);
-                return null;
-            }
-        });
-    }
-
-    private AgentClient getRandomAgentClientOrNull(Random random) {
-        if (agents.size() == 0) {
-            return null;
-        }
-        return agents.get(random.nextInt(agents.size()));
-    }
-
-    private List<Future> sendMessageToAllAgents(final Message message) {
-        List<Future> futures = new ArrayList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future<Object> future = agentExecutor.submit(new Callable<Object>() {
-                @Override
-                public Object call() throws Exception {
-                    agentClient.execute(SERVICE_PROCESS_MESSAGE, message);
-                    return null;
-                }
-            });
-            futures.add(future);
-        }
-        return futures;
-    }
-
-    public <E> List<E> executeOnAllWorkers(final Command command) throws TimeoutException {
-        List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    try {
-                        return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
-                    } catch (RuntimeException t) {
-                        if (log.isDebugEnabled()) {
-                            log.debug(t.getMessage(), t);
-                        } else {
-                            log.fatal(t.getMessage());
-                        }
-                        throw t;
-                    }
-                }
-            });
-            futures.add(f);
-        }
-
-        return getAllFutures(futures);
-    }
-
-    // a temporary hack to get the correct mapping between futures and their agents.
-    public <E> Map<AgentClient, List<E>> executeOnAllWorkersDetailed(final Command command) throws TimeoutException {
-        Map<AgentClient, Future> futures = new HashMap<AgentClient, Future>();
-
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    try {
-                        return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
-                    } catch (RuntimeException t) {
-                        log.fatal(t);
-                        throw t;
-                    }
-                }
-            });
-            futures.put(agentClient, f);
-        }
-
-        Map<AgentClient, List<E>> result = new HashMap<AgentClient, List<E>>();
-        for (Map.Entry<AgentClient, Future> entry : futures.entrySet()) {
-            AgentClient agentClient = entry.getKey();
-            Future f = entry.getValue();
-            List<List<E>> r = getAllFutures(asList(f));
-            result.put(agentClient, r.get(0));
-        }
-
-        return result;
-    }
-
-    public void executeOnSingleWorker(final Command command) {
-        if (agents.isEmpty()) {
-            return;
-        }
-
-        Future f = agentExecutor.submit(new Callable() {
-            @Override
-            public Object call() throws Exception {
-                AgentClient agentClient = agents.get(0);
-                return agentClient.execute(SERVICE_EXECUTE_SINGLE_WORKER, command);
-            }
-        });
-
-        try {
-            getAllFutures(asList(f));
-        } catch (Throwable e) {
-            //ignore
-        }
-    }
-
-    public void echo(final String msg) throws TimeoutException {
-        List<Future> futures = new LinkedList<Future>();
-        for (final AgentClient agentClient : agents) {
-            Future f = agentExecutor.submit(new Callable() {
-                @Override
-                public Object call() throws Exception {
-                    agentClient.execute(SERVICE_ECHO, msg);
-                    return null;
-                }
-            });
-            futures.add(f);
-        }
-
-        getAllFutures(futures);
+        return resultList;
     }
 }
