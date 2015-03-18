@@ -11,6 +11,10 @@
     <artifactId>simulator-tests</artifactId>
     <name>Hazelcast Simulator Tests</name>
 
+    <properties>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>

@@ -42,6 +42,9 @@
         <tomcat.version>7.0.54</tomcat.version>
         <jsp.api.version>2.2.1</jsp.api.version>
         <servlet.api.version>3.0.1</servlet.api.version>
+        <findbugs.maven.plugin.version>3.0.0</findbugs.maven.plugin.version>
+        <checkstyle.maven.plugin.version>2.12</checkstyle.maven.plugin.version>
+        <main.basedir>${project.basedir}</main.basedir>
     </properties>
 
     <modules>
@@ -148,6 +151,66 @@
                             </execution>
                         </executions>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>checkstyle</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <version>${checkstyle.maven.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>checkstyle</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <configLocation>${main.basedir}/checkstyle/checkstyle.xml</configLocation>
+                            <suppressionsLocation>${main.basedir}/checkstyle/suppressions.xml</suppressionsLocation>
+                            <headerLocation>${main.basedir}/checkstyle/ClassHeader.txt</headerLocation>
+                            <enableRSS>false</enableRSS>
+                            <linkXRef>true</linkXRef>
+                            <consoleOutput>true</consoleOutput>
+                            <failsOnError>true</failsOnError>
+                            <failOnViolation>true</failOnViolation>
+                            <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                            <enableRulesSummary>true</enableRulesSummary>
+                            <propertyExpansion>main.basedir=${main.basedir}</propertyExpansion>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>findbugs</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>findbugs-maven-plugin</artifactId>
+                        <version>${findbugs.maven.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <failOnError>true</failOnError>
+                            <excludeFilterFile>${main.basedir}/findbugs/findbugs-exclude.xml</excludeFilterFile>
+                        </configuration>
+                    </plugin>
+
                 </plugins>
             </build>
         </profile>
