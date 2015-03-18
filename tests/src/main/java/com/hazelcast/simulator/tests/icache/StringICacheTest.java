@@ -23,6 +23,7 @@ import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.tests.helpers.StringUtils;
 import com.hazelcast.simulator.test.TestContext;
