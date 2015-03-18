@@ -19,16 +19,17 @@ import com.hazelcast.simulator.agent.remoting.AgentMessageProcessor;
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.coordinator.Coordinator;
 import com.hazelcast.simulator.test.TestSuite;
-import com.hazelcast.simulator.utils.CommonUtils;
 import joptsimple.OptionException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
@@ -37,17 +38,32 @@ public class Agent {
 
     private static final Logger log = Logger.getLogger(Coordinator.class);
 
-    public static final File SIMULATOR_HOME = getSimulatorHome();
-
-    //internal state
-    private volatile TestSuite testSuite;
-    private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
-    private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
-    private final HarakiriMonitor harakiriMonitor = new HarakiriMonitor(this);
+    // internal state
     public String cloudIdentity;
     public String cloudCredential;
     public String cloudProvider;
+
     protected volatile long lastUsed = System.currentTimeMillis();
+
+    private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
+    private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
+    private final HarakiriMonitor harakiriMonitor = new HarakiriMonitor(this);
+
+    private volatile TestSuite testSuite;
+
+    public void start() throws Exception {
+        ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
+
+        startRestServer();
+
+        workerJvmFailureMonitor.start();
+
+        workerJvmManager.start();
+
+        harakiriMonitor.start();
+
+        log.info("Simulator Agent is ready for action");
+    }
 
     public void echo(String msg) {
         log.info(msg);
@@ -88,20 +104,6 @@ public class Agent {
         ensureExistingDirectory(libDir);
     }
 
-    public void start() throws Exception {
-        ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
-
-        startRestServer();
-
-        workerJvmFailureMonitor.start();
-
-        workerJvmManager.start();
-
-        harakiriMonitor.start();
-
-        log.info("Simulator Agent is ready for action");
-    }
-
     private void startRestServer() throws IOException {
         AgentMessageProcessor agentMessageProcessor = new AgentMessageProcessor(workerJvmManager);
         AgentRemoteService agentRemoteService = new AgentRemoteService(this, agentMessageProcessor);
@@ -109,14 +111,18 @@ public class Agent {
     }
 
     public static void main(String[] args) throws Exception {
+        createAgent(args);
+    }
+
+    static Agent createAgent(String[] args) throws Exception {
         log.info("Simulator Agent");
-        log.info(String.format("Version: %s, Commit: %s, Build Time: %s",
-                CommonUtils.getSimulatorVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
-        log.info(format("SIMULATOR_HOME: %s%n", SIMULATOR_HOME));
+        log.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
+        log.info(format("SIMULATOR_HOME: %s%n", getSimulatorHome()));
         logInterestingSystemProperties();
 
+        Agent agent = null;
         try {
-            Agent agent = new Agent();
+            agent = new Agent();
             AgentCli.init(agent, args);
 
             log.info("CloudIdentity: " + agent.cloudIdentity);
@@ -124,9 +130,11 @@ public class Agent {
             log.info("CloudProvider " + agent.cloudProvider);
 
             agent.start();
+
         } catch (OptionException e) {
             exitWithError(log, e.getMessage() + "\nUse --help to get overview of the help options.");
         }
+        return agent;
     }
 
     private static void logInterestingSystemProperties() {
@@ -149,9 +157,8 @@ public class Agent {
         log.info(format("%s=%s", name, System.getProperty(name)));
     }
 
-    public static void exitWithError(Logger logger, String msg) {
+    private static void exitWithError(Logger logger, String msg) {
         logger.fatal(msg);
         System.exit(1);
     }
-
 }

@@ -19,8 +19,8 @@ public class AgentClient {
 
     private static final Logger log = Logger.getLogger(AgentClient.class);
 
-    final String publicAddress;
-    final String privateIp;
+    private final String publicAddress;
+    private final String privateIp;
 
     public AgentClient(AgentAddress address) {
         this.publicAddress = address.publicAddress;
@@ -35,7 +35,8 @@ public class AgentClient {
         return privateIp;
     }
 
-    Object execute(AgentRemoteService.Service service, Object... args) throws Exception {
+    @SuppressWarnings("unchecked")
+    <E> E execute(AgentRemoteService.Service service, Object... args) throws Exception {
         Socket socket = newSocket();
 
         try {
@@ -47,7 +48,7 @@ public class AgentClient {
             oos.flush();
 
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            Object response = in.readObject();
+            E response = (E) in.readObject();
 
             if (response instanceof Exception) {
                 Exception exception = (Exception) response;
@@ -60,16 +61,16 @@ public class AgentClient {
         }
     }
 
-    //we create a new socket for every request because it could be that the agents is not reachable
-    //and we don't want to depend on state within the socket.
+    // we create a new socket for every request because it could be that the agents is not reachable
+    // and we don't want to depend on state within the socket
     private Socket newSocket() throws IOException {
         ConnectException connectException = null;
-        for (int k = 0; k < 30; k++) {
+        for (int i = 0; i < 30; i++) {
             try {
                 InetAddress hostAddress = InetAddress.getByName(publicAddress);
                 return new Socket(hostAddress, AgentRemoteService.PORT);
             } catch (ConnectException e) {
-                if (k < 10) {
+                if (i < 10) {
                     // it can happen that when a machine is under a lot of pressure, the connection can't be established
                     log.debug("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
                 } else {
@@ -81,7 +82,6 @@ public class AgentClient {
                 throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, e);
             }
         }
-
         throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, connectException);
     }
 
