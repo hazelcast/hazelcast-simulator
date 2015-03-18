@@ -14,11 +14,11 @@ do
 
     for box in $ips
     do
-        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${box} "rm -f serverStackTrace.txt; jps | grep Member.* | cut -d ' ' -f1 | xargs -L 1  jstack $1 >> serverStackTrace.txt"
-        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${box} "rm -f clientStackTrace.txt; jps | grep Client.* | cut -d ' ' -f1 | xargs -L 1  jstack $1 >> clientStackTrace.txt"
+        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no simulator@${box} "rm -f serverStackTrace.txt; jps | grep Member.* | cut -d ' ' -f1 | xargs -L 1  jstack $1 >> serverStackTrace.txt"
+        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no simulator@${box} "rm -f clientStackTrace.txt; jps | grep Client.* | cut -d ' ' -f1 | xargs -L 1  jstack $1 >> clientStackTrace.txt"
 
-        scp stabilizer@${box}:serverStackTrace.txt ${box}serverStackTrace.txt
-        scp stabilizer@${box}:clientStackTrace.txt ${box}clientStackTrace.txt
+        scp simulator@${box}:serverStackTrace.txt ${box}serverStackTrace.txt
+        scp simulator@${box}:clientStackTrace.txt ${box}clientStackTrace.txt
     done
 
     for box in $ips

@@ -1,25 +1,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>hazelcast-stabilizer-dist</artifactId>
+    <artifactId>hazelcast-simulator-dist</artifactId>
     <packaging>jar</packaging>
-    <name>Hazelcast Stabilizer Dist</name>
+    <name>Hazelcast Simulator Dist</name>
 
     <parent>
-        <groupId>com.hazelcast.stabilizer</groupId>
-        <artifactId>stabilizer-root</artifactId>
+        <groupId>com.hazelcast.simulator</groupId>
+        <artifactId>simulator-root</artifactId>
         <version>0.4-SNAPSHOT</version>
     </parent>
 
     <dependencies>
         <dependency>
-            <groupId>com.hazelcast.stabilizer</groupId>
-            <artifactId>stabilizer</artifactId>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>simulator</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.stabilizer</groupId>
-            <artifactId>stabilizer-tests</artifactId>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>simulator-tests</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
@@ -41,7 +41,7 @@
                             <descriptors>
                                 <descriptor>src/main/config/build-distribution-archive.xml</descriptor>
                             </descriptors>
-                            <finalName>hazelcast-stabilizer-${project.version}</finalName>
+                            <finalName>hazelcast-simulator-${project.version}</finalName>
                         </configuration>
                     </execution>
                 </executions>

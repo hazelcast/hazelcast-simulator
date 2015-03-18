@@ -1,13 +1,13 @@
-package com.hazelcast.stabilizer.tests.webContainer;
+package com.hazelcast.simulator.tests.webContainer;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.stabilizer.test.TestContext;
-import com.hazelcast.stabilizer.test.TestRunner;
-import com.hazelcast.stabilizer.test.annotations.Run;
-import com.hazelcast.stabilizer.test.annotations.Setup;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.Setup;
 
-import static com.hazelcast.stabilizer.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
 

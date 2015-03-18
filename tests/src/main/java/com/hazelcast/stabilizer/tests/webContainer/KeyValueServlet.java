@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hazelcast.stabilizer.tests.webContainer;
+package com.hazelcast.simulator.tests.webContainer;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;

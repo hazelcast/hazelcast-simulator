@@ -8,4 +8,4 @@ box=${array[2]}
 
 echo "${box}"
 
-ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no stabilizer@${box} "sudo /sbin/iptables -F"
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no simulator@${box} "sudo /sbin/iptables -F"

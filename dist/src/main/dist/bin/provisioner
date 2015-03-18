@@ -1,18 +1,18 @@
 #!/bin/bash
 
-if [ -z "${STABILIZER_HOME}" ] ; then
-    export STABILIZER_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
+if [ -z "${SIMULATOR_HOME}" ] ; then
+    export SIMULATOR_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
 fi
 
 export JAVA_OPTS="-server -Xms64m -Xmx1g ${JAVA_EXTRA_OPTS}"
 
 #echo PARAMETERS = $@
-#echo STABILIZER_HOME = ${STABILIZER_HOME}
+#echo SIMULATOR_HOME = ${SIMULATOR_HOME}
 #echo JAVA_VERSION = ${JAVA_VERSION}
 #echo JAVA_OPTS = ${JAVA_OPTS}
 
-java -cp "${STABILIZER_HOME}/lib/*" ${JAVA_OPTS} \
-    -DSTABILIZER_HOME=${STABILIZER_HOME}  \
+java -cp "${SIMULATOR_HOME}/lib/*" ${JAVA_OPTS} \
+    -DSIMULATOR_HOME=${SIMULATOR_HOME}  \
     -Dhazelcast.logging.type=log4j \
-    -Dlog4j.configuration=file:${STABILIZER_HOME}/conf/provisioner-log4j.xml \
-   com.hazelcast.stabilizer.provisioner.Provisioner "$@"
+    -Dlog4j.configuration=file:${SIMULATOR_HOME}/conf/provisioner-log4j.xml \
+   com.hazelcast.simulator.provisioner.Provisioner "$@"
