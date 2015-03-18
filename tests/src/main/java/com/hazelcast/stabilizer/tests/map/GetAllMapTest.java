@@ -22,10 +22,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.stabilizer.test.TestContext;
 import com.hazelcast.stabilizer.test.TestRunner;
-import com.hazelcast.stabilizer.test.annotations.RunWithWorker;
-import com.hazelcast.stabilizer.test.annotations.Setup;
-import com.hazelcast.stabilizer.test.annotations.Teardown;
-import com.hazelcast.stabilizer.test.annotations.Warmup;
+import com.hazelcast.stabilizer.test.annotations.*;
 import com.hazelcast.stabilizer.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.stabilizer.worker.tasks.AbstractWorker;
 
@@ -107,6 +104,12 @@ public class GetAllMapTest {
             }
 
         }
+    }
+
+    @Verify(global = false)
+    public void verify() throws Exception {
+        log.info("map name = "+map.getName());
+        log.info("map size = "+map.size());
     }
 
     public static void main(String[] args) throws Throwable {
