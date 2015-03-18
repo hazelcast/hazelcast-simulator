@@ -115,7 +115,7 @@ public final class PropertyBindingSupport {
                 } else if ("false".equals(value)) {
                     field.set(object, false);
                 } else {
-                    throw new NumberFormatException(format("Unrecognized boolean value: %b", value));
+                    throw new NumberFormatException(format("Unrecognized boolean value: %s", value));
                 }
             } else if (Boolean.class.equals(field.getType())) {
                 // object boolean
@@ -126,7 +126,7 @@ public final class PropertyBindingSupport {
                 } else if ("false".equals(value)) {
                     field.set(object, false);
                 } else {
-                    throw new NumberFormatException(format("Unrecognized Boolean value: %b", value));
+                    throw new NumberFormatException(format("Unrecognized Boolean value: %s", value));
                 }
             } else if (Byte.TYPE.equals(field.getType())) {
                 // primitive byte

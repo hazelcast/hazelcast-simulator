@@ -70,7 +70,7 @@ public class BuildSupport {
     }
 
     private void logFilenames(File[] jars) {
-        StringBuilder sb = new StringBuilder("Hazelcast has been built successfully. JARs found: \n");
+        StringBuilder sb = new StringBuilder("Hazelcast has been built successfully. JARs found:\n");
         for (File jar : jars) {
             sb.append(jar.getName()).append('\n');
         }
