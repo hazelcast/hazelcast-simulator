@@ -21,7 +21,7 @@ public class LatencyDistributionProbe implements IntervalProbe<LatencyDistributi
 
     @Override
     public void done() {
-        histogram.addValue((int) TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started));
+        histogram.addValue((int) TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - started));
     }
 
     @Override

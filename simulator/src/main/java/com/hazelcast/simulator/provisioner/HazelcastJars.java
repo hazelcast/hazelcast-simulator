@@ -60,6 +60,7 @@ public class HazelcastJars {
             } else {
                 mavenRetrieve("hazelcast", version);
                 mavenRetrieve("hazelcast-client", version);
+                mavenRetrieve("hazelcast-wm", version);
             }
         } else if (versionSpec.startsWith(GIT_VERSION_PREFIX)) {
             if (eejars) {
