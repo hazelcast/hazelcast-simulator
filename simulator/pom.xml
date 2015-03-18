@@ -11,7 +11,9 @@
     <name>Hazelcast Simulator Tool</name>
     <artifactId>simulator</artifactId>
 
-
+    <properties>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
 
     <dependencies>
         <dependency>
