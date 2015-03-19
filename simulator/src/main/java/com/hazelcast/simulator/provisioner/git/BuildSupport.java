@@ -10,6 +10,7 @@ import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
 public class BuildSupport {
+
     private static final Logger log = Logger.getLogger(BuildSupport.class);
 
     private final Bash bash;
@@ -73,6 +74,6 @@ public class BuildSupport {
         for (File jar : jars) {
             sb.append(jar.getName()).append('\n');
         }
+        log.info(sb.toString());
     }
-
 }

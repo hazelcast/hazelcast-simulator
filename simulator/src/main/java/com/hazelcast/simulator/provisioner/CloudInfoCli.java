@@ -14,31 +14,31 @@ public class CloudInfoCli {
 
     private static final Logger log = Logger.getLogger(ProvisionerCli.class);
 
-    public final OptionParser parser = new OptionParser();
+    private final OptionParser parser = new OptionParser();
 
-    public final OptionSpec showLocationsSpec = parser.accepts("showLocations",
+    private final OptionSpec showLocationsSpec = parser.accepts("showLocations",
             "Shows all locations available. In Amazon for example this would be regions and zones.");
 
-    public final OptionSpec showHardwareSpec = parser.accepts("showHardware",
+    private final OptionSpec showHardwareSpec = parser.accepts("showHardware",
             "Shows all hardware available");
 
-    public final OptionSpec showImagesSpec = parser.accepts("showImages",
+    private final OptionSpec showImagesSpec = parser.accepts("showImages",
             "Shows all images available");
 
-    public final OptionSpec verboseSpec = parser.accepts("verbose",
+    private final OptionSpec verboseSpec = parser.accepts("verbose",
             "Shows very detailed info");
 
-    public final OptionSpec<String> locationSpec = parser.accepts("location",
-            "The locationId.")
-            .withRequiredArg().ofType(String.class);
-
-    public final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
+    private final OptionSpec<String> locationSpec = parser.accepts("location",
+            "The locationId."
+    ).withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
-            "The file containing the simulator properties. If no file is explicitly configured, first the " +
-                    "working directory is checked for a file 'simulator.properties'. All missing properties" +
-                    "are always loaded from SIMULATOR_HOME/conf/simulator.properties"
+            "The file containing the simulator properties. If no file is explicitly configured, first the working directory is " +
+                    "checked for a file 'simulator.properties'. All missing properties are always loaded from " +
+                    "'$SIMULATOR_HOME/conf/simulator.properties'."
     ).withRequiredArg().ofType(String.class);
+
+    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     private final CloudInfo cloudInfo;
     private OptionSet options;
@@ -81,7 +81,7 @@ public class CloudInfoCli {
 
     private File getPropertiesFile() {
         if (options.has(propertiesFileSpec)) {
-            //a file was explicitly configured
+            // a file was explicitly configured
             return new File(options.valueOf(propertiesFileSpec));
         } else {
             return null;

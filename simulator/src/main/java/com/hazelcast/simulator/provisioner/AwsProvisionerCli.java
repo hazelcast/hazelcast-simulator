@@ -8,35 +8,35 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
 public class AwsProvisionerCli {
-    private final static Logger log = Logger.getLogger(AwsProvisionerCli.class);
 
-    public final OptionParser parser = new OptionParser();
+    private static final Logger log = Logger.getLogger(AwsProvisionerCli.class);
 
-    public final OptionSpec<String> makeLB = parser.accepts("newLb",
-            "create new load balancer if it dose not exist."
+    private final OptionParser parser = new OptionParser();
+
+    private final OptionSpec<String> makeLB = parser.accepts("newLb",
+            "Create new load balancer if it dose not exist."
     ).withRequiredArg().ofType(String.class);
 
-    public final OptionSpec<String> agentsToLB = parser.accepts("addToLb",
-            "adds the ips in agents.txt file to the load balancer."
+    private final OptionSpec<String> agentsToLB = parser.accepts("addToLb",
+            "Adds the ips in '" + Provisioner.AGENTS_FILE + "' file to the load balancer."
     ).withRequiredArg().ofType(String.class);
 
-    public final OptionSpec<Integer> scale = parser.accepts("scale",
-            "Desired Number of machines to scale to."
+    private final OptionSpec<Integer> scale = parser.accepts("scale",
+            "Desired number of machines to scale to."
     ).withRequiredArg().ofType(Integer.class);
 
-    public final OptionSpec<String> propertiesFile = parser.accepts("propertiesFile",
-            "The file containing the simulator properties. If no file is explicitly configured, first the " +
-            "working directory is checked for a file 'simulator.properties'"
+    private final OptionSpec<String> propertiesFile = parser.accepts("propertiesFile",
+            "The file containing the simulator properties. If no file is explicitly configured, first the working directory is " +
+                    "checked for a file 'simulator.properties'."
     ).withRequiredArg().ofType(String.class);
 
-    public final OptionSpec help = parser.accepts("help", "Show help").forHelp();
+    private final OptionSpec help = parser.accepts("help", "Show help").forHelp();
 
-
-    private AwsProvisioner aws=null;
+    private final AwsProvisioner aws;
     private OptionSet options;
 
     public AwsProvisionerCli(AwsProvisioner awsProvisioner) {
@@ -56,8 +56,8 @@ public class AwsProvisionerCli {
         }
 
         if (options.has(propertiesFile)) {
-            File f = newFile(options.valueOf(propertiesFile));
-            aws.setProperties(f);
+            File file = newFile(options.valueOf(propertiesFile));
+            aws.setProperties(file);
         }
 
         if (options.has(scale)) {

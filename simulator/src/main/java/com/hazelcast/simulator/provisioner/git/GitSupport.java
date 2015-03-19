@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.provisioner.git;
 
-import com.hazelcast.simulator.utils.CommonUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
@@ -19,9 +18,11 @@ import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
 public class GitSupport {
+
     public static final String CUSTOM_REPOSITORY_PREFIX = "custom";
 
     private static final String HAZELCAST_MAIN_REPO_URL = "https://github.com/hazelcast/hazelcast.git";
@@ -126,9 +127,9 @@ public class GitSupport {
             fetchAllRepositories(git);
             fullSha1 = checkoutRevision(git, revision);
         } catch (GitAPIException e) {
-            CommonUtils.exitWithError(log, "Error while fetching sources from GIT", e);
+            exitWithError(log, "Error while fetching sources from GIT", e);
         } catch (IOException e) {
-            CommonUtils.exitWithError(log, "Error while fetching sources from GIT", e);
+            exitWithError(log, "Error while fetching sources from GIT", e);
         } finally {
             if (git != null) {
                 git.close();
@@ -143,31 +144,31 @@ public class GitSupport {
             baseDir = getDefaultBaseDir();
             if (baseDir.exists()) {
                 if (!baseDir.isDirectory()) {
-                    CommonUtils.exitWithError(log, "Default directory for building Hazelcast from GIT is "
-                            + baseDir.getAbsolutePath() + ". This path already exists, but it isn't a directory. " +
-                            "Please configure the directory explicitly via simulator.properties or remove the existing path.");
+                    exitWithError(log, "Default directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
+                            + ". This path already exists, but it isn't a directory. " +
+                            "Please configure the directory explicitly via 'simulator.properties' or remove the existing path.");
                 } else if (!baseDir.canWrite()) {
-                    CommonUtils.exitWithError(log, "Default directory for building Hazelcast from GIT is "
-                            + baseDir.getAbsolutePath() + ". This path already exists, but it isn't writable. " +
-                            "Please configure the directory explicitly via simulator.properties or check access rights.");
+                    exitWithError(log, "Default directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
+                            + ". This path already exists, but it isn't writable. " +
+                            "Please configure the directory explicitly via 'simulator.properties' or check access rights.");
                 }
             }
         } else {
             baseDir = new File(basePath);
             if (baseDir.exists()) {
                 if (!baseDir.isDirectory()) {
-                    CommonUtils.exitWithError(log, "Directory for building Hazelcast from GIT is "
-                            + baseDir.getAbsolutePath() + ". This path already exists, but it isn't a directory. ");
+                    exitWithError(log, "Directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
+                            + ". This path already exists, but it isn't a directory.");
                 } else if (!baseDir.canWrite()) {
-                    CommonUtils.exitWithError(log, "Directory for building Hazelcast from GIT is "
-                            + baseDir.getAbsolutePath() + ". This path already exists, but it isn't writable. ");
+                    exitWithError(log, "Directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
+                            + ". This path already exists, but it isn't writable.");
                 }
             }
         }
         if (!baseDir.exists()) {
-            baseDir.mkdirs();
+            ensureExistingDirectory(baseDir);
             if (!baseDir.exists()) {
-                CommonUtils.exitWithError(log, "Cannot create a directory for building Hazelcast form GIT. Directory is set to "
+                exitWithError(log, "Cannot create a directory for building Hazelcast form GIT. Directory is set to "
                         + baseDir.getAbsolutePath() + ". Please check access rights.");
             }
         }
@@ -180,7 +181,7 @@ public class GitSupport {
 
     private File getOrCreateSourceDirectory() {
         File src = newFile(baseDir, "src");
-        src.mkdirs();
+        ensureExistingDirectory(src);
         return src;
     }
 
@@ -195,7 +196,7 @@ public class GitSupport {
 
     private void buildAndCache(File src, File buildCache) {
         File[] files = buildSupport.build(src);
-        buildCache.mkdirs();
+        ensureExistingDirectory(buildCache);
         copyFilesToDirectory(files, buildCache);
     }
 
@@ -237,5 +238,4 @@ public class GitSupport {
         }
         return result;
     }
-
 }

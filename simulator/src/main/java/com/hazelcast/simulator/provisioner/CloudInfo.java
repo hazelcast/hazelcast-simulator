@@ -17,6 +17,7 @@ import static java.lang.String.format;
  * Commandline tool to retrieve various cloud info.
  */
 public class CloudInfo {
+
     private static final Logger log = Logger.getLogger(CloudInfo.class);
 
     public SimulatorProperties props = new SimulatorProperties();
@@ -29,8 +30,7 @@ public class CloudInfo {
         computeService = new ComputeServiceBuilder(props).build();
     }
 
-    //show all support clouds
-
+    // show all support clouds
     public void showLocations() {
         Set<? extends Location> locations = computeService.listAssignableLocations();
         for (Location location : locations) {
@@ -39,8 +39,8 @@ public class CloudInfo {
     }
 
     public void showHardware() {
-        Set<? extends Hardware> hardwares = computeService.listHardwareProfiles();
-        for (Hardware hardware : hardwares) {
+        Set<? extends Hardware> hardwareSet = computeService.listHardwareProfiles();
+        for (Hardware hardware : hardwareSet) {
             if (verbose) {
                 System.out.println(hardware);
             } else {
@@ -69,10 +69,7 @@ public class CloudInfo {
             if (verbose) {
                 System.out.println(image);
             } else {
-                StringBuilder sb = new StringBuilder(image.getId());
-                sb.append(" OS: ").append(image.getOperatingSystem());
-                //    sb.append(" Version: ").append(image.getSimulatorVersion());
-                System.out.println(sb.toString());
+                System.out.println(image.getId() + " OS: " + image.getOperatingSystem() + " Version: " + image.getVersion());
             }
         }
     }

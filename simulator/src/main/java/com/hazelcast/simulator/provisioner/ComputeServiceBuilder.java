@@ -2,7 +2,6 @@ package com.hazelcast.simulator.provisioner;
 
 import com.google.inject.AbstractModule;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.utils.CommonUtils;
 import org.apache.log4j.Logger;
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
@@ -58,9 +57,9 @@ public class ComputeServiceBuilder {
         try {
             return ContextBuilder.newBuilder(cloudProvider);
         } catch (NoSuchElementException e) {
-            CommonUtils.exitWithError(log, "Unrecognized cloud-provider [" + cloudProvider + "]");
-            return null;
+            exitWithError(log, "Unrecognized cloud-provider [" + cloudProvider + "]");
         }
+        throw new RuntimeException("Could not create ContextBuilder");
     }
 
     private List<AbstractModule> getModules() {
@@ -70,14 +69,14 @@ public class ComputeServiceBuilder {
     private void ensurePublicPrivateKeyExist() {
         File publicKey = newFile("~", ".ssh", "id_rsa.pub");
         if (!publicKey.exists()) {
-            CommonUtils.exitWithError(log, "Could not found public key: " + publicKey.getAbsolutePath() + "\n" +
+            exitWithError(log, "Could not found public key: " + publicKey.getAbsolutePath() + "\n" +
                     "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
 
         File privateKey = newFile("~", ".ssh", "id_rsa");
         if (!privateKey.exists()) {
-            CommonUtils.exitWithError(log, "Public key " + publicKey.getAbsolutePath() + " was found," +
-                    " but private key: " + privateKey.getAbsolutePath() + " is missing\n" +
+            exitWithError(log, "Public key " + publicKey.getAbsolutePath() + " was found, " +
+                    "but private key: " + privateKey.getAbsolutePath() + " is missing\n" +
                     "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
     }

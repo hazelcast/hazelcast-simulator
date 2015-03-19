@@ -34,6 +34,7 @@ import java.util.concurrent.locks.LockSupport;
 import static java.lang.String.format;
 
 public final class CommonUtils {
+
     public static final String NEW_LINE = System.getProperty("line.separator");
 
     private static final String DEFAULT_DELIMITER = ", ";
@@ -95,21 +96,17 @@ public final class CommonUtils {
         long time = seconds;
 
         long s = time % 60;
+        time /= 60;
 
-        time = time / 60;
         long m = time % 60;
+        time /= 60;
 
-        time = time / 60;
         long h = time % 24;
+        time /= 24;
 
-        time = time / 24;
         long days = time;
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(format("%02d", days)).append("d ").append(format("%02d", h)).append("h ").append(format("%02d", m)).append("m ")
-          .append(format("%02d", s)).append("s");
-
-        return sb.toString();
+        return format("%02dd %02dh %02dm %02ds", days, h, m, s);
     }
 
     public static String join(Iterable<?> collection) {
@@ -135,13 +132,13 @@ public final class CommonUtils {
         }
 
         synchronized (CommonUtils.class) {
+            if (hostAddress != null) {
+                return hostAddress;
+            }
             try {
-                if (hostAddress != null) {
-                    return hostAddress;
-                }
-                Socket s = new Socket("google.com", 80);
-                hostAddress = s.getLocalAddress().getHostAddress();
-                s.close();
+                Socket socket = new Socket("google.com", 80);
+                hostAddress = socket.getLocalAddress().getHostAddress();
+                socket.close();
                 return hostAddress;
             } catch (IOException io) {
                 throw new RuntimeException(io);
@@ -185,22 +182,22 @@ public final class CommonUtils {
         }
     }
 
-    public static void closeQuietly(Closeable c) {
-        if (c == null) {
+    public static void closeQuietly(Closeable closeable) {
+        if (closeable == null) {
             return;
         }
         try {
-            c.close();
+            closeable.close();
         } catch (IOException ignore) {
         }
     }
 
-    public static void closeQuietly(XMLStreamWriter c) {
-        if (c == null) {
+    public static void closeQuietly(XMLStreamWriter writer) {
+        if (writer == null) {
             return;
         }
         try {
-            c.close();
+            writer.close();
         } catch (XMLStreamException ignore) {
         }
     }
