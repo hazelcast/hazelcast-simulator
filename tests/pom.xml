@@ -3,24 +3,33 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>stabilizer-root</artifactId>
-        <groupId>com.hazelcast.stabilizer</groupId>
+        <artifactId>simulator-root</artifactId>
+        <groupId>com.hazelcast.simulator</groupId>
         <version>0.4-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>stabilizer-tests</artifactId>
-    <name>Hazelcast Stabilizer Tests</name>
+    <artifactId>simulator-tests</artifactId>
+    <name>Hazelcast Simulator Tests</name>
+
+    <properties>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.hazelcast.stabilizer</groupId>
-            <artifactId>stabilizer</artifactId>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>simulator</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
+            <version>${hazelcast.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast-wm</artifactId>
             <version>${hazelcast.version}</version>
         </dependency>
         <dependency>
@@ -34,5 +43,44 @@
             <artifactId>cache-api</artifactId>
             <version>${jsr107.api.version}</version>
         </dependency>
+
+
+
+        <dependency>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>javax.servlet.jsp-api</artifactId>
+            <version>${jsp.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${servlet.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-catalina</artifactId>
+            <version>${tomcat.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-util</artifactId>
+            <version>${tomcat.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>${tomcat.version}</version>
+        </dependency>
+
     </dependencies>
 </project>

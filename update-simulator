@@ -1,0 +1,16 @@
+#!/bin/bash
+
+VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[')
+PROJECT_HOME=~
+if [ -n "$1" ]; then
+    PROJECT_HOME=$1
+elif [ -n "${SIMULATOR_HOME}" ]; then
+    PROJECT_HOME=$(dirname "${SIMULATOR_HOME}")
+fi
+
+echo SIMULATOR_VERSION = ${VERSION}
+echo PROJECT_HOME = ${PROJECT_HOME}
+
+mvn clean install -DskipTests
+rm -fr ${PROJECT_HOME}/hazelcast-simulator-${VERSION}
+unzip -q -d ${PROJECT_HOME} dist/target/hazelcast-simulator-${VERSION}-dist.zip

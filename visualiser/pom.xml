@@ -3,17 +3,18 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>stabilizer-root</artifactId>
-        <groupId>com.hazelcast.stabilizer</groupId>
+        <artifactId>simulator-root</artifactId>
+        <groupId>com.hazelcast.simulator</groupId>
         <version>0.4-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>visualiser</artifactId>
-    <name>Hazelcast Stabilizer Visualiser</name>
+    <name>Hazelcast Simulator Visualiser</name>
 
     <properties>
         <jfreechart.version>1.0.19</jfreechart.version>
         <commons-lang.version>3.3.2</commons-lang.version>
+        <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
 
     <dependencies>
@@ -30,7 +31,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.hazelcast.stabilizer</groupId>
+            <groupId>com.hazelcast.simulator</groupId>
             <artifactId>probes</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

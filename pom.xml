@@ -2,13 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.hazelcast.stabilizer</groupId>
-    <artifactId>stabilizer-root</artifactId>
+    <groupId>com.hazelcast.simulator</groupId>
+    <artifactId>simulator-root</artifactId>
     <version>0.4-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Hazelcast Stabilizer Root</name>
-    <url>http://github.com/hazelcast/hazelcast-stabilizer</url>
-    <description>Hazelcast Stabilizer: Stress/Performance Testing Environment for Hazelcast</description>
+    <name>Hazelcast Simulator Root</name>
+    <url>http://github.com/hazelcast/hazelcast-simulator</url>
+    <description>Hazelcast Simulator: Stress/Performance Testing Environment for Hazelcast</description>
 
     <repositories>
         <repository>
@@ -39,10 +39,16 @@
         <jsr107.api.version>1.0.0</jsr107.api.version>
         <hdr-histogram.version>2.0.1</hdr-histogram.version>
         <jgit.version>3.5.3.201412180710-r</jgit.version>
+        <tomcat.version>7.0.54</tomcat.version>
+        <jsp.api.version>2.2.1</jsp.api.version>
+        <servlet.api.version>3.0.1</servlet.api.version>
+        <findbugs.maven.plugin.version>3.0.0</findbugs.maven.plugin.version>
+        <checkstyle.maven.plugin.version>2.12</checkstyle.maven.plugin.version>
+        <main.basedir>${project.basedir}</main.basedir>
     </properties>
 
     <modules>
-        <module>stabilizer</module>
+        <module>simulator</module>
         <module>archetype</module>
         <module>dist</module>
         <module>visualiser</module>
@@ -51,15 +57,15 @@
     </modules>
 
     <scm>
-        <connection>scm:git:git@github.com:hazelcast/hazelcast-stabilizer.git</connection>
-        <developerConnection>scm:git:git@github.com:hazelcast/hazelcast-stabilizer.git</developerConnection>
-        <url>https://github.com/hazelcast/hazelcast-stabilizer</url>
+        <connection>scm:git:git@github.com:hazelcast/hazelcast-simulator.git</connection>
+        <developerConnection>scm:git:git@github.com:hazelcast/hazelcast-simulator.git</developerConnection>
+        <url>https://github.com/hazelcast/hazelcast-simulator</url>
         <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
         <system>Github</system>
-        <url>https://github.com/hazelcast/hazelcast-stabilizer</url>
+        <url>https://github.com/hazelcast/hazelcast-simulator</url>
     </issueManagement>
 
     <organization>
@@ -145,6 +151,66 @@
                             </execution>
                         </executions>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>checkstyle</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <version>${checkstyle.maven.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>checkstyle</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <configLocation>${main.basedir}/checkstyle/checkstyle.xml</configLocation>
+                            <suppressionsLocation>${main.basedir}/checkstyle/suppressions.xml</suppressionsLocation>
+                            <headerLocation>${main.basedir}/checkstyle/ClassHeader.txt</headerLocation>
+                            <enableRSS>false</enableRSS>
+                            <linkXRef>true</linkXRef>
+                            <consoleOutput>true</consoleOutput>
+                            <failsOnError>true</failsOnError>
+                            <failOnViolation>true</failOnViolation>
+                            <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                            <enableRulesSummary>true</enableRulesSummary>
+                            <propertyExpansion>main.basedir=${main.basedir}</propertyExpansion>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>findbugs</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>findbugs-maven-plugin</artifactId>
+                        <version>${findbugs.maven.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <failOnError>true</failOnError>
+                            <excludeFilterFile>${main.basedir}/findbugs/findbugs-exclude.xml</excludeFilterFile>
+                        </configuration>
+                    </plugin>
+
                 </plugins>
             </build>
         </profile>

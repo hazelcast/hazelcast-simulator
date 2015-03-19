@@ -16,6 +16,6 @@ Foo.java
 agents.txt
 vtune/
 workers/
-stabilizer/workers/*
-stabilizer/logs/*
-stabilizer-git.properties
+simulator/workers/*
+simulator/logs/*
+simulator-git.properties

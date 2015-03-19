@@ -76,7 +76,7 @@ esac
 
 mkdir -p ${profile}/${clusterSz}
 
-cp stabilizer.properties ${profile}/${clusterSz}
+cp simulator.properties ${profile}/${clusterSz}
 cp test.properties ${profile}/${clusterSz}
 cp run.sh ${profile}/${clusterSz}
 
@@ -95,7 +95,7 @@ case $jenkinsMode in
         if ! $? ; then
             exit 1
         fi
-        sed -i s/maven=.*/maven="${hzVersion}"/g ${workers}/${duration}/stabilizer.properties
+        sed -i s/maven=.*/maven="${hzVersion}"/g ${workers}/${duration}/simulator.properties
         ./run.sh ${boxCount} ${members} ${workers} ${duration} ${output}
         retCode=$?
         ;;

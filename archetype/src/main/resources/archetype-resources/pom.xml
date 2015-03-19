@@ -7,12 +7,12 @@
     <version>\${version}</version>
     <packaging>jar</packaging>
 
-    <name>A Hazelcast Stabilizer Test project</name>
+    <name>A Hazelcast Simulator Test project</name>
     <url>http://www.myorganization.org</url>
 
     <properties>
         <hazelcast.version>${hazelcast.version}</hazelcast.version>
-        <hazelcast-stabilizer.version>${project.version}</hazelcast-stabilizer.version>
+        <hazelcast-simulator.version>${project.version}</hazelcast-simulator.version>
         <java.version>1.6</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -27,9 +27,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hazelcast.stabilizer</groupId>
-            <artifactId>stabilizer</artifactId>
-            <version>${hazelcast-stabilizer.version}</version>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>simulator</artifactId>
+            <version>${hazelcast-simulator.version}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -92,10 +92,10 @@
                         <configuration>
                             <excludeTransitive>true</excludeTransitive>
                             <!-- the com.hazelcast libraries are excluded, because an explicit version is configured
-                                 in the workerdir/stabilizer.properties. If you want to provide your own hazelcast
+                                 in the workerdir/simulator.properties. If you want to provide your own hazelcast
                                  dependencies, set HAZELCAST_VERSION_SPEC to none and remove 'com.hazelcast' from
                                  the excludedGroupIds -->
-                            <excludeGroupIds>com.hazelcast.stabilizer,com.hazelcast</excludeGroupIds>
+                            <excludeGroupIds>com.hazelcast.simulator,com.hazelcast</excludeGroupIds>
                             <outputDirectory>\${project.build.directory}</outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>

@@ -22,7 +22,7 @@
 
     <map name="MapStore*">
         <map-store enabled="true">
-            <class-name>com.hazelcast.stabilizer.tests.map.helpers.MapStoreWithCounter</class-name>
+            <class-name>com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounter</class-name>
             <write-delay-seconds>5</write-delay-seconds>
         </map-store>
     </map>
@@ -50,16 +50,16 @@
 
         <data-serializable-factories>
             <data-serializable-factory factory-id="2000">
-                com.hazelcast.stabilizer.tests.synthetic.SyntheticSerializableFactory
+                com.hazelcast.simulator.tests.synthetic.SyntheticSerializableFactory
             </data-serializable-factory>
             <data-serializable-factory factory-id="3000">
-                com.hazelcast.stabilizer.tests.syntheticmap.SyntheticMapSerializableFactory
+                com.hazelcast.simulator.tests.syntheticmap.SyntheticMapSerializableFactory
             </data-serializable-factory>
         </data-serializable-factories>
 
         <portable-factories>
             <portable-factory factory-id="10000000">
-                com.hazelcast.stabilizer.tests.synthetic.SyntheticRequestPortableFactory
+                com.hazelcast.simulator.tests.synthetic.SyntheticRequestPortableFactory
             </portable-factory>
         </portable-factories>
     </serialization>
@@ -67,7 +67,7 @@
     <services>
         <service enabled="true">
             <name>hz:impl:syntheticMapService</name>
-            <class-name>com.hazelcast.stabilizer.tests.syntheticmap.SyntheticMapService</class-name>
+            <class-name>com.hazelcast.simulator.tests.syntheticmap.SyntheticMapService</class-name>
         </service>
     </services>
 

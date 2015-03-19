@@ -69,7 +69,7 @@ CLOUD_BATCH_SIZE=20
 # If the name contains ${username}, this section will be replaced by the actual user that runs the
 # test. This makes it very easy to identity which user is owning a certain machine.
 #
-GROUP_NAME=stabilizer-agent
+GROUP_NAME=simulator-agent
 
 #
 # The name of the user on your local machine.
@@ -78,7 +78,7 @@ GROUP_NAME=stabilizer-agent
 # the public key of your system to the remote machine and add it to the ~/.ssh/authorized_keys. So once the instance
 # is created, you can login with 'ssh USER@ip'.
 #
-# The default value 'stabilizer' is fine in most cases. So probably you don't want to change this.
+# The default value 'simulator' is fine in most cases. So probably you don't want to change this.
 #
 USER=${me}
 
@@ -98,7 +98,7 @@ SSH_OPTIONS=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o Check
 # GCE:
 # The value is not relevant.
 
-SECURITY_GROUP=stabilizer
+SECURITY_GROUP=simulator
 
 #
 # EC2:
@@ -169,10 +169,10 @@ MACHINE_SPEC=osFamily=CENTOS,os64Bit=true
 # =====================================================================
 #
 # The workers can be configured to use a specific version of Hazelcast; so you don't need to depend on the Hazelcast
-# version provided by the stabilizer, but you can override it with a specific version.
+# version provided by the simulator, but you can override it with a specific version.
 #
 # The Hazelcast version can be configured in different ways:
-#   outofthebox             : if you are fine with the one provided by the Stabilizer itself.
+#   outofthebox             : if you are fine with the one provided by the Simulator itself.
 #   maven=version           : if you want to use a specific version from the maven repository, e.g.
 #                                   maven=3.2
 #                                   maven=3.3-SNAPSHOT
@@ -181,7 +181,7 @@ MACHINE_SPEC=osFamily=CENTOS,os64Bit=true
 #                             on the agent machine.
 #   bringmyown              : if you want to bring your own dependencies, for more information checkout out the
 #                             --workerClassPath setting on the Controller.
-#   git=version             : if you want Stabilizer to use a specific version of Hazelcast from GIT, e.g.:
+#   git=version             : if you want Simulator to use a specific version of Hazelcast from GIT, e.g.:
 #                                   git=f0288f713    to build a specific revision
 #                                   git=v3.2.3       to build a version from a GIT tag
 #                                   git=myRepository/myBranch - to build a version from a branch in a specific repository.
@@ -198,7 +198,7 @@ HAZELCAST_VERSION_SPEC=outofthebox
 
 # Comma separated list of additional GIT repositories to be fetched when HAZELCAST_VERSION_SPEC is set to GIT.
 #
-# Stabilizer will always fetch https://github.com/hazelcast/hazelcast
+# Simulator will always fetch https://github.com/hazelcast/hazelcast
 # This property specifies additional repositories. You can use both remote and local repositories.
 # Remote repositories must be accessible for anonymous, local repositories must be accessible for current user.
 #
@@ -208,7 +208,7 @@ HAZELCAST_VERSION_SPEC=outofthebox
 
 # Path to a local Maven installation to use when HAZELCAST_VERSION_SPEC is set to GIT.
 #
-# Default value: Stabilizer expects 'mvn' binary to be available on a PATH.
+# Default value: Simulator expects 'mvn' binary to be available on a PATH.
 #
 #MVN_EXECUTABLE=/usr/bin/mvn
 
@@ -225,7 +225,7 @@ HAZELCAST_VERSION_SPEC=outofthebox
 #   openjdk
 #   ibm
 #   outofthebox
-# out of the box is the one provided by the image. So no software is installed by the Stabilizer.
+# out of the box is the one provided by the image. So no software is installed by the Simulator.
 #
 JDK_FLAVOR=openjdk
 
@@ -277,13 +277,13 @@ FLIGHTRECORDER_SETTINGS=-XX:+UnlockCommercialFeatures -XX:+FlightRecorder -XX:Fl
 #
 # Make sure that the path matches the JVM 32/64 bits. In the future this will be automated.
 #
-# The libypagent.so files, which are included in Stabilizer, are for "YourKit Java Profiler 2013".
+# The libypagent.so files, which are included in Simulator, are for "YourKit Java Profiler 2013".
 #
 # For more information about the YourKit setting, see:
 #   http://www.yourkit.com/docs/java/help/agent.jsp
 #   http://www.yourkit.com/docs/java/help/startup_options.jsp
 #
-YOURKIT_SETTINGS=-agentpath:${STABILIZER_HOME}/yourkit/linux-x86-64/libyjpagent.so=dir=${WORKER_HOME},sampling
+YOURKIT_SETTINGS=-agentpath:${SIMULATOR_HOME}/yourkit/linux-x86-64/libyjpagent.so=dir=${WORKER_HOME},sampling
 
 #
 # The settings for the HProf profiler which is part of the JDK.
@@ -335,7 +335,7 @@ PERF_SETTINGS=perf record -o perf.data --quiet
 # to start; these will be provided by the Agent. Once the coordinator completes, all the artifacts can be downloaded with
 # 'provisioner --download'.
 #
-# To see within the JVM, make sure that you locally have the same Java version (under the same path) as the stabilizer. Else
+# To see within the JVM, make sure that you locally have the same Java version (under the same path) as the simulator. Else
 # VTune will not be able to see within the JVM.
 #
 # Reference to amplxe-cl commandline options:
@@ -352,4 +352,4 @@ VTUNE_SETTINGS=/opt/intel/vtune_amplifier_xe/bin64/amplxe-cl -collect hotspots
 #
 # Default: none
 NUMA_CONTROL=none
-" > stabilizer.properties
+" > simulator.properties
