@@ -56,9 +56,10 @@ public class Coordinator {
     public static final File SIMULATOR_HOME = getSimulatorHome();
     public static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
     public static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
+    
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
-    //options.
+    // options
     public boolean monitorPerformance;
     public boolean verifyEnabled = true;
     public String workerClassPath;
@@ -73,8 +74,10 @@ public class Coordinator {
     public volatile double performance;
     public volatile long operationCount;
     public PerformanceMonitor performanceMonitor;
+    
     protected AgentsClient agentsClient;
-    //internal state.
+    
+    // internal state
     final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
     private Bash bash;
 
@@ -470,10 +473,9 @@ public class Coordinator {
 
         try {
             coordinator.run();
-            System.exit(0);
         } catch (Exception e) {
             LOGGER.fatal("Failed to run testsuite", e);
-            System.exit(1);
+            exitWithError(LOGGER, e.getMessage());
         }
     }
 }

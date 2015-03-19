@@ -24,6 +24,7 @@ import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLo
 import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 
@@ -39,7 +41,6 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
  * An AWS specific provisioning class which is using the AWS SDK to create AWS instances and AWS elastic load balancer.
  */
 public class AwsProvisioner {
-
 
     // AWS specific magic strings
     public static final String AWS_RUNNING_STATE = "running";
@@ -52,12 +53,13 @@ public class AwsProvisioner {
 
     private static final int SLEEPING_MS = 1000 * 30;
     private static final int MAX_SLEEPING_ITERATIONS = 12;
-    private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(Provisioner.class);
+    private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
     private AmazonEC2 ec2;
     private AmazonElasticLoadBalancingClient elb;
     private SimulatorProperties props = new SimulatorProperties();
-    private final File agentsFile = new File(Provisioner.AGENTS_FILE);
+
+    private final File agentsFile = new File(AgentsFile.NAME);
     private final File elbFile = new File(AWS_ELB_FILE_NAME);
 
     private String securityGroup;
@@ -295,10 +297,9 @@ public class AwsProvisioner {
             AwsProvisioner provisioner = new AwsProvisioner();
             AwsProvisionerCli cli = new AwsProvisionerCli(provisioner);
             cli.run(args);
-
         } catch (Throwable e) {
             LOGGER.fatal(e);
-            System.exit(1);
+            exitWithError(LOGGER, e.getMessage());
         }
     }
 }

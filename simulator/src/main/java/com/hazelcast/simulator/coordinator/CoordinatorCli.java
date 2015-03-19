@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.simulator.provisioner.Provisioner;
+import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestSuite;
 import joptsimple.OptionException;
@@ -26,6 +26,7 @@ public class CoordinatorCli {
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
+    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
@@ -95,7 +96,7 @@ public class CoordinatorCli {
 
     private final OptionSpec<String> agentsFileSpec = parser.accepts("agentsFile",
             "The file containing the list of agent machines")
-            .withRequiredArg().ofType(String.class).defaultsTo(Provisioner.AGENTS_FILE);
+            .withRequiredArg().ofType(String.class).defaultsTo(AgentsFile.NAME);
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
             "The file containing the simulator properties. If no file is explicitly configured, first the "
@@ -123,13 +124,13 @@ public class CoordinatorCli {
             "Maximum amount of time waiting for the Test to stop")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
 
-    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
     private final Coordinator coordinator;
+
     private OptionSet options;
 
     private static String getDefaultHzFile() {
         File file = new File("hazelcast.xml");
-        // if something exists in the current working directory, use that.
+        // if something exists in the current working directory, use that
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
@@ -139,7 +140,7 @@ public class CoordinatorCli {
 
     private static String getDefaultClientHzFile() {
         File file = new File("client-hazelcast.xml");
-        // if something exists in the current working directory, use that.
+        // if something exists in the current working directory, use that
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
@@ -214,11 +215,6 @@ public class CoordinatorCli {
         coordinator.workerJvmSettings = workerJvmSettings;
     }
 
-    @SuppressWarnings("unused")
-    private String getProperties() {
-        return options.valueOf(propertiesFileSpec);
-    }
-
     private String loadClientHzConfig() {
         File file = getFile(clientHzFileSpec, options, "Worker Client Hazelcast config file");
         LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
@@ -233,7 +229,7 @@ public class CoordinatorCli {
 
     private File getPropertiesFile() {
         if (options.has(propertiesFileSpec)) {
-            //a file was explicitly configured
+            // a file was explicitly configured
             return newFile(options.valueOf(propertiesFileSpec));
         } else {
             return null;
@@ -250,7 +246,7 @@ public class CoordinatorCli {
             testsuiteFileName = testsuiteFiles.get(0);
         } else if (testsuiteFiles.size() > 1) {
             exitWithError(LOGGER, "Too many testsuite files specified.");
-            //won't be executed.
+            // won't be executed
             return null;
         }
         if (testsuiteFileName == null) {
