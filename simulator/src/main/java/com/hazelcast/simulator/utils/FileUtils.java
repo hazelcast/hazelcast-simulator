@@ -84,7 +84,7 @@ public class FileUtils {
 
             return response.toString();
         } finally {
-            CommonUtils.closeQuietly(in);
+            closeQuietly(in);
         }
     }
 
@@ -114,12 +114,12 @@ public class FileUtils {
                 objectOutputStream = new ObjectOutputStream(fileOutputStream);
                 objectOutputStream.writeObject(o);
             } finally {
-                CommonUtils.closeQuietly(objectOutputStream);
+                closeQuietly(objectOutputStream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            CommonUtils.closeQuietly(fileOutputStream);
+            closeQuietly(fileOutputStream);
         }
 
         if (!tmpFile.renameTo(file)) {
@@ -138,14 +138,14 @@ public class FileUtils {
                 objectInputStream = new ObjectInputStream(fileInputStream);
                 return (E) objectInputStream.readObject();
             } finally {
-                CommonUtils.closeQuietly(objectInputStream);
+                closeQuietly(objectInputStream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
-            CommonUtils.closeQuietly(fileInputStream);
+            closeQuietly(fileInputStream);
         }
     }
 
@@ -165,7 +165,7 @@ public class FileUtils {
                 writer.write(text);
                 writer.close();
             } finally {
-                CommonUtils.closeQuietly(stream);
+                closeQuietly(stream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -192,7 +192,7 @@ public class FileUtils {
                 writer.write(text);
                 writer.close();
             } finally {
-                CommonUtils.closeQuietly(stream);
+                closeQuietly(stream);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -222,12 +222,12 @@ public class FileUtils {
                 }
                 return builder.toString();
             } finally {
-                CommonUtils.closeQuietly(reader);
+                closeQuietly(reader);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            CommonUtils.closeQuietly(stream);
+            closeQuietly(stream);
         }
     }
 
@@ -237,13 +237,37 @@ public class FileUtils {
         }
 
         if (file.isDirectory()) {
-            for (File fileInDirectory : file.listFiles()) {
+            File[] files = file.listFiles();
+            if (files == null) {
+                return;
+            }
+            for (File fileInDirectory : files) {
                 delete(fileInDirectory);
             }
         }
 
         if (!file.delete()) {
             throw new FileNotFoundException("Failed to delete file: " + file);
+        }
+    }
+
+    public static void ensureExistingFile(File file) {
+        if (file.isFile()) {
+            return;
+        }
+
+        if (file.isDirectory()) {
+            throw new IllegalArgumentException(format("File [%s] is a directory", file.getAbsolutePath()));
+        }
+
+        if (!file.exists()) {
+            try {
+                if (!file.createNewFile()) {
+                    throw new RuntimeException("Could not create directory: " + file.getAbsolutePath());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -287,8 +311,11 @@ public class FileUtils {
                             zipOutputStream.putNextEntry(new ZipEntry(name));
                         }
 
-                        for (File kid : file.listFiles()) {
-                            queue.push(kid);
+                        File[] files = file.listFiles();
+                        if (files != null) {
+                            for (File kid : files) {
+                                queue.push(kid);
+                            }
                         }
                     } else {
                         String name = base.relativize(file.toURI()).getPath();
@@ -338,9 +365,9 @@ public class FileUtils {
             //LOGGER.finest("Unzipping: " + file.getAbsolutePath());
 
             if (zipEntry.isDirectory()) {
-                file.mkdirs();
+                ensureExistingDirectory(file);
             } else {
-                file.getParentFile().mkdirs();
+                ensureExistingDirectory(file.getParentFile());
 
                 FileOutputStream fos = new FileOutputStream(file);
                 try {
@@ -349,7 +376,7 @@ public class FileUtils {
                         fos.write(buffer, 0, len);
                     }
                 } finally {
-                    CommonUtils.closeQuietly(fos);
+                    closeQuietly(fos);
                 }
             }
 
@@ -384,14 +411,14 @@ public class FileUtils {
         } catch (IOException e) {
             throw new RuntimeException(format("Failed to load testsuite property file [%s]", file.getAbsolutePath()), e);
         } finally {
-            CommonUtils.closeQuietly(in);
+            closeQuietly(in);
         }
     }
 
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
-            CommonUtils.exitWithError(LOGGER, format("%s [%s] does not exist%n", desc, file));
+            exitWithError(LOGGER, format("%s [%s] does not exist%n", desc, file));
         }
         return file;
     }
@@ -402,13 +429,14 @@ public class FileUtils {
             file = newFile(Coordinator.SIMULATOR_HOME + File.separator + "conf" + File.separator + fileName);
         }
         if (!file.exists()) {
-            CommonUtils.exitWithError(LOGGER, format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
+            exitWithError(LOGGER, format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
         }
         LOGGER.info("Loading " + desc + ": " + file.getAbsolutePath());
 
         return fileAsText(file);
     }
 
+    @SuppressWarnings("unchecked")
     public static List<File> getFilesFromClassPath(String classpath) throws IOException {
         if (classpath == null) {
             return Collections.EMPTY_LIST;
@@ -425,15 +453,18 @@ public class FileUtils {
                 }
 
                 String regex = file.getName().replace("*", "(.*)");
-                for (File child : parent.listFiles()) {
-                    if (child.getName().matches(regex)) {
-                        files.add(child);
+                File[] parentFiles = parent.listFiles();
+                if (parentFiles != null) {
+                    for (File child : parentFiles) {
+                        if (child.getName().matches(regex)) {
+                            files.add(child);
+                        }
                     }
                 }
             } else if (file.exists()) {
                 files.add(file);
             } else {
-                CommonUtils.exitWithError(LOGGER, format("Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
+                exitWithError(LOGGER, format("Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
             }
         }
 
@@ -453,7 +484,7 @@ public class FileUtils {
         } catch (IOException e) {
             String errorMessage = format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
                     targetFile.getAbsolutePath());
-            CommonUtils.exitWithError(LOGGER, errorMessage, e);
+            exitWithError(LOGGER, errorMessage, e);
         }
     }
 }

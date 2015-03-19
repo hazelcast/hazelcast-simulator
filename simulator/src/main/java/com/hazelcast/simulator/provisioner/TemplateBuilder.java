@@ -21,11 +21,11 @@ import java.util.Set;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 
 public class TemplateBuilder {
+
     private static final Logger log = Logger.getLogger(Provisioner.class);
 
     private final ComputeService compute;
     private final SimulatorProperties props;
-    private String machineSpec;
     private String securityGroup;
     private TemplateBuilderSpec spec;
 
@@ -35,22 +35,18 @@ public class TemplateBuilder {
     }
 
     public Template build() {
-        machineSpec = props.get("MACHINE_SPEC", "");
-
-        log.info("Machine spec: " + machineSpec);
-
         securityGroup = props.get("SECURITY_GROUP", "simulator");
 
+        String machineSpec = props.get("MACHINE_SPEC", "");
         spec = TemplateBuilderSpec.parse(machineSpec);
+        log.info("Machine spec: " + machineSpec);
 
         Template template = buildTemplate();
-
         log.info("Created template");
 
         String user = props.get("USER", "simulator");
         AdminAccess adminAccess = AdminAccess.builder().adminUsername(user).build();
-
-        log.info("Loginname to the remote machines: " + user);
+        log.info("Login name to the remote machines: " + user);
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
@@ -65,7 +61,8 @@ public class TemplateBuilder {
                 throw new IllegalStateException("SUBNET_ID can be used only when EC2 is configured as a cloud provider.");
             }
             log.info("Using VPC, Subnet ID = " + subnetId);
-            template.getOptions().as(AWSEC2TemplateOptions.class)
+            template.getOptions()
+                    .as(AWSEC2TemplateOptions.class)
                     .subnetId(subnetId);
         }
         return template;
@@ -73,14 +70,12 @@ public class TemplateBuilder {
 
     private Template buildTemplate() {
         try {
-            return compute.templateBuilder()
-                    .from(spec)
-                    .build();
+            return compute.templateBuilder().from(spec).build();
         } catch (IllegalArgumentException e) {
             log.debug(e);
             exitWithError(log, e.getMessage());
-            return null;
         }
+        throw new RuntimeException("Could not build template!");
     }
 
     private int[] inboundPorts() {
@@ -88,13 +83,13 @@ public class TemplateBuilder {
         ports.add(22);
         ports.add(AgentRemoteService.PORT);
         ports.add(WorkerJvmManager.PORT);
-        for (int k = 5701; k < 5751; k++) {
-            ports.add(k);
+        for (int port = 5701; port < 5751; port++) {
+            ports.add(port);
         }
 
         int[] result = new int[ports.size()];
-        for (int k = 0; k < result.length; k++) {
-            result[k] = ports.get(k);
+        for (int i = 0; i < result.length; i++) {
+            result[i] = ports.get(i);
         }
         return result;
     }

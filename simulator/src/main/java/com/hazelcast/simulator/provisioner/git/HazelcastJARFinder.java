@@ -8,6 +8,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
 public class HazelcastJARFinder {
+
     private static final Logger log = Logger.getLogger(HazelcastJARFinder.class);
 
     public File[] find(File path) {
@@ -49,9 +50,8 @@ public class HazelcastJARFinder {
 
     private void checkPathExist(File memberPathToTarget) {
         if (!memberPathToTarget.exists()) {
-            exitWithError(log, "Cannot find a path to Hazelcast JAR. It should be at "
-                    + memberPathToTarget.getAbsolutePath() + ", but the path doesn't exist.");
+            exitWithError(log, "Cannot find a path to Hazelcast JAR. It should be at " + memberPathToTarget.getAbsolutePath() +
+                    ", but the path doesn't exist.");
         }
     }
-
 }

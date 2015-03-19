@@ -9,6 +9,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static java.lang.String.format;
 
 public class Bash {
+
     private final String sshOptions;
     private final String user;
 
@@ -22,29 +23,29 @@ public class Bash {
     }
 
     public void executeQuiet(String command) {
-        execute(command+ " || true");
+        execute(command + " || true");
     }
 
     /**
-     * Downloads the content of the url to the target path
+     * Downloads the content of the url to the target path.
      *
      * @param path the directory where the content is stored
-     * @param url the url that is downloaded
+     * @param url  the url that is downloaded
      */
-    public void download(String path, String url){
+    public void download(String path, String url) {
         execute("if type \"wget\" > /dev/null; \n" +
                 "then \n" +
-                "\twget --no-verbose --directory-prefix="+path+" "+url+" \n" +
+                "\twget --no-verbose --directory-prefix=" + path + " " + url + " \n" +
                 "else\n" +
                 "\t\t\n" +
                 "\tpushd .\n" +
-                "\tcd "+path+"\t\n" +
-                "\tcurl -O "+url+"\n" +
+                "\tcd " + path + "\t\n" +
+                "\tcurl -O " + url + "\n" +
                 "\tpopd\n" +
                 "fi");
     }
 
-    public void copyToAgentSimulatorDir(String ip, String src, String target) {
+    public void uploadToAgentSimulatorDir(String ip, String src, String target) {
         String syncCommand = format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/%s",
                 sshOptions, src, user, ip, getSimulatorVersion(), target);
 

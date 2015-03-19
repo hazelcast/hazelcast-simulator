@@ -1,9 +1,9 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.provisioner.Provisioner;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestSuite;
-import com.hazelcast.simulator.utils.CommonUtils;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -95,7 +95,7 @@ public class CoordinatorCli {
 
     private final OptionSpec<String> agentsFileSpec = parser.accepts("agentsFile",
             "The file containing the list of agent machines")
-            .withRequiredArg().ofType(String.class).defaultsTo("agents.txt");
+            .withRequiredArg().ofType(String.class).defaultsTo(Provisioner.AGENTS_FILE);
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
             "The file containing the simulator properties. If no file is explicitly configured, first the " +
@@ -155,7 +155,7 @@ public class CoordinatorCli {
         try {
             options = parser.parse(args);
         } catch (OptionException e) {
-            CommonUtils.exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
+            exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
             return;
         }
 
@@ -206,7 +206,7 @@ public class CoordinatorCli {
         if (options.has(dedicatedMemberMachinesSpec)) {
             int dedicatedMemberCount = dedicatedMemberMachinesSpec.value(options);
             if (dedicatedMemberCount < 0) {
-                CommonUtils.exitWithError(log, "dedicatedMemberCount can't be smaller than 0");
+                exitWithError(log, "dedicatedMemberCount can't be smaller than 0");
             }
             coordinator.dedicatedMemberMachineCount = dedicatedMemberCount;
         }
@@ -249,19 +249,19 @@ public class CoordinatorCli {
         } else if (testsuiteFiles.size() == 1) {
             testsuiteFileName = testsuiteFiles.get(0);
         } else if (testsuiteFiles.size() > 1) {
-            CommonUtils.exitWithError(log, "Too many testsuite files specified.");
+            exitWithError(log, "Too many testsuite files specified.");
             //won't be executed.
             return null;
         }
         if (testsuiteFileName == null) {
-            CommonUtils.exitWithError(log, "TestSuite filename was null.");
+            exitWithError(log, "TestSuite filename was null.");
             return null;
         }
 
         File testSuiteFile = new File(testsuiteFileName);
         log.info("Loading testsuite file: " + testSuiteFile.getAbsolutePath());
         if (!testSuiteFile.exists()) {
-            CommonUtils.exitWithError(log, format("Can't find testsuite file [%s]", testSuiteFile));
+            exitWithError(log, format("Can't find testsuite file [%s]", testSuiteFile));
         }
         return testSuiteFile;
     }
@@ -286,7 +286,7 @@ public class CoordinatorCli {
                 return Integer.parseInt(value);
             }
         } catch (NumberFormatException e) {
-            CommonUtils.exitWithError(log, format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
+            exitWithError(log, format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
             return -1;
         }
     }

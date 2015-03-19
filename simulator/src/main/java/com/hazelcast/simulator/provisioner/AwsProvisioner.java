@@ -13,7 +13,6 @@ import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
-import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.elasticloadbalancing.model.CreateLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.CreateLoadBalancerResult;
@@ -22,7 +21,6 @@ import com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRe
 import com.amazonaws.services.elasticloadbalancing.model.Listener;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerRequest;
-import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerResult;
 import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
@@ -36,37 +34,33 @@ import java.util.List;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static java.lang.String.format;
 
-
-/*
-* An aws specific provisioning class which is using the AWS sdk to create aws instances,  and aws elastic load balance
-* */
-public class AwsProvisioner{
+/**
+ * An AWS specific provisioning class which is using the AWS SDK to create AWS instances and AWS elastic load balancer.
+ */
+public class AwsProvisioner {
 
     private final static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(Provisioner.class);
 
-    //AWS specific magic strings
-    public static final String AWS_RUNNING_STATE  = "running";
+    // AWS specific magic strings
+    public static final String AWS_RUNNING_STATE = "running";
     public static final String AWS_SYSTEM_STATUS_OK = "ok";
     public static final String AWS_PUBLIC_IP_FILTER = "ip-address";
     public static final String AWS_KET_NAME_FILTER = "key-name";
 
-    //the file wich will hole the public domain name of the created load balance
+    // the file which will hole the public domain name of the created load balance
     public static final String AWS_ELB_FILE_NAME = "aws-elb.txt";
 
     private static final int SLEEPING_MS = 1000 * 30;
-    private static final int MAX_SLEEPING_ITTERATIONS = 12;
+    private static final int MAX_SLEEPING_ITERATIONS = 12;
 
-    private AWSCredentials credentials;
     private AmazonEC2 ec2;
     private AmazonElasticLoadBalancingClient elb;
 
     private SimulatorProperties props = new SimulatorProperties();
 
-    private final File agentsFile = new File("agents.txt");
+    private final File agentsFile = new File(Provisioner.AGENTS_FILE);
     private final File elbFile = new File(AWS_ELB_FILE_NAME);
-    private File credentialsFile;
 
     private String securityGroup;
     private String awsKeyName;
@@ -83,11 +77,11 @@ public class AwsProvisioner{
         setProperties(null);
     }
 
-    public void setProperties(File file) throws IOException{
+    public void setProperties(File file) throws IOException {
         props.init(file);
 
         String awsCredentialsPath = props.get("AWS_CREDENTIALS", "awscredentials.properties");
-        credentialsFile = new File(awsCredentialsPath);
+        File credentialsFile = new File(awsCredentialsPath);
 
         elbProtocol = props.get("ELB_PROTOCOL");
 
@@ -101,15 +95,30 @@ public class AwsProvisioner{
         securityGroup = props.get("SECURITY_GROUP");
         subNetId = props.get("SUBNET_ID", "");
 
-        credentials = new PropertiesCredentials(credentialsFile);
+        AWSCredentials credentials = new PropertiesCredentials(credentialsFile);
 
         ec2 = new AmazonEC2Client(credentials);
         elb = new AmazonElasticLoadBalancingClient(credentials);
     }
 
-    public void addAgentsToLoadBalancer(String elbName){
+    public String createLoadBalancer(String name) {
+        CreateLoadBalancerRequest lbRequest = new CreateLoadBalancerRequest();
+        lbRequest.setLoadBalancerName(name);
+        lbRequest.withAvailabilityZones(elbAvailabilityZones.split(","));
 
-        if( ! isBalancerAlive(elbName) ){
+        List<Listener> listeners = new ArrayList<Listener>();
+        listeners.add(new Listener(elbProtocol, elbPortIn, elbPortOut));
+        lbRequest.setListeners(listeners);
+
+        CreateLoadBalancerResult lbResult = elb.createLoadBalancer(lbRequest);
+        lbResult.getDNSName();
+        appendText(lbResult.getDNSName() + "\n", elbFile);
+
+        return lbRequest.getLoadBalancerName();
+    }
+
+    public void addAgentsToLoadBalancer(String elbName) {
+        if (!isBalancerAlive(elbName)) {
             createLoadBalancer(elbName);
         }
 
@@ -118,10 +127,10 @@ public class AwsProvisioner{
         addInstancesToElb(elbName, instances);
     }
 
-    public void scaleInstanceCountTo(int totalInstancesWanted){
+    public void scaleInstanceCountTo(int totalInstancesWanted) {
         List agents = AgentsFile.load(agentsFile);
 
-        if(totalInstancesWanted <= agents.size()){
+        if (totalInstancesWanted <= agents.size()) {
             terminateInstances(agents.size() - totalInstancesWanted);
             return;
         }
@@ -130,8 +139,7 @@ public class AwsProvisioner{
         createInstances(instanceCount);
     }
 
-    private List<Instance> createInstances(int instanceCount){
-
+    private List<Instance> createInstances(int instanceCount) {
         RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
 
         runInstancesRequest.withImageId(awsAmi)
@@ -140,7 +148,7 @@ public class AwsProvisioner{
                 .withMaxCount(instanceCount)
                 .withKeyName(awsKeyName);
 
-        if(subNetId.equals("")){
+        if (subNetId.isEmpty()) {
             runInstancesRequest.withSecurityGroups(securityGroup);
         } else {
             runInstancesRequest.withSubnetId(subNetId);
@@ -148,20 +156,20 @@ public class AwsProvisioner{
 
         RunInstancesResult runInstancesResult = ec2.runInstances(runInstancesRequest);
 
-        List<Instance> checkedInstances = new ArrayList();
+        List<Instance> checkedInstances = new ArrayList<Instance>();
         List<Instance> instances = runInstancesResult.getReservation().getInstances();
-        for (Instance i : instances) {
-            if(waiteForInstanceStatusRunning(i)){
-                addInstanceToAgentsFile(i);
-                checkedInstances.add(i);
-            }else{
-                log.warn("Time out Waiting for running status id=" + i.getInstanceId() );
+        for (Instance instance : instances) {
+            if (waiteForInstanceStatusRunning(instance)) {
+                addInstanceToAgentsFile(instance);
+                checkedInstances.add(instance);
+            } else {
+                log.warn("Timeout waiting for running status id=" + instance.getInstanceId());
             }
         }
         return checkedInstances;
     }
 
-    public void terminateInstances(int count){
+    private void terminateInstances(int count) {
         List<AgentAddress> agents = AgentsFile.load(agentsFile);
 
         List<AgentAddress> deadList = agents.subList(0, count);
@@ -172,27 +180,25 @@ public class AwsProvisioner{
         terminateInstances(deadInstances);
     }
 
-    private void terminateInstances(List<Instance> instances){
-
+    private void terminateInstances(List<Instance> instances) {
         List<String> ids = new ArrayList<String>();
-        for(Instance i : instances){
-            ids.add(i.getInstanceId());
+        for (Instance instance : instances) {
+            ids.add(instance.getInstanceId());
         }
 
         TerminateInstancesRequest terminateInstancesRequest = new TerminateInstancesRequest();
         terminateInstancesRequest.withInstanceIds(ids);
-        TerminateInstancesResult result = ec2.terminateInstances(terminateInstancesRequest);
+        ec2.terminateInstances(terminateInstancesRequest);
     }
 
-    public List<Instance> getInstancesFromAgentsFile(){
+    private List<Instance> getInstancesFromAgentsFile() {
         List<AgentAddress> currentAgents = AgentsFile.load(agentsFile);
         return getInstancesByPublicIp(currentAgents);
     }
 
-    public List<Instance> getInstancesByPublicIp(List<AgentAddress> agents){
-
+    private List<Instance> getInstancesByPublicIp(List<AgentAddress> agents) {
         List<String> ips = new ArrayList<String>();
-        for(AgentAddress agent : agents){
+        for (AgentAddress agent : agents) {
             ips.add(agent.publicAddress);
         }
 
@@ -203,7 +209,7 @@ public class AwsProvisioner{
         DescribeInstancesResult result = ec2.describeInstances(request.withFilters(filter));
         List<Reservation> reservations = result.getReservations();
 
-        List<Instance> foundInstances = new ArrayList();
+        List<Instance> foundInstances = new ArrayList<Instance>();
 
         for (Reservation reservation : reservations) {
             List<Instance> instances = reservation.getInstances();
@@ -212,19 +218,17 @@ public class AwsProvisioner{
         return foundInstances;
     }
 
-    public boolean waiteForInstanceStatusRunning(Instance i){
-
-        DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(i.getInstanceId());
-        int counter=0;
-        while ( counter++ < MAX_SLEEPING_ITTERATIONS ) {
-
+    private boolean waiteForInstanceStatusRunning(Instance instance) {
+        String instanceId = instance.getInstanceId();
+        DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instanceId);
+        int counter = 0;
+        while (counter++ < MAX_SLEEPING_ITERATIONS) {
             sleepSeconds(SLEEPING_MS);
 
             DescribeInstancesResult result = ec2.describeInstances(describeInstancesRequest);
-
-            for ( Reservation r : result.getReservations() ) {
-                for ( Instance j : r.getInstances() ) {
-                    if ( j.getPublicIpAddress() != null  && j.getState().getName().equals(AWS_RUNNING_STATE) ) {
+            for (Reservation reservation : result.getReservations()) {
+                for (Instance reserved : reservation.getInstances()) {
+                    if (reserved.getPublicIpAddress() != null && AWS_RUNNING_STATE.equals(reserved.getState().getName())) {
                         return true;
                     }
                 }
@@ -233,76 +237,62 @@ public class AwsProvisioner{
         return false;
     }
 
-    public void addInstanceToAgentsFile(Instance instance){
-        DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instance.getInstanceId());
+    private void addInstanceToAgentsFile(Instance instance) {
+        String instanceId = instance.getInstanceId();
+        DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instanceId);
         DescribeInstancesResult result = ec2.describeInstances(describeInstancesRequest);
 
-        for(Reservation r : result.getReservations() ){
-            for(Instance j : r.getInstances() ){
-                appendText(j.getPublicIpAddress() + "," + j.getPrivateIpAddress() + "\n", agentsFile);
+        for (Reservation reservation : result.getReservations()) {
+            for (Instance reserved : reservation.getInstances()) {
+                appendText(reserved.getPublicIpAddress() + "," + reserved.getPrivateIpAddress() + "\n", agentsFile);
             }
         }
     }
 
-    public String createLoadBalancer(String name){
-        CreateLoadBalancerRequest lbRequest = new CreateLoadBalancerRequest();
-        lbRequest.setLoadBalancerName(name);
-        lbRequest.withAvailabilityZones(elbAvailabilityZones.split(","));
-
-        List<Listener> listeners = new ArrayList();
-        listeners.add(new Listener(elbProtocol, elbPortIn, elbPortOut));
-        lbRequest.setListeners(listeners);
-
-        CreateLoadBalancerResult lbResult=elb.createLoadBalancer(lbRequest);
-        lbResult.getDNSName();
-        appendText(lbResult.getDNSName() + "\n", elbFile);
-
-        return lbRequest.getLoadBalancerName();
-    }
-
-    public boolean isBalancerAlive(String name){
-        Collection<String> names = new HashSet();
+    private boolean isBalancerAlive(String name) {
+        Collection<String> names = new HashSet<String>();
         names.add(name);
 
         DescribeLoadBalancersRequest describe = new DescribeLoadBalancersRequest();
         describe.setLoadBalancerNames(names);
 
-        try{
-            DescribeLoadBalancersResult res=  elb.describeLoadBalancers(describe);
-            List<LoadBalancerDescription> description = res.getLoadBalancerDescriptions();
+        try {
+            DescribeLoadBalancersResult result = elb.describeLoadBalancers(describe);
+            List<LoadBalancerDescription> description = result.getLoadBalancerDescriptions();
 
-            if(description.isEmpty()){
+            if (description.isEmpty()) {
                 return false;
             }
             return true;
 
-        }catch (AmazonServiceException e) {
+        } catch (AmazonServiceException e) {
             log.fatal(e);
         }
         return false;
     }
 
-    public void addInstancesToElb(String name, List<Instance> instances){
-        if(instances.isEmpty()){
-            log.info("No instances to add to load balance "+name);
+    private void addInstancesToElb(String name, List<Instance> instances) {
+        if (instances.isEmpty()) {
+            log.info("No instances to add to load balance " + name);
             return;
         }
 
-        //get instance id's
-        Collection<com.amazonaws.services.elasticloadbalancing.model.Instance> ids = new ArrayList();
-        for (Instance i: instances) {
-            ids.add(new com.amazonaws.services.elasticloadbalancing.model.Instance(i.getInstanceId()));
+        // get instance ids
+        Collection<com.amazonaws.services.elasticloadbalancing.model.Instance> ids
+                = new ArrayList<com.amazonaws.services.elasticloadbalancing.model.Instance>();
+        for (Instance instance : instances) {
+            ids.add(new com.amazonaws.services.elasticloadbalancing.model.Instance(instance.getInstanceId()));
         }
 
-        //register the instances to the balancer
+        // register the instances to the balancer
         RegisterInstancesWithLoadBalancerRequest register = new RegisterInstancesWithLoadBalancerRequest();
         register.setLoadBalancerName(name);
         register.setInstances(ids);
-        RegisterInstancesWithLoadBalancerResult registerWithLoadBalancerResult = elb.registerInstancesWithLoadBalancer(register);
+        elb.registerInstancesWithLoadBalancer(register);
     }
 
     public static void main(String[] args) {
-        log.info("AWS specfic Provisioner");
+        log.info("AWS specific provisioner");
         try {
             AwsProvisioner provisioner = new AwsProvisioner();
             AwsProvisionerCli cli = new AwsProvisionerCli(provisioner);
