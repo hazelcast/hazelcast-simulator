@@ -18,6 +18,7 @@ import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.config.MaxSizeConfig.MaxSizePolicy.PER_NODE;
 import static com.hazelcast.simulator.test.utils.TestUtils.assertEqualsStringFormat;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static java.lang.String.format;
 import static junit.framework.Assert.assertTrue;
 
@@ -44,7 +45,7 @@ public class MapMaxSizeTest {
     private static final ILogger log = Logger.getLogger(MapMaxSizeTest.class);
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = "MapMaxSize1";
     public int keyCount = Integer.MAX_VALUE;
 
     public double putProb = 0.5;
@@ -78,17 +79,19 @@ public class MapMaxSizeTest {
                 .addOperation(MapPutOperation.PUT_ASYNC, putUsingAsyncProb)
                 .addDefaultOperation(MapPutOperation.PUT_SYNC);
 
-        // check the map configuration
-        try {
-            MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
-            maxSizePerNode = maxSizeConfig.getSize();
-            assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s", PER_NODE, maxSizeConfig.getMaxSizePolicy());
-            assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE", maxSizePerNode < Integer.MAX_VALUE);
 
-            log.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
-        } catch (Exception e) {
-            ExceptionReporter.report(testContext.getTestId(), e);
-            throw e;
+        if(isMemberNode(targetInstance)){
+            try {
+                MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
+                maxSizePerNode = maxSizeConfig.getSize();
+                assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s", PER_NODE, maxSizeConfig.getMaxSizePolicy());
+                assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE", maxSizePerNode < Integer.MAX_VALUE);
+
+                log.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
+            } catch (Exception e) {
+                ExceptionReporter.report(testContext.getTestId(), e);
+                throw e;
+            }
         }
     }
 
@@ -104,10 +107,12 @@ public class MapMaxSizeTest {
     }
 
     private void assertMapMaxSize() {
-        int mapSize = map.size();
-        int clusterSize = targetInstance.getCluster().getMembers().size();
-        assertTrue(format("Size of map %s should be <= %d * %d, but was %d", basename, clusterSize, maxSizePerNode, mapSize),
-                mapSize <= clusterSize * maxSizePerNode);
+        if(isMemberNode(targetInstance)){
+            int mapSize = map.size();
+            int clusterSize = targetInstance.getCluster().getMembers().size();
+            assertTrue(format("Size of map %s should be <= %d * %d, but was %d", basename, clusterSize, maxSizePerNode, mapSize),
+                    mapSize <= clusterSize * maxSizePerNode);
+        }
     }
 
     @RunWithWorker
