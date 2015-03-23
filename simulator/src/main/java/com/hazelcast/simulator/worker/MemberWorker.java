@@ -56,7 +56,7 @@ public class MemberWorker {
 
     private String workerMode;
     private String workerId;
-    private boolean autoCreateHazelcastInstance=true;
+    private boolean autoCreateHazelcastInstance = true;
 
     public static void main(String[] args) {
         log.info("Starting Simulator Worker");
@@ -79,7 +79,7 @@ public class MemberWorker {
             String workerMode = System.getProperty("workerMode");
             log.info("Worker mode: " + workerMode);
 
-            String autoCreateHZInstances = System.getProperty("autoCreateHZInstances","true");
+            String autoCreateHZInstances = System.getProperty("autoCreateHZInstances", "true");
             log.info("autoCreateHZInstances :" + autoCreateHZInstances);
 
 

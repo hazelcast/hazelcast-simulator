@@ -23,7 +23,7 @@ public class GenericCommand extends Command {
     public String methodName;
 
     public GenericCommand(String testId, String methodName) {
-       this.testId = testId;
+        this.testId = testId;
         this.methodName = methodName;
     }
 

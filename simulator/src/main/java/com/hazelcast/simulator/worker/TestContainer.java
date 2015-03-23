@@ -1,15 +1,6 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.common.messaging.Message;
-import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
-import com.hazelcast.simulator.utils.AnnotationFilter;
-import com.hazelcast.simulator.utils.ReflectionUtils;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.Probes;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
@@ -17,10 +8,19 @@ import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.probes.probes.impl.DisabledResult;
 import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Receive;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.AnnotationFilter;
+import com.hazelcast.simulator.utils.ReflectionUtils;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.util.Clock;
 import org.apache.log4j.Logger;
 
@@ -35,7 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
 import static java.lang.String.format;
 
 /**

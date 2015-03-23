@@ -50,6 +50,7 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
 
     /**
      * Will be called on {@link ExecutionCallback#onFailure(Throwable)} after the throwable has been reported.
+     *
      * @param t the exception that is thrown
      */
     protected abstract void handleFailure(Throwable t);

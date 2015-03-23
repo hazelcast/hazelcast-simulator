@@ -1,17 +1,24 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.worker.commands.*;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.utils.TestUtils;
+import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.worker.commands.Command;
+import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
 import com.hazelcast.simulator.worker.commands.GenericCommand;
+import com.hazelcast.simulator.worker.commands.GetBenchmarkResultsCommand;
+import com.hazelcast.simulator.worker.commands.GetOperationCountCommand;
+import com.hazelcast.simulator.worker.commands.InitCommand;
+import com.hazelcast.simulator.worker.commands.IsPhaseCompletedCommand;
+import com.hazelcast.simulator.worker.commands.MessageCommand;
 import com.hazelcast.simulator.worker.commands.RunCommand;
+import com.hazelcast.simulator.worker.commands.StopCommand;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
