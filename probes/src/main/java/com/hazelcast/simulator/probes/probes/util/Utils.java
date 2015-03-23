@@ -6,10 +6,15 @@ import java.io.Closeable;
 import java.io.IOException;
 
 // this class can be removed once util methods are in a separate module
-public class Utils {
+public final class Utils {
+
+    private Utils() {
+    }
 
     public static void closeQuietly(XMLStreamWriter c) {
-        if (c == null) return;
+        if (c == null) {
+            return;
+        }
         try {
             c.close();
         } catch (XMLStreamException ignore) {
@@ -17,10 +22,13 @@ public class Utils {
     }
 
     public static void closeQuietly(Closeable c) {
-        if (c == null) return;
+        if (c == null) {
+            return;
+        }
         try {
             c.close();
         } catch (IOException ignore) {
         }
     }
+
 }

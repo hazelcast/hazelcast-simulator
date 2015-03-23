@@ -58,6 +58,77 @@ public class MemberWorker {
     private String workerId;
     private boolean autoCreateHazelcastInstance = true;
 
+    private MemberWorker() {
+    }
+
+    private void start() throws Exception {
+        HazelcastInstance serverInstance = null;
+        HazelcastInstance clientInstance = null;
+
+        if (autoCreateHazelcastInstance && "server".equals(workerMode)) {
+            LOGGER.info("------------------------------------------------------------------------");
+            LOGGER.info("             member mode");
+            LOGGER.info("------------------------------------------------------------------------");
+            serverInstance = createServerHazelcastInstance();
+            TestUtils.warmupPartitions(LOGGER, serverInstance);
+        } else if (autoCreateHazelcastInstance && "client".equals(workerMode)) {
+            LOGGER.info("------------------------------------------------------------------------");
+            LOGGER.info("             client mode");
+            LOGGER.info("------------------------------------------------------------------------");
+            clientInstance = createClientHazelcastInstance();
+            TestUtils.warmupPartitions(LOGGER, clientInstance);
+        } else {
+            throw new IllegalStateException("Unknown worker mode: " + workerMode);
+        }
+
+        workerSocketProcessor = new WorkerSocketProcessor(requestQueue, responseQueue, workerId);
+        workerCommandRequestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue,
+                serverInstance, clientInstance);
+
+        // the last thing we do is to signal to the agent we have started
+        signalStartToAgent(serverInstance);
+    }
+
+    private void stop() {
+        LOGGER.info("Stopping threads...");
+        workerSocketProcessor.shutdown();
+        workerCommandRequestProcessor.shutdown();
+    }
+
+    private HazelcastInstance createServerHazelcastInstance() throws Exception {
+        LOGGER.info("Creating Server HazelcastInstance");
+
+        XmlConfigBuilder configBuilder = new XmlConfigBuilder(hzFile);
+        Config config = configBuilder.build();
+
+        HazelcastInstance server = Hazelcast.newHazelcastInstance(config);
+        LOGGER.info("Successfully created Server HazelcastInstance");
+        return server;
+    }
+
+    private HazelcastInstance createClientHazelcastInstance() throws Exception {
+        LOGGER.info("Creating Client HazelcastInstance");
+
+        XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(clientHzFile);
+        ClientConfig clientConfig = configBuilder.build();
+
+        HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
+        LOGGER.info("Successfully created Client HazelcastInstance");
+        return client;
+    }
+
+    private void signalStartToAgent(HazelcastInstance serverInstance) {
+        String address;
+        if (serverInstance != null) {
+            InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getInetSocketAddress();
+            address = socketAddress.getAddress().getHostAddress() + ":" + socketAddress.getPort();
+        } else {
+            address = "client:" + getHostAddress();
+        }
+        File file = new File("worker.address");
+        writeObject(address, file);
+    }
+
     public static void main(String[] args) {
         LOGGER.info("Starting Simulator Worker");
 
@@ -136,77 +207,5 @@ public class MemberWorker {
                 LogManager.shutdown();
             }
         });
-    }
-
-    private MemberWorker() {
-    }
-
-    private void start() throws Exception {
-        HazelcastInstance serverInstance = null;
-        HazelcastInstance clientInstance = null;
-
-
-        if (autoCreateHazelcastInstance && "server".equals(workerMode)) {
-            LOGGER.info("------------------------------------------------------------------------");
-            LOGGER.info("             member mode");
-            LOGGER.info("------------------------------------------------------------------------");
-            serverInstance = createServerHazelcastInstance();
-            TestUtils.warmupPartitions(LOGGER, serverInstance);
-        } else if (autoCreateHazelcastInstance && "client".equals(workerMode)) {
-            LOGGER.info("------------------------------------------------------------------------");
-            LOGGER.info("             client mode");
-            LOGGER.info("------------------------------------------------------------------------");
-            clientInstance = createClientHazelcastInstance();
-            TestUtils.warmupPartitions(LOGGER, clientInstance);
-        } else {
-            throw new IllegalStateException("Unknown worker mode: " + workerMode);
-        }
-
-        workerSocketProcessor = new WorkerSocketProcessor(requestQueue, responseQueue, workerId);
-        workerCommandRequestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue,
-                serverInstance, clientInstance);
-
-        // the last thing we do is to signal to the agent we have started
-        signalStartToAgent(serverInstance);
-    }
-
-    private void stop() {
-        LOGGER.info("Stopping threads...");
-        workerSocketProcessor.shutdown();
-        workerCommandRequestProcessor.shutdown();
-    }
-
-    private HazelcastInstance createServerHazelcastInstance() throws Exception {
-        LOGGER.info("Creating Server HazelcastInstance");
-
-        XmlConfigBuilder configBuilder = new XmlConfigBuilder(hzFile);
-        Config config = configBuilder.build();
-
-        HazelcastInstance server = Hazelcast.newHazelcastInstance(config);
-        LOGGER.info("Successfully created Server HazelcastInstance");
-        return server;
-    }
-
-    private HazelcastInstance createClientHazelcastInstance() throws Exception {
-        LOGGER.info("Creating Client HazelcastInstance");
-
-        XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(clientHzFile);
-        ClientConfig clientConfig = configBuilder.build();
-
-        HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
-        LOGGER.info("Successfully created Client HazelcastInstance");
-        return client;
-    }
-
-    private void signalStartToAgent(HazelcastInstance serverInstance) {
-        String address;
-        if (serverInstance != null) {
-            InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getInetSocketAddress();
-            address = socketAddress.getAddress().getHostAddress() + ":" + socketAddress.getPort();
-        } else {
-            address = "client:" + getHostAddress();
-        }
-        File file = new File("worker.address");
-        writeObject(address, file);
     }
 }

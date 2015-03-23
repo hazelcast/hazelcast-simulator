@@ -68,15 +68,15 @@ public class Coordinator {
     public int dedicatedMemberMachineCount;
     public boolean parallel;
 
-    //internal state.
-    final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
-    protected AgentsClient agentsClient;
     public WorkerJvmSettings workerJvmSettings;
     public SimulatorProperties props = new SimulatorProperties();
     public volatile double performance;
     public volatile long operationCount;
-    private Bash bash;
     public PerformanceMonitor performanceMonitor;
+    protected AgentsClient agentsClient;
+    //internal state.
+    final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
+    private Bash bash;
 
     private void run() throws Exception {
         bash = new Bash(props);

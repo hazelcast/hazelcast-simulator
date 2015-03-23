@@ -12,12 +12,15 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 /**
  * Responsible for writing an Exception to file. Every exception-file will have a unique name.
  */
-public class ExceptionReporter {
+public final class ExceptionReporter {
 
     public static final int MAX_EXCEPTION_COUNT = 1000;
 
     private static final AtomicLong FAILURE_ID = new AtomicLong(0);
     private static final Logger LOGGER = Logger.getLogger(ExceptionReporter.class);
+
+    private ExceptionReporter() {
+    }
 
     /**
      * Writes the cause to file.
@@ -70,6 +73,4 @@ public class ExceptionReporter {
         writeText(text, file);
     }
 
-    private ExceptionReporter() {
-    }
 }

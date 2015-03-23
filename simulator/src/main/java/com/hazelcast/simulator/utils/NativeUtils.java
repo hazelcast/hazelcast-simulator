@@ -11,7 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 
-public class NativeUtils {
+public final class NativeUtils {
 
     private static final Logger LOGGER = Logger.getLogger(NativeUtils.class);
 

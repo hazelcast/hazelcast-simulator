@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.probes.probes.impl;
 
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.probes.probes.Result;
+import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.probes.probes.util.ConstructorFunction;
 
 public class ConcurrentSimpleProbe<R extends Result<R>, T extends SimpleProbe<R, T>>

@@ -2,10 +2,10 @@ package com.hazelcast.simulator.probes.probes.impl;
 
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 
-public class DisabledProbe implements IntervalProbe<DisabledResult, DisabledProbe> {
+public final class DisabledProbe implements IntervalProbe<DisabledResult, DisabledProbe> {
 
-    private static DisabledResult RESULT = new DisabledResult();
     public static final DisabledProbe INSTANCE = new DisabledProbe();
+    private static final DisabledResult RESULT = new DisabledResult();
 
     private DisabledProbe() {
     }

@@ -40,7 +40,7 @@ public class LinearHistogram implements Serializable {
             int valuesInBucket = copyOfBuckets[i];
             values += valuesInBucket;
             if (values >= minNoOfValues) {
-                int bucket = (i+1) * step;
+                int bucket = (i + 1) * step;
                 return new HistogramPart(bucket, values);
             }
         }
@@ -124,14 +124,24 @@ public class LinearHistogram implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         LinearHistogram that = (LinearHistogram) o;
 
-        if (maxValue != that.maxValue) return false;
-        if (step != that.step) return false;
-        if (!Arrays.equals(buckets, that.buckets)) return false;
+        if (maxValue != that.maxValue) {
+            return false;
+        }
+        if (step != that.step) {
+            return false;
+        }
+        if (!Arrays.equals(buckets, that.buckets)) {
+            return false;
+        }
 
         return true;
     }

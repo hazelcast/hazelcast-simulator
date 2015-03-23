@@ -10,7 +10,8 @@ public class CountdownWatch {
 
         long now = System.currentTimeMillis();
         long candidate = now + delay;
-        limit = candidate >= now ? candidate : Long.MAX_VALUE; //overflow protection
+        //overflow protection
+        limit = candidate >= now ? candidate : Long.MAX_VALUE;
     }
 
     public long getRemainingMs() {
@@ -29,7 +30,7 @@ public class CountdownWatch {
         return new UnboundedCountdownWatch();
     }
 
-    private static class UnboundedCountdownWatch extends CountdownWatch {
+    private final static class UnboundedCountdownWatch extends CountdownWatch {
         private UnboundedCountdownWatch() {
             super(Long.MAX_VALUE);
         }

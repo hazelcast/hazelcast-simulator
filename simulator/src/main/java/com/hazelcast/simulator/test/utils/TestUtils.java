@@ -27,7 +27,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowExceptio
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
-public class TestUtils {
+public final class TestUtils {
 
     public static final String TEST_INSTANCE = "testInstance";
     public static final int ASSERT_TRUE_EVENTUALLY_TIMEOUT;

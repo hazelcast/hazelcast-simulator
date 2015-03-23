@@ -60,12 +60,18 @@ public class HdrLatencyProbeResult implements Result<HdrLatencyProbeResult> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         HdrLatencyProbeResult that = (HdrLatencyProbeResult) o;
 
-        if (histogram != null ? !histogram.equals(that.histogram) : that.histogram != null) return false;
+        if (histogram != null ? !histogram.equals(that.histogram) : that.histogram != null) {
+            return false;
+        }
 
         return true;
     }

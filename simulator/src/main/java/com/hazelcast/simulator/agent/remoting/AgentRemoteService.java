@@ -55,7 +55,7 @@ public class AgentRemoteService {
     }
 
     private class AcceptorThread extends Thread {
-        private volatile boolean stopped = false;
+        private volatile boolean stopped;
 
         public AcceptorThread() {
             super("AcceptorThread");

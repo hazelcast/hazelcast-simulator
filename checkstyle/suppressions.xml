@@ -9,5 +9,14 @@
     <!-- Suppress duplicate checking of copyright notice -->
     <suppress checks="StrictDuplicateCode" files=".java" lines="1-15"/>
 
+    <!-- Cluster -->
+    <suppress checks="JavadocMethod" files="[\\/]"/>
+    <suppress checks="JavadocType" files="[\\/]"/>
+    <suppress checks="JavadocMethod" files="[\\/]"/>
+    <suppress checks="JavadocVariable" files="[\\/]"/>
+    <suppress checks="JavadocPackage" files="[\\/]"/>
+    <suppress checks="MagicNumber" files="[\\/]"/>
+    <suppress checks="VisibilityModifier" files="[\\/]"/>
+
 </suppressions>
 

@@ -10,14 +10,18 @@ import java.util.concurrent.TimeUnit;
 public class UseAllMemoryMessage extends RunnableMessage {
     private static final Logger LOGGER = Logger.getLogger(UseAllMemoryMessage.class);
 
+    private static List list = new ArrayList();
+
     private final int bufferSize = 1000;
     private final int delay;
-
-    private static List list = new ArrayList();
 
     public UseAllMemoryMessage(MessageAddress messageAddress, int delay) {
         super(messageAddress);
         this.delay = delay;
+    }
+
+    public UseAllMemoryMessage(MessageAddress messageAddress) {
+        this(messageAddress, 0);
     }
 
     @Override
@@ -30,13 +34,9 @@ public class UseAllMemoryMessage extends RunnableMessage {
         return super.removeFromAgentList();
     }
 
-    public UseAllMemoryMessage(MessageAddress messageAddress) {
-        this(messageAddress, 0);
-    }
-
     @Override
     public void run() {
-        new Thread() {
+        Thread thread = new Thread() {
             @Override
             public void run() {
                 LOGGER.debug("Starting a thread to consume all memory");
@@ -65,6 +65,7 @@ public class UseAllMemoryMessage extends RunnableMessage {
                     Thread.currentThread().interrupt();
                 }
             }
-        }.start();
+        };
+        thread.start();
     }
 }

@@ -21,21 +21,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.DataFormatException;
 
+import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.HDR_LATENCY_DATA;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_BUCKET;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_BUCKETS;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.HDR_LATENCY_DATA;
+import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_MAX_VALUE;
+import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_STEP;
+import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_UPPER_BOUND;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_VALUES;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.MAX_LATENCY;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_MAX_VALUE;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.OPERATIONS_PER_SECOND;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBES_RESULT;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_STEP;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_UPPER_BOUND;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE_NAME;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE_TYPE;
 
-public class ProbesResultXmlReader {
+public final class ProbesResultXmlReader {
+
+    private ProbesResultXmlReader() {
+    }
 
     public static Map<String, Result> read(InputStream inputStream) {
         Map<String, Result> result = new HashMap<String, Result>();
@@ -83,7 +86,7 @@ public class ProbesResultXmlReader {
 
         Result probeResult = null;
         if (OperationsPerSecondResult.XML_TYPE.equals(type)) {
-        probeResult = parseOperationsPerSecondResult(reader);
+            probeResult = parseOperationsPerSecondResult(reader);
         } else if (MaxLatencyResult.XML_TYPE.equals(type)) {
             probeResult = parseMaxLatencyResult(reader);
         } else if (HdrLatencyProbeResult.XML_TYPE.equals(type)) {
@@ -117,7 +120,7 @@ public class ProbesResultXmlReader {
             if (xmlEvent.isEndElement()) {
                 EndElement endElement = xmlEvent.asEndElement();
                 if (OPERATIONS_PER_SECOND.string.equals(endElement.getName().getLocalPart())) {
-                    if (operationsPerSecond!= null) {
+                    if (operationsPerSecond != null) {
                         return new OperationsPerSecondResult(operationsPerSecond);
                     } else {
                         throw new XMLStreamException("Unexpected end element" + OPERATIONS_PER_SECOND.string);
@@ -250,7 +253,7 @@ public class ProbesResultXmlReader {
             throws XMLStreamException {
         String upperBound = element.getAttributeByName(new QName(LATENCY_DIST_UPPER_BOUND.string)).getValue();
         String values = element.getAttributeByName(new QName(LATENCY_DIST_VALUES.string)).getValue();
-        histogram.addMultipleValues(Integer.parseInt(upperBound)-1, Integer.parseInt(values));
+        histogram.addMultipleValues(Integer.parseInt(upperBound) - 1, Integer.parseInt(values));
 
         while (reader.hasNext()) {
             XMLEvent xmlEvent = reader.nextEvent();

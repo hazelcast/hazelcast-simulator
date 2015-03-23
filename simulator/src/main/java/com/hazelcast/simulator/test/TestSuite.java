@@ -37,6 +37,44 @@ public class TestSuite implements Serializable {
 
     private static final long serialVersionUID = 1;
 
+    public final String id = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
+    public List<TestCase> testCaseList = new LinkedList<TestCase>();
+    public int duration;
+    public boolean failFast;
+    public Set<Failure.Type> tolerableFailures = Collections.EMPTY_SET;
+
+    public TestCase getTestCase(String testCaseId) {
+        if (testCaseId == null) {
+            return null;
+        }
+
+        for (TestCase testCase : testCaseList) {
+            if (testCaseId.equals(testCase.getId())) {
+                return testCase;
+            }
+        }
+
+        return null;
+    }
+
+    public void addTest(TestCase testCase) {
+        testCaseList.add(testCase);
+    }
+
+    public int size() {
+        return testCaseList.size();
+    }
+
+    @Override
+    public String toString() {
+        return "TestSuite{"
+                + "duration=" + duration
+                + ", id='" + id + '\''
+                + ", testRecipeList=" + testCaseList
+                + ", failFast=" + failFast
+                + '}';
+    }
+
     public static TestSuite loadTestSuite(File file, String propertiesOverrideString) throws Exception {
         Properties properties = loadProperties(file);
 
@@ -113,43 +151,5 @@ public class TestSuite implements Serializable {
             result.put(keyValue[0], keyValue[1]);
         }
         return result;
-    }
-
-    public final String id = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
-    public List<TestCase> testCaseList = new LinkedList<TestCase>();
-    public int duration;
-    public boolean failFast;
-    public Set<Failure.Type> tolerableFailures = Collections.EMPTY_SET;
-
-    public TestCase getTestCase(String testCaseId) {
-        if (testCaseId == null) {
-            return null;
-        }
-
-        for (TestCase testCase : testCaseList) {
-            if (testCaseId.equals(testCase.getId())) {
-                return testCase;
-            }
-        }
-
-        return null;
-    }
-
-    public void addTest(TestCase testCase) {
-        testCaseList.add(testCase);
-    }
-
-    public int size() {
-        return testCaseList.size();
-    }
-
-    @Override
-    public String toString() {
-        return "TestSuite{"
-                + "duration=" + duration
-                + ", id='" + id + '\''
-                + ", testRecipeList=" + testCaseList
-                + ", failFast=" + failFast
-                + '}';
     }
 }

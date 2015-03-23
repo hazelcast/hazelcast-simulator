@@ -3,7 +3,11 @@ package com.hazelcast.simulator.probes.probes.util;
 import java.util.concurrent.ConcurrentMap;
 
 // this class can be removed once util methods are in a separate module
-public class ConcurrencyUtil {
+public final class ConcurrencyUtil {
+
+    private ConcurrencyUtil() {
+    }
+
     public static <K, V> V getOrPutIfAbsent(ConcurrentMap<K, V> map, K key, ConstructorFunction<K, V> func) {
         V value = map.get(key);
         if (value == null) {
@@ -13,4 +17,5 @@ public class ConcurrencyUtil {
         }
         return value;
     }
+
 }

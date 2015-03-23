@@ -29,9 +29,9 @@ public class GenericCommand extends Command {
 
     @Override
     public String toString() {
-        return "GenericCommand{" +
-                "testId='" + testId + '\'' +
-                ", methodName='" + methodName + '\'' +
-                '}';
+        return "GenericCommand{"
+                + "testId='" + testId + '\''
+                + ", methodName='" + methodName + '\''
+                + '}';
     }
 }

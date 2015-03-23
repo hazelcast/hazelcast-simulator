@@ -30,7 +30,7 @@ public class OperationsPerSecProbe implements SimpleProbe<OperationsPerSecondRes
         }
         long stopOrNow = (stopped == 0 ? System.currentTimeMillis() : stopped);
         long durationMs = stopOrNow - started;
-        return new OperationsPerSecondResult(((double)noOfOperations / durationMs) * 1000);
+        return new OperationsPerSecondResult(((double) noOfOperations / durationMs) * 1000);
     }
 
     @Override

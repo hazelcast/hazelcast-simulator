@@ -146,7 +146,8 @@ public class GitSupport {
                 if (!baseDir.isDirectory()) {
                     exitWithError(LOGGER, "Default directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
                             + ". This path already exists, but it isn't a directory. "
-                            + "Please configure the directory explicitly via 'simulator.properties' or remove the existing path.");
+                            + "Please configure the directory explicitly via 'simulator.properties'"
+                            + " or remove the existing path.");
                 } else if (!baseDir.canWrite()) {
                     exitWithError(LOGGER, "Default directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
                             + ". This path already exists, but it isn't writable. "

@@ -40,7 +40,6 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
  */
 public class AwsProvisioner {
 
-    private final static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(Provisioner.class);
 
     // AWS specific magic strings
     public static final String AWS_RUNNING_STATE = "running";
@@ -53,12 +52,11 @@ public class AwsProvisioner {
 
     private static final int SLEEPING_MS = 1000 * 30;
     private static final int MAX_SLEEPING_ITERATIONS = 12;
+    private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(Provisioner.class);
 
     private AmazonEC2 ec2;
     private AmazonElasticLoadBalancingClient elb;
-
     private SimulatorProperties props = new SimulatorProperties();
-
     private final File agentsFile = new File(Provisioner.AGENTS_FILE);
     private final File elbFile = new File(AWS_ELB_FILE_NAME);
 
@@ -163,7 +161,7 @@ public class AwsProvisioner {
                 addInstanceToAgentsFile(instance);
                 checkedInstances.add(instance);
             } else {
-                log.warn("Timeout waiting for running status id=" + instance.getInstanceId());
+                LOGGER.warn("Timeout waiting for running status id=" + instance.getInstanceId());
             }
         }
         return checkedInstances;
@@ -266,14 +264,14 @@ public class AwsProvisioner {
             return true;
 
         } catch (AmazonServiceException e) {
-            log.fatal(e);
+            LOGGER.fatal(e);
         }
         return false;
     }
 
     private void addInstancesToElb(String name, List<Instance> instances) {
         if (instances.isEmpty()) {
-            log.info("No instances to add to load balance " + name);
+            LOGGER.info("No instances to add to load balance " + name);
             return;
         }
 
@@ -292,14 +290,14 @@ public class AwsProvisioner {
     }
 
     public static void main(String[] args) {
-        log.info("AWS specific provisioner");
+        LOGGER.info("AWS specific provisioner");
         try {
             AwsProvisioner provisioner = new AwsProvisioner();
             AwsProvisionerCli cli = new AwsProvisionerCli(provisioner);
             cli.run(args);
 
         } catch (Throwable e) {
-            log.fatal(e);
+            LOGGER.fatal(e);
             System.exit(1);
         }
     }

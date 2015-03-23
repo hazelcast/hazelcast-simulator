@@ -50,13 +50,10 @@ class WorkerPerformanceMonitor {
         private final File globalPerformanceFile = new File("performance.txt");
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         private final HashMap<String, TestStats> testStats = new HashMap<String, TestStats>();
-
         private final Collection<TestContainer<TestContext>> testContainers;
-
-        private long globalLastOpsCount = 0;
+        private long globalLastOpsCount;
         private long globalLastTimeMillis = System.currentTimeMillis();
-
-        private volatile boolean running = false;
+        private volatile boolean running;
 
         private WorkerPerformanceMonitorThread(Collection<TestContainer<TestContext>> testContainers) {
             super("WorkerPerformanceMonitorThread");
@@ -165,10 +162,9 @@ class WorkerPerformanceMonitor {
                     formatLong(totalTests, fieldLength)), file);
         }
 
-        private static class TestStats {
+        private static final class TestStats {
             private final File performanceFile;
-
-            private long lastOpsCount = 0;
+            private long lastOpsCount;
 
             private TestStats(File performanceFile) {
                 this.performanceFile = performanceFile;

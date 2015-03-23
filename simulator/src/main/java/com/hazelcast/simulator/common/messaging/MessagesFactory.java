@@ -14,7 +14,7 @@ import java.util.Set;
 
 import static java.lang.String.format;
 
-class MessagesFactory {
+final class MessagesFactory {
     private static final Logger LOGGER = Logger.getLogger(MessagesFactory.class);
     private static final MessagesFactory INSTANCE = new MessagesFactory();
 
@@ -78,7 +78,11 @@ class MessagesFactory {
     private static Message createInstance(Constructor<? extends Message> constructor, MessageAddress messageAddress,
                                           KeyValuePair<? extends Serializable, ? extends Serializable> attribute) {
         try {
-            return attribute == null ? constructor.newInstance(messageAddress) : constructor.newInstance(messageAddress, attribute);
+            if (attribute == null) {
+                return constructor.newInstance(messageAddress);
+            } else {
+                return constructor.newInstance(messageAddress, attribute);
+            }
         } catch (InstantiationException e) {
             throw new IllegalStateException("Error while creating a new message", e);
         } catch (IllegalAccessException e) {
@@ -124,7 +128,8 @@ class MessagesFactory {
             attributeConstructors.put(spec, constructor);
             return true;
         } catch (NoSuchMethodException e) {
-            LOGGER.debug(format("Class %s does not have a constructor accepting %s", clazz.getName(), KeyValuePair.class.getName()));
+            LOGGER.debug(format("Class %s does not have a constructor accepting %s",
+                    clazz.getName(), KeyValuePair.class.getName()));
             return false;
         }
     }

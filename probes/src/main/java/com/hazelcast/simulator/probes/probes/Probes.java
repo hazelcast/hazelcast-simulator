@@ -1,16 +1,20 @@
 package com.hazelcast.simulator.probes.probes;
 
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionProbe;
-import com.hazelcast.simulator.probes.probes.impl.MaxLatencyProbe;
 import com.hazelcast.simulator.probes.probes.impl.ConcurrentIntervalProbe;
 import com.hazelcast.simulator.probes.probes.impl.ConcurrentSimpleProbe;
 import com.hazelcast.simulator.probes.probes.impl.DisabledProbe;
+import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionProbe;
 import com.hazelcast.simulator.probes.probes.impl.LatencyDistributionProbe;
+import com.hazelcast.simulator.probes.probes.impl.MaxLatencyProbe;
 import com.hazelcast.simulator.probes.probes.impl.OperationsPerSecProbe;
 
 import static java.lang.String.format;
 
-public class Probes {
+public final class Probes {
+
+    private Probes() {
+
+    }
 
     @SuppressWarnings("unchecked")
     public static <T extends SimpleProbe> T createProbe(Class<T> type, String name, ProbesConfiguration probesConfiguration) {

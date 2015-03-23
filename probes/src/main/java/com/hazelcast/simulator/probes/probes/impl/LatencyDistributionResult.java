@@ -38,11 +38,11 @@ public class LatencyDistributionResult implements Result<LatencyDistributionResu
             HistogramPart value = linearHistogram.getPercentile(percentile);
             String formattedPercentile = numberFormat.format(percentile);
             builder.append("Percentile ")
-                   .append(formattedPercentile).append(" ")
-                   .append(String.format("%" + (numberOfSpaces - formattedPercentile.length()) + "s", value.getBucket()))
-                   .append(" µs")
-                   .append(String.format("%" + numberOfSpaces + "s", value.getValues()))
-                   .append(" ops\n");
+                    .append(formattedPercentile).append(" ")
+                    .append(String.format("%" + (numberOfSpaces - formattedPercentile.length()) + "s", value.getBucket()))
+                    .append(" µs")
+                    .append(String.format("%" + numberOfSpaces + "s", value.getValues()))
+                    .append(" ops\n");
         }
         return builder.toString();
     }
@@ -84,12 +84,18 @@ public class LatencyDistributionResult implements Result<LatencyDistributionResu
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         LatencyDistributionResult that = (LatencyDistributionResult) o;
 
-        if (!linearHistogram.equals(that.linearHistogram)) return false;
+        if (!linearHistogram.equals(that.linearHistogram)) {
+            return false;
+        }
 
         return true;
     }

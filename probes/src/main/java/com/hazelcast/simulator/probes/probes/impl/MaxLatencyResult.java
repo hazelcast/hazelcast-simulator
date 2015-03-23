@@ -42,12 +42,18 @@ public class MaxLatencyResult implements Result<MaxLatencyResult> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         MaxLatencyResult that = (MaxLatencyResult) o;
 
-        if (maxLatencyMs != that.maxLatencyMs) return false;
+        if (maxLatencyMs != that.maxLatencyMs) {
+            return false;
+        }
 
         return true;
     }

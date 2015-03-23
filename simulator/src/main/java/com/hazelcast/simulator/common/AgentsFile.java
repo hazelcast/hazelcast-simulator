@@ -25,9 +25,12 @@ import static java.lang.String.format;
  * </li>
  * </ol>
  */
-public class AgentsFile {
+public final class AgentsFile {
 
     private static final Logger LOGGER = Logger.getLogger(AgentsFile.class);
+
+    private AgentsFile() {
+    }
 
     public static void save(File agentsFile, List<AgentAddress> addresses) {
         StringBuffer sb = new StringBuffer();

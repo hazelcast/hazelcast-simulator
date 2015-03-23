@@ -13,9 +13,9 @@ public class StopCommand extends Command {
 
     @Override
     public String toString() {
-        return "StopCommand{" +
-                "testId='" + testId + '\'' +
-                ", timeoutMs=" + timeoutMs +
-                '}';
+        return "StopCommand{"
+                + "testId='" + testId + '\''
+                + ", timeoutMs=" + timeoutMs
+                + '}';
     }
 }

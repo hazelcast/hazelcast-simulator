@@ -36,9 +36,6 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
-//https://jclouds.apache.org/start/compute/ good read
-//https://github.com/jclouds/jclouds-examples/blob/master/compute-basics/src/main/java/org/jclouds/examples/compute/basics/MainApp.java
-//https://github.com/jclouds/jclouds-examples/blob/master/minecraft-compute/src/main/java/org/jclouds/examples/minecraft/NodeManager.java
 public class Provisioner {
 
     public static final String AGENTS_FILE = "agents.txt";
@@ -152,8 +149,8 @@ public class Provisioner {
 
         if (props.isEc2()) {
             bash.ssh(ip, format(
-                    "nohup hazelcast-simulator-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s " +
-                            "> agent.out 2> agent.err < /dev/null &",
+                    "nohup hazelcast-simulator-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s "
+                            + "> agent.out 2> agent.err < /dev/null &",
                     getSimulatorVersion(),
                     props.get("CLOUD_PROVIDER"),
                     props.get("CLOUD_IDENTITY"),

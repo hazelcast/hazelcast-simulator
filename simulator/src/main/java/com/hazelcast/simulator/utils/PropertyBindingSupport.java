@@ -19,6 +19,9 @@ public final class PropertyBindingSupport {
 
     private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);
 
+    private PropertyBindingSupport() {
+    }
+
     /**
      * Binds all the properties contained in the testCase object onto the test instance.
      *

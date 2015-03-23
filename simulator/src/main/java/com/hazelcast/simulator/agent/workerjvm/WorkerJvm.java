@@ -29,7 +29,7 @@ public class WorkerJvm {
     public Process process;
     public File workerHome;
     public volatile long lastSeen = System.currentTimeMillis();
-    public volatile boolean oomeDetected = false;
+    public volatile boolean oomeDetected;
 
     public final BlockingQueue<CommandRequest> commandQueue = new LinkedBlockingQueue<CommandRequest>();
 

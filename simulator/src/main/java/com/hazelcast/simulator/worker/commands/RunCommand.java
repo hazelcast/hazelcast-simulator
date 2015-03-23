@@ -5,7 +5,7 @@ public class RunCommand extends Command {
     public static final long serialVersionUID = 0l;
 
     public String testId;
-    public boolean clientOnly = false;
+    public boolean clientOnly;
 
     public RunCommand(String testId) {
         this.testId = testId;

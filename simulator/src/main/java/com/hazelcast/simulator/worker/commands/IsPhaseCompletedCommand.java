@@ -16,8 +16,8 @@ public class IsPhaseCompletedCommand extends Command {
 
     @Override
     public String toString() {
-        return "IsPhaseCompletedCommand{" +
-                "testId='" + testId + '\'' +
-                '}';
+        return "IsPhaseCompletedCommand{"
+                + "testId='" + testId + '\''
+                + '}';
     }
 }

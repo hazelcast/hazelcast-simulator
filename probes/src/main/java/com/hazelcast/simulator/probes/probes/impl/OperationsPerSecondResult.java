@@ -45,12 +45,18 @@ public class OperationsPerSecondResult implements Result<OperationsPerSecondResu
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         OperationsPerSecondResult that = (OperationsPerSecondResult) o;
 
-        if (Double.compare(that.operationsPerSecond, operationsPerSecond) != 0) return false;
+        if (Double.compare(that.operationsPerSecond, operationsPerSecond) != 0) {
+            return false;
+        }
 
         return true;
     }

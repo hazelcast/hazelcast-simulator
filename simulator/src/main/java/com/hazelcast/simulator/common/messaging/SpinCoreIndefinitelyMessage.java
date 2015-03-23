@@ -26,3 +26,4 @@ public class SpinCoreIndefinitelyMessage extends RunnableMessage {
         }
     }
 }
+

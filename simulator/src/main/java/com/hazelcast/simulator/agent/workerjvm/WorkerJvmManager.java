@@ -119,7 +119,8 @@ public class WorkerJvmManager {
         if (MessageAddress.BROADCAST.equals(workerAddress)) {
             sendMessageToAllWorkers(message);
         } else if (MessageAddress.WORKER_WITH_OLDEST_MEMBER.equals(workerAddress)) {
-            sendMessageToAllWorkers(message); //send to all workers as they have to evaluate who is the oldest worker
+            //send to all workers as they have to evaluate who is the oldest worker
+            sendMessageToAllWorkers(message);
         } else if (MessageAddress.RANDOM.equals(workerAddress)) {
             sendMessageToRandomWorker(message);
         } else if (MessageAddress.ALL_WORKERS_WITH_MEMBER.equals(workerAddress)) {
@@ -335,7 +336,7 @@ public class WorkerJvmManager {
         launcher.launch();
     }
 
-    private class ClientSocketTask implements Runnable {
+    private final class ClientSocketTask implements Runnable {
         private final Socket clientSocket;
 
         private ClientSocketTask(Socket clientSocket) {

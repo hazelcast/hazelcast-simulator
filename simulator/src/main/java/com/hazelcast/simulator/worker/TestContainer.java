@@ -18,8 +18,6 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.test.utils.ThreadSpawner;
-import com.hazelcast.simulator.utils.AnnotationFilter;
-import com.hazelcast.simulator.utils.ReflectionUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.util.Clock;
 import org.apache.log4j.Logger;
@@ -34,9 +32,18 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.utils.AnnotationFilter.*;
+import static com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
+import static com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
+import static com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
-import static com.hazelcast.simulator.utils.ReflectionUtils.*;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getAtMostOneMethodWithoutArgs;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getValueFromNameAnnotation;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getValueFromNameAnnotations;
+import static com.hazelcast.simulator.utils.ReflectionUtils.injectObjectToInstance;
+import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static java.lang.String.format;
 
 /**
