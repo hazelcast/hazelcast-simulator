@@ -10,7 +10,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 
 class FailureMonitorThread extends Thread {
-    private final Logger log = Logger.getLogger(FailureMonitorThread.class);
+    private static final Logger LOGGER = Logger.getLogger(FailureMonitorThread.class);
     private final File file;
     private final Coordinator coordinator;
 
@@ -34,7 +34,7 @@ class FailureMonitorThread extends Thread {
                 sleepSeconds(1);
                 scan();
             } catch (Throwable e) {
-                log.fatal(e);
+                LOGGER.fatal(e);
             }
         }
     }
@@ -43,7 +43,7 @@ class FailureMonitorThread extends Thread {
         List<Failure> failures = coordinator.agentsClient.getFailures();
         for (Failure failure : failures) {
             coordinator.failureList.add(failure);
-            log.warn(buildMessage(failure));
+            LOGGER.warn(buildMessage(failure));
             appendText(failure.toString() + "\n", file);
         }
     }

@@ -13,9 +13,9 @@ public class RunCommand extends Command {
 
     @Override
     public String toString() {
-        return "RunCommand{" +
-                "testId='" + testId + '\'' +
-                ", clientOnly=" + clientOnly +
-                '}';
+        return "RunCommand{"
+                + "testId='" + testId + '\''
+                + ", clientOnly=" + clientOnly
+                + '}';
     }
 }

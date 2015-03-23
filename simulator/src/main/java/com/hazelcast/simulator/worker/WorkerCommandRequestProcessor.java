@@ -42,7 +42,7 @@ import static java.lang.String.format;
 class WorkerCommandRequestProcessor {
 
     private static final String DASHES = "---------------------------";
-    private static final Logger log = Logger.getLogger(WorkerCommandRequestProcessor.class);
+    private static final Logger LOGGER = Logger.getLogger(WorkerCommandRequestProcessor.class);
 
     private final AtomicInteger testsPending = new AtomicInteger(0);
     private final AtomicInteger testsCompleted = new AtomicInteger(0);
@@ -156,7 +156,7 @@ class WorkerCommandRequestProcessor {
                             format("Can't init TestCase: %s, testId [%s] is an invalid filename", command, testId));
                 }
 
-                log.info(String.format("%s Initializing test %s %s%n%s", DASHES, testId, DASHES, testCase));
+                LOGGER.info(String.format("%s Initializing test %s %s%n%s", DASHES, testId, DASHES, testCase));
 
                 Object testInstance = InitCommand.class.getClassLoader().loadClass(testCase.getClassname()).newInstance();
                 bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
@@ -171,14 +171,14 @@ class WorkerCommandRequestProcessor {
                     serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE + ":" + testCase.id, testInstance);
                 }
             } catch (Throwable e) {
-                log.fatal("Failed to init test", e);
+                LOGGER.fatal("Failed to init test", e);
                 throw e;
             }
         }
 
         private void process(final RunCommand command) throws Exception {
             if (workerPerformanceMonitor.start()) {
-                log.info(String.format("%s Starting performance monitoring %s", DASHES, DASHES));
+                LOGGER.info(String.format("%s Starting performance monitoring %s", DASHES, DASHES));
             }
 
             try {
@@ -187,7 +187,7 @@ class WorkerCommandRequestProcessor {
 
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
-                    log.warn(format("Failed to process command %s (no test with testId %s is found)", command, testId));
+                    LOGGER.warn(format("Failed to process command %s (no test with testId %s is found)", command, testId));
                     return;
                 }
 
@@ -197,22 +197,22 @@ class WorkerCommandRequestProcessor {
                         boolean passive = command.clientOnly && clientInstance == null;
 
                         if (passive) {
-                            log.info(String.format("%s Skipping %s.run() (member is passive) %s", DASHES, testName, DASHES));
+                            LOGGER.info(String.format("%s Skipping %s.run() (member is passive) %s", DASHES, testName, DASHES));
                         } else {
-                            log.info(String.format("%s Starting %s.run() %s", DASHES, testId, DASHES));
+                            LOGGER.info(String.format("%s Starting %s.run() %s", DASHES, testId, DASHES));
 
                             try {
                                 test.run();
-                                log.info(String.format("%s Completed %s.run() %s", DASHES, testName, DASHES));
+                                LOGGER.info(String.format("%s Completed %s.run() %s", DASHES, testName, DASHES));
                             } catch (InvocationTargetException e) {
-                                log.fatal(String.format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES),
+                                LOGGER.fatal(String.format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES),
                                         e.getCause());
                                 throw e.getCause();
                             }
 
                             // stop performance monitor if all tests have completed their run phase
                             if (testsCompleted.incrementAndGet() == testsPending.get()) {
-                                log.info(String.format("%s Stopping performance monitoring %s", DASHES, DASHES));
+                                LOGGER.info(String.format("%s Stopping performance monitoring %s", DASHES, DASHES));
                                 workerPerformanceMonitor.stop();
                             }
                         }
@@ -220,7 +220,7 @@ class WorkerCommandRequestProcessor {
                 };
                 commandThread.start();
             } catch (Exception e) {
-                log.fatal("Failed to start test", e);
+                LOGGER.fatal("Failed to start test", e);
                 throw e;
             }
         }
@@ -231,14 +231,14 @@ class WorkerCommandRequestProcessor {
                 final String testName = "".equals(testId) ? "test" : testId;
                 TestContainer<TestContext> test = tests.get(command.testId);
                 if (test == null) {
-                    log.warn("Can't stop test, test with id " + command.testId + " does not exist");
+                    LOGGER.warn("Can't stop test, test with id " + command.testId + " does not exist");
                     return;
                 }
 
-                log.info(String.format("%s %s.stop() %s", DASHES, testName, DASHES));
+                LOGGER.info(String.format("%s %s.stop() %s", DASHES, testName, DASHES));
                 test.getTestContext().stop();
             } catch (Exception e) {
-                log.fatal("Failed to execute test.stop", e);
+                LOGGER.fatal("Failed to execute test.stop", e);
                 throw e;
             }
         }
@@ -252,7 +252,7 @@ class WorkerCommandRequestProcessor {
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
                     // we log a warning: it could be that it is a newly created machine from mama-monkey.
-                    log.warn("Failed to process command: " + command + " no test with " +
+                    LOGGER.warn("Failed to process command: " + command + " no test with " +
                             "testId " + testId + " is found");
                     return;
                 }
@@ -261,13 +261,13 @@ class WorkerCommandRequestProcessor {
                 CommandThread commandThread = new CommandThread(command, command.testId) {
                     @Override
                     public void doRun() throws Throwable {
-                        log.info(String.format("%s Starting %s.%s() %s", DASHES, testName, methodName, DASHES));
+                        LOGGER.info(String.format("%s Starting %s.%s() %s", DASHES, testName, methodName, DASHES));
 
                         try {
                             method.invoke(test);
-                            log.info(String.format("%s Finished %s.%s() %s", DASHES, testName, methodName, DASHES));
+                            LOGGER.info(String.format("%s Finished %s.%s() %s", DASHES, testName, methodName, DASHES));
                         } catch (InvocationTargetException e) {
-                            log.fatal(String.format("%s Failed %s.%s() %s", DASHES, testName, methodName, DASHES));
+                            LOGGER.fatal(String.format("%s Failed %s.%s() %s", DASHES, testName, methodName, DASHES));
                             throw e.getCause();
                         } finally {
                             if ("localTeardown".equals(methodName)) {
@@ -278,7 +278,7 @@ class WorkerCommandRequestProcessor {
                 };
                 commandThread.start();
             } catch (Exception e) {
-                log.fatal(format("Failed to execute test.%s()", methodName), e);
+                LOGGER.fatal(format("Failed to execute test.%s()", methodName), e);
                 throw e;
             }
         }

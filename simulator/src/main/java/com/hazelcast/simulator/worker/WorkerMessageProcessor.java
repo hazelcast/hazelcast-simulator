@@ -26,7 +26,7 @@ import static java.lang.String.format;
  */
 class WorkerMessageProcessor {
     private static final int TIMEOUT = 60;
-    private static final Logger log = Logger.getLogger(WorkerMessageProcessor.class);
+    private static final Logger LOGGER = Logger.getLogger(WorkerMessageProcessor.class);
 
     private final ConcurrentMap<String, TestContainer<TestContext>> tests;
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
@@ -66,7 +66,7 @@ class WorkerMessageProcessor {
             try {
                 processTestMessage(message);
             } catch (Throwable throwable) {
-                log.fatal("Error while processing message", throwable);
+                LOGGER.fatal("Error while processing message", throwable);
             }
         }
     }
@@ -113,7 +113,7 @@ class WorkerMessageProcessor {
             } else if (hazelcastClientInstance != null) {
                 ((HazelcastInstanceAware) message).setHazelcastInstance(hazelcastClientInstance);
             } else {
-                log.warn(format("Message %s implements %s interface, but no instance is currently running in this worker.",
+                LOGGER.warn(format("Message %s implements %s interface, but no instance is currently running in this worker.",
                         message.getClass().getName(), HazelcastInstanceAware.class));
             }
         }
@@ -128,7 +128,7 @@ class WorkerMessageProcessor {
         } else if (MessageAddress.RANDOM.equals(testAddress)) {
             TestContainer<?> randomTestContainer = getRandomTestContainerOrNull();
             if (randomTestContainer == null) {
-                log.warn("No test container is known to this worker. Is it a race-condition?");
+                LOGGER.warn("No test container is known to this worker. Is it a race-condition?");
             } else {
                 randomTestContainer.sendMessage(message);
             }
@@ -144,7 +144,7 @@ class WorkerMessageProcessor {
     }
 
     private void processLocalRunnableMessage(Runnable message) {
-        log.info("Processing local runnable message: " + message.getClass().getName());
+        LOGGER.info("Processing local runnable message: " + message.getClass().getName());
         message.run();
     }
 

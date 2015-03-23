@@ -36,7 +36,7 @@ import static java.lang.String.format;
 
 public class Agent {
 
-    private static final Logger log = Logger.getLogger(Coordinator.class);
+    private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
     // internal state
     public String cloudIdentity;
@@ -62,11 +62,11 @@ public class Agent {
 
         harakiriMonitor.start();
 
-        log.info("Simulator Agent is ready for action");
+        LOGGER.info("Simulator Agent is ready for action");
     }
 
     public void echo(String msg) {
-        log.info(msg);
+        LOGGER.info(msg);
     }
 
     public TestSuite getTestSuite() {
@@ -115,9 +115,9 @@ public class Agent {
     }
 
     static Agent createAgent(String[] args) throws Exception {
-        log.info("Simulator Agent");
-        log.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
-        log.info(format("SIMULATOR_HOME: %s%n", getSimulatorHome()));
+        LOGGER.info("Simulator Agent");
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
+        LOGGER.info(format("SIMULATOR_HOME: %s%n", getSimulatorHome()));
         logInterestingSystemProperties();
 
         Agent agent = null;
@@ -125,14 +125,14 @@ public class Agent {
             agent = new Agent();
             AgentCli.init(agent, args);
 
-            log.info("CloudIdentity: " + agent.cloudIdentity);
-            log.info("CloudCredential " + agent.cloudCredential);
-            log.info("CloudProvider " + agent.cloudProvider);
+            LOGGER.info("CloudIdentity: " + agent.cloudIdentity);
+            LOGGER.info("CloudCredential " + agent.cloudCredential);
+            LOGGER.info("CloudProvider " + agent.cloudProvider);
 
             agent.start();
 
         } catch (OptionException e) {
-            exitWithError(log, e.getMessage() + "\nUse --help to get overview of the help options.");
+            exitWithError(LOGGER, e.getMessage() + "\nUse --help to get overview of the help options.");
         }
         return agent;
     }
@@ -154,7 +154,7 @@ public class Agent {
     }
 
     private static void logSystemProperty(String name) {
-        log.info(format("%s=%s", name, System.getProperty(name)));
+        LOGGER.info(format("%s=%s", name, System.getProperty(name)));
     }
 
     private static void exitWithError(Logger logger, String msg) {

@@ -13,7 +13,7 @@ import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
 public class AwsProvisionerCli {
 
-    private static final Logger log = Logger.getLogger(AwsProvisionerCli.class);
+    private static final Logger LOGGER = Logger.getLogger(AwsProvisionerCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -30,8 +30,8 @@ public class AwsProvisionerCli {
     ).withRequiredArg().ofType(Integer.class);
 
     private final OptionSpec<String> propertiesFile = parser.accepts("propertiesFile",
-            "The file containing the simulator properties. If no file is explicitly configured, first the working directory is " +
-                    "checked for a file 'simulator.properties'."
+            "The file containing the simulator properties. If no file is explicitly configured, first the working directory is "
+                    + "checked for a file 'simulator.properties'."
     ).withRequiredArg().ofType(String.class);
 
     private final OptionSpec help = parser.accepts("help", "Show help").forHelp();
@@ -47,7 +47,7 @@ public class AwsProvisionerCli {
         try {
             options = parser.parse(args);
         } catch (OptionException e) {
-            exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
+            exitWithError(LOGGER, e.getMessage() + ". Use --help to get overview of the help options.");
         }
 
         if (options.has(help)) {

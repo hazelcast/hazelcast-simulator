@@ -12,7 +12,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 
 public class CloudInfoCli {
 
-    private static final Logger log = Logger.getLogger(ProvisionerCli.class);
+    private static final Logger LOGGER = Logger.getLogger(ProvisionerCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -33,9 +33,9 @@ public class CloudInfoCli {
     ).withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
-            "The file containing the simulator properties. If no file is explicitly configured, first the working directory is " +
-                    "checked for a file 'simulator.properties'. All missing properties are always loaded from " +
-                    "'$SIMULATOR_HOME/conf/simulator.properties'."
+            "The file containing the simulator properties. If no file is explicitly configured, first the working directory is "
+                    + "checked for a file 'simulator.properties'. All missing properties are always loaded from "
+                    + "'$SIMULATOR_HOME/conf/simulator.properties'."
     ).withRequiredArg().ofType(String.class);
 
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
@@ -51,7 +51,7 @@ public class CloudInfoCli {
         try {
             options = parser.parse(args);
         } catch (OptionException e) {
-            exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
+            exitWithError(LOGGER, e.getMessage() + ". Use --help to get overview of the help options.");
             return;
         }
 

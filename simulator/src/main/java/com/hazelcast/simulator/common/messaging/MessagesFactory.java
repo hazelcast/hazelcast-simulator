@@ -15,8 +15,8 @@ import java.util.Set;
 import static java.lang.String.format;
 
 class MessagesFactory {
-    private static final Logger log = Logger.getLogger(MessagesFactory.class);
-    private static final MessagesFactory instance = new MessagesFactory();
+    private static final Logger LOGGER = Logger.getLogger(MessagesFactory.class);
+    private static final MessagesFactory INSTANCE = new MessagesFactory();
 
     private final Map<String, Constructor<? extends Message>> noAttributeConstructors;
     private final Map<String, Constructor<? extends Message>> attributeConstructors;
@@ -32,26 +32,26 @@ class MessagesFactory {
     }
 
     static Set<String> getMessageSpecs() {
-        HashSet<String> constructors = new HashSet<String>(instance.noAttributeConstructors.keySet());
-        constructors.addAll(instance.attributeConstructors.keySet());
+        HashSet<String> constructors = new HashSet<String>(INSTANCE.noAttributeConstructors.keySet());
+        constructors.addAll(INSTANCE.attributeConstructors.keySet());
         return constructors;
     }
 
     static String getMessageDescription(String messageSpec) {
-        String description = instance.messageDescription.get(messageSpec);
+        String description = INSTANCE.messageDescription.get(messageSpec);
         if (description == null) {
-            throw new IllegalArgumentException("Unknown message type '"+messageSpec+"'.");
+            throw new IllegalArgumentException("Unknown message type '" + messageSpec + "'.");
         }
         return description;
     }
 
     static Message bySpec(String messageTypeSpec, String messageAddressSpec) {
-        MessageAddress address = instance.messageAddressParser.parse(messageAddressSpec);
+        MessageAddress address = INSTANCE.messageAddressParser.parse(messageAddressSpec);
         return bySpec(messageTypeSpec, address);
     }
 
     static Message bySpec(String messageTypeSpec, MessageAddress messageAddress) {
-        Constructor<? extends Message> constructor = instance.noAttributeConstructors.get(messageTypeSpec);
+        Constructor<? extends Message> constructor = INSTANCE.noAttributeConstructors.get(messageTypeSpec);
 
         if (constructor == null) {
             throw new IllegalArgumentException("Unknown message type " + messageTypeSpec + ".");
@@ -61,13 +61,13 @@ class MessagesFactory {
 
     static Message bySpec(String messageTypeSpec, String messageAddressSpec,
                           KeyValuePair<? extends Serializable, ? extends Serializable> attribute) {
-        MessageAddress address = instance.messageAddressParser.parse(messageAddressSpec);
+        MessageAddress address = INSTANCE.messageAddressParser.parse(messageAddressSpec);
         return bySpec(messageTypeSpec, address, attribute);
     }
 
     static Message bySpec(String messageTypeSpec, MessageAddress messageAddress,
                           KeyValuePair<? extends Serializable, ? extends Serializable> attribute) {
-        Constructor<? extends Message> constructor = instance.attributeConstructors.get(messageTypeSpec);
+        Constructor<? extends Message> constructor = INSTANCE.attributeConstructors.get(messageTypeSpec);
 
         if (constructor == null) {
             throw new IllegalArgumentException("Unknown message type " + messageTypeSpec + ".");
@@ -97,7 +97,7 @@ class MessagesFactory {
             if (Message.class.isAssignableFrom(clazz)) {
                 registerMessage((Class<? extends Message>) clazz);
             } else {
-                log.warn(format("Class %s is annotated with %s, however it does not extend %s", clazz.getName(),
+                LOGGER.warn(format("Class %s is annotated with %s, however it does not extend %s", clazz.getName(),
                         MessageSpec.class.getName(), Message.class.getName()));
             }
         }
@@ -124,7 +124,7 @@ class MessagesFactory {
             attributeConstructors.put(spec, constructor);
             return true;
         } catch (NoSuchMethodException e) {
-            log.debug(format("Class %s does not have a constructor accepting %s", clazz.getName(), KeyValuePair.class.getName()));
+            LOGGER.debug(format("Class %s does not have a constructor accepting %s", clazz.getName(), KeyValuePair.class.getName()));
             return false;
         }
     }
@@ -136,7 +136,7 @@ class MessagesFactory {
             noAttributeConstructors.put(spec, constructor);
             return true;
         } catch (NoSuchMethodException e) {
-            log.error(format("Error while searching for message types. Does the %s have a constructor with %s as an argument?",
+            LOGGER.error(format("Error while searching for message types. Does the %s have a constructor with %s as an argument?",
                     clazz.getName(), MessageAddress.class.getName()), e);
             return false;
         }

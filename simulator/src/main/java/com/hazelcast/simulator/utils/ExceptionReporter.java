@@ -17,7 +17,7 @@ public class ExceptionReporter {
     public static final int MAX_EXCEPTION_COUNT = 1000;
 
     private static final AtomicLong FAILURE_ID = new AtomicLong(0);
-    private static final Logger log = Logger.getLogger(ExceptionReporter.class);
+    private static final Logger LOGGER = Logger.getLogger(ExceptionReporter.class);
 
     /**
      * Writes the cause to file.
@@ -28,19 +28,19 @@ public class ExceptionReporter {
      */
     public static void report(String testId, Throwable cause) {
         if (cause == null) {
-            log.fatal("Can't call report with a null exception");
+            LOGGER.fatal("Can't call report with a null exception");
             return;
         }
 
         long exceptionCount = FAILURE_ID.incrementAndGet();
 
         if (exceptionCount > MAX_EXCEPTION_COUNT) {
-            log.warn("Exception #" + exceptionCount + " detected. The maximum number of exceptions has been" +
-                    "exceeded, so it won't be reported to the agent.", cause);
+            LOGGER.warn("Exception #" + exceptionCount + " detected. The maximum number of exceptions has been"
+                    + "exceeded, so it won't be reported to the agent.", cause);
             return;
         }
 
-        log.warn("Exception #" + exceptionCount + " detected", cause);
+        LOGGER.warn("Exception #" + exceptionCount + " detected", cause);
 
         String targetFileName = exceptionCount + ".exception";
 
@@ -52,7 +52,7 @@ public class ExceptionReporter {
                 throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath() + " file already exists.");
             }
         } catch (IOException e) {
-            log.fatal("Could not report exception; this means that this exception is not visible to the coordinator", e);
+            LOGGER.fatal("Could not report exception; this means that this exception is not visible to the coordinator", e);
             return;
         }
 
@@ -61,7 +61,7 @@ public class ExceptionReporter {
         final File file = new File(targetFileName);
 
         if (!tmpFile.renameTo(file)) {
-            log.fatal("Failed to rename tmp file:" + tmpFile + " to " + file);
+            LOGGER.fatal("Failed to rename tmp file:" + tmpFile + " to " + file);
         }
     }
 

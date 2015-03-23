@@ -9,8 +9,8 @@ import org.jclouds.domain.Location;
 
 import java.util.Set;
 
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
 /**
@@ -18,13 +18,13 @@ import static java.lang.String.format;
  */
 public class CloudInfo {
 
-    private static final Logger log = Logger.getLogger(CloudInfo.class);
+    private static final Logger LOGGER = Logger.getLogger(CloudInfo.class);
 
     public SimulatorProperties props = new SimulatorProperties();
 
-    private ComputeService computeService;
     public String locationId;
     public boolean verbose;
+    private ComputeService computeService;
 
     public void init() {
         computeService = new ComputeServiceBuilder(props).build();
@@ -93,9 +93,9 @@ public class CloudInfo {
     }
 
     public static void main(String[] args) {
-        log.info("Hazelcast Simulator CloudInfo");
-        log.info(format("Version: %s", getSimulatorVersion()));
-        log.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
+        LOGGER.info("Hazelcast Simulator CloudInfo");
+        LOGGER.info(format("Version: %s", getSimulatorVersion()));
+        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
 
         try {
             CloudInfo cloudInfoCli = new CloudInfo();
@@ -103,7 +103,7 @@ public class CloudInfo {
             cli.run(args);
             System.exit(0);
         } catch (Throwable e) {
-            log.fatal(e);
+            LOGGER.fatal(e);
             System.exit(1);
         }
     }

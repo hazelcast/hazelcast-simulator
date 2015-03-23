@@ -39,11 +39,11 @@ public class WorkerJvm {
 
     @Override
     public String toString() {
-        return "WorkerJvm{" +
-                "id='" + id + '\'' +
-                ", memberAddress='" + memberAddress + '\'' +
-                ", workerHome=" + workerHome +
-                '}';
+        return "WorkerJvm{"
+                + "id='" + id + '\''
+                + ", memberAddress='" + memberAddress + '\''
+                + ", workerHome=" + workerHome
+                + '}';
     }
 
     public enum Mode {

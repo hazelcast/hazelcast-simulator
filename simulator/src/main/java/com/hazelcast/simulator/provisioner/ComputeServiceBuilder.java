@@ -22,7 +22,7 @@ import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIO
 
 public class ComputeServiceBuilder {
 
-    private static final Logger log = Logger.getLogger(ComputeServiceBuilder.class);
+    private static final Logger LOGGER = Logger.getLogger(ComputeServiceBuilder.class);
 
     private final SimulatorProperties props;
 
@@ -40,8 +40,8 @@ public class ComputeServiceBuilder {
         String identity = props.get("CLOUD_IDENTITY");
         String credential = props.get("CLOUD_CREDENTIAL");
 
-        if (log.isDebugEnabled()) {
-            log.debug("Using CLOUD_PROVIDER: " + cloudProvider);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Using CLOUD_PROVIDER: " + cloudProvider);
         }
 
         ContextBuilder contextBuilder = newContextBuilder(cloudProvider);
@@ -57,7 +57,7 @@ public class ComputeServiceBuilder {
         try {
             return ContextBuilder.newBuilder(cloudProvider);
         } catch (NoSuchElementException e) {
-            exitWithError(log, "Unrecognized cloud-provider [" + cloudProvider + "]");
+            exitWithError(LOGGER, "Unrecognized cloud-provider [" + cloudProvider + "]");
         }
         throw new RuntimeException("Could not create ContextBuilder");
     }
@@ -69,15 +69,15 @@ public class ComputeServiceBuilder {
     private void ensurePublicPrivateKeyExist() {
         File publicKey = newFile("~", ".ssh", "id_rsa.pub");
         if (!publicKey.exists()) {
-            exitWithError(log, "Could not found public key: " + publicKey.getAbsolutePath() + "\n" +
-                    "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
+            exitWithError(LOGGER, "Could not found public key: " + publicKey.getAbsolutePath() + "\n"
+                    + "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
 
         File privateKey = newFile("~", ".ssh", "id_rsa");
         if (!privateKey.exists()) {
-            exitWithError(log, "Public key " + publicKey.getAbsolutePath() + " was found, " +
-                    "but private key: " + privateKey.getAbsolutePath() + " is missing\n" +
-                    "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
+            exitWithError(LOGGER, "Public key " + publicKey.getAbsolutePath() + " was found, "
+                    + "but private key: " + privateKey.getAbsolutePath() + " is missing\n"
+                    + "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
     }
 

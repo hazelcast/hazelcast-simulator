@@ -33,16 +33,16 @@ public class Bash {
      * @param url  the url that is downloaded
      */
     public void download(String path, String url) {
-        execute("if type \"wget\" > /dev/null; \n" +
-                "then \n" +
-                "\twget --no-verbose --directory-prefix=" + path + " " + url + " \n" +
-                "else\n" +
-                "\t\t\n" +
-                "\tpushd .\n" +
-                "\tcd " + path + "\t\n" +
-                "\tcurl -O " + url + "\n" +
-                "\tpopd\n" +
-                "fi");
+        execute("if type \"wget\" > /dev/null; \n"
+                + "then \n"
+                + "\twget --no-verbose --directory-prefix=" + path + " " + url + " \n"
+                + "else\n"
+                + "\t\t\n"
+                + "\tpushd .\n"
+                + "\tcd " + path + "\t\n"
+                + "\tcurl -O " + url + "\n"
+                + "\tpopd\n"
+                + "fi");
     }
 
     public void uploadToAgentSimulatorDir(String ip, String src, String target) {

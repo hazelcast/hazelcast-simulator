@@ -68,9 +68,9 @@ public class TestUtils {
      * This method executes the normal assertEquals with expected and actual values.
      * In addition it formats the given string with those values to provide a good assert message.
      *
-     * @param message     assert message which is formatted with expected and actual values
-     * @param expected    expected value which is used for assert
-     * @param actual      actual value which is used for assert
+     * @param message  assert message which is formatted with expected and actual values
+     * @param expected expected value which is used for assert
+     * @param actual   actual value which is used for assert
      */
     public static void assertEqualsStringFormat(String message, Object expected, Object actual) {
         assertEquals(String.format(message, expected, actual), expected, actual);
@@ -78,11 +78,11 @@ public class TestUtils {
 
     /**
      * Assert that a certain task is going to assert to true eventually.
-     *
+     * <p/>
      * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
      * more times it fails the less frequent the task is going to be retried.
      *
-     * @param task AssertTask to execute
+     * @param task           AssertTask to execute
      * @param timeoutSeconds timeout for assert in seconds
      * @throws java.lang.NullPointerException if task is null.
      */
@@ -100,7 +100,7 @@ public class TestUtils {
         long expirationMs = System.currentTimeMillis() + timeoutMs;
         int sleepMillis = 100;
 
-        for (;;) {
+        for (; ; ) {
             try {
                 try {
                     task.run();
@@ -134,7 +134,9 @@ public class TestUtils {
 
     public static String humanReadableByteCount(long bytes, boolean si) {
         int unit = si ? 1000 : 1024;
-        if (bytes < unit) return bytes + " B";
+        if (bytes < unit) {
+            return bytes + " B";
+        }
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
         return format("%.1f %sB", bytes / Math.pow(unit, exp), pre);

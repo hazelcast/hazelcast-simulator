@@ -21,7 +21,6 @@ public class AgentCli {
             "Cloud provider")
             .withRequiredArg().ofType(String.class);
 
-
     public static void init(Agent agent, String[] args) throws IOException {
         AgentCli agentOptionSpec = new AgentCli();
 
@@ -32,17 +31,16 @@ public class AgentCli {
             System.exit(0);
         }
 
-        if (options.has(agentOptionSpec.cloudIdentitySpec)){
+        if (options.has(agentOptionSpec.cloudIdentitySpec)) {
             agent.cloudIdentity = options.valueOf(agentOptionSpec.cloudIdentitySpec);
         }
-        
-        if(options.has(agentOptionSpec.cloudCredentialSpec)){
+
+        if (options.has(agentOptionSpec.cloudCredentialSpec)) {
             agent.cloudCredential = options.valueOf(agentOptionSpec.cloudCredentialSpec);
         }
 
-        if(options.has(agentOptionSpec.cloudProviderSpec)){
+        if (options.has(agentOptionSpec.cloudProviderSpec)) {
             agent.cloudProvider = options.valueOf(agentOptionSpec.cloudProviderSpec);
         }
-        
     }
 }

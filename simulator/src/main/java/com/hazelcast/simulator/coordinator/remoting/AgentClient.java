@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.coordinator.remoting;
 
-import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
+import com.hazelcast.simulator.common.AgentAddress;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSecondsThrowExcepti
 
 public class AgentClient {
 
-    private static final Logger log = Logger.getLogger(AgentClient.class);
+    private static final Logger LOGGER = Logger.getLogger(AgentClient.class);
 
     private final String publicAddress;
     private final String privateIp;
@@ -72,24 +72,28 @@ public class AgentClient {
             } catch (ConnectException e) {
                 if (i < 10) {
                     // it can happen that when a machine is under a lot of pressure, the connection can't be established
-                    log.debug("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
+                    LOGGER.debug("Failed to connect to public address: " + publicAddress
+                            + " sleeping for 1 second and trying again");
                 } else {
-                    log.warn("Failed to connect to public address: " + publicAddress + " sleeping for 1 second and trying again");
+                    LOGGER.warn("Failed to connect to public address: " + publicAddress
+                            + " sleeping for 1 second and trying again");
                 }
                 sleepSecondsThrowException(1);
                 connectException = e;
             } catch (IOException e) {
-                throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, e);
+                throw new IOException("Couldn't connect to publicAddress: " + publicAddress
+                        + ":" + AgentRemoteService.PORT, e);
             }
         }
-        throw new IOException("Couldn't connect to publicAddress: " + publicAddress + ":" + AgentRemoteService.PORT, connectException);
+        throw new IOException("Couldn't connect to publicAddress: " + publicAddress
+                + ":" + AgentRemoteService.PORT, connectException);
     }
 
     @Override
     public String toString() {
-        return "AgentClient{" +
-                "publicAddress='" + publicAddress + '\'' +
-                ", privateIp='" + privateIp + '\'' +
-                '}';
+        return "AgentClient{"
+                + "publicAddress='" + publicAddress + '\''
+                + ", privateIp='" + privateIp + '\''
+                + '}';
     }
 }

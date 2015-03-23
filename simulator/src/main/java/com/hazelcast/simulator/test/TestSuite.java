@@ -102,7 +102,7 @@ public class TestSuite implements Serializable {
         overrideProperties = overrideProperties.trim();
 
         Map<String, String> result = new HashMap<String, String>();
-        if (overrideProperties.isEmpty()){
+        if (overrideProperties.isEmpty()) {
             return result;
         }
 
@@ -145,11 +145,11 @@ public class TestSuite implements Serializable {
 
     @Override
     public String toString() {
-        return "TestSuite{" +
-                "duration=" + duration +
-                ", id='" + id + '\'' +
-                ", testRecipeList=" + testCaseList +
-                ", failFast=" + failFast +
-                '}';
+        return "TestSuite{"
+                + "duration=" + duration
+                + ", id='" + id + '\''
+                + ", testRecipeList=" + testCaseList
+                + ", failFast=" + failFast
+                + '}';
     }
 }

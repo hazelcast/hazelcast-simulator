@@ -33,7 +33,7 @@ import static java.lang.String.format;
  * by having multiple TestCaseRunners  in parallel.
  */
 public class TestCaseRunner {
-    private static final Logger log = Logger.getLogger(TestCaseRunner.class);
+    private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
 
     private final TestCase testCase;
     private final Coordinator coordinator;
@@ -53,9 +53,9 @@ public class TestCaseRunner {
     }
 
     public boolean run() throws Exception {
-        log.info("--------------------------------------------------------------\n" +
-                format("Running Test : %s%n%s%n", testCase.getId(), testCase) +
-                "--------------------------------------------------------------");
+        LOGGER.info("--------------------------------------------------------------\n"
+                + format("Running Test : %s%n%s%n", testCase.getId(), testCase)
+                + "--------------------------------------------------------------");
 
         int oldFailureCount = coordinator.failureList.size();
         try {
@@ -120,7 +120,7 @@ public class TestCaseRunner {
 
             return coordinator.failureList.size() == oldFailureCount;
         } catch (Exception e) {
-            log.fatal("Failed", e);
+            LOGGER.fatal("Failed", e);
             return false;
         }
     }
@@ -147,7 +147,7 @@ public class TestCaseRunner {
         try {
             agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
         } catch (TimeoutException e) {
-            log.fatal("A timeout happened while retrieving the benchmark results");
+            LOGGER.fatal("A timeout happened while retrieving the benchmark results");
             return combinedResults;
         }
         for (List<Map<String, R>> agentProbeResults : agentsProbeResults) {
@@ -161,7 +161,7 @@ public class TestCaseRunner {
                             combinedValue = currentResult.combine(combinedValue);
                             combinedResults.put(probeName, combinedValue);
                         } else {
-                            log.warn("Probe " + probeName + " has null value for some member. This should not happen.");
+                            LOGGER.warn("Probe " + probeName + " has null value for some member. This should not happen.");
                         }
                     }
                 }
@@ -214,7 +214,7 @@ public class TestCaseRunner {
                 }
             }
 
-            log.info(prefix + msg);
+            LOGGER.info(prefix + msg);
         }
 
         sleepSeconds(small);
@@ -233,8 +233,8 @@ public class TestCaseRunner {
         try {
             agentsClient.echo(prefix + msg);
         } catch (TimeoutException e) {
-            log.warn("Failed to echo message due to timeout");
+            LOGGER.warn("Failed to echo message due to timeout");
         }
-        log.info(prefix + msg);
+        LOGGER.info(prefix + msg);
     }
 }

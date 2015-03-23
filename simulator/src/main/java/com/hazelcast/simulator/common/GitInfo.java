@@ -18,7 +18,7 @@ public final class GitInfo {
     private static final String GIT_BUILD_TIME = "git.build.time";
     private static final String GIT_REMOTE_ORIGIN_URL = "git.remote.origin.url";
 
-    private static final Logger log = Logger.getLogger(GitInfo.class);
+    private static final Logger LOGGER = Logger.getLogger(GitInfo.class);
 
     private final Properties properties;
     private static final GitInfo INSTANCE = new GitInfo();
@@ -54,7 +54,7 @@ public final class GitInfo {
             gitPropsStream = getClass().getClassLoader().getResourceAsStream(GIT_INFO_FILE);
             properties.load(gitPropsStream);
         } catch (IOException e) {
-            log.warn("Error while loading Git properties.", e);
+            LOGGER.warn("Error while loading Git properties.", e);
             properties = new DummyProperties();
         } finally {
             closeQuietly(gitPropsStream);

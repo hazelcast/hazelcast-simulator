@@ -4,7 +4,7 @@ package com.hazelcast.simulator.common;
  * The address of an agent. It contains a public and private part to deal with cloud environments. The public address is used
  * by the 'outside' systems like coordinator to talk to the agents. The private parts is used for HZ nodes/clients to communicate
  * with each other.
- *
+ * <p/>
  * publicAddress and privateAddress are the same if there is no public/private address separation, e.g. a static setup.
  */
 public class AgentAddress {
@@ -25,13 +25,21 @@ public class AgentAddress {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         AgentAddress address = (AgentAddress) o;
 
-        if (!privateAddress.equals(address.privateAddress)) return false;
-        if (!publicAddress.equals(address.publicAddress)) return false;
+        if (!privateAddress.equals(address.privateAddress)) {
+            return false;
+        }
+        if (!publicAddress.equals(address.publicAddress)) {
+            return false;
+        }
 
         return true;
     }
@@ -45,9 +53,9 @@ public class AgentAddress {
 
     @Override
     public String toString() {
-        return "AddressPair{" +
-                "publicAddress='" + publicAddress + '\'' +
-                ", privateAddress='" + privateAddress + '\'' +
-                '}';
+        return "AddressPair{"
+                + "publicAddress='" + publicAddress + '\''
+                + ", privateAddress='" + privateAddress + '\''
+                + '}';
     }
 }

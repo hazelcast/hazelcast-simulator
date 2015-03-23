@@ -12,7 +12,7 @@ import static java.lang.String.format;
  * Responsible for terminating ec2-instances if they are not used to prevent running into a big bill.
  */
 public class HarakiriMonitor extends Thread {
-    private static final Logger log = Logger.getLogger(HarakiriMonitor.class);
+    private static final Logger LOGGER = Logger.getLogger(HarakiriMonitor.class);
     private final Agent agent;
 
     public HarakiriMonitor(Agent agent) {
@@ -22,11 +22,11 @@ public class HarakiriMonitor extends Thread {
 
     public void run() {
         if (!"aws-ec2".equals(agent.cloudProvider)) {
-            log.info("No Harakiri monitor is active: only on aws-ec2 unused machines will be terminated.");
+            LOGGER.info("No Harakiri monitor is active: only on aws-ec2 unused machines will be terminated.");
             return;
         }
 
-        log.info("Harakiri monitor is active");
+        LOGGER.info("Harakiri monitor is active");
 
         for (; ; ) {
             try {
@@ -39,15 +39,15 @@ public class HarakiriMonitor extends Thread {
 
             boolean harakiri = System.currentTimeMillis() - maxIdleTimeMs > agent.lastUsed;
             if (harakiri) {
-                log.info("Trying to commit Harakiri (will only try once)");
+                LOGGER.info("Trying to commit Harakiri (will only try once)");
                 Bash bash = new Bash(new SimulatorProperties());
                 try {
-                    String cmd = format("ec2-terminate-instances $(curl -s http://169.254.169.254/latest/meta-data/instance-id) " +
-                            "--aws-access-key %s --aws-secret-key %s", agent.cloudIdentity, agent.cloudCredential);
-                    log.info("harakiri command: " + cmd);
+                    String cmd = format("ec2-terminate-instances $(curl -s http://169.254.169.254/latest/meta-data/instance-id) "
+                            + "--aws-access-key %s --aws-secret-key %s", agent.cloudIdentity, agent.cloudCredential);
+                    LOGGER.info("harakiri command: " + cmd);
                     bash.execute(cmd);
                 } catch (RuntimeException e) {
-                    log.info("Failed to execute Harakiri");
+                    LOGGER.info("Failed to execute Harakiri");
                 }
                 return;
             }

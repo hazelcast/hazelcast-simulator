@@ -11,7 +11,7 @@ import static java.lang.String.format;
 
 public class BuildSupport {
 
-    private static final Logger log = Logger.getLogger(BuildSupport.class);
+    private static final Logger LOGGER = Logger.getLogger(BuildSupport.class);
 
     private final Bash bash;
     private final HazelcastJARFinder jarFinder;
@@ -33,7 +33,7 @@ public class BuildSupport {
         } else {
             File maven = new File(pathToMaven);
             if (!maven.exists()) {
-                exitWithError(log, "Specified path " + pathToMaven + " to Maven doesn't exist.");
+                exitWithError(LOGGER, "Specified path " + pathToMaven + " to Maven doesn't exist.");
             }
             if (maven.isDirectory()) {
                 maven = newFile(pathToMaven, "mvn");
@@ -45,16 +45,16 @@ public class BuildSupport {
 
     private void checkIsValidMavenExecutable(String pathToMaven, File mavenExec) {
         if (!mavenExec.isFile()) {
-            exitWithError(log, "Specified path " + pathToMaven + " to Maven doesn't contains 'mvn' executable.");
+            exitWithError(LOGGER, "Specified path " + pathToMaven + " to Maven doesn't contains 'mvn' executable.");
         }
         if (!mavenExec.canExecute()) {
-            exitWithError(log, "Specified path " + pathToMaven + " to Maven contains 'mvn' which is not executable.");
+            exitWithError(LOGGER, "Specified path " + pathToMaven + " to Maven contains 'mvn' which is not executable.");
         }
     }
 
     public File[] build(File pathToSource) {
         String absolutePath = pathToSource.getAbsolutePath();
-        log.info("Building Hazelcast from sources at " + absolutePath);
+        LOGGER.info("Building Hazelcast from sources at " + absolutePath);
 
         String cmd = getBuildCommand(absolutePath);
         bash.execute(cmd);
@@ -74,6 +74,6 @@ public class BuildSupport {
         for (File jar : jars) {
             sb.append(jar.getName()).append('\n');
         }
-        log.info(sb.toString());
+        LOGGER.info(sb.toString());
     }
 }

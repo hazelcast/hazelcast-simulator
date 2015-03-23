@@ -19,8 +19,8 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.worker.TestContainer;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
+import com.hazelcast.simulator.worker.TestContainer;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -36,16 +36,16 @@ import static java.lang.String.format;
  * A utility class to run a test locally. This is purely meant for developing purposes; when you are writing a test
  * you want to see quickly if it works at all without needing to deploy it through an agent on a worker.
  *
- * @param <E>    class of the test
+ * @param <E> class of the test
  */
 @SuppressWarnings("unused")
 public class TestRunner<E> {
 
-    private static final Logger log = Logger.getLogger(TestRunner.class);
+    private static final Logger LOGGER = Logger.getLogger(TestRunner.class);
+
     private final E test;
     private final TestContextImpl testContext;
     private final TestContainer testInvoker;
-
     private HazelcastInstance hazelcastInstance;
     private int durationSeconds = 60;
 
@@ -114,44 +114,44 @@ public class TestRunner<E> {
             hazelcastInstance = Hazelcast.newHazelcastInstance();
         }
 
-        log.info("Starting setup");
+        LOGGER.info("Starting setup");
         testInvoker.setup();
-        log.info("Finished setup");
+        LOGGER.info("Finished setup");
 
-        log.info("Starting local warmup");
+        LOGGER.info("Starting local warmup");
         testInvoker.localWarmup();
-        log.info("Finished local warmup");
+        LOGGER.info("Finished local warmup");
 
-        log.info("Starting global warmup");
+        LOGGER.info("Starting global warmup");
         testInvoker.globalWarmup();
-        log.info("Finished global warmup");
+        LOGGER.info("Finished global warmup");
 
-        log.info("Starting run");
+        LOGGER.info("Starting run");
         testContext.stopped = false;
         new StopThread().start();
         testInvoker.run();
-        log.info("Finished run");
+        LOGGER.info("Finished run");
 
         //log.info(test.getOperationCount().toHumanString());
 
-        log.info("Starting globalVerify");
+        LOGGER.info("Starting globalVerify");
         testInvoker.globalVerify();
-        log.info("Finished globalVerify");
+        LOGGER.info("Finished globalVerify");
 
-        log.info("Starting localVerify");
+        LOGGER.info("Starting localVerify");
         testInvoker.localVerify();
-        log.info("Finished localVerify");
+        LOGGER.info("Finished localVerify");
 
-        log.info("Starting globalTearDown");
+        LOGGER.info("Starting globalTearDown");
         testInvoker.globalTeardown();
-        log.info("Finished globalTearDown");
+        LOGGER.info("Finished globalTearDown");
 
-        log.info("Starting local teardown");
+        LOGGER.info("Starting local teardown");
         testInvoker.localTeardown();
-        log.info("Finished local teardown");
+        LOGGER.info("Finished local teardown");
 
         //hazelcastInstance.shutdown();
-        log.info("Finished");
+        LOGGER.info("Finished");
     }
 
     private class StopThread extends Thread {
@@ -166,12 +166,12 @@ public class TestRunner<E> {
                 final int elapsed = period * k;
                 final float percentage = (100f * elapsed) / durationSeconds;
                 String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, durationSeconds, percentage);
-                log.info(msg);
+                LOGGER.info(msg);
                 //log.info("Performance" + test.getOperationCount());
             }
 
             sleepSeconds(small);
-            log.info("Notified test to stop");
+            LOGGER.info("Notified test to stop");
             testContext.stopped = true;
         }
     }

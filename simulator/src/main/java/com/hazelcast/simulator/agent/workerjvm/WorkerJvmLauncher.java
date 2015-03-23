@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.agent.workerjvm;
 
-import com.hazelcast.simulator.worker.ClientWorker;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.SpawnWorkerFailedException;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.provisioner.Bash;
+import com.hazelcast.simulator.worker.ClientWorker;
 import com.hazelcast.simulator.worker.MemberWorker;
 import org.apache.log4j.Logger;
 
@@ -31,15 +31,15 @@ import static java.util.Arrays.asList;
 
 public class WorkerJvmLauncher {
 
-    private static final Logger log = Logger.getLogger(WorkerJvmLauncher.class);
+    private static final Logger LOGGER = Logger.getLogger(WorkerJvmLauncher.class);
 
-    private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
     private static final String CLASSPATH = System.getProperty("java.class.path");
     private static final File SIMULATOR_HOME = getSimulatorHome();
     private static final String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
     private static final AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
     private static final String WORKERS_PATH = getSimulatorHome().getAbsolutePath() + "/workers";
 
+    private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
     private final WorkerJvmSettings settings;
     private final SimulatorProperties props = new SimulatorProperties();
     private final Bash bash = new Bash(props);
@@ -69,20 +69,20 @@ public class WorkerJvmLauncher {
             }
         }
 
-        log.info("Spawning Worker JVM using settings: " + settings);
+        LOGGER.info("Spawning Worker JVM using settings: " + settings);
         spawn(settings.memberWorkerCount, "server");
         spawn(settings.clientWorkerCount, "client");
     }
 
     private void spawn(int count, String mode) throws Exception {
-        log.info(format("Starting %s %s worker Java Virtual Machines", count, mode));
+        LOGGER.info(format("Starting %s %s worker Java Virtual Machines", count, mode));
 
         for (int k = 0; k < count; k++) {
             WorkerJvm worker = startWorkerJvm(mode);
             workersInProgress.add(worker);
         }
 
-        log.info(format("Finished starting %s %s worker Java Virtual Machines", count, mode));
+        LOGGER.info(format("Finished starting %s %s worker Java Virtual Machines", count, mode));
 
         waitForWorkersStartup(workersInProgress, settings.workerStartupTimeout);
         workersInProgress.clear();
@@ -100,7 +100,7 @@ public class WorkerJvmLauncher {
     private String getJavaHome(String javaVendor, String javaVersion) {
         String javaHome = System.getProperty("java.home");
         if (javaHomePrinted.compareAndSet(false, true)) {
-            log.info("java.home=" + javaHome);
+            LOGGER.info("java.home=" + javaHome);
         }
 
         return javaHome;
@@ -141,7 +141,7 @@ public class WorkerJvmLauncher {
         final String testSuiteId = agent.getTestSuite().id;
         File uploadDirectory = new File(WORKERS_PATH + "/" + testSuiteId + "/upload/");
         if (!uploadDirectory.exists()) {
-            log.debug("Skip copying upload directory to workers since no upload directory was found");
+            LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
             return;
         }
         String cpCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
@@ -151,7 +151,7 @@ public class WorkerJvmLauncher {
                 testSuiteId,
                 workerId);
         bash.execute(cpCommand);
-        log.info(format("Finished copying '+%s+' to worker", WORKERS_PATH));
+        LOGGER.info(format("Finished copying '+%s+' to worker", WORKERS_PATH));
     }
 
     private void generateWorkerStartScript(String mode, WorkerJvm workerJvm) {
@@ -226,7 +226,7 @@ public class WorkerJvmLauncher {
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-DworkerId=" + workerJvm.id);
         args.add("-DworkerMode=" + mode);
-        args.add("-DautoCreateHZInstances="+settings.autoCreateHZInstances);
+        args.add("-DautoCreateHZInstances=" + settings.autoCreateHZInstances);
         args.add("-Dlog4j.configuration=file:" + log4jFile.getAbsolutePath());
         args.add("-classpath");
         args.add(getClasspath());
@@ -274,7 +274,7 @@ public class WorkerJvmLauncher {
                     jvm.memberAddress = address;
 
                     it.remove();
-                    log.info(format("Worker: %s Started %s of %s",
+                    LOGGER.info(format("Worker: %s Started %s of %s",
                             jvm.id, workers.size() - todo.size(), workers.size()));
                 }
             }

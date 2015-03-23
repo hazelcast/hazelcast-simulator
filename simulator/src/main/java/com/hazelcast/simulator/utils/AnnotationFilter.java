@@ -9,7 +9,7 @@ import java.lang.annotation.Annotation;
 /**
  * This class filters Annotations, e.g. after their values.
  *
- * @param <A>    Class of type Annotation
+ * @param <A> Class of type Annotation
  */
 public interface AnnotationFilter<A extends Annotation> {
     boolean allowed(A annotation);

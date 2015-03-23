@@ -27,7 +27,7 @@ import static java.lang.String.format;
  */
 public class AgentsFile {
 
-    private static final Logger log = Logger.getLogger(AgentsFile.class);
+    private static final Logger LOGGER = Logger.getLogger(AgentsFile.class);
 
     public static void save(File agentsFile, List<AgentAddress> addresses) {
         StringBuffer sb = new StringBuffer();
@@ -71,7 +71,7 @@ public class AgentsFile {
                     pairs.add(new AgentAddress(chunks[0], chunks[1]));
                     break;
                 default:
-                    log.fatal(format("Line %s of file %s is invalid, it should contain 1 or 2 addresses separated by a "
+                    LOGGER.fatal(format("Line %s of file %s is invalid, it should contain 1 or 2 addresses separated by a "
                             + "comma, but contains %s", lineNumber, agentFile, chunks.length));
                     System.exit(1);
                     break;

@@ -22,7 +22,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 
 public class TemplateBuilder {
 
-    private static final Logger log = Logger.getLogger(Provisioner.class);
+    private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
     private final ComputeService compute;
     private final SimulatorProperties props;
@@ -39,14 +39,14 @@ public class TemplateBuilder {
 
         String machineSpec = props.get("MACHINE_SPEC", "");
         spec = TemplateBuilderSpec.parse(machineSpec);
-        log.info("Machine spec: " + machineSpec);
+        LOGGER.info("Machine spec: " + machineSpec);
 
         Template template = buildTemplate();
-        log.info("Created template");
+        LOGGER.info("Created template");
 
         String user = props.get("USER", "simulator");
         AdminAccess adminAccess = AdminAccess.builder().adminUsername(user).build();
-        log.info("Login name to the remote machines: " + user);
+        LOGGER.info("Login name to the remote machines: " + user);
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
@@ -60,7 +60,7 @@ public class TemplateBuilder {
             if (!props.isEc2()) {
                 throw new IllegalStateException("SUBNET_ID can be used only when EC2 is configured as a cloud provider.");
             }
-            log.info("Using VPC, Subnet ID = " + subnetId);
+            LOGGER.info("Using VPC, Subnet ID = " + subnetId);
             template.getOptions()
                     .as(AWSEC2TemplateOptions.class)
                     .subnetId(subnetId);
@@ -72,8 +72,8 @@ public class TemplateBuilder {
         try {
             return compute.templateBuilder().from(spec).build();
         } catch (IllegalArgumentException e) {
-            log.debug(e);
-            exitWithError(log, e.getMessage());
+            LOGGER.debug(e);
+            exitWithError(LOGGER, e.getMessage());
         }
         throw new RuntimeException("Could not build template!");
     }
@@ -109,11 +109,11 @@ public class TemplateBuilder {
 
         Set<SecurityGroup> securityGroups = securityGroupApi.describeSecurityGroupsInRegion(region, securityGroup);
         if (!securityGroups.isEmpty()) {
-            log.info("Security group: '" + securityGroup + "' is found in region '" + region + "'");
+            LOGGER.info("Security group: '" + securityGroup + "' is found in region '" + region + "'");
             return;
         }
 
-        log.info("Security group: '" + securityGroup + "' is not found in region '" + region + "', creating it on the fly");
+        LOGGER.info("Security group: '" + securityGroup + "' is not found in region '" + region + "', creating it on the fly");
 
         securityGroupApi.createSecurityGroupInRegion(region, securityGroup, securityGroup);
 

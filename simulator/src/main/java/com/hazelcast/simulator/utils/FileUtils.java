@@ -487,4 +487,7 @@ public class FileUtils {
             exitWithError(LOGGER, errorMessage, e);
         }
     }
+
+    private FileUtils() {
+    }
 }

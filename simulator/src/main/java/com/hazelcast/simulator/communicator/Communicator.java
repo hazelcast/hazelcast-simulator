@@ -15,7 +15,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
 public class Communicator {
-    private static final Logger log = Logger.getLogger(Communicator.class);
+    private static final Logger LOGGER = Logger.getLogger(Communicator.class);
     private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
 
     public File agentsFile;
@@ -24,20 +24,20 @@ public class Communicator {
     public Message message;
 
     public static void main(String[] args) throws IOException {
-        log.info("Simulator Communicator");
-        log.info(String.format("Version: %s", CommonUtils.getSimulatorVersion()));
-        log.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
+        LOGGER.info("Simulator Communicator");
+        LOGGER.info(String.format("Version: %s", CommonUtils.getSimulatorVersion()));
+        LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
 
         Communicator communicator = new Communicator();
         CommunicatorCli cli = new CommunicatorCli(communicator);
         cli.init(args);
 
-        log.info(format("Loading agents file: %s", communicator.agentsFile.getAbsolutePath()));
+        LOGGER.info(format("Loading agents file: %s", communicator.agentsFile.getAbsolutePath()));
         try {
             communicator.run();
             System.exit(0);
         } catch (Exception e) {
-            log.error("Failed to communicate", e);
+            LOGGER.error("Failed to communicate", e);
             System.exit(1);
         }
     }

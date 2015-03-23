@@ -23,7 +23,7 @@ import static java.lang.String.format;
 
 public class CoordinatorCli {
 
-    private static final Logger log = Logger.getLogger(CoordinatorCli.class);
+    private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -32,33 +32,33 @@ public class CoordinatorCli {
             .withRequiredArg().ofType(String.class).defaultsTo("60");
 
     private final OptionSpec<String> overridesSpec = parser.accepts("overrides",
-            "Properties that override the properties in a given test-case. E.g. --overrides " +
-                    "\"threadcount=20,writePercentage=20\". This makes it easy to parametrize a test.")
+            "Properties that override the properties in a given test-case. E.g. --overrides "
+                    + "\"threadcount=20,writePercentage=20\". This makes it easy to parametrize a test.")
             .withRequiredArg().ofType(String.class).defaultsTo("");
 
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
-            "Number of Cluster member Worker JVMs. If no value is specified and no mixed members are specified, " +
-                    "then the number of cluster members will be equal to the number of machines in the agents file")
+            "Number of Cluster member Worker JVMs. If no value is specified and no mixed members are specified, "
+                    + "then the number of cluster members will be equal to the number of machines in the agents file")
             .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
 
     private final OptionSpec<Integer> clientWorkerCountSpec = parser.accepts("clientWorkerCount",
             "Number of Cluster Client Worker JVMs")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
-    private final OptionSpec<Boolean> autoCreateHZInstancesSpec  = parser.accepts("autoCreateHzInstances",
+    private final OptionSpec<Boolean> autoCreateHZInstancesSpec = parser.accepts("autoCreateHzInstances",
             "auto create Hazelcast Instance's default to true")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
-            "Controls the number of dedicated member machines. For example when there are 4 machines" +
-                    "and 2 servers and 9 clients, and there is 1 dedicated member machine, then " +
-                    "1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
+            "Controls the number of dedicated member machines. For example when there are 4 machines"
+                    + "and 2 servers and 9 clients, and there is 1 dedicated member machine, then "
+                    + "1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
             .withRequiredArg().ofType(Integer.class);
 
     private final OptionSpec<String> workerClassPathSpec = parser.accepts("workerClassPath",
-            "A file/directory containing the " +
-                    "classes/jars/resources that are going to be uploaded to the agents. " +
-                    "Use ';' as separator for multiple entries. Wildcard '*' can also be used.")
+            "A file/directory containing the "
+                    + "classes/jars/resources that are going to be uploaded to the agents. "
+                    + "Use ';' as separator for multiple entries. Wildcard '*' can also be used.")
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
@@ -85,8 +85,8 @@ public class CoordinatorCli {
             "It tests should be run in parallel.");
 
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
-            "Worker VM options (quotes can be used). These options will be applied to regular members and mixed members " +
-                    "(so with client + member in the same JVM).")
+            "Worker VM options (quotes can be used). These options will be applied to regular members and mixed members "
+                    + "(so with client + member in the same JVM).")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> clientWorkerVmOptionsSpec = parser.accepts("clientWorkerVmOptions",
@@ -98,21 +98,21 @@ public class CoordinatorCli {
             .withRequiredArg().ofType(String.class).defaultsTo(Provisioner.AGENTS_FILE);
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
-            "The file containing the simulator properties. If no file is explicitly configured, first the " +
-                    "working directory is checked for a file 'simulator.properties'. All missing properties" +
-                    "are always loaded from SIMULATOR_HOME/conf/simulator.properties")
+            "The file containing the simulator properties. If no file is explicitly configured, first the "
+                    + "working directory is checked for a file 'simulator.properties'. All missing properties"
+                    + "are always loaded from SIMULATOR_HOME/conf/simulator.properties")
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> hzFileSpec = parser.accepts("hzFile",
-            "The Hazelcast xml configuration file for the worker. If one is not explicitly configured, first" +
-                    "the 'hazelcast.xml' in the working directory is loaded, if that doesn't exist then " +
-                    "SIMULATOR_HOME/conf/hazelcast.xml is loaded.")
+            "The Hazelcast xml configuration file for the worker. If one is not explicitly configured, first"
+                    + "the 'hazelcast.xml' in the working directory is loaded, if that doesn't exist then "
+                    + "SIMULATOR_HOME/conf/hazelcast.xml is loaded.")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultHzFile());
 
     private final OptionSpec<String> clientHzFileSpec = parser.accepts("clientHzFile",
-            "The client Hazelcast xml configuration file for the worker. If one is not explicitly configured, first" +
-                    "the 'client-hazelcast.xml' in the working directory is loaded, if that doesn't exist then " +
-                    "SIMULATOR_HOME/conf/client-hazelcast.xml is loaded.")
+            "The client Hazelcast xml configuration file for the worker. If one is not explicitly configured, first"
+                    + "the 'client-hazelcast.xml' in the working directory is loaded, if that doesn't exist then "
+                    + "SIMULATOR_HOME/conf/client-hazelcast.xml is loaded.")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
 
     private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
@@ -155,7 +155,7 @@ public class CoordinatorCli {
         try {
             options = parser.parse(args);
         } catch (OptionException e) {
-            exitWithError(log, e.getMessage() + ". Use --help to get overview of the help options.");
+            exitWithError(LOGGER, e.getMessage() + ". Use --help to get overview of the help options.");
             return;
         }
 
@@ -206,7 +206,7 @@ public class CoordinatorCli {
         if (options.has(dedicatedMemberMachinesSpec)) {
             int dedicatedMemberCount = dedicatedMemberMachinesSpec.value(options);
             if (dedicatedMemberCount < 0) {
-                exitWithError(log, "dedicatedMemberCount can't be smaller than 0");
+                exitWithError(LOGGER, "dedicatedMemberCount can't be smaller than 0");
             }
             coordinator.dedicatedMemberMachineCount = dedicatedMemberCount;
         }
@@ -221,13 +221,13 @@ public class CoordinatorCli {
 
     private String loadClientHzConfig() {
         File file = getFile(clientHzFileSpec, options, "Worker Client Hazelcast config file");
-        log.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
+        LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
     private String loadHzConfig() {
         File file = getFile(hzFileSpec, options, "Worker Hazelcast config file");
-        log.info("Loading Hazelcast configuration: " + file.getAbsolutePath());
+        LOGGER.info("Loading Hazelcast configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
@@ -249,19 +249,19 @@ public class CoordinatorCli {
         } else if (testsuiteFiles.size() == 1) {
             testsuiteFileName = testsuiteFiles.get(0);
         } else if (testsuiteFiles.size() > 1) {
-            exitWithError(log, "Too many testsuite files specified.");
+            exitWithError(LOGGER, "Too many testsuite files specified.");
             //won't be executed.
             return null;
         }
         if (testsuiteFileName == null) {
-            exitWithError(log, "TestSuite filename was null.");
+            exitWithError(LOGGER, "TestSuite filename was null.");
             return null;
         }
 
         File testSuiteFile = new File(testsuiteFileName);
-        log.info("Loading testsuite file: " + testSuiteFile.getAbsolutePath());
+        LOGGER.info("Loading testsuite file: " + testSuiteFile.getAbsolutePath());
         if (!testSuiteFile.exists()) {
-            exitWithError(log, format("Can't find testsuite file [%s]", testSuiteFile));
+            exitWithError(LOGGER, format("Can't find testsuite file [%s]", testSuiteFile));
         }
         return testSuiteFile;
     }
@@ -286,7 +286,7 @@ public class CoordinatorCli {
                 return Integer.parseInt(value);
             }
         } catch (NumberFormatException e) {
-            exitWithError(log, format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
+            exitWithError(LOGGER, format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
             return -1;
         }
     }

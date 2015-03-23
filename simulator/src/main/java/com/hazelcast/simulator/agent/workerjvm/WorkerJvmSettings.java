@@ -71,25 +71,25 @@ public class WorkerJvmSettings implements Serializable {
 
     @Override
     public String toString() {
-        return "WorkerSettings{" +
-                "\n  vmOptions='" + vmOptions + '\'' +
-                "\n  clientVmOptions='" + clientVmOptions + '\'' +
-                "\n, memberWorkerCount=" + memberWorkerCount +
-                "\n, clientWorkerCount=" + clientWorkerCount +
-                "\n, workerStartupTimeout=" + workerStartupTimeout +
-                "\n, refreshJvm=" + refreshJvm +
-                "\n, profiler='" + profiler + '\'' +
-                "\n, yourkitConfig='" + yourkitConfig + '\'' +
-                "\n, javaVendor=" + javaVendor +
-                "\n, javaVersion=" + javaVersion +
-                "\n, hzConfig='" + hzConfig + '\'' +
-                "\n, clientHzConfig='" + clientHzConfig + '\'' +
-                "\n, log4jConfig='" + log4jConfig + '\'' +
-                "\n, hprofSettings='" + hprofSettings + '\'' +
-                "\n, perfSettings='" + perfSettings + '\'' +
-                "\n, vtuneSettings='" + vtuneSettings + '\'' +
-                "\n, flightrecorderSettings='" + flightrecorderSettings + '\'' +
-                "\n, numaCtl='" + numaCtl + '\'' +
-                "\n}";
+        return "WorkerSettings{"
+                + "\n  vmOptions='" + vmOptions + '\''
+                + "\n  clientVmOptions='" + clientVmOptions + '\''
+                + "\n, memberWorkerCount=" + memberWorkerCount
+                + "\n, clientWorkerCount=" + clientWorkerCount
+                + "\n, workerStartupTimeout=" + workerStartupTimeout
+                + "\n, refreshJvm=" + refreshJvm
+                + "\n, profiler='" + profiler + '\''
+                + "\n, yourkitConfig='" + yourkitConfig + '\''
+                + "\n, javaVendor=" + javaVendor
+                + "\n, javaVersion=" + javaVersion
+                + "\n, hzConfig='" + hzConfig + '\''
+                + "\n, clientHzConfig='" + clientHzConfig + '\''
+                + "\n, log4jConfig='" + log4jConfig + '\''
+                + "\n, hprofSettings='" + hprofSettings + '\''
+                + "\n, perfSettings='" + perfSettings + '\''
+                + "\n, vtuneSettings='" + vtuneSettings + '\''
+                + "\n, flightrecorderSettings='" + flightrecorderSettings + '\''
+                + "\n, numaCtl='" + numaCtl + '\''
+                + "\n}";
     }
 }

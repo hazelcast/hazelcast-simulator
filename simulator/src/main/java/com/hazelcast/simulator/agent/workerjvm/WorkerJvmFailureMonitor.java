@@ -31,7 +31,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 
 public class WorkerJvmFailureMonitor {
-    private static final Logger log = Logger.getLogger(WorkerJvmFailureMonitor.class);
+    private static final Logger LOGGER = Logger.getLogger(WorkerJvmFailureMonitor.class);
     private static final int LAST_SEEN_TIMEOUT_MS = 60 * 1000;
 
     private final Agent agent;
@@ -47,7 +47,7 @@ public class WorkerJvmFailureMonitor {
     }
 
     public void publish(Failure failure) {
-        log.warn("Failure detected: " + failure);
+        LOGGER.warn("Failure detected: " + failure);
         failureQueue.add(failure);
     }
 
@@ -218,7 +218,7 @@ public class WorkerJvmFailureMonitor {
                 try {
                     detect();
                 } catch (Exception e) {
-                    log.fatal("Failed to scan for failures", e);
+                    LOGGER.fatal("Failed to scan for failures", e);
                 }
                 sleepSeconds(1);
             }

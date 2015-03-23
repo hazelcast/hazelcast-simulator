@@ -13,7 +13,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 
 public class NativeUtils {
 
-    private static final Logger log = Logger.getLogger(NativeUtils.class);
+    private static final Logger LOGGER = Logger.getLogger(NativeUtils.class);
 
     private NativeUtils() {
     }
@@ -25,7 +25,7 @@ public class NativeUtils {
     }
 
     public static void kill(int pid) {
-        log.info("Sending -9 signal to PID " + pid);
+        LOGGER.info("Sending -9 signal to PID " + pid);
         try {
             Runtime.getRuntime().exec("/bin/kill -9 " + pid + " >/dev/null");
         } catch (IOException e) {
@@ -36,8 +36,8 @@ public class NativeUtils {
     public static void execute(String command) {
         StringBuffer sb = new StringBuffer();
 
-        if (log.isDebugEnabled()) {
-            log.debug("Executing bash command: " + command);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Executing bash command: " + command);
         }
 
         try {
@@ -52,12 +52,12 @@ public class NativeUtils {
             int shellExitStatus = shell.waitFor();
 
             if (shellExitStatus != 0) {
-                log.error(String.format("Failed to execute [%s]", command));
-                log.error(sb.toString());
+                LOGGER.error(String.format("Failed to execute [%s]", command));
+                LOGGER.error(sb.toString());
                 System.exit(1);
             } else {
-                if (log.isDebugEnabled()) {
-                    log.debug("Bash output: \n" + sb);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Bash output: \n" + sb);
                 }
             }
         } catch (IOException e) {
@@ -77,7 +77,7 @@ public class NativeUtils {
         try {
             return Integer.parseInt(pidString);
         } catch (NumberFormatException e) {
-            log.warn(e);
+            LOGGER.warn(e);
             return null;
         }
     }
@@ -92,16 +92,16 @@ public class NativeUtils {
             pid_method.setAccessible(true);
             return (Integer) pid_method.invoke(mgmt);
         } catch (IllegalAccessException e) {
-            log.warn(e);
+            LOGGER.warn(e);
             return null;
         } catch (InvocationTargetException e) {
-            log.warn(e);
+            LOGGER.warn(e);
             return null;
         } catch (NoSuchMethodException e) {
-            log.warn(e);
+            LOGGER.warn(e);
             return null;
         } catch (NoSuchFieldException e) {
-            log.warn(e);
+            LOGGER.warn(e);
             return null;
         }
     }

@@ -29,10 +29,10 @@ public class AgentRemoteService {
         SERVICE_PROCESS_MESSAGE
     }
 
-    private static final Logger log = Logger.getLogger(AgentRemoteService.class);
+    private static final Logger LOGGER = Logger.getLogger(AgentRemoteService.class);
 
-    final private Agent agent;
-    final private AgentMessageProcessor agentMessageProcessor;
+    private final Agent agent;
+    private final AgentMessageProcessor agentMessageProcessor;
     private ServerSocket serverSocket;
     private final Executor executor = Executors.newFixedThreadPool(20);
     private AcceptorThread acceptorThread;
@@ -44,7 +44,7 @@ public class AgentRemoteService {
 
     public void start() throws IOException {
         serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(getHostAddress()));
-        log.info("Started Agent Remote Service on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
+        LOGGER.info("Started Agent Remote Service on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
         acceptorThread = new AcceptorThread();
         acceptorThread.start();
     }
@@ -66,16 +66,16 @@ public class AgentRemoteService {
         }
 
         public void run() {
-            while ( !stopped ) {
+            while (!stopped) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    if (log.isDebugEnabled()) {
-                        log.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
                     }
                     agent.signalUsed();
                     executor.execute(new ClientSocketTask(clientSocket, agent, agentMessageProcessor));
                 } catch (IOException e) {
-                    log.fatal(e);
+                    LOGGER.fatal(e);
                 }
             }
         }

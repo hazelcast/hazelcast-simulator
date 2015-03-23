@@ -43,7 +43,7 @@ public class Provisioner {
 
     public static final String AGENTS_FILE = "agents.txt";
 
-    private static final Logger log = Logger.getLogger(Provisioner.class);
+    private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
     private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
 
     private static final String CONF_DIR = SIMULATOR_HOME + "/conf";
@@ -152,7 +152,8 @@ public class Provisioner {
 
         if (props.isEc2()) {
             bash.ssh(ip, format(
-                    "nohup hazelcast-simulator-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s > agent.out 2> agent.err < /dev/null &",
+                    "nohup hazelcast-simulator-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s " +
+                            "> agent.out 2> agent.err < /dev/null &",
                     getSimulatorVersion(),
                     props.get("CLOUD_PROVIDER"),
                     props.get("CLOUD_IDENTITY"),
@@ -209,16 +210,16 @@ public class Provisioner {
         echo("GroupName: " + groupName);
         echo("Username: " + props.getUser());
 
-        log.info("Using init script:" + initScript.getAbsolutePath());
+        LOGGER.info("Using init script:" + initScript.getAbsolutePath());
 
         long startTimeMs = System.currentTimeMillis();
 
         String jdkFlavor = props.get("JDK_FLAVOR", "outofthebox");
         if ("outofthebox".equals(jdkFlavor)) {
-            log.info("JDK spec: outofthebox");
+            LOGGER.info("JDK spec: outofthebox");
         } else {
             String jdkVersion = props.get("JDK_VERSION", "7");
-            log.info(format("JDK spec: %s %s", jdkFlavor, jdkVersion));
+            LOGGER.info(format("JDK spec: %s %s", jdkFlavor, jdkVersion));
         }
 
         hazelcastJars.prepare(enterpriseEnabled);
@@ -254,7 +255,7 @@ public class Provisioner {
             try {
                 future.get();
             } catch (ExecutionException e) {
-                log.fatal("Failed provision", e);
+                LOGGER.fatal("Failed provision", e);
                 System.exit(1);
             }
         }
@@ -273,7 +274,7 @@ public class Provisioner {
         echo("    " + agents);
     }
 
-    private class InstallNodeTask implements Runnable {
+    private final class InstallNodeTask implements Runnable {
         private final String ip;
 
         private InstallNodeTask(String ip) {
@@ -382,7 +383,7 @@ public class Provisioner {
             destroyedCount += destroyNodes(compute, terminateMap);
         }
 
-        log.info("Updating " + agentsFile.getAbsolutePath());
+        LOGGER.info("Updating " + agentsFile.getAbsolutePath());
 
         AgentsFile.save(agentsFile, addresses);
 
@@ -391,14 +392,14 @@ public class Provisioner {
         echoImportant("Terminated %s of %s, remaining=%s", destroyedCount, count, addresses.size());
 
         if (destroyedCount != count) {
-            throw new IllegalStateException("Terminated " + destroyedCount + " of " + count +
-                    "\n1) You are trying to terminate physical hardware that you own (unsupported feature)" +
-                    "\n2) if and only if you are using AWS,  our Harakiri Monitor might have terminated them" +
-                    "\n3) You have not payed you bill and your instances have been terminated by your provider" +
-                    "\n4) You have terminated our own instances perhaps vai some console interface" +
-                    "\n5) Someone else has terminated your instances" +
-                    "\n5) elves ?" +
-                    "\n5) try again");
+            throw new IllegalStateException("Terminated " + destroyedCount + " of " + count
+                    + "\n1) You are trying to terminate physical hardware that you own (unsupported feature)"
+                    + "\n2) if and only if you are using AWS,  our Harakiri Monitor might have terminated them"
+                    + "\n3) You have not payed you bill and your instances have been terminated by your provider"
+                    + "\n4) You have terminated our own instances perhaps vai some console interface"
+                    + "\n5) Someone else has terminated your instances"
+                    + "\n5) elves ?"
+                    + "\n5) try again");
         }
     }
 
@@ -421,7 +422,7 @@ public class Provisioner {
     }
 
     private void echo(String s, Object... args) {
-        log.info(s == null ? "null" : String.format(s, args));
+        LOGGER.info(s == null ? "null" : String.format(s, args));
     }
 
     private void echoImportant(String s, Object... args) {
@@ -431,10 +432,10 @@ public class Provisioner {
     }
 
     public static void main(String[] args) {
-        log.info("Hazelcast Simulator Provisioner");
-        log.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), GitInfo.getCommitIdAbbrev(),
+        LOGGER.info("Hazelcast Simulator Provisioner");
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), GitInfo.getCommitIdAbbrev(),
                 GitInfo.getBuildTime()));
-        log.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
+        LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
 
         try {
             Provisioner provisioner = new Provisioner();
@@ -442,7 +443,7 @@ public class Provisioner {
             cli.run(args);
             System.exit(0);
         } catch (Throwable e) {
-            log.fatal(e);
+            LOGGER.fatal(e);
             System.exit(1);
         }
     }

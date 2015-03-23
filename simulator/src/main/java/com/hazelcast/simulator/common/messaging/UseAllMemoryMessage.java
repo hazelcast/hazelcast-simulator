@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 @MessageSpec(value = "oom", description = "starts a new thread allocating memory in JVM heap indefinitely")
 public class UseAllMemoryMessage extends RunnableMessage {
-    private static final Logger log = Logger.getLogger(UseAllMemoryMessage.class);
+    private static final Logger LOGGER = Logger.getLogger(UseAllMemoryMessage.class);
 
     private final int bufferSize = 1000;
     private final int delay;
@@ -39,8 +39,8 @@ public class UseAllMemoryMessage extends RunnableMessage {
         new Thread() {
             @Override
             public void run() {
-                log.debug("Starting a thread to consume all memory");
-                for (;;) {
+                LOGGER.debug("Starting a thread to consume all memory");
+                for (; ; ) {
                     try {
                         allocateMemory();
                     } catch (OutOfMemoryError ex) {
@@ -61,7 +61,7 @@ public class UseAllMemoryMessage extends RunnableMessage {
                 try {
                     TimeUnit.MILLISECONDS.sleep(sleepMillis);
                 } catch (InterruptedException e) {
-                    log.warn("Interrupted during sleep.");
+                    LOGGER.warn("Interrupted during sleep.");
                     Thread.currentThread().interrupt();
                 }
             }

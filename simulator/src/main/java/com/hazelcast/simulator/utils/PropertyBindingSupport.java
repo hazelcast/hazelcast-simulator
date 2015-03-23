@@ -17,7 +17,7 @@ import static java.lang.String.format;
  */
 public final class PropertyBindingSupport {
 
-    private static final Logger log = Logger.getLogger(PropertyBindingSupport.class);
+    private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);
 
     /**
      * Binds all the properties contained in the testCase object onto the test instance.
@@ -70,7 +70,7 @@ public final class PropertyBindingSupport {
         try {
             bindProperty(instance, propertyName, propertyValue);
         } catch (Exception e) {
-            log.warn("Optional property could not be bound", e);
+            LOGGER.warn("Optional property could not be bound", e);
         }
     }
 

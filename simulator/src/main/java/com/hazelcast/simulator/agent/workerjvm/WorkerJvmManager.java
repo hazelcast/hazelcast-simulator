@@ -23,10 +23,10 @@ import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.worker.TerminateWorkerException;
+import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
 import com.hazelcast.simulator.worker.commands.MessageCommand;
-import com.hazelcast.simulator.worker.commands.Command;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -63,7 +63,7 @@ public class WorkerJvmManager {
     public static final int PORT = 9001;
     public static final File WORKERS_HOME = new File(getSimulatorHome(), "workers");
 
-    private static final Logger log = Logger.getLogger(WorkerJvmManager.class);
+    private static final Logger LOGGER = Logger.getLogger(WorkerJvmManager.class);
     private static final int WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS = 10000;
 
     private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
@@ -91,7 +91,7 @@ public class WorkerJvmManager {
     public void start() throws Exception {
         serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(null));
 
-        log.info("Started Worker JVM Socket on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
+        LOGGER.info("Started Worker JVM Socket on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
 
         new AcceptorThread().start();
     }
@@ -108,7 +108,7 @@ public class WorkerJvmManager {
         workers = Collections.singletonList(workers.get(0));
         List results = executeOnWorkers(command, workers);
         if (results.isEmpty()) {
-            log.info("No results found");
+            LOGGER.info("No results found");
             return null;
         }
         return results.get(0);
@@ -127,15 +127,15 @@ public class WorkerJvmManager {
         } else if (MessageAddress.RANDOM_WORKER_WITH_MEMBER.equals(workerAddress)) {
             sendMessageToRandomWorkerWithClusterMember(message);
         } else {
-            throw new UnsupportedOperationException("Unsupported addressing mode for worker '" + workerAddress + "'. " +
-                    "Full address: '" + message.getMessageAddress() + "'.");
+            throw new UnsupportedOperationException("Unsupported addressing mode for worker '" + workerAddress + "'. "
+                    + "Full address: '" + message.getMessageAddress() + "'.");
         }
     }
 
     private void sendMessageToRandomWorkerWithClusterMember(Message message) throws TimeoutException, InterruptedException {
         WorkerJvm worker = getRandomWorkerWithClusterMemberOrNull();
         if (worker == null) {
-            log.warn("No worker is known to this agent. Is it a race-condition?");
+            LOGGER.warn("No worker is known to this agent. Is it a race-condition?");
         } else {
             List<WorkerJvm> workerList = Collections.singletonList(worker);
             preprocessMessage(message, workerList);
@@ -153,7 +153,7 @@ public class WorkerJvmManager {
     private void sendMessageToRandomWorker(Message message) throws TimeoutException, InterruptedException {
         WorkerJvm randomWorker = getRandomWorkerOrNull();
         if (randomWorker == null) {
-            log.warn("No worker is known to this agent. Is it a race-condition?");
+            LOGGER.warn("No worker is known to this agent. Is it a race-condition?");
         } else {
             List<WorkerJvm> workerJvmList = Arrays.asList(randomWorker);
             preprocessMessage(message, workerJvmList);
@@ -165,7 +165,9 @@ public class WorkerJvmManager {
     private void preprocessMessage(Message message, Collection<WorkerJvm> workerJvmList) {
         for (WorkerJvm workerJvm : new ArrayList<WorkerJvm>(workerJvmList)) {
             if (message.removeFromAgentList()) {
-                while (workerJvms.values().remove(workerJvm)); //remove worker
+                //remove worker
+                while (workerJvms.values().remove(workerJvm)) {
+                }
             } else if (message.disableMemberFailureDetection()) {
                 workerJvm.detectFailure = false;
             }
@@ -210,12 +212,12 @@ public class WorkerJvmManager {
                 Object result = future.get(30, TimeUnit.SECONDS);
                 results.add(result);
             } catch (TimeoutException e) {
-                if(!future.getCommand().ignoreTimeout()) {
+                if (!future.getCommand().ignoreTimeout()) {
                     registerWorkerFailure(workerJvm, e);
                 }
                 throw e;
             } catch (ExecutionException e) {
-                registerWorkerFailure(workerJvm,e);
+                registerWorkerFailure(workerJvm, e);
                 throw new FailureAlreadyThrownRuntimeException(e);
             }
         }
@@ -241,19 +243,19 @@ public class WorkerJvmManager {
     }
 
     public void terminateWorkers() {
-        log.info("Terminating workers");
+        LOGGER.info("Terminating workers");
 
         for (WorkerJvm jvm : new LinkedList<WorkerJvm>(workerJvms.values())) {
             terminateWorker(jvm);
         }
 
-        log.info("Finished terminating workers");
+        LOGGER.info("Finished terminating workers");
     }
 
     public void terminateRandomWorker() {
         WorkerJvm randomWorker = getRandomWorkerOrNull();
         if (randomWorker == null) {
-            log.warn("Attempt to terminating a random worker detected, but no worker is running.");
+            LOGGER.warn("Attempt to terminating a random worker detected, but no worker is running.");
             return;
         }
         terminateWorker(randomWorker);
@@ -268,7 +270,7 @@ public class WorkerJvmManager {
                     jvm.process.destroy(); //this sends SIGTERM on *nix
                     jvm.process.waitFor();
                 } catch (Throwable e) {
-                    log.fatal("Failed to destroy worker process: " + jvm);
+                    LOGGER.fatal("Failed to destroy worker process: " + jvm);
                 }
             }
         };
@@ -277,10 +279,10 @@ public class WorkerJvmManager {
         try {
             t.join(WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS);
             if (t.isAlive()) {
-                log.warn("WorkerJVM is still busy terminating: " + jvm);
+                LOGGER.warn("WorkerJVM is still busy terminating: " + jvm);
             }
         } catch (Exception e) {
-            log.fatal(e);
+            LOGGER.fatal(e);
         }
     }
 
@@ -317,11 +319,11 @@ public class WorkerJvmManager {
     }
 
     public void newMember() throws Exception {
-        log.info("Adding a newMember");
+        LOGGER.info("Adding a newMember");
 
         WorkerJvmSettings lastUsedWorkerJvmSettings = this.lastUsedWorkerJvmSettings;
         if (lastUsedWorkerJvmSettings == null) {
-            log.warn("No lastUsedWorkerJvmSettings available");
+            LOGGER.warn("No lastUsedWorkerJvmSettings available");
             return;
         }
 
@@ -354,7 +356,7 @@ public class WorkerJvmManager {
                 Object result = null;
                 try {
                     if (workerJvm == null) {
-                        log.warn("No worker JVM found for id: " + workerId);
+                        LOGGER.warn("No worker JVM found for id: " + workerId);
                         result = new TerminateWorkerException();
                     } else {
                         workerJvm.lastSeen = System.currentTimeMillis();
@@ -364,12 +366,12 @@ public class WorkerJvmManager {
                             result = commands;
                         } else if (COMMAND_PUSH_RESPONSE.equals(service)) {
                             CommandResponse response = (CommandResponse) in.readObject();
-                            //log.info("Received response: " + response.commandId);
+                            //LOGGER.info("Received response: " + response.commandId);
                             CommandFuture f = futureMap.remove(response.commandId);
                             if (f != null) {
                                 f.set(response.result);
                             } else {
-                                log.fatal("No future found for commandId: " + response.commandId);
+                                LOGGER.fatal("No future found for commandId: " + response.commandId);
                             }
                         } else {
                             throw new RuntimeException("Unknown service:" + service);
@@ -378,7 +380,7 @@ public class WorkerJvmManager {
                 } catch (IOException e) {
                     throw e;
                 } catch (Exception e) {
-                    log.fatal("Failed to process serviceId:" + service, e);
+                    LOGGER.fatal("Failed to process serviceId:" + service, e);
                     result = e;
                 }
 
@@ -386,7 +388,7 @@ public class WorkerJvmManager {
                 out.flush();
                 clientSocket.close();
             } catch (Exception e) {
-                log.fatal(e);
+                LOGGER.fatal(e);
             }
         }
     }
@@ -400,12 +402,12 @@ public class WorkerJvmManager {
             for (; ; ) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    if (log.isDebugEnabled()) {
-                        log.debug("Accepted worker request from: " + clientSocket.getRemoteSocketAddress());
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Accepted worker request from: " + clientSocket.getRemoteSocketAddress());
                     }
                     executor.execute(new ClientSocketTask(clientSocket));
                 } catch (Throwable e) {
-                    log.fatal(e);
+                    LOGGER.fatal(e);
                 }
             }
         }

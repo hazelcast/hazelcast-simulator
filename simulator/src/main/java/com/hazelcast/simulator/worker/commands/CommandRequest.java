@@ -11,9 +11,9 @@ public class CommandRequest implements Serializable {
 
     @Override
     public String toString() {
-        return "CommandRequest{" +
-                "id=" + id +
-                ", task=" + task +
-                '}';
+        return "CommandRequest{"
+                + "id=" + id
+                + ", task=" + task
+                + '}';
     }
 }

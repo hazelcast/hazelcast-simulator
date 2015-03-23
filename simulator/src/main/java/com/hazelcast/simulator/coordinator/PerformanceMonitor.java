@@ -23,7 +23,7 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
  */
 public class PerformanceMonitor {
     private static final AtomicBoolean performanceWritten = new AtomicBoolean();
-    private static final Logger log = Logger.getLogger(PerformanceMonitor.class);
+    private static final Logger LOGGER = Logger.getLogger(PerformanceMonitor.class);
 
     private final AgentsClient client;
     private final Coordinator coordinator;
@@ -37,29 +37,29 @@ public class PerformanceMonitor {
         this.coordinator = coordinator;
     }
 
-    public void start(){
-        if(started.compareAndSet(false, true)){
+    public void start() {
+        if (started.compareAndSet(false, true)) {
             new PerformanceThread().start();
         }
     }
 
     class PerformanceThread extends Thread {
-        public PerformanceThread(){
+        public PerformanceThread() {
             super("PerformanceThread");
             setDaemon(true);
         }
 
         @Override
         public void run() {
-            for (;;) {
+            for (; ; ) {
                 sleepSeconds(10);
 
                 try {
                     checkPerformance();
                 } catch (TimeoutException e) {
-                    log.warn("There was a timeout retrieving performance information from the members.");
+                    LOGGER.warn("There was a timeout retrieving performance information from the members.");
                 } catch (Throwable cause) {
-                    log.fatal(cause);
+                    LOGGER.fatal(cause);
                 }
             }
         }
@@ -100,12 +100,12 @@ public class PerformanceMonitor {
     public void logDetailedPerformanceInfo(int duration) {
         long operationCount = coordinator.operationCount;
         if (operationCount < 0) {
-            log.info("Operation-count: not available");
-            log.info("Performance: not available");
+            LOGGER.info("Operation-count: not available");
+            LOGGER.info("Performance: not available");
         } else {
-            log.info("Operation-count: " + formatLong(operationCount, 0));
+            LOGGER.info("Operation-count: " + formatLong(operationCount, 0));
             double performance = (operationCount * 1.0d) / duration;
-            log.info("Performance: " + formatDouble(performance, 0) + " ops/s");
+            LOGGER.info("Performance: " + formatDouble(performance, 0) + " ops/s");
         }
 
         if (performanceWritten.compareAndSet(false, true)) {
@@ -118,7 +118,7 @@ public class PerformanceMonitor {
             long operationCountPerAgent = entry.getValue();
             double percentage = 100 * (operationCountPerAgent * 1.0d) / operationCount;
             double performance = (operationCountPerAgent * 1.0d) / duration;
-            log.info("    Agent " + client.getPublicAddress() + " " + formatLong(operationCountPerAgent, 15) + " ops "
+            LOGGER.info("    Agent " + client.getPublicAddress() + " " + formatLong(operationCountPerAgent, 15) + " ops "
                     + formatDouble(performance, 15)
                     + " ops/s " + formatDouble(percentage, 5) + "%");
         }

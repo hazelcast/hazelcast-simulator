@@ -21,14 +21,14 @@ import static java.lang.String.format;
  * is configured, it will override the properties from the default.
  */
 public class SimulatorProperties {
-    private static final Logger log = Logger.getLogger(SimulatorProperties.class);
+    private static final Logger LOGGER = Logger.getLogger(SimulatorProperties.class);
 
     private final Properties properties = new Properties();
     private String forcedHazelcastVersionSpec;
 
     public SimulatorProperties() {
         File defaultPropsFile = newFile(getSimulatorHome(), "conf", "simulator.properties");
-        log.debug("Loading default simulator.properties from: " + defaultPropsFile.getAbsolutePath());
+        LOGGER.debug("Loading default simulator.properties from: " + defaultPropsFile.getAbsolutePath());
         load(defaultPropsFile);
     }
 
@@ -51,7 +51,7 @@ public class SimulatorProperties {
     public void forceGit(String gitRevision) {
         if (gitRevision != null && !gitRevision.isEmpty()) {
             forcedHazelcastVersionSpec = HazelcastJars.GIT_VERSION_PREFIX + gitRevision;
-            log.info("Overriding Hazelcast version to GIT revision " + gitRevision);
+            LOGGER.info("Overriding Hazelcast version to GIT revision " + gitRevision);
         }
     }
 
@@ -68,19 +68,19 @@ public class SimulatorProperties {
             if (fallbackPropsFile.exists()) {
                 file = fallbackPropsFile;
             } else {
-                log.warn(format("%s is not found, relying on defaults", fallbackPropsFile));
+                LOGGER.warn(format("%s is not found, relying on defaults", fallbackPropsFile));
             }
         }
 
         if (file != null) {
-            log.info(format("Loading simulator.properties: %s", file.getAbsolutePath()));
+            LOGGER.info(format("Loading simulator.properties: %s", file.getAbsolutePath()));
             load(file);
         }
     }
 
     private void load(File file) {
         if (!file.exists()) {
-            exitWithError(log, "Could not find simulator.properties file: " + file.getAbsolutePath());
+            exitWithError(LOGGER, "Could not find simulator.properties file: " + file.getAbsolutePath());
             return;
         }
 
@@ -151,11 +151,11 @@ public class SimulatorProperties {
     private String load(String property, String value) {
         File file = newFile(value);
         if (!file.exists()) {
-            exitWithError(log, format("Can't find %s file %s", property, value));
+            exitWithError(LOGGER, format("Can't find %s file %s", property, value));
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Loading " + property + " from file: " + file.getAbsolutePath());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Loading " + property + " from file: " + file.getAbsolutePath());
         }
         return fileAsText(file).trim();
     }

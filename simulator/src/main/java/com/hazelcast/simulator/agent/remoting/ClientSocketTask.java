@@ -1,13 +1,13 @@
 package com.hazelcast.simulator.agent.remoting;
 
+import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
-import com.hazelcast.simulator.test.TestSuite;
-import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.test.Failure;
+import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.worker.commands.Command;
 import org.apache.log4j.Logger;
 
@@ -21,7 +21,7 @@ import java.util.List;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 
 class ClientSocketTask implements Runnable {
-    private static final Logger log = Logger.getLogger(ClientSocketTask.class);
+    private static final Logger LOGGER = Logger.getLogger(ClientSocketTask.class);
 
     private final Socket clientSocket;
     private final Agent agent;
@@ -45,7 +45,7 @@ class ClientSocketTask implements Runnable {
                 AgentRemoteService.Service service = (AgentRemoteService.Service) in.readObject();
                 result = execute(service, in);
             } catch (Throwable e) {
-                log.fatal(e);
+                LOGGER.fatal(e);
                 result = e;
             }
             if (out != null) {
@@ -53,7 +53,7 @@ class ClientSocketTask implements Runnable {
                 out.flush();
             }
         } catch (Throwable e) {
-            log.fatal(e);
+            LOGGER.fatal(e);
         } finally {
             closeQuietly(in, out);
             closeQuietly(clientSocket);
@@ -98,7 +98,7 @@ class ClientSocketTask implements Runnable {
                 result = new ArrayList<String>();
                 Collection<WorkerJvm> workerJvms = agent.getWorkerJvmManager().getWorkerJvms();
                 for (WorkerJvm workerJvm : workerJvms) {
-                    ((List<String>)result).add(workerJvm.id);
+                    ((List<String>) result).add(workerJvm.id);
                 }
                 break;
             case SERVICE_PROCESS_MESSAGE:
@@ -112,7 +112,7 @@ class ClientSocketTask implements Runnable {
     }
 
     private void poke() {
-        log.info("Poked by coordinator");
+        LOGGER.info("Poked by coordinator");
     }
 
     private List<Failure> getFailures() {
@@ -126,7 +126,7 @@ class ClientSocketTask implements Runnable {
         try {
             agent.getWorkerJvmManager().spawn(settings);
         } catch (Exception e) {
-            log.fatal("Failed to spawn workers from settings:" + settings, e);
+            LOGGER.fatal("Failed to spawn workers from settings:" + settings, e);
             throw e;
         }
     }
@@ -135,7 +135,7 @@ class ClientSocketTask implements Runnable {
         try {
             agent.initTestSuite(testSuite);
         } catch (Exception e) {
-            log.fatal("Failed to init testsuite: " + testSuite, e);
+            LOGGER.fatal("Failed to init testsuite: " + testSuite, e);
             throw e;
         }
     }
@@ -144,7 +144,7 @@ class ClientSocketTask implements Runnable {
         try {
             agent.getWorkerJvmManager().terminateWorkers();
         } catch (Exception e) {
-            log.fatal("Failed to terminateWorker workers", e);
+            LOGGER.fatal("Failed to terminateWorker workers", e);
             throw e;
         }
     }
@@ -153,7 +153,7 @@ class ClientSocketTask implements Runnable {
         try {
             agent.echo(msg);
         } catch (Exception e) {
-            log.fatal("Failed to echo", e);
+            LOGGER.fatal("Failed to echo", e);
             throw e;
         }
     }

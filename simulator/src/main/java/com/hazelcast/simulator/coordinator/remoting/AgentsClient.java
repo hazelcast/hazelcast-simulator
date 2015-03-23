@@ -5,11 +5,11 @@ import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.CountdownWatch;
+import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestSuite;
-import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.IsPhaseCompletedCommand;
 import org.apache.log4j.Logger;
@@ -46,7 +46,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
 public class AgentsClient {
 
-    private static final Logger log = Logger.getLogger(AgentsClient.class);
+    private static final Logger LOGGER = Logger.getLogger(AgentsClient.class);
 
     private static final long TEST_METHOD_TIMEOUT = TimeUnit.SECONDS.toMillis(Integer.parseInt(System.getProperty(
             "worker.testmethod.timeout", "10000")));
@@ -69,7 +69,7 @@ public class AgentsClient {
         // starts a poke thread which will repeatedly poke the agents to make sure they are not going to terminate themselves
         pokeThread = new Thread() {
             public void run() {
-                for (;;) {
+                for (; ; ) {
                     sleepSeconds(60);
                     asyncExecuteOnAllWorkers(SERVICE_POKE);
                 }
@@ -91,9 +91,9 @@ public class AgentsClient {
     }
 
     private void awaitAgentsReachable() {
-        log.info("--------------------------------------------------------------");
-        log.info("Waiting for agents to start");
-        log.info("--------------------------------------------------------------");
+        LOGGER.info("--------------------------------------------------------------");
+        LOGGER.info("Waiting for agents to start");
+        LOGGER.info("--------------------------------------------------------------");
 
         List<AgentClient> unchecked = new LinkedList<AgentClient>(agents);
         for (int i = 0; i < 12; i++) {
@@ -103,30 +103,30 @@ public class AgentsClient {
                 try {
                     agent.execute(SERVICE_ECHO, "livecheck");
                     it.remove();
-                    log.info("Connect to agent " + agent.getPublicAddress() + " OK");
+                    LOGGER.info("Connect to agent " + agent.getPublicAddress() + " OK");
                 } catch (Exception e) {
-                    log.info("Connect to agent " + agent.getPublicAddress() + " FAILED");
-                    log.debug(e);
+                    LOGGER.info("Connect to agent " + agent.getPublicAddress() + " FAILED");
+                    LOGGER.debug(e);
                 }
             }
 
             if (unchecked.isEmpty()) {
                 break;
             }
-            log.info("Sleeping 5 seconds and retrying unchecked agents");
+            LOGGER.info("Sleeping 5 seconds and retrying unchecked agents");
             sleepSeconds(5);
         }
 
         agents.removeAll(unchecked);
 
         if (agents.isEmpty()) {
-            exitWithError(log, "There are no reachable agents");
+            exitWithError(LOGGER, "There are no reachable agents");
         }
 
         if (unchecked.isEmpty()) {
-            log.info("--------------------------------------------------------------");
-            log.info("All agents are reachable!");
-            log.info("--------------------------------------------------------------");
+            LOGGER.info("--------------------------------------------------------------");
+            LOGGER.info("All agents are reachable!");
+            LOGGER.info("--------------------------------------------------------------");
             return;
         }
 
@@ -135,9 +135,9 @@ public class AgentsClient {
             sb.append("\t").append(agent.getPublicAddress()).append("\n");
         }
 
-        log.warn("--------------------------------------------------------------");
-        log.warn(sb.toString());
-        log.warn("--------------------------------------------------------------");
+        LOGGER.warn("--------------------------------------------------------------");
+        LOGGER.warn(sb.toString());
+        LOGGER.warn("--------------------------------------------------------------");
     }
 
     public int getAgentCount() {
@@ -178,11 +178,11 @@ public class AgentsClient {
                 List<Failure> list = future.get(30, TimeUnit.SECONDS);
                 result.addAll(list);
             } catch (InterruptedException e) {
-                log.fatal(e);
+                LOGGER.fatal(e);
             } catch (ExecutionException e) {
-                log.fatal(e);
+                LOGGER.fatal(e);
             } catch (TimeoutException e) {
-                log.fatal(e);
+                LOGGER.fatal(e);
             }
         }
         return result;
@@ -191,7 +191,7 @@ public class AgentsClient {
     public void waitForPhaseCompletion(String prefix, String testId, String phaseName) throws TimeoutException {
         long startTimeMs = System.currentTimeMillis();
         IsPhaseCompletedCommand command = new IsPhaseCompletedCommand(testId);
-        for (;;) {
+        for (; ; ) {
             List<List<Boolean>> allResults = executeOnAllWorkers(command);
             boolean complete = true;
             for (List<Boolean> resultsPerAgent : allResults) {
@@ -212,7 +212,7 @@ public class AgentsClient {
             }
 
             long durationMs = System.currentTimeMillis() - startTimeMs;
-            log.info(prefix + "Waiting for " + phaseName + " completion: " + secondsToHuman(durationMs / 1000));
+            LOGGER.info(prefix + "Waiting for " + phaseName + " completion: " + secondsToHuman(durationMs / 1000));
             sleepSeconds(5);
         }
     }
@@ -239,13 +239,13 @@ public class AgentsClient {
                 settings = spawnPlan.memberSettings;
                 if (spawnPlan.memberSettings.clientWorkerCount > 0) {
                     // TODO: remove
-                    log.fatal("Found clients during member startup");
+                    LOGGER.fatal("Found clients during member startup");
                 }
             } else {
                 settings = spawnPlan.clientSettings;
                 if (spawnPlan.clientSettings.memberWorkerCount > 0) {
                     // TODO: remove
-                    log.fatal("Found members during client startup");
+                    LOGGER.fatal("Found members during client startup");
                 }
             }
 
@@ -273,7 +273,7 @@ public class AgentsClient {
 
     public void sendMessage(final Message message) throws TimeoutException {
         MessageAddress messageAddress = message.getMessageAddress();
-        log.info("Sending message '" + message + "' to address '" + messageAddress + "'");
+        LOGGER.info("Sending message '" + message + "' to address '" + messageAddress + "'");
 
         if (MessageAddress.BROADCAST.equals(messageAddress.getAgentAddress())) {
             sendMessageToAllAgents(message);
@@ -320,10 +320,10 @@ public class AgentsClient {
                     try {
                         return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
                     } catch (RuntimeException e) {
-                        if (log.isDebugEnabled()) {
-                            log.debug(e.getMessage(), e);
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug(e.getMessage(), e);
                         } else {
-                            log.fatal(e.getMessage());
+                            LOGGER.fatal(e.getMessage());
                         }
                         throw e;
                     }
@@ -346,7 +346,7 @@ public class AgentsClient {
                     try {
                         return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
                     } catch (RuntimeException e) {
-                        log.fatal(e);
+                        LOGGER.fatal(e);
                         throw e;
                     }
                 }

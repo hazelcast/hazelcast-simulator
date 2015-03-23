@@ -43,7 +43,7 @@ import static java.lang.String.format;
 
 public class MemberWorker {
 
-    private static final Logger log = Logger.getLogger(MemberWorker.class);
+    private static final Logger LOGGER = Logger.getLogger(MemberWorker.class);
 
     private final BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
     private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
@@ -59,28 +59,28 @@ public class MemberWorker {
     private boolean autoCreateHazelcastInstance = true;
 
     public static void main(String[] args) {
-        log.info("Starting Simulator Worker");
+        LOGGER.info("Starting Simulator Worker");
 
         try {
             logInputArguments();
             logInterestingSystemProperties();
 
             String workerId = System.getProperty("workerId");
-            log.info("Worker id: " + workerId);
+            LOGGER.info("Worker id: " + workerId);
 
             String workerHzFile = args[0];
-            log.info("Worker hz config file: " + workerHzFile);
-            log.info(fileAsText(new File(workerHzFile)));
+            LOGGER.info("Worker hz config file: " + workerHzFile);
+            LOGGER.info(fileAsText(new File(workerHzFile)));
 
             String clientHzFile = args[1];
-            log.info("Client hz config file: " + clientHzFile);
-            log.info(fileAsText(new File(clientHzFile)));
+            LOGGER.info("Client hz config file: " + clientHzFile);
+            LOGGER.info(fileAsText(new File(clientHzFile)));
 
             String workerMode = System.getProperty("workerMode");
-            log.info("Worker mode: " + workerMode);
+            LOGGER.info("Worker mode: " + workerMode);
 
             String autoCreateHZInstances = System.getProperty("autoCreateHZInstances", "true");
-            log.info("autoCreateHZInstances :" + autoCreateHZInstances);
+            LOGGER.info("autoCreateHZInstances :" + autoCreateHZInstances);
 
 
             MemberWorker worker = new MemberWorker();
@@ -93,7 +93,7 @@ public class MemberWorker {
 
             registerLog4jShutdownHandler(worker);
 
-            log.info("Successfully started Hazelcast Simulator Worker: " + workerId);
+            LOGGER.info("Successfully started Hazelcast Simulator Worker: " + workerId);
         } catch (Throwable e) {
             ExceptionReporter.report(null, e);
             System.exit(1);
@@ -102,7 +102,7 @@ public class MemberWorker {
 
     private static void logInputArguments() {
         List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
-        log.info("JVM input arguments: " + inputArguments);
+        LOGGER.info("JVM input arguments: " + inputArguments);
     }
 
     private static void logInterestingSystemProperties() {
@@ -124,7 +124,7 @@ public class MemberWorker {
     }
 
     private static void logSystemProperty(String name) {
-        log.info(format("%s=%s", name, System.getProperty(name)));
+        LOGGER.info(format("%s=%s", name, System.getProperty(name)));
     }
 
     private static void registerLog4jShutdownHandler(final MemberWorker worker) {
@@ -147,17 +147,17 @@ public class MemberWorker {
 
 
         if (autoCreateHazelcastInstance && "server".equals(workerMode)) {
-            log.info("------------------------------------------------------------------------");
-            log.info("             member mode");
-            log.info("------------------------------------------------------------------------");
+            LOGGER.info("------------------------------------------------------------------------");
+            LOGGER.info("             member mode");
+            LOGGER.info("------------------------------------------------------------------------");
             serverInstance = createServerHazelcastInstance();
-            TestUtils.warmupPartitions(log, serverInstance);
+            TestUtils.warmupPartitions(LOGGER, serverInstance);
         } else if (autoCreateHazelcastInstance && "client".equals(workerMode)) {
-            log.info("------------------------------------------------------------------------");
-            log.info("             client mode");
-            log.info("------------------------------------------------------------------------");
+            LOGGER.info("------------------------------------------------------------------------");
+            LOGGER.info("             client mode");
+            LOGGER.info("------------------------------------------------------------------------");
             clientInstance = createClientHazelcastInstance();
-            TestUtils.warmupPartitions(log, clientInstance);
+            TestUtils.warmupPartitions(LOGGER, clientInstance);
         } else {
             throw new IllegalStateException("Unknown worker mode: " + workerMode);
         }
@@ -171,30 +171,30 @@ public class MemberWorker {
     }
 
     private void stop() {
-        log.info("Stopping threads...");
+        LOGGER.info("Stopping threads...");
         workerSocketProcessor.shutdown();
         workerCommandRequestProcessor.shutdown();
     }
 
     private HazelcastInstance createServerHazelcastInstance() throws Exception {
-        log.info("Creating Server HazelcastInstance");
+        LOGGER.info("Creating Server HazelcastInstance");
 
         XmlConfigBuilder configBuilder = new XmlConfigBuilder(hzFile);
         Config config = configBuilder.build();
 
         HazelcastInstance server = Hazelcast.newHazelcastInstance(config);
-        log.info("Successfully created Server HazelcastInstance");
+        LOGGER.info("Successfully created Server HazelcastInstance");
         return server;
     }
 
     private HazelcastInstance createClientHazelcastInstance() throws Exception {
-        log.info("Creating Client HazelcastInstance");
+        LOGGER.info("Creating Client HazelcastInstance");
 
         XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(clientHzFile);
         ClientConfig clientConfig = configBuilder.build();
 
         HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
-        log.info("Successfully created Client HazelcastInstance");
+        LOGGER.info("Successfully created Client HazelcastInstance");
         return client;
     }
 

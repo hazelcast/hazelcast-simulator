@@ -44,8 +44,8 @@ class WorkerPerformanceMonitor {
         workerPerformanceMonitorThread.running = false;
     }
 
-    private static class WorkerPerformanceMonitorThread extends Thread {
-        private static final Logger log = Logger.getLogger(WorkerPerformanceMonitorThread.class);
+    private static final class WorkerPerformanceMonitorThread extends Thread {
+        private static final Logger LOGGER = Logger.getLogger(WorkerPerformanceMonitorThread.class);
 
         private final File globalPerformanceFile = new File("performance.txt");
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -74,7 +74,7 @@ class WorkerPerformanceMonitor {
                     Thread.sleep(5000);
                     writeStatsToFiles();
                 } catch (Throwable t) {
-                    log.fatal("Failed to run performance monitor", t);
+                    LOGGER.fatal("Failed to run performance monitor", t);
                 }
             }
         }

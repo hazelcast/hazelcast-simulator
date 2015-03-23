@@ -34,7 +34,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.simulator.utils.AnnotationFilter.*;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
+import static com.hazelcast.simulator.utils.ReflectionUtils.*;
 import static java.lang.String.format;
 
 /**
@@ -147,7 +149,7 @@ public class TestContainer<T extends TestContext> {
         if (runWithWorkerMethod != null) {
             invokeRunWithWorkerMethod();
         } else {
-            ReflectionUtils.invokeMethod(testClassInstance, runMethod);
+            invokeMethod(testClassInstance, runMethod);
         }
         now = Clock.currentTimeMillis();
         for (SimpleProbe probe : probeMap.values()) {
@@ -156,69 +158,69 @@ public class TestContainer<T extends TestContext> {
     }
 
     public void setup() throws Throwable {
-        ReflectionUtils.invokeMethod(testClassInstance, setupMethod, setupArguments);
+        invokeMethod(testClassInstance, setupMethod, setupArguments);
     }
 
     public void localWarmup() throws Throwable {
-        ReflectionUtils.invokeMethod(testClassInstance, localWarmupMethod);
+        invokeMethod(testClassInstance, localWarmupMethod);
     }
 
     public void globalWarmup() throws Throwable {
-        ReflectionUtils.invokeMethod(testClassInstance, globalWarmupMethod);
+        invokeMethod(testClassInstance, globalWarmupMethod);
     }
 
     public void localVerify() throws Throwable {
-        ReflectionUtils.invokeMethod(testClassInstance, localVerifyMethod);
+        invokeMethod(testClassInstance, localVerifyMethod);
     }
 
     public void globalVerify() throws Throwable {
-        ReflectionUtils.invokeMethod(testClassInstance, globalVerifyMethod);
+        invokeMethod(testClassInstance, globalVerifyMethod);
     }
 
     public void globalTeardown() throws Throwable {
-        ReflectionUtils.invokeMethod(testClassInstance, globalTeardownMethod);
+        invokeMethod(testClassInstance, globalTeardownMethod);
     }
 
     public void localTeardown() throws Throwable {
-        ReflectionUtils.invokeMethod(testClassInstance, localTeardownMethod);
+        invokeMethod(testClassInstance, localTeardownMethod);
     }
 
     public long getOperationCount() throws Throwable {
-        Long count = ReflectionUtils.invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
+        Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
                 operationCountMethod);
         return (count == null ? -1 : count);
     }
 
     public void sendMessage(Message message) throws Throwable {
-        ReflectionUtils.invokeMethod(testClassInstance, messageConsumerMethod, message);
+        invokeMethod(testClassInstance, messageConsumerMethod, message);
     }
 
     private void initMethods() {
         try {
-            runMethod = ReflectionUtils.getAtMostOneVoidMethodWithoutArgs(testClassType, Run.class);
-            runWithWorkerMethod = ReflectionUtils.getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, AbstractWorker.class);
+            runMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Run.class);
+            runWithWorkerMethod = getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, AbstractWorker.class);
             if (!(runMethod == null ^ runWithWorkerMethod == null)) {
                 throw new IllegalTestException(
                         format("Test must contain either %s or %s method", Run.class, RunWithWorker.class));
             }
 
-            setupMethod = ReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck(testClassType, Setup.class);
+            setupMethod = getAtMostOneVoidMethodSkipArgsCheck(testClassType, Setup.class);
             if (setupMethod != null) {
                 assertSetupArguments(setupMethod);
                 setupArguments = getSetupArguments(setupMethod);
             }
 
-            localWarmupMethod = ReflectionUtils.getAtMostOneVoidMethodWithoutArgs(testClassType, Warmup.class, new AnnotationFilter.WarmupFilter(false));
-            globalWarmupMethod = ReflectionUtils.getAtMostOneVoidMethodWithoutArgs(testClassType, Warmup.class, new AnnotationFilter.WarmupFilter(true));
+            localWarmupMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Warmup.class, new WarmupFilter(false));
+            globalWarmupMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Warmup.class, new WarmupFilter(true));
 
-            localVerifyMethod = ReflectionUtils.getAtMostOneVoidMethodWithoutArgs(testClassType, Verify.class, new AnnotationFilter.VerifyFilter(false));
-            globalVerifyMethod = ReflectionUtils.getAtMostOneVoidMethodWithoutArgs(testClassType, Verify.class, new AnnotationFilter.VerifyFilter(true));
+            localVerifyMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Verify.class, new VerifyFilter(false));
+            globalVerifyMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Verify.class, new VerifyFilter(true));
 
-            localTeardownMethod = ReflectionUtils.getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new AnnotationFilter.TeardownFilter(false));
-            globalTeardownMethod = ReflectionUtils.getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new AnnotationFilter.TeardownFilter(true));
+            localTeardownMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new TeardownFilter(false));
+            globalTeardownMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new TeardownFilter(true));
 
-            operationCountMethod = ReflectionUtils.getAtMostOneMethodWithoutArgs(testClassType, Performance.class, Long.TYPE);
-            messageConsumerMethod = ReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck(testClassType, Receive.class);
+            operationCountMethod = getAtMostOneMethodWithoutArgs(testClassType, Performance.class, Long.TYPE);
+            messageConsumerMethod = getAtMostOneVoidMethodSkipArgsCheck(testClassType, Receive.class);
             if (messageConsumerMethod != null) {
                 assertArguments(messageConsumerMethod, Message.class);
             }
@@ -285,7 +287,7 @@ public class TestContainer<T extends TestContext> {
         if (parameterType.isAssignableFrom(TestContext.class)) {
             return testContext;
         }
-        String probeName = ReflectionUtils.getValueFromNameAnnotations(parameterAnnotations, "Probe" + index);
+        String probeName = getValueFromNameAnnotations(parameterAnnotations, "Probe" + index);
         if (parameterType.equals(IntervalProbe.class)) {
             return getOrCreateProbe(probeName, IntervalProbe.class);
         }
@@ -300,13 +302,13 @@ public class TestContainer<T extends TestContext> {
     private void injectDependencies() {
         Field[] fields = testClassType.getDeclaredFields();
         for (Field field : fields) {
-            String name = ReflectionUtils.getValueFromNameAnnotation(field);
+            String name = getValueFromNameAnnotation(field);
             if (SimpleProbe.class.equals(field.getType())) {
                 SimpleProbe probe = getOrCreateProbe(name, SimpleProbe.class);
-                ReflectionUtils.injectObjectToInstance(testClassInstance, field, probe);
+                injectObjectToInstance(testClassInstance, field, probe);
             } else if (IntervalProbe.class.equals(field.getType())) {
                 IntervalProbe probe = getOrCreateProbe(name, IntervalProbe.class);
-                ReflectionUtils.injectObjectToInstance(testClassInstance, field, probe);
+                injectObjectToInstance(testClassInstance, field, probe);
             }
         }
     }
@@ -333,17 +335,17 @@ public class TestContainer<T extends TestContext> {
 
         // create one operation counter per test and inject it in all worker instances of the test
         AtomicLong operationCount = new AtomicLong(0);
-        operationCountMethod = ReflectionUtils.getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
+        operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
 
         Field testContextField = getFieldFromAbstractWorker("testContext", TestContext.class);
         Field operationCountField = getFieldFromAbstractWorker("operationCount", AtomicLong.class);
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
-            AbstractWorker worker = ReflectionUtils.invokeMethod(testClassInstance, runWithWorkerMethod);
+            AbstractWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
 
-            ReflectionUtils.injectObjectToInstance(worker, testContextField, testContext);
-            ReflectionUtils.injectObjectToInstance(worker, operationCountField, operationCount);
+            injectObjectToInstance(worker, testContextField, testContext);
+            injectObjectToInstance(worker, operationCountField, operationCount);
 
             bindOptionalProperty(worker, testCase, OptionalTestProperties.LOG_FREQUENCY.propertyName);
             bindOptionalProperty(worker, testCase, OptionalTestProperties.PERFORMANCE_UPDATE_FREQUENCY.propertyName);
@@ -359,7 +361,7 @@ public class TestContainer<T extends TestContext> {
     }
 
     private Field getFieldFromAbstractWorker(String fieldName, Class fieldType) {
-        Field field = ReflectionUtils.getField(AbstractWorker.class, fieldName, fieldType);
+        Field field = getField(AbstractWorker.class, fieldName, fieldType);
         if (field == null) {
             throw new RuntimeException(format("Could not find %s field in %s", fieldName, AbstractWorker.class.getSimpleName()));
         }

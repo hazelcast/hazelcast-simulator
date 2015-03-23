@@ -25,7 +25,7 @@ public class HazelcastJars {
     public static final String GIT_VERSION_PREFIX = "git=";
     public static final String MAVEN_VERSION_PREFIX = "maven=";
 
-    private static final Logger log = Logger.getLogger(HazelcastJars.class);
+    private static final Logger LOGGER = Logger.getLogger(HazelcastJars.class);
 
     private final Bash bash;
     private final GitSupport gitSupport;
@@ -48,7 +48,7 @@ public class HazelcastJars {
         hazelcastJarsDir = new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString());
         ensureExistingDirectory(hazelcastJarsDir);
 
-        log.info("Hazelcast version-spec: " + versionSpec);
+        LOGGER.info("Hazelcast version-spec: " + versionSpec);
 
         if (versionSpec.equals("outofthebox") || versionSpec.equals("bringmyown")) {
             // we don't need to do anything
@@ -67,13 +67,13 @@ public class HazelcastJars {
             }
         } else if (versionSpec.startsWith(GIT_VERSION_PREFIX)) {
             if (prepareEnterpriseJARs) {
-                CommonUtils.exitWithError(log,
+                CommonUtils.exitWithError(LOGGER,
                         "Hazelcast Enterprise is currently not supported when HAZELCAST_VERSION_SPEC is set to GIT.");
             }
             String revision = versionSpec.substring(GIT_VERSION_PREFIX.length());
             gitRetrieve(revision);
         } else {
-            log.fatal("Unrecognized version spec: " + versionSpec);
+            LOGGER.fatal("Unrecognized version spec: " + versionSpec);
             System.exit(1);
         }
     }
@@ -89,28 +89,29 @@ public class HazelcastJars {
         File artifactFile = newFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
 
         if (artifactFile.exists()) {
-            log.info("Using artifact: " + artifactFile + " from local maven repository");
+            LOGGER.info("Using artifact: " + artifactFile + " from local maven repository");
             bash.execute(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
         } else {
-            log.info("Artifact: " + artifactFile + " is not found in local maven repository, trying online one");
+            LOGGER.info("Artifact: " + artifactFile + " is not found in local maven repository, trying online one");
 
             String url;
             if (version.endsWith("-SNAPSHOT")) {
                 String baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
                 String mavenMetadataUrl = format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
-                log.debug("Loading: " + mavenMetadataUrl);
+                LOGGER.debug("Loading: " + mavenMetadataUrl);
                 String mavenMetadata = null;
                 try {
                     mavenMetadata = getText(mavenMetadataUrl);
                 } catch (FileNotFoundException e) {
-                    log.fatal("Failed to load " + artifact + "-" + version + ", because " + mavenMetadataUrl + " was not found");
+                    LOGGER.fatal("Failed to load " + artifact + "-" + version
+                            + ", because " + mavenMetadataUrl + " was not found");
                     System.exit(1);
                 } catch (IOException e) {
-                    log.fatal("Could not load " + mavenMetadataUrl);
+                    LOGGER.fatal("Could not load " + mavenMetadataUrl);
                     System.exit(1);
                 }
 
-                log.debug(mavenMetadata);
+                LOGGER.debug(mavenMetadata);
                 String timestamp = getTagValue(mavenMetadata, "timestamp");
                 String buildNumber = getTagValue(mavenMetadata, "buildNumber");
                 String shortVersion = version.replace("-SNAPSHOT", "");

@@ -46,10 +46,10 @@ public class JavaInstallation {
 
     @Override
     public String toString() {
-        return "JavaInstallation{" +
-                "javaHome='" + javaHome + '\'' +
-                ", vendor='" + vendor + '\'' +
-                ", version='" + version + '\'' +
-                '}';
+        return "JavaInstallation{"
+                + "javaHome='" + javaHome + '\''
+                + ", vendor='" + vendor + '\''
+                + ", version='" + version + '\''
+                + '}';
     }
 }
