@@ -10,20 +10,6 @@ Simulator includes a test suite for our own stress simulation, but you can fork 
 Commercially we offer support agreements where we will integrate your tests into our runs for new releases so that your
 tests act as an Application TCK. 
 
-* [Hazelcast Structure](docs/STRUCTURE.md)
-
-* [Installing Simulator](docs/INSTALL.md)
-
-* [Using the Simulator Archetype](docs/ARCHETYPE.md)
-
-* [Provisioning machines](docs/PROVISIONER.md)
-
-* [Running tests with the Coordinator](docs/COORDINATOR.md)
-
-* [Writing tests](docs/TESTS.md)
-
-* [Setup Machine Manually](docs/MANUALSETUP.md)
-
 ### Mail Group
 
 Please join the mail group if you are interested in using or developing Hazelcast.
