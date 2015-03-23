@@ -149,17 +149,21 @@ public class TestContainerTest {
 
     @Test
     public void testRunWithWorker() throws Throwable {
-        RunWithWorkerTest test = new RunWithWorkerTest();
+        final RunWithWorkerTest test = new RunWithWorkerTest();
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
-        new Thread() {
+        Thread testStopper = new Thread() {
             @Override
             public void run() {
-                super.run();
-                sleepMillis(50);
+                while (!test.runWithWorkerCalled) {
+                    sleepMillis(50);
+                }
                 testContext.stop();
             }
-        }.start();
+        };
+
+        testStopper.start();
         invoker.run();
+        testStopper.join();
 
         assertTrue(test.runWithWorkerCalled);
     }
@@ -172,7 +176,7 @@ public class TestContainerTest {
         private static final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>()
                 .addDefaultOperation(Operation.NOP);
 
-        boolean runWithWorkerCalled;
+        volatile boolean runWithWorkerCalled;
 
         @RunWithWorker
         AbstractWorker<Operation> createWorker() {
