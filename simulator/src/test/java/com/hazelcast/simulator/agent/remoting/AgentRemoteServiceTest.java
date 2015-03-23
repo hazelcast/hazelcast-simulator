@@ -8,6 +8,7 @@ import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeoutException;
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static org.mockito.Mockito.*;
 
+@Ignore
 public class AgentRemoteServiceTest {
 
     private Agent agentMock;
