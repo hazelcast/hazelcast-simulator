@@ -37,7 +37,7 @@ CLOUD_CREDENTIAL=~/ec2.credential
 
 So create these two text files in your home directory. The ec2.identity text-file should contain your access key and the 
 ec2.credential text-file your secret key. For a full listing of options and explanation of the options, read the 
-STABILIZER_HOME/conf/simulator.properties. This file contains all the default values that are used as soon as
+SIMULATOR_HOME/conf/simulator.properties. This file contains all the default values that are used as soon as
 a specific simulator.properties doesn't contain a specific property.
 
 And finally you can run the test from the workdir directory:
@@ -59,7 +59,7 @@ The output will look something like this:
 ```
 INFO  08:40:10 Hazelcast Simulator Provisioner
 INFO  08:40:10 Version: 0.3, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
-INFO  08:40:10 STABILIZER_HOME: /home/alarmnummer/hazelcast-simulator-0.3
+INFO  08:40:10 SIMULATOR_HOME: /home/alarmnummer/hazelcast-simulator-0.3
 INFO  08:40:10 Loading simulator.properties: /tmp/yourproject/workdir/simulator.properties
 INFO  08:40:10 ==============================================================
 INFO  08:40:10 Provisioning 4 aws-ec2 machines
@@ -83,14 +83,14 @@ INFO  08:42:24 	54.196.60.36 JAVA INSTALLED
 INFO  08:42:25 	54.237.144.164 JAVA INSTALLED
 INFO  08:42:27 	54.91.98.103 JAVA INSTALLED
 INFO  08:42:30 	54.226.58.200 JAVA INSTALLED
-INFO  08:42:57 	54.196.60.36 STABILIZER AGENT INSTALLED
-INFO  08:42:59 	54.237.144.164 STABILIZER AGENT INSTALLED
-INFO  08:43:01 	54.196.60.36 STABILIZER AGENT STARTED
-INFO  08:43:02 	54.237.144.164 STABILIZER AGENT STARTED
-INFO  08:43:06 	54.91.98.103 STABILIZER AGENT INSTALLED
-INFO  08:43:09 	54.91.98.103 STABILIZER AGENT STARTED
-INFO  08:43:21 	54.226.58.200 STABILIZER AGENT INSTALLED
-INFO  08:43:25 	54.226.58.200 STABILIZER AGENT STARTED
+INFO  08:42:57 	54.196.60.36 SIMULATOR AGENT INSTALLED
+INFO  08:42:59 	54.237.144.164 SIMULATOR AGENT INSTALLED
+INFO  08:43:01 	54.196.60.36 SIMULATOR AGENT STARTED
+INFO  08:43:02 	54.237.144.164 SIMULATOR AGENT STARTED
+INFO  08:43:06 	54.91.98.103 SIMULATOR AGENT INSTALLED
+INFO  08:43:09 	54.91.98.103 SIMULATOR AGENT STARTED
+INFO  08:43:21 	54.226.58.200 SIMULATOR AGENT INSTALLED
+INFO  08:43:25 	54.226.58.200 SIMULATOR AGENT STARTED
 INFO  08:43:25 Duration: 00d 00h 03m 15s
 INFO  08:43:25 ==============================================================
 INFO  08:43:25 Successfully provisioned 4 aws-ec2 machines
@@ -98,7 +98,7 @@ INFO  08:43:25 ==============================================================
 INFO  08:43:25 Pausing for Machine Warm up... (10 sec)
 INFO  08:43:36 Hazelcast Simulator Coordinator
 INFO  08:43:36 Version: 0.3, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
-INFO  08:43:36 STABILIZER_HOME: /home/alarmnummer/hazelcast-simulator-0.3
+INFO  08:43:36 SIMULATOR_HOME: /home/alarmnummer/hazelcast-simulator-0.3
 INFO  08:43:36 Loading simulator.properties: /tmp/yourproject/workdir/simulator.properties
 INFO  08:43:36 Loading testsuite file: /tmp/yourproject/workdir/../conf/test.properties
 INFO  08:43:36 Loading Hazelcast configuration: /tmp/yourproject/workdir/../conf/hazelcast.xml
@@ -180,7 +180,7 @@ INFO  08:49:45 No failures have been detected!
 INFO  08:49:45 -----------------------------------------------------------------------------
 INFO  08:49:46 Hazelcast Simulator Provisioner
 INFO  08:49:46 Version: 0.3, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
-INFO  08:49:46 STABILIZER_HOME: /home/alarmnummer/hazelcast-simulator-0.3
+INFO  08:49:46 SIMULATOR_HOME: /home/alarmnummer/hazelcast-simulator-0.3
 INFO  08:49:46 Loading simulator.properties: /tmp/yourproject/workdir/simulator.properties
 INFO  08:49:46 ==============================================================
 INFO  08:49:46 Download artifacts of 4 machines
@@ -194,7 +194,7 @@ INFO  08:49:56 Finished Downloading Artifacts of 4 machines
 INFO  08:49:56 ==============================================================
 INFO  08:49:56 Hazelcast Simulator Provisioner
 INFO  08:49:56 Version: 0.3, Commit: 2af49f0, Build Time: 13.07.2014 @ 08:37:06 EEST
-INFO  08:49:56 STABILIZER_HOME: /home/alarmnummer/hazelcast-simulator-0.3
+INFO  08:49:56 SIMULATOR_HOME: /home/alarmnummer/hazelcast-simulator-0.3
 INFO  08:49:56 Loading simulator.properties: /tmp/yourproject/workdir/simulator.properties
 INFO  08:49:56 ==============================================================
 INFO  08:49:56 Terminating 4 aws-ec2 machines (can take some time)
