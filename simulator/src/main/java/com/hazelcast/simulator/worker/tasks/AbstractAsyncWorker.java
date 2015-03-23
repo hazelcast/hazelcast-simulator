@@ -6,7 +6,7 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
 /**
  * Asynchronous version of {@link AbstractWorker}.
- * <p/>
+ *
  * The operation counter is automatically increased after call of {@link com.hazelcast.core.ExecutionCallback#onResponse}.
  *
  * @param <O> Type of Enum used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}

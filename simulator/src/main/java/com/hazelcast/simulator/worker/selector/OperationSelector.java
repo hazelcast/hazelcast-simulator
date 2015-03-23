@@ -4,9 +4,9 @@ import java.util.Random;
 
 /**
  * Facility to select different operations based on probabilities. Each operations is represented as an enum item.
- * <p/>
+ *
  * Calling {@link #select()} method will select an operation according to the configured probabilities.
- * <p/>
+ *
  * This class does not give any thread-safety guarantees. It is strongly recommended to construct a new instance for each thread,
  * at least to prevent contention on the random generator. Just use a single builder and call the
  * {@link OperationSelectorBuilder#build()} method in each thread constructor.

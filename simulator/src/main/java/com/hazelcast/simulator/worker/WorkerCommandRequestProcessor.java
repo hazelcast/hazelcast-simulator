@@ -36,7 +36,7 @@ import static java.lang.String.format;
 
 /**
  * Processes {@link Command} instances on {@link MemberWorker} and {@link ClientWorker} instances.
- * <p/>
+ *
  * These commands e.g. init, start and stop tests, so this instance will eventually call the annotated methods of the tests.
  */
 class WorkerCommandRequestProcessor {

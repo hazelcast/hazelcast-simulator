@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * This test verifies that there are race problems if the {@link IMap} is not used correctly.
- * <p/>
+ *
  * This test is expected to fail.
  */
 public class MapRaceTest {

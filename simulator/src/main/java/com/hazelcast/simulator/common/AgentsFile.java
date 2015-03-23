@@ -12,7 +12,7 @@ import static java.lang.String.format;
 
 /**
  * Utility class to deal with the agents-file.
- * <p/>
+ *
  * An agent entry can either be:
  * <ol>
  * <li>

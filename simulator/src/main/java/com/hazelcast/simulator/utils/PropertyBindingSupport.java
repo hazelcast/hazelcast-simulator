@@ -52,7 +52,7 @@ public final class PropertyBindingSupport {
 
     /**
      * Binds a single property contained in the testCase object onto the object instance.
-     * <p/>
+     *
      * There will be no warning if the property is not defined in the TestCase.
      * There will be no exception if the property will not be found in the object instance, just a warning.
      *

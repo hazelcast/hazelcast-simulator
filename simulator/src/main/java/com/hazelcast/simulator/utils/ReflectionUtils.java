@@ -185,7 +185,7 @@ public final class ReflectionUtils {
 
     /**
      * Returns a list of annotated methods in a class hierarchy.
-     * <p/>
+     *
      * Returns more than one method only if they are declared in the same class.
      * As soon as at least one method has been found, no super class will be searched.
      * So a child class will always overwrite the annotated methods from its superclass.

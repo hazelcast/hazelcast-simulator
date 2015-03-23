@@ -8,10 +8,10 @@ import static java.lang.String.format;
 /**
  * Builder class to create an {@link OperationSelector} instance. Each operation is represented as an enum item and is registered
  * with its probability (0.0 to 1.0) via the {@link #addOperation(Enum, double)} method.
- * <p/>
+ *
  * The total sum of probabilities has to be exactly 1.0. You can use {@link #addDefaultOperation(Enum)} to add a default operation
  * which automatically consumes the remaining probability. The probability precision is {@value #PROBABILITY_PRECISION}.
- * <p/>
+ *
  * This builder class is not thread-safe. The created {@link OperationSelector} does not give any thread-safety guarantees. It is
  * strongly recommended to construct a new instance for each thread, at least to prevent contention on the random generator. Just
  * use a single builder and call the {@link #build()} method in each thread constructor.
@@ -61,7 +61,7 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
 
     /**
      * Register an operation to be returned when no operation registered via {@link #addOperation(Enum, double)} has been selected.
-     * <p/>
+     *
      * All remaining probability will be consumed by this method.
      *
      * @param operation operation to be selected if no other operation is configured

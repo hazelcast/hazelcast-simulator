@@ -78,7 +78,7 @@ public final class TestUtils {
 
     /**
      * Assert that a certain task is going to assert to true eventually.
-     * <p/>
+     *
      * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
      * more times it fails the less frequent the task is going to be retried.
      *

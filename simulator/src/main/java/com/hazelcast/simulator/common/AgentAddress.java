@@ -4,7 +4,7 @@ package com.hazelcast.simulator.common;
  * The address of an agent. It contains a public and private part to deal with cloud environments. The public address is used
  * by the 'outside' systems like coordinator to talk to the agents. The private parts is used for HZ nodes/clients to communicate
  * with each other.
- * <p/>
+ *
  * publicAddress and privateAddress are the same if there is no public/private address separation, e.g. a static setup.
  */
 public class AgentAddress {

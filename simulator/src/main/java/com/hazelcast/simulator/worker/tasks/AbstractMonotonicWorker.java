@@ -2,7 +2,7 @@ package com.hazelcast.simulator.worker.tasks;
 
 /**
  * Monotonic version of {@link AbstractWorker}.
- * <p/>
+ *
  * This worker provides no {@link com.hazelcast.simulator.worker.selector.OperationSelector}, just a simple {@link #timeStep()}
  * method without parameters.
  */
@@ -34,7 +34,7 @@ public abstract class AbstractMonotonicWorker extends AbstractWorker {
 
     /**
      * This method is called for each iteration of {@link #run()}.
-     * <p/>
+     *
      * Won't be called if an error occurs in {@link #beforeRun()}.
      */
     protected abstract void timeStep();

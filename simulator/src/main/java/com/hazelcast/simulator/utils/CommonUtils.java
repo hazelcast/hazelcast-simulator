@@ -242,7 +242,7 @@ public final class CommonUtils {
 
     /**
      * Sleeps a random amount of time.
-     * <p/>
+     *
      * The call is ignored if maxDelayNanos equals or smaller than zero.
      *
      * @param random        the Random used to randomize

@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Abstract worker class which is returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker} annotated test
  * methods.
- * <p/>
+ *
  * Implicitly logs and measures performance. The related properties can be overwritten with the properties of the test.
  * The Operation counter is automatically increased after each {@link #timeStep(Enum)} call.
  *
@@ -83,7 +83,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
 
     /**
      * This method is called for each iteration of {@link #run()}.
-     * <p/>
+     *
      * Won't be called if an error occurs in {@link #beforeRun()}.
      *
      * @param operation The selected operation for this iteration
@@ -92,7 +92,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
 
     /**
      * Override this method if you need to execute code on each worker after {@link #run()} is called.
-     * <p/>
+     *
      * Won't be called if an error occurs in {@link #beforeRun()} or {@link #timeStep(Enum)}.
      */
     protected void afterRun() {
@@ -100,7 +100,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
 
     /**
      * Override this method if you need to execute code once after all workers have finished their run phase.
-     * <p/>
+     *
      * Will always be called by the {@link com.hazelcast.simulator.worker.TestContainer}, regardless of errors in the run phase.
      * Will be executed after {@link ThreadSpawner#awaitCompletion()} on a single worker instance.
      */

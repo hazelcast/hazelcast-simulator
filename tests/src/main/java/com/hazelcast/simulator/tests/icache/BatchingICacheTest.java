@@ -34,7 +34,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberN
  * This test demonstrates effect of batching. It uses async methods to invoke operation and wait for future
  * to complete every {@code batchSize} invocations. Hence setting batchSize to 1 is effectively the same as
  * using sync operations.
- * <p/>
+ *
  * {@code batchSize > 1} causes batch-effect to kick-in, pipe-lines are utilized better
  * and overall throughput goes up.
  */

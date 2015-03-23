@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests the ITopic. It test creates a number of topic and a number of listeners per topic and each member
  * publishes messages to every topic.
- * <p/>
+ *
  * This test is inherently unreliable because the ITopic relies on the event system which is unreliable.
  * When messages are published with a too high rate, eventually the event system will drop incoming events.
  */

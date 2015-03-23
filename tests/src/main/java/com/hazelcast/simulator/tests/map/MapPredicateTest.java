@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * In this test we are using different predicate methods to execute a query on a map of {@link Employee} objects.
- * <p/>
+ *
  * This test also concurrently updates and modifies the employee objects in the map while the predicate queries are executing. The
  * test may also destroy the map while while predicate are executing. We verify the result of every query to ensure that the
  * objects returned fit the requirements of the query.

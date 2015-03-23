@@ -6,9 +6,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Simple {@link Metronome} implementation which busy loops on a fixed interval.
- * <p/>
+ *
  * The wait interval on the first {@link #waitForNext()} call is randomized.
- * <p/>
+ *
  * It is recommended to create a new instance for each worker thread, so they are clocked interleaved.
  */
 public class SimpleMetronome implements Metronome {
