@@ -1,6 +1,6 @@
 Manual Machine Setup
 ===========================
-1. Copy the ```STABILIZER_HOME/conf/simulator.properties``` to your working directory.
+1. Copy the ```SIMULATOR_HOME/conf/simulator.properties``` to your working directory.
 
 2. Change the "USER" in the ```simulator.properties``` , if you want to use different user name than 'simulator'.
 

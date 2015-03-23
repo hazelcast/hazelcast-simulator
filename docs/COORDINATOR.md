@@ -19,7 +19,7 @@ coordinator
 
 ## Controlling the Hazelcast xml configuration
 
-By default the coordinator makes use of STABILIZER_HOME/conf/hazelcast.xml and STABILIZER_HOME/conf/client-hazelcast.xml
+By default the coordinator makes use of SIMULATOR_HOME/conf/hazelcast.xml and SIMULATOR_HOME/conf/client-hazelcast.xml
 to generate the correct Hazelcast configuration. But you can override this, so you can use your own configuration:
 
 coordinator --clientHzFile=your-client-hazelcast.xml --hzFile your-hazelcast.xml ....

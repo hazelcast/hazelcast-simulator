@@ -12,8 +12,8 @@ Download and unpack the tar.gz or zip file to e.g. the home directory.
 add to ~/.bashrc when using Linux or ~/.profile when using Mac OS:
 
 ```
-export STABILIZER_HOME=~/hazelcast-simulator-0.3
-PATH=$STABILIZER_HOME/bin:$PATH
+export SIMULATOR_HOME=~/hazelcast-simulator-0.3
+PATH=$SIMULATOR_HOME/bin:$PATH
 ```
 
 Create your tests working directory, e.g.
@@ -22,7 +22,7 @@ Create your tests working directory, e.g.
 mkdir ~/tests
 ```
 
-Copy the STABILIZER_HOME/conf/simulator.properties to the tests directory. And make
+Copy the SIMULATOR_HOME/conf/simulator.properties to the tests directory. And make
 the changes required. In case of EC2, you only need to set your ec2 identity/credential:
 
 ```
