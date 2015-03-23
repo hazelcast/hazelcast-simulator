@@ -4,7 +4,7 @@
 
     <groupId>com.hazelcast.simulator</groupId>
     <artifactId>simulator-root</artifactId>
-    <version>0.5-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Hazelcast Simulator Root</name>
     <url>http://github.com/hazelcast/hazelcast-simulator</url>
