@@ -1,4 +1,4 @@
-hazelcast-simulator
+Hazelcast Simulator
 ===========================
 
 A production simulator for stress testing Hazelcast and Hazelcast based applications in clustered environments. This
