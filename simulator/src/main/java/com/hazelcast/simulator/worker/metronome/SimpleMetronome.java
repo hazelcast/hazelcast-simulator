@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
  *
  * It is recommended to create a new instance for each worker thread, so they are clocked interleaved.
  */
-public class SimpleMetronome implements Metronome {
+public final class SimpleMetronome implements Metronome {
     private final long intervalNanos;
 
     private long waitUntil;

@@ -30,7 +30,7 @@ public class CountdownWatch {
         return new UnboundedCountdownWatch();
     }
 
-    private final static class UnboundedCountdownWatch extends CountdownWatch {
+    private static final class UnboundedCountdownWatch extends CountdownWatch {
         private UnboundedCountdownWatch() {
             super(Long.MAX_VALUE);
         }

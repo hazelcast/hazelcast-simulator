@@ -268,7 +268,8 @@ public class WorkerJvmManager {
         Thread t = new Thread() {
             public void run() {
                 try {
-                    jvm.process.destroy(); //this sends SIGTERM on *nix
+                    //this sends SIGTERM on *nix
+                    jvm.process.destroy();
                     jvm.process.waitFor();
                 } catch (Throwable e) {
                     LOGGER.fatal("Failed to destroy worker process: " + jvm);

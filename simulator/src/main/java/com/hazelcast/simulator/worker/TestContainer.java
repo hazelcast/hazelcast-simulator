@@ -164,7 +164,7 @@ public class TestContainer<T extends TestContext> {
         }
     }
 
-    public void setup() throws Throwable {
+    public void setUp() throws Throwable {
         invokeMethod(testClassInstance, setupMethod, setupArguments);
     }
 

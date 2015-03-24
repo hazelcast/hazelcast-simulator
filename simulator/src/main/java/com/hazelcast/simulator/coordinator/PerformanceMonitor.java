@@ -22,14 +22,14 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
  * Responsible for collecting performance metrics from the agents and logging/storing it.
  */
 public class PerformanceMonitor {
-    private static final AtomicBoolean performanceWritten = new AtomicBoolean();
+    private static final AtomicBoolean PERFORMANCE_WRITTEN = new AtomicBoolean();
     private static final Logger LOGGER = Logger.getLogger(PerformanceMonitor.class);
 
+    public long previousTime = System.currentTimeMillis();
     private final AgentsClient client;
     private final Coordinator coordinator;
     private final ConcurrentMap<AgentClient, Long> operationCountPerAgent = new ConcurrentHashMap<AgentClient, Long>();
-    private long previousCount = 0;
-    public long previousTime = System.currentTimeMillis();
+    private long previousCount;
     private final AtomicBoolean started = new AtomicBoolean();
 
     public PerformanceMonitor(Coordinator coordinator) {
@@ -74,7 +74,7 @@ public class PerformanceMonitor {
             Long countPerAgent = operationCountPerAgent.get(agentClient);
 
             if (countPerAgent == null) {
-                countPerAgent = 0l;
+                countPerAgent = 0L;
             }
 
             for (Long value : entry.getValue()) {
@@ -108,7 +108,7 @@ public class PerformanceMonitor {
             LOGGER.info("Performance: " + formatDouble(performance, 0) + " ops/s");
         }
 
-        if (performanceWritten.compareAndSet(false, true)) {
+        if (PERFORMANCE_WRITTEN.compareAndSet(false, true)) {
             double performance = (operationCount * 1.0d) / duration;
             appendText("" + performance + "\n", new File("performance.txt"));
         }

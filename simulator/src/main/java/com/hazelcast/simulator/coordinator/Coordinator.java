@@ -294,8 +294,8 @@ public class Coordinator {
         int agentCount = agentsClient.getAgentCount();
 
         if (dedicatedMemberMachineCount > agentCount) {
-            exitWithError(LOGGER, "dedicatedMemberMachineCount can't be larger than number of agents. " +
-                    "dedicatedMemberMachineCount is " + dedicatedMemberMachineCount + ", number of agents is: " + agentCount);
+            exitWithError(LOGGER, "dedicatedMemberMachineCount can't be larger than number of agents. "
+                    + "dedicatedMemberMachineCount is " + dedicatedMemberMachineCount + ", number of agents is: " + agentCount);
         }
 
         if (workerJvmSettings.clientWorkerCount > 0) {

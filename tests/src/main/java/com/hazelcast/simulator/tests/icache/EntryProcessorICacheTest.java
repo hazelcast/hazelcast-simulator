@@ -92,7 +92,7 @@ public class EntryProcessorICacheTest {
     @Warmup(global = true)
     public void warmup() throws Exception {
         for (int k = 0; k < keyCount; k++) {
-            cache.put(k, 0l);
+            cache.put(k, 0L);
         }
     }
 

@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
 
-    final static ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
+    static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
     final Random random = new Random();
     final OperationSelector<O> selector;
@@ -36,7 +36,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
     long performanceUpdateFrequency = 10;
 
     // local variables
-    long iteration = 0;
+    long iteration;
 
     public AbstractWorker(OperationSelectorBuilder<O> operationSelectorBuilder) {
         this.selector = operationSelectorBuilder.build();

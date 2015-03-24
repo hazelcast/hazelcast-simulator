@@ -104,7 +104,7 @@ public class HazelcastTestUtils {
                 Member member = entry.getKey();
                 Long value = entry.getValue().get();
                 if(value == null){
-                    value = 0l;
+                    value = 0L;
                 }
                 result.put(member, value);
             } catch (InterruptedException e) {

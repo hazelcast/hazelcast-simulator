@@ -20,8 +20,9 @@ public final class GitInfo {
 
     private static final Logger LOGGER = Logger.getLogger(GitInfo.class);
 
-    private final Properties properties;
     private static final GitInfo INSTANCE = new GitInfo();
+
+    private final Properties properties;
 
     private GitInfo() {
         properties = loadGitProperties();

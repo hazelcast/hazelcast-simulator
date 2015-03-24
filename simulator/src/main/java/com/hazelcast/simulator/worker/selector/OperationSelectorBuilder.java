@@ -60,7 +60,8 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
     }
 
     /**
-     * Register an operation to be returned when no operation registered via {@link #addOperation(Enum, double)} has been selected.
+     * Register an operation to be returned when no operation registered via {@link #addOperation(Enum, double)} has been
+     * selected.
      *
      * All remaining probability will be consumed by this method.
      *

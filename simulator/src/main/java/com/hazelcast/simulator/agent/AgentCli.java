@@ -8,6 +8,9 @@ import java.io.IOException;
 
 public class AgentCli {
 
+    private AgentCli() {
+    }
+
     private final OptionParser parser = new OptionParser();
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
