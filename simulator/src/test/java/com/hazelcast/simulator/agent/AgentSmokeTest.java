@@ -105,7 +105,7 @@ public class AgentSmokeTest {
         agentsClient.executeOnAllWorkers(initTestCommand);
 
         log.info("Setup phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "setup"));
+        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "setUp"));
 
         log.info("Local warmup phase...");
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localWarmup"));

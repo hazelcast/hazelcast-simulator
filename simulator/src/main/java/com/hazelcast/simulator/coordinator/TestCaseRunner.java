@@ -64,8 +64,8 @@ public class TestCaseRunner {
             echo("Completed Test initialization");
 
             echo("Starting Test setup");
-            agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "setup"));
-            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "setup");
+            agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "setUp"));
+            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "setUp");
             echo("Completed Test setup");
 
             echo("Starting Test local warmup");
