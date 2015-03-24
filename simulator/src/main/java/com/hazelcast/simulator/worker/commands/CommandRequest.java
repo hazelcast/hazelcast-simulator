@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class CommandRequest implements Serializable {
 
-    public static final long serialVersionUID = 0l;
+    public static final long serialVersionUID = 0L;
 
     public long id;
     public Command task;

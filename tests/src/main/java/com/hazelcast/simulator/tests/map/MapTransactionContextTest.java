@@ -51,7 +51,7 @@ public class MapTransactionContextTest {
     public void warmup() throws Exception {
         IMap<Integer, Long> map = targetInstance.getMap(basename);
         for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0l);
+            map.put(k, 0L);
         }
     }
 

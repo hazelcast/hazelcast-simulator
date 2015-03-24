@@ -115,7 +115,7 @@ public class TestRunner<E> {
         }
 
         LOGGER.info("Starting setup");
-        testInvoker.setup();
+        testInvoker.setUp();
         LOGGER.info("Finished setup");
 
         LOGGER.info("Starting local warmup");

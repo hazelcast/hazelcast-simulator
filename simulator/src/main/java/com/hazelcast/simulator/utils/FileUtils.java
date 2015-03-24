@@ -49,6 +49,9 @@ public class FileUtils {
     private static final String USER_HOME = System.getProperty("user.home");
     private static final Logger LOGGER = Logger.getLogger(FileUtils.class);
 
+    private FileUtils() {
+    }
+
     public static boolean isValidFileName(String fileName) {
         return VALID_FILE_NAME_PATTERN.matcher(fileName).matches();
     }
@@ -486,8 +489,5 @@ public class FileUtils {
                     targetFile.getAbsolutePath());
             exitWithError(LOGGER, errorMessage, e);
         }
-    }
-
-    private FileUtils() {
     }
 }

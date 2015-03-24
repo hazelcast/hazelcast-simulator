@@ -17,7 +17,7 @@ package com.hazelcast.simulator.worker.commands;
 
 public class GenericCommand extends Command {
 
-    public static final long serialVersionUID = 0l;
+    public static final long serialVersionUID = 0L;
 
     public String testId;
     public String methodName;

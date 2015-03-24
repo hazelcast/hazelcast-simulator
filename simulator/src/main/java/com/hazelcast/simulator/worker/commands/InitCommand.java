@@ -19,7 +19,7 @@ import com.hazelcast.simulator.test.TestCase;
 
 public class InitCommand extends Command {
 
-    public static final long serialVersionUID = 0l;
+    public static final long serialVersionUID = 0L;
 
     public TestCase testCase;
 

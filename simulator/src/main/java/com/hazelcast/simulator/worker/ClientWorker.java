@@ -9,4 +9,7 @@ public class ClientWorker {
     public static void main(String[] args) {
         MemberWorker.main(args);
     }
+
+    private ClientWorker() {
+    }
 }

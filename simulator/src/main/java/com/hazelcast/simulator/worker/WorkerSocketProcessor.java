@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit;
 import static java.util.Collections.singletonList;
 
 /**
- * Reads {@link com.hazelcast.simulator.worker.commands.CommandRequest} instances from the network and returns {@link com.hazelcast.simulator.worker.commands.CommandResponse} instances for {@link MemberWorker}
+ * Reads {@link com.hazelcast.simulator.worker.commands.CommandRequest} instances from the network and returns
+ * {@link com.hazelcast.simulator.worker.commands.CommandResponse} instances for {@link MemberWorker}
  * and {@link ClientWorker} instances.
  */
 class WorkerSocketProcessor {
@@ -43,7 +44,7 @@ class WorkerSocketProcessor {
         workerSocketThread.running = false;
     }
 
-    private class WorkerSocketThread extends Thread {
+    private final class WorkerSocketThread extends Thread {
         private volatile boolean running = true;
 
         private WorkerSocketThread() {

@@ -85,7 +85,7 @@ class WorkerCommandRequestProcessor {
         workerCommandRequestProcessorThread.running = false;
     }
 
-    private class WorkerCommandRequestProcessorThread extends Thread {
+    private final class WorkerCommandRequestProcessorThread extends Thread {
         private volatile boolean running = true;
 
         private WorkerCommandRequestProcessorThread() {
@@ -252,8 +252,8 @@ class WorkerCommandRequestProcessor {
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
                     // we log a warning: it could be that it is a newly created machine from mama-monkey.
-                    LOGGER.warn("Failed to process command: " + command + " no test with " +
-                            "testId " + testId + " is found");
+                    LOGGER.warn("Failed to process command: " + command + " no test with "
+                            + "testId " + testId + " is found");
                     return;
                 }
 

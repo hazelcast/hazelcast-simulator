@@ -142,7 +142,7 @@ public class ExpiryICacheTest {
                         }
 
                         long key = random.nextLong();
-                        cache.put(key, 0l, expiryPolicy);
+                        cache.put(key, 0L, expiryPolicy);
 
                         if (iteration % logFrequency == 0) {
                             log.info(Thread.currentThread().getName() + " At iteration: " + iteration);

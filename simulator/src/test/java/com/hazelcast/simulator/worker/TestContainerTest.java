@@ -93,7 +93,7 @@ public class TestContainerTest {
         // @Run method will be called from dummy class, not from child class
         ChildWithOwnSetupMethodTest test = new ChildWithOwnSetupMethodTest();
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
-        invoker.setup();
+        invoker.setUp();
         invoker.run();
 
         assertTrue(test.childSetupCalled); // ChildWithOwnSetupMethodTest
@@ -117,7 +117,7 @@ public class TestContainerTest {
         // @Run method will be called from child class, not from dummy class
         ChildWithOwnRunMethodTest test = new ChildWithOwnRunMethodTest();
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
-        invoker.setup();
+        invoker.setUp();
         invoker.run();
 
         assertTrue(test.childRunCalled); // ChildWithOwnRunMethodTest
@@ -257,7 +257,7 @@ public class TestContainerTest {
     public void testSetup() throws Throwable {
         DummySetupTest test = new DummySetupTest();
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
-        invoker.setup();
+        invoker.setUp();
 
         assertTrue(test.setupCalled);
         assertSame(testContext, test.context);
@@ -272,7 +272,7 @@ public class TestContainerTest {
     public void testLocalProbeInjected() throws Throwable {
         ProbeTest test = new ProbeTest();
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
-        invoker.setup();
+        invoker.setUp();
 
         assertNotNull(test.simpleProbe);
     }

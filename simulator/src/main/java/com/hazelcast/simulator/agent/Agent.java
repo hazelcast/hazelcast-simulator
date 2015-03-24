@@ -116,7 +116,10 @@ public class Agent {
 
     static Agent createAgent(String[] args) throws Exception {
         LOGGER.info("Simulator Agent");
-        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getSimulatorVersion(),
+                getCommitIdAbbrev(),
+                getBuildTime()));
         LOGGER.info(format("SIMULATOR_HOME: %s%n", getSimulatorHome()));
         logInterestingSystemProperties();
 

@@ -16,7 +16,10 @@ import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROB
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE_NAME;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE_TYPE;
 
-public class ProbesResultXmlWriter {
+public final class ProbesResultXmlWriter {
+
+    private ProbesResultXmlWriter() {
+    }
 
     public static <R extends Result<R>> void write(Map<String, R> combinedResults, File file) {
         FileOutputStream fos = null;

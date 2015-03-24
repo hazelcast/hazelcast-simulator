@@ -19,9 +19,8 @@ public class Communicator {
     private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
 
     public File agentsFile;
-    protected AgentsClient agentsClient;
-
     public Message message;
+    protected AgentsClient agentsClient;
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("Simulator Communicator");
