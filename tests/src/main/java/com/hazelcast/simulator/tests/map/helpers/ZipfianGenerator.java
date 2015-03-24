@@ -54,11 +54,6 @@ public class ZipfianGenerator extends IntegerGenerator {
     long base;
 
     /**
-     * The zipfian constant to use.
-     */
-    double zipfianConstant;
-
-    /**
      * Computed parameters for generating the distribution.
      */
     double alpha;
@@ -139,7 +134,6 @@ public class ZipfianGenerator extends IntegerGenerator {
     public ZipfianGenerator(long min, long max, double zipfianConstant, double zetan) {
         items = max - min + 1;
         base = min;
-        this.zipfianConstant = zipfianConstant;
 
         theta = zipfianConstant;
 

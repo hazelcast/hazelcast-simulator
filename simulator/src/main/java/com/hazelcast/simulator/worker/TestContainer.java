@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -57,7 +58,7 @@ public class TestContainer<T extends TestContext> {
     /**
      * List of optional test properties, which are allowed to be defined in the properties file, but not in the test class.
      */
-    public static final Set<String> OPTIONAL_TEST_PROPERTIES = new HashSet<String>();
+    public static final Set<String> OPTIONAL_TEST_PROPERTIES;
 
     private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
 
@@ -74,9 +75,11 @@ public class TestContainer<T extends TestContext> {
     }
 
     static {
-        for (OptionalTestProperties optionalTestProperties : OptionalTestProperties.values()) {
-            OPTIONAL_TEST_PROPERTIES.add(optionalTestProperties.propertyName);
+        Set<String> optionalTestProperties = new HashSet<String>();
+        for (OptionalTestProperties optionalTestProperty : OptionalTestProperties.values()) {
+            optionalTestProperties.add(optionalTestProperty.propertyName);
         }
+        OPTIONAL_TEST_PROPERTIES = Collections.unmodifiableSet(optionalTestProperties);
     }
 
     // properties
