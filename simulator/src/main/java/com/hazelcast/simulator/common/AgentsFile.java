@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static java.lang.String.format;
@@ -27,13 +28,15 @@ import static java.lang.String.format;
  */
 public final class AgentsFile {
 
+    public static final String NAME = "agents.txt";
+
     private static final Logger LOGGER = Logger.getLogger(AgentsFile.class);
 
     private AgentsFile() {
     }
 
     public static void save(File agentsFile, List<AgentAddress> addresses) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (AgentAddress agentAddress : addresses) {
             if (agentAddress.publicAddress.equals(agentAddress.privateAddress)) {
                 sb.append(agentAddress.publicAddress)
@@ -50,7 +53,6 @@ public final class AgentsFile {
 
     public static List<AgentAddress> load(File agentFile) {
         String content = fileAsText(agentFile);
-
         String[] addresses = content.split("\n");
         int lineNumber = 1;
         List<AgentAddress> pairs = new LinkedList<AgentAddress>();
@@ -74,10 +76,8 @@ public final class AgentsFile {
                     pairs.add(new AgentAddress(chunks[0], chunks[1]));
                     break;
                 default:
-                    LOGGER.fatal(format("Line %s of file %s is invalid, it should contain 1 or 2 addresses separated by a "
+                    exitWithError(LOGGER, format("Line %s of file %s is invalid, it should contain 1 or 2 addresses separated by a "
                             + "comma, but contains %s", lineNumber, agentFile, chunks.length));
-                    System.exit(1);
-                    break;
             }
         }
         return pairs;

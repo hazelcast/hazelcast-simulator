@@ -9,6 +9,8 @@ import org.jclouds.domain.Location;
 
 import java.util.Set;
 
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
@@ -101,10 +103,9 @@ public class CloudInfo {
             CloudInfo cloudInfoCli = new CloudInfo();
             CloudInfoCli cli = new CloudInfoCli(cloudInfoCli);
             cli.run(args);
-            System.exit(0);
         } catch (Throwable e) {
             LOGGER.fatal(e);
-            System.exit(1);
+            exitWithError(LOGGER, e.getMessage());
         }
     }
 }

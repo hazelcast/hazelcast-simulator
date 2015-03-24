@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
@@ -34,10 +35,9 @@ public class Communicator {
         LOGGER.info(format("Loading agents file: %s", communicator.agentsFile.getAbsolutePath()));
         try {
             communicator.run();
-            System.exit(0);
         } catch (Exception e) {
             LOGGER.error("Failed to communicate", e);
-            System.exit(1);
+            exitWithError(LOGGER, e.getMessage());
         }
     }
 

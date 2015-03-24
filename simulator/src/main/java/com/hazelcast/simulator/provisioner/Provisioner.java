@@ -28,6 +28,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -38,8 +39,6 @@ import static java.lang.String.format;
 
 public class Provisioner {
 
-    public static final String AGENTS_FILE = "agents.txt";
-
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
     private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
 
@@ -49,15 +48,12 @@ public class Provisioner {
 
     // big number of threads, but they are used to offload SSH tasks, so there is no load on this machine
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
-    private final File agentsFile = new File(AGENTS_FILE);
+    private final File agentsFile = new File(AgentsFile.NAME);
     private final List<AgentAddress> addresses = Collections.synchronizedList(new LinkedList<AgentAddress>());
 
     private Bash bash;
     private HazelcastJars hazelcastJars;
     private File initScript;
-
-    public Provisioner() {
-    }
 
     void init() {
         ensureExistingFile(agentsFile);
@@ -266,7 +262,7 @@ public class Provisioner {
     }
 
     public void listAgents() {
-        echo("Running Agents (from " + AGENTS_FILE + "):");
+        echo("Running Agents (from " + AgentsFile.NAME + "):");
         String agents = fileAsText(agentsFile);
         echo("    " + agents);
     }
@@ -438,10 +434,9 @@ public class Provisioner {
             Provisioner provisioner = new Provisioner();
             ProvisionerCli cli = new ProvisionerCli(provisioner);
             cli.run(args);
-            System.exit(0);
         } catch (Throwable e) {
             LOGGER.fatal(e);
-            System.exit(1);
+            exitWithError(LOGGER, e.getMessage());
         }
     }
 }

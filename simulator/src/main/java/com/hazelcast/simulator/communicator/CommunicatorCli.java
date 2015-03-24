@@ -1,9 +1,9 @@
 package com.hazelcast.simulator.communicator;
 
+import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.common.messaging.MessageAddressParser;
-import com.hazelcast.simulator.provisioner.Provisioner;
 import joptsimple.BuiltinHelpFormatter;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -27,7 +27,7 @@ public class CommunicatorCli {
 
     private final OptionSpec<String> agentsFileSpec = parser.accepts("agentsFile",
             "The file containing the list of agent machines")
-            .withRequiredArg().ofType(String.class).defaultsTo(Provisioner.AGENTS_FILE);
+            .withRequiredArg().ofType(String.class).defaultsTo(AgentsFile.NAME);
 
     private final OptionSpec<String> messageTypeSpec = parser.accepts("message-type",
             String.format("Message type definition. Supported message types: %n%s", Message.getMessageHelp()))

@@ -43,8 +43,10 @@ public class AgentRemoteService {
     }
 
     public void start() throws IOException {
-        serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(getHostAddress()));
+        String bindAddress = (agent.bindAddress != null) ? agent.bindAddress : getHostAddress();
+        serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(bindAddress));
         LOGGER.info("Started Agent Remote Service on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
+
         acceptorThread = new AcceptorThread();
         acceptorThread.start();
     }

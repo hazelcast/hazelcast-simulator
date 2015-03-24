@@ -29,6 +29,7 @@ import java.io.IOException;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
@@ -39,6 +40,7 @@ public class Agent {
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
     // internal state
+    public String bindAddress;
     public String cloudIdentity;
     public String cloudCredential;
     public String cloudProvider;
@@ -55,11 +57,8 @@ public class Agent {
         ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
 
         startRestServer();
-
         workerJvmFailureMonitor.start();
-
         workerJvmManager.start();
-
         harakiriMonitor.start();
 
         LOGGER.info("Simulator Agent is ready for action");
@@ -82,7 +81,6 @@ public class Agent {
         if (testSuite == null) {
             return null;
         }
-
         return new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
     }
 
@@ -128,6 +126,7 @@ public class Agent {
             agent = new Agent();
             AgentCli.init(agent, args);
 
+            LOGGER.info("Bind address: " + agent.bindAddress);
             LOGGER.info("CloudIdentity: " + agent.cloudIdentity);
             LOGGER.info("CloudCredential " + agent.cloudCredential);
             LOGGER.info("CloudProvider " + agent.cloudProvider);
@@ -158,10 +157,5 @@ public class Agent {
 
     private static void logSystemProperty(String name) {
         LOGGER.info(format("%s=%s", name, System.getProperty(name)));
-    }
-
-    private static void exitWithError(Logger logger, String msg) {
-        logger.fatal(msg);
-        System.exit(1);
     }
 }

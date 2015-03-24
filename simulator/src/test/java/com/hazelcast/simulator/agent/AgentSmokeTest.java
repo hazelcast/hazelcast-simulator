@@ -37,8 +37,8 @@ import static org.junit.Assert.assertEquals;
 @Ignore
 public class AgentSmokeTest {
 
+    private static final String AGENT_IP_ADDRESS = System.getProperty("agentBindAddress", "127.0.0.1");
     private static final int TEST_RUNTIME_SECONDS = Integer.parseInt(System.getProperty("testRuntimeSeconds", "10"));
-    private static final String AGENT_IP_ADDRESS = System.getProperty("agentIpAddress", "127.0.0.1");
 
     private static final Logger log = Logger.getLogger(Coordinator.class);
 
@@ -50,8 +50,8 @@ public class AgentSmokeTest {
         System.setProperty("worker.testmethod.timeout", "5");
         System.setProperty("user.dir", "./dist/src/main/dist");
 
+        log.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
         log.info("Test runtime for smoke test: " + TEST_RUNTIME_SECONDS + " seconds");
-        log.info("IP address for smoke test: " + AGENT_IP_ADDRESS);
 
         startAgent();
         agentsClient = getAgentsClient();
@@ -167,14 +167,16 @@ public class AgentSmokeTest {
         agentThread = new Thread() {
             public void run() {
                 try {
-                    Agent.createAgent(new String[]{});
+                    String[] args = new String[] {
+                            "--bindAddress", AGENT_IP_ADDRESS
+                    };
+                    Agent.createAgent(args);
                 } catch (Throwable t) {
                     t.printStackTrace();
                 }
             }
         };
         agentThread.start();
-
         sleepSeconds(5);
     }
 

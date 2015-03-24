@@ -15,6 +15,7 @@ public class CloudInfoCli {
     private static final Logger LOGGER = Logger.getLogger(ProvisionerCli.class);
 
     private final OptionParser parser = new OptionParser();
+    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     private final OptionSpec showLocationsSpec = parser.accepts("showLocations",
             "Shows all locations available. In Amazon for example this would be regions and zones.");
@@ -29,18 +30,17 @@ public class CloudInfoCli {
             "Shows very detailed info");
 
     private final OptionSpec<String> locationSpec = parser.accepts("location",
-            "The locationId."
-    ).withRequiredArg().ofType(String.class);
+            "The locationId.")
+            .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
             "The file containing the simulator properties. If no file is explicitly configured, first the working directory is "
                     + "checked for a file 'simulator.properties'. All missing properties are always loaded from "
-                    + "'$SIMULATOR_HOME/conf/simulator.properties'."
-    ).withRequiredArg().ofType(String.class);
-
-    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
+                    + "'$SIMULATOR_HOME/conf/simulator.properties'.")
+            .withRequiredArg().ofType(String.class);
 
     private final CloudInfo cloudInfo;
+
     private OptionSet options;
 
     public CloudInfoCli(CloudInfo cloudInfo) {

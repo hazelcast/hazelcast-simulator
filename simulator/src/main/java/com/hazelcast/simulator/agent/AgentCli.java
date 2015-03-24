@@ -14,12 +14,18 @@ public class AgentCli {
     private final OptionParser parser = new OptionParser();
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
+    private final OptionSpec<String> bindAddress = parser.accepts("bindAddress",
+            "Address to bind the agent remote service to.")
+            .withRequiredArg().ofType(String.class);
+
     private final OptionSpec<String> cloudIdentitySpec = parser.accepts("cloudIdentity",
             "Cloud identity")
             .withRequiredArg().ofType(String.class);
+
     private final OptionSpec<String> cloudCredentialSpec = parser.accepts("cloudCredential",
             "Cloud credential")
             .withRequiredArg().ofType(String.class);
+
     private final OptionSpec<String> cloudProviderSpec = parser.accepts("cloudProvider",
             "Cloud provider")
             .withRequiredArg().ofType(String.class);
@@ -32,6 +38,10 @@ public class AgentCli {
         if (options.has(agentOptionSpec.helpSpec)) {
             agentOptionSpec.parser.printHelpOn(System.out);
             System.exit(0);
+        }
+
+        if (options.has(agentOptionSpec.bindAddress)) {
+            agent.bindAddress = options.valueOf(agentOptionSpec.bindAddress);
         }
 
         if (options.has(agentOptionSpec.cloudIdentitySpec)) {

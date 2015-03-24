@@ -8,6 +8,7 @@ package com.hazelcast.simulator.common;
  * publicAddress and privateAddress are the same if there is no public/private address separation, e.g. a static setup.
  */
 public class AgentAddress {
+
     public final String publicAddress;
     public final String privateAddress;
 
@@ -21,7 +22,6 @@ public class AgentAddress {
         this.publicAddress = publicAddress;
         this.privateAddress = privateAddress;
     }
-
 
     @Override
     public boolean equals(Object o) {
