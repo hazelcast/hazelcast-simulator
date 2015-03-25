@@ -3,7 +3,6 @@ package com.hazelcast.simulator.visualiser.data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EventListener;
-import java.util.EventObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,18 +39,5 @@ public class Model {
 
     public interface BenchmarkChangeListener extends EventListener {
         void benchmarkChanged(String benchmarkName);
-    }
-
-    public static class BenchmarkedChanged extends EventObject {
-        private final String name;
-
-        public BenchmarkedChanged(Object source, String name) {
-            super(source);
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
     }
 }
