@@ -2,7 +2,7 @@ package com.hazelcast.simulator.visualiser.utils;
 
 import com.hazelcast.simulator.probes.probes.LinearHistogram;
 import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyProbeResult;
+import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionResult;
 import com.hazelcast.simulator.probes.probes.impl.LatencyDistributionResult;
 import com.hazelcast.simulator.visualiser.data.SimpleHistogramDataSetContainer;
 import org.HdrHistogram.Histogram;
@@ -17,13 +17,13 @@ public final class DataSetUtils {
     public static SimpleHistogramDataSetContainer calculateSingleProbeDataSet(Result probeData) {
         if (probeData instanceof LatencyDistributionResult) {
             return calculateSingleProbeDataSet((LatencyDistributionResult) probeData);
-        } else if (probeData instanceof HdrLatencyProbeResult) {
-            return calculateSingleProbeDataSet((HdrLatencyProbeResult) probeData);
+        } else if (probeData instanceof HdrLatencyDistributionResult) {
+            return calculateSingleProbeDataSet((HdrLatencyDistributionResult) probeData);
         }
         throw new IllegalArgumentException("unknown probe result type: " + probeData.getClass().getSimpleName());
     }
 
-    private static SimpleHistogramDataSetContainer calculateSingleProbeDataSet(HdrLatencyProbeResult probeData) {
+    private static SimpleHistogramDataSetContainer calculateSingleProbeDataSet(HdrLatencyDistributionResult probeData) {
         SimpleHistogramDataSetContainer histogramDataSet = new SimpleHistogramDataSetContainer("key");
         histogramDataSet.setAdjustForBinSize(false);
         Histogram histogram = probeData.getHistogram();

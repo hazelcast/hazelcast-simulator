@@ -1,15 +1,14 @@
 package com.hazelcast.simulator.probes.probes;
 
-
-import com.hazelcast.simulator.probes.probes.util.ConstructorFunction;
-
-public interface SimpleProbe<R extends Result<R>, T extends SimpleProbe<R, T>> extends ConstructorFunction<Long, T> {
-
-    void startProbing(long time);
-
-    void stopProbing(long time);
+public interface SimpleProbe<R extends Result<R>, T extends SimpleProbe<R, T>> {
 
     void done();
+
+    long getInvocationCount();
+
+    void startProbing(long timeStamp);
+
+    void stopProbing(long timeStamp);
 
     R getResult();
 }

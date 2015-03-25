@@ -73,18 +73,18 @@ public class HazelcastTestUtils {
     public static String getOperationCountInformation(HazelcastInstance hz) {
         Map<Member, Long> operationCountMap = getOperationCount(hz);
 
-        long total = 0;
+        long totalOps = 0;
         for (Long count : operationCountMap.values()) {
-            total += count;
+            totalOps += count;
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("total operations:").append(total).append("\n");
+        sb.append("total operations: ").append(totalOps).append("\n");
         for (Map.Entry<Member, Long> entry : operationCountMap.entrySet()) {
             Member member = entry.getKey();
-            long count = entry.getValue();
-            double percentage = count * 100d / total;
-            sb.append(member).append(" total=").append(count).append(" percentage=").append(percentage).append("%\n");
+            long opsOnMember = entry.getValue();
+            double percentage = opsOnMember * 100d / totalOps;
+            sb.append(member).append(" operations: ").append(opsOnMember).append(" percentage: ").append(percentage).append("%\n");
         }
         return sb.toString();
     }

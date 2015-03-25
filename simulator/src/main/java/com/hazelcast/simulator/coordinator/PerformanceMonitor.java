@@ -17,6 +17,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
 import static com.hazelcast.simulator.utils.CommonUtils.formatLong;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
+import static java.lang.String.format;
 
 /**
  * Responsible for collecting performance metrics from the agents and logging/storing it.
@@ -44,6 +45,7 @@ public class PerformanceMonitor {
     }
 
     class PerformanceThread extends Thread {
+        
         public PerformanceThread() {
             super("PerformanceThread");
             setDaemon(true);
@@ -98,29 +100,37 @@ public class PerformanceMonitor {
     }
 
     public void logDetailedPerformanceInfo(int duration) {
-        long operationCount = coordinator.operationCount;
-        if (operationCount < 0) {
-            LOGGER.info("Operation-count: not available");
-            LOGGER.info("Performance: not available");
-        } else {
-            LOGGER.info("Operation-count: " + formatLong(operationCount, 0));
-            double performance = (operationCount * 1.0d) / duration;
-            LOGGER.info("Performance: " + formatDouble(performance, 0) + " ops/s");
+        if (!PERFORMANCE_WRITTEN.compareAndSet(false, true)) {
+            return;
         }
 
-        if (PERFORMANCE_WRITTEN.compareAndSet(false, true)) {
+        StringBuilder sb = new StringBuilder();
+
+        long operationCount = coordinator.operationCount;
+        if (operationCount < 0) {
+            sb.append("Operations: not available");
+        } else {
             double performance = (operationCount * 1.0d) / duration;
-            appendText("" + performance + "\n", new File("performance.txt"));
+            sb.append(format("Total performance   %s%% %s ops %s ops/s%n",
+                    formatDouble(100, 7),
+                    formatLong(operationCount, 15),
+                    formatDouble(performance, 15)));
+
+            appendText(performance + "\n", new File("performance.txt"));
         }
 
         for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
             AgentClient client = entry.getKey();
             long operationCountPerAgent = entry.getValue();
-            double percentage = 100 * (operationCountPerAgent * 1.0d) / operationCount;
             double performance = (operationCountPerAgent * 1.0d) / duration;
-            LOGGER.info("    Agent " + client.getPublicAddress() + " " + formatLong(operationCountPerAgent, 15) + " ops "
-                    + formatDouble(performance, 15)
-                    + " ops/s " + formatDouble(percentage, 5) + "%");
+            double percentage = 100 * (operationCountPerAgent * 1.0d) / operationCount;
+            sb.append(format("               Agent %s %s%% %s ops %s ops/s%n",
+                    client.getPublicAddress(),
+                    formatDouble(percentage, 7),
+                    formatLong(operationCountPerAgent, 15),
+                    formatDouble(performance, 15)));
         }
+
+        LOGGER.info(sb.toString());
     }
 }

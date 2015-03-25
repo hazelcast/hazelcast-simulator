@@ -7,6 +7,7 @@ public enum ProbesResultXmlElements {
     PROBE_NAME("name"),
     PROBE_TYPE("type"),
 
+    INVOCATIONS("invocations"),
     OPERATIONS_PER_SECOND("operations-per-second"),
 
     MAX_LATENCY("max-latency"),

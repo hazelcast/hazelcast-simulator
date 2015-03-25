@@ -1,6 +1,17 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.common.messaging.Message;
+import com.hazelcast.simulator.probes.probes.*;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.Performance;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
+import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
+import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.Probes;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
@@ -31,7 +42,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import static com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
@@ -64,8 +74,8 @@ public class TestContainer<T extends TestContext> {
 
     private enum OptionalTestProperties {
         THREAD_COUNT("threadCount"),
-        LOG_FREQUENCY("logFrequency"),
-        PERFORMANCE_UPDATE_FREQUENCY("performanceUpdateFrequency");
+        WORKER_PROBE_TYPE("workerProbeType"),
+        LOG_FREQUENCY("logFrequency");
 
         private final String propertyName;
 
@@ -84,6 +94,7 @@ public class TestContainer<T extends TestContext> {
 
     // properties
     int threadCount = 10;
+    String workerProbeType = ProbesType.WORKER.string;
 
     private final Object testClassInstance;
     private final Class testClassType;
@@ -137,11 +148,11 @@ public class TestContainer<T extends TestContext> {
     public Map<String, Result<?>> getProbeResults() {
         Map<String, Result<?>> results = new HashMap<String, Result<?>>(probeMap.size());
         for (Map.Entry<String, SimpleProbe<?, ?>> entry : probeMap.entrySet()) {
-            String name = entry.getKey();
+            String probeName = entry.getKey();
             SimpleProbe<?, ?> probe = entry.getValue();
             Result<?> result = probe.getResult();
             if (!(result instanceof DisabledResult)) {
-                results.put(name, result);
+                results.put(probeName, result);
             }
         }
         return results;
@@ -157,7 +168,7 @@ public class TestContainer<T extends TestContext> {
             probe.startProbing(now);
         }
         if (runWithWorkerMethod != null) {
-            invokeRunWithWorkerMethod();
+            invokeRunWithWorkerMethod(now);
         } else {
             invokeMethod(testClassInstance, runMethod);
         }
@@ -298,11 +309,11 @@ public class TestContainer<T extends TestContext> {
             return testContext;
         }
         String probeName = getValueFromNameAnnotations(parameterAnnotations, "Probe" + index);
-        if (parameterType.equals(IntervalProbe.class)) {
-            return getOrCreateProbe(probeName, IntervalProbe.class);
+        if (IntervalProbe.class.equals(parameterType)) {
+            return getOrCreateConcurrentProbe(probeName, IntervalProbe.class);
         }
-        if (parameterType.equals(SimpleProbe.class)) {
-            SimpleProbe probe = getOrCreateProbe(probeName, SimpleProbe.class);
+        if (SimpleProbe.class.equals(parameterType)) {
+            SimpleProbe probe = getOrCreateConcurrentProbe(probeName, SimpleProbe.class);
             probeMap.put(probeName, probe);
             return probe;
         }
@@ -312,53 +323,64 @@ public class TestContainer<T extends TestContext> {
     private void injectDependencies() {
         Field[] fields = testClassType.getDeclaredFields();
         for (Field field : fields) {
-            String name = getValueFromNameAnnotation(field);
+            String probeName = getValueFromNameAnnotation(field);
             if (SimpleProbe.class.equals(field.getType())) {
-                SimpleProbe probe = getOrCreateProbe(name, SimpleProbe.class);
+                SimpleProbe probe = getOrCreateConcurrentProbe(probeName, SimpleProbe.class);
                 injectObjectToInstance(testClassInstance, field, probe);
             } else if (IntervalProbe.class.equals(field.getType())) {
-                IntervalProbe probe = getOrCreateProbe(name, IntervalProbe.class);
+                IntervalProbe probe = getOrCreateConcurrentProbe(probeName, IntervalProbe.class);
                 injectObjectToInstance(testClassInstance, field, probe);
             }
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <P extends SimpleProbe> P getOrCreateProbe(String probeName, Class<P> probeType) {
+    private <P extends SimpleProbe> P getOrCreateConcurrentProbe(String probeName, Class<P> targetClassType) {
         SimpleProbe<?, ?> probe = probeMap.get(probeName);
         if (probe == null) {
-            probe = Probes.createProbe(probeType, probeName, probesConfiguration);
+            probe = Probes.createConcurrentProbe(probeName, targetClassType, probesConfiguration);
             probeMap.put(probeName, probe);
             return (P) probe;
         }
-        if (probeType.isAssignableFrom(probe.getClass())) {
-            return (P) probe;
+        if (!probe.getClass().isAssignableFrom(targetClassType)) {
+            throw new IllegalArgumentException(format("Probe \"%s\" of type %s does not match requested probe type %s",
+                    probeName, probe.getClass().getSimpleName(), targetClassType.getSimpleName()));
         }
-        throw new IllegalArgumentException(
-                format("Can't create a probe %s of type %s as there is already a probe %s with the same name", probeName,
-                        probeType.getName(), probe.getClass()));
+        return (P) probe;
     }
 
-    private void invokeRunWithWorkerMethod() throws Throwable {
+    private void invokeRunWithWorkerMethod(long now) throws Throwable {
         bindOptionalProperty(this, testCase, OptionalTestProperties.THREAD_COUNT.propertyName);
-        LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
+        bindOptionalProperty(this, testCase, OptionalTestProperties.WORKER_PROBE_TYPE.propertyName);
 
-        // create one operation counter per test and inject it in all worker instances of the test
-        AtomicLong operationCount = new AtomicLong(0);
+        String testId = (testContext.getTestId().isEmpty() ? "Default" : testContext.getTestId());
+        String probeName = testId + "IntervalProbe";
+
+        if (ProbesType.getProbeType((workerProbeType)) == null) {
+            LOGGER.warn("Illegal argument workerProbeType: " + workerProbeType);
+            workerProbeType = ProbesType.WORKER.string;
+        }
+
+        LOGGER.info(format("Spawning %d worker threads for test %s with %s probe", threadCount, testId, workerProbeType));
+
+        // create one concurrent probe per test and inject it in all worker instances of the test
+        probesConfiguration.addConfig(probeName, workerProbeType);
+        IntervalProbe intervalProbe = getOrCreateConcurrentProbe(probeName, IntervalProbe.class);
+        intervalProbe.startProbing(now);
+
         operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
 
         Field testContextField = getFieldFromAbstractWorker("testContext", TestContext.class);
-        Field operationCountField = getFieldFromAbstractWorker("operationCount", AtomicLong.class);
+        Field intervalProbeField = getFieldFromAbstractWorker("intervalProbe", IntervalProbe.class);
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
             AbstractWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
 
             injectObjectToInstance(worker, testContextField, testContext);
-            injectObjectToInstance(worker, operationCountField, operationCount);
+            injectObjectToInstance(worker, intervalProbeField, intervalProbe);
 
             bindOptionalProperty(worker, testCase, OptionalTestProperties.LOG_FREQUENCY.propertyName);
-            bindOptionalProperty(worker, testCase, OptionalTestProperties.PERFORMANCE_UPDATE_FREQUENCY.propertyName);
 
             operationCountWorkerInstance = worker;
 

@@ -3,7 +3,7 @@ package com.hazelcast.simulator.probes.probes.impl;
 import com.hazelcast.simulator.probes.probes.ProbesResultXmlElements;
 import com.hazelcast.simulator.probes.probes.Result;
 import org.HdrHistogram.Histogram;
-import sun.misc.BASE64Encoder;
+import org.apache.commons.codec.binary.Base64;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -11,24 +11,28 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
-public class HdrLatencyProbeResult implements Result<HdrLatencyProbeResult> {
+public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributionResult> {
 
-    public static final String XML_TYPE = HdrLatencyProbeResult.class.getSimpleName();
+    public static final String XML_TYPE = HdrLatencyDistributionResult.class.getSimpleName();
 
     private final Histogram histogram;
 
-    public HdrLatencyProbeResult(Histogram histogram) {
+    public HdrLatencyDistributionResult(Histogram histogram) {
         this.histogram = histogram;
     }
 
+    public Histogram getHistogram() {
+        return histogram;
+    }
+
     @Override
-    public HdrLatencyProbeResult combine(HdrLatencyProbeResult other) {
+    public HdrLatencyDistributionResult combine(HdrLatencyDistributionResult other) {
         if (other == null) {
             return this;
         }
         Histogram histogramCopy = new Histogram(histogram);
         histogramCopy.add(other.histogram);
-        return new HdrLatencyProbeResult(histogramCopy);
+        return new HdrLatencyDistributionResult(histogramCopy);
     }
 
     @Override
@@ -47,8 +51,7 @@ public class HdrLatencyProbeResult implements Result<HdrLatencyProbeResult> {
         int bytesWritten = histogram.encodeIntoCompressedByteBuffer(byteBuffer);
         byteBuffer.rewind();
         byteBuffer.limit(bytesWritten);
-        BASE64Encoder encoder = new BASE64Encoder();
-        String encodedData = encoder.encode(byteBuffer);
+        String encodedData = Base64.encodeBase64String(byteBuffer.array());
         try {
             writer.writeStartElement(ProbesResultXmlElements.HDR_LATENCY_DATA.string);
             writer.writeCData(encodedData);
@@ -67,7 +70,7 @@ public class HdrLatencyProbeResult implements Result<HdrLatencyProbeResult> {
             return false;
         }
 
-        HdrLatencyProbeResult that = (HdrLatencyProbeResult) o;
+        HdrLatencyDistributionResult that = (HdrLatencyDistributionResult) o;
 
         if (histogram != null ? !histogram.equals(that.histogram) : that.histogram != null) {
             return false;
@@ -79,9 +82,5 @@ public class HdrLatencyProbeResult implements Result<HdrLatencyProbeResult> {
     @Override
     public int hashCode() {
         return histogram != null ? histogram.hashCode() : 0;
-    }
-
-    public Histogram getHistogram() {
-        return histogram;
     }
 }

@@ -11,8 +11,7 @@ public class LinearHistogram implements Serializable {
 
     private final int maxValue;
     private final int step;
-
-    private int[] buckets;
+    private final int[] buckets;
 
     public LinearHistogram(int maxValue, int step) {
         this(maxValue, step, null);
@@ -28,6 +27,22 @@ public class LinearHistogram implements Serializable {
         this.maxValue = maxValue;
         this.step = step;
         this.buckets = (buckets == null ? createBuckets(maxValue) : buckets);
+    }
+
+    public void addValue(int value) {
+        if (value < 0) {
+            throw new IllegalArgumentException("Value cannot be a negative number. Passed value: " + value);
+        }
+        int bucket = calculateBucket(value);
+        buckets[bucket]++;
+    }
+
+    public void addMultipleValues(int value, int times) {
+        if (value < 0) {
+            throw new IllegalArgumentException("Value cannot be a negative number. Passed value: " + value);
+        }
+        int bucket = calculateBucket(value);
+        buckets[bucket] += times;
     }
 
     public HistogramPart getPercentile(double percentile) {
@@ -47,40 +62,6 @@ public class LinearHistogram implements Serializable {
         return new HistogramPart(maxValue, noOfValues);
     }
 
-    private int getNoOfValues(int[] copyOfBuckets) {
-        int noOfValues = 0;
-        for (int noOfValuesInBucket : copyOfBuckets) {
-            noOfValues += noOfValuesInBucket;
-        }
-        return noOfValues;
-    }
-
-    public LinearHistogram combine(LinearHistogram other) {
-        validateBeforeCombining(other);
-        int noOfBuckets = buckets.length;
-        int[] combinedBuckets = new int[noOfBuckets];
-        for (int i = 0; i < noOfBuckets; i++) {
-            combinedBuckets[i] = buckets[i] + other.buckets[i];
-        }
-        return new LinearHistogram(maxValue, step, combinedBuckets);
-    }
-
-    public void addValue(int value) {
-        if (value < 0) {
-            throw new IllegalArgumentException("Value cannot be a negative number. Passed value: " + value);
-        }
-        int bucket = calculateBucket(value);
-        buckets[bucket]++;
-    }
-
-    public void addMultipleValues(int value, int times) {
-        if (value < 0) {
-            throw new IllegalArgumentException("Value cannot be a negative number. Passed value: " + value);
-        }
-        int bucket = calculateBucket(value);
-        buckets[bucket] += times;
-    }
-
     public int[] getBuckets() {
         int noOfBuckets = buckets.length;
         int[] copy = new int[noOfBuckets];
@@ -96,30 +77,14 @@ public class LinearHistogram implements Serializable {
         return step;
     }
 
-    private void validateBeforeCombining(LinearHistogram other) {
-        if (maxValue != other.maxValue) {
-            throw new IllegalStateException(format(
-                    "Cannot combine other %s with %s as this other has max value set to %d and the other has max value set to %d",
-                    this, other, maxValue, other.maxValue));
+    public LinearHistogram combine(LinearHistogram other) {
+        validateBeforeCombining(other);
+        int noOfBuckets = buckets.length;
+        int[] combinedBuckets = new int[noOfBuckets];
+        for (int i = 0; i < noOfBuckets; i++) {
+            combinedBuckets[i] = buckets[i] + other.buckets[i];
         }
-        if (step != other.step) {
-            throw new IllegalStateException(format(
-                    "Cannot combine other %s with %s as this other has step set to %d and the other has step set to %d",
-                    this, other, step, other.step));
-        }
-    }
-
-    private int[] createBuckets(int maxValue) {
-        int noOfBuckets = calculateBucket(maxValue) + 1;
-        return new int[noOfBuckets + 1];
-    }
-
-    private int calculateBucket(int value) {
-        if (value > maxValue) {
-            return buckets.length - 1;
-        } else {
-            return (value / step);
-        }
+        return new LinearHistogram(maxValue, step, combinedBuckets);
     }
 
     @Override
@@ -152,5 +117,39 @@ public class LinearHistogram implements Serializable {
         result = 31 * result + step;
         result = 31 * result + Arrays.hashCode(buckets);
         return result;
+    }
+
+    private int getNoOfValues(int[] copyOfBuckets) {
+        int noOfValues = 0;
+        for (int noOfValuesInBucket : copyOfBuckets) {
+            noOfValues += noOfValuesInBucket;
+        }
+        return noOfValues;
+    }
+
+    private int[] createBuckets(int maxValue) {
+        int noOfBuckets = calculateBucket(maxValue) + 1;
+        return new int[noOfBuckets + 1];
+    }
+
+    private int calculateBucket(int value) {
+        if (value > maxValue) {
+            return buckets.length - 1;
+        } else {
+            return (value / step);
+        }
+    }
+
+    private void validateBeforeCombining(LinearHistogram other) {
+        if (maxValue != other.maxValue) {
+            throw new IllegalStateException(format(
+                    "Cannot combine other %s with %s as this other has max value set to %d and the other has max value set to %d",
+                    this, other, maxValue, other.maxValue));
+        }
+        if (step != other.step) {
+            throw new IllegalStateException(format(
+                    "Cannot combine other %s with %s as this other has step set to %d and the other has step set to %d",
+                    this, other, step, other.step));
+        }
     }
 }

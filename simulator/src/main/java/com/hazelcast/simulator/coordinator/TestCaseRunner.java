@@ -41,7 +41,6 @@ public class TestCaseRunner {
     private final TestSuite testSuite;
     private final String prefix;
     private final Set<Failure.Type> nonCriticalFailures;
-    //private final NumberFormat performanceFormat = NumberFormat.getInstance(Locale.US);
 
     public TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int maxTextCaseIdLength) {
         this.testCase = testCase;
@@ -128,7 +127,8 @@ public class TestCaseRunner {
     private void processProbeResults() {
         Map<String, ? extends Result> probesResult = getProbesResult();
         if (!probesResult.isEmpty()) {
-            ProbesResultXmlWriter.write(probesResult, new File("results-" + coordinator.testSuite.id + ".xml"));
+            String fileName = "probes-" + coordinator.testSuite.id + "_" + testCase.id + ".xml";
+            ProbesResultXmlWriter.write(probesResult, new File(fileName));
             logProbesResultInHumanReadableFormat(probesResult);
         }
     }
@@ -137,7 +137,7 @@ public class TestCaseRunner {
         for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
             String probeName = entry.getKey();
             R result = entry.getValue();
-            echo("Probe " + probeName + " result:\n" + result.toHumanString());
+            echo("Probe " + probeName + ": " + result.toHumanString());
         }
     }
 
@@ -201,15 +201,15 @@ public class TestCaseRunner {
             sleepSeconds(period);
             final int elapsed = period * k;
             final float percentage = (100f * elapsed) / seconds;
-            String msg = format("Running %s %6.2f%% complete", secondsToHuman(elapsed), percentage);
+            String msg = format("Running %s %s%% complete", secondsToHuman(elapsed), formatDouble(percentage, 7));
 
             if (coordinator.monitorPerformance) {
                 if (coordinator.operationCount < 0) {
-                    msg += ", performance not available";
+                    msg += " (performance not available)";
                 } else {
-                    msg += String.format("%s ops/s %s ops",
-                            formatDouble(coordinator.performance, 18),
-                            formatLong(coordinator.operationCount, 18)
+                    msg += String.format("%s ops %s ops/s",
+                            formatLong(coordinator.operationCount, 15),
+                            formatDouble(coordinator.performance, 15)
                     );
                 }
             }
