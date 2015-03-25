@@ -4,10 +4,12 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
+import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class OperationsPerSecProbeTest extends AbstractProbeTest {
+public class OperationsPerSecProbeTest {
 
     private OperationsPerSecProbe operationsPerSecProbe = new OperationsPerSecProbe();
 

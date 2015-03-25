@@ -11,8 +11,8 @@ import java.io.FileInputStream;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import static com.hazelcast.simulator.probes.probes.util.Utils.closeQuietly;
-import static com.hazelcast.simulator.visualiser.utils.FileUtils.getFileName;
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.FileUtils.getFileName;
 
 public class ResultParserWorker extends SwingWorker<BenchmarkResults, Void> {
 

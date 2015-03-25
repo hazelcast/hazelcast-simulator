@@ -1,8 +1,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-
-import javax.cache.CacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -19,9 +17,10 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.icache.helpers.MyCacheEntryEventFilter;
 import com.hazelcast.simulator.tests.icache.helpers.MyCacheEntryListener;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import javax.cache.CacheException;
+import javax.cache.CacheManager;
 import javax.cache.configuration.CacheEntryListenerConfiguration;
 import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
@@ -33,8 +32,8 @@ import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static junit.framework.Assert.assertEquals;
 
 /*

@@ -1,24 +1,24 @@
 /**
- * Copyright (c) 2010 Yahoo! Inc. All rights reserved.                                                                                                                             
+ * Copyright (c) 2010 Yahoo! Inc. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you                                                                                                             
- * may not use this file except in compliance with the License. You                                                                                                                
- * may obtain a copy of the License at                                                                                                                                             
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You
+ * * may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0                                                                                                                                      
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software                                                                                                             
- * distributed under the License is distributed on an "AS IS" BASIS,                                                                                                               
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or                                                                                                                 
- * implied. See the License for the specific language governing                                                                                                                    
- * permissions and limitations under the License. See accompanying                                                                                                                 
- * LICENSE file.                                                                                                                                                                   
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * permissions and limitations under the License. See accompanying
+ * LICENSE file.
  */
-
 package com.hazelcast.simulator.tests.map.helpers;
 
-
 import com.hazelcast.simulator.tests.helpers.IntegerGenerator;
+
+import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.random;
 
 /**
  * A generator of a zipfian distribution. It produces a sequence of items, such that some items are more popular than others,
@@ -78,7 +78,7 @@ public class ZipfianGenerator extends IntegerGenerator {
      * that recomputation. If true, then the code will recompute zeta if the itemCount goes down. If false, the code will assume
      * itemCount only goes up, and never recompute.
      */
-    boolean allowItemCountDecrease = false;
+    boolean allowItemCountDecrease;
 
     /******************************* Constructors **************************************/
 
@@ -244,7 +244,8 @@ public class ZipfianGenerator extends IntegerGenerator {
                     // have to start over with zetan
                     // note : for large item sets, this is very slow. so don't do it!
 
-                    // TODO: can also have a negative incremental computation, e.g. if you decrease the number of items, then just subtract
+                    // TODO: can also have a negative incremental computation,
+                    // e.g. if you decrease the number of items, then just subtract
                     // the zeta sequence terms for the items that went away. This would be faster than recomputing from scratch
                     // when the number of items decreases
 
@@ -258,7 +259,7 @@ public class ZipfianGenerator extends IntegerGenerator {
             }
         }
 
-        double u = ZipfianUtils.random().nextDouble();
+        double u = random().nextDouble();
         double uz = u * zetan;
 
         if (uz < 1.0) {

@@ -4,7 +4,6 @@ import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
-import com.hazelcast.simulator.utils.CommonUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -12,6 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
@@ -25,7 +25,7 @@ public class Communicator {
 
     public static void main(String[] args) throws IOException {
         LOGGER.info("Simulator Communicator");
-        LOGGER.info(String.format("Version: %s", CommonUtils.getSimulatorVersion()));
+        LOGGER.info(String.format("Version: %s", getSimulatorVersion()));
         LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
 
         Communicator communicator = new Communicator();

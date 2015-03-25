@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.common.messaging;
 
-import com.hazelcast.simulator.utils.NativeUtils;
+import static com.hazelcast.simulator.utils.NativeUtils.execute;
 
 @MessageSpec(value = "unblockTraffic", description = "unblock all traffic by calling 'sudo /sbin/iptables -F'")
 public class UnblockTrafficMessage extends RunnableMessage {
@@ -11,6 +11,6 @@ public class UnblockTrafficMessage extends RunnableMessage {
     @Override
     public void run() {
         String command = "sudo /sbin/iptables -F";
-        NativeUtils.execute(command);
+        execute(command);
     }
 }

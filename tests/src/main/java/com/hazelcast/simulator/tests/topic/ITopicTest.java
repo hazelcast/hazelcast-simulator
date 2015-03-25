@@ -14,8 +14,8 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.utils.AssertTask;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.AssertTask;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepRandomNanos;
-import static com.hazelcast.simulator.test.utils.TestUtils.assertTrueEventually;
+import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -34,6 +34,8 @@ import static org.junit.Assert.assertEquals;
  * When messages are published with a too high rate, eventually the event system will drop incoming events.
  */
 public class ITopicTest {
+
+    private static final ILogger log = Logger.getLogger(ITopicTest.class);
 
     //props
     public int topicCount = 1000;
@@ -48,7 +50,6 @@ public class ITopicTest {
     public int maxVerificationTimeSeconds = 60;
     public String basename = "topic";
 
-    private static final ILogger log = Logger.getLogger(ITopicTest.class);
     private IAtomicLong totalExpectedCounter;
     private IAtomicLong totalFoundCounter;
     private ITopic[] topics;

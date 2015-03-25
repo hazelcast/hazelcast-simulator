@@ -94,7 +94,7 @@ abstract class AbstractMapTest {
     }
 
     void baseWarmupStringKey() {
-        String[] keys = generateStringKeys(localKeyCount, 10, KeyLocality.Local, hazelcastInstance);
+        String[] keys = generateStringKeys(localKeyCount, 10, KeyLocality.LOCAL, hazelcastInstance);
         int i = 0;
         for (String key : keys) {
             map.put(key, i++);
@@ -102,7 +102,7 @@ abstract class AbstractMapTest {
     }
 
     void baseWarmupIntKey() {
-        int[] keys = generateIntKeys(localKeyCount, Integer.MAX_VALUE, KeyLocality.Local, hazelcastInstance);
+        int[] keys = generateIntKeys(localKeyCount, Integer.MAX_VALUE, KeyLocality.LOCAL, hazelcastInstance);
         int i = 0;
         for (int key : keys) {
             map.put(key, i++);

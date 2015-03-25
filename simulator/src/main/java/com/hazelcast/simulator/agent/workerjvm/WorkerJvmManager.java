@@ -21,7 +21,6 @@ import com.hazelcast.simulator.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.test.Failure;
-import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.worker.TerminateWorkerException;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
@@ -54,6 +53,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
+import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 
 public class WorkerJvmManager {
@@ -229,11 +230,11 @@ public class WorkerJvmManager {
         Failure failure = new Failure();
         failure.type = Failure.Type.WORKER_EXCEPTION;
         failure.message = e.getMessage();
-        failure.agentAddress = CommonUtils.getHostAddress();
+        failure.agentAddress = getHostAddress();
         failure.workerAddress = workerJvm.memberAddress;
         failure.workerId = workerJvm.id;
         failure.testSuite = agent.getTestSuite();
-        failure.cause = CommonUtils.throwableToString(e);
+        failure.cause = throwableToString(e);
         agent.getWorkerJvmFailureMonitor().publish(failure);
     }
 

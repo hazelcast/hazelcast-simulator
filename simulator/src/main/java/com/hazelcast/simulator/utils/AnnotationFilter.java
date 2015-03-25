@@ -12,16 +12,17 @@ import java.lang.annotation.Annotation;
  * @param <A> Class of type Annotation
  */
 public interface AnnotationFilter<A extends Annotation> {
+
     boolean allowed(A annotation);
 
-    public static class AlwaysFilter implements AnnotationFilter<Annotation> {
+    class AlwaysFilter implements AnnotationFilter<Annotation> {
         @Override
         public boolean allowed(Annotation annotation) {
             return true;
         }
     }
 
-    public class TeardownFilter implements AnnotationFilter<Teardown> {
+    class TeardownFilter implements AnnotationFilter<Teardown> {
         private final boolean isGlobal;
 
         public TeardownFilter(boolean isGlobal) {
@@ -34,7 +35,7 @@ public interface AnnotationFilter<A extends Annotation> {
         }
     }
 
-    public class WarmupFilter implements AnnotationFilter<Warmup> {
+    class WarmupFilter implements AnnotationFilter<Warmup> {
         private final boolean isGlobal;
 
         public WarmupFilter(boolean isGlobal) {
@@ -47,7 +48,7 @@ public interface AnnotationFilter<A extends Annotation> {
         }
     }
 
-    public class VerifyFilter implements AnnotationFilter<Verify> {
+    class VerifyFilter implements AnnotationFilter<Verify> {
         private final boolean isGlobal;
 
         public VerifyFilter(boolean isGlobal) {

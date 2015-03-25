@@ -30,7 +30,7 @@ public class MapEntryProcessorTest {
     public int keyCount = 1000;
     public int minProcessorDelayMs;
     public int maxProcessorDelayMs;
-    public KeyLocality keyLocality = KeyLocality.Random;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public IntervalProbe probe;
 
     private HazelcastInstance targetInstance;

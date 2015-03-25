@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>tests</artifactId>
+    <name>Hazelcast Simulator Tests</name>
+
     <parent>
-        <artifactId>simulator-root</artifactId>
         <groupId>com.hazelcast.simulator</groupId>
+        <artifactId>simulator-root</artifactId>
         <version>0.5-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>simulator-tests</artifactId>
-    <name>Hazelcast Simulator Tests</name>
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
@@ -42,8 +46,6 @@
             <version>${jsr107.api.version}</version>
         </dependency>
 
-
-
         <dependency>
             <groupId>javax.servlet.jsp</groupId>
             <artifactId>javax.servlet.jsp-api</artifactId>
@@ -57,11 +59,10 @@
             <scope>provided</scope>
         </dependency>
 
-
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.3.1</version>
+            <version>${httpclient.version}</version>
         </dependency>
 
         <dependency>
@@ -79,6 +80,5 @@
             <artifactId>tomcat-embed-core</artifactId>
             <version>${tomcat.version}</version>
         </dependency>
-
     </dependencies>
 </project>

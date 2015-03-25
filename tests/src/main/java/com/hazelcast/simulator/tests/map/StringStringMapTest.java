@@ -27,8 +27,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
-import com.hazelcast.simulator.tests.helpers.StringUtils;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -36,6 +34,8 @@ import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
 public class StringStringMapTest {
 
@@ -52,7 +52,7 @@ public class StringStringMapTest {
     public int keyCount = 10000;
     public int valueCount = 10000;
     public String basename = "stringStringMap";
-    public KeyLocality keyLocality = KeyLocality.Random;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
 
     public double putProb = 0.1;
@@ -88,8 +88,8 @@ public class StringStringMapTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         waitClusterSize(log, testContext.getTargetInstance(), minNumberOfMembers);
-        keys = KeyUtils.generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
-        values = StringUtils.generateStrings(valueCount, valueLength);
+        keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
+        values = generateStrings(valueCount, valueLength);
 
         Random random = new Random();
         for (String key : keys) {

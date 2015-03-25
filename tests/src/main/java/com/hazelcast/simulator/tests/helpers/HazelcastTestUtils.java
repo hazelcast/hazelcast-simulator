@@ -27,7 +27,6 @@ import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.OperationService;
-import com.hazelcast.simulator.utils.ReflectionUtils;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -36,27 +35,28 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-public class HazelcastTestUtils {
+import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 
-    private static final ILogger log = Logger.getLogger(HazelcastTestUtils.class);
+public final class HazelcastTestUtils {
 
-    // we don't want instances
+    private static final ILogger LOGGER = Logger.getLogger(HazelcastTestUtils.class);
+
     private HazelcastTestUtils() {
     }
 
     public static String getPartitionDistributionInformation(HazelcastInstance hz) {
         Map<Member, Integer> partitionCountMap = new HashMap<Member, Integer>();
         int totalPartitions = 0;
-        for(Partition partition: hz.getPartitionService().getPartitions()){
+        for (Partition partition: hz.getPartitionService().getPartitions()) {
             totalPartitions++;
             Member member = partition.getOwner();
             Integer count = partitionCountMap.get(member);
-            if(count == null){
+            if (count == null) {
                 count = 0;
             }
 
             count++;
-            partitionCountMap.put(member,count);
+            partitionCountMap.put(member, count);
         }
 
         StringBuilder sb = new StringBuilder();
@@ -84,7 +84,9 @@ public class HazelcastTestUtils {
             Member member = entry.getKey();
             long opsOnMember = entry.getValue();
             double percentage = opsOnMember * 100d / totalOps;
-            sb.append(member).append(" operations: ").append(opsOnMember).append(" percentage: ").append(percentage).append("%\n");
+            sb.append(member)
+                    .append(" operations: ").append(opsOnMember)
+                    .append(" percentage: ").append(percentage).append("%\n");
         }
         return sb.toString();
     }
@@ -103,7 +105,7 @@ public class HazelcastTestUtils {
             try {
                 Member member = entry.getKey();
                 Long value = entry.getValue().get();
-                if(value == null){
+                if (value == null) {
                     value = 0L;
                 }
                 result.put(member, value);
@@ -130,8 +132,8 @@ public class HazelcastTestUtils {
                 OperationService operationService = node.getNodeEngine().getOperationService();
                 return operationService.getExecutedOperationCount();
             } catch (NoSuchMethodError e) {
-                log.warning(e);
-                return -1l;
+                LOGGER.warning(e);
+                return -1L;
             }
         }
 
@@ -160,7 +162,7 @@ public class HazelcastTestUtils {
     public static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
         HazelcastInstanceImpl impl = null;
         if (hz instanceof HazelcastInstanceProxy) {
-            return ReflectionUtils.getObjectFromField(hz, "original");
+            return getObjectFromField(hz, "original");
         } else if (hz instanceof HazelcastInstanceImpl) {
             impl = (HazelcastInstanceImpl) hz;
         }

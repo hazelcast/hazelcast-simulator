@@ -1,23 +1,24 @@
 /**
- * Copyright (c) 2010 Yahoo! Inc. All rights reserved.                                                                                                                             
+ * Copyright (c) 2010 Yahoo! Inc. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you                                                                                                             
- * may not use this file except in compliance with the License. You                                                                                                                
- * may obtain a copy of the License at                                                                                                                                             
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You
+ * may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0                                                                                                                                      
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software                                                                                                             
- * distributed under the License is distributed on an "AS IS" BASIS,                                                                                                               
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or                                                                                                                 
- * implied. See the License for the specific language governing                                                                                                                    
- * permissions and limitations under the License. See accompanying                                                                                                                 
- * LICENSE file.                                                                                                                                                                   
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * permissions and limitations under the License. See accompanying
+ * LICENSE file.
  */
-
 package com.hazelcast.simulator.tests.map.helpers;
 
 import com.hazelcast.simulator.tests.helpers.IntegerGenerator;
+
+import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.FNVHash64;
 
 /**
  * A generator of a zipfian distribution. It produces a sequence of items, such that some items are more popular than others,
@@ -61,20 +62,6 @@ public class ScrambledZipfianGenerator extends IntegerGenerator {
     }
 
     /**
-     * Create a zipfian generator for the specified number of items using the specified zipfian constant.
-     *
-     * @param items The number of items in the distribution.
-     * @param zipfianConstant The zipfian constant to use.
-     */
-    /*
-    // not supported, as the value of zeta depends on the zipfian constant, and we have only precomputed zeta for one zipfian constant
-	public ScrambledZipfianGenerator(long items, double zipfianConstant)
-	{
-		this(0, items - 1, zipfianConstant);
-	}
-    */
-
-    /**
      * Create a zipfian generator for items between min and max (inclusive) for the specified zipfian constant. If you use a
      * zipfian constant other than 0.99, this will take a long time to complete because we need to recompute zeta.
      *
@@ -108,7 +95,7 @@ public class ScrambledZipfianGenerator extends IntegerGenerator {
      */
     public long nextLong() {
         long ret = gen.nextLong();
-        ret = min + ZipfianUtils.FNVHash64(ret) % itemCount;
+        ret = min + FNVHash64(ret) % itemCount;
         setLastInt((int) ret);
         return ret;
     }

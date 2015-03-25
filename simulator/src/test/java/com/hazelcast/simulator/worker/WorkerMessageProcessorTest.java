@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.AssertTask;
 import com.hazelcast.simulator.common.messaging.DummyRunnableMessage;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.utils.AssertTask;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.exceptions.verification.WantedButNotInvoked;
@@ -12,9 +12,13 @@ import org.mockito.exceptions.verification.WantedButNotInvoked;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
-import static com.hazelcast.simulator.TestSupport.*;
+import static com.hazelcast.simulator.utils.TestUtils.TIMEOUT;
+import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 public class WorkerMessageProcessorTest {
 
@@ -22,8 +26,8 @@ public class WorkerMessageProcessorTest {
     private TestContainer<TestContext> testContainerMock1;
     private TestContainer<TestContext> testContainerMock2;
 
-
     @Before
+    @SuppressWarnings("unchecked")
     public void setUp() {
         testContainerMock1 = mock(TestContainer.class);
         testContainerMock2 = mock(TestContainer.class);
@@ -68,13 +72,13 @@ public class WorkerMessageProcessorTest {
         verifyMessageSentToEitherOr(testContainerMock1, testContainerMock2, message);
     }
 
-    private void verifyMessageSentToEitherOr(TestContainer<?> container1, TestContainer<?> container2, Message message) throws Throwable {
+    private void verifyMessageSentToEitherOr(TestContainer<?> container1, TestContainer<?> container2, Message message)
+            throws Throwable {
         try {
             verify(container1, timeout(TIMEOUT)).sendMessage(message);
-            verify(container2, timeout(TIMEOUT).never()).sendMessage(message);
-        } catch (WantedButNotInvoked e) { //the message was not deliver to container1
-            verify(container2).sendMessage(message); //so it should go to container2
+        } catch (WantedButNotInvoked e) {
+            //the message was not deliver to container1, so it should go to container2
+            verify(container2).sendMessage(message);
         }
     }
-
 }

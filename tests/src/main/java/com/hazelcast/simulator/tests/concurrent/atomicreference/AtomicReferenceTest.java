@@ -26,15 +26,15 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
-import com.hazelcast.simulator.tests.helpers.StringUtils;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.test.utils.TestUtils.randomByteArray;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 
 public class AtomicReferenceTest {
 
@@ -46,7 +46,7 @@ public class AtomicReferenceTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
     public String basename = "atomicreference";
-    public KeyLocality keyLocality = KeyLocality.Random;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int writePercentage = 100;
     public int valueCount = 1000;
     public int valueLength = 512;
@@ -76,15 +76,15 @@ public class AtomicReferenceTest {
         Random random = new Random();
         for (int k = 0; k < valueCount; k++) {
             if (useStringValue) {
-                values[k] = StringUtils.generateString(valueLength);
+                values[k] = generateString(valueLength);
             } else {
-                values[k] = randomByteArray(random, valueLength);
+                values[k] = generateByteArray(random, valueLength);
             }
         }
 
         counters = new IAtomicReference[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            String key = KeyUtils.generateStringKey(8, keyLocality, targetInstance);
+            String key = generateStringKey(8, keyLocality, targetInstance);
             IAtomicReference atomicReference = targetInstance.getAtomicReference(key);
             atomicReference.set(values[random.nextInt(values.length)]);
             counters[k] = atomicReference;

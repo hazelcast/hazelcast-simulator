@@ -16,8 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-
-import javax.cache.CacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
@@ -32,17 +30,18 @@ import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import javax.cache.CacheException;
+import javax.cache.CacheManager;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.test.utils.TestUtils.humanReadableByteCount;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.utils.CommonUtils.humanReadableByteCount;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
 public class ExpiryICacheTest {

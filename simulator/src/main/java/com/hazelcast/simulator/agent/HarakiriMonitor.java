@@ -1,11 +1,10 @@
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.provisioner.Bash;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.lang.String.format;
 
 /**
@@ -40,12 +39,11 @@ public class HarakiriMonitor extends Thread {
             boolean harakiri = System.currentTimeMillis() - maxIdleTimeMs > agent.lastUsed;
             if (harakiri) {
                 LOGGER.info("Trying to commit Harakiri (will only try once)");
-                Bash bash = new Bash(new SimulatorProperties());
                 try {
                     String cmd = format("ec2-terminate-instances $(curl -s http://169.254.169.254/latest/meta-data/instance-id) "
                             + "--aws-access-key %s --aws-secret-key %s", agent.cloudIdentity, agent.cloudCredential);
                     LOGGER.info("harakiri command: " + cmd);
-                    bash.execute(cmd);
+                    execute(cmd);
                 } catch (RuntimeException e) {
                     LOGGER.info("Failed to execute Harakiri");
                 }

@@ -2,8 +2,6 @@ package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.SpawnWorkerFailedException;
-import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.provisioner.Bash;
 import com.hazelcast.simulator.worker.ClientWorker;
 import com.hazelcast.simulator.worker.MemberWorker;
 import org.apache.log4j.Logger;
@@ -22,10 +20,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.readObject;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
+import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
@@ -41,8 +41,6 @@ public class WorkerJvmLauncher {
 
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
     private final WorkerJvmSettings settings;
-    private final SimulatorProperties props = new SimulatorProperties();
-    private final Bash bash = new Bash(props);
     private final Agent agent;
     private final ConcurrentMap<String, WorkerJvm> workerJVMs;
     private File hzFile;
@@ -150,7 +148,7 @@ public class WorkerJvmLauncher {
                 WORKERS_PATH,
                 testSuiteId,
                 workerId);
-        bash.execute(cpCommand);
+        execute(cpCommand);
         LOGGER.info(format("Finished copying '+%s+' to worker", WORKERS_PATH));
     }
 
@@ -311,7 +309,8 @@ public class WorkerJvmLauncher {
         }
 
         String address = readObject(file);
-        file.delete();
+        deleteQuiet(file);
+
         return address;
     }
 }

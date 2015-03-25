@@ -20,20 +20,20 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
-import com.hazelcast.simulator.test.utils.AssertTask;
-import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
+import com.hazelcast.simulator.utils.AssertTask;
+import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.test.utils.TestUtils.assertTrueEventually;
+import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
 /**

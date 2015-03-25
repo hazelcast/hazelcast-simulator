@@ -27,8 +27,7 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.utils.TestUtils;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -38,18 +37,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static org.junit.Assert.assertEquals;
 
 public class ExecutorTest {
 
     private static final ILogger log = Logger.getLogger(ExecutorTest.class);
 
-    //props
+    // props
     public int executorCount = 1;
-    //the number of threads submitting tasks to the executor.
+    // the number of threads submitting tasks to the executor
     public int threadCount = 5;
-    //the number of outstanding submits, before doing get. A count of 1 means that you wait for every task
-    //to complete, before sending in the next.
+    // the number of outstanding submits, before doing get. A count of 1 means that you wait for every task to complete,
+    // before sending in the next
     public int submitCount = 5;
     public String basename = this.getClass().getSimpleName();
 
@@ -79,7 +79,7 @@ public class ExecutorTest {
         for (IExecutorService executor : executors) {
             executor.shutdownNow();
             if (!executor.awaitTermination(120, TimeUnit.SECONDS)) {
-                log.severe("Time out while waiting for  shutdown of executor: " + executor.getId());
+                log.severe("Time out while waiting for shutdown of executor: " + executor.getId());
             }
             executor.destroy();
         }
@@ -151,7 +151,7 @@ public class ExecutorTest {
 
         @Override
         public void run() {
-            ExecutorTest test = (ExecutorTest) hz.getUserContext().get(TestUtils.TEST_INSTANCE + ":" + testId);
+            ExecutorTest test = (ExecutorTest) hz.getUserContext().get(getUserContextKeyFromTestId(testId));
             test.executedCounter.incrementAndGet();
         }
 

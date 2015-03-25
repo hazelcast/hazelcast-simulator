@@ -11,18 +11,19 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class ConcurrentProbeTest extends AbstractProbeTest {
+public class ConcurrentProbeTest {
 
     private ProbesConfiguration config = new ProbesConfiguration();
     private ConcurrentProbe concurrentProbe;
 
     @Before
-    public void setup() {
+    public void setUp() {
         config.addConfig("throughput", ProbesType.THROUGHPUT.string);
         config.addConfig("latency", ProbesType.MAX_LATENCY.string);
         concurrentProbe = (ConcurrentProbe) Probes.createConcurrentProbe("throughput", SimpleProbe.class, config);

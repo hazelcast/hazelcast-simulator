@@ -4,9 +4,9 @@ import java.io.Serializable;
 
 public class TxnCounter implements Serializable {
 
-    public long committed = 0;
-    public long rolled = 0;
-    public long failedRoles = 0;
+    public long committed ;
+    public long rolled;
+    public long failedRoles;
 
     public TxnCounter() {
     }
@@ -19,10 +19,10 @@ public class TxnCounter implements Serializable {
 
     @Override
     public String toString() {
-        return "TxnCounter{" +
-                "committed=" + committed +
-                ", rolled=" + rolled +
-                ", failedRoles=" + failedRoles +
-                '}';
+        return "TxnCounter{"
+                + "committed=" + committed
+                + ", rolled=" + rolled
+                + ", failedRoles=" + failedRoles
+                + '}';
     }
 }

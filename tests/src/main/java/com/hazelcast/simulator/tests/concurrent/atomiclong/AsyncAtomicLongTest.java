@@ -30,10 +30,9 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
-import com.hazelcast.simulator.test.utils.AssertTask;
+import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -41,9 +40,10 @@ import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.test.utils.TestUtils.assertTrueEventually;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
 public class AsyncAtomicLongTest {
@@ -55,7 +55,7 @@ public class AsyncAtomicLongTest {
     public int threadCount = 10;
     public int logFrequency = 10000;
     public String basename = "atomiclong";
-    public KeyLocality keyLocality = KeyLocality.Random;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int writePercentage = 100;
     public int assertEventuallySeconds = 300;
     public int batchSize = -1;
@@ -83,7 +83,7 @@ public class AsyncAtomicLongTest {
         totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new AsyncAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            String key = KeyUtils.generateStringKey(8, keyLocality, targetInstance);
+            String key = generateStringKey(8, keyLocality, targetInstance);
             counters[k] = (AsyncAtomicLong) targetInstance.getAtomicLong(key);
         }
     }

@@ -12,7 +12,6 @@ import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
-import com.hazelcast.spi.OperationService;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -21,10 +20,9 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
-import com.hazelcast.simulator.utils.ReflectionUtils;
+import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.spi.OperationService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +33,8 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKey;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 
 /**
  * The SyntheticBackPressureTest tests back pressure.
@@ -69,7 +69,7 @@ public class SyntheticTest {
     public int threadCount = 10;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
-    public KeyLocality keyLocality = KeyLocality.Random;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int syncFrequency = 1;
     public String serviceName;
 
@@ -120,7 +120,7 @@ public class SyntheticTest {
                 HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy) targetInstance;
                 operationService = null;
                 PartitionServiceProxy partitionService = (PartitionServiceProxy) hazelcastClientProxy.client.getPartitionService();
-                clientPartitionService = ReflectionUtils.getObjectFromField(partitionService, "partitionService");
+                clientPartitionService = getObjectFromField(partitionService, "partitionService");
                 clientInvocationService = hazelcastClientProxy.client.getInvocationService();
             } else {
                 clientInvocationService = null;
@@ -131,14 +131,14 @@ public class SyntheticTest {
             }
 
             if (isClient) {
-                if (keyLocality == KeyLocality.Local)
+                if (keyLocality == KeyLocality.LOCAL)
                     throw new IllegalStateException("A KeyLocality has been set to Local, but test is running on a client. " +
                             "It doesn't make sense as no keys are stored on clients. ");
             }
 
             int keys = 1000;
             for (int k = 0; k < keys; k++) {
-                Integer key = KeyUtils.generateIntKey(keys, keyLocality, targetInstance);
+                Integer key = generateIntKey(keys, keyLocality, targetInstance);
                 Partition partition = targetInstance.getPartitionService().getPartition(key);
                 partitionSequence.add(partition.getPartitionId());
             }
