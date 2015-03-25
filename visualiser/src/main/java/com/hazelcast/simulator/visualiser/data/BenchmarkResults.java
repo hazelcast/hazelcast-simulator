@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class BenchmarkResults {
 
-    private final Map<String, Result> probeDataMap  = new HashMap<String, Result>();
+    private final Map<String, Result> probeDataMap = new HashMap<String, Result>();
     private final String name;
 
     public BenchmarkResults(String name) {
@@ -24,11 +24,11 @@ public class BenchmarkResults {
         probeDataMap.put(probeName, probeData);
     }
 
-    public Set<String> getProbeNames() {
-        return Collections.unmodifiableSet(probeDataMap.keySet());
-    }
-
     public Result getProbeData(String probeName) {
         return probeDataMap.get(probeName);
+    }
+
+    public Set<String> getProbeNames() {
+        return Collections.unmodifiableSet(probeDataMap.keySet());
     }
 }

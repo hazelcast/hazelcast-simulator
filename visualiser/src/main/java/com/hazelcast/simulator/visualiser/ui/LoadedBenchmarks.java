@@ -9,9 +9,8 @@ public class LoadedBenchmarks extends JPanel implements Model.BenchmarkChangeLis
 
     public LoadedBenchmarks() {
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-        BoxLayout layout = new BoxLayout(this, BoxLayout.Y_AXIS);
-        setLayout(layout);
         setBorder(BorderFactory.createTitledBorder("Benchmarks"));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
 
     @Override

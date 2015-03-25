@@ -1,8 +1,7 @@
 package com.hazelcast.simulator.visualiser.io;
 
-import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.ProbesResultXmlReader;
-import com.hazelcast.simulator.probes.probes.util.Utils;
+import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.visualiser.data.BenchmarkResults;
 import com.hazelcast.simulator.visualiser.data.Model;
 
@@ -11,6 +10,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+
+import static com.hazelcast.simulator.probes.probes.util.Utils.closeQuietly;
+import static com.hazelcast.simulator.visualiser.utils.FileUtils.getFileName;
 
 public class ResultParserWorker extends SwingWorker<BenchmarkResults, Void> {
 
@@ -36,20 +38,8 @@ public class ResultParserWorker extends SwingWorker<BenchmarkResults, Void> {
             }
             return benchmarkResults;
         } finally {
-            Utils.closeQuietly(fileInputStream);
+            closeQuietly(fileInputStream);
         }
-    }
-
-    private static String getFileName(File file) {
-        return removeExtension(file.getName());
-    }
-
-    private static String removeExtension(String name) {
-        int dotPos = name.lastIndexOf('.');
-        if (dotPos != -1) {
-            name = name.substring(0, dotPos);
-        }
-        return name;
     }
 
     @Override
