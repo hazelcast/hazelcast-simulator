@@ -80,9 +80,9 @@ public class MapEntryProcessorTest {
         }
 
         int failures = 0;
-        for (int k = 0; k < keyCount; k++) {
-            long expected = amount[k];
-            long found = map.get(k);
+        for (int i = 0; i < keyCount; i++) {
+            long expected = amount[i];
+            long found = map.get(i);
             if (expected != found) {
                 failures++;
             }
@@ -118,7 +118,7 @@ public class MapEntryProcessorTest {
         }
 
         @Override
-        public void afterCompletion() {
+        protected void afterRun() {
             // sleep to give time for the last EntryProcessor tasks to complete
             sleepMillis(maxProcessorDelayMs * 2);
             resultsPerWorker.add(result);
@@ -145,7 +145,7 @@ public class MapEntryProcessorTest {
         }
     }
 
-    private static class IncrementEntryProcessor extends AbstractEntryProcessor<Integer, Long> {
+    private static final class IncrementEntryProcessor extends AbstractEntryProcessor<Integer, Long> {
         private final long increment;
         private final int delayMs;
 
