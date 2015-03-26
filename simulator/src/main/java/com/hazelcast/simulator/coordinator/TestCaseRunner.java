@@ -30,9 +30,10 @@ import static java.lang.String.format;
 
 /**
  * TestCase runner is responsible for running a single test case. Multiple test-cases can be run in parallel,
- * by having multiple TestCaseRunners  in parallel.
+ * by having multiple TestCaseRunners in parallel.
  */
 public class TestCaseRunner {
+
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
 
     private final TestCase testCase;
@@ -73,7 +74,7 @@ public class TestCaseRunner {
             echo("Completed Test local warmup");
 
             echo("Starting Test global warmup");
-            agentsClient.executeOnSingleWorker(new GenericCommand(testCase.id, "globalWarmup"));
+            agentsClient.executeOnFirstWorker(new GenericCommand(testCase.id, "globalWarmup"));
             agentsClient.waitForPhaseCompletion(prefix, testCase.id, "globalWarmup");
             echo("Completed Test global warmup");
 
@@ -95,7 +96,7 @@ public class TestCaseRunner {
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
-                agentsClient.executeOnSingleWorker(new GenericCommand(testCase.id, "globalVerify"));
+                agentsClient.executeOnFirstWorker(new GenericCommand(testCase.id, "globalVerify"));
                 agentsClient.waitForPhaseCompletion(prefix, testCase.id, "globalVerify");
                 echo("Completed Test global verify");
 
@@ -108,7 +109,7 @@ public class TestCaseRunner {
             }
 
             echo("Starting Test global tear down");
-            agentsClient.executeOnSingleWorker(new GenericCommand(testCase.id, "globalTeardown"));
+            agentsClient.executeOnFirstWorker(new GenericCommand(testCase.id, "globalTeardown"));
             agentsClient.waitForPhaseCompletion(prefix, testCase.id, "globalTeardown");
             echo("Finished Test global tear down");
 
@@ -229,11 +230,7 @@ public class TestCaseRunner {
     }
 
     private void echo(String msg) {
-        try {
-            agentsClient.echo(prefix + msg);
-        } catch (TimeoutException e) {
-            LOGGER.warn("Failed to echo message due to timeout");
-        }
+        agentsClient.echo(prefix + msg);
         LOGGER.info(prefix + msg);
     }
 }

@@ -22,6 +22,7 @@ import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import com.hazelcast.util.Clock;
 import org.apache.log4j.Logger;
@@ -32,6 +33,7 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -113,6 +115,7 @@ public class TestContainer<T extends TestContext> {
     private Method messageConsumerMethod;
 
     private IWorker operationCountWorkerInstance;
+    private ThreadSpawner workerThreadSpawner;
 
     public TestContainer(Object testObject, T testContext, ProbesConfiguration probesConfiguration) {
         this(testObject, testContext, probesConfiguration, null);
@@ -200,6 +203,13 @@ public class TestContainer<T extends TestContext> {
         Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
                 operationCountMethod);
         return (count == null ? -1 : count);
+    }
+
+    public List<String> getStackTraces() throws Exception {
+        if (workerThreadSpawner == null) {
+            return Collections.emptyList();
+        }
+        return workerThreadSpawner.getStackTraces();
     }
 
     public void sendMessage(Message message) throws Exception {
@@ -370,7 +380,9 @@ public class TestContainer<T extends TestContext> {
         IntervalProbe intervalProbe = getOrCreateConcurrentProbe(probeName, IntervalProbe.class);
         intervalProbe.startProbing(now);
 
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+        operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
+
+        workerThreadSpawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
             worker = invokeMethod(testClassInstance, runWithWorkerMethod);
 
@@ -385,9 +397,9 @@ public class TestContainer<T extends TestContext> {
 
             operationCountWorkerInstance = worker;
 
-            spawner.spawn(worker);
+            workerThreadSpawner.spawn(worker);
         }
-        spawner.awaitCompletion();
+        workerThreadSpawner.awaitCompletion();
 
         // call the afterCompletion method on a single instance of the worker
         operationCountWorkerInstance.afterCompletion();

@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.utils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,6 +45,29 @@ public class ThreadSpawner {
         return thread;
     }
 
+    public void awaitCompletion() {
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public List<String> getStackTraces() {
+        StringBuilder sb = new StringBuilder();
+        List<String> stackTraces = new ArrayList<String>(threads.size());
+        for (Thread thread : threads) {
+            sb.setLength(0);
+            for (StackTraceElement stackTraceElement : thread.getStackTrace()) {
+                sb.append(stackTraceElement);
+            }
+            stackTraces.add(sb.toString());
+        }
+        return stackTraces;
+    }
+
     private String getName(String prefix) {
         AtomicInteger idGenerator = idMap.get(prefix);
         if (idGenerator == null) {
@@ -53,16 +77,6 @@ public class ThreadSpawner {
         }
 
         return prefix + "-" + idGenerator.incrementAndGet();
-    }
-
-    public void awaitCompletion() {
-        for (Thread thread : threads) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     private class DefaultThread extends Thread {

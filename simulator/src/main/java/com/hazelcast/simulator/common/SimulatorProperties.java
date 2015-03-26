@@ -21,6 +21,7 @@ import static java.lang.String.format;
  * is configured, it will override the properties from the default.
  */
 public class SimulatorProperties {
+
     private static final Logger LOGGER = Logger.getLogger(SimulatorProperties.class);
 
     private final Properties properties = new Properties();
@@ -133,14 +134,13 @@ public class SimulatorProperties {
         if ("GROUP_NAME".equals(name)) {
             String username = System.getProperty("user.name").toLowerCase();
 
-            StringBuilder sb = new StringBuilder();
-            for (char c : username.toCharArray()) {
-                if (Character.isLetter(c)) {
-                    sb.append(c);
-                } else if (Character.isDigit(c)) {
-                    sb.append(c);
-                }
-            }
+            // TODO: do we need this code? it was unused
+            //StringBuilder fixedUserName = new StringBuilder();
+            //for (char character : username.toCharArray()) {
+            //    if (Character.isLetter(character) || Character.isDigit(character)) {
+            //        fixedUserName.append(character);
+            //    }
+            //}
 
             value = value.replace("${username}", username);
         }
