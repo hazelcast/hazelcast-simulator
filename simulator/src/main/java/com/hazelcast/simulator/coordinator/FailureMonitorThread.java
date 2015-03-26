@@ -10,7 +10,9 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 
 class FailureMonitorThread extends Thread {
+
     private static final Logger LOGGER = Logger.getLogger(FailureMonitorThread.class);
+
     private final File file;
     private final Coordinator coordinator;
 
@@ -30,7 +32,7 @@ class FailureMonitorThread extends Thread {
     public void run() {
         for (; ; ) {
             try {
-                //todo: this delay should be configurable.
+                // TODO: this delay should be configurable
                 sleepSeconds(1);
                 scan();
             } catch (Throwable e) {

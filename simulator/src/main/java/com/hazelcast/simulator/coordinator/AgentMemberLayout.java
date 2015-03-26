@@ -3,7 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 
 /**
- * THe layout (so number of clients/servers) for a given agent.
+ * The layout (number of clients/servers) for a given agent.
  */
 public class AgentMemberLayout {
 

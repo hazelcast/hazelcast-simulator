@@ -15,6 +15,7 @@ import java.util.Set;
 import static java.lang.String.format;
 
 final class MessagesFactory {
+
     private static final Logger LOGGER = Logger.getLogger(MessagesFactory.class);
     private static final MessagesFactory INSTANCE = new MessagesFactory();
 

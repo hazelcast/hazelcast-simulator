@@ -13,12 +13,14 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 @Ignore
 public class AgentRemoteServiceTest {
@@ -36,7 +38,7 @@ public class AgentRemoteServiceTest {
         agentRemoteService.start();
         InetAddress localInetAddress = InetAddress.getByName(getHostAddress());
         String addressString = localInetAddress.getHostAddress();
-        List<AgentAddress> addresses = Arrays.asList(new AgentAddress(addressString, addressString));
+        List<AgentAddress> addresses = Collections.singletonList(new AgentAddress(addressString, addressString));
         client = new AgentsClient(addresses);
     }
 
