@@ -1,0 +1,1 @@
+user defined lib,  will be added to the class path of the worker

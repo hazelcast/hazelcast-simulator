@@ -329,6 +329,7 @@ public class Provisioner {
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/conf/", "conf");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/jdk-install/", "jdk-install");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/tests/", "tests");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/user-lib/", "user-lib/");
 
         String script = loadInitScript();
         bash.ssh(ip, script);
