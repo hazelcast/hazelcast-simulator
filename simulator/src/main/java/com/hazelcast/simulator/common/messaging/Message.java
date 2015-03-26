@@ -8,6 +8,7 @@ import java.util.Set;
 import static com.hazelcast.simulator.utils.CommonUtils.NEW_LINE;
 
 public abstract class Message implements Serializable {
+
     private MessageAddress messageAddress;
 
     public Message(MessageAddress messageAddress) {
@@ -15,18 +16,6 @@ public abstract class Message implements Serializable {
             throw new IllegalArgumentException("Message address cannot be null");
         }
         this.messageAddress = messageAddress;
-    }
-
-    public static String getMessageHelp() {
-        Set<String> messageSpecs = MessagesFactory.getMessageSpecs();
-        StringBuilder builder = new StringBuilder();
-        for (String spec : messageSpecs) {
-            builder.append(spec)
-                    .append(" - ")
-                    .append(MessagesFactory.getMessageDescription(spec))
-                    .append(NEW_LINE);
-        }
-        return builder.toString();
     }
 
     public MessageAddress getMessageAddress() {
@@ -39,6 +28,18 @@ public abstract class Message implements Serializable {
 
     public boolean removeFromAgentList() {
         return false;
+    }
+
+    public static String getMessageHelp() {
+        Set<String> messageSpecs = MessagesFactory.getMessageSpecs();
+        StringBuilder builder = new StringBuilder();
+        for (String spec : messageSpecs) {
+            builder.append(spec)
+                    .append(" - ")
+                    .append(MessagesFactory.getMessageDescription(spec))
+                    .append(NEW_LINE);
+        }
+        return builder.toString();
     }
 
     public static Message newBySpec(String messageTypeSpec, String messageAddressSpec) {
@@ -58,5 +59,4 @@ public abstract class Message implements Serializable {
                                                  KeyValuePair<? extends Serializable, ? extends Serializable> attribute) {
         return MessagesFactory.bySpec(messageTypeSpec, messageAddress, attribute);
     }
-
 }

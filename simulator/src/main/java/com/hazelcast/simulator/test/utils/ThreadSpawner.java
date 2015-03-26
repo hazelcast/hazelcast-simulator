@@ -2,6 +2,7 @@ package com.hazelcast.simulator.test.utils;
 
 import com.hazelcast.simulator.utils.ExceptionReporter;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,10 +51,33 @@ public class ThreadSpawner {
             throw new NullPointerException("runnable can't be null");
         }
 
-        DefaultThread t = new DefaultThread(getName(namePrefix), runnable);
-        threads.add(t);
-        t.start();
-        return t;
+        DefaultThread thread = new DefaultThread(getName(namePrefix), runnable);
+        threads.add(thread);
+        thread.start();
+        return thread;
+    }
+
+    public void awaitCompletion() {
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public List<String> getStackTraces() {
+        StringBuilder sb = new StringBuilder();
+        List<String> stackTraces = new ArrayList<String>(threads.size());
+        for (Thread thread : threads) {
+            sb.setLength(0);
+            for (StackTraceElement stackTraceElement : thread.getStackTrace()) {
+                sb.append(stackTraceElement);
+            }
+            stackTraces.add(sb.toString());
+        }
+        return stackTraces;
     }
 
     private String getName(String prefix) {
@@ -65,16 +89,6 @@ public class ThreadSpawner {
         }
 
         return prefix + "-" + idGenerator.incrementAndGet();
-    }
-
-    public void awaitCompletion() {
-        for (Thread t : threads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     private class DefaultThread extends Thread {

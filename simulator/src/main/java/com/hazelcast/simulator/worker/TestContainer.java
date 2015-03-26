@@ -1,20 +1,10 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.common.messaging.Message;
-import com.hazelcast.simulator.probes.probes.*;
-import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
-import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
-import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
-import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.Probes;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
+import com.hazelcast.simulator.probes.probes.ProbesType;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.probes.probes.impl.DisabledResult;
@@ -29,6 +19,9 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
+import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
+import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.util.Clock;
 import org.apache.log4j.Logger;
@@ -39,13 +32,11 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
-import static com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
-import static com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getAtMostOneMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck;
@@ -123,6 +114,7 @@ public class TestContainer<T extends TestContext> {
     private Method messageConsumerMethod;
 
     private AbstractWorker operationCountWorkerInstance;
+    private ThreadSpawner workerThreadSpawner;
 
     public TestContainer(Object testObject, T testContext, ProbesConfiguration probesConfiguration) {
         this(testObject, testContext, probesConfiguration, null);
@@ -210,6 +202,13 @@ public class TestContainer<T extends TestContext> {
         Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
                 operationCountMethod);
         return (count == null ? -1 : count);
+    }
+
+    public List<String> getStackTraces() throws Throwable {
+        if (workerThreadSpawner == null) {
+            return Collections.emptyList();
+        }
+        return workerThreadSpawner.getStackTraces();
     }
 
     public void sendMessage(Message message) throws Throwable {
@@ -373,7 +372,7 @@ public class TestContainer<T extends TestContext> {
         Field testContextField = getFieldFromAbstractWorker("testContext", TestContext.class);
         Field intervalProbeField = getFieldFromAbstractWorker("intervalProbe", IntervalProbe.class);
 
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+        workerThreadSpawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
             AbstractWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
 
@@ -384,9 +383,9 @@ public class TestContainer<T extends TestContext> {
 
             operationCountWorkerInstance = worker;
 
-            spawner.spawn(worker);
+            workerThreadSpawner.spawn(worker);
         }
-        spawner.awaitCompletion();
+        workerThreadSpawner.awaitCompletion();
 
         // call the afterCompletion method on a single instance of the worker
         operationCountWorkerInstance.afterCompletion();

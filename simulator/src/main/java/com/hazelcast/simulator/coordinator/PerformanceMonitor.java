@@ -45,7 +45,7 @@ public class PerformanceMonitor {
     }
 
     class PerformanceThread extends Thread {
-        
+
         public PerformanceThread() {
             super("PerformanceThread");
             setDaemon(true);
