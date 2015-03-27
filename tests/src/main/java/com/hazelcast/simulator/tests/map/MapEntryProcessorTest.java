@@ -13,13 +13,12 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
-import java.util.HashMap;
 import java.util.Map;
 
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKey;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 
@@ -29,17 +28,17 @@ public class MapEntryProcessorTest {
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 10;
     public int keyCount = 1000;
-    public int minProcessorDelayMs = 0;
-    public int maxProcessorDelayMs = 0;
+    public int minProcessorDelayMs;
+    public int maxProcessorDelayMs;
     public KeyLocality keyLocality = KeyLocality.Random;
     public IntervalProbe probe;
 
     private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;
-    private IList<Map<Integer, Long>> resultsPerWorker;
+    private IList<long[]> resultsPerWorker;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         if (minProcessorDelayMs > maxProcessorDelayMs) {
             throw new IllegalArgumentException("minProcessorDelayMs has to be >= maxProcessorDelayMs. "
                     + "Current settings: minProcessorDelayMs = " + minProcessorDelayMs
@@ -52,7 +51,7 @@ public class MapEntryProcessorTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         map.destroy();
         resultsPerWorker.destroy();
     }
@@ -66,17 +65,17 @@ public class MapEntryProcessorTest {
 
     @Verify
     public void verify() throws Exception {
-        long[] amount = new long[keyCount];
+        long[] expectedValueForKey = new long[keyCount];
 
-        for (Map<Integer, Long> map : resultsPerWorker) {
-            for (Map.Entry<Integer, Long> entry : map.entrySet()) {
-                amount[entry.getKey()] += entry.getValue();
+        for (long[] incrementsAtKey : resultsPerWorker) {
+            for (int i = 0; i < incrementsAtKey.length; i++) {
+                expectedValueForKey[i] += incrementsAtKey[i];
             }
         }
 
         int failures = 0;
         for (int i = 0; i < keyCount; i++) {
-            long expected = amount[i];
+            long expected = expectedValueForKey[i];
             long found = map.get(i);
             if (expected != found) {
                 failures++;
@@ -92,24 +91,24 @@ public class MapEntryProcessorTest {
     }
 
     private class Worker extends AbstractMonotonicWorker {
-        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
+        private final long[] localIncrementsAtKey = new long[keyCount];
 
         @Override
         public void timeStep() {
-            int key = KeyUtils.generateIntKey(keyCount, keyLocality, targetInstance);
+            int key = generateIntKey(keyCount, keyLocality, targetInstance);
             long increment = randomInt(100);
             int delayMs = calculateDelay();
             probe.started();
             map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
             probe.done();
-            result.put(key, result.get(key) + increment);
+            localIncrementsAtKey[key] += increment;
         }
 
         @Override
         protected void afterRun() {
             // sleep to give time for the last EntryProcessor tasks to complete
             sleepMillis(maxProcessorDelayMs * 2);
-            resultsPerWorker.add(result);
+            resultsPerWorker.add(localIncrementsAtKey);
         }
 
         private int calculateDelay() {
