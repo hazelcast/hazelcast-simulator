@@ -3,8 +3,6 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.test.TestContext;
@@ -27,8 +25,6 @@ import static org.junit.Assert.assertEquals;
 
 public class MapEntryProcessorTest {
 
-    private static final ILogger log = Logger.getLogger(MapEntryProcessorTest.class);
-
     // properties
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 10;
@@ -45,9 +41,9 @@ public class MapEntryProcessorTest {
     @Setup
     public void setup(TestContext testContext) throws Exception {
         if (minProcessorDelayMs > maxProcessorDelayMs) {
-            throw new IllegalArgumentException("minProcessorDelayMs has to be >= maxProcessorDelayMs. " +
-                    "Current settings: minProcessorDelayMs = " + minProcessorDelayMs +
-                    " maxProcessorDelayMs = " + maxProcessorDelayMs);
+            throw new IllegalArgumentException("minProcessorDelayMs has to be >= maxProcessorDelayMs. "
+                    + "Current settings: minProcessorDelayMs = " + minProcessorDelayMs
+                    + " maxProcessorDelayMs = " + maxProcessorDelayMs);
         }
 
         targetInstance = testContext.getTargetInstance();
@@ -66,7 +62,6 @@ public class MapEntryProcessorTest {
         for (int i = 0; i < keyCount; i++) {
             map.put(i, 0L);
         }
-        log.info(basename + " map size ==>" + map.size());
     }
 
     @Verify
@@ -100,21 +95,14 @@ public class MapEntryProcessorTest {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         @Override
-        protected void beforeRun() {
-            for (int i = 0; i < keyCount; i++) {
-                result.put(i, 0L);
-            }
-        }
-
-        @Override
         public void timeStep() {
-            int key = calculateKey();
-            long increment = calculateIncrement();
+            int key = KeyUtils.generateIntKey(keyCount, keyLocality, targetInstance);
+            long increment = randomInt(100);
             int delayMs = calculateDelay();
             probe.started();
             map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
             probe.done();
-            incrementLocalStats(key, increment);
+            result.put(key, result.get(key) + increment);
         }
 
         @Override
@@ -124,24 +112,12 @@ public class MapEntryProcessorTest {
             resultsPerWorker.add(result);
         }
 
-        private int calculateKey() {
-            return KeyUtils.generateIntKey(keyCount, keyLocality, targetInstance);
-        }
-
-        private int calculateIncrement() {
-            return randomInt(100);
-        }
-
         private int calculateDelay() {
             int delayMs = 0;
             if (minProcessorDelayMs >= 0 && maxProcessorDelayMs > 0) {
                 delayMs = minProcessorDelayMs + randomInt(1 + maxProcessorDelayMs - minProcessorDelayMs);
             }
             return delayMs;
-        }
-
-        private void incrementLocalStats(int key, long increment) {
-            result.put(key, result.get(key) + increment);
         }
     }
 
@@ -168,4 +144,3 @@ public class MapEntryProcessorTest {
         new TestRunner<MapEntryProcessorTest>(test).run();
     }
 }
-
