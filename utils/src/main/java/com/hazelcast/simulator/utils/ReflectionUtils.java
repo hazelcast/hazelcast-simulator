@@ -44,8 +44,21 @@ public final class ReflectionUtils {
         }
     }
 
-    public static Field getField(Class searchClass, String fieldName, Class fieldType) {
-        for (Field field : searchClass.getDeclaredFields()) {
+    public static Field getField(Class classType, String fieldName, Class fieldType) {
+        Field field;
+        do {
+            field = findField(classType, fieldName, fieldType);
+            if (field != null) {
+                return field;
+            }
+            classType = classType.getSuperclass();
+        } while (classType != null);
+
+        return null;
+    }
+
+    private static Field findField(Class classType, String fieldName, Class fieldType) {
+        for (Field field : classType.getDeclaredFields()) {
             if (field.getName().equals(fieldName) && ((fieldType != null && field.getType().isAssignableFrom(fieldType)) || (
                     fieldType == null && field.getType().isPrimitive()))) {
                 return field;

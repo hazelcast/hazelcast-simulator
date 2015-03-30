@@ -61,7 +61,7 @@ public class MapEntryListenerTest {
     }
 
     private static final int SLEEP_CATCH_EVENTS_MILLIS = 8000;
-    private static final ILogger log = Logger.getLogger(MapEntryListenerTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapEntryListenerTest.class);
 
     // properties
     public String basename = this.getClass().getSimpleName();
@@ -82,7 +82,8 @@ public class MapEntryListenerTest {
     public double putUsingReplaceProb = 0.25;
 
     private final ScrambledZipfianGenerator keysZipfian = new ScrambledZipfianGenerator(keyCount);
-    private final OperationSelectorBuilder<MapOperation> mapOperationSelectorBuilder = new OperationSelectorBuilder<MapOperation>();
+    private final OperationSelectorBuilder<MapOperation> mapOperationSelectorBuilder
+            = new OperationSelectorBuilder<MapOperation>();
     private final OperationSelectorBuilder<MapPutOperation> mapPutOperationSelectorBuilder
             = new OperationSelectorBuilder<MapPutOperation>();
 
@@ -93,7 +94,7 @@ public class MapEntryListenerTest {
     private IMap<Integer, String> map;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         values = generateStrings(valueCount, valueLength);
@@ -117,6 +118,11 @@ public class MapEntryListenerTest {
                 .addDefaultOperation(MapPutOperation.PUT);
     }
 
+    @Teardown(global = true)
+    public void tearDown() throws Exception {
+        map.destroy();
+    }
+
     @Warmup(global = true)
     public void globalWarmup() {
         EventCount initCounter = new EventCount();
@@ -127,11 +133,6 @@ public class MapEntryListenerTest {
         }
 
         eventCounts.add(initCounter);
-    }
-
-    @Teardown(global = true)
-    public void tearDown() throws Exception {
-        map.destroy();
     }
 
     @Verify(global = true)
@@ -151,7 +152,7 @@ public class MapEntryListenerTest {
         }
         total.waitWhileListenerEventsIncrease(listener, 10);
 
-        log.info("Event counter for " + basename + " (actual / expected)"
+        LOGGER.info("Event counter for " + basename + " (actual / expected)"
                 + "\nadd: " + listener.addCount.get() + " / " + total.addCount.get()
                 + "\nupdate: " + listener.updateCount.get() + " / " + total.updateCount.get()
                 + "\nremove: " + listener.removeCount.get() + " / " + total.removeCount.get()
@@ -162,7 +163,7 @@ public class MapEntryListenerTest {
     }
 
     @RunWithWorker
-    public AbstractWorker<MapOperation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

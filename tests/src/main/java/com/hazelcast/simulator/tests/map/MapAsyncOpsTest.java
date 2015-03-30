@@ -26,7 +26,7 @@ public class MapAsyncOpsTest {
         DESTROY
     }
 
-    private static final ILogger log = Logger.getLogger(MapAsyncOpsTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapAsyncOpsTest.class);
 
     // properties
     public String basename = MapAsyncOpsTest.class.getSimpleName();
@@ -47,7 +47,7 @@ public class MapAsyncOpsTest {
     private IList<MapOperationCounter> results;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         results = targetInstance.getList(basename + "report");
@@ -65,18 +65,18 @@ public class MapAsyncOpsTest {
         for (MapOperationCounter mapOperationsCount : results) {
             totalMapOperationsCount.add(mapOperationsCount);
         }
-        log.info(basename + ": " + totalMapOperationsCount + " total of " + results.size());
+        LOGGER.info(basename + ": " + totalMapOperationsCount + " total of " + results.size());
     }
 
     @Verify(global = false)
     public void verify() throws Exception {
         Thread.sleep(maxTTLExpirySeconds * 2);
 
-        log.info(basename + ": map size  =" + map.size());
+        LOGGER.info(basename + ": map size  =" + map.size());
     }
 
     @RunWithWorker
-    public AbstractWorker<Operation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

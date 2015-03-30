@@ -116,7 +116,7 @@ public class MapMaxSizeTest {
     }
 
     @RunWithWorker
-    public AbstractWorker<MapOperation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

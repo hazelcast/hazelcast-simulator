@@ -39,7 +39,7 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
 public class StringStringMapTest {
 
-    private static final ILogger log = Logger.getLogger(StringStringMapTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(StringStringMapTest.class);
 
     private enum Operation {
         PUT,
@@ -72,7 +72,7 @@ public class StringStringMapTest {
     private String[] values;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         this.testContext = testContext;
         map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
 
@@ -80,14 +80,14 @@ public class StringStringMapTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         map.destroy();
-        log.info(getOperationCountInformation(testContext.getTargetInstance()));
+        LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
     }
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitClusterSize(log, testContext.getTargetInstance(), minNumberOfMembers);
+        waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
         keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = generateStrings(valueCount, valueLength);
 
@@ -99,7 +99,7 @@ public class StringStringMapTest {
     }
 
     @RunWithWorker
-    public AbstractWorker<Operation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

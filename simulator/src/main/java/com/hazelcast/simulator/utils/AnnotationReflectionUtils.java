@@ -97,10 +97,10 @@ public final class AnnotationReflectionUtils {
     private static Method getAtMostOneMethod(Class classType, Class<? extends Annotation> annotationType, AnnotationFilter filter,
                                              Class returnType, boolean skipArgsCheck) {
         List<Method> methods = findMethod(classType, annotationType, filter);
-        assertAtMostOne(methods, classType, annotationType);
-        if (methods.isEmpty()) {
+        if (methods == null) {
             return null;
         }
+        assertAtMostOne(methods, classType, annotationType);
 
         Method method = methods.get(0);
         method.setAccessible(true);
@@ -126,22 +126,19 @@ public final class AnnotationReflectionUtils {
      *
      * @param annotation Type of the annotation to search for
      * @param filter     Filter to filter search result by annotation values
-     * @return List of found methods with this annotation
+     * @return List of found methods with this annotation or <tt>null</tt> if no methods were found
      */
     private static List<Method> findMethod(Class classType, Class<? extends Annotation> annotation, AnnotationFilter filter) {
         List<Method> methods = new LinkedList<Method>();
+        do {
+            findMethod(classType, annotation, filter, methods);
+            if (!methods.isEmpty()) {
+                return methods;
+            }
+            classType = classType.getSuperclass();
+        } while (classType != null);
 
-        // search in base class
-        findMethod(classType, annotation, filter, methods);
-
-        Class searchClass = classType;
-        while (methods.size() == 0 && searchClass.getSuperclass() != null) {
-            // search in super class
-            searchClass = searchClass.getSuperclass();
-            findMethod(searchClass, annotation, filter, methods);
-        }
-
-        return methods;
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -173,7 +170,7 @@ public final class AnnotationReflectionUtils {
     }
 
     private static void assertReturnType(Class classType, Method method, Class<?> returnType) {
-        if (returnType.equals(method.getReturnType())) {
+        if (returnType.isAssignableFrom(method.getReturnType())) {
             return;
         }
         throw new RuntimeException(format("Method %s.%s should have returnType %s", classType, method, returnType));

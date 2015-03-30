@@ -23,7 +23,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.IWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
@@ -109,7 +109,7 @@ abstract class AbstractMapTest {
         }
     }
 
-    AbstractWorker baseRunWithWorker(String operationType) {
+    IWorker baseRunWithWorker(String operationType) {
         if ("values".equals(operationType)) {
             return new ValuesWorker();
         } else if ("keySet".equals(operationType)) {

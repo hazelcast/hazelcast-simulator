@@ -19,6 +19,7 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -62,12 +63,13 @@ public class TestContainerTest {
     }
 
     private static class TooManyMixedRunAnnotationsTest {
+
         @Run
         public void run() {
         }
 
         @RunWithWorker
-        public AbstractWorker createWorker() {
+        public IWorker createWorker() {
             return null;
         }
     }
@@ -78,12 +80,13 @@ public class TestContainerTest {
     }
 
     private static class DuplicateSetupAnnotationTest {
+
         @Setup
-        void setup() {
+        public void setUp() {
         }
 
         @Setup
-        void anotherSetup() {
+        public void anotherSetup() {
         }
     }
 
@@ -96,16 +99,19 @@ public class TestContainerTest {
         invoker.setUp();
         invoker.run();
 
-        assertTrue(test.childSetupCalled); // ChildWithOwnSetupMethodTest
-        assertFalse(test.setupCalled); // DummySetupTest
-        assertTrue(test.runCalled); // DummyTest
+        // ChildWithOwnSetupMethodTest
+        assertTrue(test.childSetupCalled);
+        // DummySetupTest
+        assertFalse(test.setupCalled);
+        // DummyTest
+        assertTrue(test.runCalled);
     }
 
     private static class ChildWithOwnSetupMethodTest extends DummySetupTest {
         boolean childSetupCalled;
 
         @Setup
-        void setup(TestContext context) {
+        public void setUp(TestContext context) {
             this.context = context;
             this.childSetupCalled = true;
         }
@@ -120,9 +126,12 @@ public class TestContainerTest {
         invoker.setUp();
         invoker.run();
 
-        assertTrue(test.childRunCalled); // ChildWithOwnRunMethodTest
-        assertTrue(test.setupCalled); // DummySetupTest
-        assertFalse(test.runCalled); // DummyTest
+        // ChildWithOwnRunMethodTest
+        assertTrue(test.childRunCalled);
+        // DummySetupTest
+        assertTrue(test.setupCalled);
+        // DummyTest
+        assertFalse(test.runCalled);
     }
 
     private static class ChildWithOwnRunMethodTest extends DummySetupTest {
@@ -169,21 +178,64 @@ public class TestContainerTest {
     }
 
     private static class RunWithWorkerTest {
+
         private enum Operation {
             NOP
         }
 
-        private static final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>()
+        private static final OperationSelectorBuilder<Operation> BUILDER = new OperationSelectorBuilder<Operation>()
                 .addDefaultOperation(Operation.NOP);
 
         volatile boolean runWithWorkerCalled;
 
         @RunWithWorker
-        AbstractWorker<Operation> createWorker() {
-            return new AbstractWorker<Operation>(builder) {
+        IWorker createWorker() {
+            return new AbstractWorker<Operation>(BUILDER) {
+
                 @Override
                 protected void timeStep(Operation operation) {
                     runWithWorkerCalled = true;
+                }
+            };
+        }
+    }
+
+    @Test
+    public void testRunWithIWorker() throws Throwable {
+        final RunWithIWorkerTest test = new RunWithIWorkerTest();
+        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        Thread testStopper = new Thread() {
+            @Override
+            public void run() {
+                while (!test.runWithWorkerCalled) {
+                    sleepMillis(50);
+                }
+                testContext.stop();
+            }
+        };
+
+        testStopper.start();
+        invoker.run();
+        testStopper.join();
+
+        assertTrue(test.runWithWorkerCalled);
+    }
+
+    private static class RunWithIWorkerTest {
+
+        volatile boolean runWithWorkerCalled;
+
+        @RunWithWorker
+        IWorker createWorker() {
+            return new IWorker() {
+
+                @Override
+                public void run() {
+                    runWithWorkerCalled = true;
+                }
+
+                @Override
+                public void afterCompletion() {
                 }
             };
         }
@@ -198,10 +250,10 @@ public class TestContainerTest {
         new TestContainer<DummyTestContext>(new SetupWithoutArgumentsTest(), testContext, probesConfiguration);
     }
 
-    @SuppressWarnings("unused")
     private static class SetupWithoutArgumentsTest extends DummyTest {
+
         @Setup
-        void setup() {
+        public void setUp() {
         }
     }
 
@@ -210,10 +262,10 @@ public class TestContainerTest {
         new TestContainer<DummyTestContext>(new SetupWithTextContextOnlyTest(), testContext, probesConfiguration);
     }
 
-    @SuppressWarnings("unused")
     private static class SetupWithTextContextOnlyTest extends DummyTest {
+
         @Setup
-        void setup(TestContext testContext) {
+        public void setUp(TestContext testContext) {
         }
     }
 
@@ -222,10 +274,10 @@ public class TestContainerTest {
         new TestContainer<DummyTestContext>(new SetupWithSimpleProbeOnly(), testContext, probesConfiguration);
     }
 
-    @SuppressWarnings("unused")
     private static class SetupWithSimpleProbeOnly extends DummyTest {
+
         @Setup
-        void setup(SimpleProbe simpleProbe) {
+        public void setUp(SimpleProbe simpleProbe) {
         }
     }
 
@@ -234,10 +286,10 @@ public class TestContainerTest {
         new TestContainer<DummyTestContext>(new IllegalSetupArgumentsTest(), testContext, probesConfiguration);
     }
 
-    @SuppressWarnings("unused")
     private static class IllegalSetupArgumentsTest extends DummyTest {
+
         @Setup
-        void setup(TestContext testContext, Object wrongType) {
+        public void setUp(TestContext testContext, Object wrongType) {
         }
     }
 
@@ -246,10 +298,10 @@ public class TestContainerTest {
         new TestContainer<DummyTestContext>(new SetupWithValidArgumentsTest(), testContext, probesConfiguration);
     }
 
-    @SuppressWarnings("unused")
     private static class SetupWithValidArgumentsTest extends DummyTest {
+
         @Setup
-        void setup(TestContext testContext, SimpleProbe simpleProbe, IntervalProbe intervalProbe) {
+        public void setUp(TestContext testContext, SimpleProbe simpleProbe, IntervalProbe intervalProbe) {
         }
     }
 
@@ -352,7 +404,7 @@ public class TestContainerTest {
         private IntervalProbe disabled;
 
         @Setup
-        void setup(TestContext context, @Name("explicitProbeName") SimpleProbe probe1, SimpleProbe probe2) {
+        public void setUp(TestContext context, @Name("explicitProbeName") SimpleProbe probe1, SimpleProbe probe2) {
             this.context = context;
             this.simpleProbe = probe1;
         }
@@ -382,8 +434,8 @@ public class TestContainerTest {
         assertTrue(test.globalWarmupCalled);
     }
 
-    @SuppressWarnings("unused")
     private static class WarmupTest extends DummyTest {
+
         boolean localWarmupCalled;
         boolean globalWarmupCalled;
 
@@ -422,8 +474,8 @@ public class TestContainerTest {
         assertTrue(test.globalVerifyCalled);
     }
 
-    @SuppressWarnings("unused")
     private static class VerifyTest extends DummyTest {
+
         boolean localVerifyCalled;
         boolean globalVerifyCalled;
 
@@ -462,8 +514,8 @@ public class TestContainerTest {
         assertTrue(test.globalTeardownCalled);
     }
 
-    @SuppressWarnings("unused")
     private static class TeardownTest extends DummyTest {
+
         boolean localTeardownCalled;
         boolean globalTeardownCalled;
 
@@ -491,8 +543,8 @@ public class TestContainerTest {
         assertEquals(20, count);
     }
 
-    @SuppressWarnings("unused")
     private static class PerformanceTest {
+
         @Performance
         public long getCount() {
             return 20;
@@ -517,8 +569,8 @@ public class TestContainerTest {
         assertEquals(message, test.messagePassed);
     }
 
-    @SuppressWarnings("unused")
     private static class ReceiveTest extends DummyTest {
+
         Message messagePassed;
 
         @Receive
@@ -532,6 +584,7 @@ public class TestContainerTest {
     // ==========================================================
 
     private static class DummyTest {
+
         boolean runCalled;
 
         @Run
@@ -541,18 +594,20 @@ public class TestContainerTest {
     }
 
     private static class DummySetupTest extends DummyTest {
+
         TestContext context;
         boolean setupCalled;
 
         @Setup
-        void setup(TestContext context) {
+        public void setUp(TestContext context) {
             this.context = context;
             this.setupCalled = true;
         }
     }
 
     private static class DummyTestContext implements TestContext {
-        volatile boolean isStopped = false;
+
+        volatile boolean isStopped;
 
         @Override
         public HazelcastInstance getTargetInstance() {

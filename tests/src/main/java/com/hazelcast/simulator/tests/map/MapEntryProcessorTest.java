@@ -14,7 +14,6 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.Map;
 
@@ -86,7 +85,7 @@ public class MapEntryProcessorTest {
     }
 
     @RunWithWorker
-    public AbstractWorker createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

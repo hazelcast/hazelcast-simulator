@@ -11,7 +11,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
@@ -25,7 +24,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class MapLockTest {
 
-    private static final ILogger log = Logger.getLogger(MapLockTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapLockTest.class);
 
     // properties
     public String basename = this.getClass().getSimpleName();
@@ -36,7 +35,7 @@ public class MapLockTest {
     private IList<long[]> incrementsList;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         map = targetInstance.getMap(basename);
@@ -59,7 +58,7 @@ public class MapLockTest {
                 expected[i] += increments[i];
             }
         }
-        log.info(format("%s: collected increments from %d worker threads", basename, incrementsList.size()));
+        LOGGER.info(format("%s: collected increments from %d worker threads", basename, incrementsList.size()));
 
         int failures = 0;
         for (int i = 0; i < keyCount; i++) {
@@ -72,7 +71,7 @@ public class MapLockTest {
     }
 
     @RunWithWorker
-    public AbstractWorker createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

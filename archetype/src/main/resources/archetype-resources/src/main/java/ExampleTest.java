@@ -4,7 +4,11 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.*;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -17,54 +21,54 @@ public class ExampleTest {
         GET
     }
 
-    private static final ILogger log = Logger.getLogger(ExampleTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(ExampleTest.class);
 
-    //properties
+    // properties
     public double putProb = 0.5;
     public int maxKeys = 1000;
 
-    private TestContext testContext;
-    private IMap map;
+    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
+    private IMap<Integer, String> map;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
-        log.info("======== SETUP =========");
-        this.testContext = testContext;
+    public void setUp(TestContext testContext) throws Exception {
+        LOGGER.info("======== SETUP =========");
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap("exampleMap");
 
-        log.info("Map name is:" + map.getName());
+        LOGGER.info("Map name is:" + map.getName());
 
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
+        operationSelectorBuilder
+                .addOperation(Operation.PUT, putProb)
+                .addDefaultOperation(Operation.GET);
+    }
+
+    @Teardown
+    public void tearDown() throws Exception {
+        LOGGER.info("======== TEAR DOWN =========");
+        map.destroy();
+        LOGGER.info("======== THE END =========");
     }
 
     @Warmup
     public void warmup() {
-        log.info("======== WARMUP =========");
-        log.info("Map size is:" + map.size());
+        LOGGER.info("======== WARMUP =========");
+        LOGGER.info("Map size is:" + map.size());
     }
 
     @Verify
     public void verify() {
-        log.info("======== VERIFYING =========");
-        log.info("Map size is:" + map.size());
+        LOGGER.info("======== VERIFYING =========");
+        LOGGER.info("Map size is:" + map.size());
 
         for (int i = 0; i < maxKeys; i++) {
             assertEquals(map.get(i), "value" + i);
         }
     }
 
-    @Teardown
-    public void teardown() throws Exception {
-        log.info("======== TEAR DOWN =========");
-        map.destroy();
-        log.info("======== THE END =========");
-    }
-
     @RunWithWorker
-    public AbstractWorker<Operation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

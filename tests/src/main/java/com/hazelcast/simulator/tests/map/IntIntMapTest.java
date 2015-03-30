@@ -38,7 +38,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 
 public class IntIntMapTest {
 
-    private static final ILogger log = Logger.getLogger(IntIntMapTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(IntIntMapTest.class);
 
     private enum Operation {
         PUT,
@@ -70,7 +70,7 @@ public class IntIntMapTest {
     private int[] keys;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         this.testContext = testContext;
         map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
 
@@ -78,14 +78,14 @@ public class IntIntMapTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         map.destroy();
-        log.info(getOperationCountInformation(testContext.getTargetInstance()));
+        LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
     }
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitClusterSize(log, testContext.getTargetInstance(), minNumberOfMembers);
+        waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
         keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
 
         Random random = new Random();
@@ -96,7 +96,7 @@ public class IntIntMapTest {
     }
 
     @RunWithWorker
-    public AbstractWorker<Operation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 
