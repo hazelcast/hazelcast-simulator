@@ -12,6 +12,9 @@ import java.util.concurrent.TimeUnit;
  * It is recommended to create a new instance for each worker thread, so they are clocked interleaved.
  */
 public final class SimpleMetronome implements Metronome {
+
+    private static final Metronome EMPTY_METRONOME = new EmptyMetronome();
+
     private final long intervalNanos;
 
     private long waitUntil;
@@ -28,7 +31,7 @@ public final class SimpleMetronome implements Metronome {
      */
     public static Metronome withFixedIntervalMs(int intervalMs) {
         if (intervalMs == 0) {
-            return new EmptyMetronome();
+            return EMPTY_METRONOME;
         }
         return new SimpleMetronome(TimeUnit.MILLISECONDS.toNanos(intervalMs));
     }
@@ -51,9 +54,9 @@ public final class SimpleMetronome implements Metronome {
     }
 
     private static class EmptyMetronome implements Metronome {
+
         @Override
         public void waitForNext() {
-            // noop
         }
     }
 }
