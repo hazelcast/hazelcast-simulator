@@ -28,6 +28,7 @@ import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
+import static java.lang.String.format;
 
 abstract class AbstractMapTest {
 
@@ -68,8 +69,12 @@ abstract class AbstractMapTest {
             LOGGER.severe("Could not read expected field!", e);
         }
 
+        int clusterSize = hazelcastInstance.getCluster().getMembers().size();
         globalKeyCount = getGlobalKeyCount(minResultSizeLimit, resultLimitFactor);
-        localKeyCount = 1 + (int) (globalKeyCount / hazelcastInstance.getCluster().getMembers().size());
+        localKeyCount = 1 + (int) (globalKeyCount / clusterSize);
+
+        LOGGER.info(format("%s: Filling map with %d items (%d items per member, %d members in cluster)",
+                basename, globalKeyCount, localKeyCount, clusterSize));
     }
 
     abstract long getGlobalKeyCount(Integer minResultSizeLimit, Float resultLimitFactor);
