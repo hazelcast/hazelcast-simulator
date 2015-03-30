@@ -117,8 +117,12 @@ public class Chart extends JPanel {
         for (String benchmarkName : benchmarkNames) {
             BenchmarkResults benchmarkResults = model.getBenchmarkResults(benchmarkName);
             for (String selectedProbe : selectedProbes) {
-                String name = benchmarkName + " - " + selectedProbe;
                 Result probeData = benchmarkResults.getProbeData(selectedProbe);
+                if (probeData == null) {
+                    System.out.println("Couldn't find probe " + selectedProbe + " in benchmark " + benchmarkName);
+                    continue;
+                }
+                String name = benchmarkName + " - " + selectedProbe;
                 SimpleHistogramDataSetContainer dataSet = calculateSingleProbeDataSet(probeData);
                 aggregatedDataSet.addNewSeries(dataSet, name);
             }
