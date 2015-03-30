@@ -55,7 +55,7 @@ abstract class AbstractMapTest {
             LOGGER.warning("Feature is not enabled in this version of Hazelcast!", e);
         }
 
-        Integer minResultSizeLimit = 150000;
+        Integer minResultSizeLimit = 100000;
         Float resultLimitFactor = 1.15f;
         try {
             if (classType != null) {
