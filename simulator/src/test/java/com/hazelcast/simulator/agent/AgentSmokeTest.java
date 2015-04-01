@@ -20,7 +20,6 @@ import com.hazelcast.simulator.worker.commands.StopCommand;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -34,13 +33,12 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static org.junit.Assert.assertEquals;
 
-@Ignore
 public class AgentSmokeTest {
 
     private static final String AGENT_IP_ADDRESS = System.getProperty("agentBindAddress", "127.0.0.1");
     private static final int TEST_RUNTIME_SECONDS = Integer.parseInt(System.getProperty("testRuntimeSeconds", "10"));
 
-    private static final Logger log = Logger.getLogger(Coordinator.class);
+    private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
     private static Thread agentThread;
     private static AgentsClient agentsClient;
@@ -50,8 +48,8 @@ public class AgentSmokeTest {
         System.setProperty("worker.testmethod.timeout", "5");
         System.setProperty("user.dir", "./dist/src/main/dist");
 
-        log.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
-        log.info("Test runtime for smoke test: " + TEST_RUNTIME_SECONDS + " seconds");
+        LOGGER.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
+        LOGGER.info("Test runtime for smoke test: " + TEST_RUNTIME_SECONDS + " seconds");
 
         startAgent();
         agentsClient = getAgentsClient();
@@ -88,63 +86,63 @@ public class AgentSmokeTest {
     }
 
     private void cooldown() {
-        log.info("Cooldown...");
+        LOGGER.info("Cooldown...");
         sleepSeconds(3);
-        log.info("Finished cooldown");
+        LOGGER.info("Finished cooldown");
     }
 
     public void executeTestCase(TestCase testCase) throws Exception {
         TestSuite testSuite = new TestSuite();
         agentsClient.initTestSuite(testSuite);
 
-        log.info("Spawning workers...");
+        LOGGER.info("Spawning workers...");
         spawnWorkers(agentsClient);
 
         InitCommand initTestCommand = new InitCommand(testCase);
-        log.info("InitTest phase...");
+        LOGGER.info("InitTest phase...");
         agentsClient.executeOnAllWorkers(initTestCommand);
 
-        log.info("Setup phase...");
+        LOGGER.info("Setup phase...");
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "setUp"));
 
-        log.info("Local warmup phase...");
+        LOGGER.info("Local warmup phase...");
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localWarmup"));
         agentsClient.waitForPhaseCompletion("", testCase.id, "localWarmup");
 
-        log.info("Global warmup phase...");
+        LOGGER.info("Global warmup phase...");
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "globalWarmup"));
         agentsClient.waitForPhaseCompletion("", testCase.id, "globalWarmup");
 
-        log.info("Run phase...");
+        LOGGER.info("Run phase...");
         RunCommand runCommand = new RunCommand(testCase.id);
         runCommand.clientOnly = false;
         agentsClient.executeOnAllWorkers(runCommand);
 
-        log.info("Running for " + TEST_RUNTIME_SECONDS + " seconds");
+        LOGGER.info("Running for " + TEST_RUNTIME_SECONDS + " seconds");
         sleepSeconds(TEST_RUNTIME_SECONDS);
-        log.info("Finished running");
+        LOGGER.info("Finished running");
 
-        log.info("Stopping test...");
+        LOGGER.info("Stopping test...");
         agentsClient.executeOnAllWorkers(new StopCommand(testCase.id));
         agentsClient.waitForPhaseCompletion("", testCase.id, "stop");
 
-        log.info("Local verify phase...");
+        LOGGER.info("Local verify phase...");
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localVerify"));
         agentsClient.waitForPhaseCompletion("", testCase.id, "localVerify");
 
-        log.info("Global verify phase...");
+        LOGGER.info("Global verify phase...");
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "globalVerify"));
         agentsClient.waitForPhaseCompletion("", testCase.id, "globalVerify");
 
-        log.info("Global teardown phase...");
+        LOGGER.info("Global teardown phase...");
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "globalTeardown"));
         agentsClient.waitForPhaseCompletion("", testCase.id, "globalTeardown");
 
-        log.info("Local teardown phase...");
+        LOGGER.info("Local teardown phase...");
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localTeardown"));
         agentsClient.waitForPhaseCompletion("", testCase.id, "localTeardown");
 
-        log.info("Testcase done!");
+        LOGGER.info("Testcase done!");
     }
 
     private void spawnWorkers(AgentsClient client) throws TimeoutException {
@@ -168,7 +166,7 @@ public class AgentSmokeTest {
             public void run() {
                 try {
                     String[] args = new String[] {
-                            "--bindAddress", AGENT_IP_ADDRESS
+                            "--bindAddress", AGENT_IP_ADDRESS,
                     };
                     Agent.createAgent(args);
                 } catch (Throwable t) {
@@ -189,12 +187,13 @@ public class AgentSmokeTest {
     }
 
     public static class SuccessTest {
+
         private TestContext context;
 
         @Run
         void run() {
             while (!context.isStopped()) {
-                log.info("SuccessTest iteration...");
+                LOGGER.info("SuccessTest iteration...");
                 sleepSeconds(1);
             }
         }
@@ -205,21 +204,22 @@ public class AgentSmokeTest {
         }
 
         @Setup
-        void setup(TestContext context) {
+        public void setUp(TestContext context) {
             this.context = context;
         }
     }
 
     public static class FailingTest {
+
         private TestContext context;
 
         @Run
         void run() {
             if (!context.isStopped()) {
-                log.info("FailingTest iteration...");
+                LOGGER.info("FailingTest iteration...");
                 sleepSeconds(1);
 
-                log.info("FailingTest failing!");
+                LOGGER.info("FailingTest failing!");
                 throw new RuntimeException("This test should fail");
             }
         }
@@ -230,7 +230,7 @@ public class AgentSmokeTest {
         }
 
         @Setup
-        void setup(TestContext context) {
+        public void setUp(TestContext context) {
             this.context = context;
         }
     }
