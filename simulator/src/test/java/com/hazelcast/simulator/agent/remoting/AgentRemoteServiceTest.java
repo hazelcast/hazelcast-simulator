@@ -8,25 +8,25 @@ import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-@Ignore
 public class AgentRemoteServiceTest {
 
     private Agent agentMock;
+    private AgentMessageProcessor agentMessageProcessorMock;
     private AgentRemoteService agentRemoteService;
     private AgentsClient client;
-    private AgentMessageProcessor agentMessageProcessorMock;
 
     @Before
     public void setUp() throws IOException {
@@ -34,9 +34,10 @@ public class AgentRemoteServiceTest {
         agentMessageProcessorMock = mock(AgentMessageProcessor.class);
         agentRemoteService = new AgentRemoteService(agentMock, agentMessageProcessorMock);
         agentRemoteService.start();
+
         InetAddress localInetAddress = InetAddress.getByName(getHostAddress());
         String addressString = localInetAddress.getHostAddress();
-        List<AgentAddress> addresses = Arrays.asList(new AgentAddress(addressString, addressString));
+        List<AgentAddress> addresses = Collections.singletonList(new AgentAddress(addressString, addressString));
         client = new AgentsClient(addresses);
     }
 
