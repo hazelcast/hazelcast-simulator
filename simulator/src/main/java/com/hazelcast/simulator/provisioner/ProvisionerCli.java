@@ -88,28 +88,32 @@ public class ProvisionerCli {
             provisioner.props.forceGit(git);
         }
 
-        provisioner.init();
-        if (options.has(restartSpec)) {
-            boolean enterpriseEnabled = options.valueOf(enterpriseEnabledSpec);
-            provisioner.restart(enterpriseEnabled);
-            provisioner.startAgents();
-        } else if (options.has(killSpec)) {
-            provisioner.killAgents();
-        } else if (options.has(downloadSpec)) {
-            String dir = options.valueOf(downloadSpec);
-            provisioner.download(dir);
-        } else if (options.has(cleanSpec)) {
-            provisioner.clean();
-        } else if (options.has(terminateSpec)) {
-            provisioner.terminate();
-        } else if (options.has(scaleSpec)) {
-            int size = options.valueOf(scaleSpec);
-            boolean enterpriseEnabled = options.valueOf(enterpriseEnabledSpec);
-            provisioner.scale(size, enterpriseEnabled);
-        } else if (options.has(listAgentsSpec)) {
-            provisioner.listAgents();
-        } else {
-            parser.printHelpOn(System.out);
+        try {
+            provisioner.init();
+            if (options.has(restartSpec)) {
+                boolean enterpriseEnabled = options.valueOf(enterpriseEnabledSpec);
+                provisioner.restart(enterpriseEnabled);
+                provisioner.startAgents();
+            } else if (options.has(killSpec)) {
+                provisioner.killAgents();
+            } else if (options.has(downloadSpec)) {
+                String dir = options.valueOf(downloadSpec);
+                provisioner.download(dir);
+            } else if (options.has(cleanSpec)) {
+                provisioner.clean();
+            } else if (options.has(terminateSpec)) {
+                provisioner.terminate();
+            } else if (options.has(scaleSpec)) {
+                int size = options.valueOf(scaleSpec);
+                boolean enterpriseEnabled = options.valueOf(enterpriseEnabledSpec);
+                provisioner.scale(size, enterpriseEnabled);
+            } else if (options.has(listAgentsSpec)) {
+                provisioner.listAgents();
+            } else {
+                parser.printHelpOn(System.out);
+            }
+        } finally {
+            provisioner.shutdown();
         }
     }
 
