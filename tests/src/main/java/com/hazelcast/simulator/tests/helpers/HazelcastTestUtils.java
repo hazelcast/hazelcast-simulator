@@ -167,15 +167,22 @@ public class HazelcastTestUtils {
         return impl;
     }
 
-    public static long nextKeyOwnedBy(long key, HazelcastInstance instance) {
-        final Member localMember = instance.getCluster().getLocalMember();
-        final PartitionService partitionService = instance.getPartitionService();
-        for (; ; ) {
-            Partition partition = partitionService.getPartition(key);
+    /**
+     * Returns the next {@code long} key owned by the given Hazelcast instance.
+     *
+     * @param instance  Hazelcast instance to search next key for
+     * @param lastKey   last key to start search from
+     * @return next key owned by given Hazelcast instance
+     */
+    public static long nextKeyOwnedBy(HazelcastInstance instance, long lastKey) {
+        Member localMember = instance.getCluster().getLocalMember();
+        PartitionService partitionService = instance.getPartitionService();
+        while (true) {
+            Partition partition = partitionService.getPartition(lastKey);
             if (localMember.equals(partition.getOwner())) {
-                return key;
+                return lastKey;
             }
-            key++;
+            lastKey++;
         }
     }
 
