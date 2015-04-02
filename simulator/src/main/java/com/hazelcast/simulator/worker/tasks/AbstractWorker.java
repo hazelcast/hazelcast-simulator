@@ -20,7 +20,7 @@ import java.util.Random;
  *
  * @param <O> Type of Enum used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
-public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
+public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
@@ -94,8 +94,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements Runnable {
     /**
      * Override this method if you need to execute code once after all workers have finished their run phase.
      *
-     * Will always be called by the {@link com.hazelcast.simulator.worker.TestContainer}, regardless of errors in the run phase.
-     * Will be executed after {@link ThreadSpawner#awaitCompletion()} on a single worker instance.
+     * @see IWorker
      */
     public void afterCompletion() {
     }

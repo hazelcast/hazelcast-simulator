@@ -24,7 +24,7 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
 public class StringStringSyntheticMapTest {
 
-    private static final ILogger log = Logger.getLogger(StringStringSyntheticMapTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(StringStringSyntheticMapTest.class);
 
     private enum Operation {
         PUT,
@@ -56,7 +56,7 @@ public class StringStringSyntheticMapTest {
     private String[] values;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + testContext.getTestId());
@@ -64,14 +64,14 @@ public class StringStringSyntheticMapTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         map.destroy();
-        log.info(getOperationCountInformation(testContext.getTargetInstance()));
+        LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
     }
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitClusterSize(log, testContext.getTargetInstance(), minNumberOfMembers);
+        waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
         keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = generateStrings(valueCount, valueLength);
 
@@ -83,7 +83,7 @@ public class StringStringSyntheticMapTest {
     }
 
     @RunWithWorker
-    public AbstractWorker<Operation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

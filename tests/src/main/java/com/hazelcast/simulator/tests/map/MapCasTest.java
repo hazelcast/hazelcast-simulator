@@ -9,7 +9,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
@@ -39,14 +38,14 @@ public class MapCasTest {
     private IMap<String, Map<Integer, Long>> resultsPerWorker;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
         resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         map.destroy();
         resultsPerWorker.destroy();
     }
@@ -81,7 +80,7 @@ public class MapCasTest {
     }
 
     @RunWithWorker
-    public AbstractWorker createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

@@ -22,7 +22,7 @@ import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.IWorker;
 import com.hazelcast.util.Clock;
 import org.apache.log4j.Logger;
 
@@ -112,7 +112,7 @@ public class TestContainer<T extends TestContext> {
     private Method operationCountMethod;
     private Method messageConsumerMethod;
 
-    private AbstractWorker operationCountWorkerInstance;
+    private IWorker operationCountWorkerInstance;
 
     public TestContainer(Object testObject, T testContext, ProbesConfiguration probesConfiguration) {
         this(testObject, testContext, probesConfiguration, null);
@@ -209,7 +209,7 @@ public class TestContainer<T extends TestContext> {
     private void initMethods() {
         try {
             runMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Run.class);
-            runWithWorkerMethod = getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, AbstractWorker.class);
+            runWithWorkerMethod = getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, IWorker.class);
             if (!(runMethod == null ^ runWithWorkerMethod == null)) {
                 throw new IllegalTestException(
                         format("Test must contain either %s or %s method", Run.class, RunWithWorker.class));
@@ -353,22 +353,33 @@ public class TestContainer<T extends TestContext> {
 
         LOGGER.info(format("Spawning %d worker threads for test %s with %s probe", threadCount, testId, workerProbeType));
 
+        // create instance to get class of worker
+        IWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
+        Class workerClass = worker.getClass();
+
+        Field testContextField = getField(workerClass, "testContext", TestContext.class);
+        Field intervalProbeField = getField(workerClass, "intervalProbe", IntervalProbe.class);
+
+        Method optionalMethod = getAtMostOneMethodWithoutArgs(workerClass, Performance.class, Long.TYPE);
+        if (optionalMethod != null) {
+            operationCountMethod = optionalMethod;
+        }
+
         // create one concurrent probe per test and inject it in all worker instances of the test
         probesConfiguration.addConfig(probeName, workerProbeType);
         IntervalProbe intervalProbe = getOrCreateConcurrentProbe(probeName, IntervalProbe.class);
         intervalProbe.startProbing(now);
 
-        operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
-
-        Field testContextField = getFieldFromAbstractWorker("testContext", TestContext.class);
-        Field intervalProbeField = getFieldFromAbstractWorker("intervalProbe", IntervalProbe.class);
-
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
-            AbstractWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
+            worker = invokeMethod(testClassInstance, runWithWorkerMethod);
 
-            injectObjectToInstance(worker, testContextField, testContext);
-            injectObjectToInstance(worker, intervalProbeField, intervalProbe);
+            if (testContextField != null) {
+                injectObjectToInstance(worker, testContextField, testContext);
+            }
+            if (intervalProbeField != null) {
+                injectObjectToInstance(worker, intervalProbeField, intervalProbe);
+            }
 
             bindOptionalProperty(worker, testCase, OptionalTestProperties.LOG_FREQUENCY.propertyName);
 
@@ -380,13 +391,5 @@ public class TestContainer<T extends TestContext> {
 
         // call the afterCompletion method on a single instance of the worker
         operationCountWorkerInstance.afterCompletion();
-    }
-
-    private Field getFieldFromAbstractWorker(String fieldName, Class fieldType) {
-        Field field = getField(AbstractWorker.class, fieldName, fieldType);
-        if (field == null) {
-            throw new RuntimeException(format("Could not find %s field in %s", fieldName, AbstractWorker.class.getSimpleName()));
-        }
-        return field;
     }
 }

@@ -37,7 +37,8 @@ import static org.junit.Assert.fail;
  * This test invokes slowed down map operations on a Hazelcast instance to provoke slow operation logs.
  */
 public class SlowOperationMapTest {
-    private static final ILogger log = Logger.getLogger(SlowOperationMapTest.class);
+
+    private static final ILogger LOGGER = Logger.getLogger(SlowOperationMapTest.class);
 
     private enum Operation {
         PUT,
@@ -65,7 +66,7 @@ public class SlowOperationMapTest {
     private int[] keys;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         this.testContext = testContext;
         map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
 
@@ -80,14 +81,14 @@ public class SlowOperationMapTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         map.destroy();
-        log.info(getOperationCountInformation(testContext.getTargetInstance()));
+        LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
     }
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitClusterSize(log, testContext.getTargetInstance(), minNumberOfMembers);
+        waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
         keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
 
         Random random = new Random();
@@ -121,11 +122,11 @@ public class SlowOperationMapTest {
         long expected = Math.max(putCounter.get(), 1) + Math.max(getCounter.get(), 1);
         assertTrue("Expected " + expected + " slow operation logs, but was " + actual, actual == expected);
 
-        log.info("Found " + actual + " slow query logs after completing " + operationCount + " operations.");
+        LOGGER.info("Found " + actual + " slow query logs after completing " + operationCount + " operations.");
     }
 
     @RunWithWorker
-    public AbstractWorker<Operation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

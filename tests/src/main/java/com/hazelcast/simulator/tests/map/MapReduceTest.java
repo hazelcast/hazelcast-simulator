@@ -41,7 +41,7 @@ public class MapReduceTest {
         MODIFY_MAP_ENTRY
     }
 
-    private static final ILogger log = Logger.getLogger(MapReduceTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapReduceTest.class);
 
     // properties
     public String baseName = MapReduceTest.class.getSimpleName();
@@ -58,7 +58,7 @@ public class MapReduceTest {
     private IList<MapReduceOperationCounter> operationCounterList;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         targetInstance = testContext.getTargetInstance();
 
         map = targetInstance.getMap(baseName);
@@ -82,11 +82,11 @@ public class MapReduceTest {
         for (MapReduceOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        log.info(baseName + ": " + total + " from " + operationCounterList.size() + " worker threads");
+        LOGGER.info(baseName + ": " + total + " from " + operationCounterList.size() + " worker threads");
     }
 
     @RunWithWorker
-    public AbstractWorker<Operation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 
@@ -164,7 +164,8 @@ public class MapReduceTest {
         }
     }
 
-    private static class ModIdMapper implements Mapper<Integer, Employee, Integer, Employee> {
+    private static final class ModIdMapper implements Mapper<Integer, Employee, Integer, Employee> {
+
         private int mod = 0;
 
         private ModIdMapper(int mod) {
@@ -179,7 +180,7 @@ public class MapReduceTest {
         }
     }
 
-    private static class RangeIdCombinerFactory implements CombinerFactory<Integer, Employee, Set<Employee>> {
+    private static final class RangeIdCombinerFactory implements CombinerFactory<Integer, Employee, Set<Employee>> {
         private final int min;
         private final int max;
 

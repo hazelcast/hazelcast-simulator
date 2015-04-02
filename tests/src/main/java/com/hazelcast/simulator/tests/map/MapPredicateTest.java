@@ -43,7 +43,7 @@ public class MapPredicateTest {
         DESTROY_MAP
     }
 
-    private static final ILogger log = Logger.getLogger(MapPredicateTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapPredicateTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;
@@ -62,7 +62,7 @@ public class MapPredicateTest {
     private IList<PredicateOperationCounter> operationCounterList;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         operationCounterList = targetInstance.getList(basename + "OperationCounter");
@@ -92,11 +92,11 @@ public class MapPredicateTest {
         for (PredicateOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        log.info(format("Operation counters from %s: %s", basename, total));
+        LOGGER.info(format("Operation counters from %s: %s", basename, total));
     }
 
     @RunWithWorker
-    public AbstractWorker<Operation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 

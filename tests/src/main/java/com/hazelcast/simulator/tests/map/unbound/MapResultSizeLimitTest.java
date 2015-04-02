@@ -22,7 +22,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.IWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static java.lang.String.format;
@@ -73,7 +73,7 @@ public class MapResultSizeLimitTest extends AbstractMapTest {
     }
 
     @RunWithWorker
-    public AbstractWorker run() {
+    public IWorker run() {
         return baseRunWithWorker(operationType);
     }
 

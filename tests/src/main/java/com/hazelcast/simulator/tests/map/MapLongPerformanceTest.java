@@ -37,7 +37,7 @@ public class MapLongPerformanceTest {
     private IMap<Integer, Long> map;
 
     @Setup
-    public void setup(TestContext testContext, @Name("latencyProbe")IntervalProbe intervalProbe,
+    public void setUp(TestContext testContext, @Name("latencyProbe")IntervalProbe intervalProbe,
                       @Name("set") SimpleProbe setProbe, @Name("get") SimpleProbe getProbe) {
         this.intervalProbe = intervalProbe;
         this.setProbe = setProbe;
@@ -52,7 +52,7 @@ public class MapLongPerformanceTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         map.destroy();
     }
 
@@ -64,7 +64,7 @@ public class MapLongPerformanceTest {
     }
 
     @RunWithWorker
-    public AbstractWorker<Operation> createWorker() {
+    public Worker createWorker() {
         return new Worker();
     }
 
