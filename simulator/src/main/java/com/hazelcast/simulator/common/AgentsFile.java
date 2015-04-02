@@ -76,7 +76,8 @@ public final class AgentsFile {
                     pairs.add(new AgentAddress(chunks[0], chunks[1]));
                     break;
                 default:
-                    exitWithError(LOGGER, format("Line %s of file %s is invalid, it should contain 1 or 2 addresses separated by a "
+                    exitWithError(LOGGER, format("Line %s of file %s is invalid, "
+                            + "it should contain 1 or 2 addresses separated by a "
                             + "comma, but contains %s", lineNumber, agentFile, chunks.length));
             }
         }

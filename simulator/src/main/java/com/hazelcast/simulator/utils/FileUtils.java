@@ -43,7 +43,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static java.lang.String.format;
 
-public class FileUtils {
+public final class FileUtils {
 
     private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-_]+$");
     private static final String USER_HOME = System.getProperty("user.home");
