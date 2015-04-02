@@ -9,14 +9,13 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.tests.helpers.StringUtils;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.SimpleMetronome;
 
@@ -25,6 +24,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 
 public class SqlPredicateTest {
 
@@ -65,7 +65,7 @@ public class SqlPredicateTest {
         Random random = new Random();
         for (int k = 0; k < keyCount; k++) {
             int id = random.nextInt();
-            String key = StringUtils.generateString(keyLength);
+            String key = generateString(keyLength);
             DataSerializableEmployee value = new DataSerializableEmployee(id);
             map.put(key, value);
         }

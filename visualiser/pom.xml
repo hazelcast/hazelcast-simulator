@@ -1,21 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>simulator-root</artifactId>
-        <groupId>com.hazelcast.simulator</groupId>
-        <version>0.5-SNAPSHOT</version>
-    </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <artifactId>visualiser</artifactId>
     <name>Hazelcast Simulator Visualiser</name>
 
+    <parent>
+        <groupId>com.hazelcast.simulator</groupId>
+        <artifactId>simulator-root</artifactId>
+        <version>0.5-SNAPSHOT</version>
+    </parent>
+
     <properties>
-        <jfreechart.version>1.0.19</jfreechart.version>
-        <commons-lang.version>3.3.2</commons-lang.version>
         <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>probes</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.jfree</groupId>
             <artifactId>jfreechart</artifactId>
@@ -26,19 +34,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons-lang.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>probes</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.common.messaging;
 
-import com.hazelcast.simulator.utils.NativeUtils;
+import static com.hazelcast.simulator.utils.NativeUtils.execute;
 
 @MessageSpec(value = "blockHzTraffic", description = "configures iptables to block all incoming "
         + "traffic to TCP port range " + BlockTrafficMessage.PORTS
@@ -15,6 +15,6 @@ public class BlockTrafficMessage extends RunnableMessage {
     @Override
     public void run() {
         String command = String.format("sudo /sbin/iptables -p tcp --dport %s -A INPUT -i eth0 -j REJECT", PORTS);
-        NativeUtils.execute(command);
+        execute(command);
     }
 }

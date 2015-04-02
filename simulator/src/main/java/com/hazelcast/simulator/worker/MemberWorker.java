@@ -22,7 +22,8 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.test.utils.TestUtils;
+import com.hazelcast.core.Partition;
+import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
@@ -35,13 +36,14 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeObject;
 import static java.lang.String.format;
 
-public class MemberWorker {
+public final class MemberWorker {
 
     private static final Logger LOGGER = Logger.getLogger(MemberWorker.class);
 
@@ -70,13 +72,13 @@ public class MemberWorker {
             LOGGER.info("             member mode");
             LOGGER.info("------------------------------------------------------------------------");
             serverInstance = createServerHazelcastInstance();
-            TestUtils.warmupPartitions(LOGGER, serverInstance);
+            warmupPartitions(LOGGER, serverInstance);
         } else if (autoCreateHazelcastInstance && "client".equals(workerMode)) {
             LOGGER.info("------------------------------------------------------------------------");
             LOGGER.info("             client mode");
             LOGGER.info("------------------------------------------------------------------------");
             clientInstance = createClientHazelcastInstance();
-            TestUtils.warmupPartitions(LOGGER, clientInstance);
+            warmupPartitions(LOGGER, clientInstance);
         } else {
             throw new IllegalStateException("Unknown worker mode: " + workerMode);
         }
@@ -115,6 +117,29 @@ public class MemberWorker {
         HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
         LOGGER.info("Successfully created Client HazelcastInstance");
         return client;
+    }
+
+    private void warmupPartitions(Logger logger, HazelcastInstance hz) {
+        logger.info("Waiting for partition warmup");
+
+        PartitionService partitionService = hz.getPartitionService();
+        long startTime = System.currentTimeMillis();
+        for (Partition partition : partitionService.getPartitions()) {
+            if (System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
+                throw new IllegalStateException("Partition warmup timeout. Partitions didn't get an owner in time");
+            }
+
+            while (partition.getOwner() == null) {
+                logger.debug("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        logger.info("Partitions are warmed up successfully");
     }
 
     private void signalStartToAgent(HazelcastInstance serverInstance) {

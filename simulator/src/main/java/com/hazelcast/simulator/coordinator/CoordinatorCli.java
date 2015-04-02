@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
-import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
@@ -192,7 +192,7 @@ public class CoordinatorCli {
         workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
         workerJvmSettings.hzConfig = loadHzConfig();
         workerJvmSettings.clientHzConfig = loadClientHzConfig();
-        workerJvmSettings.log4jConfig = getFileAsTextFromWorkingDirOrSimulatorHome(
+        workerJvmSettings.log4jConfig = getFileAsTextFromWorkingDirOrBaseDir(Coordinator.SIMULATOR_HOME,
                 "worker-log4j.xml", "Log4j configuration for worker"
         );
         workerJvmSettings.refreshJvm = options.valueOf(workerRefreshSpec);

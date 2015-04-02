@@ -5,8 +5,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
-
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import org.apache.http.HttpEntity;
@@ -19,12 +18,12 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
-
 
 /*
 *

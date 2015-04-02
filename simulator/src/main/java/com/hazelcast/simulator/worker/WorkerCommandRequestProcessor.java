@@ -6,7 +6,6 @@ import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.utils.TestUtils;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
@@ -32,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.parseProbeConfiguration;
+import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static java.lang.String.format;
 
 /**
@@ -168,7 +168,7 @@ class WorkerCommandRequestProcessor {
                 testsPending.incrementAndGet();
 
                 if (serverInstance != null) {
-                    serverInstance.getUserContext().put(TestUtils.TEST_INSTANCE + ":" + testCase.id, testInstance);
+                    serverInstance.getUserContext().put(getUserContextKeyFromTestId(testCase.id), testInstance);
                 }
             } catch (Throwable e) {
                 LOGGER.fatal("Failed to init test", e);

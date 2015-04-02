@@ -24,8 +24,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.StringUtils;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Performance;
@@ -33,7 +31,8 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
@@ -44,6 +43,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
 public class StringICacheTest {
 
@@ -61,7 +61,7 @@ public class StringICacheTest {
     // if we use the putAndGet (so returning a value) or the put (which returns void)
     public boolean useGetAndPut = true;
     public String basename = "stringicache";
-    public KeyLocality keyLocality = KeyLocality.Random;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
     public IntervalProbe putLatency;
     public IntervalProbe getLatency;
@@ -119,7 +119,7 @@ public class StringICacheTest {
         waitClusterSize(log, targetInstance, minNumberOfMembers);
 
         keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
-        values = StringUtils.generateStrings(valueCount, valueLength);
+        values = generateStrings(valueCount, valueLength);
 
         Random random = new Random();
 

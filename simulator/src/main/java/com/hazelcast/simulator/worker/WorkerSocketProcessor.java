@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
@@ -15,6 +14,8 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static java.util.Collections.singletonList;
 
 /**
@@ -105,13 +106,13 @@ class WorkerSocketProcessor {
 
             if (response instanceof Exception) {
                 Exception exception = (Exception) response;
-                CommonUtils.fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
+                fixRemoteStackTrace(exception, Thread.currentThread().getStackTrace());
                 throw exception;
             }
 
             return (E) response;
         } finally {
-            CommonUtils.closeQuietly(socket);
+            closeQuietly(socket);
         }
     }
 }

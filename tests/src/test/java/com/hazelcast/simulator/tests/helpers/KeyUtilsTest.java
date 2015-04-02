@@ -10,8 +10,8 @@ public class KeyUtilsTest {
 
     @Test
     public void generateInt_singlePartition() {
-        int key1 = generateIntKey(100, KeyLocality.SinglePartition, null);
-        int key2 = generateIntKey(100, KeyLocality.SinglePartition, null);
+        int key1 = generateIntKey(100, KeyLocality.SINGLE_PARTITION, null);
+        int key2 = generateIntKey(100, KeyLocality.SINGLE_PARTITION, null);
 
         assertEquals(0, key1);
         assertEquals(0, key2);
@@ -19,8 +19,8 @@ public class KeyUtilsTest {
 
     @Test
     public void generateString_singlePartition() {
-        String key1 = generateStringKey(100, KeyLocality.SinglePartition, null);
-        String key2 = generateStringKey(100, KeyLocality.SinglePartition, null);
+        String key1 = generateStringKey(100, KeyLocality.SINGLE_PARTITION, null);
+        String key2 = generateStringKey(100, KeyLocality.SINGLE_PARTITION, null);
 
         assertEquals("", key1);
         assertEquals("", key2);

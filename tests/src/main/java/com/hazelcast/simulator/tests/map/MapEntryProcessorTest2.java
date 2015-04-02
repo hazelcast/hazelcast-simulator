@@ -8,10 +8,15 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.*;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
+import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Random;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static junit.framework.TestCase.assertEquals;

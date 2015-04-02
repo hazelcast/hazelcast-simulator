@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.provisioner.git.GitSupport;
-import com.hazelcast.simulator.utils.CommonUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -11,6 +10,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getText;
@@ -67,7 +67,7 @@ public class HazelcastJars {
             }
         } else if (versionSpec.startsWith(GIT_VERSION_PREFIX)) {
             if (prepareEnterpriseJARs) {
-                CommonUtils.exitWithError(LOGGER,
+                exitWithError(LOGGER,
                         "Hazelcast Enterprise is currently not supported when HAZELCAST_VERSION_SPEC is set to GIT.");
             }
             String revision = versionSpec.substring(GIT_VERSION_PREFIX.length());

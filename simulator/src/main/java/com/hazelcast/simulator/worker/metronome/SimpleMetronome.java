@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.worker.metronome;
 
-import org.apache.commons.lang3.RandomUtils;
-
 import java.util.concurrent.TimeUnit;
+
+import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
  * Simple {@link Metronome} implementation which busy loops on a fixed interval.
@@ -40,7 +40,7 @@ public final class SimpleMetronome implements Metronome {
     public void waitForNext() {
         // set random interval on the first run
         if (waitUntil == 0) {
-            waitUntil = System.nanoTime() + RandomUtils.nextLong(0, intervalNanos);
+            waitUntil = System.nanoTime() + nextLong(0, intervalNanos);
         }
 
         // busy loop

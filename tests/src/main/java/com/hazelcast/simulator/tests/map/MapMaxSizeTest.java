@@ -17,8 +17,8 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.config.MaxSizeConfig.MaxSizePolicy.PER_NODE;
-import static com.hazelcast.simulator.test.utils.TestUtils.assertEqualsStringFormat;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;
 import static junit.framework.Assert.assertTrue;
 
@@ -42,7 +42,7 @@ public class MapMaxSizeTest {
         PUT_ASYNC
     }
 
-    private static final ILogger log = Logger.getLogger(MapMaxSizeTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapMaxSizeTest.class);
 
     // properties
     public String basename = "MapMaxSize1";
@@ -65,7 +65,7 @@ public class MapMaxSizeTest {
     private int maxSizePerNode;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         operationCounterList = targetInstance.getList(basename + "OperationCounter");
@@ -80,14 +80,14 @@ public class MapMaxSizeTest {
                 .addDefaultOperation(MapPutOperation.PUT_SYNC);
 
 
-        if(isMemberNode(targetInstance)){
+        if (isMemberNode(targetInstance)) {
             try {
                 MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
                 maxSizePerNode = maxSizeConfig.getSize();
                 assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s", PER_NODE, maxSizeConfig.getMaxSizePolicy());
                 assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE", maxSizePerNode < Integer.MAX_VALUE);
 
-                log.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
+                LOGGER.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
             } catch (Exception e) {
                 ExceptionReporter.report(testContext.getTestId(), e);
                 throw e;
@@ -101,13 +101,13 @@ public class MapMaxSizeTest {
         for (MapMaxSizeOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        log.info(format("Operation counters from %s: %s", basename, total));
+        LOGGER.info(format("Operation counters from %s: %s", basename, total));
 
         assertMapMaxSize();
     }
 
     private void assertMapMaxSize() {
-        if(isMemberNode(targetInstance)){
+        if (isMemberNode(targetInstance)) {
             int mapSize = map.size();
             int clusterSize = targetInstance.getCluster().getMembers().size();
             assertTrue(format("Size of map %s should be <= %d * %d, but was %d", basename, clusterSize, maxSizePerNode, mapSize),

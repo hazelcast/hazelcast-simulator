@@ -303,29 +303,35 @@ public class Provisioner {
     private void installAgent(String ip) {
         bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s", getSimulatorVersion()));
 
-        // first we remove the old lib files to prevent different versions of the same JAR to bite us
-        bash.sshQuiet(ip, format("rm -fr hazelcast-simulator-%s/lib", getSimulatorVersion()));
+        // first we delete the old lib files to prevent different versions of the same JAR to bite us
+        bash.sshQuiet(ip, format("rm -f hazelcast-simulator-%s/lib/*", getSimulatorVersion()));
+
+        // upload Simulator JARs
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/simulator-*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/probes-*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/tests-*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/utils-*", "lib");
+
+        // upload Hazelcast JARs
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/hazelcast*", "lib");
+
+        // we don't copy all JARs to the agent to increase upload speed, e.g. YourKit is uploaded on demand by the Coordinator
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/cache-api*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/commons-codec*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/commons-lang3*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/jopt*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/junit*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/HdrHistogram-*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/log4j*", "lib");
+
+        // upload remaining files
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/bin/", "bin");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/conf/", "conf");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/jdk-install/", "jdk-install");
-
-        // we don't copy all JARs to the agent since most of them are not needed
-        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/hazelcast*", "lib");
-        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/jopt*", "lib");
-        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/junit*", "lib");
-        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/log4j*", "lib");
-        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/simulator*", "lib");
-        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/commons-codec*", "lib");
-        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/commons-lang3*", "lib");
-        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/cache-api*", "lib");
-        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/probes-*", "lib");
-        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/HdrHistogram-*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/tests/", "tests");
 
         String script = loadInitScript();
         bash.ssh(ip, script);
-
-        // we don't upload YourKit to reduce upload size (it will be done by the Coordinator if profiler is used)
 
         String versionSpec = props.getHazelcastVersionSpec();
         if (!versionSpec.equals("outofthebox")) {

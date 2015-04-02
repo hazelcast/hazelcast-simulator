@@ -27,7 +27,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -35,6 +34,7 @@ import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 
 public class IntIntMapTest {
 
@@ -51,7 +51,7 @@ public class IntIntMapTest {
     public int keyCount = 10000;
     public int valueCount = 10000;
     public String basename = "intIntMap";
-    public KeyLocality keyLocality = KeyLocality.Random;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
 
     public double putProb = 0.1;
@@ -86,7 +86,7 @@ public class IntIntMapTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         waitClusterSize(log, testContext.getTargetInstance(), minNumberOfMembers);
-        keys = KeyUtils.generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
+        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
 
         Random random = new Random();
         for (int key : keys) {

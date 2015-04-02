@@ -5,7 +5,6 @@ import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.map.MapInterceptor;
-import com.hazelcast.spi.impl.InternalOperationService;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -14,10 +13,10 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.spi.impl.InternalOperationService;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -27,6 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getMethodByName;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
@@ -50,7 +50,7 @@ public class SlowOperationMapTest {
     public int keyCount = 100;
     public int valueCount = 100;
     public String basename = "slowOperationTestMap";
-    public KeyLocality keyLocality = KeyLocality.Random;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
     public double putProb = 0.5;
     public int recursionDepth = 10;
@@ -88,7 +88,7 @@ public class SlowOperationMapTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         waitClusterSize(log, testContext.getTargetInstance(), minNumberOfMembers);
-        keys = KeyUtils.generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
+        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
 
         Random random = new Random();
         for (int key : keys) {

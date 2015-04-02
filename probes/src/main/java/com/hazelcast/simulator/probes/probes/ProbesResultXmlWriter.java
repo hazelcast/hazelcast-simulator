@@ -1,7 +1,5 @@
 package com.hazelcast.simulator.probes.probes;
 
-import com.hazelcast.simulator.probes.probes.util.Utils;
-
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -15,6 +13,7 @@ import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROB
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBES_RESULT;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE_NAME;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE_TYPE;
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 
 public final class ProbesResultXmlWriter {
 
@@ -29,7 +28,7 @@ public final class ProbesResultXmlWriter {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         } finally {
-            Utils.closeQuietly(fos);
+            closeQuietly(fos);
         }
     }
 
@@ -53,7 +52,7 @@ public final class ProbesResultXmlWriter {
         } catch (XMLStreamException e) {
             throw new RuntimeException("Cannot create XML Output Stream Writer");
         } finally {
-            Utils.closeQuietly(xmlStreamWriter);
+            closeQuietly(xmlStreamWriter);
         }
     }
 }

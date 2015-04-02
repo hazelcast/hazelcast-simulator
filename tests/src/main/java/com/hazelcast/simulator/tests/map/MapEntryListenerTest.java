@@ -26,15 +26,15 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.tests.helpers.StringUtils;
-import com.hazelcast.simulator.tests.map.helpers.EventCount;
 import com.hazelcast.simulator.tests.map.helpers.EntryListenerImpl;
+import com.hazelcast.simulator.tests.map.helpers.EventCount;
 import com.hazelcast.simulator.tests.map.helpers.ScrambledZipfianGenerator;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -96,7 +96,7 @@ public class MapEntryListenerTest {
     public void setup(TestContext testContext) throws Exception {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
-        values = StringUtils.generateStrings(valueCount, valueLength);
+        values = generateStrings(valueCount, valueLength);
         listener = new EntryListenerImpl<Integer, String>(minEntryListenerDelayMs, maxEntryListenerDelayMs);
 
         eventCounts = targetInstance.getList(basename + "eventCount");

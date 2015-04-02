@@ -27,14 +27,14 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
 import static org.junit.Assert.assertEquals;
 
 public class AtomicLongTest {
@@ -47,7 +47,7 @@ public class AtomicLongTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
     public String basename = "atomiclong";
-    public KeyLocality keyLocality = KeyLocality.Random;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int writePercentage = 100;
     public int warmupIterations = 100;
 
@@ -74,7 +74,7 @@ public class AtomicLongTest {
         totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         for (int k = 0; k < counters.length; k++) {
-            String key = KeyUtils.generateStringKey(8, keyLocality, targetInstance);
+            String key = generateStringKey(8, keyLocality, targetInstance);
             counters[k] = targetInstance.getAtomicLong(key);
         }
     }

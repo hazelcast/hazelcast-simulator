@@ -14,9 +14,8 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.utils.ThreadSpawner;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.transaction.TransactionException;
@@ -28,6 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 
 public class MapTransactionReadWriteTest {
 
@@ -47,7 +47,7 @@ public class MapTransactionReadWriteTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1;
     public String basename = "txintIntMap";
-    public KeyLocality keyLocality = KeyLocality.Random;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
 
     public double putProb = 0.1;
@@ -84,7 +84,7 @@ public class MapTransactionReadWriteTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         waitClusterSize(log, targetInstance, minNumberOfMembers);
-        keys = KeyUtils.generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, targetInstance);
+        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, targetInstance);
 
         Random random = new Random();
         for (int key : keys) {
