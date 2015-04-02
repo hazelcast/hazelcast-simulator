@@ -13,7 +13,7 @@ import static java.lang.String.format;
 
 public final class AnnotationReflectionUtils {
 
-    private static final AnnotationFilter.AlwaysFilter ALWAYS_FILTER = new AnnotationFilter.AlwaysFilter();
+    static final AnnotationFilter.AlwaysFilter ALWAYS_FILTER = new AnnotationFilter.AlwaysFilter();
 
     private AnnotationReflectionUtils() {
     }
