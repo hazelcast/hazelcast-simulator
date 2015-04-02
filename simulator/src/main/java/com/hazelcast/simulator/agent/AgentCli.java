@@ -6,10 +6,7 @@ import joptsimple.OptionSpec;
 
 import java.io.IOException;
 
-public class AgentCli {
-
-    private AgentCli() {
-    }
+public final class AgentCli {
 
     private final OptionParser parser = new OptionParser();
     private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
@@ -29,6 +26,9 @@ public class AgentCli {
     private final OptionSpec<String> cloudProviderSpec = parser.accepts("cloudProvider",
             "Cloud provider")
             .withRequiredArg().ofType(String.class);
+
+    private AgentCli() {
+    }
 
     public static void init(Agent agent, String[] args) throws IOException {
         AgentCli agentOptionSpec = new AgentCli();

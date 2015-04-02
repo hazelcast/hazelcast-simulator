@@ -128,6 +128,10 @@ public class CoordinatorCli {
 
     private OptionSet options;
 
+    public CoordinatorCli(Coordinator coordinator) {
+        this.coordinator = coordinator;
+    }
+
     private static String getDefaultHzFile() {
         File file = new File("hazelcast.xml");
         // if something exists in the current working directory, use that
@@ -146,10 +150,6 @@ public class CoordinatorCli {
         } else {
             return Coordinator.SIMULATOR_HOME + File.separator + "conf" + File.separator + "client-hazelcast.xml";
         }
-    }
-
-    public CoordinatorCli(Coordinator coordinator) {
-        this.coordinator = coordinator;
     }
 
     public void init(String[] args) throws Exception {
