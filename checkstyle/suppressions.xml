@@ -19,5 +19,6 @@
 
     <!-- Suppress some checks for JUnit tests -->
     <suppress checks="MethodName" files=".*Test\.java$"/>
+    <suppress checks="TypeName" files=".*Test\.java$"/>
 
 </suppressions>
