@@ -232,7 +232,8 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindClass(Object object, String value, Field field) throws IllegalAccessException, ClassNotFoundException {
+    private static void bindClass(Object object, String value, Field field) throws IllegalAccessException,
+            ClassNotFoundException {
         if ("null".equals(value)) {
             field.set(object, null);
         } else {
