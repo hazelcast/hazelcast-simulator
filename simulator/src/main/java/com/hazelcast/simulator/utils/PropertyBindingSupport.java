@@ -52,7 +52,7 @@ public final class PropertyBindingSupport {
 
     /**
      * Binds a single property contained in the testCase object onto the object instance.
-     *
+     * <p/>
      * There will be no warning if the property is not defined in the TestCase.
      * There will be no exception if the property will not be found in the object instance, just a warning.
      *
@@ -83,6 +83,7 @@ public final class PropertyBindingSupport {
 
     private static void bindProperty(Object object, String property, String value, Set<String> optionalProperties)
             throws IllegalAccessException {
+
         String[] path = property.split("\\.");
 
         Field field;
@@ -104,84 +105,83 @@ public final class PropertyBindingSupport {
             if (optionalProperties != null && optionalProperties.contains(property)) {
                 return;
             }
-            throw new BindException(format("Property [%s.%s] does not exist", object.getClass().getName(), property));
+            throwBindException("Property [%s.%s] does not exist", object.getClass().getName(), property);
         }
 
         try {
-            if (Boolean.TYPE.equals(field.getType())) {
-                bindPrimitiveBoolean(object, value, field);
-            } else if (Boolean.class.equals(field.getType())) {
-                bindBoolean(object, value, field);
-            } else if (Byte.TYPE.equals(field.getType())) {
-                // primitive byte
-                field.set(object, Byte.parseByte(value));
-            } else if (Byte.class.equals(field.getType())) {
-                bindByte(object, value, field);
-            } else if (Short.TYPE.equals(field.getType())) {
-                // primitive short
-                field.set(object, Short.parseShort(value));
-            } else if (Short.class.equals(field.getType())) {
-                bindShort(object, value, field);
-            } else if (Integer.TYPE.equals(field.getType())) {
-                // primitive integer
-                field.set(object, Integer.parseInt(value));
-            } else if (Integer.class.equals(field.getType())) {
-                bindInteger(object, value, field);
-            } else if (Long.TYPE.equals(field.getType())) {
-                // primitive long
-                field.set(object, Long.parseLong(value));
-            } else if (Long.class.equals(field.getType())) {
-                bindLong(object, value, field);
-            } else if (Float.TYPE.equals(field.getType())) {
-                // primitive float
-                field.set(object, Float.parseFloat(value));
-            } else if (Float.class.equals(field.getType())) {
-                bindFloat(object, value, field);
-            } else if (Double.TYPE.equals(field.getType())) {
-                // primitive double
-                field.set(object, Double.parseDouble(value));
-            } else if (Double.class.equals(field.getType())) {
-                bindDouble(object, value, field);
-            } else if (field.getType().isAssignableFrom(Class.class)) {
-                bindClass(object, value, field);
-            } else if (String.class.equals(field.getType())) {
-                bindString(object, value, field);
-            } else if (field.getType().isEnum()) {
-                bindEnum(object, value, field);
-            } else {
-                throw new BindException(
-                        format("Unhandled type [%s] for field [%s.%s]", field.getType(), object.getClass().getName(),
-                                field.getName()));
+            if (!setIntegralValue(object, value, field)
+                    && !setFloatingPointValue(object, value, field)
+                    && !setNonNumericValue(object, value, field)) {
+                String fieldName = object.getClass().getName() + "." + field.getName();
+                throwBindException("Unhandled type [%s] for field [%s]", field.getType(), fieldName);
             }
         } catch (BindException e) {
             throw e;
         } catch (Exception e) {
-            throw new BindException(
-                    format("Failed to bind value [%s] to property [%s.%s] of type [%s]", value, object.getClass().getName(),
-                            property, field.getType()));
+            String propertyName = object.getClass().getName() + "." + property;
+            throwBindException("Failed to bind value [%s] to property [%s] of type [%s]", value, propertyName, field.getType());
         }
     }
 
-    private static void bindPrimitiveBoolean(Object object, String value, Field field) throws IllegalAccessException {
-        if ("true".equals(value)) {
-            field.set(object, true);
-        } else if ("false".equals(value)) {
-            field.set(object, false);
+    private static boolean setIntegralValue(Object object, String value, Field field) throws IllegalAccessException {
+        if (Byte.TYPE.equals(field.getType())) {
+            // primitive byte
+            field.set(object, Byte.parseByte(value));
+        } else if (Byte.class.equals(field.getType())) {
+            bindByte(object, value, field);
+        } else if (Short.TYPE.equals(field.getType())) {
+            // primitive short
+            field.set(object, Short.parseShort(value));
+        } else if (Short.class.equals(field.getType())) {
+            bindShort(object, value, field);
+        } else if (Integer.TYPE.equals(field.getType())) {
+            // primitive integer
+            field.set(object, Integer.parseInt(value));
+        } else if (Integer.class.equals(field.getType())) {
+            bindInteger(object, value, field);
+        } else if (Long.TYPE.equals(field.getType())) {
+            // primitive long
+            field.set(object, Long.parseLong(value));
+        } else if (Long.class.equals(field.getType())) {
+            bindLong(object, value, field);
         } else {
-            throw new NumberFormatException(format("Unrecognized boolean value: %s", value));
+            return false;
         }
+        return true;
     }
 
-    private static void bindBoolean(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
-            field.set(object, null);
-        } else if ("true".equals(value)) {
-            field.set(object, true);
-        } else if ("false".equals(value)) {
-            field.set(object, false);
+    private static boolean setFloatingPointValue(Object object, String value, Field field) throws IllegalAccessException {
+        if (Float.TYPE.equals(field.getType())) {
+            // primitive float
+            field.set(object, Float.parseFloat(value));
+        } else if (Float.class.equals(field.getType())) {
+            bindFloat(object, value, field);
+        } else if (Double.TYPE.equals(field.getType())) {
+            // primitive double
+            field.set(object, Double.parseDouble(value));
+        } else if (Double.class.equals(field.getType())) {
+            bindDouble(object, value, field);
         } else {
-            throw new NumberFormatException(format("Unrecognized Boolean value: %s", value));
+            return false;
         }
+        return true;
+    }
+
+    private static boolean setNonNumericValue(Object object, String value, Field field) throws IllegalAccessException {
+        if (Boolean.TYPE.equals(field.getType())) {
+            bindPrimitiveBoolean(object, value, field);
+        } else if (Boolean.class.equals(field.getType())) {
+            bindBoolean(object, value, field);
+        } else if (field.getType().isAssignableFrom(Class.class)) {
+            bindClass(object, value, field);
+        } else if (String.class.equals(field.getType())) {
+            bindString(object, value, field);
+        } else if (field.getType().isEnum()) {
+            bindEnum(object, value, field);
+        } else {
+            return false;
+        }
+        return true;
     }
 
     private static void bindByte(Object object, String value, Field field) throws IllegalAccessException {
@@ -232,24 +232,36 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindClass(Object object, String value, Field field) throws IllegalAccessException,
-            ClassNotFoundException {
-        if ("null".equals(value)) {
-            field.set(object, null);
+    private static void bindPrimitiveBoolean(Object object, String value, Field field) throws IllegalAccessException {
+        if ("true".equals(value)) {
+            field.set(object, true);
+        } else if ("false".equals(value)) {
+            field.set(object, false);
         } else {
-            field.set(object, PropertyBindingSupport.class.getClassLoader().loadClass(value));
+            throw new NumberFormatException(format("Unrecognized boolean value: %s", value));
         }
     }
 
-    private static void bindEnum(Object object, String value, Field field) throws Exception {
+    private static void bindBoolean(Object object, String value, Field field) throws IllegalAccessException {
+        if ("null".equals(value)) {
+            field.set(object, null);
+        } else if ("true".equals(value)) {
+            field.set(object, true);
+        } else if ("false".equals(value)) {
+            field.set(object, false);
+        } else {
+            throw new NumberFormatException(format("Unrecognized Boolean value: %s", value));
+        }
+    }
+
+    private static void bindClass(Object object, String value, Field field) throws IllegalAccessException {
         if ("null".equals(value)) {
             field.set(object, null);
         } else {
             try {
-                Object enumValue = getEnumValue(value, field);
-                field.set(object, enumValue);
-            } catch (IllegalArgumentException e) {
-                throw new NumberFormatException(e.getMessage());
+                field.set(object, PropertyBindingSupport.class.getClassLoader().loadClass(value));
+            } catch (Exception e) {
+                throw new BindException(e.getMessage());
             }
         }
     }
@@ -259,6 +271,19 @@ public final class PropertyBindingSupport {
             field.set(object, null);
         } else {
             field.set(object, value);
+        }
+    }
+
+    private static void bindEnum(Object object, String value, Field field) throws IllegalAccessException {
+        if ("null".equals(value)) {
+            field.set(object, null);
+        } else {
+            try {
+                Object enumValue = getEnumValue(value, field);
+                field.set(object, enumValue);
+            } catch (Exception e) {
+                throw new BindException(e.getMessage());
+            }
         }
     }
 
@@ -282,11 +307,11 @@ public final class PropertyBindingSupport {
             Field field = clazz.getDeclaredField(property);
 
             if (Modifier.isStatic(field.getModifiers())) {
-                throw new BindException(format("Property [%s.%s] can't be static", clazz.getName(), property));
+                throwBindException("Property [%s.%s] can't be static", clazz.getName(), property);
             }
 
             if (Modifier.isFinal(field.getModifiers())) {
-                throw new BindException(format("Property [%s.%s] can't be final", clazz.getName(), property));
+                throwBindException("Property [%s.%s] can't be final", clazz.getName(), property);
             }
 
             field.setAccessible(true);
@@ -299,6 +324,10 @@ public final class PropertyBindingSupport {
                 return findPropertyField(superClass, property);
             }
         }
+    }
+
+    private static void throwBindException(String msg, Object... args) {
+        throw new BindException(format(msg, args));
     }
 
     public static ProbesConfiguration parseProbeConfiguration(TestCase testCase) {
