@@ -52,7 +52,7 @@ public final class PropertyBindingSupport {
 
     /**
      * Binds a single property contained in the testCase object onto the object instance.
-     * <p/>
+     *
      * There will be no warning if the property is not defined in the TestCase.
      * There will be no exception if the property will not be found in the object instance, just a warning.
      *
@@ -105,7 +105,7 @@ public final class PropertyBindingSupport {
             if (optionalProperties != null && optionalProperties.contains(property)) {
                 return;
             }
-            throwBindException("Property [%s.%s] does not exist", object.getClass().getName(), property);
+            throw new BindException(format("Property [%s.%s] does not exist", object.getClass().getName(), property));
         }
 
         try {
@@ -113,13 +113,14 @@ public final class PropertyBindingSupport {
                     && !setFloatingPointValue(object, value, field)
                     && !setNonNumericValue(object, value, field)) {
                 String fieldName = object.getClass().getName() + "." + field.getName();
-                throwBindException("Unhandled type [%s] for field [%s]", field.getType(), fieldName);
+                throw new BindException(format("Unhandled type [%s] for field [%s]", field.getType(), fieldName));
             }
         } catch (BindException e) {
             throw e;
         } catch (Exception e) {
             String propertyName = object.getClass().getName() + "." + property;
-            throwBindException("Failed to bind value [%s] to property [%s] of type [%s]", value, propertyName, field.getType());
+            throw new BindException(
+                    format("Failed to bind value [%s] to property [%s] of type [%s]", value, propertyName, field.getType()));
         }
     }
 
@@ -307,11 +308,11 @@ public final class PropertyBindingSupport {
             Field field = clazz.getDeclaredField(property);
 
             if (Modifier.isStatic(field.getModifiers())) {
-                throwBindException("Property [%s.%s] can't be static", clazz.getName(), property);
+                throw new BindException(format("Property [%s.%s] can't be static", clazz.getName(), property));
             }
 
             if (Modifier.isFinal(field.getModifiers())) {
-                throwBindException("Property [%s.%s] can't be final", clazz.getName(), property);
+                throw new BindException(format("Property [%s.%s] can't be final", clazz.getName(), property));
             }
 
             field.setAccessible(true);
@@ -324,10 +325,6 @@ public final class PropertyBindingSupport {
                 return findPropertyField(superClass, property);
             }
         }
-    }
-
-    private static void throwBindException(String msg, Object... args) {
-        throw new BindException(format(msg, args));
     }
 
     public static ProbesConfiguration parseProbeConfiguration(TestCase testCase) {
