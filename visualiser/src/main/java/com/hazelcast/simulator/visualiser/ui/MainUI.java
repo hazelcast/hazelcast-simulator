@@ -32,6 +32,8 @@ public final class MainUI extends JFrame {
         setVisible(true);
         setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
 
+        AccuracyRadioButtons accuracyRadioButtons = new AccuracyRadioButtons();
+
         ProbesCheckboxes checkBoxes = new ProbesCheckboxes(model);
         model.addBenchmarkChangeListener(checkBoxes);
 
@@ -40,10 +42,11 @@ public final class MainUI extends JFrame {
 
         JPanel northWestPanel = new JPanel();
         northWestPanel.setLayout(new BoxLayout(northWestPanel, BoxLayout.Y_AXIS));
+        northWestPanel.add(accuracyRadioButtons);
         northWestPanel.add(checkBoxes);
         northWestPanel.add(loadedBenchmarks);
 
-        final Chart chart = new Chart(model, checkBoxes);
+        final Chart chart = new Chart(model, accuracyRadioButtons, checkBoxes);
         checkBoxes.setChart(chart);
 
         JButton renderButton = new JButton("Render");

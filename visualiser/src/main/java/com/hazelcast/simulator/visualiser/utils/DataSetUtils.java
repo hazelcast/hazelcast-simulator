@@ -14,47 +14,59 @@ public final class DataSetUtils {
     private DataSetUtils() {
     }
 
-    public static SimpleHistogramDataSetContainer calculateSingleProbeDataSet(Result probeData) {
+    public static SimpleHistogramDataSetContainer calculateSingleProbeDataSet(Result probeData, int accuracy) {
         if (probeData instanceof LatencyDistributionResult) {
-            return calculateSingleProbeDataSet((LatencyDistributionResult) probeData);
+            return calcSingleProbeDataSet((LatencyDistributionResult) probeData, accuracy);
         } else if (probeData instanceof HdrLatencyDistributionResult) {
-            return calculateSingleProbeDataSet((HdrLatencyDistributionResult) probeData);
+            return calcSingleProbeDataSet((HdrLatencyDistributionResult) probeData);
         }
         throw new IllegalArgumentException("unknown probe result type: " + probeData.getClass().getSimpleName());
     }
 
-    private static SimpleHistogramDataSetContainer calculateSingleProbeDataSet(HdrLatencyDistributionResult probeData) {
+    private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(HdrLatencyDistributionResult probeData) {
         SimpleHistogramDataSetContainer histogramDataSet = new SimpleHistogramDataSetContainer("key");
         histogramDataSet.setAdjustForBinSize(false);
         Histogram histogram = probeData.getHistogram();
         for (HistogramIterationValue value : histogram.linearBucketValues(10)) {
-            double lowerBound = value.getDoubleValueIteratedFrom();
-            double upperBound = value.getDoubleValueIteratedTo();
-            SimpleHistogramBin bin = new SimpleHistogramBin(lowerBound, upperBound, true, false);
-            bin.setItemCount((int) value.getCountAddedInThisIterationStep());
-            histogramDataSet.addBin(bin);
+            int values = (int) value.getCountAddedInThisIterationStep();
+            if (values > 0) {
+                long lowerBound = value.getValueIteratedFrom();
+                long upperBound = value.getValueIteratedTo();
+                SimpleHistogramBin bin = new SimpleHistogramBin(lowerBound, upperBound, true, false);
+                bin.setItemCount(values);
+                histogramDataSet.addBin(bin);
+            }
         }
         histogramDataSet.setMaxLatency(histogram.getMaxValue());
         return histogramDataSet;
     }
 
-    private static SimpleHistogramDataSetContainer calculateSingleProbeDataSet(LatencyDistributionResult probeData) {
+    private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(LatencyDistributionResult probeData, int accuracy) {
         SimpleHistogramDataSetContainer histogramDataSet = new SimpleHistogramDataSetContainer("key");
         LinearHistogram histogram = probeData.getHistogram();
-        int step = histogram.getStep();
+        int histogramStep = histogram.getStep();
         int lowerBound = 0;
         int maxLatency = 0;
+        SimpleHistogramBin bin = new SimpleHistogramBin(0, accuracy, true, false);
         for (int values : histogram.getBuckets()) {
-            int upperBound = lowerBound + step;
-            if (values > 0) {
-                maxLatency = upperBound;
+            if (lowerBound % accuracy == 0) {
+                addBinIfNotEmpty(histogramDataSet, bin);
+                bin = new SimpleHistogramBin(lowerBound, lowerBound + accuracy, true, false);
             }
-            SimpleHistogramBin bin = new SimpleHistogramBin(lowerBound, upperBound, true, false);
-            bin.setItemCount(values);
-            histogramDataSet.addBin(bin);
-            lowerBound += step;
+            if (values > 0) {
+                maxLatency = lowerBound;
+                bin.setItemCount((values * accuracy) + bin.getItemCount());
+            }
+            lowerBound += histogramStep;
         }
+        addBinIfNotEmpty(histogramDataSet, bin);
         histogramDataSet.setMaxLatency(maxLatency);
         return histogramDataSet;
+    }
+
+    private static void addBinIfNotEmpty(SimpleHistogramDataSetContainer histogramDataSet, SimpleHistogramBin bin) {
+        if (bin != null && bin.getItemCount() > 0) {
+            histogramDataSet.addBin(bin);
+        }
     }
 }
