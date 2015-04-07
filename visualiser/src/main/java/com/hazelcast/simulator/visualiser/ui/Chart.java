@@ -35,20 +35,19 @@ public class Chart extends JPanel {
     private final JSlider verticalSlider = new JSlider();
 
     private final Model model;
+    private final AccuracyRadioButtons accuracyRadioButtons;
     private final ProbesCheckboxes probesCheckboxes;
     private final XYPlot plot;
 
-    public Chart(Model model, ProbesCheckboxes probesCheckboxes) {
+    public Chart(Model model, AccuracyRadioButtons accuracyRadioButtons, ProbesCheckboxes probesCheckboxes) {
         this.model = model;
+        this.accuracyRadioButtons = accuracyRadioButtons;
         this.probesCheckboxes = probesCheckboxes;
 
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         setLayout(new BorderLayout());
 
-        mainHorizontalSlider.setMinimum(MAIN_SLIDER_MINIMUM);
-        fineHorizontalSlider.setMinimum(FINE_SLIDER_MINIMUM);
-        verticalSlider.setMinimum(VERTICAL_SLIDER_MINIMUM);
-        verticalSlider.setOrientation(JSlider.VERTICAL);
+        initSliders();
 
         JPanel horizontalSlidersPanel = new JPanel();
         horizontalSlidersPanel.setLayout(new BoxLayout(horizontalSlidersPanel, BoxLayout.Y_AXIS));
@@ -69,6 +68,13 @@ public class Chart extends JPanel {
         add(chartPanel, BorderLayout.CENTER);
 
         initSliderChangeListener();
+    }
+
+    private void initSliders() {
+        mainHorizontalSlider.setMinimum(MAIN_SLIDER_MINIMUM);
+        fineHorizontalSlider.setMinimum(FINE_SLIDER_MINIMUM);
+        verticalSlider.setMinimum(VERTICAL_SLIDER_MINIMUM);
+        verticalSlider.setOrientation(JSlider.VERTICAL);
     }
 
     private void initSliderChangeListener() {
@@ -112,6 +118,7 @@ public class Chart extends JPanel {
     }
 
     private AggregatedDataSet calculateDataSet(List<String> selectedProbes) {
+        int accuracy = accuracyRadioButtons.getEnabledAccuracy();
         AggregatedDataSet aggregatedDataSet = new AggregatedDataSet();
         Set<String> benchmarkNames = model.getBenchmarkNames();
         for (String benchmarkName : benchmarkNames) {
@@ -123,7 +130,7 @@ public class Chart extends JPanel {
                     continue;
                 }
                 String name = benchmarkName + " - " + selectedProbe;
-                SimpleHistogramDataSetContainer dataSet = calculateSingleProbeDataSet(probeData);
+                SimpleHistogramDataSetContainer dataSet = calculateSingleProbeDataSet(probeData, accuracy);
                 aggregatedDataSet.addNewSeries(dataSet, name);
             }
         }
@@ -135,7 +142,7 @@ public class Chart extends JPanel {
         plot.getRangeAxis().setAutoRange(true);
         plot.setDataset(dataSet);
 
-        Double horizontalUpperBound = Math.min(plot.getDomainAxis().getRange().getUpperBound(), dataSet.getMaxLatency());
+        Double horizontalUpperBound = plot.getDomainAxis().getRange().getUpperBound();
         mainHorizontalSlider.setMaximum(horizontalUpperBound.intValue());
         mainHorizontalSlider.setValue(horizontalUpperBound.intValue());
 
