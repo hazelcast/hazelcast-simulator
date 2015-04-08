@@ -21,30 +21,6 @@
 
     <!--MANAGEMENT_CENTER_CONFIG-->
 
-    <map name="MapStore*">
-        <map-store enabled="true">
-            <class-name>com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounter</class-name>
-            <write-delay-seconds>5</write-delay-seconds>
-        </map-store>
-    </map>
-
-    <map name="MapMaxSize*">
-        <eviction-policy>LRU</eviction-policy>
-        <max-size policy="PER_NODE">1000</max-size>
-        <eviction-percentage>25</eviction-percentage>
-        <min-eviction-check-millis>0</min-eviction-check-millis>
-    </map>
-
-    <map name="NoBackup*">
-        <statistics-enabled>false</statistics-enabled>
-        <backup-count>0</backup-count>
-        <async-backup-count>0</async-backup-count>
-    </map>
-
-    <map name="ObjectMap*">
-        <in-memory-format>OBJECT</in-memory-format>
-    </map>
-
     <serialization>
         <portable-version>1</portable-version>
 
@@ -71,6 +47,30 @@
         </service>
     </services>
 
+    <map name="MapStore*">
+        <map-store enabled="true">
+            <class-name>com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounter</class-name>
+            <write-delay-seconds>5</write-delay-seconds>
+        </map-store>
+    </map>
+
+    <map name="MapMaxSize*">
+        <eviction-policy>LRU</eviction-policy>
+        <max-size policy="PER_NODE">1000</max-size>
+        <eviction-percentage>25</eviction-percentage>
+        <min-eviction-check-millis>0</min-eviction-check-millis>
+    </map>
+
+    <map name="NoBackup*">
+        <statistics-enabled>false</statistics-enabled>
+        <backup-count>0</backup-count>
+        <async-backup-count>0</async-backup-count>
+    </map>
+
+    <map name="ObjectMap*">
+        <in-memory-format>OBJECT</in-memory-format>
+    </map>
+
     <cache name="maxCachSmall*">
         <eviction max-size-policy="ENTRY_COUNT" size="271" eviction-policy="LFU"/>
     </cache>
@@ -82,5 +82,12 @@
     <cache name="maxCachLarge*">
         <eviction max-size-policy="ENTRY_COUNT" size="10000" eviction-policy="LFU"/>
     </cache>
+
+    <topic name="ReliableITopic*">
+        <reliable-enabled>true</reliable-enabled>
+    </topic>
+
+    <ringbuffer name="ReliableITopic*">
+    </ringbuffer>
 
 </hazelcast>
