@@ -41,6 +41,7 @@ public class MapLatencyTest extends AbstractMapTest {
     public String basename = this.getClass().getSimpleName();
     public String keyType = "String";
     public String operationType = "values";
+    public int keyCount = -1;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
@@ -49,6 +50,9 @@ public class MapLatencyTest extends AbstractMapTest {
 
     @Override
     long getGlobalKeyCount(Integer minResultSizeLimit, Float resultLimitFactor) {
+        if (keyCount > -1) {
+            return keyCount;
+        }
         return Math.round(minResultSizeLimit * resultLimitFactor * 0.9);
     }
 
