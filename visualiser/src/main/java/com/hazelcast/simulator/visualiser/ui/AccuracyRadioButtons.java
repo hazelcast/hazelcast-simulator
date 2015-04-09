@@ -19,6 +19,7 @@ public class AccuracyRadioButtons extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         addButton(DEFAULT_ACCURACY, "10 µs", true);
+        addButton(TimeUnit.MICROSECONDS.toMicros(50), "50 µs");
         addButton(TimeUnit.MICROSECONDS.toMicros(100), "100 µs");
         addButton(TimeUnit.MICROSECONDS.toMicros(500), "500 µs");
         addButton(TimeUnit.MILLISECONDS.toMicros(1), "1 ms");
