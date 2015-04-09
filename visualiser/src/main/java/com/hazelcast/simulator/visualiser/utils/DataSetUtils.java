@@ -41,7 +41,7 @@ public final class DataSetUtils {
         return histogramDataSet;
     }
 
-    private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(LatencyDistributionResult probeData, int accuracy) {
+    private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(LatencyDistributionResult probeData, long accuracy) {
         SimpleHistogramDataSetContainer histogramDataSet = new SimpleHistogramDataSetContainer("key");
         LinearHistogram histogram = probeData.getHistogram();
         int histogramStep = histogram.getStep();
@@ -49,13 +49,15 @@ public final class DataSetUtils {
         int maxLatency = 0;
         SimpleHistogramBin bin = new SimpleHistogramBin(0, accuracy, true, false);
         for (int values : histogram.getBuckets()) {
-            if (lowerBound % accuracy == 0) {
+            if (lowerBound % accuracy == 0 && lowerBound > 0) {
                 addBinIfNotEmpty(histogramDataSet, bin);
                 bin = new SimpleHistogramBin(lowerBound, lowerBound + accuracy, true, false);
             }
             if (values > 0) {
                 maxLatency = lowerBound;
-                bin.setItemCount((values * accuracy) + bin.getItemCount());
+                long addValue = values * accuracy;
+                int newValue = (int) Math.min(bin.getItemCount() + addValue, Integer.MAX_VALUE);
+                bin.setItemCount(newValue);
             }
             lowerBound += histogramStep;
         }
