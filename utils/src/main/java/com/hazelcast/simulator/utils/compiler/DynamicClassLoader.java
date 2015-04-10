@@ -1,14 +1,31 @@
 package com.hazelcast.simulator.utils.compiler;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 class DynamicClassLoader extends ClassLoader {
 
+    private final static DynamicClassLoader INSTANCE;
+
+    static {
+        INSTANCE = AccessController.doPrivileged(new PrivilegedAction<DynamicClassLoader>() {
+
+            public DynamicClassLoader run() {
+                return new DynamicClassLoader(ClassLoader.getSystemClassLoader());
+            }
+        });
+    }
+
     private final Map<String, CompiledCode> customCompiledCode = new ConcurrentHashMap<String, CompiledCode>();
 
-    public DynamicClassLoader(ClassLoader parent) {
+    private DynamicClassLoader(ClassLoader parent) {
         super(parent);
+    }
+
+    public static DynamicClassLoader getInstance() {
+        return INSTANCE;
     }
 
     public void setCode(CompiledCode compiledCode) {

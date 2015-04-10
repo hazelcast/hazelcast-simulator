@@ -25,7 +25,6 @@ public class MapEntryProcessorTest {
 
     // properties
     public String basename = this.getClass().getSimpleName();
-    public int threadCount = 10;
     public int keyCount = 1000;
     public int minProcessorDelayMs;
     public int maxProcessorDelayMs;

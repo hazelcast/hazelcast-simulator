@@ -30,6 +30,6 @@ public class InMemoryJavaCompilerTest {
 
     @Test(expected = ClassNotFoundException.class)
     public void testDynamicClassLoader() throws Exception {
-        InMemoryJavaCompiler.CLASS_LOADER.findClass("NotCompiledClass");
+        DynamicClassLoader.getInstance().findClass("NotCompiledClass");
     }
 }

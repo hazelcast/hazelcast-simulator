@@ -38,4 +38,25 @@ public class SimpleHistogramDataSetContainer extends SimpleHistogramDataset {
     public void setMaxLatency(long maxLatency) {
         this.maxLatency = maxLatency;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        SimpleHistogramDataSetContainer that = (SimpleHistogramDataSetContainer) o;
+
+        if (maxLatency != that.maxLatency) return false;
+        if (bins != null ? !bins.equals(that.bins) : that.bins != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = bins != null ? bins.hashCode() : 0;
+        result = 31 * result + (int) (maxLatency ^ (maxLatency >>> 32));
+        return result;
+    }
 }

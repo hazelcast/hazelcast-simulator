@@ -78,7 +78,7 @@ abstract class AbstractMapTest {
 
         int clusterSize = hazelcastInstance.getCluster().getMembers().size();
         globalKeyCount = getGlobalKeyCount(minResultSizeLimit, resultLimitFactor);
-        localKeyCount = (int) Math.ceil(globalKeyCount / clusterSize);
+        localKeyCount = (int) Math.ceil(globalKeyCount / (double) clusterSize);
 
         LOGGER.info(format("%s: Filling map with %d items (%d items per member, %d members in cluster)",
                 basename, globalKeyCount, localKeyCount, clusterSize));

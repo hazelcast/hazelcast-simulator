@@ -36,7 +36,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -157,7 +156,7 @@ public class WorkerJvmManager {
         if (randomWorker == null) {
             LOGGER.warn("No worker is known to this agent. Is it a race-condition?");
         } else {
-            List<WorkerJvm> workerJvmList = Arrays.asList(randomWorker);
+            List<WorkerJvm> workerJvmList = Collections.singletonList(randomWorker);
             preprocessMessage(message, workerJvmList);
             Command command = new MessageCommand(message);
             executeOnWorkers(command, workerJvmList);
@@ -390,7 +389,9 @@ public class WorkerJvmManager {
                 out.writeObject(result);
                 out.flush();
                 clientSocket.close();
-            } catch (Exception e) {
+            } catch (ClassNotFoundException e) {
+                LOGGER.fatal(e);
+            } catch (IOException e) {
                 LOGGER.fatal(e);
             }
         }

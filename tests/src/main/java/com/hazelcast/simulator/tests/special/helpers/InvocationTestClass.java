@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.tests.special.helpers;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class InvocationTestClass {
 
     private volatile long invokeCounter;
@@ -17,6 +19,7 @@ public class InvocationTestClass {
                 + "}\n";
     }
 
+    @SuppressFBWarnings({"VO_VOLATILE_INCREMENT"})
     public void shouldBeCalled() {
         invokeCounter++;
     }

@@ -13,23 +13,23 @@ import java.util.Collections;
  */
 public final class InMemoryJavaCompiler {
 
-    static final DynamicClassLoader CLASS_LOADER = new DynamicClassLoader(ClassLoader.getSystemClassLoader());
-    static final JavaCompiler JAVAC = ToolProvider.getSystemJavaCompiler();
+    static final JavaCompiler COMPILER = ToolProvider.getSystemJavaCompiler();
 
     private InMemoryJavaCompiler() {
     }
 
     public static Class<?> compile(String className, String sourceCodeInText) throws Exception {
-        CompiledCode compiledCode = new CompiledCode(className);
         SourceCode sourceCode = new SourceCode(className, sourceCodeInText);
+        CompiledCode compiledCode = new CompiledCode(className);
+        DynamicClassLoader classLoader = DynamicClassLoader.getInstance();
         Iterable<? extends JavaFileObject> compilationUnits = Collections.singletonList(sourceCode);
 
-        StandardJavaFileManager standardJavaFileManager = JAVAC.getStandardFileManager(null, null, null);
-        ExtendedJavaFileManager fileManager = new ExtendedJavaFileManager(standardJavaFileManager, compiledCode, CLASS_LOADER);
+        StandardJavaFileManager standardJavaFileManager = COMPILER.getStandardFileManager(null, null, null);
+        ExtendedJavaFileManager fileManager = new ExtendedJavaFileManager(standardJavaFileManager, compiledCode, classLoader);
 
-        JavaCompiler.CompilationTask task = JAVAC.getTask(null, fileManager, null, null, null, compilationUnits);
+        JavaCompiler.CompilationTask task = COMPILER.getTask(null, fileManager, null, null, null, compilationUnits);
         task.call();
 
-        return CLASS_LOADER.loadClass(className);
+        return classLoader.loadClass(className);
     }
 }

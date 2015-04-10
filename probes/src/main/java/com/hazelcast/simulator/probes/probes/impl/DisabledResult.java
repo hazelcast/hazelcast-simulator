@@ -4,7 +4,7 @@ import com.hazelcast.simulator.probes.probes.Result;
 
 import javax.xml.stream.XMLStreamWriter;
 
-public class DisabledResult implements Result<DisabledResult> {
+public final class DisabledResult implements Result<DisabledResult> {
 
     @Override
     public DisabledResult combine(DisabledResult other) {

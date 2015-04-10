@@ -28,6 +28,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 
 public class WorkerJvmFailureMonitor {
@@ -119,8 +120,8 @@ public class WorkerJvmFailureMonitor {
             String testId = content.substring(0, indexOf);
             String cause = content.substring(indexOf + 1);
 
-            //we rename it so that we don't detect the same exception again.
-            exceptionFile.delete();
+            // we rename it so that we don't detect the same exception again
+            deleteQuiet(exceptionFile);
 
             Failure failure = new Failure();
             failure.message = "Worked ran into an unhandled exception";

@@ -55,8 +55,8 @@ public class MapHeapHogWarmupTest {
         long used = total - free;
         long totalFree = max - used;
 
-        long maxLocalEntries = (long) ((totalFree / APPROX_ENTRY_BYTES_SIZE) * approxHeapUsageFactor);
-        maxEntriesPerThread = (long) ((double) maxLocalEntries / (double) threadCount);
+        long maxLocalEntries = (long) ((totalFree / (double) APPROX_ENTRY_BYTES_SIZE) * approxHeapUsageFactor);
+        maxEntriesPerThread = (long) (maxLocalEntries / (double) threadCount);
     }
 
     @Warmup
