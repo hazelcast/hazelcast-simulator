@@ -2,9 +2,13 @@ package com.hazelcast.simulator.utils;
 
 import org.junit.Test;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getMethodByName;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
+import static com.hazelcast.simulator.utils.ReflectionUtils.injectObjectToInstance;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
@@ -69,6 +73,64 @@ public class ReflectionUtilsTest {
         invokeMethod(new InvokeMethodTest(), method);
     }
 
+    @Test
+    public void testGetField() {
+        Field field = getField(GetFieldTest.class, "booleanField", Boolean.TYPE);
+        assertNotNull(field);
+        assertEquals(field.getType().getName(), Boolean.TYPE.getName());
+    }
+
+    @Test
+    public void testGetField_fromSuperclass() {
+        Field field = getField(GetFieldTest.class, "intField", Integer.TYPE);
+        assertNotNull(field);
+        assertEquals(field.getType().getName(), Integer.TYPE.getName());
+    }
+
+    @Test
+    public void testGetField_notFound() {
+        Field field = getField(GetFieldTest.class, "notFound", Integer.TYPE);
+        assertNull(field);
+    }
+
+    @Test
+    public void testGetObjectFromField() {
+        GetFieldTest getFieldTest = new GetFieldTest();
+
+        Boolean bool = getObjectFromField(getFieldTest, "booleanField");
+        assertNotNull(bool);
+        assertFalse(bool);
+
+        getFieldTest.booleanField = true;
+        bool = getObjectFromField(getFieldTest, "booleanField");
+        assertNotNull(bool);
+        assertTrue(bool);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testGetObjectFromField_nullObject() {
+        getObjectFromField(null, "notEvaluated");
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testGetObjectFromField_notFound() {
+        GetFieldTest getFieldTest = new GetFieldTest();
+
+        getObjectFromField(getFieldTest, "intField");
+    }
+
+    @Test
+    public void testInjectObjectToInstance() {
+        InjectTest injectTest = new InjectTest();
+        assertNull(injectTest.injectField);
+
+        Field field = getField(InjectTest.class, "injectField", Object.class);
+        assertNotNull(field);
+
+        injectObjectToInstance(injectTest, field, 154915782);
+        assertEquals(154915782, injectTest.injectField);
+    }
+
     private static final class PrivateConstructorTest {
 
         private static boolean hasBeenConstructed;
@@ -93,5 +155,23 @@ public class ReflectionUtilsTest {
 
         private void cannotAccessMethod() {
         }
+    }
+
+    @SuppressWarnings("unused")
+    private static final class GetFieldTest extends GetFieldParent {
+
+        private boolean booleanField;
+    }
+
+    @SuppressWarnings("unused")
+    private static class GetFieldParent {
+
+        private static int intField;
+    }
+
+    @SuppressWarnings("unused")
+    private static final class InjectTest {
+
+        private Object injectField;
     }
 }

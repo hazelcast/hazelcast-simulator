@@ -77,16 +77,14 @@ public final class ReflectionUtils {
             Field field = object.getClass().getDeclaredField(fieldName);
             field.setAccessible(true);
             return (E) field.get(object);
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     public static void injectObjectToInstance(Object classInstance, Field field, Object object) {
-        field.setAccessible(true);
         try {
+            field.setAccessible(true);
             field.set(classInstance, object);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
