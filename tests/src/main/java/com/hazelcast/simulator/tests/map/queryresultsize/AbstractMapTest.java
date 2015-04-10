@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.tests.map.unbound;
+
+package com.hazelcast.simulator.tests.map.queryresultsize;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
@@ -22,6 +23,8 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.utils.EmptyStatement;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
@@ -29,8 +32,12 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberN
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static java.lang.String.format;
+import static org.junit.Assert.fail;
 
 abstract class AbstractMapTest {
+
+    private static final int DEFAULT_RESULT_SIZE_LIMIT = 100000;
+    private static final float DEFAULT_RESULT_LIMIT_FACTOR = 1.15f;
 
     private static final ILogger LOGGER = Logger.getLogger(AbstractMapTest.class);
 
@@ -42,6 +49,14 @@ abstract class AbstractMapTest {
     long globalKeyCount;
     int localKeyCount;
 
+    private Class classType;
+
+    void failOnVersionMismatch(String basename) {
+        if (classType == null) {
+            fail(basename + ": This test needs Hazelcast 3.5 or newer");
+        }
+    }
+
     void baseSetup(TestContext testContext, String basename) {
         hazelcastInstance = testContext.getTargetInstance();
 
@@ -49,29 +64,22 @@ abstract class AbstractMapTest {
         operationCounter = hazelcastInstance.getAtomicLong(basename + "Ops");
         exceptionCounter = hazelcastInstance.getAtomicLong(basename + "Exceptions");
 
-        Class classType = null;
+        Integer minResultSizeLimit = DEFAULT_RESULT_SIZE_LIMIT;
+        Float resultLimitFactor = DEFAULT_RESULT_LIMIT_FACTOR;
         try {
             classType = Class.forName("com.hazelcast.map.impl.MapQueryResultSizeLimitHelper");
-        } catch (ClassNotFoundException e) {
-            LOGGER.warning("Feature is not enabled in this version of Hazelcast!", e);
-        }
 
-        Integer minResultSizeLimit = 100000;
-        Float resultLimitFactor = 1.15f;
-        try {
-            if (classType != null) {
-                minResultSizeLimit = (Integer) classType.getDeclaredField("MINIMUM_MAX_RESULT_LIMIT").get(null);
-                resultLimitFactor = (Float) classType.getDeclaredField("MAX_RESULT_LIMIT_FACTOR").get(null);
-            }
-        } catch (NoSuchFieldException e) {
-            LOGGER.severe("Could not find expected field!", e);
-        } catch (IllegalAccessException e) {
-            LOGGER.severe("Could not read expected field!", e);
+            minResultSizeLimit = (Integer) classType.getDeclaredField("MINIMUM_MAX_RESULT_LIMIT").get(null);
+            resultLimitFactor = (Float) classType.getDeclaredField("MAX_RESULT_LIMIT_FACTOR").get(null);
+        } catch (ClassNotFoundException ignored) {
+            EmptyStatement.ignore(ignored);
+        } catch (Exception e) {
+            ExceptionReporter.report(basename, e);
         }
 
         int clusterSize = hazelcastInstance.getCluster().getMembers().size();
         globalKeyCount = getGlobalKeyCount(minResultSizeLimit, resultLimitFactor);
-        localKeyCount = 1 + (int) (globalKeyCount / clusterSize);
+        localKeyCount = (int) Math.ceil(globalKeyCount / clusterSize);
 
         LOGGER.info(format("%s: Filling map with %d items (%d items per member, %d members in cluster)",
                 basename, globalKeyCount, localKeyCount, clusterSize));

@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.tests.map.unbound;
+
+package com.hazelcast.simulator.tests.map.queryresultsize;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.TestContext;
@@ -31,16 +32,26 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * This test verifies that {@link IMap#values()}, {@link IMap#keySet()} and {@link IMap#entrySet()} throw an exception if the
- * configured result size limit is exceeded. It will create a failure on Hazelcast version prior 3.5. The test can be configured
- * to use {@link String} or {@link Integer} keys.
+ * This test creates latency probe results for {@link IMap#values()}, {@link IMap#keySet()} and {@link IMap#entrySet()}. It is
+ * used to ensure that the query result size limit has no bad impact on the latency of those method calls.
+ *
+ * To achieve this we fill a map slightly below the trigger limit of the query result size limit, so we are sure it will never
+ * trigger the exception. Then we call the map methods and measure their latency.
+ *
+ * The test can be configured to use {@link String} or {@link Integer} keys. You can also override the number of filled items
+ * with the {@link #keyCount} property.
+ *
+ * This test works fine with all Hazelcast versions, since it does not use any new functionality. Just be sure the default
+ * values in {@link AbstractMapTest} match with the default values of the query result size limit in Hazelcast 3.5. Otherwise
+ * the map will be filled with a different number of keys and the latency results may not be comparable.
  */
-public class MapResultSizeLimitTest extends AbstractMapTest {
+public class MapLatencyTest extends AbstractMapTest {
 
     // properties
     public String basename = this.getClass().getSimpleName();
     public String keyType = "String";
     public String operationType = "values";
+    public int keyCount = -1;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
@@ -49,7 +60,11 @@ public class MapResultSizeLimitTest extends AbstractMapTest {
 
     @Override
     long getGlobalKeyCount(Integer minResultSizeLimit, Float resultLimitFactor) {
-        return Math.round(minResultSizeLimit * resultLimitFactor * 1.1);
+        long localKeyCount = Math.round(minResultSizeLimit * resultLimitFactor * 0.9);
+        if (keyCount > -1) {
+            localKeyCount = Math.min(keyCount, localKeyCount);
+        }
+        return localKeyCount;
     }
 
     @Warmup
@@ -68,8 +83,9 @@ public class MapResultSizeLimitTest extends AbstractMapTest {
         assertTrue(format("Expected mapSize >= globalKeyCount (%d >= %d)", mapSize, globalKeyCount), mapSize >= globalKeyCount);
 
         long ops = operationCounter.get();
-        long exceptions = exceptionCounter.get();
-        assertEquals("Expected as many exceptions as operations", ops, exceptions);
+        assertTrue(format("Expected ops > 0 (%d > 0)", ops), ops > 0);
+
+        assertEquals("Expected 0 exceptions", 0, exceptionCounter.get());
     }
 
     @RunWithWorker
@@ -78,6 +94,6 @@ public class MapResultSizeLimitTest extends AbstractMapTest {
     }
 
     public static void main(String[] args) throws Throwable {
-        new TestRunner<MapResultSizeLimitTest>(new MapResultSizeLimitTest()).run();
+        new TestRunner<MapLatencyTest>(new MapLatencyTest()).run();
     }
 }
