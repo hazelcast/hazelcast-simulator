@@ -5,6 +5,7 @@ import com.hazelcast.simulator.probes.probes.impl.DisabledProbe;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -17,6 +18,11 @@ public class ProbesTest {
         config.addConfig("throughput", ProbesType.THROUGHPUT.string);
         config.addConfig("hdr", ProbesType.HDR.string);
         config.addConfig("invalid", "invalid");
+    }
+
+    @Test
+    public void constructor() throws Exception {
+        invokePrivateConstructor(Probes.class);
     }
 
     @Test

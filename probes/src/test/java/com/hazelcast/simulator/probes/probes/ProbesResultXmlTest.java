@@ -10,15 +10,30 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 
 public class ProbesResultXmlTest {
 
     private Map<String, Result> resultMap = new HashMap<String, Result>();
+
+    @Test
+    public void constructorReader() throws Exception {
+        invokePrivateConstructor(ProbesResultXmlReader.class);
+    }
+
+    @Test
+    public void constructorWriter() throws Exception {
+        invokePrivateConstructor(ProbesResultXmlWriter.class);
+    }
 
     @Test
     public void testHdrLatencyProbeResult() throws Exception {
@@ -61,7 +76,7 @@ public class ProbesResultXmlTest {
     }
 
     @Test
-    public void testMultipleProbes() throws Exception {
+    public void multipleProbes() throws Exception {
         LatencyDistributionResult result1 = createLatencyDistribution();
         resultMap.put("result1", result1);
 
@@ -76,6 +91,36 @@ public class ProbesResultXmlTest {
         assertEquals(result1, read.get("result1"));
         assertEquals(result2, read.get("result2"));
         assertEquals(result3, read.get("result3"));
+    }
+
+    @Test
+    public void write_toFile() throws Exception {
+        LatencyDistributionResult original = createLatencyDistribution();
+        resultMap.put("latencyDistribution", original);
+
+        File tmpFile = File.createTempFile("ProbesResultXmlWriter", "xml");
+        ProbesResultXmlWriter.write(resultMap, tmpFile);
+
+        InputStream targetStream = new FileInputStream(tmpFile);
+        Map<String, Result> read = ProbesResultXmlReader.read(targetStream);
+
+        assertEquals(original, read.get("latencyDistribution"));
+
+        deleteQuiet(tmpFile);
+    }
+
+    @Test(expected = Exception.class)
+    public void write_toDirectory() throws Exception {
+        LatencyDistributionResult original = createLatencyDistribution();
+        resultMap.put("latencyDistribution", original);
+
+        File tmpDirectory = new File("isDirectory");
+        try {
+            ensureExistingDirectory(tmpDirectory);
+            ProbesResultXmlWriter.write(resultMap, tmpDirectory);
+        } finally {
+            deleteQuiet(tmpDirectory);
+        }
     }
 
     private static HdrLatencyDistributionResult createHdrLatencyDistribution() {
