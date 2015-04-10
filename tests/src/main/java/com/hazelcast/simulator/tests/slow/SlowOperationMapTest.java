@@ -28,6 +28,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -108,20 +109,17 @@ public class SlowOperationMapTest {
     public void verify() throws Exception {
         long putCount = putCounter.get();
         long getCount = getCounter.get();
-        long operationCount = putCount + getCount;
-        assertTrue("Expected at least one completed operations, but was " + operationCount, operationCount > 0);
-
         Map<Integer, Object> slowOperationLogs = getObjectFromField(slowOperationDetector, "slowOperationLogs");
-        if (slowOperationLogs == null) {
-            fail("Could not retrieve slow operation logs");
-        }
 
-        int actual = slowOperationLogs.size();
         int expected = (int) (Math.min(putCount, 1) + Math.min(getCount, 1));
-        LOGGER.info(format("Found %d/%d slow operation logs after completing %d operations (%d put, %d get).",
-                actual, expected, operationCount, putCount, getCount));
+        long operationCount = putCount + getCount;
 
-        assertEqualsStringFormat("Expected %d slow operation logs, but was %d", expected, actual);
+        LOGGER.info(format("Expecting %d slow operation logs after completing %d operations (%d put, %d get).",
+                expected, operationCount, putCount, getCount));
+
+        assertNotNull("Could not retrieve slow operation logs", slowOperationLogs);
+        assertEqualsStringFormat("Expected %d slow operation logs, but was %d", expected, slowOperationLogs.size());
+        assertTrue("Expected at least one completed operations, but was " + operationCount, operationCount > 0);
     }
 
     @RunWithWorker
