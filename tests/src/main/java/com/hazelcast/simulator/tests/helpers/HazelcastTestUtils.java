@@ -47,7 +47,7 @@ public final class HazelcastTestUtils {
     public static String getPartitionDistributionInformation(HazelcastInstance hz) {
         Map<Member, Integer> partitionCountMap = new HashMap<Member, Integer>();
         int totalPartitions = 0;
-        for (Partition partition: hz.getPartitionService().getPartitions()) {
+        for (Partition partition : hz.getPartitionService().getPartitions()) {
             totalPartitions++;
             Member member = partition.getOwner();
             Integer count = partitionCountMap.get(member);
@@ -154,6 +154,10 @@ public final class HazelcastTestUtils {
         }
     }
 
+    public static OperationService getOperationService(HazelcastInstance hz) {
+        return getNode(hz).getNodeEngine().getOperationService();
+    }
+
     public static Node getNode(HazelcastInstance hz) {
         HazelcastInstanceImpl impl = getHazelcastInstanceImpl(hz);
         return impl != null ? impl.node : null;
@@ -172,8 +176,8 @@ public final class HazelcastTestUtils {
     /**
      * Returns the next {@code long} key owned by the given Hazelcast instance.
      *
-     * @param instance  Hazelcast instance to search next key for
-     * @param lastKey   last key to start search from
+     * @param instance Hazelcast instance to search next key for
+     * @param lastKey  last key to start search from
      * @return next key owned by given Hazelcast instance
      */
     public static long nextKeyOwnedBy(HazelcastInstance instance, long lastKey) {
