@@ -92,7 +92,7 @@ public class Agent {
         return workerJvmManager;
     }
 
-    public void initTestSuite(TestSuite testSuite) throws IOException {
+    public void initTestSuite(TestSuite testSuite) {
         this.testSuite = testSuite;
 
         File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);

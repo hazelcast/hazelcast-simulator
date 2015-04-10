@@ -135,7 +135,7 @@ public class WorkerJvmLauncher {
         return workerJvm;
     }
 
-    private void copyResourcesToWorkerId(String workerId) throws IOException {
+    private void copyResourcesToWorkerId(String workerId) {
         final String testSuiteId = agent.getTestSuite().id;
         File uploadDirectory = new File(WORKERS_PATH + "/" + testSuiteId + "/upload/");
         if (!uploadDirectory.exists()) {
@@ -251,7 +251,7 @@ public class WorkerJvmLauncher {
         }
     }
 
-    private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) throws InterruptedException {
+    private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) {
         List<WorkerJvm> todo = new ArrayList<WorkerJvm>(workers);
 
         for (int l = 0; l < workerTimeoutSec; l++) {

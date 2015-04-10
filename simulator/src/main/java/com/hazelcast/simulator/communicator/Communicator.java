@@ -46,7 +46,7 @@ public class Communicator {
         agentsClient.sendMessage(message);
     }
 
-    private void initAgents() throws Exception {
+    private void initAgents() {
         List<AgentAddress> agentAddresses = AgentsFile.load(agentsFile);
         agentsClient = new AgentsClient(agentAddresses);
         agentsClient.start();

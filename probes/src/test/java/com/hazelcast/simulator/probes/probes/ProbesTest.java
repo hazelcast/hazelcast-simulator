@@ -42,7 +42,7 @@ public class ProbesTest {
     }
 
     @Test
-    public void createConcurrentProbe() throws Exception {
+    public void createConcurrentProbe() {
         SimpleProbe probe = Probes.createConcurrentProbe("throughput", SimpleProbe.class, config);
         assertTrue(probe instanceof ConcurrentProbe);
     }

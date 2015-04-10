@@ -161,7 +161,7 @@ public class AgentSmokeTest {
         client.spawnWorkers(Collections.singletonList(agentLayout), true);
     }
 
-    private static void startAgent() throws InterruptedException {
+    private static void startAgent() {
         agentThread = new Thread() {
             public void run() {
                 try {

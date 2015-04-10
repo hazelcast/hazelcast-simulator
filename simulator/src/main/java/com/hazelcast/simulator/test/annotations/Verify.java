@@ -13,7 +13,7 @@ public @interface Verify {
      * Global indicates that a single member in the cluster is responsible for the verify. If not global, then
      * all members in the cluster will do the verify.
      *
-     * @return
+     * @return <tt>true</tt> if global teardown method, <tt>false</tt> otherwise
      */
     boolean global() default true;
 }

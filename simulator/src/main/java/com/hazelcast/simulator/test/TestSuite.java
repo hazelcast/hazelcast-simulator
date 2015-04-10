@@ -75,7 +75,7 @@ public class TestSuite implements Serializable {
                 + '}';
     }
 
-    public static TestSuite loadTestSuite(File file, String propertiesOverrideString) throws Exception {
+    public static TestSuite loadTestSuite(File file, String propertiesOverrideString) {
         Properties properties = loadProperties(file);
 
         Map<String, TestCase> testcases = new HashMap<String, TestCase>();

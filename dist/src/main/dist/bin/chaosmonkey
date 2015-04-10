@@ -2,7 +2,7 @@
 
 CHAOS_MONKEY=$1
 
-case $CHAOS_MONKEY in
+case ${CHAOS_MONKEY} in
     "mama")
         communicator --message-address Agent=R --message-type newMember
         ;;

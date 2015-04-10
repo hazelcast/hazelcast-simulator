@@ -139,7 +139,7 @@ class WorkerCommandRequestProcessor {
             }
         }
 
-        private boolean process(IsPhaseCompletedCommand command) throws Exception {
+        private boolean process(IsPhaseCompletedCommand command) {
             return !commands.containsKey(command.testId);
         }
 

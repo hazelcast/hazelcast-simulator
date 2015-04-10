@@ -16,7 +16,7 @@ public @interface Warmup {
      * If you have a lot of data you want to put in the system, then probably you don't want to use global = true
      * because all loads will be generated through a single member in the cluster.
      *
-     * @return
+     * @return <tt>true</tt> if global teardown method, <tt>false</tt> otherwise
      */
     boolean global() default false;
 }

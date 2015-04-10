@@ -133,7 +133,7 @@ public class SimulatorProperties {
         if ("GROUP_NAME".equals(name)) {
             String username = System.getProperty("user.name").toLowerCase();
 
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (char c : username.toCharArray()) {
                 if (Character.isLetter(c)) {
                     sb.append(c);

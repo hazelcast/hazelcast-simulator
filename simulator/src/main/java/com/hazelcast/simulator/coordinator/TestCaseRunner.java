@@ -51,7 +51,7 @@ public class TestCaseRunner {
         this.nonCriticalFailures = testSuite.tolerableFailures;
     }
 
-    public boolean run() throws Exception {
+    public boolean run() {
         LOGGER.info("--------------------------------------------------------------\n"
                 + format("Running Test : %s%n%s%n", testCase.getId(), testCase)
                 + "--------------------------------------------------------------");

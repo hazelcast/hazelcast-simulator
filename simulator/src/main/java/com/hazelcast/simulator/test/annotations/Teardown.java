@@ -14,7 +14,7 @@ public @interface Teardown {
      * Global indicates that a single member in the cluster is responsible for the tear down. If not global, then
      * all members in the cluster will do the teardown.
      *
-     * @return
+     * @return <tt>true</tt> if global teardown method, <tt>false</tt> otherwise
      */
     boolean global() default false;
 }

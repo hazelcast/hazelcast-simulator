@@ -74,7 +74,7 @@ public class KeyValueServlet extends HttpServlet {
             String value = split[2];
 
             session.setAttribute(key, value);
-            resp.getWriter().write(value.toString());
+            resp.getWriter().write(value);
         }
     }
 }

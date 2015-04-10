@@ -3,6 +3,7 @@ package com.hazelcast.simulator.probes.probes.impl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class DisabledProbeTest {
@@ -37,7 +38,7 @@ public class DisabledProbeTest {
     public void testResultToHumanString() {
         DisabledResult result = disabledProbe.getResult();
         assertTrue(result != null);
-        assertTrue(result.toHumanString() != null);
+        assertNotNull(result.toHumanString());
     }
 
     @Test

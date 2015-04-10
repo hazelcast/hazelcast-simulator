@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 public class Failure implements Serializable {
+
     public enum Type {
         WORKER_EXCEPTION("Worker exception", "workerException"),
         WORKER_TIMEOUT("Worker timeout", "workerTimeout"),
@@ -32,7 +33,7 @@ public class Failure implements Serializable {
         private String humanReadable;
         private String id;
 
-        private Type(String humanReadable, String id) {
+        Type(String humanReadable, String id) {
             this.humanReadable = humanReadable;
             this.id = id;
         }
@@ -82,7 +83,6 @@ public class Failure implements Serializable {
         }
     }
 
-
     private static final long serialVersionUID = 1;
 
     public String message;
@@ -97,7 +97,7 @@ public class Failure implements Serializable {
 
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("Failure[\n");
         sb.append("   message='").append(message).append("'\n");
         sb.append("   type='").append(type).append("'\n");
@@ -107,7 +107,6 @@ public class Failure implements Serializable {
         sb.append("   workerId=").append(workerId).append("\n");
 
         TestCase testCase = testSuite.getTestCase(testId);
-
         if (testCase != null) {
             String[] testString = testCase.toString().split("\n");
             sb.append("   test=").append(testString[0]).append("\n");
@@ -115,16 +114,12 @@ public class Failure implements Serializable {
                 sb.append("    ").append(testString[k]).append("\n");
             }
         } else {
-            sb.append("   test=").append(testId + " unknown").append("\n");
+            sb.append("   test=").append(testId).append(" unknown").append("\n");
         }
 
-        if (cause != null) {
-            sb.append("   cause=").append(cause).append("\n");
-        } else {
-            sb.append("   cause=").append("null").append("\n");
-        }
-
+        sb.append("   cause=").append(cause != null ? cause : "null").append("\n");
         sb.append("]");
+
         return sb.toString();
     }
 }

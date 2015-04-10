@@ -24,7 +24,7 @@ public @interface MessageSpec {
     /**
      * A human-readable description of a message. It can be used to generate --help
      *
-     * @return
+     * @return human-readable description
      */
     String description() default "No description provided";
 }

@@ -8,7 +8,7 @@ class SourceCode extends SimpleJavaFileObject {
 
     private final String contents;
 
-    public SourceCode(String className, String contents) throws Exception {
+    public SourceCode(String className, String contents) {
         super(URI.create("string:///" + className.replace('.', '/') + Kind.SOURCE.extension), Kind.SOURCE);
         this.contents = contents;
     }

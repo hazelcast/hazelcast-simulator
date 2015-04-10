@@ -27,11 +27,10 @@ public final class PropertyBindingSupport {
      *
      * @param testInstance Instance of the test class
      * @param testCase     TestCase which contains the properties
-     * @throws NoSuchFieldException
      * @throws IllegalAccessException
      */
     public static void bindProperties(Object testInstance, TestCase testCase, Set<String> optionalProperties)
-            throws NoSuchFieldException, IllegalAccessException {
+            throws IllegalAccessException {
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
             String property = entry.getKey();
             String value = entry.getValue();
