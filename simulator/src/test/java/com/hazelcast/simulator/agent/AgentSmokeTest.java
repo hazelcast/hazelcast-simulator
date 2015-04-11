@@ -8,11 +8,9 @@ import com.hazelcast.simulator.coordinator.Coordinator;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestCase;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestSuite;
-import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.FailingTest;
+import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.worker.commands.GenericCommand;
 import com.hazelcast.simulator.worker.commands.InitCommand;
 import com.hazelcast.simulator.worker.commands.RunCommand;
@@ -184,54 +182,5 @@ public class AgentSmokeTest {
         writeText(AGENT_IP_ADDRESS, agentFile);
         List<AgentAddress> agentAddresses = AgentsFile.load(agentFile);
         return new AgentsClient(agentAddresses);
-    }
-
-    public static class SuccessTest {
-
-        private TestContext context;
-
-        @Run
-        void run() {
-            while (!context.isStopped()) {
-                LOGGER.info("SuccessTest iteration...");
-                sleepSeconds(1);
-            }
-        }
-
-        @Warmup
-        void warmup() {
-            sleepSeconds(10);
-        }
-
-        @Setup
-        public void setUp(TestContext context) {
-            this.context = context;
-        }
-    }
-
-    public static class FailingTest {
-
-        private TestContext context;
-
-        @Run
-        void run() {
-            if (!context.isStopped()) {
-                LOGGER.info("FailingTest iteration...");
-                sleepSeconds(1);
-
-                LOGGER.info("FailingTest failing!");
-                throw new RuntimeException("This test should fail");
-            }
-        }
-
-        @Warmup
-        void warmup() {
-            sleepSeconds(10);
-        }
-
-        @Setup
-        public void setUp(TestContext context) {
-            this.context = context;
-        }
     }
 }

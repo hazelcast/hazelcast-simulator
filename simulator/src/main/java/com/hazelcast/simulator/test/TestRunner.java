@@ -33,8 +33,10 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 
 /**
- * A utility class to run a test locally. This is purely meant for developing purposes; when you are writing a test
- * you want to see quickly if it works at all without needing to deploy it through an agent on a worker.
+ * A utility class to run a test locally.
+ *
+ * This is purely meant for developing purposes, e.g. when you are writing a test and you want to see quickly if it works at all
+ * without needing to deploy it through an agent on a worker.
  *
  * @param <E> class of the test
  */
@@ -43,24 +45,30 @@ public class TestRunner<E> {
 
     private static final Logger LOGGER = Logger.getLogger(TestRunner.class);
 
-    private final E test;
-    private final TestContextImpl testContext;
+    private final StopThread stopThread = new StopThread();
+    private final TestContextImpl testContext = new TestContextImpl();
+
     private final TestContainer testInvoker;
-    private HazelcastInstance hazelcastInstance;
+    private final E test;
+
     private int durationSeconds = 60;
+    private HazelcastInstance hazelcastInstance;
 
     public TestRunner(E test) {
         if (test == null) {
             throw new NullPointerException("test can't be null");
         }
 
-        this.test = test;
-        this.testContext = new TestContextImpl();
         this.testInvoker = new TestContainer<TestContext>(test, testContext, new ProbesConfiguration());
+        this.test = test;
     }
 
     public E getTest() {
         return test;
+    }
+
+    public long getDurationSeconds() {
+        return durationSeconds;
     }
 
     public HazelcastInstance getHazelcastInstance() {
@@ -80,17 +88,16 @@ public class TestRunner<E> {
         if (file == null) {
             throw new NullPointerException("file can't be null");
         }
-
         if (!file.exists()) {
             throw new IllegalArgumentException(format("file [%s] doesn't exist", file.getAbsolutePath()));
         }
 
-        FileInputStream fis = new FileInputStream(file);
+        FileInputStream inputStream = new FileInputStream(file);
         try {
-            Config config = new XmlConfigBuilder(fis).build();
+            Config config = new XmlConfigBuilder(inputStream).build();
             hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         } finally {
-            closeQuietly(fis);
+            closeQuietly(inputStream);
         }
 
         return this;
@@ -103,10 +110,6 @@ public class TestRunner<E> {
 
         this.durationSeconds = durationSeconds;
         return this;
-    }
-
-    public long getDurationSeconds() {
-        return durationSeconds;
     }
 
     public void run() throws Throwable {
@@ -127,12 +130,9 @@ public class TestRunner<E> {
         LOGGER.info("Finished global warmup");
 
         LOGGER.info("Starting run");
-        testContext.stopped = false;
-        new StopThread().start();
+        stopThread.start();
         testInvoker.run();
         LOGGER.info("Finished run");
-
-        //log.info(test.getOperationCount().toHumanString());
 
         LOGGER.info("Starting globalVerify");
         testInvoker.globalVerify();
@@ -150,35 +150,40 @@ public class TestRunner<E> {
         testInvoker.localTeardown();
         LOGGER.info("Finished local teardown");
 
-        //hazelcastInstance.shutdown();
+        LOGGER.info("Shutdown...");
+        stopThread.interrupt();
+        hazelcastInstance.shutdown();
         LOGGER.info("Finished");
     }
 
-    private class StopThread extends Thread {
+    private final class StopThread extends Thread {
+
         @Override
         public void run() {
-            int period = 5;
-            int big = durationSeconds / period;
-            int small = durationSeconds % period;
+            testContext.stopped = false;
 
-            for (int k = 1; k <= big; k++) {
+            int period = 5;
+            int sleepInterval = durationSeconds / period;
+
+            for (int i = 1; i <= sleepInterval; i++) {
                 sleepSeconds(period);
-                final int elapsed = period * k;
-                final float percentage = (100f * elapsed) / durationSeconds;
-                String msg = format("Running %s of %s seconds %-4.2f percent complete", elapsed, durationSeconds, percentage);
-                LOGGER.info(msg);
-                //log.info("Performance" + test.getOperationCount());
+
+                int elapsed = i * period;
+                float percentage = elapsed * 100f / durationSeconds;
+                LOGGER.info(format("Running %d of %d seconds %-4.2f percent complete", elapsed, durationSeconds, percentage));
             }
 
-            sleepSeconds(small);
-            LOGGER.info("Notified test to stop");
+            sleepSeconds(durationSeconds % period);
             testContext.stopped = true;
+            LOGGER.info("Notified test to stop");
         }
     }
 
-    private class TestContextImpl implements TestContext {
-        final String testId = UUID.randomUUID().toString();
-        volatile boolean stopped;
+    private final class TestContextImpl implements TestContext {
+
+        private final String testId = UUID.randomUUID().toString();
+
+        private volatile boolean stopped;
 
         @Override
         public HazelcastInstance getTargetInstance() {
