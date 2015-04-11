@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.test;
 
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.tests.TestContextImplTest;
@@ -42,7 +43,7 @@ public class TestRunnerTest {
         TestContextImplTest test = new TestContextImplTest();
         TestRunner<TestContextImplTest> testRunner = new TestRunner<TestContextImplTest>(test);
 
-        testRunner.withDuration(0).run();
+        testRunner.withDuration(0).withHazelcastInstance(Hazelcast.newHazelcastInstance()).run();
     }
 
     @Test
