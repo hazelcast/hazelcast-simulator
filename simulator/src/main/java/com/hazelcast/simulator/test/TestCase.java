@@ -23,8 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 public class TestCase implements Serializable {
+
+    private final HashMap<String, String> properties = new HashMap<String, String>();
+
     public String id;
-    public HashMap<String, String> properties = new HashMap<String, String>();
 
     public String getClassname() {
         return properties.get("class");

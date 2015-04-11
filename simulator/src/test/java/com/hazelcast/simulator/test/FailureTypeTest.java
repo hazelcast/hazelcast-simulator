@@ -4,11 +4,19 @@ import org.junit.Test;
 
 import java.util.Set;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static com.hazelcast.simulator.test.Failure.Type.*;
+import static com.hazelcast.simulator.test.Failure.Type.WORKER_EXCEPTION;
+import static com.hazelcast.simulator.test.Failure.Type.WORKER_EXIT;
+import static com.hazelcast.simulator.test.Failure.Type.fromPropertyValue;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-public class TypeTest {
+public class FailureTypeTest {
 
     @Test
     public void testFromPropertyValue_null() throws Exception {
@@ -48,6 +56,15 @@ public class TypeTest {
 
         for (Failure.Type type : types) {
             assertTrue(idsAsString.contains(type.getId()));
+        }
+    }
+
+    @Test
+    public void testToString() {
+        Failure.Type[] types = Failure.Type.values();
+
+        for (Failure.Type type : types) {
+            assertNotNull(type.toString());
         }
     }
 }

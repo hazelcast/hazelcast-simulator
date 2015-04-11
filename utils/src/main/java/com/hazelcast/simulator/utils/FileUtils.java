@@ -26,7 +26,6 @@ import java.net.URLConnection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -313,25 +312,6 @@ public final class FileUtils {
             return new File(System.getProperty("user.dir"));
         } else {
             return new File(home);
-        }
-    }
-
-    public static Properties loadProperties(File file) {
-        Properties properties = new Properties();
-        final FileInputStream in;
-        try {
-            in = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            // should not be thrown since it is already verified that the property file exist
-            throw new RuntimeException(e);
-        }
-        try {
-            properties.load(in);
-            return properties;
-        } catch (IOException e) {
-            throw new RuntimeException(format("Failed to load testsuite property file [%s]", file.getAbsolutePath()), e);
-        } finally {
-            closeQuietly(in);
         }
     }
 

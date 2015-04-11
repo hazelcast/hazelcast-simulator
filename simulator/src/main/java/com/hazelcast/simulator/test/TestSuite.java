@@ -18,6 +18,8 @@ package com.hazelcast.simulator.test;
 import com.hazelcast.simulator.utils.BindException;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -29,8 +31,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
-import static com.hazelcast.simulator.utils.FileUtils.loadProperties;
 import static java.lang.String.format;
 
 public class TestSuite implements Serializable {
@@ -38,10 +40,12 @@ public class TestSuite implements Serializable {
     private static final long serialVersionUID = 1;
 
     public final String id = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
-    public List<TestCase> testCaseList = new LinkedList<TestCase>();
+    public final List<TestCase> testCaseList = new LinkedList<TestCase>();
+
+    public Set<Failure.Type> tolerableFailures = Collections.emptySet();
+
     public int duration;
     public boolean failFast;
-    public Set<Failure.Type> tolerableFailures = Collections.EMPTY_SET;
 
     public TestCase getTestCase(String testCaseId) {
         if (testCaseId == null) {
@@ -53,7 +57,6 @@ public class TestSuite implements Serializable {
                 return testCase;
             }
         }
-
         return null;
     }
 
@@ -75,10 +78,32 @@ public class TestSuite implements Serializable {
                 + '}';
     }
 
-    public static TestSuite loadTestSuite(File file, String propertiesOverrideString) {
-        Properties properties = loadProperties(file);
+    public static TestSuite loadTestSuite(File testPropertiesFile, String propertiesOverrideString) {
+        Properties properties = loadProperties(testPropertiesFile);
 
-        Map<String, TestCase> testcases = new HashMap<String, TestCase>();
+        Map<String, TestCase> testCases = createTestCases(properties);
+
+        return createTestSuite(testPropertiesFile, testCases, propertiesOverrideString);
+    }
+
+    private static Properties loadProperties(File file) {
+        FileReader reader = null;
+        try {
+            reader = new FileReader(file);
+
+            Properties properties = new Properties();
+            properties.load(reader);
+
+            return properties;
+        } catch (IOException e) {
+            throw new RuntimeException(format("Failed to load testsuite property file [%s]", file.getAbsolutePath()), e);
+        } finally {
+            closeQuietly(reader);
+        }
+    }
+
+    private static Map<String, TestCase> createTestCases(Properties properties) {
+        Map<String, TestCase> testCases = new HashMap<String, TestCase>();
         for (String property : properties.stringPropertyNames()) {
             String value = (String) properties.get(property);
             int indexOfAt = property.indexOf("@");
@@ -90,44 +115,46 @@ public class TestSuite implements Serializable {
                 field = property.substring(indexOfAt + 1);
             }
 
-            TestCase testCase = testcases.get(testCaseId);
-            if (testCase == null) {
-                if (!testCaseId.isEmpty() && !isValidFileName(testCaseId)) {
-                    throw new IllegalArgumentException(format(
-                            "Can't create TestCase: testId [%s] is an invalid filename for performance log", testCaseId
-                    ));
-                }
-
-                testCase = new TestCase();
-                testCase.id = testCaseId;
-                testcases.put(testCaseId, testCase);
-            }
-
+            TestCase testCase = getOrCreateTestCase(testCases, testCaseId);
             testCase.setProperty(field, value);
         }
+        return testCases;
+    }
 
-        List<String> testcaseIds = new LinkedList<String>(testcases.keySet());
-        Collections.sort(testcaseIds);
+    private static TestCase getOrCreateTestCase(Map<String, TestCase> testCases, String testCaseId) {
+        TestCase testCase = testCases.get(testCaseId);
+        if (testCase == null) {
+            if (!testCaseId.isEmpty() && !isValidFileName(testCaseId)) {
+                throw new IllegalArgumentException(format(
+                        "Can't create TestCase: testId [%s] is an invalid filename for performance log", testCaseId
+                ));
+            }
 
-        Map<String, String> propertiesOverride = parse(propertiesOverrideString);
+            testCase = new TestCase();
+            testCase.id = testCaseId;
+            testCases.put(testCaseId, testCase);
+        }
+        return testCase;
+    }
+
+    private static TestSuite createTestSuite(File file, Map<String, TestCase> testCases, String propertiesOverrideString) {
+        Map<String, String> propertiesOverride = parseProperties(propertiesOverrideString);
 
         TestSuite testSuite = new TestSuite();
-        for (String testcaseId : testcaseIds) {
-            TestCase testcase = testcases.get(testcaseId);
+        for (String testcaseId : getTestCaseIds(testCases)) {
+            TestCase testcase = testCases.get(testcaseId);
             testcase.override(propertiesOverride);
 
             if (testcase.getClassname() == null) {
-                if ("".equals(testcaseId)) {
-                    throw new BindException(format(
-                            "There is no class set for the in property file [%s]. Add class=YourTestClass",
-                            file.getAbsolutePath()
-                    ));
+                String msg;
+                if (testcaseId.isEmpty()) {
+                    msg = format("There is no class set in property file [%s]. Add class=YourTestClass", file.getAbsolutePath());
                 } else {
-                    throw new BindException(format(
-                            "There is no class set for test [%s] in property file [%s]. Add %s.class=YourTestClass",
+                    msg = format("There is no class set for test [%s] in property file [%s]. Add %s.class=YourTestClass",
                             testcaseId, file.getAbsolutePath(), testcaseId
-                    ));
+                    );
                 }
+                throw new BindException(msg);
             }
 
             testSuite.addTest(testcase);
@@ -136,7 +163,7 @@ public class TestSuite implements Serializable {
         return testSuite;
     }
 
-    private static Map<String, String> parse(String overrideProperties) {
+    private static Map<String, String> parseProperties(String overrideProperties) {
         overrideProperties = overrideProperties.trim();
 
         Map<String, String> result = new HashMap<String, String>();
@@ -144,12 +171,16 @@ public class TestSuite implements Serializable {
             return result;
         }
 
-        String[] entries = overrideProperties.split(",");
-
-        for (String entry : entries) {
+        for (String entry : overrideProperties.split(",")) {
             String[] keyValue = entry.split("=");
             result.put(keyValue[0], keyValue[1]);
         }
         return result;
+    }
+
+    private static List<String> getTestCaseIds(Map<String, TestCase> testCases) {
+        List<String> testcaseIds = new LinkedList<String>(testCases.keySet());
+        Collections.sort(testcaseIds);
+        return testcaseIds;
     }
 }

@@ -22,12 +22,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-public class Failure implements Serializable {
+public final class Failure implements Serializable {
 
     public enum Type {
+
         WORKER_EXCEPTION("Worker exception", "workerException"),
         WORKER_TIMEOUT("Worker timeout", "workerTimeout"),
-        WORKER_OOM("Worker Out Of Memory Error", "workerOOM"),
+        WORKER_OOM("Worker out of memory error", "workerOOM"),
         WORKER_EXIT("Worker exit", "workerExit");
 
         private String humanReadable;
@@ -85,12 +86,13 @@ public class Failure implements Serializable {
 
     private static final long serialVersionUID = 1;
 
+    public final Date time = new Date();
+
     public String message;
     public Type type;
     public String agentAddress;
     public String workerAddress;
     public String workerId;
-    public Date time = new Date();
     public String testId;
     public TestSuite testSuite;
     public String cause;
@@ -108,10 +110,10 @@ public class Failure implements Serializable {
 
         TestCase testCase = testSuite.getTestCase(testId);
         if (testCase != null) {
-            String[] testString = testCase.toString().split("\n");
-            sb.append("   test=").append(testString[0]).append("\n");
-            for (int k = 1; k < testString.length; k++) {
-                sb.append("    ").append(testString[k]).append("\n");
+            String prefix ="   test=";
+            for (String aTestString : testCase.toString().split("\n")) {
+                sb.append(prefix).append(aTestString).append("\n");
+                prefix = "    ";
             }
         } else {
             sb.append("   test=").append(testId).append(" unknown").append("\n");

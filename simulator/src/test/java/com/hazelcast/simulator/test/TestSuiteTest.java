@@ -4,71 +4,138 @@ import com.hazelcast.simulator.utils.BindException;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Map;
 
+import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class TestSuiteTest {
 
     @Test
     public void loadTestSuite_singleTestWithTestName() throws Exception {
-        String txt = "atomiclong@class=AtomicLong\n"
-                + "atomiclong@threadcount=10";
+        String txt = "atomicLongTest@class=AtomicLong\n"
+                + "atomicLongTest@threadCount=10";
 
-        TestSuite suite = load(txt);
-        assertEquals(1, suite.testCaseList.size());
-        TestCase testCase = suite.testCaseList.get(0);
-        assertEquals("atomiclong", testCase.getId());
+        TestSuite testSuite = createTestSuite(txt);
+        assertEquals(1, testSuite.testCaseList.size());
+        TestCase testCase = testSuite.testCaseList.get(0);
+        assertEquals("atomicLongTest", testCase.getId());
         assertEquals("AtomicLong", testCase.getClassname());
-        assertEquals("10", testCase.getProperty("threadcount"));
+        assertEquals("10", testCase.getProperty("threadCount"));
     }
 
     @Test
     public void loadTestSuite_multipleCases() throws Exception {
-        String txt = "atomiclong@class=AtomicLong\n"
-                + "atomiclong@threadcount=10\n"
-                + "atomicboolean@class=AtomicBoolean\n"
-                + "atomicboolean@threadcount=20";
+        String txt = "atomicLongTest@class=AtomicLong\n"
+                + "atomicLongTest@threadCount=10\n"
+                + "atomicBooleanTest@class=AtomicBoolean\n"
+                + "atomicBooleanTest@threadCount=20";
 
-        TestSuite suite = load(txt);
-        assertEquals(2, suite.testCaseList.size());
+        TestSuite testSuite = createTestSuite(txt);
+        assertEquals(2, testSuite.size());
 
-        TestCase atomicLongTestCase = suite.getTestCase("atomiclong");
-        assertEquals("atomiclong", atomicLongTestCase.getId());
+        TestCase atomicLongTestCase = testSuite.getTestCase("atomicLongTest");
+        assertEquals("atomicLongTest", atomicLongTestCase.getId());
         assertEquals("AtomicLong", atomicLongTestCase.getClassname());
-        assertEquals("10", atomicLongTestCase.getProperty("threadcount"));
+        assertEquals("10", atomicLongTestCase.getProperty("threadCount"));
 
-        TestCase atomicBooleanTestCase = suite.getTestCase("atomicboolean");
-        assertEquals("atomicboolean", atomicBooleanTestCase.getId());
+        TestCase atomicBooleanTestCase = testSuite.getTestCase("atomicBooleanTest");
+        assertEquals("atomicBooleanTest", atomicBooleanTestCase.getId());
         assertEquals("AtomicBoolean", atomicBooleanTestCase.getClassname());
-        assertEquals("20", atomicBooleanTestCase.getProperty("threadcount"));
+        assertEquals("20", atomicBooleanTestCase.getProperty("threadCount"));
     }
 
-     @Test
+    @Test
     public void loadTestSuite_singleTest() throws Exception {
         String txt = "class=AtomicLong\n"
-                + "threadcount=10";
+                + "threadCount=10";
 
-        TestSuite suite = load(txt);
-        assertEquals(1, suite.testCaseList.size());
+        TestSuite testSuite = createTestSuite(txt);
+        assertEquals(1, testSuite.size());
 
-        TestCase testCase = suite.testCaseList.get(0);
+        TestCase testCase = testSuite.testCaseList.get(0);
+        assertNotNull(testCase);
         assertEquals("AtomicLong", testCase.getClassname());
-        assertEquals("10", testCase.getProperty("threadcount"));
+        assertNotNull(testCase.toString());
+
+        Map<String, String> properties = testCase.getProperties();
+        assertEquals("10", properties.get("threadCount"));
     }
 
     @Test(expected = BindException.class)
     public void loadTestSuite_missingClassName() throws Exception {
-        String txt = "threadcount=10";
+        String txt = "threadCount=10";
 
-        load(txt);
+        createTestSuite(txt);
     }
 
-    private TestSuite load(String txt) throws Exception {
+    @Test(expected = BindException.class)
+    public void loadTestSuite_missingClassName_withTestCaseId() throws Exception {
+        String txt = "TestCase@threadCount=10";
+
+        createTestSuite(txt);
+    }
+
+    @Test
+    public void getTestCase_null() throws Exception {
+        TestSuite testSuite = createTestSuite("");
+
+        assertNull(testSuite.getTestCase(null));
+    }
+
+    @Test
+    public void getTestCase_notFound() throws Exception {
+        TestSuite testSuite = createTestSuite("");
+
+        assertNull(testSuite.getTestCase("notFound"));
+    }
+
+    @Test
+    public void getTestCase_toString() throws Exception {
+        TestSuite testSuite = createTestSuite("");
+
+        assertNotNull(testSuite.toString());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void propertiesNotFound() throws Exception {
+        loadTestSuite(new File("notFound"), "");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidTestCaseId() throws Exception {
+        String txt = "In$valid@class=AtomicLong\n";
+
+        createTestSuite(txt);
+    }
+
+    @Test
+    public void overrideProperties() throws Exception {
+        String txt = "class=AtomicLong\n"
+                + "threadCount=10";
+
+        String overrideProperties = "threadCount=20";
+
+        TestSuite testSuite = createTestSuite(txt, overrideProperties);
+        assertEquals(1, testSuite.size());
+
+        TestCase testCase = testSuite.testCaseList.get(0);
+        assertEquals("AtomicLong", testCase.getClassname());
+        assertEquals("20", testCase.getProperty("threadCount"));
+    }
+
+    static TestSuite createTestSuite(String txt) throws Exception {
+        return createTestSuite(txt, "");
+    }
+
+    private static TestSuite createTestSuite(String txt, String overrideProperties) throws Exception {
         File file = File.createTempFile("simulator", "properties");
         file.deleteOnExit();
         writeText(txt, file);
 
-        return TestSuite.loadTestSuite(file, "");
+        return loadTestSuite(file, overrideProperties);
     }
 }
