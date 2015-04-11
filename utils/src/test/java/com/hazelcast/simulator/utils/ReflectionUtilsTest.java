@@ -89,7 +89,20 @@ public class ReflectionUtilsTest {
 
     @Test
     public void testGetField_notFound() {
-        Field field = getField(GetFieldTest.class, "notFound", Integer.TYPE);
+        Field field = getField(GetFieldTest.class, "notFound", null);
+        assertNull(field);
+    }
+
+    @Test
+    public void testGetField_primitive() {
+        Field field = getField(GetFieldTest.class, "booleanField", null);
+        assertNotNull(field);
+        assertEquals(field.getType().getName(), Boolean.TYPE.getName());
+    }
+
+    @Test
+    public void testGetField_typeMismatch() {
+        Field field = getField(GetFieldTest.class, "booleanField", Integer.TYPE);
         assertNull(field);
     }
 
