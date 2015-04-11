@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>utils</artifactId>
-    <name>Simulator Utils</name>
+    <name>Hazelcast Simulator Utils</name>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>
