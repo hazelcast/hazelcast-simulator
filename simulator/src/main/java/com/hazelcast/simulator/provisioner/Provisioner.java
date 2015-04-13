@@ -362,7 +362,7 @@ public class Provisioner {
 
         echo("Starting Agent on: %s", ip);
 
-        if (props.isEc2()) {
+        if (props.isEC2()) {
             bash.ssh(ip, format(
                     "nohup hazelcast-simulator-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s "
                             + "> agent.out 2> agent.err < /dev/null &",

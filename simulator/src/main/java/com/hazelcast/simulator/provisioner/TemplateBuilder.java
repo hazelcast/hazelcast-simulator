@@ -57,7 +57,7 @@ public class TemplateBuilder {
             initSecurityGroup();
             template.getOptions().securityGroups(securityGroup);
         } else {
-            if (!props.isEc2()) {
+            if (!props.isEC2()) {
                 throw new IllegalStateException("SUBNET_ID can be used only when EC2 is configured as a cloud provider.");
             }
             LOGGER.info("Using VPC, Subnet ID = " + subnetId);
@@ -95,7 +95,7 @@ public class TemplateBuilder {
     }
 
     private void initSecurityGroup() {
-        if (!props.isEc2()) {
+        if (!props.isEC2()) {
             return;
         }
 
