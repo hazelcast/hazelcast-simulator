@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static org.junit.Assert.assertEquals;
@@ -38,11 +39,14 @@ public class AgentSmokeTest {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
+    private static String userDir;
     private static Thread agentThread;
     private static AgentsClient agentsClient;
 
     @BeforeClass
     public static void setUp() throws Exception {
+        userDir = System.getProperty("user.dir");
+
         System.setProperty("worker.testmethod.timeout", "5");
         System.setProperty("user.dir", "./dist/src/main/dist");
 
@@ -60,6 +64,9 @@ public class AgentSmokeTest {
 
         agentThread.interrupt();
         agentThread.join();
+
+        System.setProperty("user.dir", userDir);
+        deleteQuiet(new File("./dist/src/main/dist/workers"));
     }
 
     @Test
