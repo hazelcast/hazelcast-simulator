@@ -2,9 +2,10 @@ package com.hazelcast.simulator.common;
 
 import java.io.Serializable;
 
-public class KeyValuePair<K, V> implements Serializable {
-    private K key;
-    private V value;
+public final class KeyValuePair<K, V> implements Serializable {
+
+    private final K key;
+    private final V value;
 
     public KeyValuePair(K key, V value) {
         this.key = key;
