@@ -17,7 +17,11 @@ public class HdrLatencyDistributionProbe
             throw new IllegalStateException("You have to call started() before done()");
         }
         histogram.recordValue((int) TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - started));
-        invocations++;
+    }
+
+    @Override
+    public long getInvocationCount() {
+        return histogram.getTotalCount();
     }
 
     @Override

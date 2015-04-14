@@ -33,7 +33,6 @@ public class LatencyDistributionResult implements Result<LatencyDistributionResu
         NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
         int numberOfSpaces = 15;
         double[] percentiles = {0.999d, 0.99d, 0.9d, 0.85d, 0.8d, 0.75d, 0.7d, 0.6d, 0.5d, 0.4d, 0.3d};
-        builder.append('\n');
         for (double percentile : percentiles) {
             HistogramPart value = linearHistogram.getPercentile(percentile);
             String formattedPercentile = numberFormat.format(percentile);

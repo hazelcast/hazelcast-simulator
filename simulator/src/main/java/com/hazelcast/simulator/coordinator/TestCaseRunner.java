@@ -136,8 +136,9 @@ public class TestCaseRunner {
     private <R extends Result<R>> void logProbesResultInHumanReadableFormat(Map<String, R> combinedResults) {
         for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
             String probeName = entry.getKey();
-            R result = entry.getValue();
-            echo("Probe " + probeName + ": " + result.toHumanString());
+            String result = entry.getValue().toHumanString();
+            String whitespace = (result.contains("\n") ? "\n" : " ");
+            echo("Results of probe " + probeName + ":" + whitespace + result);
         }
     }
 
