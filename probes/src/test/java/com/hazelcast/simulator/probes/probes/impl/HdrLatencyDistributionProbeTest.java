@@ -34,12 +34,11 @@ public class HdrLatencyDistributionProbeTest {
 
     @Test
     public void testResult() {
-        long sleepTime = 150;
-        long minLatency = TimeUnit.MILLISECONDS.toMillis(sleepTime);
-        long maxLatency = TimeUnit.MILLISECONDS.toMillis(1000);
+        long sleepTime = TimeUnit.MILLISECONDS.toMicros(150);
+        long tolerance = TimeUnit.MILLISECONDS.toMicros(5);
 
         hdrLatencyDistributionProbe.started();
-        sleepNanos(TimeUnit.MILLISECONDS.toNanos(sleepTime));
+        sleepNanos(TimeUnit.MICROSECONDS.toNanos(sleepTime));
         hdrLatencyDistributionProbe.done();
 
         HdrLatencyDistributionResult result = hdrLatencyDistributionProbe.getResult();
@@ -49,17 +48,18 @@ public class HdrLatencyDistributionProbeTest {
         assertEqualsStringFormat("Expected %d records, but was %d", 1L, histogram.getTotalCount());
 
         long minValue = histogram.getMinValue();
-        assertEqualsStringFormat("Expected minValue %d to be the same as maxValue %d", minValue, histogram.getMaxValue());
+        long maxValue = histogram.getMaxValue();
+        assertTrue("Expected minValue and maxValue within a range of 1 ms", maxValue - minValue < tolerance);
 
         double latency = histogram.getMean();
-        assertTrue("latency should be >= " + minLatency + ", but was " + latency, latency >= minLatency);
-        assertTrue("latency should be < " + maxLatency + ", but was " + latency, latency < maxLatency);
+        assertTrue("latency should be >= " + sleepTime + ", but was " + latency, latency >= sleepTime);
+        assertTrue("latency should be < " + (sleepTime + tolerance) + ", but was " + latency, latency < sleepTime + tolerance);
     }
 
     @Test
     public void testResultToHumanString() {
         hdrLatencyDistributionProbe.started();
-        sleepNanos(TimeUnit.MILLISECONDS.toNanos(150));
+        sleepNanos(TimeUnit.MICROSECONDS.toNanos(150));
         hdrLatencyDistributionProbe.done();
 
         HdrLatencyDistributionResult result = hdrLatencyDistributionProbe.getResult();
@@ -69,26 +69,26 @@ public class HdrLatencyDistributionProbeTest {
 
     @Test
     public void testResultCombine() {
-        long sleepTime1 = 150;
-        long sleepTime2 = 300;
-        long safetyMargin = 100;
-        long latency1 = TimeUnit.MILLISECONDS.toMillis(sleepTime1);
-        long latency2 = TimeUnit.MILLISECONDS.toMillis(sleepTime2);
-        long maxLatency = TimeUnit.MILLISECONDS.toMillis(sleepTime2 + safetyMargin);
+        long sleepTime1 = TimeUnit.MILLISECONDS.toMicros(150);
+        long sleepTime2 = TimeUnit.MILLISECONDS.toMicros(500);
+        long tolerance = TimeUnit.MILLISECONDS.toMicros(5);
 
         hdrLatencyDistributionProbe.started();
-        sleepNanos(TimeUnit.MILLISECONDS.toNanos(sleepTime1));
+        sleepNanos(TimeUnit.MICROSECONDS.toNanos(sleepTime1));
         hdrLatencyDistributionProbe.done();
 
         HdrLatencyDistributionResult result1 = hdrLatencyDistributionProbe.getResult();
         assertTrue(result1 != null);
+        assertEqualsStringFormat("Expected %d records, but was %d", 1L, result1.getHistogram().getTotalCount());
 
-        hdrLatencyDistributionProbe.started();
-        sleepNanos(TimeUnit.MILLISECONDS.toNanos(sleepTime2));
-        hdrLatencyDistributionProbe.done();
+        HdrLatencyDistributionProbe hdrLatencyDistributionProbe2 = new HdrLatencyDistributionProbe();
+        hdrLatencyDistributionProbe2.started();
+        sleepNanos(TimeUnit.MICROSECONDS.toNanos(sleepTime2));
+        hdrLatencyDistributionProbe2.done();
 
-        HdrLatencyDistributionResult result2 = hdrLatencyDistributionProbe.getResult();
+        HdrLatencyDistributionResult result2 = hdrLatencyDistributionProbe2.getResult();
         assertTrue(result2 != null);
+        assertEqualsStringFormat("Expected %d records, but was %d", 1L, result2.getHistogram().getTotalCount());
 
         HdrLatencyDistributionResult combined = result1.combine(result2);
         assertTrue(combined != null);
@@ -99,13 +99,17 @@ public class HdrLatencyDistributionProbeTest {
         long minValue = histogram.getMinValue();
         long maxValue = histogram.getMaxValue();
         assertNotEquals("Expected minValue and maxValue to differ", minValue, maxValue);
-        assertTrue("Expected minValue >= " + (latency1 - 10) + ", but was " + minValue, minValue >= latency1 - 10);
-        assertTrue("Expected minValue <= " + (latency1 + 10) + ", but was " + minValue, minValue <= latency1 + 10);
-        assertTrue("Expected maxValue >= " + (latency2 - 10) + ", but was " + maxValue, maxValue >= latency2 - 10);
-        assertTrue("Expected maxValue <= " + (latency2 + 10) + ", but was " + maxValue, maxValue <= latency2 + 10);
+        assertTrue("Expected minValue >= " + (sleepTime1 - tolerance) + ", but was " + minValue,
+                minValue >= sleepTime1 - tolerance);
+        assertTrue("Expected minValue <= " + (sleepTime1 + tolerance) + ", but was " + minValue,
+                minValue <= sleepTime1 + tolerance);
+        assertTrue("Expected maxValue >= " + (sleepTime2 - tolerance) + ", but was " + maxValue,
+                maxValue >= sleepTime2 - tolerance);
+        assertTrue("Expected maxValue <= " + (sleepTime2 + tolerance) + ", but was " + maxValue,
+                maxValue <= sleepTime2 + tolerance);
 
         double latency = histogram.getMean();
-        assertTrue("latency should be >= " + latency1 + ", but was " + latency, latency >= latency1);
-        assertTrue("latency should be < " + maxLatency + ", but was " + latency, latency < maxLatency);
+        assertTrue("latency should be >= " + sleepTime1 + ", but was " + latency, latency >= sleepTime1);
+        assertTrue("latency should be < " + sleepTime2 + tolerance + ", but was " + latency, latency < sleepTime2 + tolerance);
     }
 }

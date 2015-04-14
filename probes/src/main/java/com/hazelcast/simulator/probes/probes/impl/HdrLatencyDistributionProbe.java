@@ -16,7 +16,7 @@ public class HdrLatencyDistributionProbe
         if (started == 0) {
             throw new IllegalStateException("You have to call started() before done()");
         }
-        histogram.recordValue((int) TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started));
+        histogram.recordValue((int) TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - started));
         invocations++;
     }
 
