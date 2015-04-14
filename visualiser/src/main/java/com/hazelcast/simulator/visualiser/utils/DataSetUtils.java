@@ -18,16 +18,16 @@ public final class DataSetUtils {
         if (probeData instanceof LatencyDistributionResult) {
             return calcSingleProbeDataSet((LatencyDistributionResult) probeData, accuracy);
         } else if (probeData instanceof HdrLatencyDistributionResult) {
-            return calcSingleProbeDataSet((HdrLatencyDistributionResult) probeData);
+            return calcSingleProbeDataSet((HdrLatencyDistributionResult) probeData, accuracy);
         }
         throw new IllegalArgumentException("unknown probe result type: " + probeData.getClass().getSimpleName());
     }
 
-    private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(HdrLatencyDistributionResult probeData) {
+    private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(HdrLatencyDistributionResult probeData, long accuracy) {
         SimpleHistogramDataSetContainer histogramDataSet = new SimpleHistogramDataSetContainer("key");
         histogramDataSet.setAdjustForBinSize(false);
         Histogram histogram = probeData.getHistogram();
-        for (HistogramIterationValue value : histogram.linearBucketValues(10)) {
+        for (HistogramIterationValue value : histogram.linearBucketValues(accuracy)) {
             int values = (int) value.getCountAddedInThisIterationStep();
             if (values > 0) {
                 long lowerBound = value.getValueIteratedFrom();
@@ -43,6 +43,7 @@ public final class DataSetUtils {
 
     private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(LatencyDistributionResult probeData, long accuracy) {
         SimpleHistogramDataSetContainer histogramDataSet = new SimpleHistogramDataSetContainer("key");
+        histogramDataSet.setAdjustForBinSize(false);
         LinearHistogram histogram = probeData.getHistogram();
         int histogramStep = histogram.getStep();
         int lowerBound = 0;
@@ -55,9 +56,7 @@ public final class DataSetUtils {
             }
             if (values > 0) {
                 maxLatency = lowerBound;
-                long addValue = values * accuracy;
-                int newValue = (int) Math.min(bin.getItemCount() + addValue, Integer.MAX_VALUE);
-                bin.setItemCount(newValue);
+                bin.setItemCount(bin.getItemCount() + values);
             }
             lowerBound += histogramStep;
         }

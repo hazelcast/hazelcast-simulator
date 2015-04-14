@@ -30,9 +30,10 @@ public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributi
         if (other == null) {
             return this;
         }
-        Histogram histogramCopy = new Histogram(histogram);
-        histogramCopy.add(other.histogram);
-        return new HdrLatencyDistributionResult(histogramCopy);
+        Histogram combinedHistogram = new Histogram(histogram);
+        combinedHistogram.add(histogram);
+        combinedHistogram.add(other.histogram);
+        return new HdrLatencyDistributionResult(combinedHistogram);
     }
 
     @Override
