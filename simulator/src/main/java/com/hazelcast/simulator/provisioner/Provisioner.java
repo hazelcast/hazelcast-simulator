@@ -301,7 +301,7 @@ public class Provisioner {
     }
 
     private void installAgent(String ip) {
-        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s", getSimulatorVersion()));
+        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/lib/", getSimulatorVersion()));
 
         // first we delete the old lib files to prevent different versions of the same JAR to bite us
         bash.sshQuiet(ip, format("rm -f hazelcast-simulator-%s/lib/*", getSimulatorVersion()));
