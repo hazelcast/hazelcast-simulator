@@ -4,7 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -13,6 +17,7 @@ public class AccuracyRadioButtons extends JPanel {
     private static final int DEFAULT_ACCURACY = (int) TimeUnit.MICROSECONDS.toMicros(10);
 
     private final Map<Integer, JRadioButton> radioButtonMap = new HashMap<Integer, JRadioButton>();
+    private final List<Integer> accuracyList = new ArrayList<Integer>();
     private final ButtonGroup buttonGroup = new ButtonGroup();
 
     private Chart chart;
@@ -34,10 +39,10 @@ public class AccuracyRadioButtons extends JPanel {
     }
 
     private void addButton(long accuracy, String title) {
-        addButton(accuracy, title, (accuracy == DEFAULT_ACCURACY));
+        addButton((int) accuracy, title, (accuracy == DEFAULT_ACCURACY));
     }
 
-    private void addButton(long accuracy, String title, boolean selected) {
+    private void addButton(int accuracy, String title, boolean selected) {
         JRadioButton radioButton = new JRadioButton(title);
         if (selected) {
             radioButton.setSelected(true);
@@ -45,14 +50,54 @@ public class AccuracyRadioButtons extends JPanel {
         radioButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (chart != null) {
-                    chart.updateChart();
+                update();
+            }
+        });
+        radioButton.addMouseWheelListener(new MouseWheelListener() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                if (e.getWheelRotation() > 0) {
+                    selectNextRadioButton();
+                } else {
+                    selectPrevRadioButton();
                 }
             }
         });
         add(radioButton);
-        radioButtonMap.put((int) accuracy, radioButton);
+        radioButtonMap.put(accuracy, radioButton);
+        accuracyList.add(accuracy);
         buttonGroup.add(radioButton);
+    }
+
+    private void update() {
+        revalidate();
+        if (chart != null) {
+            chart.updateChart();
+        }
+    }
+
+    private void selectNextRadioButton() {
+        int accuracy = getEnabledAccuracy();
+        int index = accuracyList.indexOf(accuracy);
+        if (index < accuracyList.size() - 1) {
+            accuracy = accuracyList.get(index + 1);
+            radioButtonMap.get(accuracy).setSelected(true);
+            update();
+        }
+    }
+
+    private void selectPrevRadioButton() {
+        int accuracy = getEnabledAccuracy();
+        int index = accuracyList.indexOf(accuracy);
+        if (index > 0) {
+            accuracy = accuracyList.get(index - 1);
+            radioButtonMap.get(accuracy).setSelected(true);
+            update();
+        }
+    }
+
+    public void setChart(Chart chart) {
+        this.chart = chart;
     }
 
     public int getEnabledAccuracy() {
@@ -63,9 +108,5 @@ public class AccuracyRadioButtons extends JPanel {
             }
         }
         return DEFAULT_ACCURACY;
-    }
-
-    public void setChart(Chart chart) {
-        this.chart = chart;
     }
 }
