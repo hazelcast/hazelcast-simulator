@@ -16,6 +16,7 @@ public final class MainUI extends JFrame {
     private final Model model = new Model();
 
     private JMenuItem loadMenuItem;
+    private File lastFileChooserDirectory = null;
 
     public MainUI() {
         createUI();
@@ -77,12 +78,12 @@ public final class MainUI extends JFrame {
         loadMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFileChooser fc = new JFileChooser();
-                fc.setFileFilter(new ExtensionFileFilter("XML Files", "xml"));
-                int retVal = fc.showOpenDialog(null);
-                if (retVal == JFileChooser.APPROVE_OPTION) {
-                    File file = fc.getSelectedFile();
-                    new ResultParserWorker(file, model).execute();
+                JFileChooser fileChooser = new JFileChooser(lastFileChooserDirectory);
+                fileChooser.setFileFilter(new ExtensionFileFilter("XML Files", "xml"));
+                int returnValue = fileChooser.showOpenDialog(null);
+                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                    lastFileChooserDirectory = fileChooser.getSelectedFile();
+                    new ResultParserWorker(lastFileChooserDirectory, model).execute();
                 }
             }
         });
