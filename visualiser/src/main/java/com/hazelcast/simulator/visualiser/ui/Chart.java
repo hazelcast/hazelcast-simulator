@@ -24,8 +24,8 @@ import static com.hazelcast.simulator.visualiser.utils.ListenerUtils.addVertical
 
 public class Chart extends JPanel {
 
-    private static final int MAIN_SLIDER_MINIMUM = 5000;
-    private static final int FINE_SLIDER_MINIMUM = 100;
+    private static final int MAIN_SLIDER_MINIMUM = 100;
+    private static final int FINE_SLIDER_MINIMUM = 50;
     private static final int VERTICAL_SLIDER_MINIMUM = 100;
 
     private static final float ALPHA = 0.65f;
@@ -36,12 +36,15 @@ public class Chart extends JPanel {
 
     private final Model model;
     private final AccuracyRadioButtons accuracyRadioButtons;
+    private final AutoScaleRadioButtons autoScaleRadioButtons;
     private final ProbesCheckboxes probesCheckboxes;
     private final XYPlot plot;
 
-    public Chart(Model model, AccuracyRadioButtons accuracyRadioButtons, ProbesCheckboxes probesCheckboxes) {
+    public Chart(Model model, AccuracyRadioButtons accuracyRadioButtons, AutoScaleRadioButtons autoScaleRadioButtons,
+                 ProbesCheckboxes probesCheckboxes) {
         this.model = model;
         this.accuracyRadioButtons = accuracyRadioButtons;
+        this.autoScaleRadioButtons = autoScaleRadioButtons;
         this.probesCheckboxes = probesCheckboxes;
 
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
@@ -119,6 +122,7 @@ public class Chart extends JPanel {
 
     private AggregatedDataSet calculateDataSet(List<String> selectedProbes) {
         int accuracy = accuracyRadioButtons.getEnabledAccuracy();
+        double scalingPercentile = autoScaleRadioButtons.getEnabledPercentile();
         AggregatedDataSet aggregatedDataSet = new AggregatedDataSet();
         Set<String> benchmarkNames = model.getBenchmarkNames();
         for (String benchmarkName : benchmarkNames) {
@@ -130,7 +134,7 @@ public class Chart extends JPanel {
                     continue;
                 }
                 String name = benchmarkName + " - " + selectedProbe;
-                SimpleHistogramDataSetContainer dataSet = calculateSingleProbeDataSet(probeData, accuracy);
+                SimpleHistogramDataSetContainer dataSet = calculateSingleProbeDataSet(probeData, accuracy, scalingPercentile);
                 aggregatedDataSet.addNewSeries(dataSet, name);
             }
         }
@@ -144,10 +148,12 @@ public class Chart extends JPanel {
 
         Double horizontalUpperBound = plot.getDomainAxis().getRange().getUpperBound();
         mainHorizontalSlider.setMaximum(horizontalUpperBound.intValue());
-        mainHorizontalSlider.setValue(horizontalUpperBound.intValue());
+        mainHorizontalSlider.setValue(0);
+        mainHorizontalSlider.setValue((int) dataSet.getAutoScaleValue());
 
         Double verticalUpperBound = plot.getRangeAxis().getRange().getUpperBound();
         verticalSlider.setMaximum(verticalUpperBound.intValue());
+        verticalSlider.setValue(0);
         verticalSlider.setValue(verticalUpperBound.intValue());
     }
 }

@@ -11,11 +11,11 @@ public class AggregatedDataSet extends AbstractIntervalXYDataset implements Inte
     private final List<IntervalXYDataset> series = new ArrayList<IntervalXYDataset>();
     private final List<String> keys = new ArrayList<String>();
 
-    private long maxLatency;
+    private long autoScaleValue;
     private int noOfSeries;
 
     public void addNewSeries(SimpleHistogramDataSetContainer dataSet, String key) {
-        maxLatency = Math.max(maxLatency, dataSet.getMaxLatency());
+        autoScaleValue = Math.max(autoScaleValue, dataSet.getAutoScaleValue());
         addNewSeries((IntervalXYDataset) dataSet, key);
     }
 
@@ -71,7 +71,7 @@ public class AggregatedDataSet extends AbstractIntervalXYDataset implements Inte
         return this.series.get(series).getEndY(series, item);
     }
 
-    public long getMaxLatency() {
-        return maxLatency;
+    public long getAutoScaleValue() {
+        return autoScaleValue;
     }
 }

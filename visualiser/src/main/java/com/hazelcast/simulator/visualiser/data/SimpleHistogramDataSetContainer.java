@@ -10,7 +10,7 @@ public class SimpleHistogramDataSetContainer extends SimpleHistogramDataset {
 
     private final List bins;
 
-    private long maxLatency;
+    private long autoScaleValue;
 
     public SimpleHistogramDataSetContainer(Comparable key) {
         super(key);
@@ -31,12 +31,12 @@ public class SimpleHistogramDataSetContainer extends SimpleHistogramDataset {
         bins.add(bin);
     }
 
-    public long getMaxLatency() {
-        return maxLatency;
+    public long getAutoScaleValue() {
+        return autoScaleValue;
     }
 
-    public void setMaxLatency(long maxLatency) {
-        this.maxLatency = maxLatency;
+    public void setAutoScaleValue(long autoScaleValue) {
+        this.autoScaleValue = autoScaleValue;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class SimpleHistogramDataSetContainer extends SimpleHistogramDataset {
 
         SimpleHistogramDataSetContainer that = (SimpleHistogramDataSetContainer) o;
 
-        if (maxLatency != that.maxLatency) return false;
+        if (autoScaleValue != that.autoScaleValue) return false;
         if (bins != null ? !bins.equals(that.bins) : that.bins != null) return false;
 
         return true;
@@ -56,7 +56,7 @@ public class SimpleHistogramDataSetContainer extends SimpleHistogramDataset {
     @Override
     public int hashCode() {
         int result = bins != null ? bins.hashCode() : 0;
-        result = 31 * result + (int) (maxLatency ^ (maxLatency >>> 32));
+        result = 31 * result + (int) (autoScaleValue ^ (autoScaleValue >>> 32));
         return result;
     }
 }

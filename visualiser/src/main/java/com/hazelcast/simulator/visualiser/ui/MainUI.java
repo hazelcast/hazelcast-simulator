@@ -33,6 +33,7 @@ public final class MainUI extends JFrame {
         setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
 
         AccuracyRadioButtons accuracyRadioButtons = new AccuracyRadioButtons();
+        AutoScaleRadioButtons autoScaleRadioButtons = new AutoScaleRadioButtons();
 
         ProbesCheckboxes checkBoxes = new ProbesCheckboxes(model);
         model.addBenchmarkChangeListener(checkBoxes);
@@ -43,13 +44,16 @@ public final class MainUI extends JFrame {
         JPanel northWestPanel = new JPanel();
         northWestPanel.setLayout(new BoxLayout(northWestPanel, BoxLayout.Y_AXIS));
         northWestPanel.add(accuracyRadioButtons);
+        northWestPanel.add(autoScaleRadioButtons);
         northWestPanel.add(checkBoxes);
         northWestPanel.add(loadedBenchmarks);
 
-        final Chart chart = new Chart(model, accuracyRadioButtons, checkBoxes);
+        final Chart chart = new Chart(model, accuracyRadioButtons, autoScaleRadioButtons, checkBoxes);
+        accuracyRadioButtons.setChart(chart);
+        autoScaleRadioButtons.setChart(chart);
         checkBoxes.setChart(chart);
 
-        JButton renderButton = new JButton("Render");
+        JButton renderButton = new JButton("Reset");
         renderButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

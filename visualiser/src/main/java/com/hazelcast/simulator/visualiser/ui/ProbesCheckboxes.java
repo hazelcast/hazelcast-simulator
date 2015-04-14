@@ -5,6 +5,8 @@ import com.hazelcast.simulator.visualiser.data.Model;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +29,10 @@ public class ProbesCheckboxes extends JPanel implements Model.BenchmarkChangeLis
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         setBorder(BorderFactory.createTitledBorder("Probes"));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+    }
+
+    public void setChart(Chart chart) {
+        this.chart = chart;
     }
 
     public List<String> getEnabledProbes() {
@@ -55,16 +61,22 @@ public class ProbesCheckboxes extends JPanel implements Model.BenchmarkChangeLis
         if (!checkBoxMap.containsKey(name)) {
             JCheckBox button = new JCheckBox(name);
             button.setSelected(AUTO_SELECT_PROBES);
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    update();
+                }
+            });
             add(button);
             checkBoxMap.put(name, button);
         }
+        update();
+    }
+
+    private void update() {
         revalidate();
         if (chart != null) {
             chart.updateChart();
         }
-    }
-
-    public void setChart(Chart chart) {
-        this.chart = chart;
     }
 }

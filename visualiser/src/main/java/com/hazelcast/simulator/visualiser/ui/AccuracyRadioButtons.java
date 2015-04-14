@@ -2,6 +2,8 @@ package com.hazelcast.simulator.visualiser.ui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -13,12 +15,14 @@ public class AccuracyRadioButtons extends JPanel {
     private final Map<Integer, JRadioButton> radioButtonMap = new HashMap<Integer, JRadioButton>();
     private final ButtonGroup buttonGroup = new ButtonGroup();
 
+    private Chart chart;
+
     public AccuracyRadioButtons() {
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         setBorder(BorderFactory.createTitledBorder("Accuracy"));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        addButton(DEFAULT_ACCURACY, "10 µs", true);
+        addButton(TimeUnit.MICROSECONDS.toMicros(10), "10 µs");
         addButton(TimeUnit.MICROSECONDS.toMicros(50), "50 µs");
         addButton(TimeUnit.MICROSECONDS.toMicros(100), "100 µs");
         addButton(TimeUnit.MICROSECONDS.toMicros(500), "500 µs");
@@ -30,7 +34,7 @@ public class AccuracyRadioButtons extends JPanel {
     }
 
     private void addButton(long accuracy, String title) {
-        addButton(accuracy, title, false);
+        addButton(accuracy, title, (accuracy == DEFAULT_ACCURACY));
     }
 
     private void addButton(long accuracy, String title, boolean selected) {
@@ -38,6 +42,14 @@ public class AccuracyRadioButtons extends JPanel {
         if (selected) {
             radioButton.setSelected(true);
         }
+        radioButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (chart != null) {
+                    chart.updateChart();
+                }
+            }
+        });
         add(radioButton);
         radioButtonMap.put((int) accuracy, radioButton);
         buttonGroup.add(radioButton);
@@ -51,5 +63,9 @@ public class AccuracyRadioButtons extends JPanel {
             }
         }
         return DEFAULT_ACCURACY;
+    }
+
+    public void setChart(Chart chart) {
+        this.chart = chart;
     }
 }
