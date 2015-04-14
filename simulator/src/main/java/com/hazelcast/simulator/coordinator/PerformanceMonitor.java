@@ -110,7 +110,7 @@ public class PerformanceMonitor {
 
         double performance = (totalOperationCount * 1.0d) / duration;
         appendText(performance + "\n", new File("performance.txt"));
-        LOGGER.info(format("Total performance     %s%% %s ops %s ops/s",
+        LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
                 formatDouble(100, 7),
                 formatLong(totalOperationCount, 15),
                 formatDouble(performance, 15)));
@@ -120,7 +120,7 @@ public class PerformanceMonitor {
             long operationCountPerAgent = entry.getValue();
             double percentage = 100 * (operationCountPerAgent * 1.0d) / totalOperationCount;
             performance = (operationCountPerAgent * 1.0d) / duration;
-            LOGGER.info(format("  Agent %s %s%% %s ops %s ops/s",
+            LOGGER.info(format("  Agent %-15s %s%% %s ops %s ops/s",
                     client.getPublicAddress(),
                     formatDouble(percentage, 7),
                     formatLong(operationCountPerAgent, 15),
