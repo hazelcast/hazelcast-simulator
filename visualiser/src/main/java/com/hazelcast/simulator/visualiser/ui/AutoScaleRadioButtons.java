@@ -14,6 +14,7 @@ import java.util.Map;
 public class AutoScaleRadioButtons extends JPanel {
 
     private static final double DEFAULT_SCALE = 0.99d;
+    private static final double[] SCALE_PERCENTILES = {1, 0.9999, 0.999, 0.99, 0.98, 0.97, 0.95, 0.9, 0.85, 0.8, 0.7, 0.5};
 
     private final Map<Double, JRadioButton> radioButtonMap = new HashMap<Double, JRadioButton>();
     private final List<Double> percentileList = new ArrayList<Double>();
@@ -26,18 +27,9 @@ public class AutoScaleRadioButtons extends JPanel {
         setBorder(BorderFactory.createTitledBorder("AutoScale Percentile"));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        addButton(1.0d, "1.0");
-        addButton(0.9999d, "0.9999");
-        addButton(0.999d, "0.999");
-        addButton(0.99d, "0.99");
-        addButton(0.98d, "0.98");
-        addButton(0.97d, "0.97");
-        addButton(0.95d, "0.95");
-        addButton(0.9d, "0.9");
-        addButton(0.85d, "0.85");
-        addButton(0.8d, "0.8");
-        addButton(0.7d, "0.7");
-        addButton(0.5d, "0.5");
+        for (double percentile : SCALE_PERCENTILES) {
+            addButton(percentile, String.valueOf(percentile));
+        }
     }
 
     private void addButton(double percentile, String title) {

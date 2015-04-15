@@ -13,6 +13,8 @@ public class LatencyDistributionResult implements Result<LatencyDistributionResu
 
     public static final String XML_TYPE = LatencyDistributionResult.class.getSimpleName();
 
+    private static final double[] PERCENTILES = {0.999, 0.99, 0.9, 0.85, 0.8, 0.75, 0.7, 0.6, 0.5, 0.4, 0.3};
+
     private final LinearHistogram linearHistogram;
 
     public LatencyDistributionResult(LinearHistogram linearHistogram) {
@@ -32,8 +34,7 @@ public class LatencyDistributionResult implements Result<LatencyDistributionResu
         StringBuilder builder = new StringBuilder();
         NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
         int numberOfSpaces = 15;
-        double[] percentiles = {0.999d, 0.99d, 0.9d, 0.85d, 0.8d, 0.75d, 0.7d, 0.6d, 0.5d, 0.4d, 0.3d};
-        for (double percentile : percentiles) {
+        for (double percentile : PERCENTILES) {
             HistogramPart value = linearHistogram.getPercentile(percentile);
             String formattedPercentile = numberFormat.format(percentile);
             builder.append("Percentile ")

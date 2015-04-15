@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 public class AccuracyRadioButtons extends JPanel {
 
     private static final int DEFAULT_ACCURACY = (int) TimeUnit.MICROSECONDS.toMicros(10);
+    private static final int[] MICRO_SECONDS_ACCURACY = {10, 50, 100, 500};
+    private static final int[] MILLI_SECONDS_ACCURACY = {1, 10, 50, 100, 1000};
 
     private final Map<Integer, JRadioButton> radioButtonMap = new HashMap<Integer, JRadioButton>();
     private final List<Integer> accuracyList = new ArrayList<Integer>();
@@ -27,15 +29,12 @@ public class AccuracyRadioButtons extends JPanel {
         setBorder(BorderFactory.createTitledBorder("Accuracy"));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        addButton(TimeUnit.MICROSECONDS.toMicros(10), "10 µs");
-        addButton(TimeUnit.MICROSECONDS.toMicros(50), "50 µs");
-        addButton(TimeUnit.MICROSECONDS.toMicros(100), "100 µs");
-        addButton(TimeUnit.MICROSECONDS.toMicros(500), "500 µs");
-        addButton(TimeUnit.MILLISECONDS.toMicros(1), "1 ms");
-        addButton(TimeUnit.MILLISECONDS.toMicros(10), "10 ms");
-        addButton(TimeUnit.MILLISECONDS.toMicros(50), "50 ms");
-        addButton(TimeUnit.MILLISECONDS.toMicros(100), "100 ms");
-        addButton(TimeUnit.MILLISECONDS.toMicros(1000), "1000 ms");
+        for (int accuracy : MICRO_SECONDS_ACCURACY) {
+            addButton(TimeUnit.MICROSECONDS.toMicros(accuracy), accuracy + " µs");
+        }
+        for (int accuracy : MILLI_SECONDS_ACCURACY) {
+            addButton(TimeUnit.MILLISECONDS.toMicros(accuracy), accuracy + " ms");
+        }
     }
 
     private void addButton(long accuracy, String title) {
