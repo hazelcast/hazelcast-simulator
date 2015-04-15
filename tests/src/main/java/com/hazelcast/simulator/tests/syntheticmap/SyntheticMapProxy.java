@@ -2,17 +2,18 @@ package com.hazelcast.simulator.tests.syntheticmap;
 
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.spi.AbstractDistributedObject;
-import com.hazelcast.spi.InternalCompletableFuture;
 import com.hazelcast.spi.NodeEngine;
 import com.hazelcast.spi.OperationService;
 
-public class SyntheticMapProxy<K,V> extends AbstractDistributedObject implements SyntheticMap<K,V> {
+public class SyntheticMapProxy<K, V> extends AbstractDistributedObject<SyntheticMapService> implements SyntheticMap<K, V> {
 
     private final String name;
+    private final NodeEngine nodeEngine;
 
-    public SyntheticMapProxy(String name, NodeEngine nodeEngine, SyntheticMapService service){
+    public SyntheticMapProxy(String name, NodeEngine nodeEngine, SyntheticMapService service) {
         super(nodeEngine, service);
         this.name = name;
+        this.nodeEngine = nodeEngine;
     }
 
     @Override
@@ -22,26 +23,29 @@ public class SyntheticMapProxy<K,V> extends AbstractDistributedObject implements
 
     @Override
     public V get(K key) {
-        NodeEngine nodeEngine = getNodeEngine();
         Data keyData = nodeEngine.toData(key);
+
+        GetOperation operation = new GetOperation(name, keyData);
         int partitionId = nodeEngine.getPartitionService().getPartitionId(key);
+
         OperationService operationService = nodeEngine.getOperationService();
-        GetOperation op = new GetOperation(name, keyData);
-        InternalCompletableFuture f = operationService.invokeOnPartition(SyntheticMapService.SERVICE_NAME, op, partitionId);
-        return (V)f.getSafely();
+        return operationService
+                .<V>invokeOnPartition(SyntheticMapService.SERVICE_NAME, operation, partitionId)
+                .getSafely();
     }
 
     @Override
     public void put(K key, V value) {
-        NodeEngine nodeEngine = getNodeEngine();
         Data keyData = nodeEngine.toData(key);
         Data valueData = nodeEngine.toData(value);
 
+        PutOperation operation = new PutOperation(name, keyData, valueData);
         int partitionId = nodeEngine.getPartitionService().getPartitionId(key);
+
         OperationService operationService = nodeEngine.getOperationService();
-        PutOperation op = new PutOperation(name, keyData, valueData);
-        InternalCompletableFuture f = operationService.invokeOnPartition(SyntheticMapService.SERVICE_NAME, op, partitionId);
-        f.getSafely();
+        operationService
+                .<V>invokeOnPartition(SyntheticMapService.SERVICE_NAME, operation, partitionId)
+                .getSafely();
     }
 
     @Override

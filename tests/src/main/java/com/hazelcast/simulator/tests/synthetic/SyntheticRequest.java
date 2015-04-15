@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.security.Permission;
 
 public class SyntheticRequest extends PartitionClientRequest {
-    private int partitionId;
+
     private int syncBackupCount;
     private int asyncBackupCount;
     private long backupDelayNanos;
-    private String serviceName;
+    private int partitionId;
 
     public SyntheticRequest() {
     }
@@ -22,18 +22,18 @@ public class SyntheticRequest extends PartitionClientRequest {
         this.syncBackupCount = syncBackupCount;
         this.asyncBackupCount = asyncBackupCount;
         this.backupDelayNanos = backupDelayNanos;
-        this.serviceName = serviceName;
     }
 
-    public void setPartitionId(int partitionId) {
+    public void setLocalPartitionId(int partitionId) {
         this.partitionId = partitionId;
     }
 
     @Override
     protected Operation prepareOperation() {
-        SyntheticOperation op = new SyntheticOperation((byte)syncBackupCount, (byte)asyncBackupCount, backupDelayNanos);
-        op.setPartitionId(partitionId);
-        return op;
+        SyntheticOperation operation = new SyntheticOperation((byte) syncBackupCount, (byte) asyncBackupCount, backupDelayNanos);
+        operation.setPartitionId(partitionId);
+
+        return operation;
     }
 
     @Override
@@ -69,7 +69,6 @@ public class SyntheticRequest extends PartitionClientRequest {
         writer.writeInt("asyncBackupCount", asyncBackupCount);
         writer.writeLong("backupDelayNanos", backupDelayNanos);
         writer.writeInt("partitionId", partitionId);
-        writer.writeUTF("serviceName",serviceName);
     }
 
     @Override
@@ -80,6 +79,5 @@ public class SyntheticRequest extends PartitionClientRequest {
         asyncBackupCount = reader.readInt("asyncBackupCount");
         backupDelayNanos = reader.readLong("backupDelayNanos");
         partitionId = reader.readInt("partitionId");
-        serviceName = reader.readUTF("serviceName");
     }
 }

@@ -15,7 +15,8 @@ public class GetOperation extends AbstractOperation implements PartitionAwareOpe
     private Data key;
     private Data response;
 
-    public GetOperation(){}
+    public GetOperation() {
+    }
 
     public GetOperation(String mapName, Data key) {
         this.mapName = mapName;
