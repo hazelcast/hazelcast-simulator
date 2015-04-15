@@ -7,16 +7,16 @@ import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.transaction.TransactionException;
+import com.hazelcast.transaction.TransactionOptions;
+import com.hazelcast.transaction.TransactionOptions.TransactionType;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
-
-import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
@@ -34,17 +34,21 @@ public class MapTransactionTest {
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 5;
     public int keyCount = 1000;
-
-    public boolean reThrowTransactionException=false;
+    public boolean reThrowTransactionException = false;
+    public TransactionType transactionType = TransactionType.TWO_PHASE;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
     private int maxInc = 100;
+    private TransactionOptions transactionOptions;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+
+        transactionOptions = new TransactionOptions();
+        transactionOptions.setTransactionType(transactionType);
     }
 
     @Warmup(global = true)
@@ -55,43 +59,40 @@ public class MapTransactionTest {
         }
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
     }
 
-    private class Worker implements Runnable {
-        private final Random random = new Random();
+    private class Worker extends AbstractMonotonicWorker {
         private final long[] increments = new long[keyCount];
 
         @Override
-        public void run() {
-            while (!testContext.isStopped()) {
-                final int key = random.nextInt(keyCount);
-                final int increment = random.nextInt(maxInc);
+        protected void timeStep() {
+            final int key = randomInt(keyCount);
+            final int increment = randomInt(maxInc);
 
-                try {
-                    targetInstance.executeTransaction(new TransactionalTask<Object>() {
-                        @Override
-                        public Object execute(TransactionalTaskContext txContext) throws TransactionException {
-                            TransactionalMap<Integer, Long> map = txContext.getMap(basename);
-                            Long current = map.getForUpdate(key);
-                            map.put(key, current + increment);
-                            return null;
-                        }
-                    });
-                    increments[key] += increment;
-                } catch (TransactionException e) {
-                    if(reThrowTransactionException){
-                        throw new RuntimeException(e);
+            try {
+                targetInstance.executeTransaction(transactionOptions, new TransactionalTask<Object>() {
+                    @Override
+                    public Object execute(TransactionalTaskContext txContext) throws TransactionException {
+                        TransactionalMap<Integer, Long> map = txContext.getMap(basename);
+                        Long current = map.getForUpdate(key);
+                        map.put(key, current + increment);
+                        return null;
                     }
-                    log.warning(basename + ": caught TransactionException ", e);
+                });
+                increments[key] += increment;
+            } catch (TransactionException e) {
+                if (reThrowTransactionException) {
+                    throw new RuntimeException(e);
                 }
+                log.warning(basename + ": caught TransactionException ", e);
             }
+        }
+
+        @Override
+        protected void afterRun() {
             IList<long[]> results = targetInstance.getList(basename + "results");
             results.add(increments);
         }
