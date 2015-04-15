@@ -20,6 +20,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import static java.lang.String.format;
+
 public final class ReflectionUtils {
 
     private ReflectionUtils() {
@@ -32,7 +34,7 @@ public final class ReflectionUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E> E invokeMethod(Object classInstance, Method method, Object... args) throws Throwable {
+    public static <E> E invokeMethod(Object classInstance, Method method, Object... args) throws Exception {
         if (method == null) {
             return null;
         }
@@ -40,7 +42,14 @@ public final class ReflectionUtils {
         try {
             return (E) method.invoke(classInstance, args);
         } catch (InvocationTargetException e) {
-            throw e.getCause();
+            if (e.getCause() instanceof Error) {
+                throw (Error) e.getCause();
+            }
+            if (e.getCause() instanceof Exception) {
+                throw (Exception) e.getCause();
+            }
+            throw new RuntimeException(format("Error while invoking method %s on instance of type %s",
+                    method.getName(), classInstance.getClass().getSimpleName()), e.getCause());
         }
     }
 

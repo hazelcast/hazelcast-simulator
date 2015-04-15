@@ -6,7 +6,7 @@ import org.junit.Test;
 public class MapRaceTestTest {
 
     @Test(expected = AssertionError.class)
-    public void test() throws Throwable {
+    public void test() throws Exception {
         MapRaceTest test = new MapRaceTest();
         new TestRunner<MapRaceTest>(test).withDuration(10).run();
     }

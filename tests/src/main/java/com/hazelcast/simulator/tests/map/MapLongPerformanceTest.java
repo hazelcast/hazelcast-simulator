@@ -103,7 +103,7 @@ public class MapLongPerformanceTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         MapLongPerformanceTest test = new MapLongPerformanceTest();
         new TestRunner<MapLongPerformanceTest>(test).run();
     }

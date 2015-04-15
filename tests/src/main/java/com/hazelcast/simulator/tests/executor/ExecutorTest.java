@@ -161,7 +161,7 @@ public class ExecutorTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         ExecutorTest test = new ExecutorTest();
         new TestRunner<ExecutorTest>(test).run();
     }

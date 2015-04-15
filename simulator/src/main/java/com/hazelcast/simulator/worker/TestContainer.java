@@ -152,7 +152,7 @@ public class TestContainer<T extends TestContext> {
         return testContext;
     }
 
-    public void run() throws Throwable {
+    public void run() throws Exception {
         long now = Clock.currentTimeMillis();
         for (SimpleProbe probe : probeMap.values()) {
             probe.startProbing(now);
@@ -168,41 +168,41 @@ public class TestContainer<T extends TestContext> {
         }
     }
 
-    public void setUp() throws Throwable {
+    public void setUp() throws Exception {
         invokeMethod(testClassInstance, setupMethod, setupArguments);
     }
 
-    public void localWarmup() throws Throwable {
+    public void localWarmup() throws Exception {
         invokeMethod(testClassInstance, localWarmupMethod);
     }
 
-    public void globalWarmup() throws Throwable {
+    public void globalWarmup() throws Exception {
         invokeMethod(testClassInstance, globalWarmupMethod);
     }
 
-    public void localVerify() throws Throwable {
+    public void localVerify() throws Exception {
         invokeMethod(testClassInstance, localVerifyMethod);
     }
 
-    public void globalVerify() throws Throwable {
+    public void globalVerify() throws Exception {
         invokeMethod(testClassInstance, globalVerifyMethod);
     }
 
-    public void globalTeardown() throws Throwable {
+    public void globalTeardown() throws Exception {
         invokeMethod(testClassInstance, globalTeardownMethod);
     }
 
-    public void localTeardown() throws Throwable {
+    public void localTeardown() throws Exception {
         invokeMethod(testClassInstance, localTeardownMethod);
     }
 
-    public long getOperationCount() throws Throwable {
+    public long getOperationCount() throws Exception {
         Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
                 operationCountMethod);
         return (count == null ? -1 : count);
     }
 
-    public void sendMessage(Message message) throws Throwable {
+    public void sendMessage(Message message) throws Exception {
         invokeMethod(testClassInstance, messageConsumerMethod, message);
     }
 
@@ -339,7 +339,7 @@ public class TestContainer<T extends TestContext> {
         return (P) probe;
     }
 
-    private void invokeRunWithWorkerMethod(long now) throws Throwable {
+    private void invokeRunWithWorkerMethod(long now) throws Exception {
         bindOptionalProperty(this, testCase, OptionalTestProperties.THREAD_COUNT.propertyName);
         bindOptionalProperty(this, testCase, OptionalTestProperties.WORKER_PROBE_TYPE.propertyName);
 

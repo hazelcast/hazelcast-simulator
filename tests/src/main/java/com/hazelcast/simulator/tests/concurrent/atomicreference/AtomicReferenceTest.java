@@ -156,7 +156,7 @@ public class AtomicReferenceTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         AtomicReferenceTest test = new AtomicReferenceTest();
         new TestRunner<AtomicReferenceTest>(test).withDuration(10).run();
     }

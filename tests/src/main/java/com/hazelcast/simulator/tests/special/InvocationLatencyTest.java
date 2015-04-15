@@ -129,7 +129,7 @@ public class InvocationLatencyTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         InvocationLatencyTest test = new InvocationLatencyTest();
         new TestRunner<InvocationLatencyTest>(test).withDuration(5).run();
     }

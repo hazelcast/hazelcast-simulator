@@ -199,7 +199,7 @@ public class StringICacheTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         StringICacheTest test = new StringICacheTest();
         test.writePercentage = 10;
         new TestRunner<StringICacheTest>(test).run();

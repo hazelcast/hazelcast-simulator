@@ -186,7 +186,7 @@ public class ExpiryICacheTest {
         log.info(basename + "usedOfMax = " + usedOfMax + "%");
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         new TestRunner<ExpiryICacheTest>(new ExpiryICacheTest()).run();
     }
 }

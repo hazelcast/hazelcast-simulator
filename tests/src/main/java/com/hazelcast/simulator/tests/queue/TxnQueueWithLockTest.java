@@ -114,7 +114,7 @@ public class TxnQueueWithLockTest {
         //assertEquals(total.committed - total.rolled, queue.size());
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         TxnQueueWithLockTest test = new TxnQueueWithLockTest();
         new TestRunner<TxnQueueWithLockTest>(test).run();
     }

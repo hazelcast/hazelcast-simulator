@@ -107,7 +107,7 @@ class WorkerCommandRequestProcessor {
             }
         }
 
-        private void doProcess(long id, Command command) throws Throwable {
+        private void doProcess(long id, Command command) throws Exception {
             Object result = null;
             try {
                 if (command instanceof IsPhaseCompletedCommand) {
@@ -143,7 +143,7 @@ class WorkerCommandRequestProcessor {
             return !commands.containsKey(command.testId);
         }
 
-        private void process(InitCommand command) throws Throwable {
+        private void process(InitCommand command) throws Exception {
             try {
                 TestCase testCase = command.testCase;
                 String testId = testCase.getId();
@@ -156,7 +156,7 @@ class WorkerCommandRequestProcessor {
                             format("Can't init TestCase: %s, testId [%s] is an invalid filename", command, testId));
                 }
 
-                LOGGER.info(String.format("%s Initializing test %s %s%n%s", DASHES, testId, DASHES, testCase));
+                LOGGER.info(format("%s Initializing test %s %s%n%s", DASHES, testId, DASHES, testCase));
 
                 Object testInstance = InitCommand.class.getClassLoader().loadClass(testCase.getClassname()).newInstance();
                 bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
@@ -172,13 +172,19 @@ class WorkerCommandRequestProcessor {
                 }
             } catch (Throwable e) {
                 LOGGER.fatal("Failed to init test", e);
-                throw e;
+                if (e instanceof Error) {
+                    throw (Error) e;
+                }
+                if (e instanceof Exception) {
+                    throw (Exception) e;
+                }
+                throw new RuntimeException("Failed to init test", e);
             }
         }
 
         private void process(final RunCommand command) throws Exception {
             if (workerPerformanceMonitor.start()) {
-                LOGGER.info(String.format("%s Starting performance monitoring %s", DASHES, DASHES));
+                LOGGER.info(format("%s Starting performance monitoring %s", DASHES, DASHES));
             }
 
             try {
@@ -193,26 +199,32 @@ class WorkerCommandRequestProcessor {
 
                 CommandThread commandThread = new CommandThread(command, testId) {
                     @Override
-                    public void doRun() throws Throwable {
+                    public void doRun() throws Exception {
                         boolean passive = command.clientOnly && clientInstance == null;
 
                         if (passive) {
-                            LOGGER.info(String.format("%s Skipping %s.run() (member is passive) %s", DASHES, testName, DASHES));
+                            LOGGER.info(format("%s Skipping %s.run() (member is passive) %s", DASHES, testName, DASHES));
                         } else {
-                            LOGGER.info(String.format("%s Starting %s.run() %s", DASHES, testId, DASHES));
+                            LOGGER.info(format("%s Starting %s.run() %s", DASHES, testId, DASHES));
 
                             try {
                                 test.run();
-                                LOGGER.info(String.format("%s Completed %s.run() %s", DASHES, testName, DASHES));
+                                LOGGER.info(format("%s Completed %s.run() %s", DASHES, testName, DASHES));
                             } catch (InvocationTargetException e) {
-                                LOGGER.fatal(String.format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES),
+                                LOGGER.fatal(format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES),
                                         e.getCause());
-                                throw e.getCause();
+                                if (e.getCause() instanceof Error) {
+                                    throw (Error) e.getCause();
+                                }
+                                if (e.getCause() instanceof Exception) {
+                                    throw (Exception) e.getCause();
+                                }
+                                throw new RuntimeException(format("Failed to execute RunCommand of %s", testName), e.getCause());
                             }
 
                             // stop performance monitor if all tests have completed their run phase
                             if (testsCompleted.incrementAndGet() == testsPending.get()) {
-                                LOGGER.info(String.format("%s Stopping performance monitoring %s", DASHES, DASHES));
+                                LOGGER.info(format("%s Stopping performance monitoring %s", DASHES, DASHES));
                                 workerPerformanceMonitor.stop();
                             }
                         }
@@ -235,7 +247,7 @@ class WorkerCommandRequestProcessor {
                     return;
                 }
 
-                LOGGER.info(String.format("%s %s.stop() %s", DASHES, testName, DASHES));
+                LOGGER.info(format("%s %s.stop() %s", DASHES, testName, DASHES));
                 test.getTestContext().stop();
             } catch (Exception e) {
                 LOGGER.fatal("Failed to execute test.stop", e);
@@ -243,7 +255,7 @@ class WorkerCommandRequestProcessor {
             }
         }
 
-        private void process(final GenericCommand command) throws Throwable {
+        private void process(final GenericCommand command) throws Exception {
             final String methodName = command.methodName;
             final String testId = command.testId;
             final String testName = "".equals(testId) ? "test" : testId;
@@ -260,15 +272,21 @@ class WorkerCommandRequestProcessor {
                 final Method method = test.getClass().getMethod(methodName);
                 CommandThread commandThread = new CommandThread(command, command.testId) {
                     @Override
-                    public void doRun() throws Throwable {
-                        LOGGER.info(String.format("%s Starting %s.%s() %s", DASHES, testName, methodName, DASHES));
+                    public void doRun() throws Exception {
+                        LOGGER.info(format("%s Starting %s.%s() %s", DASHES, testName, methodName, DASHES));
 
                         try {
                             method.invoke(test);
-                            LOGGER.info(String.format("%s Finished %s.%s() %s", DASHES, testName, methodName, DASHES));
+                            LOGGER.info(format("%s Finished %s.%s() %s", DASHES, testName, methodName, DASHES));
                         } catch (InvocationTargetException e) {
-                            LOGGER.fatal(String.format("%s Failed %s.%s() %s", DASHES, testName, methodName, DASHES));
-                            throw e.getCause();
+                            LOGGER.fatal(format("%s Failed %s.%s() %s", DASHES, testName, methodName, DASHES));
+                            if (e.getCause() instanceof Error) {
+                                throw (Error) e.getCause();
+                            }
+                            if (e.getCause() instanceof Exception) {
+                                throw (Exception) e.getCause();
+                            }
+                            throw new RuntimeException(format("Failed to execute %s of %s", methodName, testName), e.getCause());
                         } finally {
                             if ("localTeardown".equals(methodName)) {
                                 tests.remove(testId);
@@ -289,7 +307,7 @@ class WorkerCommandRequestProcessor {
         }
 
         @SuppressWarnings("unused")
-        private Long process(GetOperationCountCommand command) throws Throwable {
+        private Long process(GetOperationCountCommand command) throws Exception {
             long result = 0;
 
             for (TestContainer testContainer : tests.values()) {
@@ -338,6 +356,6 @@ class WorkerCommandRequestProcessor {
             }
         }
 
-        public abstract void doRun() throws Throwable;
+        public abstract void doRun() throws Exception;
     }
 }

@@ -164,7 +164,7 @@ public class CasICacheTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         CasICacheTest test = new CasICacheTest();
         new TestRunner<CasICacheTest>(test).run();
     }

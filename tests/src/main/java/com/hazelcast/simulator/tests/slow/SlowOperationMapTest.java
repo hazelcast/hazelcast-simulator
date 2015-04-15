@@ -220,7 +220,7 @@ public class SlowOperationMapTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         SlowOperationMapTest test = new SlowOperationMapTest();
         new TestRunner<SlowOperationMapTest>(test).run();
     }

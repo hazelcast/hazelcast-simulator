@@ -209,7 +209,7 @@ public class EntryProcessorICacheTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         EntryProcessorICacheTest test = new EntryProcessorICacheTest();
         new TestRunner<EntryProcessorICacheTest>(test).run();
     }

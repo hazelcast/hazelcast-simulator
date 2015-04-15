@@ -138,7 +138,7 @@ public class MapTTLSaturationTest {
         log.info(basename + "usedOfMax = " + usedOfMax + "%");
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         Config config = new Config();
         config.addMapConfig(new MapConfig("mapttlsaturation*").setBackupCount(0).setStatisticsEnabled(false));
         HazelcastInstance hz = Hazelcast.newHazelcastInstance(config);

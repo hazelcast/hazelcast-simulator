@@ -47,12 +47,12 @@ public class ReflectionUtilsTest {
     }
 
     @Test()
-    public void testInvokeMethodNull() throws Throwable {
+    public void testInvokeMethodNull() throws Exception {
         assertNull(invokeMethod(new InvokeMethodTest(), null));
     }
 
     @Test
-    public void testInvokeMethod() throws Throwable {
+    public void testInvokeMethod() throws Exception {
         assertFalse(InvokeMethodTest.hasBeenInvoked);
 
         Method method = getMethodByName(InvokeMethodTest.class, "testMethod");
@@ -62,13 +62,13 @@ public class ReflectionUtilsTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInvokeMethodThrowsException() throws Throwable {
+    public void testInvokeMethodThrowsException() throws Exception {
         Method method = getMethodByName(InvokeMethodTest.class, "throwExceptionMethod");
         invokeMethod(new InvokeMethodTest(), method);
     }
 
     @Test(expected = IllegalAccessException.class)
-    public void testInvokeMethodPrivate() throws Throwable {
+    public void testInvokeMethodPrivate() throws Exception {
         Method method = getMethodByName(InvokeMethodTest.class, "cannotAccessMethod");
         invokeMethod(new InvokeMethodTest(), method);
     }

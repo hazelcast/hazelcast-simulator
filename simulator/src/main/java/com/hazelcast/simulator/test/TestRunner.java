@@ -112,7 +112,7 @@ public class TestRunner<E> {
         return this;
     }
 
-    public void run() throws Throwable {
+    public void run() throws Exception {
         if (hazelcastInstance == null) {
             hazelcastInstance = Hazelcast.newHazelcastInstance();
         }

@@ -26,7 +26,7 @@ public class TestRunnerTest {
     }
 
     @Test
-    public void testBasics() throws Throwable {
+    public void testBasics() throws Exception {
         assertEquals(successTest, testRunner.getTest());
         assertNull(testRunner.getHazelcastInstance());
         assertTrue(testRunner.getDurationSeconds() > 0);
@@ -39,7 +39,7 @@ public class TestRunnerTest {
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void testTestContextImpl() throws Throwable {
+    public void testTestContextImpl() throws Exception {
         TestContextImplTest test = new TestContextImplTest();
         TestRunner<TestContextImplTest> testRunner = new TestRunner<TestContextImplTest>(test);
 

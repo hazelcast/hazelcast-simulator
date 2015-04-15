@@ -4,8 +4,9 @@ import com.hazelcast.simulator.test.TestRunner;
 import org.junit.Test;
 
 public class MapCasTestTest {
+
     @Test
-    public void test() throws Throwable {
+    public void test() throws Exception {
         MapCasTest test = new MapCasTest();
         new TestRunner<MapCasTest>(test).withDuration(10).run();
     }
