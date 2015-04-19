@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map;
 
+import com.hazelcast.core.ExecutionCallback;
+import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -31,6 +33,8 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.Random;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
@@ -91,10 +95,31 @@ public class StringStringMapTest {
         keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = generateStrings(valueCount, valueLength);
 
+        loadInitialData();
+    }
+
+    private void loadInitialData() throws InterruptedException {
+        int concurrencyLevel = 1000;
+        final Semaphore concurrencyLimiter = new Semaphore(concurrencyLevel);
         Random random = new Random();
         for (String key : keys) {
             String value = values[random.nextInt(valueCount)];
-            map.put(key, value);
+            concurrencyLimiter.acquire();
+            ICompletableFuture<String> future = (ICompletableFuture<String>) map.putAsync(key, value);
+            future.andThen(new ExecutionCallback<String>() {
+                @Override
+                public void onResponse(String response) {
+                    concurrencyLimiter.release();
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    LOGGER.severe("Error while loading data to a map.", t);
+                }
+            });
+        }
+        if (!concurrencyLimiter.tryAcquire(concurrencyLevel, 1, TimeUnit.MINUTES)) {
+            throw new IllegalStateException("timeout while loading initial data.");
         }
     }
 
