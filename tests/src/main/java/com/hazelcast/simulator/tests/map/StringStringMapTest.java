@@ -47,6 +47,7 @@ public class StringStringMapTest {
 
     private enum Operation {
         PUT,
+        SET,
         GET
     }
 
@@ -60,6 +61,8 @@ public class StringStringMapTest {
     public int minNumberOfMembers = 0;
 
     public double putProb = 0.1;
+    public double setProb = 0;
+    @Deprecated //use the setProb property instead
     public boolean useSet = false;
 
     // probes
@@ -77,10 +80,17 @@ public class StringStringMapTest {
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
+        if (useSet) {
+            throw new IllegalArgumentException("The 'useSet' property is no longer supported. " +
+                    "Configure 'setProb' property to use IMap::set.");
+        }
+
         this.testContext = testContext;
         map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
 
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
+        operationSelectorBuilder.addOperation(Operation.PUT, putProb)
+                .addOperation(Operation.SET, setProb)
+                .addDefaultOperation(Operation.GET);
     }
 
     @Teardown
@@ -142,11 +152,13 @@ public class StringStringMapTest {
                 case PUT:
                     String value = randomValue();
                     putLatency.started();
-                    if (useSet) {
-                        map.set(key, value);
-                    } else {
-                        map.put(key, value);
-                    }
+                    map.put(key, value);
+                    putLatency.done();
+                    break;
+                case SET:
+                    value = randomValue();
+                    putLatency.started();
+                    map.set(key, value);
                     putLatency.done();
                     break;
                 case GET:
