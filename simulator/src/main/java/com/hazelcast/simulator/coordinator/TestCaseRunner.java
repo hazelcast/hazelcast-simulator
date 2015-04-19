@@ -161,8 +161,6 @@ public class TestCaseRunner {
                             R combinedValue = combinedResults.get(probeName);
                             combinedValue = currentResult.combine(combinedValue);
                             combinedResults.put(probeName, combinedValue);
-                        } else {
-                            LOGGER.warn("Probe " + probeName + " has null value for some member. This should not happen.");
                         }
                     }
                 }
