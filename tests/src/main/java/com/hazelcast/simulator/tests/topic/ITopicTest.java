@@ -175,7 +175,7 @@ public class ITopicTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         ITopicTest test = new ITopicTest();
         new TestRunner<ITopicTest>(test).withDuration(10).run();
     }

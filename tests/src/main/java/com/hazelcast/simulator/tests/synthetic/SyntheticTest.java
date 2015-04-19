@@ -236,7 +236,7 @@ public class SyntheticTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         SyntheticTest test = new SyntheticTest();
         new TestRunner<SyntheticTest>(test).withDuration(10).run();
     }

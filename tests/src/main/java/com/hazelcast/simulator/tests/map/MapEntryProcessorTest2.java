@@ -138,7 +138,7 @@ public class MapEntryProcessorTest2 {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         MapEntryProcessorTest2 test = new MapEntryProcessorTest2();
         new TestRunner<MapEntryProcessorTest2>(test).run();
     }

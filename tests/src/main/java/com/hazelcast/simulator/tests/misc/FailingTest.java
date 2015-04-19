@@ -44,7 +44,7 @@ public class FailingTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         FailingTest test = new FailingTest();
         new TestRunner<FailingTest>(test).run();
     }

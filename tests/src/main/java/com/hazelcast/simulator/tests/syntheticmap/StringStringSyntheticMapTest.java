@@ -124,7 +124,7 @@ public class StringStringSyntheticMapTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         StringStringSyntheticMapTest test = new StringStringSyntheticMapTest();
         new TestRunner<StringStringSyntheticMapTest>(test).run();
     }

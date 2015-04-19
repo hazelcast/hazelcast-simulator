@@ -176,7 +176,7 @@ public class MapTransactionReadWriteTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         MapTransactionReadWriteTest test = new MapTransactionReadWriteTest();
         new TestRunner<MapTransactionReadWriteTest>(test).run();
     }

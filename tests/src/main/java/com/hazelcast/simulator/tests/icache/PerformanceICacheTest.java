@@ -155,7 +155,7 @@ public class PerformanceICacheTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         PerformanceICacheTest test = new PerformanceICacheTest();
         new TestRunner<PerformanceICacheTest>(test).run();
     }

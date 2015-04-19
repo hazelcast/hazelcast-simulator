@@ -140,7 +140,7 @@ public class MapTimeToLiveTest {
     }
 
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         new TestRunner<MapAsyncOpsTest>(new MapAsyncOpsTest()).run();
     }
 }

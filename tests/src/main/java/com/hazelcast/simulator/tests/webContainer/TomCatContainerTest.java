@@ -8,7 +8,6 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static org.junit.Assert.assertEquals;
 
 
 /*
@@ -40,7 +39,7 @@ public class TomCatContainerTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         TomCatContainerTest test = new TomCatContainerTest();
         new TestRunner<TomCatContainerTest>(test).run();
     }

@@ -150,7 +150,7 @@ public class GrowingMapTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         GrowingMapTest test = new GrowingMapTest();
         new TestRunner<GrowingMapTest>(test).withDuration(30).run();
     }

@@ -92,7 +92,7 @@ public class MapLatencyTest extends AbstractMapTest {
         return baseRunWithWorker(operationType);
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         new TestRunner<MapLatencyTest>(new MapLatencyTest()).run();
     }
 }

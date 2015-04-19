@@ -142,7 +142,7 @@ public class IntIntMapTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         IntIntMapTest test = new IntIntMapTest();
         new TestRunner<IntIntMapTest>(test).withDuration(10).run();
     }

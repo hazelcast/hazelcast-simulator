@@ -182,7 +182,7 @@ public class StringStringMapTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         StringStringMapTest test = new StringStringMapTest();
         new TestRunner<StringStringMapTest>(test).run();
     }

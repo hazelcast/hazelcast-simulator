@@ -151,7 +151,7 @@ public class ProducerConsumerTest {
     static class Work implements Serializable {
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         ProducerConsumerTest test = new ProducerConsumerTest();
         new TestRunner<ProducerConsumerTest>(test).run();
     }

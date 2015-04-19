@@ -118,7 +118,7 @@ public class MapCasTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         MapCasTest test = new MapCasTest();
         new TestRunner<MapCasTest>(test).run();
     }

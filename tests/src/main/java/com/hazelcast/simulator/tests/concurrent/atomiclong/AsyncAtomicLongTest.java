@@ -202,7 +202,7 @@ public class AsyncAtomicLongTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         AsyncAtomicLongTest test = new AsyncAtomicLongTest();
         new TestRunner<AsyncAtomicLongTest>(test).withDuration(10).run();
     }

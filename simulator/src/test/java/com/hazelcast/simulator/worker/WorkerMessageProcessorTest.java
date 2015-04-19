@@ -52,7 +52,7 @@ public class WorkerMessageProcessorTest {
     }
 
     @Test
-    public void testMessageToAllTests() throws Throwable {
+    public void testMessageToAllTests() throws Exception {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toAllTests().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
@@ -64,7 +64,7 @@ public class WorkerMessageProcessorTest {
     }
 
     @Test
-    public void testMessageToRandomTest() throws Throwable {
+    public void testMessageToRandomTest() throws Exception {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toRandomTest().build();
         final DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
@@ -73,7 +73,7 @@ public class WorkerMessageProcessorTest {
     }
 
     private void verifyMessageSentToEitherOr(TestContainer<?> container1, TestContainer<?> container2, Message message)
-            throws Throwable {
+            throws Exception {
         try {
             verify(container1, timeout(TIMEOUT)).sendMessage(message);
         } catch (WantedButNotInvoked e) {

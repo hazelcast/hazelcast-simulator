@@ -131,7 +131,7 @@ public class QueueTest {
         }
     }
 
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws Exception {
         QueueTest test = new QueueTest();
         new TestRunner<QueueTest>(test).run();
     }

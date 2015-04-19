@@ -119,7 +119,7 @@ class WorkerMessageProcessor {
         }
     }
 
-    private void processTestMessage(Message message) throws Throwable {
+    private void processTestMessage(Message message) throws Exception {
         String testAddress = message.getMessageAddress().getTestAddress();
         if (MessageAddress.BROADCAST.equals(testAddress)) {
             for (TestContainer<TestContext> testContainer : tests.values()) {
