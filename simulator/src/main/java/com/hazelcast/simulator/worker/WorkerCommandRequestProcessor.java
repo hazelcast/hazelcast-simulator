@@ -170,15 +170,11 @@ class WorkerCommandRequestProcessor {
                 if (serverInstance != null) {
                     serverInstance.getUserContext().put(getUserContextKeyFromTestId(testCase.id), testInstance);
                 }
+            } catch (Exception e) {
+                throw e;
             } catch (Throwable e) {
                 LOGGER.fatal("Failed to init test", e);
-                if (e instanceof Error) {
-                    throw (Error) e;
-                }
-                if (e instanceof Exception) {
-                    throw (Exception) e;
-                }
-                throw new RuntimeException("Failed to init test", e);
+                throw (Error) e;
             }
         }
 
