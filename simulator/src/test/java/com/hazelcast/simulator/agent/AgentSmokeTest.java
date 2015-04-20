@@ -31,6 +31,7 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class AgentSmokeTest {
 
@@ -88,6 +89,10 @@ public class AgentSmokeTest {
 
         List<Failure> failures = agentsClient.getFailures();
         assertEquals("Expected 1 failure!", 1, failures.size());
+
+        Failure failure = failures.get(0);
+        assertEquals("Expected started test to fail", testCase.id, failure.testId);
+        assertTrue("Expected started test to fail", failure.cause.contains("This test should fail"));
     }
 
     private void cooldown() {
