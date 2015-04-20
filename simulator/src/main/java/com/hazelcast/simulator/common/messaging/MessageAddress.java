@@ -3,6 +3,7 @@ package com.hazelcast.simulator.common.messaging;
 import java.io.Serializable;
 
 public class MessageAddress implements Serializable {
+
     public static final String BROADCAST = "*";
     public static final String RANDOM = "R";
 

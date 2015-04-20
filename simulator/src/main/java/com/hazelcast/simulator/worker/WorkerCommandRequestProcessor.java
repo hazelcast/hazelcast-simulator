@@ -13,6 +13,7 @@ import com.hazelcast.simulator.worker.commands.CommandResponse;
 import com.hazelcast.simulator.worker.commands.GenericCommand;
 import com.hazelcast.simulator.worker.commands.GetBenchmarkResultsCommand;
 import com.hazelcast.simulator.worker.commands.GetOperationCountCommand;
+import com.hazelcast.simulator.worker.commands.GetStackTraceCommand;
 import com.hazelcast.simulator.worker.commands.InitCommand;
 import com.hazelcast.simulator.worker.commands.IsPhaseCompletedCommand;
 import com.hazelcast.simulator.worker.commands.MessageCommand;
@@ -22,6 +23,7 @@ import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -86,6 +88,7 @@ class WorkerCommandRequestProcessor {
     }
 
     private final class WorkerCommandRequestProcessorThread extends Thread {
+
         private volatile boolean running = true;
 
         private WorkerCommandRequestProcessorThread() {
@@ -126,8 +129,10 @@ class WorkerCommandRequestProcessor {
                     result = process((GetOperationCountCommand) command);
                 } else if (command instanceof GetBenchmarkResultsCommand) {
                     result = process((GetBenchmarkResultsCommand) command);
+                } else if (command instanceof GetStackTraceCommand) {
+                    result = process((GetStackTraceCommand) command);
                 } else {
-                    throw new RuntimeException("Unhandled command: " + command.getClass());
+                    throw new RuntimeException("Unsupported command: " + command.getClass().getSimpleName());
                 }
             } finally {
                 if (command.awaitReply()) {
@@ -246,7 +251,7 @@ class WorkerCommandRequestProcessor {
                 LOGGER.info(format("%s %s.stop() %s", DASHES, testName, DASHES));
                 test.getTestContext().stop();
             } catch (Exception e) {
-                LOGGER.fatal("Failed to execute test.stop", e);
+                LOGGER.fatal("Failed to execute test.stop()", e);
                 throw e;
             }
         }
@@ -319,6 +324,24 @@ class WorkerCommandRequestProcessor {
         private Map<String, Result<?>> process(GetBenchmarkResultsCommand command) {
             String testId = command.getTestId();
             return tests.get(testId).getProbeResults();
+        }
+
+        private List<String> process(GetStackTraceCommand command) throws Exception {
+            try {
+                String testId = command.testId;
+                final String testName = "".equals(testId) ? "test" : testId;
+                TestContainer<TestContext> test = tests.get(command.testId);
+                if (test == null) {
+                    LOGGER.warn("Can't get stack traces, test with id " + command.testId + " does not exist");
+                    return null;
+                }
+
+                LOGGER.info(String.format("%s %s.getStackTraces() %s", DASHES, testName, DASHES));
+                return tests.get(testId).getStackTraces();
+            } catch (Exception e) {
+                LOGGER.fatal("Failed to execute test.getStackTraces()", e);
+                throw e;
+            }
         }
 
         private HazelcastInstance getHazelcastInstance() {
