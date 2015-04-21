@@ -27,6 +27,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -87,12 +88,13 @@ public class IntIntMapTest {
     public void warmup() throws InterruptedException {
         waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
         keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
-
+        MapStreamer<Integer, Integer> streamer = new MapStreamer<Integer, Integer>(map);
         Random random = new Random();
         for (int key : keys) {
             int value = random.nextInt(Integer.MAX_VALUE);
-            map.put(key, value);
+            streamer.pushEntry(key, value);
         }
+        streamer.await();
     }
 
     @RunWithWorker

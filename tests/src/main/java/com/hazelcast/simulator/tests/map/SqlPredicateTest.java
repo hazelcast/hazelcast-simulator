@@ -64,7 +64,7 @@ public class SqlPredicateTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         Random random = new Random();
-        MapStreamer<String, DataSerializableEmployee> streamer = new MapStreamer(map);
+        MapStreamer<String, DataSerializableEmployee> streamer = new MapStreamer<String, DataSerializableEmployee>(map);
         for (int k = 0; k < keyCount; k++) {
             int id = random.nextInt();
             String key = generateString(keyLength);

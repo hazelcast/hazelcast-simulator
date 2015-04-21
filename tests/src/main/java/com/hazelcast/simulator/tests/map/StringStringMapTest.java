@@ -29,6 +29,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -109,28 +110,13 @@ public class StringStringMapTest {
     }
 
     private void loadInitialData() throws InterruptedException {
-        int concurrencyLevel = 1000;
-        final Semaphore concurrencyLimiter = new Semaphore(concurrencyLevel);
         Random random = new Random();
+        MapStreamer<String, String> streamer = new MapStreamer<String, String>(map);
         for (String key : keys) {
             String value = values[random.nextInt(valueCount)];
-            concurrencyLimiter.acquire();
-            ICompletableFuture<String> future = (ICompletableFuture<String>) map.putAsync(key, value);
-            future.andThen(new ExecutionCallback<String>() {
-                @Override
-                public void onResponse(String response) {
-                    concurrencyLimiter.release();
-                }
-
-                @Override
-                public void onFailure(Throwable t) {
-                    LOGGER.severe("Error while loading data to a map.", t);
-                }
-            });
+            streamer.pushEntry(key, value);
         }
-        if (!concurrencyLimiter.tryAcquire(concurrencyLevel, 1, TimeUnit.MINUTES)) {
-            throw new IllegalStateException("timeout while loading initial data.");
-        }
+        streamer.await();
     }
 
     @RunWithWorker
