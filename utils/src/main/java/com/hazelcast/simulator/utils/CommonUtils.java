@@ -204,6 +204,14 @@ public final class CommonUtils {
         }
     }
 
+    public static RuntimeException rethrow(Throwable t) {
+        if (t instanceof RuntimeException) {
+            throw (RuntimeException)t;
+        } else {
+            throw new RuntimeException(t);
+        }
+    }
+
     public static void closeQuietly(XMLStreamWriter writer) {
         if (writer == null) {
             return;

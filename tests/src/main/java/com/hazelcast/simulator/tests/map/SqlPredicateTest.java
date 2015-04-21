@@ -16,6 +16,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.SimpleMetronome;
 
@@ -63,12 +64,14 @@ public class SqlPredicateTest {
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
         Random random = new Random();
+        MapStreamer<String, DataSerializableEmployee> streamer = new MapStreamer(map);
         for (int k = 0; k < keyCount; k++) {
             int id = random.nextInt();
             String key = generateString(keyLength);
             DataSerializableEmployee value = new DataSerializableEmployee(id);
-            map.put(key, value);
+            streamer.pushEntry(key, value);
         }
+        streamer.await();
         log.info("Map size is:" + map.size());
         log.info("Map localKeySet size is: "+map.localKeySet().size());
     }
