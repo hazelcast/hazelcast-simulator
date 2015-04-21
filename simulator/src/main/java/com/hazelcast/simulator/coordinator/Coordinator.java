@@ -389,6 +389,7 @@ public class Coordinator {
 
         try {
             coordinator.run();
+            System.exit(0);
         } catch (Exception e) {
             LOGGER.fatal("Failed to run testsuite", e);
             exitWithError(LOGGER, e.getMessage());
