@@ -18,6 +18,7 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.tests.map.helpers.PredicateOperationCounter;
+import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -80,10 +81,12 @@ public class MapPredicateTest {
     }
 
     private void initMap() {
+        MapStreamer<Integer, Employee> streamer = new MapStreamer<Integer, Employee>(map);
         for (int i = 0; i < keyCount; i++) {
             Employee employee = new Employee(i);
-            map.put(employee.getId(), employee);
+            streamer.pushEntry(employee.getId(), employee);
         }
+        streamer.await();
     }
 
     @Verify(global = true)
