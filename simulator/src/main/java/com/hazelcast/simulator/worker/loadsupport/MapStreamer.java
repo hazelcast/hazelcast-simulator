@@ -36,6 +36,7 @@ public class MapStreamer<K, V> {
     private final IMap<K, V> map;
     private final Semaphore semaphore;
     private final int concurrencyLevel;
+    private final ExecutionCallback<V> callback;
 
     private Throwable storedException;
 
@@ -43,6 +44,7 @@ public class MapStreamer<K, V> {
         this.map = map;
         this.concurrencyLevel = DEFAULT_CONCURRENCY_LEVEL;
         this.semaphore = new Semaphore(concurrencyLevel);
+        this.callback = new MyExecutionCallback<V>();
     }
 
     /**
@@ -55,18 +57,7 @@ public class MapStreamer<K, V> {
     public void pushEntry(K key, V value) {
         acquirePermit(1);
         ICompletableFuture<V> future = (ICompletableFuture<V>) map.putAsync(key, value);
-        future.andThen(new ExecutionCallback<V>() {
-            @Override
-            public void onResponse(V response) {
-                releasePermit(1);
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                storedException = t;
-                releasePermit(1);
-            }
-        });
+        future.andThen(callback);
     }
 
     /**
@@ -100,6 +91,20 @@ public class MapStreamer<K, V> {
             }
         } catch (InterruptedException e) {
             rethrow(e);
+        }
+    }
+
+
+    private class MyExecutionCallback<V> implements ExecutionCallback<V> {
+        @Override
+        public void onResponse(V response) {
+            releasePermit(1);
+        }
+
+        @Override
+        public void onFailure(Throwable t) {
+            storedException = t;
+            releasePermit(1);
         }
     }
 }
