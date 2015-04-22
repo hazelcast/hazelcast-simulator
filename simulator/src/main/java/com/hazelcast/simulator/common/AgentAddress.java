@@ -32,12 +32,11 @@ public class AgentAddress {
             return false;
         }
 
-        AgentAddress address = (AgentAddress) o;
-
-        if (!privateAddress.equals(address.privateAddress)) {
+        AgentAddress other = (AgentAddress) o;
+        if (!privateAddress.equals(other.privateAddress)) {
             return false;
         }
-        if (!publicAddress.equals(address.publicAddress)) {
+        if (!publicAddress.equals(other.publicAddress)) {
             return false;
         }
 
