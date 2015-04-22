@@ -5,8 +5,9 @@ import org.apache.log4j.Logger;
 import static com.hazelcast.simulator.utils.NativeUtils.getPIDorNull;
 import static com.hazelcast.simulator.utils.NativeUtils.kill;
 
-@MessageSpec(value = "kill", description = "it causes process to kill itself by sending SIGKILL signal to itself.")
+@MessageSpec(value = "kill", description = "Instructs the receiving process to send a SIGKILL signal to itself.")
 public class KillWorkerMessage extends RunnableMessage {
+
     private static final Logger LOGGER = Logger.getLogger(KillWorkerMessage.class);
 
     public KillWorkerMessage(MessageAddress messageAddress) {

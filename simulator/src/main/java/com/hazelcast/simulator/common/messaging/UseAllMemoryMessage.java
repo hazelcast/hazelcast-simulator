@@ -7,12 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@MessageSpec(value = "oom", description = "starts a new thread allocating memory in JVM heap indefinitely")
+@MessageSpec(value = "oom", description = "Starts a new thread allocating memory in JVM heap indefinitely.")
 public class UseAllMemoryMessage extends RunnableMessage {
 
     private static final Logger LOGGER = Logger.getLogger(UseAllMemoryMessage.class);
-
-    private static List<Object> list = new ArrayList<Object>();
+    private static final List<Object> ALLOCATION_LIST = new ArrayList<Object>();
 
     private final int bufferSize = 1000;
     private final int delay;
@@ -42,7 +41,7 @@ public class UseAllMemoryMessage extends RunnableMessage {
             @Override
             public void run() {
                 LOGGER.debug("Starting a thread to consume all memory");
-                for (; ; ) {
+                while (!interrupted()) {
                     try {
                         allocateMemory();
                     } catch (OutOfMemoryError e) {
@@ -54,7 +53,7 @@ public class UseAllMemoryMessage extends RunnableMessage {
             private void allocateMemory() {
                 while (!interrupted()) {
                     byte[] buff = new byte[bufferSize];
-                    list.add(buff);
+                    ALLOCATION_LIST.add(buff);
                     sleepMillisInterruptThread(delay);
                 }
             }
@@ -63,7 +62,7 @@ public class UseAllMemoryMessage extends RunnableMessage {
                 try {
                     TimeUnit.MILLISECONDS.sleep(sleepMillis);
                 } catch (InterruptedException e) {
-                    LOGGER.warn("Interrupted during sleep.");
+                    LOGGER.warn("Interrupted during sleep on map size: " + ALLOCATION_LIST.size());
                     Thread.currentThread().interrupt();
                 }
             }

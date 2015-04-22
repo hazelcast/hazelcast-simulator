@@ -3,8 +3,11 @@ package com.hazelcast.simulator.common.messaging;
 
 import org.apache.log4j.Logger;
 
-@MessageSpec(value = "softKill", description = "instructs receiving party to call System.exit(-1)")
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+
+@MessageSpec(value = "softKill", description = "Instructs receiving party to call System.exit(-1).")
 public class SoftKillMessage extends RunnableMessage {
+
     private static final Logger LOGGER = Logger.getLogger(SoftKillMessage.class);
 
     public SoftKillMessage(MessageAddress messageAddress) {
@@ -14,7 +17,7 @@ public class SoftKillMessage extends RunnableMessage {
     @Override
     public void run() {
         LOGGER.warn("Processing soft kill message. I'm about to die!");
-        System.exit(-1);
+        exitWithError();
     }
 
     @Override
