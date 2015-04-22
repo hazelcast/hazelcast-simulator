@@ -168,9 +168,9 @@ public class WorkerJvmLauncher {
 
     private String getClasspath() {
         File libDir = new File(agent.getTestSuiteDir(), "lib");
-        return  CLASSPATH + CLASSPATH_SEPARATOR +
-                SIMULATOR_HOME + "/user-lib/*" + CLASSPATH_SEPARATOR +
-                new File(libDir, "*").getAbsolutePath();
+        return CLASSPATH + CLASSPATH_SEPARATOR
+                + SIMULATOR_HOME + "/user-lib/*" + CLASSPATH_SEPARATOR
+                + new File(libDir, "*").getAbsolutePath();
     }
 
     private List<String> getJvmOptions(WorkerJvmSettings settings, String mode) {
