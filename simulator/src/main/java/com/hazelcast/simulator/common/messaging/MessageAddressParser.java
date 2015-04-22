@@ -1,25 +1,34 @@
 package com.hazelcast.simulator.common.messaging;
 
+import com.hazelcast.simulator.common.messaging.MessageAddress.MessageAddressBuilder;
+
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.lang.String.format;
+import static java.util.regex.Pattern.compile;
+
+/**
+ * Parses the {@link MessageAddress} from the command line argument.
+ *
+ * Warning: Change user help in {@link com.hazelcast.simulator.communicator.CommunicatorCli#messageAddressSpec} when changing
+ * input format accepted by this parser.
+ */
 public class MessageAddressParser {
-    /**
-     * Warning: Change user help in {@link com.hazelcast.simulator.communicator.CommunicatorCli#messageAddressSpec} when changing
-     * input format accepted by this parser.
-     */
+
     public static final String AGENT = "Agent";
     public static final String WORKER = "Worker";
     public static final String TEST = "Test";
 
-    public static final String ALL_WORKERS = "*";
-    public static final String WORKERS_WITH_MEMBER = "*m";
-    public static final String RANDOM_WORKER = "R";
-    public static final String RANDOM_WORKER_WITH_MEMBER = "Rm";
-    public static final String OLDEST_MEMBER = "O";
+    public static final String ALL = "*";
+    public static final String RANDOM = "R";
 
-    public static final String ADDRESS_SEPARATOR = ",";
+    public static final String OLDEST_MEMBER = "O";
+    public static final String WORKERS_WITH_MEMBER = "*m";
+    public static final String RANDOM_WORKER_WITH_MEMBER = "Rm";
+
+    private static final Pattern PATTERN = compile("(Agent=)(\\*|R)(,Worker=)?(\\*|R|O|\\*m|Rm)?(,Test=)?(\\*|R)?");
 
     private enum ParserState {
         START,
@@ -36,11 +45,10 @@ public class MessageAddressParser {
         if (input == null) {
             throw new IllegalArgumentException("Input string cannot be null");
         }
-        Pattern pattern = Pattern.compile("(Agent=)(\\*|R)(,Worker=)?(\\*|R|O|\\*m|Rm)?(,Test=)?(\\*|R)?");
-        Matcher matcher = pattern.matcher(input);
 
-        MessageAddress.MessageAddressBuilder builder = MessageAddress.builder();
+        Matcher matcher = PATTERN.matcher(input);
         ParserState state = ParserState.START;
+        MessageAddressBuilder builder = MessageAddress.builder();
         if (!matcher.matches()) {
             throw wrongFormat(input);
         }
@@ -50,25 +58,10 @@ public class MessageAddressParser {
                 if (EnumSet.of(ParserState.AFTER_AGENT_ADDRESS, ParserState.AFTER_WORKER_ADDRESS).contains(state)) {
                     state = ParserState.DONE;
                     break;
-                } else {
-                    throw wrongFormat(input);
                 }
-            }
-            if (state.equals(ParserState.START)) {
-                state = parseStart(input, group);
-            } else if (state.equals(ParserState.BEFORE_AGENT_ADDRESS)) {
-                state = parseBeforeAgentAddress(input, builder, group);
-            } else if (state.equals(ParserState.AFTER_AGENT_ADDRESS)) {
-                state = parseAfterAgentAddress(input, group);
-            } else if (state.equals(ParserState.BEFORE_WORKER_ADDRESS)) {
-                state = parseBeforeWorkerAddress(input, builder, group);
-            } else if (state.equals(ParserState.AFTER_WORKER_ADDRESS)) {
-                state = parseAfterWorkerAddress(input, group);
-            } else if (state.equals(ParserState.BEFORE_TEST_ADDRESS)) {
-                state = parseBeforeTestAddress(input, builder, group);
-            } else {
                 throw wrongFormat(input);
             }
+            state = parseState(state, input, group, builder);
         }
         if (!ParserState.DONE.equals(state)) {
             throw wrongFormat(input);
@@ -76,84 +69,85 @@ public class MessageAddressParser {
         return builder.build();
     }
 
-    private ParserState parseBeforeTestAddress(String input, MessageAddress.MessageAddressBuilder builder, String group) {
-        ParserState state;
-        if (group.equals("*")) {
-            builder.toAllTests();
-        } else if (group.equals("R")) {
-            builder.toRandomTest();
-        } else {
-            throw wrongFormat(input);
+    private ParserState parseState(ParserState state, String input, String group, MessageAddressBuilder builder) {
+        if (state.equals(ParserState.START)) {
+            return parseStart(input, group);
+        } else if (state.equals(ParserState.BEFORE_AGENT_ADDRESS)) {
+            return parseBeforeAgentAddress(input, builder, group);
+        } else if (state.equals(ParserState.AFTER_AGENT_ADDRESS)) {
+            return parseAfterAgentAddress(input, group);
+        } else if (state.equals(ParserState.BEFORE_WORKER_ADDRESS)) {
+            return parseBeforeWorkerAddress(input, builder, group);
+        } else if (state.equals(ParserState.AFTER_WORKER_ADDRESS)) {
+            return parseAfterWorkerAddress(input, group);
+        } else if (state.equals(ParserState.BEFORE_TEST_ADDRESS)) {
+            return parseBeforeTestAddress(input, builder, group);
         }
-        state = ParserState.DONE;
-        return state;
+        throw wrongFormat(input);
     }
 
-    private ParserState parseAfterWorkerAddress(String input, String group) {
-        ParserState state;
-        if (group.equals(",Test=")) {
-            state = ParserState.BEFORE_TEST_ADDRESS;
-        } else {
-            throw wrongFormat(input);
+    private ParserState parseStart(String input, String group) {
+        if ("Agent=".equals(group)) {
+            return ParserState.BEFORE_AGENT_ADDRESS;
         }
-        return state;
+        throw wrongFormat(input);
     }
 
-    private ParserState parseBeforeWorkerAddress(String input, MessageAddress.MessageAddressBuilder builder, String group) {
-        ParserState state;
-        if (group.equals("*")) {
-            builder.toAllWorkers();
-        } else if (group.equals("R")) {
-            builder.toRandomWorker();
-        } else if (group.equals("O")) {
-            builder.toOldestMember();
-        } else if (group.equals("*m")) {
-            builder.toWorkersWithClusterMember();
-        } else if (group.equals("Rm")) {
-            builder.toRandomWorkerWithMember();
-        } else {
-            throw wrongFormat(input);
-        }
-        state = ParserState.AFTER_WORKER_ADDRESS;
-        return state;
-    }
-
-    private ParserState parseAfterAgentAddress(String input, String group) {
-        ParserState state;
-        if (group.equals(",Worker=")) {
-            state = ParserState.BEFORE_WORKER_ADDRESS;
-        } else {
-            throw wrongFormat(input);
-        }
-        return state;
-    }
-
-    private ParserState parseBeforeAgentAddress(String input, MessageAddress.MessageAddressBuilder builder, String group) {
-        ParserState state;
-        if (group.equals("*")) {
+    private ParserState parseBeforeAgentAddress(String input, MessageAddressBuilder builder, String group) {
+        if (group.equals(ALL)) {
             builder.toAllAgents();
-        } else if (group.equals("R")) {
+        } else if (group.equals(RANDOM)) {
             builder.toRandomAgent();
         } else {
             throw wrongFormat(input);
         }
-        state = ParserState.AFTER_AGENT_ADDRESS;
-        return state;
+        return ParserState.AFTER_AGENT_ADDRESS;
     }
 
-    private ParserState parseStart(String input, String group) {
-        ParserState state;
-        if ("Agent=".equals(group)) {
-            state = ParserState.BEFORE_AGENT_ADDRESS;
+    private ParserState parseAfterAgentAddress(String input, String group) {
+        if (group.equals(",Worker=")) {
+            return ParserState.BEFORE_WORKER_ADDRESS;
+        }
+        throw wrongFormat(input);
+    }
+
+    private ParserState parseBeforeWorkerAddress(String input, MessageAddressBuilder builder, String group) {
+        if (group.equals(ALL)) {
+            builder.toAllWorkers();
+        } else if (group.equals(RANDOM)) {
+            builder.toRandomWorker();
+        } else if (group.equals(OLDEST_MEMBER)) {
+            builder.toOldestMember();
+        } else if (group.equals(WORKERS_WITH_MEMBER)) {
+            builder.toWorkersWithClusterMember();
+        } else if (group.equals(RANDOM_WORKER_WITH_MEMBER)) {
+            builder.toRandomWorkerWithMember();
         } else {
             throw wrongFormat(input);
         }
-        return state;
+        return ParserState.AFTER_WORKER_ADDRESS;
+    }
+
+    private ParserState parseAfterWorkerAddress(String input, String group) {
+        if (group.equals(",Test=")) {
+            return ParserState.BEFORE_TEST_ADDRESS;
+        }
+        throw wrongFormat(input);
+    }
+
+    private ParserState parseBeforeTestAddress(String input, MessageAddressBuilder builder, String group) {
+        if (group.equals(ALL)) {
+            builder.toAllTests();
+        } else if (group.equals(RANDOM)) {
+            builder.toRandomTest();
+        } else {
+            throw wrongFormat(input);
+        }
+        return ParserState.DONE;
     }
 
     private RuntimeException wrongFormat(String address) {
         return new IllegalArgumentException(
-                String.format("Address '%s' has a wrong format. Please use communicator --help to see the syntax",
-                        address));
+                format("Address '%s' has a wrong format. Please use communicator --help to see the syntax", address));
     }
 }

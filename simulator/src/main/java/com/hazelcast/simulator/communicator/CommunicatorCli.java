@@ -29,13 +29,14 @@ public class CommunicatorCli {
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> messageAddressSpec = parser.accepts("message-address",
-            String.format("Message address definition.%nSyntax: Agent=<mode>[,Worker=<mode>[,Test=<mode>]]."
-                    + " Mode can be either '%s' for broadcast' or '%s' for a single random destination.%nExamples:"
-                    + "%n--message-address 'Agent=*,Worker=R' - a message will be routed to all agents and then each agent"
-                    + " will pass it to a single random worker for processing."
-                    + "%n--message-address 'Agent=R,Worker=R,Test=*' - a message will be routed to a single random agent."
-                    + " The agent will pass it to a single random worker and the worker will pass the message to all tests.",
-                    MessageAddressParser.ALL_WORKERS, MessageAddressParser.RANDOM_WORKER))
+            String.format("Message address definition.%nSyntax: %s=<mode>[,%s=<mode>[,%s=<mode>]]."
+                            + " Mode can be either '%s' for broadcast' or '%s' for a single random destination.%nExamples:"
+                            + "%n--message-address 'Agent=*,Worker=R' - a message will be routed to all agents and then each agent"
+                            + " will pass it to a single random worker for processing."
+                            + "%n--message-address 'Agent=R,Worker=R,Test=*' - a message will be routed to a single random agent."
+                            + " The agent will pass it to a single random worker and the worker will pass the message to all tests.",
+                    MessageAddressParser.AGENT, MessageAddressParser.WORKER, MessageAddressParser.TEST,
+                    MessageAddressParser.ALL, MessageAddressParser.RANDOM))
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec oldestMemberSpec = parser.accepts("oldest-member",

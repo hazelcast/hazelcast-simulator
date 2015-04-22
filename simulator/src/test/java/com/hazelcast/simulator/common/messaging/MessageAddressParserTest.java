@@ -21,7 +21,7 @@ public class MessageAddressParserTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testParse_missingAgentPrefix() throws Exception {
-        parser.parse("foooooooooooooooo");
+        parser.parse("Illegal");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -32,6 +32,46 @@ public class MessageAddressParserTest {
     @Test(expected = IllegalArgumentException.class)
     public void testParse_wrongAgentMode() throws Exception {
         parser.parse("Agent=A");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParse_missingWorker() throws Exception {
+        parser.parse("Agent=R,");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParse_wrongWorkerFormat() throws Exception {
+        parser.parse("Agent=R,Illegal");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParse_noArgumentAfterOptionalGroup() {
+        parser.parse("Agent=*,Worker=");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParse_wrongWorkerMode() throws Exception {
+        parser.parse("Agent=R,Worker=A");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParse_missingTest() throws Exception {
+        parser.parse("Agent=R,Worker=*,");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParse_wrongTestFormat() throws Exception {
+        parser.parse("Agent=R,Worker=*,Illegal");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParse_wrongTestMode() throws Exception {
+        parser.parse("Agent=R,Worker=*,Test=A");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParse_addressTooLong() throws Exception {
+        parser.parse("Agent=*,Worker=R,Test=R,");
     }
 
     @Test
@@ -50,21 +90,6 @@ public class MessageAddressParserTest {
         assertNull(address.getTestAddress());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testParse_missingWorker() throws Exception {
-        parser.parse("Agent=R,");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testParse_wrongWorkerFormat() throws Exception {
-        parser.parse("Agent=R,Fooo");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testParse_wrongWorkerMode() throws Exception {
-        parser.parse("Agent=R,Worker=A");
-    }
-
     @Test
     public void testParse_toAllWorkers() throws Exception {
         MessageAddress address = parser.parse("Agent=R,Worker=*");
@@ -79,21 +104,6 @@ public class MessageAddressParserTest {
         assertEquals(MessageAddress.BROADCAST, address.getAgentAddress());
         assertEquals(MessageAddress.RANDOM, address.getWorkerAddress());
         assertNull(address.getTestAddress());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testParse_missingTest() throws Exception {
-        parser.parse("Agent=R,Worker=*,");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testParse_wrongTestFormat() throws Exception {
-        parser.parse("Agent=R,Worker=*,Fooo");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testParse_wrongTestMode() throws Exception {
-        parser.parse("Agent=R,Worker=*,Test=A");
     }
 
     @Test
@@ -112,11 +122,6 @@ public class MessageAddressParserTest {
         assertEquals(MessageAddress.RANDOM, address.getTestAddress());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testParse_addressTooLong() throws Exception {
-        parser.parse("Agent=*,Worker=R,Test=R,");
-    }
-
     @Test
     public void testParse_toAllMembersWithWorker() {
         MessageAddress address = parser.parse("Agent=*,Worker=*m");
@@ -130,6 +135,14 @@ public class MessageAddressParserTest {
         MessageAddress address = parser.parse("Agent=*,Worker=Rm");
         assertEquals(MessageAddress.BROADCAST, address.getAgentAddress());
         assertEquals(MessageAddress.RANDOM_WORKER_WITH_MEMBER, address.getWorkerAddress());
+        assertNull(address.getTestAddress());
+    }
+
+    @Test
+    public void testParse_toWorkerWithOldestMember() {
+        MessageAddress address = parser.parse("Agent=*,Worker=O");
+        assertEquals(MessageAddress.BROADCAST, address.getAgentAddress());
+        assertEquals(MessageAddress.WORKER_WITH_OLDEST_MEMBER, address.getWorkerAddress());
         assertNull(address.getTestAddress());
     }
 }
