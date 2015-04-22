@@ -16,36 +16,65 @@ import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
 /**
- * SimulatorProperties will always load the properties in the simulator_home/conf/simulator.properties
- * as defaults. If a simulator.properties is available in the working dir of if an explicit simulator.properties
- * is configured, it will override the properties from the default.
+ * Loads the Hazelcast Simulator properties file.
+ *
+ * This class will always load the properties in the <tt>${SIMULATOR_HOME}/conf/simulator.properties</tt> as defaults. If an
+ * explicit <tt>simulator.properties</tt> file is configured or <tt>simulator.properties</tt> is available in the working dir,
+ * it will override the properties from the default.
  */
 public class SimulatorProperties {
+
+    static final String PROPERTIES_FILE_NAME = "simulator.properties";
 
     private static final Logger LOGGER = Logger.getLogger(SimulatorProperties.class);
 
     private final Properties properties = new Properties();
+
     private String forcedHazelcastVersionSpec;
 
     public SimulatorProperties() {
-        File defaultPropsFile = newFile(getSimulatorHome(), "conf", "simulator.properties");
-        LOGGER.debug("Loading default simulator.properties from: " + defaultPropsFile.getAbsolutePath());
+        File defaultPropsFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
+        LOGGER.debug(format("Loading default %s from: %s", PROPERTIES_FILE_NAME, defaultPropsFile.getAbsolutePath()));
+        check(defaultPropsFile);
         load(defaultPropsFile);
     }
 
-    public String getUser() {
-        return get("USER", "simulator");
+    /**
+     * Initializes the SimulatorProperties.
+     *
+     * @param file the file to load the properties from. If the file is null, then first the simulator.properties
+     *             in the working dir is checked.
+     */
+    public void init(File file) {
+        if (file == null) {
+            // if no file is explicitly given, we look in the working directory
+            file = new File(PROPERTIES_FILE_NAME);
+            if (!file.exists()) {
+                LOGGER.warn(format("%s is not found, relying on defaults", file.getAbsolutePath()));
+                return;
+            }
+        }
+
+        LOGGER.info(format("Loading %s: %s", PROPERTIES_FILE_NAME, file.getAbsolutePath()));
+        check(file);
+        load(file);
     }
 
-    public boolean isEc2() {
-        return "aws-ec2".equals(get("CLOUD_PROVIDER"));
+    private void check(File file) {
+        if (!file.exists()) {
+            exitWithError(LOGGER, format("Could not find %s file: %s", PROPERTIES_FILE_NAME, file.getAbsolutePath()));
+        }
     }
 
-    public String getHazelcastVersionSpec() {
-        if (forcedHazelcastVersionSpec == null) {
-            return get("HAZELCAST_VERSION_SPEC", "outofthebox");
-        } else {
-            return forcedHazelcastVersionSpec;
+    void load(File file) {
+        FileInputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(file);
+            properties.load(inputStream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            closeQuietly(inputStream);
         }
     }
 
@@ -56,47 +85,19 @@ public class SimulatorProperties {
         }
     }
 
-    /**
-     * Initialized the SimulatorProperties
-     *
-     * @param file the file to load the properties from. If the file is null, then first the simulator.properties
-     *             in the working dir is checked.
-     */
-    public void init(File file) {
-        if (file == null) {
-            //if no file is explicitly given, we look in the working directory
-            File fallbackPropsFile = new File("simulator.properties");
-            if (fallbackPropsFile.exists()) {
-                file = fallbackPropsFile;
-            } else {
-                LOGGER.warn(format("%s is not found, relying on defaults", fallbackPropsFile));
-            }
-        }
-
-        if (file != null) {
-            LOGGER.info(format("Loading simulator.properties: %s", file.getAbsolutePath()));
-            load(file);
-        }
+    public boolean isEC2() {
+        return "aws-ec2".equals(get("CLOUD_PROVIDER"));
     }
 
-    private void load(File file) {
-        if (!file.exists()) {
-            exitWithError(LOGGER, "Could not find simulator.properties file: " + file.getAbsolutePath());
-            return;
-        }
+    public String getUser() {
+        return get("USER", "simulator");
+    }
 
-        FileInputStream inputStream = null;
-        try {
-            inputStream = new FileInputStream(file);
-            try {
-                properties.load(inputStream);
-            } catch (IOException e) {
-                closeQuietly(inputStream);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            closeQuietly(inputStream);
+    public String getHazelcastVersionSpec() {
+        if (forcedHazelcastVersionSpec == null) {
+            return get("HAZELCAST_VERSION_SPEC", "outofthebox");
+        } else {
+            return forcedHazelcastVersionSpec;
         }
     }
 
@@ -104,9 +105,9 @@ public class SimulatorProperties {
         String value = (String) properties.get(name);
 
         if ("CLOUD_IDENTITY".equals(name)) {
-            value = load("CLOUD_IDENTITY", value);
+            value = loadPropertyFromFile("CLOUD_IDENTITY", value);
         } else if ("CLOUD_CREDENTIAL".equals(name)) {
-            value = load("CLOUD_CREDENTIAL", value);
+            value = loadPropertyFromFile("CLOUD_CREDENTIAL", value);
         }
 
         return fixValue(name, value);
@@ -126,6 +127,18 @@ public class SimulatorProperties {
         return fixValue(name, value);
     }
 
+    private String loadPropertyFromFile(String property, String path) {
+        File file = newFile(path);
+        if (!file.exists()) {
+            exitWithError(LOGGER, format("Can't find property %s file %s", property, path));
+        }
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Loading " + property + " from file: " + file.getAbsolutePath());
+        }
+        return fileAsText(file).trim();
+    }
+
     private String fixValue(String name, String value) {
         if (value == null) {
             return null;
@@ -134,29 +147,16 @@ public class SimulatorProperties {
         if ("GROUP_NAME".equals(name)) {
             String username = System.getProperty("user.name").toLowerCase();
 
-            // TODO: do we need this code? it was unused
-            //StringBuilder fixedUserName = new StringBuilder();
-            //for (char character : username.toCharArray()) {
-            //    if (Character.isLetter(character) || Character.isDigit(character)) {
-            //        fixedUserName.append(character);
-            //    }
-            //}
+            StringBuilder fixedUserName = new StringBuilder();
+            for (char character : username.toCharArray()) {
+                if (Character.isLetter(character) || Character.isDigit(character)) {
+                    fixedUserName.append(character);
+                }
+            }
 
-            value = value.replace("${username}", username);
+            return value.replace("${username}", fixedUserName.toString());
         }
 
         return value;
-    }
-
-    private String load(String property, String value) {
-        File file = newFile(value);
-        if (!file.exists()) {
-            exitWithError(LOGGER, format("Can't find %s file %s", property, value));
-        }
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Loading " + property + " from file: " + file.getAbsolutePath());
-        }
-        return fileAsText(file).trim();
     }
 }
