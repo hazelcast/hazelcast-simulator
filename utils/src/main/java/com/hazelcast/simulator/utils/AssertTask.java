@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.utils;
 
-public abstract class AssertTask {
+public interface AssertTask {
 
-    public abstract void run() throws Exception;
+    void run() throws Exception;
 }
