@@ -4,43 +4,38 @@ import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.common.messaging.MessageAddressParser;
-import joptsimple.BuiltinHelpFormatter;
-import joptsimple.OptionException;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.apache.log4j.Logger;
 
-import java.io.IOException;
 import java.util.List;
 
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
 
 public class CommunicatorCli {
-    private static final Logger LOGGER = Logger.getLogger(CommunicatorCli.class);
 
-    private final Communicator communicator;
+    private static final String HELP_ADVICE = " Use --help to get overview of the help options.";
 
     private final OptionParser parser = new OptionParser();
-    private OptionSet options;
 
     private final OptionSpec<String> agentsFileSpec = parser.accepts("agentsFile",
             "The file containing the list of agent machines")
             .withRequiredArg().ofType(String.class).defaultsTo(AgentsFile.NAME);
 
     private final OptionSpec<String> messageTypeSpec = parser.accepts("message-type",
-            String.format("Message type definition. Supported message types: %n%s", Message.getMessageHelp()))
+            String.format("Message type definition. Supported message types:%n%s", Message.getMessageHelp()))
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> messageAddressSpec = parser.accepts("message-address",
-            String.format("Message address definition. %nSyntax: Agent=<mode>[,Worker=<mode>[,Test=<mode>]]. "
-                    + "Mode can be either '%s' for broadcast' or '%s' for a single random destination. %n"
-                    + "Examples: %n--message-address 'Agent=*,Worker=R' - a message will be routed to all agents and than "
-                    + "each agent will pass it to a single random worker for processing. %n"
-                    + "          %n--message-address 'Agent=R,Worker=R,Test=*' - a message will be router to a single random "
-                    + "agent. The agent will pass it to a single random worker and the worker will pass the message to all "
-                    + "tests.", MessageAddressParser.ALL_WORKERS, MessageAddressParser.RANDOM_WORKER))
+            String.format("Message address definition.%nSyntax: Agent=<mode>[,Worker=<mode>[,Test=<mode>]]."
+                    + " Mode can be either '%s' for broadcast' or '%s' for a single random destination.%nExamples:"
+                    + "%n--message-address 'Agent=*,Worker=R' - a message will be routed to all agents and then each agent"
+                    + " will pass it to a single random worker for processing."
+                    + "%n--message-address 'Agent=R,Worker=R,Test=*' - a message will be routed to a single random agent."
+                    + " The agent will pass it to a single random worker and the worker will pass the message to all tests.",
+                    MessageAddressParser.ALL_WORKERS, MessageAddressParser.RANDOM_WORKER))
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec oldestMemberSpec = parser.accepts("oldest-member",
@@ -52,44 +47,33 @@ public class CommunicatorCli {
     private final OptionSpec randomWorkerSpec = parser.accepts("random-worker",
             "Send the message to a worker agent. Cannot be used together with --message-address or any other addressing option.");
 
-    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
+    private final Communicator communicator;
+    private final OptionSet options;
 
-    public CommunicatorCli(Communicator communicator) {
+    public CommunicatorCli(Communicator communicator, String[] args) {
         this.communicator = communicator;
+        this.options = initOptionsWithHelp(parser, args);
     }
 
-    public void init(String[] args) throws IOException {
-        try {
-            options = parser.parse(args);
-        } catch (OptionException e) {
-            exitWithError(LOGGER, e.getMessage() + ". Use --help to get overview of the help options.");
-            return;
-        }
-        if (options.has(helpSpec)) {
-            parser.formatHelpWith(new BuiltinHelpFormatter(160, 2));
-            parser.printHelpOn(System.out);
-            System.exit(0);
-        }
-
-        String messageTypeString = null;
+    public void init() {
+        String messageTypeString;
         List<String> noArgOptions = options.nonOptionArguments();
         if (options.has(messageTypeSpec)) {
             if (!noArgOptions.isEmpty()) {
-                exitWithError(LOGGER, "You cannot use --message-type simultaneously with a message shortcut. "
-                        + "Use --help to get overview of the help options.");
+                throw new CommandLineExitException("You cannot use --message-type simultaneously with a message shortcut."
+                        + HELP_ADVICE);
             }
             messageTypeString = options.valueOf(this.messageTypeSpec);
         } else if (!noArgOptions.isEmpty()) {
             if (noArgOptions.size() > 1) {
-                exitWithError(LOGGER, "You cannot use more than 1 message shortcut.");
+                throw new CommandLineExitException("You cannot use more than one message shortcut at a time." + HELP_ADVICE);
             }
             messageTypeString = noArgOptions.get(0);
         } else {
-            exitWithError(LOGGER, "You have to use either --message-type or message shortcut "
-                    + "Use --help to get overview of the help options.");
+            throw new CommandLineExitException("You have to use either --message-type or message shortcut." + HELP_ADVICE);
         }
 
-        MessageAddress messageAddress = null;
+        MessageAddress messageAddress;
         if (options.has(randomAgentSpec)) {
             checkHasOnlyAddressingOption(randomAgentSpec);
             messageAddress = MessageAddress.builder().toRandomAgent().build();
@@ -105,17 +89,18 @@ public class CommunicatorCli {
             checkHasOnlyAddressingOption(randomWorkerSpec);
             messageAddress = MessageAddress.builder().toAllAgents().toRandomWorker().build();
         } else {
-            exitWithError(LOGGER, "You have to use either --oldest-member or --message-address to specify message address"
-                    + ". Use --help to get overview of the help options.");
+            throw new CommandLineExitException("You have to use either --oldest-member or --message-address to specify message"
+                    + " address." + HELP_ADVICE);
         }
+
         communicator.message = Message.newBySpec(messageTypeString, messageAddress);
         communicator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
     }
 
     private void checkHasOnlyAddressingOption(OptionSpec optionSpec) {
         if (hasOtherAddressOptionThen(optionSpec)) {
-            exitWithError(LOGGER, "You cannot use --random-agent and --message-address or any other addressing option "
-                    + "simultaneously. Use --help to get overview of the help options.");
+            throw new CommandLineExitException("You cannot use --random-agent and --message-address or any other addressing"
+                    + " option simultaneously." + HELP_ADVICE);
         }
     }
 
@@ -127,8 +112,8 @@ public class CommunicatorCli {
                 randomWorkerSpec,
         };
 
-        for (OptionSpec o : addressOptionSpecs) {
-            if (!o.equals(optionSpec) && options.has(o)) {
+        for (OptionSpec option : addressOptionSpecs) {
+            if (!option.equals(optionSpec) && options.has(option)) {
                 return true;
             }
         }

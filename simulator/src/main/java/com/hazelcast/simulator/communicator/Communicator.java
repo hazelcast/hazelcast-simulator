@@ -4,10 +4,10 @@ import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -16,39 +16,51 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
 public class Communicator {
+
     private static final Logger LOGGER = Logger.getLogger(Communicator.class);
-    private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
 
-    public File agentsFile;
-    public Message message;
-    protected AgentsClient agentsClient;
+    File agentsFile;
+    Message message;
 
-    public static void main(String[] args) throws IOException {
-        LOGGER.info("Simulator Communicator");
-        LOGGER.info(String.format("Version: %s", getSimulatorVersion()));
-        LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
+    private AgentsClient agentsClient;
 
-        Communicator communicator = new Communicator();
-        CommunicatorCli cli = new CommunicatorCli(communicator);
-        cli.init(args);
-
-        LOGGER.info(format("Loading agents file: %s", communicator.agentsFile.getAbsolutePath()));
-        try {
-            communicator.run();
-        } catch (Exception e) {
-            LOGGER.error("Failed to communicate", e);
-            exitWithError(LOGGER, e.getMessage());
-        }
-    }
-
-    private void run() throws Exception {
+    private void run() {
         initAgents();
-        agentsClient.sendMessage(message);
+
+        try {
+            agentsClient.sendMessage(message);
+            agentsClient.stop();
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not send message to agents", e);
+        }
+
+        LOGGER.info("Message sent!");
     }
 
     private void initAgents() {
         List<AgentAddress> agentAddresses = AgentsFile.load(agentsFile);
         agentsClient = new AgentsClient(agentAddresses);
         agentsClient.start();
+    }
+
+    public static void main(String[] args) {
+        try {
+            LOGGER.info("Simulator Communicator");
+            LOGGER.info(String.format("Version: %s", getSimulatorVersion()));
+            LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath()));
+
+            Communicator communicator = new Communicator();
+            CommunicatorCli cli = new CommunicatorCli(communicator, args);
+            cli.init();
+
+            LOGGER.info(format("Loading agents file: %s", communicator.agentsFile.getAbsolutePath()));
+
+            communicator.run();
+        } catch (Exception e) {
+            if (!(e instanceof CommandLineExitException)) {
+                LOGGER.fatal("Failed to communicate", e);
+            }
+            exitWithError(LOGGER, e.getMessage());
+        }
     }
 }

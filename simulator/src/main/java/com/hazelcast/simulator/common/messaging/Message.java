@@ -34,7 +34,8 @@ public abstract class Message implements Serializable {
         Set<String> messageSpecs = MessagesFactory.getMessageSpecs();
         StringBuilder builder = new StringBuilder();
         for (String spec : messageSpecs) {
-            builder.append(spec)
+            builder.append("* ")
+                    .append(spec)
                     .append(" - ")
                     .append(MessagesFactory.getMessageDescription(spec))
                     .append(NEW_LINE);
