@@ -7,7 +7,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 
-public class ExecutorFactory {
+public final class ExecutorFactory {
+
+    private ExecutorFactory() {
+    }
 
     public static ExecutorService createFixedThreadPool(int poolSize, Class classType) {
         return createFixedThreadPool(poolSize, getName(classType));

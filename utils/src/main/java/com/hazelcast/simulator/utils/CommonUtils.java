@@ -206,7 +206,7 @@ public final class CommonUtils {
 
     public static RuntimeException rethrow(Throwable t) {
         if (t instanceof RuntimeException) {
-            throw (RuntimeException)t;
+            throw (RuntimeException) t;
         } else {
             throw new RuntimeException(t);
         }

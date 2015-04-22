@@ -57,24 +57,9 @@ public final class ZipUtils {
                     }
 
                     if (file.isDirectory()) {
-                        String name = base.relativize(file.toURI()).getPath();
-                        name = name.endsWith("/") ? name : name + "/";
-
-                        if (names.add(name)) {
-                            zipOutputStream.putNextEntry(new ZipEntry(name));
-                        }
-
-                        File[] files = file.listFiles();
-                        if (files != null) {
-                            for (File kid : files) {
-                                queue.push(kid);
-                            }
-                        }
+                        addDirectory(zipOutputStream, queue, names, base, file);
                     } else {
-                        String name = base.relativize(file.toURI()).getPath();
-                        zipOutputStream.putNextEntry(new ZipEntry(name));
-                        copy(file, zipOutputStream);
-                        zipOutputStream.closeEntry();
+                        addFile(zipOutputStream, base, file);
                     }
                 }
             }
@@ -83,6 +68,30 @@ public final class ZipUtils {
         }
 
         return outputStream.toByteArray();
+    }
+
+    private static void addDirectory(ZipOutputStream zipOutputStream, Deque<File> queue, Set<String> names, URI base, File file)
+            throws IOException {
+        String name = base.relativize(file.toURI()).getPath();
+        name = name.endsWith("/") ? name : name + "/";
+
+        if (names.add(name)) {
+            zipOutputStream.putNextEntry(new ZipEntry(name));
+        }
+
+        File[] files = file.listFiles();
+        if (files != null) {
+            for (File kid : files) {
+                queue.push(kid);
+            }
+        }
+    }
+
+    private static void addFile(ZipOutputStream zipOutputStream, URI base, File file) throws IOException {
+        String name = base.relativize(file.toURI()).getPath();
+        zipOutputStream.putNextEntry(new ZipEntry(name));
+        copy(file, zipOutputStream);
+        zipOutputStream.closeEntry();
     }
 
     public static void unzip(byte[] content, final File destinationDir) throws IOException {

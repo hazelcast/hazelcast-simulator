@@ -5,9 +5,9 @@ import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-class DynamicClassLoader extends ClassLoader {
+final class DynamicClassLoader extends ClassLoader {
 
-    private final static DynamicClassLoader INSTANCE;
+    private static final DynamicClassLoader INSTANCE;
 
     static {
         INSTANCE = AccessController.doPrivileged(new PrivilegedAction<DynamicClassLoader>() {
