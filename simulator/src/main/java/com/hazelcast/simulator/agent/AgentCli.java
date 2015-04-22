@@ -1,15 +1,13 @@
 package com.hazelcast.simulator.agent;
 
+import com.hazelcast.simulator.utils.CliUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import java.io.IOException;
-
 public final class AgentCli {
 
     private final OptionParser parser = new OptionParser();
-    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     private final OptionSpec<String> bindAddress = parser.accepts("bindAddress",
             "Address to bind the agent remote service to.")
@@ -30,30 +28,24 @@ public final class AgentCli {
     private AgentCli() {
     }
 
-    public static void init(Agent agent, String[] args) throws IOException {
-        AgentCli agentOptionSpec = new AgentCli();
+    static void init(Agent agent, String[] args) {
+        AgentCli agentCli = new AgentCli();
+        OptionSet options = CliUtils.initOptionsWithHelp(agentCli.parser, args);
 
-        OptionSet options = agentOptionSpec.parser.parse(args);
-
-        if (options.has(agentOptionSpec.helpSpec)) {
-            agentOptionSpec.parser.printHelpOn(System.out);
-            System.exit(0);
+        if (options.has(agentCli.bindAddress)) {
+            agent.bindAddress = options.valueOf(agentCli.bindAddress);
         }
 
-        if (options.has(agentOptionSpec.bindAddress)) {
-            agent.bindAddress = options.valueOf(agentOptionSpec.bindAddress);
+        if (options.has(agentCli.cloudIdentitySpec)) {
+            agent.cloudIdentity = options.valueOf(agentCli.cloudIdentitySpec);
         }
 
-        if (options.has(agentOptionSpec.cloudIdentitySpec)) {
-            agent.cloudIdentity = options.valueOf(agentOptionSpec.cloudIdentitySpec);
+        if (options.has(agentCli.cloudCredentialSpec)) {
+            agent.cloudCredential = options.valueOf(agentCli.cloudCredentialSpec);
         }
 
-        if (options.has(agentOptionSpec.cloudCredentialSpec)) {
-            agent.cloudCredential = options.valueOf(agentOptionSpec.cloudCredentialSpec);
-        }
-
-        if (options.has(agentOptionSpec.cloudProviderSpec)) {
-            agent.cloudProvider = options.valueOf(agentOptionSpec.cloudProviderSpec);
+        if (options.has(agentCli.cloudProviderSpec)) {
+            agent.cloudProvider = options.valueOf(agentCli.cloudProviderSpec);
         }
     }
 }

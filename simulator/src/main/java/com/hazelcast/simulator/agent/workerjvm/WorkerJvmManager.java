@@ -21,6 +21,7 @@ import com.hazelcast.simulator.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.test.Failure;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.TerminateWorkerException;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
@@ -91,12 +92,16 @@ public class WorkerJvmManager {
         });
     }
 
-    public void start() throws Exception {
-        serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(null));
+    public void start() {
+        try {
+            serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(null));
 
-        LOGGER.info("Started Worker JVM Socket on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
+            LOGGER.info("Started Worker JVM Socket on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
 
-        new AcceptorThread().start();
+            new AcceptorThread().start();
+        } catch (Exception e) {
+            throw new CommandLineExitException("Failed to start WorkerJvmManager", e);
+        }
     }
 
     public Collection<WorkerJvm> getWorkerJVMs() {

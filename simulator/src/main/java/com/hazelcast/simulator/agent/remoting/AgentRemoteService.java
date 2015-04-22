@@ -44,7 +44,7 @@ public class AgentRemoteService {
     }
 
     public void start() throws IOException {
-        String bindAddress = (agent.bindAddress != null) ? agent.bindAddress : getHostAddress();
+        String bindAddress = (agent.getBindAddress() != null) ? agent.getBindAddress() : getHostAddress();
         serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(bindAddress));
         LOGGER.info("Started Agent Remote Service on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
 
