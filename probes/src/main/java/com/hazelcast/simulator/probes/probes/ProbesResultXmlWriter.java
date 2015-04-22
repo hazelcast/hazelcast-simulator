@@ -38,13 +38,13 @@ public final class ProbesResultXmlWriter {
         try {
             xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(outputStream);
             xmlStreamWriter.writeStartDocument();
-            xmlStreamWriter.writeStartElement(PROBES_RESULT.string);
+            xmlStreamWriter.writeStartElement(PROBES_RESULT.getName());
             for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
                 String probeName = entry.getKey();
                 R result = entry.getValue();
-                xmlStreamWriter.writeStartElement(PROBE.string);
-                xmlStreamWriter.writeAttribute(PROBE_NAME.string, probeName);
-                xmlStreamWriter.writeAttribute(PROBE_TYPE.string, result.getClass().getSimpleName());
+                xmlStreamWriter.writeStartElement(PROBE.getName());
+                xmlStreamWriter.writeAttribute(PROBE_NAME.getName(), probeName);
+                xmlStreamWriter.writeAttribute(PROBE_TYPE.getName(), result.getClass().getSimpleName());
                 result.writeTo(xmlStreamWriter);
                 xmlStreamWriter.writeEndElement();
             }

@@ -86,7 +86,7 @@ public class TestContainer<T extends TestContext> {
 
     // properties
     int threadCount = 10;
-    String workerProbeType = ProbesType.WORKER.string;
+    String workerProbeType = ProbesType.WORKER.getName();
 
     private final Object testClassInstance;
     private final Class testClassType;
@@ -358,7 +358,7 @@ public class TestContainer<T extends TestContext> {
 
         if (ProbesType.getProbeType((workerProbeType)) == null) {
             LOGGER.warn("Illegal argument workerProbeType: " + workerProbeType);
-            workerProbeType = ProbesType.WORKER.string;
+            workerProbeType = ProbesType.WORKER.getName();
         }
 
         LOGGER.info(format("Spawning %d worker threads for test %s with %s probe", threadCount, testId, workerProbeType));

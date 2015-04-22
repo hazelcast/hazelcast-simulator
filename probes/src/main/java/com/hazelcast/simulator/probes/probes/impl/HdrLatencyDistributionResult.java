@@ -54,7 +54,7 @@ public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributi
         byteBuffer.limit(bytesWritten);
         String encodedData = Base64.encodeBase64String(byteBuffer.array());
         try {
-            writer.writeStartElement(ProbesResultXmlElements.HDR_LATENCY_DATA.string);
+            writer.writeStartElement(ProbesResultXmlElements.HDR_LATENCY_DATA.getName());
             writer.writeCData(encodedData);
             writer.writeEndElement();
         } catch (XMLStreamException e) {

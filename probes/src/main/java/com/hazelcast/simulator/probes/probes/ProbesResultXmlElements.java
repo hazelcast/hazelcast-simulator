@@ -21,9 +21,17 @@ public enum ProbesResultXmlElements {
     LATENCY_DIST_UPPER_BOUND("upper-bound"),
     LATENCY_DIST_VALUES("values");
 
-    public final String string;
+    private final String string;
 
     ProbesResultXmlElements(String string) {
         this.string = string;
+    }
+
+    public boolean matches(String elementName) {
+        return string.equals(elementName);
+    }
+
+    public String getName() {
+        return string;
     }
 }

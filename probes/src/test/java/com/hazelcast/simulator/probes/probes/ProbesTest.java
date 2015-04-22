@@ -15,8 +15,8 @@ public class ProbesTest {
 
     @Before
     public void setup() {
-        config.addConfig("throughput", ProbesType.THROUGHPUT.string);
-        config.addConfig("hdr", ProbesType.HDR.string);
+        config.addConfig("throughput", ProbesType.THROUGHPUT.getName());
+        config.addConfig("hdr", ProbesType.HDR.getName());
         config.addConfig("invalid", "invalid");
     }
 

@@ -54,25 +54,26 @@ public class LatencyDistributionResult implements Result<LatencyDistributionResu
     @Override
     public void writeTo(XMLStreamWriter writer) {
         try {
-            writer.writeStartElement(ProbesResultXmlElements.LATENCY_DIST_STEP.string);
+            writer.writeStartElement(ProbesResultXmlElements.LATENCY_DIST_STEP.getName());
             int step = linearHistogram.getStep();
             writer.writeCharacters(Integer.toString(step));
             writer.writeEndElement();
 
-            writer.writeStartElement(ProbesResultXmlElements.LATENCY_DIST_MAX_VALUE.string);
+            writer.writeStartElement(ProbesResultXmlElements.LATENCY_DIST_MAX_VALUE.getName());
             int maxValue = linearHistogram.getMaxValue();
             writer.writeCharacters(Integer.toString(maxValue));
             writer.writeEndElement();
 
-            writer.writeStartElement(ProbesResultXmlElements.LATENCY_DIST_BUCKETS.string);
+            writer.writeStartElement(ProbesResultXmlElements.LATENCY_DIST_BUCKETS.getName());
             int[] buckets = linearHistogram.getBuckets();
             for (int i = 0; i < buckets.length; i++) {
                 int upperBound = (i + 1) * step;
                 int values = buckets[i];
                 if (values != 0) {
-                    writer.writeStartElement(ProbesResultXmlElements.LATENCY_DIST_BUCKET.string);
-                    writer.writeAttribute(ProbesResultXmlElements.LATENCY_DIST_UPPER_BOUND.string, Integer.toString(upperBound));
-                    writer.writeAttribute(ProbesResultXmlElements.LATENCY_DIST_VALUES.string, Integer.toString(values));
+                    writer.writeStartElement(ProbesResultXmlElements.LATENCY_DIST_BUCKET.getName());
+                    writer.writeAttribute(ProbesResultXmlElements.LATENCY_DIST_UPPER_BOUND.getName(),
+                            Integer.toString(upperBound));
+                    writer.writeAttribute(ProbesResultXmlElements.LATENCY_DIST_VALUES.getName(), Integer.toString(values));
                     writer.writeEndElement();
                 }
             }

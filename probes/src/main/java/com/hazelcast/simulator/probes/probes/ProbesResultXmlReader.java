@@ -49,7 +49,7 @@ public final class ProbesResultXmlReader {
                 XMLEvent event = reader.nextEvent();
                 if (event.isStartElement()) {
                     StartElement startElement = event.asStartElement();
-                    if (PROBES_RESULT.string.equals(startElement.getName().getLocalPart())) {
+                    if (PROBES_RESULT.matches(startElement.getName().getLocalPart())) {
                         parseProbesResult(reader, result);
                     }
                 }
@@ -65,12 +65,12 @@ public final class ProbesResultXmlReader {
             XMLEvent event = reader.nextEvent();
             if (event.isStartElement()) {
                 StartElement startElement = event.asStartElement();
-                if (PROBE.string.equals(startElement.getName().getLocalPart())) {
+                if (PROBE.matches(startElement.getName().getLocalPart())) {
                     parseProbe(reader, startElement, result);
                 }
             } else if (event.isEndElement()) {
                 EndElement endElement = event.asEndElement();
-                if (!PROBES_RESULT.string.equals(endElement.getName().getLocalPart())) {
+                if (!PROBES_RESULT.matches(endElement.getName().getLocalPart())) {
                     throw new XMLStreamException("Unexpected end element " + endElement.getName());
                 }
                 return;
@@ -80,8 +80,8 @@ public final class ProbesResultXmlReader {
 
     private static void parseProbe(XMLEventReader reader, StartElement startElement, Map<String, Result> result)
             throws XMLStreamException {
-        String name = startElement.getAttributeByName(new QName(PROBE_NAME.string)).getValue();
-        String type = startElement.getAttributeByName(new QName(PROBE_TYPE.string)).getValue();
+        String name = startElement.getAttributeByName(new QName(PROBE_NAME.getName())).getValue();
+        String type = startElement.getAttributeByName(new QName(PROBE_TYPE.getName())).getValue();
 
         Result probeResult = null;
         if (OperationsPerSecResult.XML_TYPE.equals(type)) {
@@ -99,7 +99,7 @@ public final class ProbesResultXmlReader {
             XMLEvent eventType = reader.nextEvent();
             if (eventType.isEndElement()) {
                 EndElement endElement = eventType.asEndElement();
-                if (!PROBE.string.equals(endElement.getName().getLocalPart())) {
+                if (!PROBE.matches(endElement.getName().getLocalPart())) {
                     throw new XMLStreamException("Unexpected end element " + endElement.getName());
                 }
                 return;
@@ -119,15 +119,16 @@ public final class ProbesResultXmlReader {
             XMLEvent xmlEvent = reader.nextEvent();
             if (xmlEvent.isStartElement()) {
                 StartElement startElement = xmlEvent.asStartElement();
-                if (INVOCATIONS.string.equals(startElement.getName().getLocalPart())) {
+                if (INVOCATIONS.matches(startElement.getName().getLocalPart())) {
                     if (invocations != null) {
-                        throw new XMLStreamException("Unexpected element " + INVOCATIONS.string + " (has been already defined)");
+                        throw new XMLStreamException("Unexpected element " + INVOCATIONS.getName()
+                                + " (has been already defined)");
                     }
                     invocations = Long.parseLong(parseCharsAndEndCurrentElement(reader));
-                } else if (OPERATIONS_PER_SECOND.string.equals(startElement.getName().getLocalPart())) {
+                } else if (OPERATIONS_PER_SECOND.matches(startElement.getName().getLocalPart())) {
                     if (operationsPerSecond != null) {
                         throw new XMLStreamException(
-                                "Unexpected element " + OPERATIONS_PER_SECOND.string + " (has been already defined)");
+                                "Unexpected element " + OPERATIONS_PER_SECOND.getName() + " (has been already defined)");
                     }
                     operationsPerSecond = Double.parseDouble(parseCharsAndEndCurrentElement(reader));
                 }
@@ -147,11 +148,11 @@ public final class ProbesResultXmlReader {
                 maxLatency = Long.parseLong(xmlEvent.asCharacters().getData());
             } else if (xmlEvent.isEndElement()) {
                 EndElement endElement = xmlEvent.asEndElement();
-                if (!MAX_LATENCY.string.equals(endElement.getName().getLocalPart())) {
+                if (!MAX_LATENCY.matches(endElement.getName().getLocalPart())) {
                     throw new XMLStreamException("Unexpected end element " + endElement.getName());
                 }
                 if (maxLatency == null) {
-                    throw new XMLStreamException("Unexpected end element " + MAX_LATENCY.string);
+                    throw new XMLStreamException("Unexpected end element " + MAX_LATENCY.getName());
                 }
                 return new MaxLatencyResult(maxLatency);
             }
@@ -167,11 +168,11 @@ public final class ProbesResultXmlReader {
                 encodedData = xmlEvent.asCharacters().getData();
             } else if (xmlEvent.isEndElement()) {
                 EndElement endElement = xmlEvent.asEndElement();
-                if (!HDR_LATENCY_DATA.string.equals(endElement.getName().getLocalPart())) {
+                if (!HDR_LATENCY_DATA.matches(endElement.getName().getLocalPart())) {
                     throw new XMLStreamException("Unexpected end element " + endElement.getName());
                 }
                 if (encodedData == null) {
-                    throw new XMLStreamException("Unexpected end element " + HDR_LATENCY_DATA.string);
+                    throw new XMLStreamException("Unexpected end element " + HDR_LATENCY_DATA.getName());
                 }
                 try {
                     byte[] bytes = Base64.decodeBase64(encodedData);
@@ -193,19 +194,19 @@ public final class ProbesResultXmlReader {
             XMLEvent xmlEvent = reader.nextEvent();
             if (xmlEvent.isStartElement()) {
                 StartElement startElement = xmlEvent.asStartElement();
-                if (LATENCY_DIST_STEP.string.equals(startElement.getName().getLocalPart())) {
+                if (LATENCY_DIST_STEP.matches(startElement.getName().getLocalPart())) {
                     if (step != null) {
-                        throw new XMLStreamException("Unexpected element " + LATENCY_DIST_STEP.string);
+                        throw new XMLStreamException("Unexpected element " + LATENCY_DIST_STEP.getName());
                     }
                     step = Integer.parseInt(parseCharsAndEndCurrentElement(reader));
-                } else if (LATENCY_DIST_MAX_VALUE.string.equals(startElement.getName().getLocalPart())) {
+                } else if (LATENCY_DIST_MAX_VALUE.matches(startElement.getName().getLocalPart())) {
                     if (maxValue != null) {
-                        throw new XMLStreamException("Unexpected element " + LATENCY_DIST_MAX_VALUE.string);
+                        throw new XMLStreamException("Unexpected element " + LATENCY_DIST_MAX_VALUE.getName());
                     }
                     maxValue = Integer.parseInt(parseCharsAndEndCurrentElement(reader));
-                } else if (LATENCY_DIST_BUCKETS.string.equals(startElement.getName().getLocalPart())) {
+                } else if (LATENCY_DIST_BUCKETS.matches(startElement.getName().getLocalPart())) {
                     if (step == null || maxValue == null) {
-                        throw new XMLStreamException("Unexpected element " + LATENCY_DIST_BUCKETS.string);
+                        throw new XMLStreamException("Unexpected element " + LATENCY_DIST_BUCKETS.getName());
                     }
                     LinearHistogram histogram = new LinearHistogram(maxValue, step);
                     parseBuckets(reader, histogram);
@@ -221,12 +222,12 @@ public final class ProbesResultXmlReader {
             XMLEvent xmlEvent = reader.nextEvent();
             if (xmlEvent.isStartElement()) {
                 StartElement startElement = xmlEvent.asStartElement();
-                if (LATENCY_DIST_BUCKET.string.equals(startElement.getName().getLocalPart())) {
+                if (LATENCY_DIST_BUCKET.matches(startElement.getName().getLocalPart())) {
                     parseBucket(reader, startElement, histogram);
                 }
             } else if (xmlEvent.isEndElement()) {
                 EndElement endElement = xmlEvent.asEndElement();
-                if (!LATENCY_DIST_BUCKETS.string.equals(endElement.getName().getLocalPart())) {
+                if (!LATENCY_DIST_BUCKETS.matches(endElement.getName().getLocalPart())) {
                     throw new XMLStreamException("Unexpected end element " + endElement.getName());
                 }
                 return;
@@ -236,15 +237,15 @@ public final class ProbesResultXmlReader {
 
     private static void parseBucket(XMLEventReader reader, StartElement element, LinearHistogram histogram)
             throws XMLStreamException {
-        String upperBound = element.getAttributeByName(new QName(LATENCY_DIST_UPPER_BOUND.string)).getValue();
-        String values = element.getAttributeByName(new QName(LATENCY_DIST_VALUES.string)).getValue();
+        String upperBound = element.getAttributeByName(new QName(LATENCY_DIST_UPPER_BOUND.getName())).getValue();
+        String values = element.getAttributeByName(new QName(LATENCY_DIST_VALUES.getName())).getValue();
         histogram.addMultipleValues(Integer.parseInt(upperBound) - 1, Integer.parseInt(values));
 
         while (reader.hasNext()) {
             XMLEvent xmlEvent = reader.nextEvent();
             if (xmlEvent.isEndElement()) {
                 EndElement endElement = xmlEvent.asEndElement();
-                if (LATENCY_DIST_BUCKET.string.equals(endElement.getName().getLocalPart())) {
+                if (LATENCY_DIST_BUCKET.getName().equals(endElement.getName().getLocalPart())) {
                     return;
                 }
             }

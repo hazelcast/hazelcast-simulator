@@ -24,8 +24,8 @@ public class ConcurrentProbeTest {
 
     @Before
     public void setUp() {
-        config.addConfig("throughput", ProbesType.THROUGHPUT.string);
-        config.addConfig("latency", ProbesType.MAX_LATENCY.string);
+        config.addConfig("throughput", ProbesType.THROUGHPUT.getName());
+        config.addConfig("latency", ProbesType.MAX_LATENCY.getName());
         concurrentProbe = (ConcurrentProbe) Probes.createConcurrentProbe("throughput", SimpleProbe.class, config);
     }
 

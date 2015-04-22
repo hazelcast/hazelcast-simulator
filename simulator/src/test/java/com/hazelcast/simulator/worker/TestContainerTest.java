@@ -332,7 +332,7 @@ public class TestContainerTest {
     @Test
     public void testProbeExplicitNameSetViaAnnotation() throws Exception {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("explicitProbeName", ProbesType.THROUGHPUT.string);
+        probesConfiguration.addConfig("explicitProbeName", ProbesType.THROUGHPUT.getName());
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         Map probeResults = invoker.getProbeResults();
 
@@ -342,7 +342,7 @@ public class TestContainerTest {
     @Test
     public void testProbeImplicitName() throws Exception {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("Probe2", ProbesType.THROUGHPUT.string);
+        probesConfiguration.addConfig("Probe2", ProbesType.THROUGHPUT.getName());
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         Map probeResults = invoker.getProbeResults();
 
@@ -352,7 +352,7 @@ public class TestContainerTest {
     @Test
     public void testProbeInjectSimpleProbeToField() {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("throughputProbe", ProbesType.THROUGHPUT.string);
+        probesConfiguration.addConfig("throughputProbe", ProbesType.THROUGHPUT.getName());
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         Map probeResults = invoker.getProbeResults();
 
@@ -363,7 +363,7 @@ public class TestContainerTest {
     @Test
     public void testProbeInjectIntervalProbeToField() {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("latencyProbe", ProbesType.LATENCY.string);
+        probesConfiguration.addConfig("latencyProbe", ProbesType.LATENCY.getName());
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         Map probeResults = invoker.getProbeResults();
 
@@ -374,7 +374,7 @@ public class TestContainerTest {
     @Test
     public void testProbeInjectExplicitlyNamedProbeToField() {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("explicitProbeInjectedToField", ProbesType.THROUGHPUT.string);
+        probesConfiguration.addConfig("explicitProbeInjectedToField", ProbesType.THROUGHPUT.getName());
         invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
         Map probeResults = invoker.getProbeResults();
 

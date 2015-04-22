@@ -41,10 +41,10 @@ public class OperationsPerSecResult implements Result<OperationsPerSecResult> {
     @Override
     public void writeTo(XMLStreamWriter writer) {
         try {
-            writer.writeStartElement(ProbesResultXmlElements.INVOCATIONS.string);
+            writer.writeStartElement(ProbesResultXmlElements.INVOCATIONS.getName());
             writer.writeCharacters(Long.toString(invocations));
             writer.writeEndElement();
-            writer.writeStartElement(ProbesResultXmlElements.OPERATIONS_PER_SECOND.string);
+            writer.writeStartElement(ProbesResultXmlElements.OPERATIONS_PER_SECOND.getName());
             writer.writeCharacters(Double.toString(operationsPerSecond));
             writer.writeEndElement();
         } catch (XMLStreamException e) {

@@ -19,7 +19,7 @@ public enum ProbesType {
     MAX_LATENCY("maxLatency", IntervalProbe.class, MaxLatencyProbe.class),
     HDR("hdr", IntervalProbe.class, HdrLatencyDistributionProbe.class);
 
-    public final String string;
+    private final String string;
 
     private final Class<? extends SimpleProbe> assignableClassType;
     private final Class<? extends SimpleProbe> probeClassType;
@@ -32,7 +32,7 @@ public enum ProbesType {
 
     public static ProbesType getProbeType(String probeType) {
         for (ProbesType probesType : ProbesType.values()) {
-            if (probesType.string.equals(probeType)) {
+            if (probesType.matches(probeType)) {
                 return probesType;
             }
         }
@@ -49,5 +49,13 @@ public enum ProbesType {
 
     public boolean isAssignableFrom(Class<? extends SimpleProbe> classType) {
         return this.assignableClassType.isAssignableFrom(classType);
+    }
+
+    public boolean matches(String probeName) {
+        return string.equals(probeName);
+    }
+
+    public String getName() {
+        return string;
     }
 }

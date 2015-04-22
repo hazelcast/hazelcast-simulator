@@ -32,7 +32,7 @@ public class MaxLatencyResult implements Result<MaxLatencyResult> {
     @Override
     public void writeTo(XMLStreamWriter writer) {
         try {
-            writer.writeStartElement(ProbesResultXmlElements.MAX_LATENCY.string);
+            writer.writeStartElement(ProbesResultXmlElements.MAX_LATENCY.getName());
             writer.writeCharacters(Long.toString(maxLatencyMs));
             writer.writeEndElement();
         } catch (XMLStreamException e) {
