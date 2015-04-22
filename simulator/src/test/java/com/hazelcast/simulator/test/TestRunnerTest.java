@@ -5,6 +5,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.tests.TestContextImplTest;
 import com.hazelcast.simulator.utils.FileUtils;
+import org.junit.After;
 import org.junit.Test;
 
 import java.io.File;
@@ -19,6 +20,11 @@ public class TestRunnerTest {
 
     private final SuccessTest successTest = new SuccessTest();
     private final TestRunner<SuccessTest> testRunner = new TestRunner<SuccessTest>(successTest);
+
+    @After
+    public void tearDown() {
+        Hazelcast.shutdownAll();
+    }
 
     @Test(expected = NullPointerException.class)
     public void testConstructor_nullTest() {

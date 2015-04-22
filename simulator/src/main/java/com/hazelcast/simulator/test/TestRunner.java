@@ -40,7 +40,6 @@ import static java.lang.String.format;
  *
  * @param <E> class of the test
  */
-@SuppressWarnings("unused")
 public class TestRunner<E> {
 
     private static final Logger LOGGER = Logger.getLogger(TestRunner.class);
@@ -113,47 +112,51 @@ public class TestRunner<E> {
     }
 
     public void run() throws Exception {
-        if (hazelcastInstance == null) {
-            hazelcastInstance = Hazelcast.newHazelcastInstance();
+        try {
+            if (hazelcastInstance == null) {
+                hazelcastInstance = Hazelcast.newHazelcastInstance();
+            }
+
+            LOGGER.info("Starting setup");
+            testInvoker.setUp();
+            LOGGER.info("Finished setup");
+
+            LOGGER.info("Starting local warmup");
+            testInvoker.localWarmup();
+            LOGGER.info("Finished local warmup");
+
+            LOGGER.info("Starting global warmup");
+            testInvoker.globalWarmup();
+            LOGGER.info("Finished global warmup");
+
+            LOGGER.info("Starting run");
+            stopThread.start();
+            testInvoker.run();
+            LOGGER.info("Finished run");
+
+            LOGGER.info("Starting globalVerify");
+            testInvoker.globalVerify();
+            LOGGER.info("Finished globalVerify");
+
+            LOGGER.info("Starting localVerify");
+            testInvoker.localVerify();
+            LOGGER.info("Finished localVerify");
+
+            LOGGER.info("Starting globalTearDown");
+            testInvoker.globalTeardown();
+            LOGGER.info("Finished globalTearDown");
+
+            LOGGER.info("Starting local teardown");
+            testInvoker.localTeardown();
+            LOGGER.info("Finished local teardown");
+        } finally {
+            LOGGER.info("Shutdown...");
+            hazelcastInstance.shutdown();
+
+            stopThread.interrupt();
+            stopThread.join();
+            LOGGER.info("Finished");
         }
-
-        LOGGER.info("Starting setup");
-        testInvoker.setUp();
-        LOGGER.info("Finished setup");
-
-        LOGGER.info("Starting local warmup");
-        testInvoker.localWarmup();
-        LOGGER.info("Finished local warmup");
-
-        LOGGER.info("Starting global warmup");
-        testInvoker.globalWarmup();
-        LOGGER.info("Finished global warmup");
-
-        LOGGER.info("Starting run");
-        stopThread.start();
-        testInvoker.run();
-        LOGGER.info("Finished run");
-
-        LOGGER.info("Starting globalVerify");
-        testInvoker.globalVerify();
-        LOGGER.info("Finished globalVerify");
-
-        LOGGER.info("Starting localVerify");
-        testInvoker.localVerify();
-        LOGGER.info("Finished localVerify");
-
-        LOGGER.info("Starting globalTearDown");
-        testInvoker.globalTeardown();
-        LOGGER.info("Finished globalTearDown");
-
-        LOGGER.info("Starting local teardown");
-        testInvoker.localTeardown();
-        LOGGER.info("Finished local teardown");
-
-        LOGGER.info("Shutdown...");
-        stopThread.interrupt();
-        hazelcastInstance.shutdown();
-        LOGGER.info("Finished");
     }
 
     private final class StopThread extends Thread {

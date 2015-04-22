@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.agent;
 
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
@@ -56,18 +57,22 @@ public class AgentSmokeTest {
 
         startAgent();
         agentsClient = getAgentsClient();
-        //agentsClient.start();
+        agentsClient.start();
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        agentsClient.stop();
+        try {
+            agentsClient.stop();
 
-        agentThread.interrupt();
-        agentThread.join();
+            agentThread.interrupt();
+            agentThread.join();
+        } finally {
+            Hazelcast.shutdownAll();
 
-        System.setProperty("user.dir", userDir);
-        deleteQuiet(new File("./dist/src/main/dist/workers"));
+            System.setProperty("user.dir", userDir);
+            deleteQuiet(new File("./dist/src/main/dist/workers"));
+        }
     }
 
     @Test
@@ -152,6 +157,9 @@ public class AgentSmokeTest {
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localTeardown"));
         agentsClient.waitForPhaseCompletion("", testCase.id, "localTeardown");
 
+        LOGGER.info("Terminating workers...");
+        agentsClient.terminateWorkers();
+
         LOGGER.info("Testcase done!");
     }
 
@@ -175,7 +183,7 @@ public class AgentSmokeTest {
         agentThread = new Thread() {
             public void run() {
                 try {
-                    String[] args = new String[] {
+                    String[] args = new String[]{
                             "--bindAddress", AGENT_IP_ADDRESS,
                     };
                     Agent.createAgent(args);
