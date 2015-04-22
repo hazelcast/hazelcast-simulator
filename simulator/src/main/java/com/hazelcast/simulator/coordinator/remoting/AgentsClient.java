@@ -24,7 +24,6 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -43,6 +42,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSecondsThrowException;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 
 public class AgentsClient {
 
@@ -51,7 +51,7 @@ public class AgentsClient {
     private static final long TEST_METHOD_TIMEOUT = TimeUnit.SECONDS.toMillis(Integer.parseInt(System.getProperty(
             "worker.testmethod.timeout", "10000")));
 
-    private final ExecutorService agentExecutor = Executors.newFixedThreadPool(100);
+    private final ExecutorService agentExecutor = createFixedThreadPool(100, AgentsClient.class);
     private final List<AgentClient> agents = new LinkedList<AgentClient>();
     private final Random random = new Random();
 

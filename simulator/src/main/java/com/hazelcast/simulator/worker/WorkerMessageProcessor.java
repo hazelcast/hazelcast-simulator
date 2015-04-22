@@ -14,22 +14,23 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
 import static java.lang.String.format;
 
 /**
  * Processes {@link Message} instances on {@link MemberWorker} and {@link ClientWorker} instances.
  */
 class WorkerMessageProcessor {
+
     private static final int TIMEOUT = 60;
     private static final Logger LOGGER = Logger.getLogger(WorkerMessageProcessor.class);
 
     private final ConcurrentMap<String, TestContainer<TestContext>> tests;
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
+    private final ScheduledExecutorService executor = createScheduledThreadPool(10, WorkerMessageProcessor.class);
     private final Random random = new Random();
 
     private HazelcastInstance hazelcastServerInstance;

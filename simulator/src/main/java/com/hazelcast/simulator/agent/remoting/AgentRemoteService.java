@@ -8,9 +8,9 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 
 public class AgentRemoteService {
 
@@ -33,8 +33,9 @@ public class AgentRemoteService {
 
     private final Agent agent;
     private final AgentMessageProcessor agentMessageProcessor;
+    private final Executor executor = createFixedThreadPool(20, AgentRemoteService.class);
+
     private ServerSocket serverSocket;
-    private final Executor executor = Executors.newFixedThreadPool(20);
     private AcceptorThread acceptorThread;
 
     public AgentRemoteService(Agent agent, AgentMessageProcessor agentMessageProcessor) {

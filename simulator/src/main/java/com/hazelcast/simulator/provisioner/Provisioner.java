@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.google.common.base.Predicate;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.GitInfo;
@@ -24,9 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -34,6 +31,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -50,9 +48,8 @@ public class Provisioner {
 
     private final File agentsFile = new File(AgentsFile.NAME);
     private final List<AgentAddress> addresses = Collections.synchronizedList(new LinkedList<AgentAddress>());
-    private final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("provisioner-thread-%d").build();
     // big number of threads, but they are used to offload SSH tasks, so there is no load on this machine
-    private final ExecutorService executor = Executors.newFixedThreadPool(10, namedThreadFactory);
+    private final ExecutorService executor = createFixedThreadPool(10, Provisioner.class);
 
     private Bash bash;
     private HazelcastJars hazelcastJars;
@@ -319,6 +316,7 @@ public class Provisioner {
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/cache-api*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/commons-codec*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/commons-lang3*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/guava-*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/jopt*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/junit*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/HdrHistogram-*", "lib");

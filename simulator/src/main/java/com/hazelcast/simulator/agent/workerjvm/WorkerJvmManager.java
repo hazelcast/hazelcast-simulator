@@ -47,13 +47,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 
 public class WorkerJvmManager {
@@ -72,9 +72,10 @@ public class WorkerJvmManager {
     private final ConcurrentMap<Long, CommandFuture> futureMap = new ConcurrentHashMap<Long, CommandFuture>();
     private final AtomicLong requestIdGenerator = new AtomicLong(0);
 
+    private final Executor executor = createFixedThreadPool(20, WorkerJvmManager.class);
+    private final Random random = new Random();
+
     private ServerSocket serverSocket;
-    private final Executor executor = Executors.newFixedThreadPool(20);
-    private Random random = new Random();
 
     private volatile WorkerJvmSettings lastUsedWorkerJvmSettings;
 
