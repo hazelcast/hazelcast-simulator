@@ -184,7 +184,7 @@ public class AgentsClient {
         return result;
     }
 
-    public void initTestSuite(final TestSuite testSuite) throws TimeoutException {
+    public void initTestSuite(TestSuite testSuite) throws TimeoutException {
         executeOnAllWorkers(SERVICE_INIT_TESTSUITE, testSuite);
     }
 

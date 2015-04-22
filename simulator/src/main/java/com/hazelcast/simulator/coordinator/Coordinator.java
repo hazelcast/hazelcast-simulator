@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.SpawnWorkerFailedException;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
@@ -23,20 +22,16 @@ import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.provisioner.Bash;
-import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestSuite;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,6 +44,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
@@ -70,37 +66,49 @@ public class Coordinator {
     public TestSuite testSuite;
     public int dedicatedMemberMachineCount;
     public boolean parallel;
-
     public WorkerJvmSettings workerJvmSettings;
-    public volatile double performance;
-    public volatile long operationCount;
-    public PerformanceMonitor performanceMonitor;
 
     // internal state
-    AgentsClient agentsClient;
-
-    final BlockingQueue<Failure> failureList = new LinkedBlockingQueue<Failure>();
     final SimulatorProperties props = new SimulatorProperties();
+
+    AgentsClient agentsClient;
+    FailureMonitor failureMonitor;
+    PerformanceMonitor performanceMonitor;
 
     private final Bash bash = new Bash(props);
 
+    private ExecutorService parallelExecutor;
+
     private void run() throws Exception {
-        initAgents();
+        try {
+            initAgents();
 
-        startWorkers();
+            startWorkers();
 
-        new FailureMonitorThread(this).start();
+            failureMonitor = new FailureMonitor(agentsClient, testSuite.id);
+            failureMonitor.start();
 
-        if (monitorPerformance) {
-            performanceMonitor = new PerformanceMonitor(this);
+            performanceMonitor = new PerformanceMonitor(agentsClient);
+
+            runTestSuite();
+
+            logFailureInfo();
+        } finally {
+            performanceMonitor.stop();
+
+            failureMonitor.stop();
+
+            if (parallelExecutor != null) {
+                parallelExecutor.shutdown();
+                parallelExecutor.awaitTermination(10, TimeUnit.SECONDS);
+            }
+
+            agentsClient.terminateWorkers();
+            agentsClient.stop();
         }
-
-        runTestSuite();
-
-        logFailureInfo();
     }
 
-    private void initAgents() throws Exception {
+    private void initAgents() {
         List<AgentAddress> agentAddresses = AgentsFile.load(agentsFile);
         agentsClient = new AgentsClient(agentAddresses);
         agentsClient.start();
@@ -115,12 +123,16 @@ public class Coordinator {
         LOGGER.info(format("Total number of Hazelcast member workers: %s", workerJvmSettings.memberWorkerCount));
         LOGGER.info(format("Total number of Hazelcast client workers: %s", workerJvmSettings.clientWorkerCount));
 
-        agentsClient.initTestSuite(testSuite);
+        try {
+            agentsClient.initTestSuite(testSuite);
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not init TestSuite", e);
+        }
 
         uploadUploadDirectory();
         uploadWorkerClassPath();
         uploadYourKitIfNeeded();
-        //TODO: copy the hazelcast jars
+        // TODO: copy the hazelcast jars
     }
 
     private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {
@@ -130,60 +142,69 @@ public class Coordinator {
         }
     }
 
-    private void initHzConfig(WorkerJvmSettings settings) throws Exception {
+    private void initHzConfig(WorkerJvmSettings settings) {
         String addressConfig = createAddressConfig("member", agentsClient.getPrivateAddresses(), settings);
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", addressConfig);
     }
 
-    private void initClientHzConfig(WorkerJvmSettings settings) throws Exception {
+    private void initClientHzConfig(WorkerJvmSettings settings) {
         String addressConfig = createAddressConfig("address", agentsClient.getPrivateAddresses(), settings);
         settings.clientHzConfig = settings.clientHzConfig.replace("<!--MEMBERS-->", addressConfig);
     }
 
-    private void uploadUploadDirectory() throws IOException {
-        if (!UPLOAD_DIRECTORY.exists()) {
-            LOGGER.debug("Skipping upload, since no upload file in working directory");
-            return;
-        }
-
-        LOGGER.info(format("Starting uploading '+%s+' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
-        List<File> files = getFilesFromClassPath(UPLOAD_DIRECTORY.getAbsolutePath());
-        for (String ip : agentsClient.getPublicAddresses()) {
-            LOGGER.info(format(" Uploading '+%s+' to agent %s", UPLOAD_DIRECTORY.getAbsolutePath(), ip));
-            for (File file : files) {
-                bash.execute(format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/workers/%s/",
-                        props.get("SSH_OPTIONS", ""),
-                        file,
-                        props.get("USER"),
-                        ip,
-                        getSimulatorVersion(),
-                        testSuite.id));
+    private void uploadUploadDirectory() {
+        try {
+            if (!UPLOAD_DIRECTORY.exists()) {
+                LOGGER.debug("Skipping upload, since no upload file in working directory");
+                return;
             }
-            LOGGER.info("    " + ip + " copied");
+
+            LOGGER.info(format("Starting uploading '+%s+' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
+            List<File> files = getFilesFromClassPath(UPLOAD_DIRECTORY.getAbsolutePath());
+            for (String ip : agentsClient.getPublicAddresses()) {
+                LOGGER.info(format(" Uploading '+%s+' to agent %s", UPLOAD_DIRECTORY.getAbsolutePath(), ip));
+                for (File file : files) {
+                    bash.execute(format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/workers/%s/",
+                            props.get("SSH_OPTIONS", ""),
+                            file,
+                            props.get("USER"),
+                            ip,
+                            getSimulatorVersion(),
+                            testSuite.id));
+                }
+                LOGGER.info("    " + ip + " copied");
+            }
+            LOGGER.info(format("Finished uploading '+%s+' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not copy upload directory to agents", e);
         }
-        LOGGER.info(format("Finished uploading '+%s+' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
     }
 
-    private void uploadWorkerClassPath() throws IOException {
+    private void uploadWorkerClassPath() {
         if (workerClassPath == null) {
             return;
         }
 
-        LOGGER.info(format("Copying workerClasspath '%s' to agents", workerClassPath));
-        List<File> upload = getFilesFromClassPath(workerClassPath);
-        for (String ip : agentsClient.getPublicAddresses()) {
-            for (File file : upload) {
-                bash.execute(format("rsync --ignore-existing -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/workers/%s/lib",
-                        props.get("SSH_OPTIONS", ""),
-                        file.getAbsolutePath(),
-                        props.get("USER"),
-                        ip,
-                        getSimulatorVersion(),
-                        testSuite.id));
+        try {
+            LOGGER.info(format("Copying workerClasspath '%s' to agents", workerClassPath));
+            List<File> upload = getFilesFromClassPath(workerClassPath);
+            for (String ip : agentsClient.getPublicAddresses()) {
+                for (File file : upload) {
+                    bash.execute(
+                            format("rsync --ignore-existing -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/workers/%s/lib",
+                                    props.get("SSH_OPTIONS", ""),
+                                    file.getAbsolutePath(),
+                                    props.get("USER"),
+                                    ip,
+                                    getSimulatorVersion(),
+                                    testSuite.id));
+                }
+                LOGGER.info("    " + ip + " copied");
             }
-            LOGGER.info("    " + ip + " copied");
+            LOGGER.info(format("Finished copying workerClasspath '%s' to agents", workerClassPath));
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not upload worker classpath to agents", e);
         }
-        LOGGER.info(format("Finished copying workerClasspath '%s' to agents", workerClassPath));
     }
 
     private void uploadYourKitIfNeeded() {
@@ -205,7 +226,7 @@ public class Coordinator {
         }
     }
 
-    private void startWorkers() throws Exception {
+    private void startWorkers() {
         List<AgentMemberLayout> agentMemberLayouts = initMemberLayout();
 
         long started = System.nanoTime();
@@ -225,8 +246,8 @@ public class Coordinator {
             } else {
                 echo("Skipping client startup, since no clients are configured");
             }
-        } catch (SpawnWorkerFailedException e) {
-            exitWithError(LOGGER, "Failed to start workers", e);
+        } catch (Exception e) {
+            throw new CommandLineExitException("Failed to start workers", e);
         }
 
         long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
@@ -238,11 +259,11 @@ public class Coordinator {
         int agentCount = agentsClient.getAgentCount();
 
         if (dedicatedMemberMachineCount > agentCount) {
-            exitWithError(LOGGER, format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
+            throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
                     dedicatedMemberMachineCount, agentCount));
         }
         if (workerJvmSettings.clientWorkerCount > 0 && agentCount - dedicatedMemberMachineCount < 1) {
-            exitWithError(LOGGER, "dedicatedMemberMachineCount is too big, there are no machines left for clients!");
+            throw new CommandLineExitException("dedicatedMemberMachineCount is too big, there are no machines left for clients!");
         }
 
         List<AgentMemberLayout> agentMemberLayouts = initAgentMemberLayouts(agentsClient, workerJvmSettings);
@@ -274,7 +295,7 @@ public class Coordinator {
         return agentMemberLayouts;
     }
 
-    void runTestSuite() throws Exception {
+    void runTestSuite() {
         echo("Starting testsuite: %s", testSuite.id);
         echo("Tests in testsuite: %s", testSuite.size());
         echo("Running time per test: %s ", secondsToHuman(testSuite.duration));
@@ -299,15 +320,15 @@ public class Coordinator {
         LOGGER.info(format("Total running time: %s seconds", duration));
     }
 
-    private void runParallel() throws InterruptedException, java.util.concurrent.ExecutionException {
+    private void runParallel() {
         echo("Running %s tests parallel", testSuite.size());
 
         final int maxTestCaseIdLength = getMaxTestCaseIdLength(testSuite.testCaseList);
-        ExecutorService executor = Executors.newFixedThreadPool(testSuite.size());
+        parallelExecutor = createFixedThreadPool(testSuite.size(), Coordinator.class);
 
         List<Future> futures = new LinkedList<Future>();
         for (final TestCase testCase : testSuite.testCaseList) {
-            Future future = executor.submit(new Runnable() {
+            Future future = parallelExecutor.submit(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -323,12 +344,16 @@ public class Coordinator {
             });
             futures.add(future);
         }
-        for (Future future : futures) {
-            future.get();
+        try {
+            for (Future future : futures) {
+                future.get();
+            }
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not execute tests in parallel", e);
         }
     }
 
-    private void runSequential() throws Exception {
+    private void runSequential() {
         echo("Running %s tests sequentially", testSuite.size());
 
         int maxTestCaseIdLength = getMaxTestCaseIdLength(testSuite.testCaseList);
@@ -347,18 +372,23 @@ public class Coordinator {
         }
     }
 
-    private void terminateWorkers() throws Exception {
-        echo("Terminating workers");
-        agentsClient.terminateWorkers();
-        echo("All workers have been terminated");
+    private void terminateWorkers() {
+        try {
+            echo("Terminating workers");
+            agentsClient.terminateWorkers();
+            echo("All workers have been terminated");
+        } catch (Exception e) {
+            LOGGER.fatal("Could not terminate workers!", e);
+        }
     }
 
     private void logFailureInfo() {
-        if (!failureList.isEmpty()) {
+        int failureCount = failureMonitor.getFailureCount();
+        if (failureCount > 0) {
             LOGGER.fatal("-----------------------------------------------------------------------------");
-            LOGGER.fatal(failureList.size() + " failures have been detected!!!");
+            LOGGER.fatal(failureCount + " failures have been detected!!!");
             LOGGER.fatal("-----------------------------------------------------------------------------");
-            System.exit(1);
+            throw new CommandLineExitException(failureCount + " failures have been detected");
         }
         LOGGER.info("-----------------------------------------------------------------------------");
         LOGGER.info("No failures have been detected!");
@@ -374,24 +404,25 @@ public class Coordinator {
         LOGGER.info(msg);
     }
 
-    public static void main(String[] args) throws Exception {
-        LOGGER.info("Hazelcast Simulator Coordinator");
-        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
-                getSimulatorVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
-        LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
-
-        Coordinator coordinator = new Coordinator();
-        CoordinatorCli cli = new CoordinatorCli(coordinator);
-        cli.init(args);
-
-        LOGGER.info(format("Loading agents file: %s", coordinator.agentsFile.getAbsolutePath()));
-        LOGGER.info(format("HAZELCAST_VERSION_SPEC: %s", coordinator.props.getHazelcastVersionSpec()));
-
+    public static void main(String[] args) {
         try {
+            LOGGER.info("Hazelcast Simulator Coordinator");
+            LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
+                    getSimulatorVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
+            LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
+
+            Coordinator coordinator = new Coordinator();
+            CoordinatorCli cli = new CoordinatorCli(coordinator, args);
+            cli.init();
+
+            LOGGER.info(format("Loading agents file: %s", coordinator.agentsFile.getAbsolutePath()));
+            LOGGER.info(format("HAZELCAST_VERSION_SPEC: %s", coordinator.props.getHazelcastVersionSpec()));
+
             coordinator.run();
-            System.exit(0);
         } catch (Exception e) {
-            LOGGER.fatal("Failed to run testsuite", e);
+            if (!(e instanceof CommandLineExitException)) {
+                LOGGER.fatal("Failed to run testsuite", e);
+            }
             exitWithError(LOGGER, e.getMessage());
         }
     }

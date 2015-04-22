@@ -2,9 +2,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
-import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
-import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
-import org.junit.After;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -34,7 +32,6 @@ public class CoordinatorInitMemberLayoutTest {
 
     @Before
     public void setUp() {
-        System.setSecurityManager(new ExitExceptionSecurityManager());
         System.setProperty("user.dir", "./dist/src/main/dist");
 
         MockitoAnnotations.initMocks(this);
@@ -48,11 +45,6 @@ public class CoordinatorInitMemberLayoutTest {
         when(agentsClient.getAgentCount()).thenReturn(3);
     }
 
-    @After
-    public void tearDown() {
-        System.setSecurityManager(null);
-    }
-
     @Test
     public void testDedicatedMemberCountEqualsAgentCount() {
         coordinator.dedicatedMemberMachineCount = 3;
@@ -60,7 +52,7 @@ public class CoordinatorInitMemberLayoutTest {
         coordinator.initMemberLayout();
     }
 
-    @Test(expected = ExitStatusOneException.class)
+    @Test(expected = CommandLineExitException.class)
     public void testDedicatedMemberCountHigherThanAgentCount() {
         coordinator.dedicatedMemberMachineCount = 5;
 
@@ -75,7 +67,7 @@ public class CoordinatorInitMemberLayoutTest {
         coordinator.initMemberLayout();
     }
 
-    @Test(expected = ExitStatusOneException.class)
+    @Test(expected = CommandLineExitException.class)
     public void testAgentCountNotSufficientForDedicatedMembersAndClientWorkers() {
         coordinator.dedicatedMemberMachineCount = 3;
         workerJvmSettings.clientWorkerCount = 1;

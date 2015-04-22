@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
-import static com.hazelcast.simulator.utils.CommonUtils.formatLong;
 import static com.hazelcast.simulator.utils.CommonUtils.padRight;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -37,19 +36,23 @@ public class TestCaseRunner {
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
 
     private final TestCase testCase;
+    private final TestSuite testSuite;
     private final Coordinator coordinator;
     private final AgentsClient agentsClient;
-    private final TestSuite testSuite;
-    private final String prefix;
+    private final FailureMonitor failureMonitor;
+    private final PerformanceMonitor performanceMonitor;
     private final Set<Failure.Type> nonCriticalFailures;
+    private final String prefix;
 
     public TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int maxTextCaseIdLength) {
         this.testCase = testCase;
-        this.coordinator = coordinator;
         this.testSuite = testSuite;
+        this.coordinator = coordinator;
         this.agentsClient = coordinator.agentsClient;
-        this.prefix = (testCase.id.isEmpty() ? "" : padRight(testCase.id, maxTextCaseIdLength + 1));
+        this.failureMonitor = coordinator.failureMonitor;
+        this.performanceMonitor = coordinator.performanceMonitor;
         this.nonCriticalFailures = testSuite.tolerableFailures;
+        this.prefix = (testCase.id.isEmpty() ? "" : padRight(testCase.id, maxTextCaseIdLength + 1));
     }
 
     public boolean run() {
@@ -57,7 +60,7 @@ public class TestCaseRunner {
                 + format("Running Test : %s%n%s%n", testCase.getId(), testCase)
                 + "--------------------------------------------------------------");
 
-        int oldFailureCount = coordinator.failureList.size();
+        int oldFailureCount = failureMonitor.getFailureCount();
         try {
             echo("Starting Test initialization");
             agentsClient.executeOnAllWorkers(new InitCommand(testCase));
@@ -118,7 +121,7 @@ public class TestCaseRunner {
             agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localTeardown"));
             echo("Completed Test local tear down");
 
-            return coordinator.failureList.size() == oldFailureCount;
+            return (failureMonitor.getFailureCount() == oldFailureCount);
         } catch (Exception e) {
             LOGGER.fatal("Failed", e);
             return false;
@@ -171,14 +174,12 @@ public class TestCaseRunner {
     }
 
     private void logPerformance() {
-        if (coordinator.monitorPerformance) {
-            coordinator.performanceMonitor.logDetailedPerformanceInfo(testSuite.duration);
-        }
+        performanceMonitor.logDetailedPerformanceInfo(testSuite.duration);
     }
 
     private void startTestCase() throws TimeoutException {
         if (coordinator.monitorPerformance) {
-            coordinator.performanceMonitor.start();
+            performanceMonitor.start();
         }
 
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
@@ -192,41 +193,25 @@ public class TestCaseRunner {
         int big = seconds / period;
         int small = seconds % period;
 
-        for (int k = 1; k <= big; k++) {
-            if (shouldTerminate()) {
+        for (int i = 1; i <= big; i++) {
+            if (failureMonitor.hasCriticalFailure(nonCriticalFailures)) {
                 echo("Critical Failure detected, aborting execution of test");
                 return;
             }
 
             sleepSeconds(period);
-            final int elapsed = period * k;
+            final int elapsed = period * i;
             final float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s %s%% complete", secondsToHuman(elapsed), formatDouble(percentage, 7));
 
             if (coordinator.monitorPerformance) {
-                if (coordinator.operationCount < 0) {
-                    msg += " (performance not available)";
-                } else {
-                    msg += String.format("%s ops %s ops/s",
-                            formatLong(coordinator.operationCount, 15),
-                            formatDouble(coordinator.performance, 15)
-                    );
-                }
+                msg += performanceMonitor.getPerformanceNumbers();
             }
 
             LOGGER.info(prefix + msg);
         }
 
         sleepSeconds(small);
-    }
-
-    private boolean shouldTerminate() {
-        for (Failure failure : coordinator.failureList) {
-            if (!nonCriticalFailures.contains(failure.type)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void echo(String msg) {

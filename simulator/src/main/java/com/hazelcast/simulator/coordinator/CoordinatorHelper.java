@@ -5,6 +5,7 @@ import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -17,7 +18,7 @@ public final class CoordinatorHelper {
     private CoordinatorHelper() {
     }
 
-    static String createAddressConfig(String tagName, List<String> addresses, WorkerJvmSettings settings) throws Exception {
+    static String createAddressConfig(String tagName, List<String> addresses, WorkerJvmSettings settings) {
         StringBuilder members = new StringBuilder();
         for (String hostAddress : addresses) {
             members.append("<").append(tagName).append(">")
@@ -28,9 +29,13 @@ public final class CoordinatorHelper {
         return members.toString();
     }
 
-    private static int getPort(WorkerJvmSettings settings) throws UnsupportedEncodingException {
-        Config config = new XmlConfigBuilder(new ByteArrayInputStream(settings.hzConfig.getBytes("UTF-8"))).build();
-        return config.getNetworkConfig().getPort();
+    private static int getPort(WorkerJvmSettings settings) {
+        try {
+            Config config = new XmlConfigBuilder(new ByteArrayInputStream(settings.hzConfig.getBytes("UTF-8"))).build();
+            return config.getNetworkConfig().getPort();
+        } catch (UnsupportedEncodingException e) {
+            throw new CommandLineExitException("Could not get port from settings", e);
+        }
     }
 
     static List<AgentMemberLayout> initAgentMemberLayouts(AgentsClient agentsClient, WorkerJvmSettings workerJvmSettings) {
