@@ -38,6 +38,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeObject;
@@ -192,7 +193,7 @@ public final class MemberWorker {
             LOGGER.info("Successfully started Hazelcast Simulator Worker: " + workerId);
         } catch (Throwable e) {
             ExceptionReporter.report(null, e);
-            System.exit(1);
+            exitWithError();
         }
     }
 

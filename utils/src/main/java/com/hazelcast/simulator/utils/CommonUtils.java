@@ -280,6 +280,10 @@ public final class CommonUtils {
         sleepNanos(randomValue % maxDelayNanos);
     }
 
+    public static void exitWithError() {
+        System.exit(1);
+    }
+
     public static void exitWithError(Logger logger, String msg) {
         logger.fatal(msg);
         System.exit(1);

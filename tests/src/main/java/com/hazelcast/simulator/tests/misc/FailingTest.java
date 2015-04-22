@@ -10,6 +10,8 @@ import com.hazelcast.simulator.utils.ExceptionReporter;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+
 /**
  * A test that causes a failure. This is useful for testing the simulator framework and for demonstration purposes.
  */
@@ -40,7 +42,7 @@ public class FailingTest {
                 }
             }
         } else if ("Exit".equals(failure)) {
-            System.exit(1);
+            exitWithError();
         }
     }
 

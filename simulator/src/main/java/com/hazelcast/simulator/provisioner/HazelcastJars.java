@@ -73,8 +73,7 @@ public class HazelcastJars {
             String revision = versionSpec.substring(GIT_VERSION_PREFIX.length());
             gitRetrieve(revision);
         } else {
-            LOGGER.fatal("Unrecognized version spec: " + versionSpec);
-            System.exit(1);
+            exitWithError(LOGGER, "Unrecognized version spec: " + versionSpec);
         }
     }
 
@@ -103,12 +102,10 @@ public class HazelcastJars {
                 try {
                     mavenMetadata = getText(mavenMetadataUrl);
                 } catch (FileNotFoundException e) {
-                    LOGGER.fatal("Failed to load " + artifact + "-" + version
+                    exitWithError(LOGGER, "Failed to load " + artifact + "-" + version
                             + ", because " + mavenMetadataUrl + " was not found");
-                    System.exit(1);
                 } catch (IOException e) {
-                    LOGGER.fatal("Could not load " + mavenMetadataUrl);
-                    System.exit(1);
+                    exitWithError(LOGGER, "Could not load " + mavenMetadataUrl);
                 }
 
                 LOGGER.debug(mavenMetadata);
