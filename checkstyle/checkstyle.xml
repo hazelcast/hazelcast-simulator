@@ -47,6 +47,9 @@
     <!-- Enable suppression of file contents using //CHECKSTYLE:[ON|OFF] comments -->
     <module name="SuppressionCommentFilter"/>
 
+    <!-- Enable suppression of file contents using @SuppressWarnings annotation -->
+    <module name="SuppressWarningsFilter"/>
+
     <!-- Checks that a package-info.java file exists for each package.     -->
     <!-- See http://checkstyle.sf.net/config_javadoc.html#JavadocPackage -->
     <module name="JavadocPackage"/>
@@ -80,14 +83,16 @@
 
     <!-- Checks for Headers                                -->
     <!-- See http://checkstyle.sf.net/config_header.html   -->
-     <!--<module name="Header">-->
-       <!--<property name="headerFile" value="${basedir}/checkstyle/ClassHeader.txt"/>-->
-       <!--<property name="fileExtensions" value="java"/>-->
-     <!--</module>-->
+    <!--<module name="Header">-->
+    <!--<property name="headerFile" value="${basedir}/checkstyle/ClassHeader.txt"/>-->
+    <!--<property name="fileExtensions" value="java"/>-->
+    <!--</module>-->
 
     <module name="TreeWalker">
         <!-- Activate comment suppression filters -->
         <module name="FileContentsHolder"/>
+
+        <module name="SuppressWarningsHolder"/>
 
         <!-- Checks for Javadoc comments.                     -->
         <!-- See http://checkstyle.sf.net/config_javadoc.html -->
@@ -95,8 +100,8 @@
 
         <!-- Only some methods, on public APIs we agreed to JavaDoc. TODO figure out how to do that -->
         <!--<module name="JavadocMethod">-->
-            <!--<property name="scope" value="public"/>-->
-            <!--<property name="allowMissingParamTags" value="true"/>-->
+        <!--<property name="scope" value="public"/>-->
+        <!--<property name="allowMissingParamTags" value="true"/>-->
         <!--</module>-->
 
         <module name="JavadocType">
@@ -112,7 +117,6 @@
         </module>
 
         <module name="TrailingComment"/>
-
 
 
         <!-- Checks for Naming Conventions.                  -->
@@ -132,7 +136,8 @@
         <!-- Checks for imports                              -->
         <!-- See http://checkstyle.sf.net/config_import.html -->
         <module name="AvoidStarImport"/>
-        <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
+        <module name="IllegalImport"/>
+        <!-- defaults to sun.* packages -->
         <module name="RedundantImport"/>
         <module name="UnusedImports">
             <property name="processJavadoc" value="true"/>
@@ -180,7 +185,6 @@
         </module>
 
 
-
         <!-- Checks for whitespace                               -->
         <!-- See http://checkstyle.sf.net/config_whitespace.html -->
         <!-- module name="EmptyForIteratorPad"/ -->
@@ -222,7 +226,7 @@
         <module name="MultipleVariableDeclarations"/>
         <module name="EmptyStatement"/>
         <!--<module name="HiddenField">-->
-            <!--<property name="tokens" value="VARIABLE_DEF"/>-->
+        <!--<property name="tokens" value="VARIABLE_DEF"/>-->
         <!--</module>-->
         <module name="IllegalInstantiation">
             <property name="classes" value="java.lang.Boolean"/>
@@ -268,7 +272,6 @@
         <module name="MissingSwitchDefault"/>
 
 
-
         <!-- Checks for class design                         -->
         <!-- See http://checkstyle.sf.net/config_design.html -->
         <!-- module name="DesignForExtension"/ -->
@@ -299,12 +302,10 @@
         </module>
 
 
-
         <!-- Miscellaneous other checks.                   -->
         <!-- See http://checkstyle.sf.net/config_misc.html -->
         <module name="ArrayTypeStyle"/>
         <module name="UpperEll"/>
 
     </module>
-
 </module>

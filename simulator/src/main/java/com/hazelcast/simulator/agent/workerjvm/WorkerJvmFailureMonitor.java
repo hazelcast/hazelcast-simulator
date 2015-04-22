@@ -59,7 +59,7 @@ public class WorkerJvmFailureMonitor {
     private void detect() {
         WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
 
-        for (WorkerJvm jvm : workerJvmManager.getWorkerJvms()) {
+        for (WorkerJvm jvm : workerJvmManager.getWorkerJVMs()) {
             if (jvm.detectFailure) {
                 detectFailuresInJvm(jvm);
             }

@@ -6,6 +6,7 @@ import java.io.FilenameFilter;
 public class HazelcastFilenameFilter implements FilenameFilter {
 
     @Override
+    @SuppressWarnings("checkstyle:returncount")
     public boolean accept(File dir, String name) {
         if (!name.endsWith(".jar")) {
             return false;

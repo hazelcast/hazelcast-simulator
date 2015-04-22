@@ -57,17 +57,18 @@ import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class WorkerJvmManager {
 
+    public static final int PORT = 9001;
     public static final String SERVICE_POLL_WORK = "poll";
     public static final String COMMAND_PUSH_RESPONSE = "push";
-    public static final int PORT = 9001;
     public static final File WORKERS_HOME = new File(getSimulatorHome(), "workers");
 
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmManager.class);
     private static final int WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS = 10000;
 
-    private final ConcurrentMap<String, WorkerJvm> workerJvms = new ConcurrentHashMap<String, WorkerJvm>();
+    private final ConcurrentMap<String, WorkerJvm> workerJVMs = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
 
     private final ConcurrentMap<Long, CommandFuture> futureMap = new ConcurrentHashMap<Long, CommandFuture>();
@@ -98,12 +99,12 @@ public class WorkerJvmManager {
         new AcceptorThread().start();
     }
 
-    public Collection<WorkerJvm> getWorkerJvms() {
-        return workerJvms.values();
+    public Collection<WorkerJvm> getWorkerJVMs() {
+        return workerJVMs.values();
     }
 
     public Object executeOnSingleWorker(Command command) throws Exception {
-        List<WorkerJvm> workers = new ArrayList<WorkerJvm>(workerJvms.values());
+        List<WorkerJvm> workers = new ArrayList<WorkerJvm>(workerJVMs.values());
         if (workers.isEmpty()) {
             throw new NoWorkerAvailableException("No worker JVMs found");
         }
@@ -169,7 +170,7 @@ public class WorkerJvmManager {
         for (WorkerJvm workerJvm : new ArrayList<WorkerJvm>(workerJvmList)) {
             if (message.removeFromAgentList()) {
                 // remove worker
-                while (workerJvms.values().remove(workerJvm)) {
+                while (workerJVMs.values().remove(workerJvm)) {
                     EmptyStatement.ignore(null);
                 }
             } else if (message.disableMemberFailureDetection()) {
@@ -180,13 +181,13 @@ public class WorkerJvmManager {
 
     private void sendMessageToAllWorkers(Message message) throws TimeoutException, InterruptedException {
         Command command = new MessageCommand(message);
-        Collection<WorkerJvm> workerJvmList = workerJvms.values();
+        Collection<WorkerJvm> workerJvmList = workerJVMs.values();
         preprocessMessage(message, workerJvmList);
         executeOnWorkers(command, workerJvmList);
     }
 
     public List executeOnAllWorkers(Command command) throws TimeoutException, InterruptedException {
-        return executeOnWorkers(command, workerJvms.values());
+        return executeOnWorkers(command, workerJVMs.values());
     }
 
     private List executeOnWorkers(Command command, Collection<WorkerJvm> workers) throws TimeoutException, InterruptedException {
@@ -242,14 +243,14 @@ public class WorkerJvmManager {
 
     public void spawn(WorkerJvmSettings settings) throws Exception {
         this.lastUsedWorkerJvmSettings = settings;
-        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvms, settings);
+        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, settings);
         launcher.launch();
     }
 
     public void terminateWorkers() {
         LOGGER.info("Terminating workers");
 
-        for (WorkerJvm jvm : new LinkedList<WorkerJvm>(workerJvms.values())) {
+        for (WorkerJvm jvm : new LinkedList<WorkerJvm>(workerJVMs.values())) {
             terminateWorker(jvm);
         }
 
@@ -266,7 +267,7 @@ public class WorkerJvmManager {
     }
 
     public void terminateWorker(final WorkerJvm jvm) {
-        workerJvms.remove(jvm.id);
+        workerJVMs.remove(jvm.id);
 
         Thread t = new Thread() {
             public void run() {
@@ -292,7 +293,7 @@ public class WorkerJvmManager {
     }
 
     private WorkerJvm getRandomWorkerWithClusterMemberOrNull() {
-        List<WorkerJvm> jvmCollection = withoutMode(workerJvms.values(), WorkerJvm.Mode.CLIENT);
+        List<WorkerJvm> jvmCollection = withoutMode(workerJVMs.values(), WorkerJvm.Mode.CLIENT);
         if (jvmCollection.isEmpty()) {
             return null;
         }
@@ -301,7 +302,7 @@ public class WorkerJvmManager {
     }
 
     private List<WorkerJvm> getAllWorkersWithClusterMembers() {
-        return withoutMode(workerJvms.values(), WorkerJvm.Mode.CLIENT);
+        return withoutMode(workerJVMs.values(), WorkerJvm.Mode.CLIENT);
     }
 
     public List<WorkerJvm> withoutMode(Iterable<WorkerJvm> source, WorkerJvm.Mode mode) {
@@ -315,7 +316,7 @@ public class WorkerJvmManager {
     }
 
     private WorkerJvm getRandomWorkerOrNull() {
-        Collection<WorkerJvm> jvmCollection = workerJvms.values();
+        Collection<WorkerJvm> jvmCollection = workerJVMs.values();
         if (jvmCollection.isEmpty()) {
             return null;
         }
@@ -336,7 +337,7 @@ public class WorkerJvmManager {
         settings.memberWorkerCount = 1;
         settings.clientWorkerCount = 0;
 
-        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvms, settings);
+        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, settings);
         launcher.launch();
     }
 
@@ -356,7 +357,7 @@ public class WorkerJvmManager {
                 ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
                 String service = (String) in.readObject();
                 String workerId = (String) in.readObject();
-                WorkerJvm workerJvm = workerJvms.get(workerId);
+                WorkerJvm workerJvm = workerJVMs.get(workerId);
 
                 Object result = null;
                 try {
@@ -401,6 +402,7 @@ public class WorkerJvmManager {
     }
 
     private class AcceptorThread extends Thread {
+
         public AcceptorThread() {
             super("AcceptorThread");
         }

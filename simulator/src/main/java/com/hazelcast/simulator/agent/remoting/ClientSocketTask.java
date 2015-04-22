@@ -95,11 +95,12 @@ class ClientSocketTask implements Runnable {
                 result = getFailures();
                 break;
             case SERVICE_GET_ALL_WORKERS:
-                result = new ArrayList<String>();
-                Collection<WorkerJvm> workerJvms = agent.getWorkerJvmManager().getWorkerJvms();
-                for (WorkerJvm workerJvm : workerJvms) {
-                    ((List<String>) result).add(workerJvm.id);
+                List<String> workerJvmIds = new ArrayList<String>();
+                Collection<WorkerJvm> workerJVMs = agent.getWorkerJvmManager().getWorkerJVMs();
+                for (WorkerJvm workerJvm : workerJVMs) {
+                    workerJvmIds.add(workerJvm.id);
                 }
+                result = workerJvmIds;
                 break;
             case SERVICE_PROCESS_MESSAGE:
                 Message message = (Message) in.readObject();

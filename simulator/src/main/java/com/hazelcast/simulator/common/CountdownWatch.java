@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.common;
 
+@SuppressWarnings("checkstyle:finalclass")
 public class CountdownWatch {
 
     private final long limit;
@@ -11,7 +12,7 @@ public class CountdownWatch {
 
         long now = System.currentTimeMillis();
         long candidate = now + delay;
-        //overflow protection
+        // overflow protection
         limit = (candidate >= now ? candidate : Long.MAX_VALUE);
     }
 
