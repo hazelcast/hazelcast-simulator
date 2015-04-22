@@ -4,7 +4,7 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestSuite;
-import joptsimple.OptionException;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -14,7 +14,7 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
@@ -26,7 +26,6 @@ public class CoordinatorCli {
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
-    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
@@ -125,11 +124,11 @@ public class CoordinatorCli {
             .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
 
     private final Coordinator coordinator;
+    private final OptionSet options;
 
-    private OptionSet options;
-
-    public CoordinatorCli(Coordinator coordinator) {
+    public CoordinatorCli(Coordinator coordinator, String[] args) {
         this.coordinator = coordinator;
+        this.options = initOptionsWithHelp(parser, args);
     }
 
     private static String getDefaultHzFile() {
@@ -152,19 +151,7 @@ public class CoordinatorCli {
         }
     }
 
-    public void init(String[] args) throws Exception {
-        try {
-            options = parser.parse(args);
-        } catch (OptionException e) {
-            exitWithError(LOGGER, e.getMessage() + ". Use --help to get overview of the help options.");
-            return;
-        }
-
-        if (options.has(helpSpec)) {
-            parser.printHelpOn(System.out);
-            System.exit(0);
-        }
-
+    public void init() {
         if (options.has(workerClassPathSpec)) {
             coordinator.workerClassPath = options.valueOf(workerClassPathSpec);
         }
@@ -207,7 +194,7 @@ public class CoordinatorCli {
         if (options.has(dedicatedMemberMachinesSpec)) {
             int dedicatedMemberCount = dedicatedMemberMachinesSpec.value(options);
             if (dedicatedMemberCount < 0) {
-                exitWithError(LOGGER, "dedicatedMemberCount can't be smaller than 0");
+                throw new CommandLineExitException("dedicatedMemberCount can't be smaller than 0");
             }
             coordinator.dedicatedMemberMachineCount = dedicatedMemberCount;
         }
@@ -245,19 +232,16 @@ public class CoordinatorCli {
         } else if (testsuiteFiles.size() == 1) {
             testsuiteFileName = testsuiteFiles.get(0);
         } else if (testsuiteFiles.size() > 1) {
-            exitWithError(LOGGER, "Too many testsuite files specified.");
-            // won't be executed
-            return null;
+            throw new CommandLineExitException("Too many testsuite files specified");
         }
         if (testsuiteFileName == null) {
-            exitWithError(LOGGER, "TestSuite filename was null.");
-            return null;
+            throw new CommandLineExitException("TestSuite filename was null");
         }
 
         File testSuiteFile = new File(testsuiteFileName);
         LOGGER.info("Loading testsuite file: " + testSuiteFile.getAbsolutePath());
         if (!testSuiteFile.exists()) {
-            exitWithError(LOGGER, format("Can't find testsuite file [%s]", testSuiteFile));
+            throw new CommandLineExitException(format("Can't find testsuite file [%s]", testSuiteFile));
         }
         return testSuiteFile;
     }
@@ -282,8 +266,7 @@ public class CoordinatorCli {
                 return Integer.parseInt(value);
             }
         } catch (NumberFormatException e) {
-            exitWithError(LOGGER, format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
-            return -1;
+            throw new CommandLineExitException(format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
         }
     }
 }

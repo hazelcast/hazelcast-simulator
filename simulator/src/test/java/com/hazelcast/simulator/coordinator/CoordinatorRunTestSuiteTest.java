@@ -32,6 +32,12 @@ public class CoordinatorRunTestSuiteTest {
     @Mock
     private final AgentsClient agentsClient = mock(AgentsClient.class);
 
+    @Mock
+    private final FailureMonitor failureMonitor = mock(FailureMonitor.class);
+
+    @Mock
+    private final PerformanceMonitor performanceMonitor = mock(PerformanceMonitor.class);
+
     @InjectMocks
     private Coordinator coordinator;
 
@@ -42,7 +48,7 @@ public class CoordinatorRunTestSuiteTest {
         MockitoAnnotations.initMocks(this);
 
         List<String> privateAddressList = new ArrayList<String>(1);
-        privateAddressList.add("192.168.0.1");
+        privateAddressList.add("127.0.0.1");
 
         TestCase testCase1 = new TestCase();
         testCase1.id = "CoordinatorTest1";
@@ -57,6 +63,8 @@ public class CoordinatorRunTestSuiteTest {
 
         when(agentsClient.getPublicAddresses()).thenReturn(privateAddressList);
         when(agentsClient.getAgentCount()).thenReturn(1);
+
+        when(failureMonitor.getFailureCount()).thenReturn(0);
     }
 
     @Test
