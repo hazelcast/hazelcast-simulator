@@ -5,10 +5,7 @@
 
 <suppressions>
 
-    <!-- Suppress duplicate checking of copyright notice -->
-    <suppress checks="StrictDuplicateCode" files=".java" lines="1-15"/>
-
-    <!-- Cluster -->
+    <!-- General -->
     <suppress checks="JavadocMethod" files="[\\/]"/>
     <suppress checks="JavadocType" files="[\\/]"/>
     <suppress checks="JavadocMethod" files="[\\/]"/>
@@ -17,8 +14,15 @@
     <suppress checks="MagicNumber" files="[\\/]"/>
     <suppress checks="VisibilityModifier" files="[\\/]"/>
 
+    <!-- Suppress duplicate checking of copyright notice -->
+    <suppress checks="StrictDuplicateCode" files=".java" lines="1-15"/>
+
     <!-- Suppress some checks for JUnit tests -->
     <suppress checks="MethodName" files=".*Test\.java$"/>
     <suppress checks="TypeName" files=".*Test\.java$"/>
+
+    <!-- Visualiser -->
+    <suppress checks="ClassDataAbstractionCoupling" files=".*MainUI\.java$"/>
+    <suppress checks="AvoidStarImport" files="[\\/]visualiser[\\/]"/>
 
 </suppressions>

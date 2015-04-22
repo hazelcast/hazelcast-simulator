@@ -183,7 +183,7 @@ class WorkerCommandRequestProcessor {
             }
         }
 
-        private void process(final RunCommand command) throws Exception {
+        private void process(RunCommand command) throws Exception {
             if (workerPerformanceMonitor.start()) {
                 LOGGER.info(format("%s Starting performance monitoring %s", DASHES, DASHES));
             }
@@ -198,36 +198,35 @@ class WorkerCommandRequestProcessor {
                     return;
                 }
 
+                boolean passive = (command.clientOnly && clientInstance == null);
+                if (passive) {
+                    LOGGER.info(format("%s Skipping %s.run() (member is passive) %s", DASHES, testName, DASHES));
+                    return;
+                }
+
                 CommandThread commandThread = new CommandThread(command, testId) {
                     @Override
                     public void doRun() throws Exception {
-                        boolean passive = command.clientOnly && clientInstance == null;
+                        LOGGER.info(format("%s Starting %s.run() %s", DASHES, testId, DASHES));
 
-                        if (passive) {
-                            LOGGER.info(format("%s Skipping %s.run() (member is passive) %s", DASHES, testName, DASHES));
-                        } else {
-                            LOGGER.info(format("%s Starting %s.run() %s", DASHES, testId, DASHES));
-
-                            try {
-                                test.run();
-                                LOGGER.info(format("%s Completed %s.run() %s", DASHES, testName, DASHES));
-                            } catch (InvocationTargetException e) {
-                                LOGGER.fatal(format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES),
-                                        e.getCause());
-                                if (e.getCause() instanceof Error) {
-                                    throw (Error) e.getCause();
-                                }
-                                if (e.getCause() instanceof Exception) {
-                                    throw (Exception) e.getCause();
-                                }
-                                throw new RuntimeException(format("Failed to execute RunCommand of %s", testName), e.getCause());
+                        try {
+                            test.run();
+                            LOGGER.info(format("%s Completed %s.run() %s", DASHES, testName, DASHES));
+                        } catch (InvocationTargetException e) {
+                            LOGGER.fatal(format("%s Failed to execute %s.run() %s", DASHES, testName, DASHES), e.getCause());
+                            if (e.getCause() instanceof Error) {
+                                throw (Error) e.getCause();
                             }
-
-                            // stop performance monitor if all tests have completed their run phase
-                            if (testsCompleted.incrementAndGet() == testsPending.get()) {
-                                LOGGER.info(format("%s Stopping performance monitoring %s", DASHES, DASHES));
-                                workerPerformanceMonitor.stop();
+                            if (e.getCause() instanceof Exception) {
+                                throw (Exception) e.getCause();
                             }
+                            throw new RuntimeException(format("Failed to execute RunCommand of %s", testName), e.getCause());
+                        }
+
+                        // stop performance monitor if all tests have completed their run phase
+                        if (testsCompleted.incrementAndGet() == testsPending.get()) {
+                            LOGGER.info(format("%s Stopping performance monitoring %s", DASHES, DASHES));
+                            workerPerformanceMonitor.stop();
                         }
                     }
                 };
@@ -256,17 +255,16 @@ class WorkerCommandRequestProcessor {
             }
         }
 
-        private void process(final GenericCommand command) throws Exception {
-            final String methodName = command.methodName;
+        private void process(GenericCommand command) throws Exception {
             final String testId = command.testId;
             final String testName = "".equals(testId) ? "test" : testId;
+            final String methodName = command.methodName;
 
             try {
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
-                    // we log a warning: it could be that it is a newly created machine from mama-monkey.
-                    LOGGER.warn("Failed to process command: " + command + " no test with "
-                            + "testId " + testId + " is found");
+                    // we log a warning: it could be that it is a newly created machine from mama-monkey
+                    LOGGER.warn("Failed to process command: " + command + " no test with " + "testId " + testId + " is found");
                     return;
                 }
 

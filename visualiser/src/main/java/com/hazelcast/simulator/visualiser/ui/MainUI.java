@@ -16,7 +16,7 @@ public final class MainUI extends JFrame {
     private final Model model = new Model();
 
     private JMenuItem loadMenuItem;
-    private File lastFileChooserDirectory = null;
+    private File lastFileChooserDirectory;
 
     public MainUI() {
         createUI();

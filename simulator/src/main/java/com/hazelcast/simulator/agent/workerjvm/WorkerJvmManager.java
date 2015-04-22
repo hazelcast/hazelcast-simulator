@@ -26,6 +26,7 @@ import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
 import com.hazelcast.simulator.worker.commands.MessageCommand;
+import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -167,8 +168,9 @@ public class WorkerJvmManager {
     private void preprocessMessage(Message message, Collection<WorkerJvm> workerJvmList) {
         for (WorkerJvm workerJvm : new ArrayList<WorkerJvm>(workerJvmList)) {
             if (message.removeFromAgentList()) {
-                //remove worker
+                // remove worker
                 while (workerJvms.values().remove(workerJvm)) {
+                    EmptyStatement.ignore(null);
                 }
             } else if (message.disableMemberFailureDetection()) {
                 workerJvm.detectFailure = false;

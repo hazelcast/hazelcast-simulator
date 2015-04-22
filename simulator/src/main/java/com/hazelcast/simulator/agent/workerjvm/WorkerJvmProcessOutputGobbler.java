@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.agent.workerjvm;
 
+import com.hazelcast.util.EmptyStatement;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +29,7 @@ public class WorkerJvmProcessOutputGobbler extends Thread {
                 writer.append(line).append("\n");
             }
         } catch (IOException ignored) {
+            EmptyStatement.ignore(ignored);
         } finally {
             closeQuietly(writer);
             closeQuietly(reader);

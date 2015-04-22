@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -132,6 +133,7 @@ class WorkerPerformanceMonitor {
                     return operationCount;
                 }
             } catch (Throwable ignored) {
+                EmptyStatement.ignore(ignored);
             }
 
             return 0;

@@ -120,10 +120,12 @@ public class CommunicatorCli {
     }
 
     private boolean hasOtherAddressOptionThen(OptionSpec optionSpec) {
-        OptionSpec[] addressOptionSpecs = new OptionSpec[]{messageAddressSpec,
+        OptionSpec[] addressOptionSpecs = new OptionSpec[]{
+                messageAddressSpec,
                 randomAgentSpec,
                 oldestMemberSpec,
-                randomWorkerSpec};
+                randomWorkerSpec,
+        };
 
         for (OptionSpec o : addressOptionSpecs) {
             if (!o.equals(optionSpec) && options.has(o)) {

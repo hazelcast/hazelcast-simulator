@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.common.messaging;
 
+import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -8,9 +9,10 @@ import java.util.concurrent.TimeUnit;
 
 @MessageSpec(value = "oom", description = "starts a new thread allocating memory in JVM heap indefinitely")
 public class UseAllMemoryMessage extends RunnableMessage {
+
     private static final Logger LOGGER = Logger.getLogger(UseAllMemoryMessage.class);
 
-    private static List list = new ArrayList();
+    private static List<Object> list = new ArrayList<Object>();
 
     private final int bufferSize = 1000;
     private final int delay;
@@ -43,8 +45,8 @@ public class UseAllMemoryMessage extends RunnableMessage {
                 for (; ; ) {
                     try {
                         allocateMemory();
-                    } catch (OutOfMemoryError ex) {
-                        //ignore
+                    } catch (OutOfMemoryError e) {
+                        EmptyStatement.ignore(e);
                     }
                 }
             }

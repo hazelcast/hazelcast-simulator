@@ -24,9 +24,9 @@ import java.util.Map;
 
 public class TestCase implements Serializable {
 
-    private final HashMap<String, String> properties = new HashMap<String, String>();
-
     public String id;
+
+    private final HashMap<String, String> properties = new HashMap<String, String>();
 
     public String getClassname() {
         return properties.get("class");

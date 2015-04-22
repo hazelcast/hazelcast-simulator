@@ -110,7 +110,7 @@ public final class Failure implements Serializable {
 
         TestCase testCase = testSuite.getTestCase(testId);
         if (testCase != null) {
-            String prefix ="   test=";
+            String prefix = "   test=";
             for (String aTestString : testCase.toString().split("\n")) {
                 sb.append(prefix).append(aTestString).append("\n");
                 prefix = "    ";
