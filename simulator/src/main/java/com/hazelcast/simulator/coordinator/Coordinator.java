@@ -94,9 +94,13 @@ public class Coordinator {
 
             logFailureInfo();
         } finally {
-            performanceMonitor.stop();
+            if (performanceMonitor != null) {
+                performanceMonitor.stop();
+            }
 
-            failureMonitor.stop();
+            if (failureMonitor != null) {
+                failureMonitor.stop();
+            }
 
             if (parallelExecutor != null) {
                 parallelExecutor.shutdown();
