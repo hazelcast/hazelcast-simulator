@@ -3,8 +3,11 @@ package com.hazelcast.simulator.common.messaging;
 import com.hazelcast.simulator.common.KeyValuePair;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 public class MessagesFactoryTest {
 

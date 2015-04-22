@@ -2,8 +2,8 @@ package com.hazelcast.simulator.common.messaging;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 public class MessageTest {
 
