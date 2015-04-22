@@ -33,10 +33,9 @@ public class ExitExceptionSecurityManagerTest {
     public void testCheckExitStatusTwo() throws Exception {
         try {
             exitExceptionSecurityManager.checkExit(2);
+            fail("Expected ExitException!");
         } catch (ExitException e) {
             assertEquals(2, e.getStatus());
-            return;
         }
-        fail("Expected ExitException!");
     }
 }

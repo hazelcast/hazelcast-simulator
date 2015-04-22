@@ -5,6 +5,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import java.io.OutputStream;
+
 public final class CliUtils {
 
     private CliUtils() {
@@ -15,7 +17,7 @@ public final class CliUtils {
             OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
             OptionSet options = parser.parse(args);
 
-            printHelpAndExit(parser, options, helpSpec);
+            printHelpAndExit(parser, options, helpSpec, System.out);
 
             return options;
         } catch (OptionException e) {
@@ -23,10 +25,10 @@ public final class CliUtils {
         }
     }
 
-    private static void printHelpAndExit(OptionParser parser, OptionSet options, OptionSpec helpSpec) {
+    static void printHelpAndExit(OptionParser parser, OptionSet options, OptionSpec helpSpec, OutputStream sink) {
         if (options.has(helpSpec)) {
             try {
-                parser.printHelpOn(System.out);
+                parser.printHelpOn(sink);
             } catch (Exception e) {
                 throw new CommandLineExitException("Could not print command line help", e);
             }
