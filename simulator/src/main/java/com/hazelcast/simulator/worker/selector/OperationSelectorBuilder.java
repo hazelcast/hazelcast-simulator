@@ -19,6 +19,7 @@ import static java.lang.String.format;
  * @param <T> enum of operations
  */
 public class OperationSelectorBuilder<T extends Enum<T>> {
+
     public static final int PROBABILITY_PRECISION = 3;
     public static final double PROBABILITY_INTERVAL = 1.0 / Math.pow(10, PROBABILITY_PRECISION);
 
@@ -38,16 +39,9 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
         if (operationsArray != null) {
             throw new IllegalStateException("The build() method was already called, cannot change operations anymore");
         }
+        checkProbabilityArgument(probability);
         if (probability == 0.0) {
             return this;
-        }
-        if (probability < 0.0) {
-            throw new IllegalArgumentException("Probability has to be between 0.0 and 1.0, but was " + probability);
-        }
-        double probabilityDecimalPlaces = probability - Math.floor(probability);
-        if (probabilityDecimalPlaces > 0.0 && probabilityDecimalPlaces < PROBABILITY_INTERVAL) {
-            throw new IllegalArgumentException(
-                    format("Maximum probability precision is %f, but was %f", PROBABILITY_INTERVAL, probability));
         }
         if (operations.put(operation, probability) != null) {
             throw new IllegalStateException("Operation " + operation + " has been already added to this selector");
@@ -86,6 +80,17 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
             populateOperationsArray();
         }
         return new OperationSelector<T>(operationsArray);
+    }
+
+    private void checkProbabilityArgument(double probability) {
+        if (probability < 0.0) {
+            throw new IllegalArgumentException("Probability has to be between 0.0 and 1.0, but was " + probability);
+        }
+        double probabilityDecimalPlaces = probability - Math.floor(probability);
+        if (probabilityDecimalPlaces > 0.0 && probabilityDecimalPlaces < PROBABILITY_INTERVAL) {
+            throw new IllegalArgumentException(format("Maximum probability precision is %f, but was %f",
+                    PROBABILITY_INTERVAL, probability));
+        }
     }
 
     private void probabilityMismatch() {
