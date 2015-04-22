@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.common;
 
 import com.hazelcast.simulator.provisioner.HazelcastJars;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -9,7 +10,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
@@ -62,7 +62,8 @@ public class SimulatorProperties {
 
     private void check(File file) {
         if (!file.exists()) {
-            exitWithError(LOGGER, format("Could not find %s file: %s", PROPERTIES_FILE_NAME, file.getAbsolutePath()));
+            throw new CommandLineExitException(
+                    format("Could not find %s file: %s", PROPERTIES_FILE_NAME, file.getAbsolutePath()));
         }
     }
 
@@ -130,7 +131,7 @@ public class SimulatorProperties {
     private String loadPropertyFromFile(String property, String path) {
         File file = newFile(path);
         if (!file.exists()) {
-            exitWithError(LOGGER, format("Can't find property %s file %s", property, path));
+            throw new CommandLineExitException(format("Can't find property %s file %s", property, path));
         }
 
         if (LOGGER.isDebugEnabled()) {

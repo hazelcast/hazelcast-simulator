@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.provisioner.git.GitSupport;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -10,7 +11,6 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getText;
@@ -67,13 +67,13 @@ public class HazelcastJars {
             }
         } else if (versionSpec.startsWith(GIT_VERSION_PREFIX)) {
             if (prepareEnterpriseJARs) {
-                exitWithError(LOGGER,
+                throw new CommandLineExitException(
                         "Hazelcast Enterprise is currently not supported when HAZELCAST_VERSION_SPEC is set to GIT.");
             }
             String revision = versionSpec.substring(GIT_VERSION_PREFIX.length());
             gitRetrieve(revision);
         } else {
-            exitWithError(LOGGER, "Unrecognized version spec: " + versionSpec);
+            throw new CommandLineExitException("Unrecognized version spec: " + versionSpec);
         }
     }
 
@@ -98,14 +98,14 @@ public class HazelcastJars {
                 String baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
                 String mavenMetadataUrl = format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
                 LOGGER.debug("Loading: " + mavenMetadataUrl);
-                String mavenMetadata = null;
+                String mavenMetadata;
                 try {
                     mavenMetadata = getText(mavenMetadataUrl);
                 } catch (FileNotFoundException e) {
-                    exitWithError(LOGGER, "Failed to load " + artifact + "-" + version
+                    throw new CommandLineExitException("Failed to load " + artifact + "-" + version
                             + ", because " + mavenMetadataUrl + " was not found");
                 } catch (IOException e) {
-                    exitWithError(LOGGER, "Could not load " + mavenMetadataUrl);
+                    throw new CommandLineExitException("Could not load " + mavenMetadataUrl);
                 }
 
                 LOGGER.debug(mavenMetadata);

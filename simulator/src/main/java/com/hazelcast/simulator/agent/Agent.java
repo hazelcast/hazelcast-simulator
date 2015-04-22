@@ -116,34 +116,31 @@ public class Agent {
     }
 
     public static void main(String[] args) {
-        createAgent(args);
+        try {
+            createAgent(args);
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Could not start agent!", e);
+        }
     }
 
     static void createAgent(String[] args) {
-        try {
-            LOGGER.info("Simulator Agent");
-            LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
-                    getSimulatorVersion(),
-                    getCommitIdAbbrev(),
-                    getBuildTime()));
-            LOGGER.info(format("SIMULATOR_HOME: %s%n", getSimulatorHome()));
-            logInterestingSystemProperties();
+        LOGGER.info("Simulator Agent");
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getSimulatorVersion(),
+                getCommitIdAbbrev(),
+                getBuildTime()));
+        LOGGER.info(format("SIMULATOR_HOME: %s%n", getSimulatorHome()));
+        logInterestingSystemProperties();
 
-            Agent agent = new Agent();
-            AgentCli.init(agent, args);
+        Agent agent = new Agent();
+        AgentCli.init(agent, args);
 
-            LOGGER.info("Bind address: " + agent.bindAddress);
-            LOGGER.info("CloudIdentity: " + agent.cloudIdentity);
-            LOGGER.info("CloudCredential: " + agent.cloudCredential);
-            LOGGER.info("CloudProvider: " + agent.cloudProvider);
+        LOGGER.info("Bind address: " + agent.bindAddress);
+        LOGGER.info("CloudIdentity: " + agent.cloudIdentity);
+        LOGGER.info("CloudCredential: " + agent.cloudCredential);
+        LOGGER.info("CloudProvider: " + agent.cloudProvider);
 
-            agent.start();
-        } catch (Exception e) {
-            if (!(e instanceof CommandLineExitException)) {
-                LOGGER.fatal("Use --help to get overview of the help options", e);
-            }
-            exitWithError(LOGGER, e.getMessage());
-        }
+        agent.start();
     }
 
     private static void logInterestingSystemProperties() {

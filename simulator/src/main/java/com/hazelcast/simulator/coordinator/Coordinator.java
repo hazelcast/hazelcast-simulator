@@ -49,24 +49,24 @@ import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
-public class Coordinator {
+public final class Coordinator {
 
-    public static final File SIMULATOR_HOME = getSimulatorHome();
-    public static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
-    public static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
+    static final File SIMULATOR_HOME = getSimulatorHome();
+    static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
+    static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
     // options
-    public boolean monitorPerformance;
-    public boolean verifyEnabled = true;
-    public String workerClassPath;
-    public Integer testStopTimeoutMs;
-    public File agentsFile;
-    public TestSuite testSuite;
-    public int dedicatedMemberMachineCount;
-    public boolean parallel;
-    public WorkerJvmSettings workerJvmSettings;
+    boolean monitorPerformance;
+    boolean verifyEnabled = true;
+    String workerClassPath;
+    Integer testStopTimeoutMs;
+    File agentsFile;
+    TestSuite testSuite;
+    int dedicatedMemberMachineCount;
+    boolean parallel;
+    WorkerJvmSettings workerJvmSettings;
 
     // internal state
     final SimulatorProperties props = new SimulatorProperties();
@@ -424,10 +424,7 @@ public class Coordinator {
 
             coordinator.run();
         } catch (Exception e) {
-            if (!(e instanceof CommandLineExitException)) {
-                LOGGER.fatal("Failed to run testsuite", e);
-            }
-            exitWithError(LOGGER, e.getMessage());
+            exitWithError(LOGGER, "Failed to run testsuite", e);
         }
     }
 }

@@ -156,7 +156,7 @@ public final class MemberWorker {
     }
 
     public static void main(String[] args) {
-        LOGGER.info("Starting Simulator Worker");
+        LOGGER.info("Starting Hazelcast Simulator Worker");
 
         try {
             logInputArguments();
@@ -193,7 +193,7 @@ public final class MemberWorker {
             LOGGER.info("Successfully started Hazelcast Simulator Worker: " + workerId);
         } catch (Throwable e) {
             ExceptionReporter.report(null, e);
-            exitWithError();
+            exitWithError(LOGGER, "Could not start Hazelcast Simulator Worker!", e);
         }
     }
 

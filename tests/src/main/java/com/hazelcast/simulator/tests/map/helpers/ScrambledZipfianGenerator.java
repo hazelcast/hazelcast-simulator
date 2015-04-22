@@ -111,12 +111,10 @@ public class ScrambledZipfianGenerator extends IntegerGenerator {
     public static void main(String[] args) {
         double newZetan = ZipfianGenerator.zetaStatic(ITEM_COUNT, ZipfianGenerator.ZIPFIAN_CONSTANT);
         System.out.println("zetan: " + newZetan);
-        System.exit(0);
 
-        ScrambledZipfianGenerator gen = new ScrambledZipfianGenerator(10000);
-
-        for (int i = 0; i < 1000000; i++) {
-            System.out.println(gen.nextInt());
-        }
+        //ScrambledZipfianGenerator gen = new ScrambledZipfianGenerator(10000);
+        //for (int i = 0; i < 1000000; i++) {
+        //    System.out.println(gen.nextInt());
+        //}
     }
 }

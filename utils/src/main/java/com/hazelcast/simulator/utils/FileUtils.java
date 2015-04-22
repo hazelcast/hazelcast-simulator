@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static java.lang.String.format;
 
 public final class FileUtils {
@@ -165,7 +164,6 @@ public final class FileUtils {
         if (text == null) {
             throw new NullPointerException("Text can't be null");
         }
-
         if (file == null) {
             throw new NullPointerException("File can't be null");
         }
@@ -180,16 +178,12 @@ public final class FileUtils {
                 closeQuietly(stream);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CommandLineExitException("Could not append text", e);
         }
     }
 
     public static String fileAsText(String filePath) {
         return fileAsText(new File(filePath));
-    }
-
-    public static String[] fileAsLines(File file) {
-        return fileAsText(file).split("\n");
     }
 
     public static String getText(String url) throws IOException {
@@ -333,7 +327,7 @@ public final class FileUtils {
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
-            exitWithError(LOGGER, format("%s [%s] does not exist%n", desc, file));
+            throw new CommandLineExitException(format("%s [%s] does not exist%n", desc, file));
         }
         return file;
     }
@@ -344,7 +338,7 @@ public final class FileUtils {
             file = newFile(baseDir + File.separator + "conf" + File.separator + fileName);
         }
         if (!file.exists()) {
-            exitWithError(LOGGER, format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
+            throw new CommandLineExitException(format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
         }
         LOGGER.info("Loading " + desc + ": " + file.getAbsolutePath());
 
@@ -379,7 +373,8 @@ public final class FileUtils {
             } else if (file.exists()) {
                 files.add(file);
             } else {
-                exitWithError(LOGGER, format("Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
+                throw new CommandLineExitException(format(
+                        "Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
             }
         }
 
@@ -397,9 +392,8 @@ public final class FileUtils {
         try {
             Files.copy(sourceFile, targetFile);
         } catch (IOException e) {
-            String errorMessage = format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
-                    targetFile.getAbsolutePath());
-            exitWithError(LOGGER, errorMessage, e);
+            throw new CommandLineExitException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
+                    targetFile.getAbsolutePath()), e);
         }
     }
 

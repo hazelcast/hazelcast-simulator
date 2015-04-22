@@ -21,7 +21,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDi
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
-public class CoordinatorCli {
+final class CoordinatorCli {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
@@ -126,7 +126,7 @@ public class CoordinatorCli {
     private final Coordinator coordinator;
     private final OptionSet options;
 
-    public CoordinatorCli(Coordinator coordinator, String[] args) {
+    CoordinatorCli(Coordinator coordinator, String[] args) {
         this.coordinator = coordinator;
         this.options = initOptionsWithHelp(parser, args);
     }
@@ -151,7 +151,7 @@ public class CoordinatorCli {
         }
     }
 
-    public void init() {
+    void init() {
         if (options.has(workerClassPathSpec)) {
             coordinator.workerClassPath = options.valueOf(workerClassPathSpec);
         }

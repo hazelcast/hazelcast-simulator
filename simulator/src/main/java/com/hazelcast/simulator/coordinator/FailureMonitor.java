@@ -15,25 +15,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 
+@SuppressWarnings("checkstyle:finalclass")
 class FailureMonitor {
 
     private final FailureThread thread;
     private final AtomicBoolean started = new AtomicBoolean();
 
-    public FailureMonitor(AgentsClient agentsClient, String testSuiteId) {
+    FailureMonitor(AgentsClient agentsClient, String testSuiteId) {
         if (agentsClient == null) {
             throw new NullPointerException();
         }
         thread = new FailureThread(agentsClient, testSuiteId);
     }
 
-    public void start() {
+    void start() {
         if (started.compareAndSet(false, true)) {
             thread.start();
         }
     }
 
-    public void stop() {
+    void stop() {
         if (started.compareAndSet(true, false)) {
             try {
                 thread.isRunning = false;
@@ -45,7 +46,7 @@ class FailureMonitor {
         }
     }
 
-    public int getFailureCount() {
+    int getFailureCount() {
         if (!started.get()) {
             throw new IllegalStateException("FailureMonitor has not been started!");
         }
@@ -70,7 +71,7 @@ class FailureMonitor {
 
         private volatile boolean isRunning = true;
 
-        public FailureThread(AgentsClient agentsClient, String testSuiteId) {
+        private FailureThread(AgentsClient agentsClient, String testSuiteId) {
             super("FailureMonitorThread");
             setDaemon(true);
 
@@ -78,6 +79,7 @@ class FailureMonitor {
             this.file = new File("failures-" + testSuiteId + ".txt");
         }
 
+        @Override
         public void run() {
             while (isRunning) {
                 try {

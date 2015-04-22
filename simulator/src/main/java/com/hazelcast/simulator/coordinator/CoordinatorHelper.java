@@ -13,7 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class CoordinatorHelper {
+final class CoordinatorHelper {
 
     private CoordinatorHelper() {
     }

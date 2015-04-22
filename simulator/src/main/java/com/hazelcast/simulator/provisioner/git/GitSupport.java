@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.provisioner.git;
 
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
@@ -16,7 +17,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
@@ -127,9 +127,9 @@ public class GitSupport {
             fetchAllRepositories(git);
             fullSha1 = checkoutRevision(git, revision);
         } catch (GitAPIException e) {
-            exitWithError(LOGGER, "Error while fetching sources from GIT", e);
+            throw new CommandLineExitException("Error while fetching sources from GIT", e);
         } catch (IOException e) {
-            exitWithError(LOGGER, "Error while fetching sources from GIT", e);
+            throw new CommandLineExitException("Error while fetching sources from GIT", e);
         } finally {
             if (git != null) {
                 git.close();
@@ -144,12 +144,14 @@ public class GitSupport {
             baseDir = getDefaultBaseDir();
             if (baseDir.exists()) {
                 if (!baseDir.isDirectory()) {
-                    exitWithError(LOGGER, "Default directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
+                    throw new CommandLineExitException(
+                            "Default directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
                             + ". This path already exists, but it isn't a directory. "
                             + "Please configure the directory explicitly via 'simulator.properties'"
                             + " or remove the existing path.");
                 } else if (!baseDir.canWrite()) {
-                    exitWithError(LOGGER, "Default directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
+                    throw new CommandLineExitException(
+                            "Default directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
                             + ". This path already exists, but it isn't writable. "
                             + "Please configure the directory explicitly via 'simulator.properties' or check access rights.");
                 }
@@ -158,10 +160,10 @@ public class GitSupport {
             baseDir = new File(basePath);
             if (baseDir.exists()) {
                 if (!baseDir.isDirectory()) {
-                    exitWithError(LOGGER, "Directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
+                    throw new CommandLineExitException("Directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
                             + ". This path already exists, but it isn't a directory.");
                 } else if (!baseDir.canWrite()) {
-                    exitWithError(LOGGER, "Directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
+                    throw new CommandLineExitException("Directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
                             + ". This path already exists, but it isn't writable.");
                 }
             }
@@ -169,8 +171,8 @@ public class GitSupport {
         if (!baseDir.exists()) {
             ensureExistingDirectory(baseDir);
             if (!baseDir.exists()) {
-                exitWithError(LOGGER, "Cannot create a directory for building Hazelcast form GIT. Directory is set to "
-                        + baseDir.getAbsolutePath() + ". Please check access rights.");
+                throw new CommandLineExitException("Cannot create a directory for building Hazelcast form GIT."
+                        + " Directory is set to " + baseDir.getAbsolutePath() + ". Please check access rights.");
             }
         }
         return baseDir;

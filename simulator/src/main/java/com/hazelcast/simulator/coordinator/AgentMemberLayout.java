@@ -5,7 +5,7 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 /**
  * The layout (number of clients/servers) for a given agent.
  */
-public class AgentMemberLayout {
+public final class AgentMemberLayout {
 
     public WorkerJvmSettings memberSettings;
     public WorkerJvmSettings clientSettings;

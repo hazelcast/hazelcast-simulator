@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.common;
 
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
-import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +57,7 @@ public class SimulatorPropertiesTest {
         assertEquals("workingDirUserName", simulatorProperties.getUser());
     }
 
-    @Test(expected = ExitStatusOneException.class)
+    @Test(expected = CommandLineExitException.class)
     public void testInit_customFile_notExists() throws Exception {
         simulatorProperties.init(customFile);
     }
@@ -145,7 +145,7 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testGetHazelcastVersionSpec() throws Exception {
-        assertTrue(simulatorProperties.getHazelcastVersionSpec().contains("maven="));
+        assertTrue(simulatorProperties.getHazelcastVersionSpec().equals("outofthebox"));
     }
 
     @Test
@@ -186,7 +186,7 @@ public class SimulatorPropertiesTest {
         assertEquals("testCloudIdentityString", simulatorProperties.get("CLOUD_IDENTITY"));
     }
 
-    @Test(expected = ExitStatusOneException.class)
+    @Test(expected = CommandLineExitException.class)
     public void testGet_CLOUD_IDENTITY_notFound() throws Exception {
         initProperty("CLOUD_IDENTITY", "notFound");
 
@@ -201,7 +201,7 @@ public class SimulatorPropertiesTest {
         assertEquals("testCloudCredentialString", simulatorProperties.get("CLOUD_CREDENTIAL"));
     }
 
-    @Test(expected = ExitStatusOneException.class)
+    @Test(expected = CommandLineExitException.class)
     public void testGet_CLOUD_CREDENTIAL_notFound() throws Exception {
         initProperty("CLOUD_CREDENTIAL", "notFound");
 

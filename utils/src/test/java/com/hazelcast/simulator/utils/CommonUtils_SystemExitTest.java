@@ -28,11 +28,6 @@ public class CommonUtils_SystemExitTest {
     }
 
     @Test(expected = ExitStatusOneException.class)
-    public void testExitWithError() {
-        exitWithError(logger, "expected failure");
-    }
-
-    @Test(expected = ExitStatusOneException.class)
     public void testExitWithErrorWithThrowable() {
         exitWithError(logger, "expected failure", new Throwable("expected throwable"));
     }

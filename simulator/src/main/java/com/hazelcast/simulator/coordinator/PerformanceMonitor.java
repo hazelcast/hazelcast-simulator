@@ -24,25 +24,25 @@ import static java.lang.String.format;
 /**
  * Responsible for collecting performance metrics from the agents and logging/storing it.
  */
-public class PerformanceMonitor {
+class PerformanceMonitor {
 
     private final PerformanceThread thread;
     private final AtomicBoolean started = new AtomicBoolean();
 
-    public PerformanceMonitor(AgentsClient agentsClient) {
+    PerformanceMonitor(AgentsClient agentsClient) {
         if (agentsClient == null) {
             throw new NullPointerException();
         }
         thread = new PerformanceThread(agentsClient);
     }
 
-    public void start() {
+    void start() {
         if (started.compareAndSet(false, true)) {
             thread.start();
         }
     }
 
-    public void stop() {
+    void stop() {
         if (started.compareAndSet(true, false)) {
             try {
                 thread.isRunning = false;
@@ -54,13 +54,13 @@ public class PerformanceMonitor {
         }
     }
 
-    public void logDetailedPerformanceInfo(int duration) {
+    void logDetailedPerformanceInfo(int duration) {
         if (started.get()) {
             thread.logDetailedPerformanceInfo(duration);
         }
     }
 
-    public String getPerformanceNumbers() {
+    String getPerformanceNumbers() {
         if (started.get()) {
             return thread.getPerformanceNumbers();
         }
@@ -164,7 +164,7 @@ public class PerformanceMonitor {
             }
         }
 
-        public String getPerformanceNumbers() {
+        private String getPerformanceNumbers() {
             if (operationCount < 0) {
                 return " (performance not available)";
             }

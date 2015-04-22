@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createCachedThreadPool;
 
 public class AgentMessageProcessor {
+
     private static final Logger LOGGER = Logger.getLogger(AgentMessageProcessor.class);
 
     private final ExecutorService executor = createCachedThreadPool(AgentMessageProcessor.class);
@@ -28,22 +29,16 @@ public class AgentMessageProcessor {
             public void run() {
                 try {
                     MessageAddress messageAddress = message.getMessageAddress();
-                    if (shouldProcess(message)) {
-                        if (messageAddress.getWorkerAddress() == null) {
-                            processLocalMessage(message);
-                        } else {
-                            processWorkerMessage(message);
-                        }
+                    if (messageAddress.getWorkerAddress() == null) {
+                        processLocalMessage(message);
+                    } else {
+                        processWorkerMessage(message);
                     }
                 } catch (Throwable t) {
                     LOGGER.error("Failed to process message:" + message, t);
                 }
             }
         });
-    }
-
-    private boolean shouldProcess(Message message) {
-        return true;
     }
 
     private void processWorkerMessage(Message message) {

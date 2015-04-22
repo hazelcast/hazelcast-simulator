@@ -15,7 +15,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
-public class Communicator {
+public final class Communicator {
 
     private static final Logger LOGGER = Logger.getLogger(Communicator.class);
 
@@ -57,10 +57,7 @@ public class Communicator {
 
             communicator.run();
         } catch (Exception e) {
-            if (!(e instanceof CommandLineExitException)) {
-                LOGGER.fatal("Failed to communicate", e);
-            }
-            exitWithError(LOGGER, e.getMessage());
+            exitWithError(LOGGER, "Failed to communicate", e);
         }
     }
 }

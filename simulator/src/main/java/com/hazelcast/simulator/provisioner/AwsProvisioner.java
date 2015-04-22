@@ -24,10 +24,10 @@ import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLo
 import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -40,16 +40,17 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
 /**
  * An AWS specific provisioning class which is using the AWS SDK to create AWS instances and AWS elastic load balancer.
  */
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class AwsProvisioner {
 
-    // AWS specific magic strings
-    public static final String AWS_RUNNING_STATE = "running";
-    public static final String AWS_SYSTEM_STATUS_OK = "ok";
-    public static final String AWS_PUBLIC_IP_FILTER = "ip-address";
-    public static final String AWS_KET_NAME_FILTER = "key-name";
-
     // the file which will hole the public domain name of the created load balance
-    public static final String AWS_ELB_FILE_NAME = "aws-elb.txt";
+    private static final String AWS_ELB_FILE_NAME = "aws-elb.txt";
+
+    // AWS specific magic strings
+    private static final String AWS_RUNNING_STATE = "running";
+    private static final String AWS_SYSTEM_STATUS_OK = "ok";
+    private static final String AWS_PUBLIC_IP_FILTER = "ip-address";
+    private static final String AWS_KET_NAME_FILTER = "key-name";
 
     private static final int SLEEPING_MS = 1000 * 30;
     private static final int MAX_SLEEPING_ITERATIONS = 12;
@@ -73,11 +74,11 @@ public class AwsProvisioner {
     private int elbPortOut;
     private String elbAvailabilityZones;
 
-    public AwsProvisioner() throws IOException {
+    AwsProvisioner() {
         setProperties(null);
     }
 
-    public void setProperties(File file) throws IOException {
+    void setProperties(File file) {
         props.init(file);
 
         String awsCredentialsPath = props.get("AWS_CREDENTIALS", "awscredentials.properties");
@@ -95,28 +96,41 @@ public class AwsProvisioner {
         securityGroup = props.get("SECURITY_GROUP");
         subNetId = props.get("SUBNET_ID", "");
 
-        AWSCredentials credentials = new PropertiesCredentials(credentialsFile);
+        try {
+            AWSCredentials credentials = new PropertiesCredentials(credentialsFile);
 
-        ec2 = new AmazonEC2Client(credentials);
-        elb = new AmazonElasticLoadBalancingClient(credentials);
+            ec2 = new AmazonEC2Client(credentials);
+            elb = new AmazonElasticLoadBalancingClient(credentials);
+        } catch (Exception e) {
+            throw new CommandLineExitException("Credentials file could not be loaded", e);
+        }
     }
 
-    public String createLoadBalancer(String name) {
-        CreateLoadBalancerRequest lbRequest = new CreateLoadBalancerRequest();
-        lbRequest.setLoadBalancerName(name);
-        lbRequest.withAvailabilityZones(elbAvailabilityZones.split(","));
+    void shutdown() {
+        if (ec2 != null) {
+            ec2.shutdown();
+        }
+        if (elb != null) {
+            elb.shutdown();
+        }
+    }
+
+    String createLoadBalancer(String name) {
+        CreateLoadBalancerRequest request = new CreateLoadBalancerRequest();
+        request.setLoadBalancerName(name);
+        request.withAvailabilityZones(elbAvailabilityZones.split(","));
 
         List<Listener> listeners = new ArrayList<Listener>();
         listeners.add(new Listener(elbProtocol, elbPortIn, elbPortOut));
-        lbRequest.setListeners(listeners);
+        request.setListeners(listeners);
 
-        CreateLoadBalancerResult lbResult = elb.createLoadBalancer(lbRequest);
+        CreateLoadBalancerResult lbResult = elb.createLoadBalancer(request);
         appendText(lbResult.getDNSName() + "\n", elbFile);
 
-        return lbRequest.getLoadBalancerName();
+        return request.getLoadBalancerName();
     }
 
-    public void addAgentsToLoadBalancer(String elbName) {
+    void addAgentsToLoadBalancer(String elbName) {
         if (!isBalancerAlive(elbName)) {
             createLoadBalancer(elbName);
         }
@@ -126,7 +140,7 @@ public class AwsProvisioner {
         addInstancesToElb(elbName, instances);
     }
 
-    public void scaleInstanceCountTo(int totalInstancesWanted) {
+    void scaleInstanceCountTo(int totalInstancesWanted) {
         List agents = AgentsFile.load(agentsFile);
 
         if (totalInstancesWanted <= agents.size()) {
@@ -202,12 +216,10 @@ public class AwsProvisioner {
         }
 
         DescribeInstancesRequest request = new DescribeInstancesRequest();
-
         Filter filter = new Filter(AWS_PUBLIC_IP_FILTER, ips);
 
         DescribeInstancesResult result = ec2.describeInstances(request.withFilters(filter));
         List<Reservation> reservations = result.getReservations();
-
         List<Instance> foundInstances = new ArrayList<Instance>();
 
         for (Reservation reservation : reservations) {
@@ -291,14 +303,15 @@ public class AwsProvisioner {
     }
 
     public static void main(String[] args) {
-        LOGGER.info("AWS specific provisioner");
         try {
+            LOGGER.info("AWS specific provisioner");
+
             AwsProvisioner provisioner = new AwsProvisioner();
-            AwsProvisionerCli cli = new AwsProvisionerCli(provisioner);
-            cli.run(args);
-        } catch (Throwable e) {
-            LOGGER.fatal(e);
-            exitWithError(LOGGER, e.getMessage());
+            AwsProvisionerCli cli = new AwsProvisionerCli(provisioner, args);
+
+            cli.run();
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Could not provision machines", e);
         }
     }
 }

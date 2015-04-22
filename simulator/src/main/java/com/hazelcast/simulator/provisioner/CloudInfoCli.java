@@ -7,7 +7,7 @@ import joptsimple.OptionSpec;
 
 import java.io.File;
 
-public class CloudInfoCli {
+final class CloudInfoCli {
 
     private final OptionParser parser = new OptionParser();
 
@@ -41,23 +41,27 @@ public class CloudInfoCli {
         this.options = CliUtils.initOptionsWithHelp(parser, args);
     }
 
-    void run() throws Exception {
-        cloudInfo.props.init(getPropertiesFile());
+    void run() {
+        try {
+            cloudInfo.props.init(getPropertiesFile());
 
-        cloudInfo.locationId = options.valueOf(locationSpec);
-        cloudInfo.verbose = options.has(verboseSpec);
+            cloudInfo.locationId = options.valueOf(locationSpec);
+            cloudInfo.verbose = options.has(verboseSpec);
 
-        if (options.has(showLocationsSpec)) {
-            cloudInfo.init();
-            cloudInfo.showLocations();
-        } else if (options.has(showHardwareSpec)) {
-            cloudInfo.init();
-            cloudInfo.showHardware();
-        } else if (options.has(showImagesSpec)) {
-            cloudInfo.init();
-            cloudInfo.showImages();
-        } else {
-            parser.printHelpOn(System.out);
+            if (options.has(showLocationsSpec)) {
+                cloudInfo.init();
+                cloudInfo.showLocations();
+            } else if (options.has(showHardwareSpec)) {
+                cloudInfo.init();
+                cloudInfo.showHardware();
+            } else if (options.has(showImagesSpec)) {
+                cloudInfo.init();
+                cloudInfo.showImages();
+            } else {
+                CliUtils.printHelpAndExit(parser);
+            }
+        } finally {
+            cloudInfo.shutdown();
         }
     }
 

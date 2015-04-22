@@ -2,6 +2,7 @@ package com.hazelcast.simulator.provisioner;
 
 import com.google.inject.AbstractModule;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
@@ -14,26 +15,25 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static java.util.Arrays.asList;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
 
-public class ComputeServiceBuilder {
+class ComputeServiceBuilder {
 
     private static final Logger LOGGER = Logger.getLogger(ComputeServiceBuilder.class);
 
     private final SimulatorProperties props;
 
-    public ComputeServiceBuilder(SimulatorProperties props) {
+    ComputeServiceBuilder(SimulatorProperties props) {
         if (props == null) {
             throw new NullPointerException("props can't be null");
         }
         this.props = props;
     }
 
-    public ComputeService build() {
+    ComputeService build() {
         ensurePublicPrivateKeyExist();
 
         String cloudProvider = props.get("CLOUD_PROVIDER");
@@ -57,9 +57,8 @@ public class ComputeServiceBuilder {
         try {
             return ContextBuilder.newBuilder(cloudProvider);
         } catch (NoSuchElementException e) {
-            exitWithError(LOGGER, "Unrecognized cloud-provider [" + cloudProvider + "]");
+            throw new CommandLineExitException("Unrecognized cloud-provider [" + cloudProvider + "]");
         }
-        throw new RuntimeException("Could not create ContextBuilder");
     }
 
     private List<AbstractModule> getModules() {
@@ -69,13 +68,13 @@ public class ComputeServiceBuilder {
     private void ensurePublicPrivateKeyExist() {
         File publicKey = newFile("~", ".ssh", "id_rsa.pub");
         if (!publicKey.exists()) {
-            exitWithError(LOGGER, "Could not found public key: " + publicKey.getAbsolutePath() + "\n"
+            throw new CommandLineExitException("Could not found public key: " + publicKey.getAbsolutePath() + "\n"
                     + "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
 
         File privateKey = newFile("~", ".ssh", "id_rsa");
         if (!privateKey.exists()) {
-            exitWithError(LOGGER, "Public key " + publicKey.getAbsolutePath() + " was found, "
+            throw new CommandLineExitException("Public key " + publicKey.getAbsolutePath() + " was found, "
                     + "but private key: " + privateKey.getAbsolutePath() + " is missing\n"
                     + "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }

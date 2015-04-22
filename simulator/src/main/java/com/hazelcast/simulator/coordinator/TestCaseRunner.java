@@ -31,7 +31,7 @@ import static java.lang.String.format;
  * TestCase runner is responsible for running a single test case. Multiple test-cases can be run in parallel,
  * by having multiple TestCaseRunners in parallel.
  */
-public class TestCaseRunner {
+final class TestCaseRunner {
 
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
 
@@ -44,7 +44,7 @@ public class TestCaseRunner {
     private final Set<Failure.Type> nonCriticalFailures;
     private final String prefix;
 
-    public TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int maxTextCaseIdLength) {
+    TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int maxTextCaseIdLength) {
         this.testCase = testCase;
         this.testSuite = testSuite;
         this.coordinator = coordinator;
@@ -55,7 +55,7 @@ public class TestCaseRunner {
         this.prefix = (testCase.id.isEmpty() ? "" : padRight(testCase.id, maxTextCaseIdLength + 1));
     }
 
-    public boolean run() {
+    boolean run() {
         LOGGER.info("--------------------------------------------------------------\n"
                 + format("Running Test : %s%n%s%n", testCase.getId(), testCase)
                 + "--------------------------------------------------------------");

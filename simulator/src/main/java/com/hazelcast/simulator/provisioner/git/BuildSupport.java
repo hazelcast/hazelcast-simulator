@@ -1,11 +1,11 @@
 package com.hazelcast.simulator.provisioner.git;
 
 import com.hazelcast.simulator.provisioner.Bash;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
@@ -33,7 +33,7 @@ public class BuildSupport {
         } else {
             File maven = new File(pathToMaven);
             if (!maven.exists()) {
-                exitWithError(LOGGER, "Specified path " + pathToMaven + " to Maven doesn't exist.");
+                throw new CommandLineExitException("Specified path " + pathToMaven + " to Maven doesn't exist.");
             }
             if (maven.isDirectory()) {
                 maven = newFile(pathToMaven, "mvn");
@@ -45,10 +45,11 @@ public class BuildSupport {
 
     private void checkIsValidMavenExecutable(String pathToMaven, File mavenExec) {
         if (!mavenExec.isFile()) {
-            exitWithError(LOGGER, "Specified path " + pathToMaven + " to Maven doesn't contains 'mvn' executable.");
+            throw new CommandLineExitException("Specified path " + pathToMaven + " to Maven doesn't contains 'mvn' executable.");
         }
         if (!mavenExec.canExecute()) {
-            exitWithError(LOGGER, "Specified path " + pathToMaven + " to Maven contains 'mvn' which is not executable.");
+            throw new CommandLineExitException("Specified path " + pathToMaven
+                    + " to Maven contains 'mvn' which is not executable.");
         }
     }
 

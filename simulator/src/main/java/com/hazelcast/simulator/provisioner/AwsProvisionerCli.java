@@ -1,23 +1,18 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.AgentsFile;
-import joptsimple.OptionException;
+import com.hazelcast.simulator.utils.CliUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.apache.log4j.Logger;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
-public class AwsProvisionerCli {
-
-    private static final Logger LOGGER = Logger.getLogger(AwsProvisionerCli.class);
+class AwsProvisionerCli {
 
     private final OptionParser parser = new OptionParser();
-    private final OptionSpec help = parser.accepts("help", "Show help").forHelp();
 
     private final OptionSpec<String> makeLB = parser.accepts("newLb",
             "Create new load balancer if it dose not exist.")
@@ -37,47 +32,32 @@ public class AwsProvisionerCli {
             .withRequiredArg().ofType(String.class);
 
     private final AwsProvisioner aws;
+    private final OptionSet options;
 
-    public AwsProvisionerCli(AwsProvisioner awsProvisioner) {
+    AwsProvisionerCli(AwsProvisioner awsProvisioner, String[] args) {
         this.aws = awsProvisioner;
+        this.options = CliUtils.initOptionsWithHelp(parser, args);
     }
 
-    public void run(String[] args) throws Exception {
-        OptionSet options;
-
+    void run() {
         try {
-            options = parser.parse(args);
-        } catch (OptionException e) {
-            exitWithError(LOGGER, e.getMessage() + ". Use --help to get overview of the help options.");
-            return;
-        }
+            if (options.has(propertiesFile)) {
+                File file = newFile(options.valueOf(propertiesFile));
+                aws.setProperties(file);
+            }
 
-        if (options.has(help)) {
-            parser.printHelpOn(System.out);
-            System.exit(0);
-        }
-
-        if (options.has(propertiesFile)) {
-            File file = newFile(options.valueOf(propertiesFile));
-            aws.setProperties(file);
-        }
-
-        if (options.has(scale)) {
-            int count = options.valueOf(scale);
-            aws.scaleInstanceCountTo(count);
-            System.exit(0);
-        }
-
-        if (options.has(makeLB)) {
-            String name = options.valueOf(makeLB);
-            aws.createLoadBalancer(name);
-            System.exit(0);
-        }
-
-        if (options.has(agentsToLB)) {
-            String name = options.valueOf(agentsToLB);
-            aws.addAgentsToLoadBalancer(name);
-            System.exit(0);
+            if (options.has(scale)) {
+                int count = options.valueOf(scale);
+                aws.scaleInstanceCountTo(count);
+            } else if (options.has(makeLB)) {
+                String name = options.valueOf(makeLB);
+                aws.createLoadBalancer(name);
+            } else if (options.has(agentsToLB)) {
+                String name = options.valueOf(agentsToLB);
+                aws.addAgentsToLoadBalancer(name);
+            }
+        } finally {
+            aws.shutdown();
         }
     }
 }

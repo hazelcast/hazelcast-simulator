@@ -1,22 +1,18 @@
 package com.hazelcast.simulator.provisioner;
 
-import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.apache.log4j.Logger;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
+import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
-public class ProvisionerCli {
-
-    private static final Logger LOGGER = Logger.getLogger(ProvisionerCli.class);
+final class ProvisionerCli {
 
     private final OptionParser parser = new OptionParser();
-    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     private final OptionSpec<String> gitSpec = parser.accepts("git",
             "Overrides the HAZELCAST_VERSION_SPEC property and forces Provisioner to build Hazelcast JARs from a given GIT "
@@ -61,33 +57,23 @@ public class ProvisionerCli {
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     private final Provisioner provisioner;
+    private final OptionSet options;
 
-    private OptionSet options;
-
-    public ProvisionerCli(Provisioner provisioner) {
+    ProvisionerCli(Provisioner provisioner, String[] args) {
         this.provisioner = provisioner;
+        this.options = initOptionsWithHelp(parser, args);
     }
 
-    public void run(String[] args) throws Exception {
-        try {
-            options = parser.parse(args);
-        } catch (OptionException e) {
-            exitWithError(LOGGER, e.getMessage() + ". Use --help to get overview of the help options.");
-            return;
-        }
-
-        if (options.has(helpSpec)) {
-            parser.printHelpOn(System.out);
-            System.exit(0);
-        }
-
+    void init() {
         provisioner.props.init(getPropertiesFile());
 
         if (options.has(gitSpec)) {
             String git = options.valueOf(gitSpec);
             provisioner.props.forceGit(git);
         }
+    }
 
+    void run() {
         try {
             provisioner.init();
             if (options.has(restartSpec)) {
@@ -110,7 +96,7 @@ public class ProvisionerCli {
             } else if (options.has(listAgentsSpec)) {
                 provisioner.listAgents();
             } else {
-                parser.printHelpOn(System.out);
+                printHelpAndExit(parser);
             }
         } finally {
             provisioner.shutdown();

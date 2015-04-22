@@ -8,6 +8,8 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.provisioner.git.BuildSupport;
 import com.hazelcast.simulator.provisioner.git.GitSupport;
 import com.hazelcast.simulator.provisioner.git.HazelcastJARFinder;
+import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -21,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +39,7 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
-public class Provisioner {
+public final class Provisioner {
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
     private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
@@ -111,7 +112,7 @@ public class Provisioner {
         echoImportant("Restarting %s Agents", addresses.size());
     }
 
-    void scale(int size, boolean enterpriseEnabled) throws Exception {
+    void scale(int size, boolean enterpriseEnabled) {
         int delta = size - addresses.size();
         if (delta == 0) {
             echo("Current number of machines: " + addresses.size());
@@ -134,12 +135,16 @@ public class Provisioner {
         echo("    " + agents);
     }
 
-    void shutdown() throws InterruptedException {
+    void shutdown() {
         echo("Shutting down Provisioner...");
 
         // shutdown thread pool
-        executor.shutdown();
-        executor.awaitTermination(10, TimeUnit.SECONDS);
+        try {
+            executor.shutdown();
+            executor.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (Exception ignored) {
+            EmptyStatement.ignore(ignored);
+        }
 
         // shutdown compute service (which holds another thread pool)
         if (compute != null) {
@@ -177,7 +182,7 @@ public class Provisioner {
         echoImportant("Finished cleaning worker homes of %s machines", addresses.size());
     }
 
-    private void scaleUp(int delta, boolean enterpriseEnabled) throws Exception {
+    private void scaleUp(int delta, boolean enterpriseEnabled) {
         echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
         echo("Current number of machines: " + addresses.size());
         echo("Desired number of machines: " + (addresses.size() + delta));
@@ -204,34 +209,34 @@ public class Provisioner {
 
         Template template = new TemplateBuilder(compute, props).build();
 
-        echo("Creating machines... (can take a few minutes)");
-        Set<Future> futures = new HashSet<Future>();
-        for (int batch : calcBatches(delta)) {
-            Set<? extends NodeMetadata> nodes = compute.createNodesInGroup(groupName, batch, template);
-            for (NodeMetadata node : nodes) {
-                String privateIpAddress = node.getPrivateAddresses().iterator().next();
-                String publicIpAddress = node.getPublicAddresses().iterator().next();
+        try {
+            echo("Creating machines... (can take a few minutes)");
+            Set<Future> futures = new HashSet<Future>();
+            for (int batch : calcBatches(delta)) {
+                Set<? extends NodeMetadata> nodes = compute.createNodesInGroup(groupName, batch, template);
+                for (NodeMetadata node : nodes) {
+                    String privateIpAddress = node.getPrivateAddresses().iterator().next();
+                    String publicIpAddress = node.getPublicAddresses().iterator().next();
 
-                echo("    " + publicIpAddress + " LAUNCHED");
-                appendText(publicIpAddress + "," + privateIpAddress + "\n", agentsFile);
+                    echo("    " + publicIpAddress + " LAUNCHED");
+                    appendText(publicIpAddress + "," + privateIpAddress + "\n", agentsFile);
 
-                AgentAddress address = new AgentAddress(publicIpAddress, privateIpAddress);
-                addresses.add(address);
+                    AgentAddress address = new AgentAddress(publicIpAddress, privateIpAddress);
+                    addresses.add(address);
+                }
+
+                for (NodeMetadata node : nodes) {
+                    String publicIpAddress = node.getPublicAddresses().iterator().next();
+                    Future future = executor.submit(new InstallNodeTask(publicIpAddress));
+                    futures.add(future);
+                }
             }
 
-            for (NodeMetadata node : nodes) {
-                String publicIpAddress = node.getPublicAddresses().iterator().next();
-                Future future = executor.submit(new InstallNodeTask(publicIpAddress));
-                futures.add(future);
-            }
-        }
-
-        for (Future future : futures) {
-            try {
+            for (Future future : futures) {
                 future.get();
-            } catch (ExecutionException e) {
-                exitWithError(LOGGER, "Failed provision", e);
             }
+        } catch (Exception e) {
+            throw new CommandLineExitException("Failed to provision machines", e);
         }
 
         echo("Pausing for machine warmup... (10 sec)");
@@ -447,18 +452,19 @@ public class Provisioner {
     }
 
     public static void main(String[] args) {
-        LOGGER.info("Hazelcast Simulator Provisioner");
-        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), GitInfo.getCommitIdAbbrev(),
-                GitInfo.getBuildTime()));
-        LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
-
         try {
+            LOGGER.info("Hazelcast Simulator Provisioner");
+            LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), GitInfo.getCommitIdAbbrev(),
+                    GitInfo.getBuildTime()));
+            LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
+
             Provisioner provisioner = new Provisioner();
-            ProvisionerCli cli = new ProvisionerCli(provisioner);
-            cli.run(args);
-        } catch (Throwable e) {
-            LOGGER.fatal(e);
-            exitWithError(LOGGER, e.getMessage());
+            ProvisionerCli cli = new ProvisionerCli(provisioner, args);
+            cli.init();
+
+            cli.run();
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Could not provision machines", e);
         }
     }
 }

@@ -5,7 +5,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-public final class AgentCli {
+final class AgentCli {
 
     private final OptionParser parser = new OptionParser();
 

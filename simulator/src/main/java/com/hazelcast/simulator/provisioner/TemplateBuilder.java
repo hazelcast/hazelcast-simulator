@@ -3,6 +3,7 @@ package com.hazelcast.simulator.provisioner;
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
@@ -18,9 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-
-public class TemplateBuilder {
+class TemplateBuilder {
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
@@ -29,12 +28,12 @@ public class TemplateBuilder {
     private String securityGroup;
     private TemplateBuilderSpec spec;
 
-    public TemplateBuilder(ComputeService compute, SimulatorProperties properties) {
+    TemplateBuilder(ComputeService compute, SimulatorProperties properties) {
         this.compute = compute;
         this.props = properties;
     }
 
-    public Template build() {
+    Template build() {
         securityGroup = props.get("SECURITY_GROUP", "simulator");
 
         String machineSpec = props.get("MACHINE_SPEC", "");
@@ -72,10 +71,8 @@ public class TemplateBuilder {
         try {
             return compute.templateBuilder().from(spec).build();
         } catch (IllegalArgumentException e) {
-            LOGGER.debug(e);
-            exitWithError(LOGGER, e.getMessage());
+            throw new CommandLineExitException(e.getMessage());
         }
-        throw new RuntimeException("Could not build template!");
     }
 
     private int[] inboundPorts() {

@@ -9,6 +9,7 @@ import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestSuite;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.IsPhaseCompletedCommand;
 import org.apache.log4j.Logger;
@@ -37,7 +38,6 @@ import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.
 import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.SERVICE_PROCESS_MESSAGE;
 import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.SERVICE_SPAWN_WORKERS;
 import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.SERVICE_TERMINATE_WORKERS;
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -125,7 +125,7 @@ public class AgentsClient {
 
             agents.removeAll(uncheckedAgents);
             if (agents.isEmpty()) {
-                exitWithError(LOGGER, "There are no reachable agents");
+                throw new CommandLineExitException("There are no reachable agents");
             }
         } else {
             LOGGER.info("--------------------------------------------------------------");

@@ -69,6 +69,7 @@ public class MessageAddressParser {
         return builder.build();
     }
 
+    @SuppressWarnings("checkstyle:returncount")
     private ParserState parseState(ParserState state, String input, String group, MessageAddressBuilder builder) {
         if (state.equals(ParserState.START)) {
             return parseStart(input, group);

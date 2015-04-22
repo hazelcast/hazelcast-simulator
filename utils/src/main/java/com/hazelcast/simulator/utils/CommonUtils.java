@@ -169,25 +169,24 @@ public final class CommonUtils {
         remoteCause.setStackTrace(newStackTrace);
     }
 
-    public static void rethrow(Throwable t) {
-        if (t instanceof RuntimeException) {
-            throw (RuntimeException) t;
+    public static void rethrow(Throwable throwable) {
+        if (throwable instanceof RuntimeException) {
+            throw (RuntimeException) throwable;
         } else {
-            throw new RuntimeException(t);
+            throw new RuntimeException(throwable);
         }
     }
 
-    public static String throwableToString(Throwable t) {
-        StringWriter sw = new StringWriter();
-        t.printStackTrace(new PrintWriter(sw));
-        return sw.toString();
+    public static String throwableToString(Throwable throwable) {
+        StringWriter stringWriter = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(stringWriter));
+        return stringWriter.toString();
     }
 
     public static void closeQuietly(Socket socket) {
         if (socket == null) {
             return;
         }
-
         try {
             socket.close();
         } catch (IOException ignore) {
@@ -243,7 +242,6 @@ public final class CommonUtils {
         if (nanos <= 0) {
             return;
         }
-
         LockSupport.parkNanos(nanos);
     }
 
@@ -275,7 +273,6 @@ public final class CommonUtils {
         if (maxDelayNanos <= 0) {
             return;
         }
-
         long randomValue = Math.abs(random.nextLong() + 1);
         sleepNanos(randomValue % maxDelayNanos);
     }
@@ -284,13 +281,13 @@ public final class CommonUtils {
         System.exit(1);
     }
 
-    public static void exitWithError(Logger logger, String msg) {
-        logger.fatal(msg);
+    public static void exitWithError(Logger logger, String msg, Throwable throwable) {
+        if (throwable instanceof CommandLineExitException) {
+            logger.fatal(throwable.getMessage());
+        } else {
+            String throwableString = throwableToString(throwable);
+            logger.fatal(msg + "\n" + throwableString);
+        }
         System.exit(1);
-    }
-
-    public static void exitWithError(Logger logger, String msg, Throwable t) {
-        String throwableString = throwableToString(t);
-        exitWithError(logger, msg + "\n" + throwableString);
     }
 }

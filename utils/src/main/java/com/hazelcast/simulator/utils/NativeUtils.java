@@ -25,6 +25,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 
 public final class NativeUtils {
 
@@ -73,7 +74,7 @@ public final class NativeUtils {
             if (shellExitStatus != 0) {
                 LOGGER.error(String.format("Failed to execute [%s]", command));
                 LOGGER.error(sb.toString());
-                System.exit(1);
+                exitWithError();
             } else {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Bash output: \n" + sb);

@@ -4,7 +4,6 @@ import com.hazelcast.simulator.utils.helper.ExitException;
 import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,11 +72,18 @@ public class CliUtilsTest {
         initOptionsWithHelp(parser, new String[]{"--argName"});
     }
 
-    @Test(expected = CommandLineExitException.class)
+    @Test
     public void testPrintHelpAndExit() {
-        OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
-        OptionSet options = parser.parse("--help");
+        try {
+            printHelpAndExit(parser);
+            fail("Expected ExitException");
+        } catch (ExitException e) {
+            assertEquals(0, e.getStatus());
+        }
+    }
 
-        printHelpAndExit(parser, options, helpSpec, null);
+    @Test(expected = CommandLineExitException.class)
+    public void testPrintHelpAndExit_invalidOutputStream() {
+        printHelpAndExit(parser, null);
     }
 }

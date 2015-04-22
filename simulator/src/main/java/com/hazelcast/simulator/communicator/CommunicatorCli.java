@@ -14,7 +14,7 @@ import java.util.List;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
 
-public class CommunicatorCli {
+final class CommunicatorCli {
 
     private static final String HELP_ADVICE = " Use --help to get overview of the help options.";
 
@@ -31,10 +31,11 @@ public class CommunicatorCli {
     private final OptionSpec<String> messageAddressSpec = parser.accepts("message-address",
             String.format("Message address definition.%nSyntax: %s=<mode>[,%s=<mode>[,%s=<mode>]]."
                             + " Mode can be either '%s' for broadcast' or '%s' for a single random destination.%nExamples:"
-                            + "%n--message-address 'Agent=*,Worker=R' - a message will be routed to all agents and then each agent"
-                            + " will pass it to a single random worker for processing."
+                            + "%n--message-address 'Agent=*,Worker=R' - a message will be routed to all agents and then each"
+                            + " agent will pass it to a single random worker for processing."
                             + "%n--message-address 'Agent=R,Worker=R,Test=*' - a message will be routed to a single random agent."
-                            + " The agent will pass it to a single random worker and the worker will pass the message to all tests.",
+                            + " The agent will pass it to a single random worker and the worker will pass the message to all"
+                            + " tests.",
                     MessageAddressParser.AGENT, MessageAddressParser.WORKER, MessageAddressParser.TEST,
                     MessageAddressParser.ALL, MessageAddressParser.RANDOM))
             .withRequiredArg().ofType(String.class);
@@ -51,12 +52,12 @@ public class CommunicatorCli {
     private final Communicator communicator;
     private final OptionSet options;
 
-    public CommunicatorCli(Communicator communicator, String[] args) {
+    CommunicatorCli(Communicator communicator, String[] args) {
         this.communicator = communicator;
         this.options = initOptionsWithHelp(parser, args);
     }
 
-    public void init() {
+    void init() {
         String messageTypeString;
         List<String> noArgOptions = options.nonOptionArguments();
         if (options.has(messageTypeSpec)) {

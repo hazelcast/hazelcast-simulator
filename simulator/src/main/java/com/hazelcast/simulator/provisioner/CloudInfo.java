@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Hardware;
@@ -18,7 +17,7 @@ import static java.lang.String.format;
 /**
  * Commandline tool to retrieve various cloud info.
  */
-public class CloudInfo {
+public final class CloudInfo {
 
     private static final Logger LOGGER = Logger.getLogger(CloudInfo.class);
 
@@ -31,6 +30,12 @@ public class CloudInfo {
 
     void init() {
         computeService = new ComputeServiceBuilder(props).build();
+    }
+
+    void shutdown() {
+        if (computeService != null) {
+            computeService.getContext().close();
+        }
     }
 
     // show all support clouds
@@ -105,10 +110,7 @@ public class CloudInfo {
 
             cli.run();
         } catch (Exception e) {
-            if (!(e instanceof CommandLineExitException)) {
-                LOGGER.fatal(e);
-            }
-            exitWithError(LOGGER, e.getMessage());
+            exitWithError(LOGGER, "Could not retrieve cloud information!", e);
         }
     }
 }
