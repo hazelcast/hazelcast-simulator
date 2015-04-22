@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.utils;
 
+import joptsimple.BuiltinHelpFormatter;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -15,6 +16,7 @@ public final class CliUtils {
     public static OptionSet initOptionsWithHelp(OptionParser parser, String[] args) {
         try {
             OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
+
             OptionSet options = parser.parse(args);
 
             printHelpAndExit(parser, options, helpSpec, System.out);
@@ -28,6 +30,7 @@ public final class CliUtils {
     static void printHelpAndExit(OptionParser parser, OptionSet options, OptionSpec helpSpec, OutputStream sink) {
         if (options.has(helpSpec)) {
             try {
+                parser.formatHelpWith(new BuiltinHelpFormatter(160, 2));
                 parser.printHelpOn(sink);
             } catch (Exception e) {
                 throw new CommandLineExitException("Could not print command line help", e);
