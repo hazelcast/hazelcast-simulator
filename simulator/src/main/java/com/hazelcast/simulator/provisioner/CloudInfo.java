@@ -37,7 +37,7 @@ public class CloudInfo {
     void showLocations() {
         Set<? extends Location> locations = computeService.listAssignableLocations();
         for (Location location : locations) {
-            System.out.println(location);
+            LOGGER.info(location);
         }
     }
 
@@ -45,19 +45,19 @@ public class CloudInfo {
         Set<? extends Hardware> hardwareSet = computeService.listHardwareProfiles();
         for (Hardware hardware : hardwareSet) {
             if (verbose) {
-                System.out.println(hardware);
-            } else {
-                StringBuilder sb = new StringBuilder(hardware.getId());
-                sb.append(" Ram: ").append(hardware.getRam());
-                sb.append(" Processors: ").append(hardware.getProcessors());
-                if (locationId == null) {
-                    Location location = hardware.getLocation();
-                    if (location != null) {
-                        sb.append(" Location: ").append(location.getId());
-                    }
-                }
-                System.out.println(sb.toString());
+                LOGGER.info(hardware);
+                continue;
             }
+            StringBuilder sb = new StringBuilder(hardware.getId());
+            sb.append(" Ram: ").append(hardware.getRam());
+            sb.append(" Processors: ").append(hardware.getProcessors());
+            if (locationId == null) {
+                Location location = hardware.getLocation();
+                if (location != null) {
+                    sb.append(" Location: ").append(location.getId());
+                }
+            }
+            LOGGER.info(sb.toString());
         }
     }
 
@@ -68,12 +68,11 @@ public class CloudInfo {
             if (!match) {
                 continue;
             }
-
             if (verbose) {
-                System.out.println(image);
-            } else {
-                System.out.println(image.getId() + " OS: " + image.getOperatingSystem() + " Version: " + image.getVersion());
+                LOGGER.info(image);
+                continue;
             }
+            LOGGER.info(image.getId() + " OS: " + image.getOperatingSystem() + " Version: " + image.getVersion());
         }
     }
 
