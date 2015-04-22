@@ -25,6 +25,9 @@ import java.io.OutputStream;
 
 public final class CliUtils {
 
+    private static final int HELP_WIDTH = 160;
+    private static final int HELP_INDENTATION = 2;
+
     private CliUtils() {
     }
 
@@ -45,7 +48,7 @@ public final class CliUtils {
     static void printHelpAndExit(OptionParser parser, OptionSet options, OptionSpec helpSpec, OutputStream sink) {
         if (options.has(helpSpec)) {
             try {
-                parser.formatHelpWith(new BuiltinHelpFormatter(160, 2));
+                parser.formatHelpWith(new BuiltinHelpFormatter(HELP_WIDTH, HELP_INDENTATION));
                 parser.printHelpOn(sink);
             } catch (Exception e) {
                 throw new CommandLineExitException("Could not print command line help", e);

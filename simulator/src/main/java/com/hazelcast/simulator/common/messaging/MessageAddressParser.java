@@ -1,14 +1,13 @@
 package com.hazelcast.simulator.common.messaging;
 
-import com.hazelcast.simulator.communicator.CommunicatorCli;
-
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MessageAddressParser {
     /**
-     * Warning: Change user help in {@link CommunicatorCli#messageAddressSpec} when changing input format accepted by this parser.
+     * Warning: Change user help in {@link com.hazelcast.simulator.communicator.CommunicatorCli#messageAddressSpec} when changing
+     * input format accepted by this parser.
      */
     public static final String AGENT = "Agent";
     public static final String WORKER = "Worker";
