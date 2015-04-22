@@ -169,6 +169,14 @@ public final class CommonUtils {
         remoteCause.setStackTrace(newStackTrace);
     }
 
+    public static void rethrow(Throwable t) {
+        if (t instanceof RuntimeException) {
+            throw (RuntimeException) t;
+        } else {
+            throw new RuntimeException(t);
+        }
+    }
+
     public static String throwableToString(Throwable t) {
         StringWriter sw = new StringWriter();
         t.printStackTrace(new PrintWriter(sw));
@@ -201,14 +209,6 @@ public final class CommonUtils {
             closeable.close();
         } catch (IOException ignore) {
             EmptyStatement.ignore(ignore);
-        }
-    }
-
-    public static RuntimeException rethrow(Throwable t) {
-        if (t instanceof RuntimeException) {
-            throw (RuntimeException) t;
-        } else {
-            throw new RuntimeException(t);
         }
     }
 

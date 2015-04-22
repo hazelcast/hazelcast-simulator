@@ -30,6 +30,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
  * @param <V>
  */
 public class MapStreamer<K, V> {
+
     private static final int DEFAULT_CONCURRENCY_LEVEL = 1000;
     private static final long DEFAULT_TIMEOUT_MINUTES = 2;
 
@@ -44,15 +45,15 @@ public class MapStreamer<K, V> {
         this.map = map;
         this.concurrencyLevel = DEFAULT_CONCURRENCY_LEVEL;
         this.semaphore = new Semaphore(concurrencyLevel);
-        this.callback = new MyExecutionCallback<V>();
+        this.callback = new MyExecutionCallback();
     }
 
     /**
      * Push key/value pair into a map. It's a non-blocking operation.
      * You have to call {@link #await()} to make sure the entry has been created successfully.
      *
-     * @param key
-     * @param value
+     * @param key   the key of the map entry
+     * @param value the new value of the map entry
      */
     public void pushEntry(K key, V value) {
         acquirePermit(1);
@@ -62,7 +63,8 @@ public class MapStreamer<K, V> {
 
     /**
      * Wait until all in-flight operations are finished.
-     * @throws Exception if at least any pushEntry operation failed
+     *
+     * @throws RuntimeException if at least any pushEntry operation failed
      */
     public void await() {
         waitForInFlightOperationsFinished();
@@ -94,8 +96,7 @@ public class MapStreamer<K, V> {
         }
     }
 
-
-    private class MyExecutionCallback<V> implements ExecutionCallback<V> {
+    private class MyExecutionCallback implements ExecutionCallback<V> {
         @Override
         public void onResponse(V response) {
             releasePermit(1);

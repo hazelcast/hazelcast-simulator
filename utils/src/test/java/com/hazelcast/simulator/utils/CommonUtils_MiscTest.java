@@ -60,6 +60,28 @@ public class CommonUtils_MiscTest {
     }
 
     @Test
+    public void testRethrow_RuntimeException() {
+        Throwable throwable = new RuntimeException();
+
+        try {
+            CommonUtils.rethrow(throwable);
+        } catch (RuntimeException e) {
+            assertEquals(throwable, e);
+        }
+    }
+
+    @Test
+    public void testRethrow_Throwable() {
+        Throwable throwable = new Throwable();
+
+        try {
+            CommonUtils.rethrow(throwable);
+        } catch (RuntimeException e) {
+            assertEquals(throwable, e.getCause());
+        }
+    }
+
+    @Test
     public void testThrowableToString() {
         String marker = "#*+*#";
         Throwable throwable = new Throwable(marker);
