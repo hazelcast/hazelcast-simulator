@@ -1,21 +1,15 @@
 package com.hazelcast.simulator.provisioner;
 
-import joptsimple.OptionException;
+import com.hazelcast.simulator.utils.CliUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.apache.log4j.Logger;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-
 public class CloudInfoCli {
 
-    private static final Logger LOGGER = Logger.getLogger(ProvisionerCli.class);
-
     private final OptionParser parser = new OptionParser();
-    private final OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
 
     private final OptionSpec showLocationsSpec = parser.accepts("showLocations",
             "Shows all locations available. In Amazon for example this would be regions and zones.");
@@ -40,26 +34,14 @@ public class CloudInfoCli {
             .withRequiredArg().ofType(String.class);
 
     private final CloudInfo cloudInfo;
+    private final OptionSet options;
 
-    private OptionSet options;
-
-    public CloudInfoCli(CloudInfo cloudInfo) {
+    CloudInfoCli(CloudInfo cloudInfo, String[] args) {
         this.cloudInfo = cloudInfo;
+        this.options = CliUtils.initOptionsWithHelp(parser, args);
     }
 
-    public void run(String[] args) throws Exception {
-        try {
-            options = parser.parse(args);
-        } catch (OptionException e) {
-            exitWithError(LOGGER, e.getMessage() + ". Use --help to get overview of the help options.");
-            return;
-        }
-
-        if (options.has(helpSpec)) {
-            parser.printHelpOn(System.out);
-            System.exit(0);
-        }
-
+    void run() throws Exception {
         cloudInfo.props.init(getPropertiesFile());
 
         cloudInfo.locationId = options.valueOf(locationSpec);

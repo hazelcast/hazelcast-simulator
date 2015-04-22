@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Hardware;
@@ -21,25 +22,26 @@ public class CloudInfo {
 
     private static final Logger LOGGER = Logger.getLogger(CloudInfo.class);
 
-    public SimulatorProperties props = new SimulatorProperties();
+    SimulatorProperties props = new SimulatorProperties();
 
-    public String locationId;
-    public boolean verbose;
+    String locationId;
+    boolean verbose;
+
     private ComputeService computeService;
 
-    public void init() {
+    void init() {
         computeService = new ComputeServiceBuilder(props).build();
     }
 
     // show all support clouds
-    public void showLocations() {
+    void showLocations() {
         Set<? extends Location> locations = computeService.listAssignableLocations();
         for (Location location : locations) {
             System.out.println(location);
         }
     }
 
-    public void showHardware() {
+    void showHardware() {
         Set<? extends Hardware> hardwareSet = computeService.listHardwareProfiles();
         for (Hardware hardware : hardwareSet) {
             if (verbose) {
@@ -59,7 +61,7 @@ public class CloudInfo {
         }
     }
 
-    public void showImages() {
+    void showImages() {
         Set<? extends Image> images = computeService.listImages();
         for (Image image : images) {
             boolean match = show(image);
@@ -100,10 +102,13 @@ public class CloudInfo {
 
         try {
             CloudInfo cloudInfoCli = new CloudInfo();
-            CloudInfoCli cli = new CloudInfoCli(cloudInfoCli);
-            cli.run(args);
-        } catch (Throwable e) {
-            LOGGER.fatal(e);
+            CloudInfoCli cli = new CloudInfoCli(cloudInfoCli, args);
+
+            cli.run();
+        } catch (Exception e) {
+            if (!(e instanceof CommandLineExitException)) {
+                LOGGER.fatal(e);
+            }
             exitWithError(LOGGER, e.getMessage());
         }
     }
