@@ -15,6 +15,7 @@ import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPoo
 public class AgentRemoteService {
 
     public static final int PORT = 9000;
+    public static final String ANY_ADDRESS = "0.0.0.0";
 
     public enum Service {
         SERVICE_SPAWN_WORKERS,
@@ -44,7 +45,7 @@ public class AgentRemoteService {
     }
 
     public void start() throws IOException {
-        String bindAddress = (agent.getBindAddress() != null) ? agent.getBindAddress() : getHostAddress();
+        String bindAddress = (agent.getBindAddress() != null) ? agent.getBindAddress() : ANY_ADDRESS;
         serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(bindAddress));
         LOGGER.info("Started Agent Remote Service on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
 
