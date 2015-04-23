@@ -23,8 +23,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.Formatter;
 import java.util.Iterator;
 import java.util.Random;
@@ -145,14 +149,8 @@ public final class CommonUtils {
             if (hostAddress != null) {
                 return hostAddress;
             }
-            try {
-                Socket socket = new Socket("google.com", 80);
-                hostAddress = socket.getLocalAddress().getHostAddress();
-                socket.close();
-                return hostAddress;
-            } catch (IOException io) {
-                throw new RuntimeException(io);
-            }
+            hostAddress = HostAddressPicker.pickHostAddress();
+            return hostAddress;
         }
     }
 
@@ -169,7 +167,7 @@ public final class CommonUtils {
         remoteCause.setStackTrace(newStackTrace);
     }
 
-    public static void rethrow(Throwable throwable) {
+    public static RuntimeException rethrow(Throwable throwable) {
         if (throwable instanceof RuntimeException) {
             throw (RuntimeException) throwable;
         } else {
