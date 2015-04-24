@@ -6,7 +6,7 @@
 
     <artifactId>dist</artifactId>
     <name>Hazelcast Simulator Distribution</name>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>
