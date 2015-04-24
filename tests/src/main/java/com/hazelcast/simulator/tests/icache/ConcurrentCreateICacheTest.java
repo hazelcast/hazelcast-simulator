@@ -17,8 +17,6 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
@@ -33,78 +31,68 @@ import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import java.io.Serializable;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static junit.framework.Assert.assertEquals;
 
 /**
- * In This tests we concurrently call createCache, from multi clients/members we expect no exceptions
- * in the setup phase of this test we count the number of CacheExceptions thrown when creating the cache
- * form multi members and clients,  and at verification we assert 0 exceptions where thrown
+ * In this test we concurrently call createCache. From multi clients/members we expect no exceptions
+ * in the setup phase of this test. We count the number of {@link CacheException} thrown when creating the cache
+ * from multi members and clients, and at verification we assert that no exceptions where thrown.
  */
-public class ConcurentCreateICacheTest {
+public class ConcurrentCreateICacheTest {
 
-    private static final ILogger log = Logger.getLogger(ConcurentCreateICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(ConcurrentCreateICacheTest.class);
 
-    private HazelcastInstance targetInstance;
-    private CacheManager cacheManager;
-    private String baseName;
-    private Counter counter = new Counter();
+    // properties
+    public String baseName = ConcurrentCreateICacheTest.class.getSimpleName();
+
+    private IList<Counter> counterList;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
+        HazelcastInstance instance = testContext.getTargetInstance();
+        counterList = instance.getList(baseName);
 
-        targetInstance = testContext.getTargetInstance();
-        baseName = testContext.getTestId();
+        HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
+        CacheManager cacheManager = new HazelcastServerCacheManager(
+                hcp, instance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
 
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        }
-
-        final CacheConfig config = new CacheConfig();
-
+        CacheConfig config = new CacheConfig();
         config.setName(baseName);
 
+        Counter counter = new Counter();
         try {
             cacheManager.createCache(baseName, config);
             counter.create++;
         } catch (CacheException e) {
-            log.severe(baseName +": createCache exception "+e, e);
+            LOGGER.severe(baseName + ": createCache exception " + e, e);
             counter.createException++;
         }
-
-        targetInstance.getList(baseName).add(counter);
-    }
-
-    @Run
-    public void run(){
+        counterList.add(counter);
     }
 
     @Verify(global = true)
     public void verify() throws Exception {
-        IList<Counter> counters = targetInstance.getList(baseName);
         Counter total = new Counter();
-        for(Counter c : counters){
-            total.add(c);
+        for (Counter counter : counterList) {
+            total.add(counter);
         }
-        log.info(baseName + ": "+total + " from " + counters.size() + " worker threads");
+        LOGGER.info(baseName + ": " + total + " from " + counterList.size() + " worker threads");
 
         assertEquals(baseName + ": We expect 0 CacheException from multi node create cache calls", 0, total.createException);
     }
 
-    static class Counter implements Serializable {
+    @Run
+    public void run() {
+    }
+
+    private static class Counter implements Serializable {
 
         public long create = 0;
         public long createException = 0;
 
-        public void add(Counter c) {
-            create += c.create;
-            createException += c.createException;
+        public void add(Counter counter) {
+            create += counter.create;
+            createException += counter.createException;
         }
 
         @Override
