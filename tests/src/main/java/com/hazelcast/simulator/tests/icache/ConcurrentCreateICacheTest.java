@@ -17,6 +17,8 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
+import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
+import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
@@ -31,6 +33,7 @@ import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import java.io.Serializable;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static junit.framework.Assert.assertEquals;
 
 /**
@@ -52,9 +55,14 @@ public class ConcurrentCreateICacheTest {
         HazelcastInstance instance = testContext.getTargetInstance();
         counterList = instance.getList(baseName);
 
-        HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-        CacheManager cacheManager = new HazelcastServerCacheManager(
-                hcp, instance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        CacheManager cacheManager;
+        if (isMemberNode(instance)) {
+            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
+            cacheManager = new HazelcastServerCacheManager(hcp, instance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        } else {
+            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
+            cacheManager = new HazelcastClientCacheManager(hcp, instance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+        }
 
         CacheConfig config = new CacheConfig();
         config.setName(baseName);
