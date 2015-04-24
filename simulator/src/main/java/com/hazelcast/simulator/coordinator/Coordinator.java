@@ -107,13 +107,19 @@ public final class Coordinator {
                 parallelExecutor.awaitTermination(10, TimeUnit.SECONDS);
             }
 
-            agentsClient.terminateWorkers();
-            agentsClient.stop();
+            if (agentsClient != null) {
+                agentsClient.terminateWorkers();
+                agentsClient.stop();
+            }
         }
     }
 
     private void initAgents() {
         List<AgentAddress> agentAddresses = AgentsFile.load(agentsFile);
+        if (agentAddresses.isEmpty()) {
+            throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
+        }
+
         agentsClient = new AgentsClient(agentAddresses);
         agentsClient.start();
 
