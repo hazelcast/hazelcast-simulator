@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.agent.remoting;
 
 import com.hazelcast.simulator.agent.Agent;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.messaging.DummyRunnableMessage;
 import com.hazelcast.simulator.common.messaging.Message;
@@ -11,38 +12,43 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
+import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class AgentRemoteServiceTest {
 
-    private Agent agentMock;
-    private AgentMessageProcessor agentMessageProcessorMock;
+    private static final String AGENT_ADDRESS = "127.0.0.1";
+
+    private Agent agent;
+    private AgentMessageProcessor agentMessageProcessor;
     private AgentRemoteService agentRemoteService;
     private AgentsClient client;
 
     @Before
     public void setUp() throws IOException {
-        agentMock = mock(Agent.class);
-        agentMessageProcessorMock = mock(AgentMessageProcessor.class);
-        agentRemoteService = new AgentRemoteService(agentMock, agentMessageProcessorMock);
+        WorkerJvmManager workerJvmManager = mock(WorkerJvmManager.class);
+
+        agent = mock(Agent.class);
+        when(agent.getWorkerJvmManager()).thenReturn(workerJvmManager);
+
+        agentMessageProcessor = mock(AgentMessageProcessor.class);
+
+        agentRemoteService = new AgentRemoteService(agent, agentMessageProcessor);
         agentRemoteService.start();
 
-        InetAddress localInetAddress = InetAddress.getByName(getHostAddress());
-        String addressString = localInetAddress.getHostAddress();
-        List<AgentAddress> addresses = Collections.singletonList(new AgentAddress(addressString, addressString));
+        List<AgentAddress> addresses = singletonList(new AgentAddress(AGENT_ADDRESS, AGENT_ADDRESS));
         client = new AgentsClient(addresses);
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws Exception {
+        client.stop();
         agentRemoteService.stop();
     }
 
@@ -50,7 +56,8 @@ public class AgentRemoteServiceTest {
     public void testEcho() throws IOException, TimeoutException {
         String string = "foo";
         client.echo(string);
-        verify(agentMock).echo(string);
+
+        verify(agent).echo(string);
     }
 
     @Test
@@ -58,6 +65,7 @@ public class AgentRemoteServiceTest {
         MessageAddress address = MessageAddress.builder().toRandomAgent().build();
         Message message = new DummyRunnableMessage(address);
         client.sendMessage(message);
-        verify(agentMessageProcessorMock).submit(any(Message.class));
+
+        verify(agentMessageProcessor).submit(any(Message.class));
     }
 }

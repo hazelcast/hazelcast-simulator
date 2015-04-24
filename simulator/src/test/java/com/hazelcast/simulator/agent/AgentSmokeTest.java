@@ -5,7 +5,6 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
-import com.hazelcast.simulator.coordinator.Coordinator;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestCase;
@@ -25,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -39,10 +39,10 @@ public class AgentSmokeTest {
     private static final String AGENT_IP_ADDRESS = System.getProperty("agentBindAddress", "127.0.0.1");
     private static final int TEST_RUNTIME_SECONDS = Integer.parseInt(System.getProperty("testRuntimeSeconds", "10"));
 
-    private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
+    private static final Logger LOGGER = Logger.getLogger(AgentSmokeTest.class);
 
     private static String userDir;
-    private static Thread agentThread;
+    private static AgentStarter agentStarter;
     private static AgentsClient agentsClient;
 
     @BeforeClass
@@ -55,7 +55,9 @@ public class AgentSmokeTest {
         LOGGER.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
         LOGGER.info("Test runtime for smoke test: " + TEST_RUNTIME_SECONDS + " seconds");
 
-        startAgent();
+        agentStarter = new AgentStarter();
+        agentStarter.start();
+
         agentsClient = getAgentsClient();
         agentsClient.start();
     }
@@ -65,8 +67,7 @@ public class AgentSmokeTest {
         try {
             agentsClient.stop();
 
-            agentThread.interrupt();
-            agentThread.join();
+            agentStarter.stop();
         } finally {
             Hazelcast.shutdownAll();
 
@@ -179,28 +180,47 @@ public class AgentSmokeTest {
         client.spawnWorkers(Collections.singletonList(agentLayout), true);
     }
 
-    private static void startAgent() {
-        agentThread = new Thread() {
-            public void run() {
-                try {
-                    String[] args = new String[]{
-                            "--bindAddress", AGENT_IP_ADDRESS,
-                    };
-                    Agent.createAgent(args);
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                }
-            }
-        };
-        agentThread.start();
-        sleepSeconds(5);
-    }
-
     private static AgentsClient getAgentsClient() throws IOException {
         File agentFile = File.createTempFile("agents", "txt");
         agentFile.deleteOnExit();
         writeText(AGENT_IP_ADDRESS, agentFile);
         List<AgentAddress> agentAddresses = AgentsFile.load(agentFile);
         return new AgentsClient(agentAddresses);
+    }
+
+    private static class AgentStarter {
+
+        private final CountDownLatch latch = new CountDownLatch(1);
+        private final AgentThread agentThread = new AgentThread();
+
+        private void start() throws Exception {
+            agentThread.start();
+            latch.await();
+        }
+
+        private void stop() throws Exception {
+            agentThread.shutdown();
+            agentThread.interrupt();
+            agentThread.join();
+        }
+
+        private class AgentThread extends Thread {
+
+            private Agent agent;
+
+            @Override
+            public void run() {
+                String[] args = new String[]{
+                        "--bindAddress", AGENT_IP_ADDRESS,
+                };
+                agent = Agent.createAgent(args);
+                agent.start();
+                latch.countDown();
+            }
+
+            private void shutdown() {
+                agent.stop();
+            }
+        }
     }
 }

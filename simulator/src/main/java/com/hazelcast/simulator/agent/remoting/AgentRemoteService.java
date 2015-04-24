@@ -9,7 +9,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Executor;
 
-import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 
 public class AgentRemoteService {
@@ -54,32 +53,40 @@ public class AgentRemoteService {
     }
 
     public void stop() throws IOException {
-        acceptorThread.stopMe();
-        serverSocket.close();
+        LOGGER.info("Stopping AgentRemoteService...");
+        if (acceptorThread != null) {
+            acceptorThread.shutdown();
+        }
+        if (serverSocket != null) {
+            serverSocket.close();
+        }
     }
 
     private class AcceptorThread extends Thread {
-        private volatile boolean stopped;
 
-        public AcceptorThread() {
+        private volatile boolean running = true;
+
+        private AcceptorThread() {
             super("AcceptorThread");
         }
 
-        public void stopMe() {
-            stopped = true;
+        private void shutdown() {
+            running = false;
         }
 
         public void run() {
-            while (!stopped) {
+            while (running) {
                 try {
-                    Socket clientSocket = serverSocket.accept();
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
+                    if (!serverSocket.isClosed()) {
+                        Socket clientSocket = serverSocket.accept();
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
+                        }
+                        agent.signalUsed();
+                        executor.execute(new ClientSocketTask(clientSocket, agent, agentMessageProcessor));
                     }
-                    agent.signalUsed();
-                    executor.execute(new ClientSocketTask(clientSocket, agent, agentMessageProcessor));
                 } catch (IOException e) {
-                    LOGGER.fatal(e);
+                    LOGGER.fatal("Exception in AcceptorThread", e);
                 }
             }
         }
