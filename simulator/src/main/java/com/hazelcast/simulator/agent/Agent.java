@@ -22,9 +22,11 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.coordinator.Coordinator;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.IOException;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
@@ -50,10 +52,26 @@ public class Agent {
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
     private final HarakiriMonitor harakiriMonitor = new HarakiriMonitor(this);
 
+    private AgentRemoteService agentRemoteService;
+
     private volatile TestSuite testSuite;
+
+    public void initTestSuite(TestSuite testSuite) {
+        this.testSuite = testSuite;
+
+        File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
+        ensureExistingDirectory(testSuiteDir);
+
+        File libDir = new File(testSuiteDir, "lib");
+        ensureExistingDirectory(libDir);
+    }
 
     public void echo(String msg) {
         LOGGER.info(msg);
+    }
+
+    public void signalUsed() {
+        lastUsed = System.currentTimeMillis();
     }
 
     public String getBindAddress() {
@@ -62,10 +80,6 @@ public class Agent {
 
     public TestSuite getTestSuite() {
         return testSuite;
-    }
-
-    public void signalUsed() {
-        lastUsed = System.currentTimeMillis();
     }
 
     public File getTestSuiteDir() {
@@ -84,17 +98,7 @@ public class Agent {
         return workerJvmManager;
     }
 
-    public void initTestSuite(TestSuite testSuite) {
-        this.testSuite = testSuite;
-
-        File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
-        ensureExistingDirectory(testSuiteDir);
-
-        File libDir = new File(testSuiteDir, "lib");
-        ensureExistingDirectory(libDir);
-    }
-
-    private void start() {
+    void start() {
         ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
 
         startRestServer();
@@ -105,10 +109,18 @@ public class Agent {
         LOGGER.info("Simulator Agent is ready for action");
     }
 
+    void stop() {
+        try {
+            agentRemoteService.stop();
+        } catch (IOException e) {
+            EmptyStatement.ignore(e);
+        }
+    }
+
     private void startRestServer() {
         try {
             AgentMessageProcessor agentMessageProcessor = new AgentMessageProcessor(workerJvmManager);
-            AgentRemoteService agentRemoteService = new AgentRemoteService(this, agentMessageProcessor);
+            agentRemoteService = new AgentRemoteService(this, agentMessageProcessor);
             agentRemoteService.start();
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to start REST server", e);
@@ -117,13 +129,14 @@ public class Agent {
 
     public static void main(String[] args) {
         try {
-            createAgent(args);
+            Agent agent = createAgent(args);
+            agent.start();
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not start agent!", e);
         }
     }
 
-    static void createAgent(String[] args) {
+    static Agent createAgent(String[] args) {
         LOGGER.info("Simulator Agent");
         LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
                 getSimulatorVersion(),
@@ -140,7 +153,7 @@ public class Agent {
         LOGGER.info("CloudCredential: " + agent.cloudCredential);
         LOGGER.info("CloudProvider: " + agent.cloudProvider);
 
-        agent.start();
+        return agent;
     }
 
     private static void logInterestingSystemProperties() {
