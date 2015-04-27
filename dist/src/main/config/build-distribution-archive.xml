@@ -26,6 +26,9 @@
         <dependencySet>
             <outputDirectory>/lib</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
+            <excludes>
+                <exclude>com.hazelcast:hazelcast-code-generator</exclude>
+            </excludes>
         </dependencySet>
     </dependencySets>
 </assembly>
