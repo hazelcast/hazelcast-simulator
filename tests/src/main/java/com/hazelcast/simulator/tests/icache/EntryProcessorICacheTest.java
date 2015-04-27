@@ -75,7 +75,7 @@ public class EntryProcessorICacheTest {
         try {
             cacheManager.createCache(basename, config);
         } catch (CacheException hack) {
-            //temp hack to deal with multiple nodes wanting to make the same cache.
+            // temp hack to deal with multiple nodes wanting to make the same cache
             LOGGER.severe(hack);
         }
 
@@ -167,7 +167,7 @@ public class EntryProcessorICacheTest {
             }
             operations.addAndGet(iteration % performanceUpdateFrequency);
 
-            //sleep to give time for the last EntryProcessor tasks to complete.
+            // sleep to give time for the last EntryProcessor tasks to complete
             try {
                 Thread.sleep(maxProcessorDelayMs * 2);
             } catch (InterruptedException e) {

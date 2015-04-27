@@ -37,14 +37,14 @@ public class MapStoreTest {
     public int threadCount = 3;
     public int keyCount = 10;
 
-    //check these add up to 1
+    // check these add up to 1
     public double writeProb = 0.4;
     public double getProb = 0.2;
     public double getAsyncProb = 0.15;
     public double deleteProb = 0.2;
     public double destroyProb = 0.0;
 
-    //check these add up to 1   (writeProb is split up into sub styles)
+    // check these add up to 1 (writeProb is split up into sub styles)
     public double writeUsingPutProb = 0.4;
     public double writeUsingPutAsyncProb = 0.0;
     public double writeUsingPutTTLProb = 0.3;

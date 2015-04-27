@@ -50,7 +50,7 @@ public class MapTimeToLiveTest {
     public int threadCount = 3;
     public int keyCount = 10;
 
-    //check these add up to 1
+    // check these add up to 1
     public double putTTLProb = 0.4;
     public double putAsyncTTLProb = 0.3;
     public double getProb = 0.2;

@@ -37,7 +37,7 @@ public class ProducerConsumerTest {
 
     private static final ILogger LOGGER = Logger.getLogger(ProducerConsumerTest.class);
 
-    //props
+    // properties
     public int producerCount = 4;
     public int consumerCount = 4;
     public int maxIntervalMillis = 1000;

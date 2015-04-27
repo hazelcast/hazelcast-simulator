@@ -127,7 +127,7 @@ public class WorkerJvmManager {
         if (MessageAddress.BROADCAST.equals(workerAddress)) {
             sendMessageToAllWorkers(message);
         } else if (MessageAddress.WORKER_WITH_OLDEST_MEMBER.equals(workerAddress)) {
-            //send to all workers as they have to evaluate who is the oldest worker
+            // send to all workers as they have to evaluate who is the oldest worker
             sendMessageToAllWorkers(message);
         } else if (MessageAddress.RANDOM.equals(workerAddress)) {
             sendMessageToRandomWorker(message);
@@ -277,7 +277,7 @@ public class WorkerJvmManager {
         Thread t = new Thread() {
             public void run() {
                 try {
-                    //this sends SIGTERM on *nix
+                    // this sends SIGTERM on *nix
                     jvm.process.destroy();
                     jvm.process.waitFor();
                 } catch (Throwable e) {

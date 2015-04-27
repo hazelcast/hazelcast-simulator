@@ -59,7 +59,8 @@ public class StringStringMapTest {
 
     public double putProb = 0.1;
     public double setProb = 0;
-    @Deprecated //use the setProb property instead
+    @Deprecated
+    // use the setProb property instead
     public boolean useSet = false;
 
     // probes

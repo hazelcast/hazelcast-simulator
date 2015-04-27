@@ -87,7 +87,7 @@ public class MapEntryProcessorTest2 {
                 localIncrementsAtKey[key] += increment;
             }
 
-            //sleep to give time for the last EntryProcessor tasks to complete.
+            // sleep to give time for the last EntryProcessor tasks to complete
             sleepMillis(maxProcessorDelayMs * 2);
             allIncrementsOnKeys.add(localIncrementsAtKey);
         }

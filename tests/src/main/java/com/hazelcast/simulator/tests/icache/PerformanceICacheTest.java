@@ -35,7 +35,7 @@ public class PerformanceICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(PerformanceICacheTest.class);
 
-    //props
+    // properties
     public int threadCount = 10;
     public int keyCount = 1000000;
     public int logFrequency = 10000;
@@ -78,7 +78,7 @@ public class PerformanceICacheTest {
         try {
             cacheManager.createCache(basename, config);
         } catch (CacheException hack) {
-            //temp hack to deal with multiple nodes wanting to make the same cache.
+            // temp hack to deal with multiple nodes wanting to make the same cache
             LOGGER.severe(hack);
         }
         cache = cacheManager.getCache(basename);

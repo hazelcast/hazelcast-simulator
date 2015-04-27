@@ -50,12 +50,12 @@ public class SyntheticMapService implements ManagedService, RemoteService {
 
     @Override
     public void reset() {
-        //no-op
+        // no-op
     }
 
     @Override
     public void shutdown(boolean terminate) {
-        //no-op
+        // no-op
     }
 
     private static class Partition {

@@ -49,7 +49,7 @@ public class StringICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(StringICacheTest.class);
 
-    //props
+    // properties
     public int writePercentage = 10;
     public int threadCount = 10;
     public int keyLength = 10;
@@ -103,7 +103,7 @@ public class StringICacheTest {
         try {
             cacheManager.createCache(basename, config);
         } catch (CacheException hack) {
-            //temp hack to deal with multiple nodes wanting to make the same cache.
+            // temp hack to deal with multiple nodes wanting to make the same cache.
             LOGGER.severe(hack);
         }
         cache = cacheManager.getCache(basename);

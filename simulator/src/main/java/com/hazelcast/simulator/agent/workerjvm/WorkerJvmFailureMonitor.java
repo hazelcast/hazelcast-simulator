@@ -188,7 +188,7 @@ public class WorkerJvmFailureMonitor {
         try {
             exitCode = process.exitValue();
         } catch (IllegalThreadStateException ignore) {
-            //process is still running.
+            // process is still running
             return;
         }
 

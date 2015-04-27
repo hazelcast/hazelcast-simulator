@@ -47,7 +47,7 @@ public class BatchingICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(PerformanceICacheTest.class);
 
-    //props
+    // properties
     public int threadCount = 10;
     public int keyCount = 1000000;
     public int logFrequency = 10000;

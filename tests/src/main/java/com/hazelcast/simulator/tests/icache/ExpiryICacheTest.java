@@ -83,7 +83,7 @@ public class ExpiryICacheTest {
         try {
             cacheManager.createCache(basename, config);
         } catch (CacheException hack) {
-            //temp hack to deal with multiple nodes wanting to make the same cache.
+            // temp hack to deal with multiple nodes wanting to make the same cache
             LOGGER.severe(hack);
         }
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);

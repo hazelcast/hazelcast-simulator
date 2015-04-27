@@ -55,7 +55,7 @@ public class SyntheticOperation extends AbstractOperation
 
     @Override
     public void run() throws Exception {
-        //do nothing
+        // do nothing
     }
 
     @Override

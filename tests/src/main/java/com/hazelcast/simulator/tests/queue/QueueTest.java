@@ -39,7 +39,7 @@ public class QueueTest {
     private IAtomicLong totalCounter;
     private IQueue[] queues;
 
-    //props
+    // properties
     public int queueLength = 100;
     public int threadsPerQueue = 1;
     public int messagesPerQueue = 1;

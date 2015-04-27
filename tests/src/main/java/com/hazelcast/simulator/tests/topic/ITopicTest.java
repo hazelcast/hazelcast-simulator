@@ -37,7 +37,7 @@ public class ITopicTest {
 
     private static final ILogger LOGGER = Logger.getLogger(ITopicTest.class);
 
-    //props
+    // properties
     public int topicCount = 1000;
     public int threadCount = 5;
     public int listenersPerTopic = 1;
