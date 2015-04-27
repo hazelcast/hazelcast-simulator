@@ -6,7 +6,10 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 
-public class HostAddressPicker {
+public final class HostAddressPicker {
+
+    private HostAddressPicker() {
+    }
 
     public static String pickHostAddress() {
         try {

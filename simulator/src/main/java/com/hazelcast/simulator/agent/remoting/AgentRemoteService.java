@@ -62,7 +62,7 @@ public class AgentRemoteService {
         }
     }
 
-    private class AcceptorThread extends Thread {
+    private final class AcceptorThread extends Thread {
 
         private volatile boolean running = true;
 
