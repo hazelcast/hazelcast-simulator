@@ -26,7 +26,7 @@ import static org.junit.Assert.assertFalse;
 * */
 public class TryLockTimeOutTest {
 
-    private ILogger log;
+    private ILogger LOGGER = Logger.getLogger(TryLockTimeOutTest.class);
 
     public int threadCount = 3;
     public int maxAccounts = 100;
@@ -44,7 +44,6 @@ public class TryLockTimeOutTest {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         id = testContext.getTestId();
-        log = Logger.getLogger(TryLockTimeOutTest.class+" "+id);
     }
 
     @Warmup(global = true)
@@ -54,7 +53,7 @@ public class TryLockTimeOutTest {
             accounts.add(initialAccountValue);
         }
         totalInitalValue = initialAccountValue * maxAccounts;
-        log.info(" totalInitalValue=" + totalInitalValue);
+        LOGGER.info(" totalInitalValue=" + totalInitalValue);
     }
 
     @Run
@@ -98,7 +97,7 @@ public class TryLockTimeOutTest {
                                     }
                                 }
                             }catch(InterruptedException e){
-                                log.severe(" lock2 "+e, e);
+                                LOGGER.severe(" lock2 " + e, e);
                                 counter.interruptedException++;
                             }
                         } finally {
@@ -106,7 +105,7 @@ public class TryLockTimeOutTest {
                         }
                     }
                 }catch(InterruptedException e){
-                    log.severe(" lock1 "+e, e);
+                    LOGGER.severe(" lock1 " + e, e);
                     counter.interruptedException++;
                 }
             }
@@ -145,7 +144,7 @@ public class TryLockTimeOutTest {
         for (long value : accounts) {
             totalValue += value;
         }
-        log.info(": totalValue=" + totalValue);
+        LOGGER.info(": totalValue=" + totalValue);
         assertEquals(id + " totalInitalValue != totalValue ", totalInitalValue, totalValue);
 
         Counter total = new Counter();
@@ -153,6 +152,6 @@ public class TryLockTimeOutTest {
         for (Counter count : totals) {
             total.add(count);
         }
-        log.info(" total count " + total);
+        LOGGER.info(" total count " + total);
     }
 }

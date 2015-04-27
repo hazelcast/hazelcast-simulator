@@ -46,7 +46,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
 public class ExpiryICacheTest {
 
-    private static final ILogger log = Logger.getLogger(ExpiryICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(ExpiryICacheTest.class);
 
     // properties
     public String basename = "ttlicachetest";
@@ -84,7 +84,7 @@ public class ExpiryICacheTest {
             cacheManager.createCache(basename, config);
         } catch (CacheException hack) {
             //temp hack to deal with multiple nodes wanting to make the same cache.
-            log.severe(hack);
+            LOGGER.severe(hack);
         }
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
     }
@@ -118,11 +118,11 @@ public class ExpiryICacheTest {
             long maxBytes = Runtime.getRuntime().maxMemory();
             double usedOfMax = 100.0 * ((double) baseLineUsed / (double) maxBytes);
 
-            log.info(basename + " before Init");
-            log.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
-            log.info(basename + " used = " + humanReadableByteCount(baseLineUsed, true) + " = " + baseLineUsed);
-            log.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-            log.info(basename + " usedOfMax = " + usedOfMax + "%");
+            LOGGER.info(basename + " before Init");
+            LOGGER.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
+            LOGGER.info(basename + " used = " + humanReadableByteCount(baseLineUsed, true) + " = " + baseLineUsed);
+            LOGGER.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
+            LOGGER.info(basename + " usedOfMax = " + usedOfMax + "%");
 
             long iteration = 1;
             Random random = new Random();
@@ -130,21 +130,21 @@ public class ExpiryICacheTest {
             while (!testContext.isStopped()) {
                 double usedPercentage = heapUsedPercentage();
                 if (usedPercentage >= maxHeapUsagePercentage) {
-                    log.info("heap used: " + usedPercentage + " % map.size:" + cache.size());
+                    LOGGER.info("heap used: " + usedPercentage + " % map.size:" + cache.size());
 
                     sleepSeconds(10);
                 } else {
                     for (int k = 0; k < 1000; k++) {
                         iteration++;
                         if (iteration % 100000 == 0) {
-                            log.info("at:" + iteration + " heap used: " + usedPercentage + " % map.size:" + cache.size());
+                            LOGGER.info("at:" + iteration + " heap used: " + usedPercentage + " % map.size:" + cache.size());
                         }
 
                         long key = random.nextLong();
                         cache.put(key, 0L, expiryPolicy);
 
                         if (iteration % logFrequency == 0) {
-                            log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                            LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                         }
 
                         if (iteration % performanceUpdateFrequency == 0) {
@@ -161,13 +161,13 @@ public class ExpiryICacheTest {
             maxBytes = Runtime.getRuntime().maxMemory();
             usedOfMax = 100.0 * ((double) nowUsed / (double) maxBytes);
 
-            log.info(basename + " After Init");
-            log.info(basename + " map = " + cache.size());
-            log.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
-            log.info(basename + " used = " + humanReadableByteCount(nowUsed, true) + " = " + nowUsed);
-            log.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-            log.info(basename + " usedOfMax = " + usedOfMax + "%");
-            log.info(basename + " map size:" + cache.size());
+            LOGGER.info(basename + " After Init");
+            LOGGER.info(basename + " map = " + cache.size());
+            LOGGER.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
+            LOGGER.info(basename + " used = " + humanReadableByteCount(nowUsed, true) + " = " + nowUsed);
+            LOGGER.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
+            LOGGER.info(basename + " usedOfMax = " + usedOfMax + "%");
+            LOGGER.info(basename + " map size:" + cache.size());
         }
     }
 
@@ -179,11 +179,11 @@ public class ExpiryICacheTest {
         long maxBytes = Runtime.getRuntime().maxMemory();
         double usedOfMax = 100.0 * ((double) used / (double) maxBytes);
 
-        log.info(basename + " map = " + cache.size());
-        log.info(basename + "free = " + humanReadableByteCount(free, true) + " = " + free);
-        log.info(basename + "used = " + humanReadableByteCount(used, true) + " = " + used);
-        log.info(basename + "max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-        log.info(basename + "usedOfMax = " + usedOfMax + "%");
+        LOGGER.info(basename + " map = " + cache.size());
+        LOGGER.info(basename + "free = " + humanReadableByteCount(free, true) + " = " + free);
+        LOGGER.info(basename + "used = " + humanReadableByteCount(used, true) + " = " + used);
+        LOGGER.info(basename + "max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
+        LOGGER.info(basename + "usedOfMax = " + usedOfMax + "%");
     }
 
     public static void main(String[] args) throws Exception {

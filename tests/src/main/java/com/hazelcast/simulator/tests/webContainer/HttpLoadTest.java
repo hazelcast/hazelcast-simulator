@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 * */
 public class HttpLoadTest {
 
-    private final static ILogger log = Logger.getLogger(HttpLoadTest.class);
+    private final static ILogger LOGGER = Logger.getLogger(HttpLoadTest.class);
 
     public String serverIp="";
     public int serverPort=0;
@@ -81,7 +81,7 @@ public class HttpLoadTest {
             cookieStore = new BasicCookieStore();
             client = HttpClientBuilder.create().disableRedirectHandling().setDefaultCookieStore(cookieStore).build();
 
-            log.info(id+": baseRul="+baseRul + " cookie="+cookieStore);
+            LOGGER.info(id + ": baseRul=" + baseRul + " cookie=" + cookieStore);
 
             OperationSelectorBuilder operationSelectorBuilder = new OperationSelectorBuilder();
 

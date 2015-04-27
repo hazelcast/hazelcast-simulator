@@ -1,7 +1,5 @@
 package com.hazelcast.simulator.tests.webContainer;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -17,11 +15,10 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 * */
 public class TomCatContainerTest {
 
-    private final static ILogger log = Logger.getLogger(TomCatContainerTest.class);
     public String basename = this.getClass().getSimpleName();
-    public int port=6555;
-    public String webAppPath="webapp";
-    public String configXml="tomcat-hz.xml";
+    public int port = 6555;
+    public String webAppPath = "webapp";
+    public String configXml = "tomcat-hz.xml";
 
     private TomcatContainer tomcat;
     private TestContext testContext;

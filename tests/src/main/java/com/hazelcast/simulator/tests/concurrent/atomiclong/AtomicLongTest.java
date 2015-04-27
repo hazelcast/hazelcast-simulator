@@ -39,9 +39,9 @@ import static org.junit.Assert.assertEquals;
 
 public class AtomicLongTest {
 
-    private static final ILogger log = Logger.getLogger(AtomicLongTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(AtomicLongTest.class);
 
-    //props
+    // properties
     public int countersLength = 1000;
     public int threadCount = 10;
     public int logFrequency = 10000;
@@ -94,7 +94,7 @@ public class AtomicLongTest {
             counter.destroy();
         }
         totalCounter.destroy();
-        log.info(getOperationCountInformation(targetInstance));
+        LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
     @Run
@@ -141,7 +141,7 @@ public class AtomicLongTest {
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);

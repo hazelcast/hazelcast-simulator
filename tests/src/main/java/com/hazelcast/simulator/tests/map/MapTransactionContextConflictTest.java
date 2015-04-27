@@ -31,7 +31,8 @@ import static org.junit.Assert.assertEquals;
  * more transactions are rolled back.
  */
 public class MapTransactionContextConflictTest {
-    private static final ILogger log = Logger.getLogger(MapTransactionContextConflictTest.class);
+
+    private static final ILogger LOGGER = Logger.getLogger(MapTransactionContextConflictTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;
@@ -105,7 +106,7 @@ public class MapTransactionContextConflictTest {
                     }
                 } catch (TransactionException e) {
 
-                    log.warning(basename + ": commit fail. tried key increments=" + putIncrements +" "+e.getMessage());
+                    LOGGER.warning(basename + ": commit fail. tried key increments=" + putIncrements + " " + e.getMessage());
                     if(throwCommitException){
                         throw new RuntimeException(e);
                     }
@@ -115,7 +116,7 @@ public class MapTransactionContextConflictTest {
                         count.rolled++;
 
                     } catch (TransactionException rollBack) {
-                        log.warning(basename + ": rollback fail " + rollBack.getMessage(), rollBack);
+                        LOGGER.warning(basename + ": rollback fail " + rollBack.getMessage(), rollBack);
                         count.failedRoles++;
 
                         if(throwRollBackException){
@@ -136,7 +137,7 @@ public class MapTransactionContextConflictTest {
         for (TxnCounter c : counts) {
             total.add(c);
         }
-        log.info(basename + ": " + total + " from " + counts.size() + " worker threads");
+        LOGGER.info(basename + ": " + total + " from " + counts.size() + " worker threads");
 
         IList<long[]> allIncrements = targetInstance.getList(basename + "inc");
         long expected[] = new long[keyCount];
@@ -151,7 +152,7 @@ public class MapTransactionContextConflictTest {
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != map.get(k)) {
                 failures++;
-                log.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + map.get(k));
+                LOGGER.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + map.get(k));
             }
         }
         assertEquals(basename + ": " + failures + " key=>values have been incremented unExpected", 0, failures);

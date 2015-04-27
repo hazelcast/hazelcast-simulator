@@ -63,7 +63,7 @@ public class ExpiryTest {
         GET_ASYNC
     }
 
-    private static final ILogger log = Logger.getLogger(ExpiryTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(ExpiryTest.class);
 
     public int threadCount = 3;
     public int expiryDuration = 500;
@@ -184,7 +184,7 @@ public class ExpiryTest {
         for (Counter counter : results) {
             totalCounter.add(counter);
         }
-        log.info(basename + ": " + totalCounter + " from " + results.size() + " worker Threads");
+        LOGGER.info(basename + ": " + totalCounter + " from " + results.size() + " worker Threads");
 
         @SuppressWarnings("unchecked") final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
 

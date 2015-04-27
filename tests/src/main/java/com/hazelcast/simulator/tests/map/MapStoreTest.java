@@ -31,7 +31,7 @@ import static junit.framework.Assert.assertNull;
  */
 public class MapStoreTest {
 
-    private static final ILogger log = Logger.getLogger(MapStoreTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapStoreTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;
@@ -153,7 +153,7 @@ public class MapStoreTest {
         for (MapOperationCounter i : results) {
             total.add(i);
         }
-        log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
+        LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads");
     }
 
     @Verify(global = false)
@@ -168,8 +168,8 @@ public class MapStoreTest {
             final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
             final IMap map = targetInstance.getMap(basename);
 
-            log.info(basename + ": map size  =" + map.size());
-            log.info(basename + ": " + mapStore);
+            LOGGER.info(basename + ": map size  =" + map.size());
+            LOGGER.info(basename + ": " + mapStore);
 
             assertTrueEventually(new AssertTask() {
                 @Override

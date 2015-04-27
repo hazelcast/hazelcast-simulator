@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 public class SimpleLockTest {
 
-    private static final ILogger log = Logger.getLogger(SimpleLockTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(SimpleLockTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int maxAccounts = 7;
@@ -93,7 +93,7 @@ public class SimpleLockTest {
             ILock lock = targetInstance.getLock(basename + k);
             IAtomicLong account = targetInstance.getAtomicLong(basename + k);
 
-            log.info(account + " " + account.get());
+            LOGGER.info(account + " " + account.get());
 
             assertFalse(basename + ": Lock should be unlocked", lock.isLocked());
             assertTrue(basename + ": Amount is < 0 ", account.get() >= 0);

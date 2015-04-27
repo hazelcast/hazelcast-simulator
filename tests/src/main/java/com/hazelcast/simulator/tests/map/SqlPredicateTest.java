@@ -29,7 +29,7 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 
 public class SqlPredicateTest {
 
-    private static final ILogger log = Logger.getLogger(SqlPredicateTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(SqlPredicateTest.class);
 
     // properties
     public int threadCount = 40;
@@ -58,7 +58,7 @@ public class SqlPredicateTest {
     @Teardown
     public void teardown() throws Exception {
         map.destroy();
-        log.info(getOperationCountInformation(targetInstance));
+        LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = false)
@@ -72,8 +72,8 @@ public class SqlPredicateTest {
             streamer.pushEntry(key, value);
         }
         streamer.await();
-        log.info("Map size is:" + map.size());
-        log.info("Map localKeySet size is: "+map.localKeySet().size());
+        LOGGER.info("Map size is:" + map.size());
+        LOGGER.info("Map localKeySet size is: " + map.localKeySet().size());
     }
 
     @Run
@@ -104,7 +104,7 @@ public class SqlPredicateTest {
                 search.done();
                 
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
                 if (iteration % performanceUpdateFrequency == 0) {

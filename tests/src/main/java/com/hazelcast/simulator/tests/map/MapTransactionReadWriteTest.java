@@ -36,7 +36,7 @@ public class MapTransactionReadWriteTest {
         GET
     }
 
-    private static final ILogger log = Logger.getLogger(MapTransactionReadWriteTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapTransactionReadWriteTest.class);
 
     // properties
     public int threadCount = 10;
@@ -78,12 +78,12 @@ public class MapTransactionReadWriteTest {
     @Teardown
     public void teardown() throws Exception {
         map.destroy();
-        log.info(getOperationCountInformation(targetInstance));
+        LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitClusterSize(log, targetInstance, minNumberOfMembers);
+        waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
         keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, targetInstance);
 
         Random random = new Random();
@@ -154,7 +154,7 @@ public class MapTransactionReadWriteTest {
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
 
                 if (iteration % performanceUpdateFrequency == 0) {

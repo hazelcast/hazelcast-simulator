@@ -47,7 +47,7 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
 public class StringICacheTest {
 
-    private static final ILogger log = Logger.getLogger(StringICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(StringICacheTest.class);
 
     //props
     public int writePercentage = 10;
@@ -104,7 +104,7 @@ public class StringICacheTest {
             cacheManager.createCache(basename, config);
         } catch (CacheException hack) {
             //temp hack to deal with multiple nodes wanting to make the same cache.
-            log.severe(hack);
+            LOGGER.severe(hack);
         }
         cache = cacheManager.getCache(basename);
     }
@@ -116,7 +116,7 @@ public class StringICacheTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitClusterSize(log, targetInstance, minNumberOfMembers);
+        waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
 
         keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = generateStrings(valueCount, valueLength);
@@ -170,7 +170,7 @@ public class StringICacheTest {
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);

@@ -23,7 +23,7 @@ import static org.junit.Assert.assertFalse;
  */
 public class TxnQueueWithLockTest {
 
-    private static final ILogger log = Logger.getLogger(TxnQueueWithLockTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(TxnQueueWithLockTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 5;
@@ -76,18 +76,18 @@ public class TxnQueueWithLockTest {
                             ctx.rollbackTransaction();
                             counter.rolled++;
 
-                            log.severe(basename + ": Exception in txn " + counter, txnException);
+                            LOGGER.severe(basename + ": Exception in txn " + counter, txnException);
                         } catch (Exception rollException) {
                             // TODO: Bad exception handling
                             counter.failedRoles++;
-                            log.severe(basename + ": Exception in roll " + counter,rollException);
+                            LOGGER.severe(basename + ": Exception in roll " + counter, rollException);
                         }
                     } finally {
                         firstLock.unlock();
                     }
                 } catch (Exception e) {
                     // TODO: Bad exception handling
-                    log.warning(e.getMessage(), e);
+                    LOGGER.warning(e.getMessage(), e);
                 }
             }
             IList<TxnCounter> results = instance.getList(basename + "results");
@@ -108,7 +108,7 @@ public class TxnQueueWithLockTest {
             total.add(counter);
         }
 
-        log.info(basename + ": " + total + " from " + results.size() + " worker Threads  Queue size=" + queue.size());
+        LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads  Queue size=" + queue.size());
         assertFalse(basename + ": firstLock.isLocked()", firstLock.isLocked());
         assertFalse(basename + ": secondLock.isLocked()", secondLock.isLocked());
         //assertEquals(total.committed - total.rolled, queue.size());

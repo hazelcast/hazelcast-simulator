@@ -36,9 +36,9 @@ import static org.junit.Assert.assertEquals;
 
 public class EntryProcessorICacheTest {
 
-    private static final ILogger log = Logger.getLogger(EntryProcessorICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(EntryProcessorICacheTest.class);
 
-    //props
+    // properties
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 10;
     public int keyCount = 1000;
@@ -76,7 +76,7 @@ public class EntryProcessorICacheTest {
             cacheManager.createCache(basename, config);
         } catch (CacheException hack) {
             //temp hack to deal with multiple nodes wanting to make the same cache.
-            log.severe(hack);
+            LOGGER.severe(hack);
         }
 
         cache = cacheManager.getCache(basename);
@@ -159,7 +159,7 @@ public class EntryProcessorICacheTest {
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);

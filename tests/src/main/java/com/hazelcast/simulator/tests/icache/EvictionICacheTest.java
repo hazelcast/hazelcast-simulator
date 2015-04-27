@@ -43,19 +43,19 @@ public class EvictionICacheTest {
         PUT_ALL,
     }
 
-    private static final ILogger log = Logger.getLogger(EvictionICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(EvictionICacheTest.class);
 
-    //number of threads each test participants will use to run the test
+    // number of threads each test participants will use to run the test
     public int threadCount = 3;
 
-    //number of bytes for the value/payload of a key
+    // number of bytes for the value/payload of a key
     public int valueSize = 2;
 
     public double putProb = 0.8;
     public double putAsyncProb = 0.1;
     public double putAllProb = 0.1;
 
-    //used as the basename of the data structure
+    // used as the basename of the data structure
     public String basename;
 
     public int partitionCount;
@@ -68,7 +68,7 @@ public class EvictionICacheTest {
     private int configuredMaxSize;
     private Map<Integer, Object> putAllMap = new HashMap<Integer, Object>();
 
-    // Find estimated max size (entry count) that cache can reach at max
+    // find estimated max size (entry count) that cache can reach at max
     private int estimatedMaxSize;
 
     private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
@@ -98,12 +98,12 @@ public class EvictionICacheTest {
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
 
         CacheConfig config = cache.getConfiguration(CacheConfig.class);
-        log.info(id + ": " + cache.getName() + " config=" + config);
+        LOGGER.info(id + ": " + cache.getName() + " config=" + config);
 
         configuredMaxSize = config.getEvictionConfig().getSize();
 
-        //we are explicitly using a random key so that all participants of the test do not put keys 0..Max
-        //the size of putAllMap is not guarantied to be configuredMaxSize/2 as keys are random
+        // we are explicitly using a random key so that all participants of the test do not put keys 0...max
+        // the size of putAllMap is not guarantied to be configuredMaxSize / 2 as keys are random
         for (int i = 0; i < configuredMaxSize / 2; i++) {
             putAllMap.put(random.nextInt(), value);
         }
@@ -180,7 +180,7 @@ public class EvictionICacheTest {
                 observedMaxSize = m;
             }
         }
-        log.info(id + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
+        LOGGER.info(id + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
                 + " observedMaxSize=" + observedMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
 
         IList<Counter> counters = targetInstance.getList(basename + "counter");
@@ -188,8 +188,8 @@ public class EvictionICacheTest {
         for (Counter c : counters) {
             total.add(c);
         }
-        log.info(id + ": " + total);
-        log.info(id + ": putAllMap size=" + putAllMap.size());
+        LOGGER.info(id + ": " + total);
+        LOGGER.info(id + ": putAllMap size=" + putAllMap.size());
     }
 
     public static class Counter implements Serializable {

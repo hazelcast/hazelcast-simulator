@@ -38,9 +38,9 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 
 public class AtomicReferenceTest {
 
-    private static final ILogger log = Logger.getLogger(AtomicReferenceTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(AtomicReferenceTest.class);
 
-    //props
+    // properties
     public int countersLength = 1000;
     public int threadCount = 10;
     public int logFrequency = 10000;
@@ -96,7 +96,7 @@ public class AtomicReferenceTest {
         for (IAtomicReference counter : counters) {
             counter.destroy();
         }
-        log.info(getOperationCountInformation(targetInstance));
+        LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
     @Run
@@ -131,7 +131,7 @@ public class AtomicReferenceTest {
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);

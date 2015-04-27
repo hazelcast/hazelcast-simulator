@@ -22,10 +22,10 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
-// TODO: We need to deal with exception logging; they are logged but not visible to simulator.
+// TODO: We need to deal with exception logging; they are logged but not visible to simulator
 public class LockConflictTest {
 
-    private static final ILogger log = Logger.getLogger(LockConflictTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(LockConflictTest.class);
 
     // properties.
     public String basename = this.getClass().getSimpleName();
@@ -87,13 +87,13 @@ public class LockConflictTest {
                                 counter.locked++;
                             }
                         } catch (Exception e) {
-                            log.severe(basename + ": trying lock=" + i.key, e);
+                            LOGGER.severe(basename + ": trying lock=" + i.key, e);
                             if(throwException){
                                 throw new RuntimeException(e);
                             }
                         }
                     } catch (Exception e) {
-                        log.severe(basename + ": getting lock for locking=" + i.key, e);
+                        LOGGER.severe(basename + ": getting lock for locking=" + i.key, e);
                         if(throwException){
                             throw new RuntimeException(e);
                         }
@@ -108,7 +108,7 @@ public class LockConflictTest {
                         localIncrements[i.key] += i.inc;
                         counter.inced++;
                     } catch (Exception e) {
-                        log.severe(basename + ": updating account=" + i, e);
+                        LOGGER.severe(basename + ": updating account=" + i, e);
                         if(throwException){
                             throw new RuntimeException(e);
                         }
@@ -127,13 +127,13 @@ public class LockConflictTest {
                                 counter.unlocked++;
                                 it.remove();
                             } catch (Exception e) {
-                                log.severe(basename + ": unlocking lock =" + i.key, e);
+                                LOGGER.severe(basename + ": unlocking lock =" + i.key, e);
                                 if(throwException){
                                     throw new RuntimeException(e);
                                 }
                             }
                         } catch (Exception e) {
-                            log.severe(basename + ": getting lock for unlocking=" + i.key, e);
+                            LOGGER.severe(basename + ": getting lock for unlocking=" + i.key, e);
                             if(throwException){
                                 throw new RuntimeException(e);
                             }
@@ -142,7 +142,7 @@ public class LockConflictTest {
                     sleepSeconds(1);
 
                     if (++unlockAttempts > 5) {
-                        log.info(basename + ": Cant unlock=" + locked + " unlockAttempts=" + unlockAttempts);
+                        LOGGER.info(basename + ": Cant unlock=" + locked + " unlockAttempts=" + unlockAttempts);
                         break;
                     }
                 }
@@ -159,7 +159,7 @@ public class LockConflictTest {
         for (LockCounter i : results) {
             total.add(i);
         }
-        log.info(basename + ": " + total + " from " + results.size() + " worker threads");
+        LOGGER.info(basename + ": " + total + " from " + results.size() + " worker threads");
 
         IList<long[]> allIncrements = targetInstance.getList(basename + "res");
         long expected[] = new long[keyCount];
@@ -174,7 +174,7 @@ public class LockConflictTest {
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != accounts.get(k)) {
                 failures++;
-                log.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + accounts.get(k));
+                LOGGER.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + accounts.get(k));
             }
         }
 

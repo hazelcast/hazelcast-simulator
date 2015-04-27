@@ -20,7 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class GrowingMapTest {
-    private static final ILogger log = Logger.getLogger(GrowingMapTest.class);
+    
+    private static final ILogger LOGGER = Logger.getLogger(GrowingMapTest.class);
 
     // properties
     public int threadCount = 10;
@@ -101,11 +102,11 @@ public class GrowingMapTest {
 
                 insertIteration++;
                 if (insertIteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At insert iteration: " + insertIteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At insert iteration: " + insertIteration);
                 }
             }
 
-            log.info(Thread.currentThread().getName() + " Inserted " + insertIteration + " key/value pairs");
+            LOGGER.info(Thread.currentThread().getName() + " Inserted " + insertIteration + " key/value pairs");
             return insertIteration;
         }
 
@@ -122,7 +123,7 @@ public class GrowingMapTest {
 
                 readIteration++;
                 if (readIteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At read iteration: " + readIteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At read iteration: " + readIteration);
                 }
             }
         }
@@ -144,7 +145,7 @@ public class GrowingMapTest {
 
                 deleteIteration++;
                 if (deleteIteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At delete iteration: " + deleteIteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At delete iteration: " + deleteIteration);
                 }
             }
         }

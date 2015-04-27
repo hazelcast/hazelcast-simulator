@@ -23,7 +23,7 @@ import static junit.framework.TestCase.assertEquals;
 
 public class MapEntryProcessorTest2 {
 
-    private final static ILogger log = Logger.getLogger(MapEntryProcessorTest2.class);
+    private final static ILogger LOGGER = Logger.getLogger(MapEntryProcessorTest2.class);
 
     public String basename = this.getClass().getName();
     public int threadCount = 10;
@@ -117,7 +117,7 @@ public class MapEntryProcessorTest2 {
             assertEquals(basename + ": expectedValueForKey " + k + " not in the map at key " + k, expectedValueForKey[k], actual);
         }
 
-        log.info(basename + " OKOOKOKKKKKKKK");
+        LOGGER.info(basename + " OKOOKOKKKKKKKK");
     }
 
     private static class IncrementEntryProcessor extends AbstractEntryProcessor<Integer, Long> {

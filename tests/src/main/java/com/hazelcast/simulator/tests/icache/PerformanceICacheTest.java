@@ -33,7 +33,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberN
  */
 public class PerformanceICacheTest {
 
-    private static final ILogger log = Logger.getLogger(PerformanceICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(PerformanceICacheTest.class);
 
     //props
     public int threadCount = 10;
@@ -79,7 +79,7 @@ public class PerformanceICacheTest {
             cacheManager.createCache(basename, config);
         } catch (CacheException hack) {
             //temp hack to deal with multiple nodes wanting to make the same cache.
-            log.severe(hack);
+            LOGGER.severe(hack);
         }
         cache = cacheManager.getCache(basename);
     }
@@ -95,7 +95,7 @@ public class PerformanceICacheTest {
             cache.put(k, 0);
 
             if (k % 10000 == 0) {
-                log.info("Warmup: " + k);
+                LOGGER.info("Warmup: " + k);
             }
         }
     }
@@ -135,7 +135,7 @@ public class PerformanceICacheTest {
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);

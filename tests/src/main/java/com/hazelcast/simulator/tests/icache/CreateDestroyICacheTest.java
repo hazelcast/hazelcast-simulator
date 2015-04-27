@@ -45,7 +45,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberN
  */
 public class CreateDestroyICacheTest {
 
-    private static final ILogger log = Logger.getLogger(CreateDestroyICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(CreateDestroyICacheTest.class);
 
     public int threadCount = 3;
     public double createCacheProb=0.4;
@@ -141,7 +141,7 @@ public class CreateDestroyICacheTest {
         for(Counter c : counters){
             total.add(c);
         }
-        log.info(basename + ": " + total + " from " + counters.size() + " worker threads");
+        LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
 
     public static class Counter implements Serializable {

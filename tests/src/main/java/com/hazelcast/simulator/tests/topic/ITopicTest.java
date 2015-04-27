@@ -35,7 +35,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ITopicTest {
 
-    private static final ILogger log = Logger.getLogger(ITopicTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(ITopicTest.class);
 
     //props
     public int topicCount = 1000;
@@ -140,7 +140,7 @@ public class ITopicTest {
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);

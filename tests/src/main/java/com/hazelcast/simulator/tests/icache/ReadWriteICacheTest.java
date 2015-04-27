@@ -49,7 +49,7 @@ import static org.junit.Assert.assertNotNull;
  * */
 public class ReadWriteICacheTest {
 
-    private static final ILogger log = Logger.getLogger(ReadWriteICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(ReadWriteICacheTest.class);
 
     public int threadCount = 3;
     public int keyCount=10;
@@ -145,8 +145,8 @@ public class ReadWriteICacheTest {
         RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
         RecordingCacheWriter writer = (RecordingCacheWriter) config.getCacheWriterFactory().create();
 
-        log.info(basename+": "+loader);
-        log.info(basename+": "+writer);
+        LOGGER.info(basename + ": " + loader);
+        LOGGER.info(basename + ": " + writer);
     }
 
     @Verify(global = true)
@@ -157,7 +157,7 @@ public class ReadWriteICacheTest {
         for(Counter c : counters){
             total.add(c);
         }
-        log.info(basename+": "+total+" from "+counters.size()+" worker threads");
+        LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
 
     static class Counter implements Serializable {

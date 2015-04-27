@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 
 public class QueueTest {
 
-    private static final ILogger log = Logger.getLogger(QueueTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(QueueTest.class);
 
     private IAtomicLong totalCounter;
     private IQueue[] queues;
@@ -116,7 +116,7 @@ public class QueueTest {
 
                     iteration++;
                     if (iteration % 200 == 0) {
-                        log.info(String.format(
+                        LOGGER.info(String.format(
                                 "%s iteration: %d, fromQueue size: %d, toQueue size: %d",
                                 Thread.currentThread().getName(), iteration, fromQueue.size(), toQueue.size()
                         ));

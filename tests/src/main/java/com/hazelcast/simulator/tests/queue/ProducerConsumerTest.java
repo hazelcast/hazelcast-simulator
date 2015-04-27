@@ -35,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ProducerConsumerTest {
 
-    private static final ILogger log = Logger.getLogger(ProducerConsumerTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(ProducerConsumerTest.class);
 
     //props
     public int producerCount = 4;
@@ -103,7 +103,7 @@ public class ProducerConsumerTest {
 
                     iteration++;
                     if (iteration % 10 == 0) {
-                        log.info(String.format(
+                        LOGGER.info(String.format(
                                 "%s prod-id: %d, iteration: %d, produced: %d, workQueue: %d, consumed: %d",
                                 Thread.currentThread().getName(), id, iteration,
                                 produced.get(), workQueue.size(), consumed.get()
@@ -135,7 +135,7 @@ public class ProducerConsumerTest {
 
                     iteration++;
                     if (iteration % 20 == 0) {
-                        log.info(String.format(
+                        LOGGER.info(String.format(
                                 "%s prod-id: %d, iteration: %d, produced: %d, workQueue: %d, consumed: %d",
                                 Thread.currentThread().getName(), id, iteration,
                                 produced.get(), workQueue.size(), consumed.get()

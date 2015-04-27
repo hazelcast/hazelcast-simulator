@@ -47,7 +47,7 @@ public class MangleICacheTest {
         PUT
     }
 
-    private static final ILogger log = Logger.getLogger(MangleICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MangleICacheTest.class);
 
     public int threadCount = 3;
     public int maxCaches = 100;
@@ -253,7 +253,7 @@ public class MangleICacheTest {
         for (Counter c : counters) {
             total.add(c);
         }
-        log.info(basename + ": " + total + " from " + counters.size() + " worker threads");
+        LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
 
     static class Counter implements Serializable {

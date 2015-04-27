@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class MapTransactionContextTest {
 
-    private static final ILogger log = Logger.getLogger(MapTransactionContextTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapTransactionContextTest.class);
 
     // properties
     public String basename = this.getClass().getSimpleName();
@@ -96,7 +96,7 @@ public class MapTransactionContextTest {
                 } catch (Exception commitFailedException) {
                     if (context != null) {
                         try {
-                            log.warning(basename + ": commit   fail key=" + key + " inc=" + increment, commitFailedException);
+                            LOGGER.warning(basename + ": commit   fail key=" + key + " inc=" + increment, commitFailedException);
 
                             if(rethrowAllException){
                                 throw new RuntimeException(commitFailedException);
@@ -105,7 +105,7 @@ public class MapTransactionContextTest {
                             context.rollbackTransaction();
                             count.rolled++;
                         } catch (Exception rollBackFailed) {
-                            log.warning(basename + ": rollback fail key=" + key + " inc=" + increment, rollBackFailed);
+                            LOGGER.warning(basename + ": rollback fail key=" + key + " inc=" + increment, rollBackFailed);
                             count.failedRoles++;
 
                             if(rethrowRollBackException){
@@ -127,7 +127,7 @@ public class MapTransactionContextTest {
         for (TxnCounter c : counts) {
             total.add(c);
         }
-        log.info(basename + ": " + total + " from " + counts.size() + " workers");
+        LOGGER.info(basename + ": " + total + " from " + counts.size() + " workers");
 
         IList<long[]> allIncrements = targetInstance.getList(basename + "res");
         long expected[] = new long[keyCount];
@@ -143,7 +143,7 @@ public class MapTransactionContextTest {
         for (int k = 0; k < keyCount; k++) {
             if (expected[k] != map.get(k)) {
                 failures++;
-                log.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + map.get(k));
+                LOGGER.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + map.get(k));
             }
         }
 

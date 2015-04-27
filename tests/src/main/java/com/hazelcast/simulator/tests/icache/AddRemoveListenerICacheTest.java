@@ -35,7 +35,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberN
  * **/
 public class AddRemoveListenerICacheTest {
 
-    private static final ILogger log = Logger.getLogger(AddRemoveListenerICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(AddRemoveListenerICacheTest.class);
 
     public int threadCount = 3;
     public int keyCount = 1000;
@@ -127,7 +127,7 @@ public class AddRemoveListenerICacheTest {
                     counter.put++;
                 }
             }
-            log.info(basename + ": "+counter);
+            LOGGER.info(basename + ": " + counter);
             targetInstance.getList(basename).add(counter);
         }
     }
@@ -140,7 +140,7 @@ public class AddRemoveListenerICacheTest {
         for (Counter i : results) {
             total.add(i);
         }
-        log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
+        LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads");
     }
 
     private static class Counter implements Serializable {

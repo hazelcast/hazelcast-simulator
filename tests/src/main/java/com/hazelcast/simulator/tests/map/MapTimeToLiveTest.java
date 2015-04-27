@@ -43,7 +43,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class MapTimeToLiveTest {
 
-    private static final ILogger log = Logger.getLogger(MapTimeToLiveTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapTimeToLiveTest.class);
 
     // properties
     public String basename = this.getClass().getSimpleName();
@@ -127,7 +127,7 @@ public class MapTimeToLiveTest {
         for (MapOperationCounter i : results) {
             total.add(i);
         }
-        log.info(basename + ": " + total + " total of " + results.size());
+        LOGGER.info(basename + ": " + total + " total of " + results.size());
 
         final IMap map = targetInstance.getMap(basename);
 

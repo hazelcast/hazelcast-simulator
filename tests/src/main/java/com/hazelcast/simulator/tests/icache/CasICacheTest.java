@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class CasICacheTest {
 
-    private static final ILogger log = Logger.getLogger(CasICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(CasICacheTest.class);
 
     public int threadCount = 10;
     public int keyCount = 1000;
@@ -79,7 +79,7 @@ public class CasICacheTest {
         try {
             cacheManager.createCache(basename, config);
         } catch (CacheException e) {
-            log.severe(basename + ": createCache "+e);
+            LOGGER.severe(basename + ": createCache " + e);
         }
         cache = cacheManager.getCache(basename);
     }
@@ -153,7 +153,7 @@ public class CasICacheTest {
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);

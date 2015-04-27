@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class MapTransactionTest {
 
-    private static final ILogger log = Logger.getLogger(MapTransactionTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapTransactionTest.class);
 
     // properties
     public String basename = this.getClass().getSimpleName();
@@ -87,7 +87,7 @@ public class MapTransactionTest {
                 if (reThrowTransactionException) {
                     throw new RuntimeException(e);
                 }
-                log.warning(basename + ": caught TransactionException ", e);
+                LOGGER.warning(basename + ": caught TransactionException ", e);
             }
         }
 
@@ -103,7 +103,7 @@ public class MapTransactionTest {
         IList<long[]> allIncrements = targetInstance.getList(basename + "results");
         long[] total = new long[keyCount];
 
-        log.info(basename + ": collected increments from " + allIncrements.size() + " worker threads");
+        LOGGER.info(basename + ": collected increments from " + allIncrements.size() + " worker threads");
 
         for (long[] increments : allIncrements) {
             for (int i = 0; i < increments.length; i++) {
@@ -116,7 +116,7 @@ public class MapTransactionTest {
             IMap<Integer, Long> map = targetInstance.getMap(basename);
             if (total[i] != map.get(i)) {
                 failures++;
-                log.info(basename + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
+                LOGGER.info(basename + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
             }
         }
 

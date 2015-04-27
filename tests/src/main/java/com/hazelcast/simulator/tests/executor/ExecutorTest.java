@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ExecutorTest {
 
-    private static final ILogger log = Logger.getLogger(ExecutorTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(ExecutorTest.class);
 
     // props
     public int executorCount = 1;
@@ -79,7 +79,7 @@ public class ExecutorTest {
         for (IExecutorService executor : executors) {
             executor.shutdownNow();
             if (!executor.awaitTermination(120, TimeUnit.SECONDS)) {
-                log.severe("Time out while waiting for shutdown of executor: " + executor.getId());
+                LOGGER.severe("Time out while waiting for shutdown of executor: " + executor.getId());
             }
             executor.destroy();
         }
@@ -131,7 +131,7 @@ public class ExecutorTest {
                 }
 
                 if (iteration % 10000 == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
             }
             expectedExecutedCounter.addAndGet(iteration);

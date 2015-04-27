@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 
 public class SplitClusterDataTest {
 
-    private static final ILogger log = Logger.getLogger(SplitClusterDataTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(SplitClusterDataTest.class);
 
     public String basename = this.getClass().getSimpleName();
     public int maxItems = 10000;
@@ -40,7 +40,7 @@ public class SplitClusterDataTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        waitClusterSize(log, targetInstance, clusterSize);
+        waitClusterSize(LOGGER, targetInstance, clusterSize);
 
         for (int i = 0; i < maxItems; i++) {
             map.put(i, i);
@@ -70,13 +70,13 @@ public class SplitClusterDataTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
-        log.info(basename + ": cluster size =" + targetInstance.getCluster().getMembers().size());
-        log.info(basename + ": map size =" + map.size());
+        LOGGER.info(basename + ": cluster size =" + targetInstance.getCluster().getMembers().size());
+        LOGGER.info(basename + ": map size =" + map.size());
 
         if (targetInstance.getCluster().getMembers().size() == splitClusterSize) {
-            log.info(basename + ": check again cluster =" + targetInstance.getCluster().getMembers().size());
+            LOGGER.info(basename + ": check again cluster =" + targetInstance.getCluster().getMembers().size());
         } else {
-            log.info(basename + ": check again cluster =" + targetInstance.getCluster().getMembers().size());
+            LOGGER.info(basename + ": check again cluster =" + targetInstance.getCluster().getMembers().size());
 
             int max = 0;
             while (map.size() != maxItems) {
@@ -89,7 +89,7 @@ public class SplitClusterDataTest {
             }
 
             assertEquals("data loss ", map.size(), maxItems);
-            log.info(basename + "verify OK ");
+            LOGGER.info(basename + "verify OK ");
         }
     }
 }

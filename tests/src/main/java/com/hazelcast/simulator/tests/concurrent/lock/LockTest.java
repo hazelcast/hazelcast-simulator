@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 public class LockTest {
 
-    private static final ILogger log = Logger.getLogger(LockTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(LockTest.class);
 
     // properties
     public String basename = "lock";
@@ -147,7 +147,7 @@ public class LockTest {
 
                 iteration++;
                 if (iteration % logFrequency == 0) {
-                    log.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
             }
             totalMoney.addAndGet(iteration);

@@ -45,7 +45,7 @@ public class ListenerICacheTest {
 
     private static final int PAUSE_FOR_LAST_EVENTS_SECONDS = 10;
 
-    private static final ILogger log = Logger.getLogger(ListenerICacheTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(ListenerICacheTest.class);
 
     public int threadCount = 3;
     public int maxExpiryDurationMs = 500;
@@ -176,8 +176,8 @@ public class ListenerICacheTest {
 
     @Verify(global = false)
     public void verify() throws Exception {
-        log.info(basename + ": listener " + listener);
-        log.info(basename + ": filter " + filter);
+        LOGGER.info(basename + ": listener " + listener);
+        LOGGER.info(basename + ": filter " + filter);
     }
 
     @Verify(global = true)
@@ -188,14 +188,14 @@ public class ListenerICacheTest {
         for (Counter i : results) {
             total.add(i);
         }
-        log.info(basename + ": " + total + " from " + results.size() + " worker Threads");
+        LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
         IList<MyCacheEntryListener> listeners = targetInstance.getList(basename+"listeners");
         MyCacheEntryListener totalEvents = new MyCacheEntryListener();
         for(MyCacheEntryListener listener : listeners){
             totalEvents.add(listener);
         }
-        log.info(basename + ": totalEvents " + totalEvents);
+        LOGGER.info(basename + ": totalEvents " + totalEvents);
 
         assertEquals(basename + ": unExpected Events found ", 0, totalEvents.getUnexpected());
     }

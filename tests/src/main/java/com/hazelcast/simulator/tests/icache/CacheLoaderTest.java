@@ -53,7 +53,7 @@ import static junit.framework.Assert.assertTrue;
  * */
 public class CacheLoaderTest {
 
-    private static final ILogger log = Logger.getLogger(CacheLoaderTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(CacheLoaderTest.class);
 
     public int threadCount = 3;
     public int keyCount = 10;
@@ -134,7 +134,7 @@ public class CacheLoaderTest {
     @Verify(global = false)
     public void verify() throws Exception {
         RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
-        log.info(basename+": "+loader);
+        LOGGER.info(basename + ": " + loader);
     }
 
     @Verify(global = true)
