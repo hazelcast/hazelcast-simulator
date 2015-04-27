@@ -20,6 +20,7 @@
     <!-- Suppress some checks for JUnit tests -->
     <suppress checks="MethodName" files=".*Test\.java$"/>
     <suppress checks="TypeName" files=".*Test\.java$"/>
+    <suppress checks="JUnitTestCase" files=".*Test\.java$"/>
 
     <!-- Visualiser -->
     <suppress checks="ClassDataAbstractionCoupling" files=".*MainUI\.java$"/>
