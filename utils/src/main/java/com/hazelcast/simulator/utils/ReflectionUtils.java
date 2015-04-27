@@ -68,9 +68,11 @@ public final class ReflectionUtils {
 
     private static Field findField(Class classType, String fieldName, Class fieldType) {
         for (Field field : classType.getDeclaredFields()) {
-            if (field.getName().equals(fieldName) && ((fieldType != null && field.getType().isAssignableFrom(fieldType)) || (
-                    fieldType == null && field.getType().isPrimitive()))) {
-                return field;
+            if (field.getName().equals(fieldName)) {
+                if (fieldType != null && field.getType().isAssignableFrom(fieldType)
+                        || (fieldType == null && field.getType().isPrimitive())) {
+                    return field;
+                }
             }
         }
         return null;
