@@ -7,16 +7,16 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class CommandFuture<E> implements Future<E> {
+import static java.lang.String.format;
 
-    private static final Object NO_RESULT = new Object() {
-        public String toString() {
-            return "NO_RESULT";
-        }
-    };
+public final class CommandFuture<E> implements Future<E> {
+
+    private static final Object NO_RESULT = new Object();
 
     private final Command command;
-    private volatile Object result = NO_RESULT;
+
+    @SuppressWarnings("unchecked")
+    private volatile E result = (E) NO_RESULT;
 
     public CommandFuture(Command command) {
         this.command = command;
@@ -38,10 +38,10 @@ public class CommandFuture<E> implements Future<E> {
 
     @Override
     public boolean isDone() {
-        return result != NO_RESULT;
+        return (result != NO_RESULT);
     }
 
-    public void set(Object result) {
+    public void set(E result) {
         synchronized (this) {
             this.result = result;
             notifyAll();
@@ -58,32 +58,33 @@ public class CommandFuture<E> implements Future<E> {
             if (result instanceof Throwable) {
                 throw new ExecutionException((Throwable) result);
             }
-            return (E) result;
+            return result;
         }
     }
 
     @Override
-    public E get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        long remainingTimeoutMs = unit.toMillis(timeout);
+    public E get(long timeout, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
+        if (timeout < 0 || timeUnit == null) {
+            throw new IllegalArgumentException("Invalid timeout or timeUnit for CommandFuture.get()");
+        }
 
+        long remainingTimeoutNanos = timeUnit.toNanos(timeout);
         synchronized (this) {
-            for (; ; ) {
-                if (result != NO_RESULT) {
-                    if (result instanceof Throwable) {
-                        throw new ExecutionException((Throwable) result);
-                    }
-                    return (E) result;
-                }
-
-                if (remainingTimeoutMs <= 0) {
-                    throw new TimeoutException("Timeout while executing : "
-                            + command + " total timeout: " + unit.toMillis(timeout) + " ms");
-                }
-
-                long startMs = System.currentTimeMillis();
-                wait(remainingTimeoutMs);
-                remainingTimeoutMs -= System.currentTimeMillis() - startMs;
+            while (result == NO_RESULT && remainingTimeoutNanos > 0) {
+                long started = System.nanoTime();
+                wait(TimeUnit.NANOSECONDS.toMillis(remainingTimeoutNanos));
+                remainingTimeoutNanos -= System.nanoTime() - started;
             }
+
+            if (result == NO_RESULT) {
+                throw new TimeoutException(format(
+                        "Timeout while executing: %s total timeout: %d ms", command, timeUnit.toMillis(timeout)));
+            }
+
+            if (result instanceof Throwable) {
+                throw new ExecutionException((Throwable) result);
+            }
+            return result;
         }
     }
 }
