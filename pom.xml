@@ -33,34 +33,39 @@
         <hazelcast.version>3.5-SNAPSHOT</hazelcast.version>
         <jsr107.api.version>1.0.0</jsr107.api.version>
 
-        <junit.version>4.11</junit.version>
+        <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
         <hamcrest.version>1.3</hamcrest.version>
 
         <commons-codec.version>1.10</commons-codec.version>
-        <commons-lang.version>3.3.2</commons-lang.version>
+        <commons-lang.version>3.4</commons-lang.version>
         <guava.version>18.0</guava.version>
         <hdr-histogram.version>2.1.4</hdr-histogram.version>
         <jfreechart.version>1.0.19</jfreechart.version>
-        <jgit.version>3.5.3.201412180710-r</jgit.version>
-        <jopt.version>4.4</jopt.version>
-        <reflections.version>0.9.9-RC2</reflections.version>
+        <jgit.version>3.7.1.201504261725-r</jgit.version>
+        <jopt.version>4.8</jopt.version>
+        <reflections.version>0.9.10</reflections.version>
 
-        <amazonaws.version>1.3.21.1</amazonaws.version>
+        <amazonaws.version>1.9.35</amazonaws.version>
         <jclouds.version>1.9.0</jclouds.version>
 
         <log4j.version>1.2.17</log4j.version>
-        <slf4j.version>1.7.2</slf4j.version>
-        <logback.version>1.0.13</logback.version>
+        <slf4j.version>1.7.12</slf4j.version>
+        <logback.version>1.1.3</logback.version>
 
         <tomcat.version>7.0.54</tomcat.version>
         <jsp.api.version>2.2.1</jsp.api.version>
         <servlet.api.version>3.0.1</servlet.api.version>
         <httpclient.version>4.3.1</httpclient.version>
 
-        <maven.gpg.plugin.version>1.4</maven.gpg.plugin.version>
-        <checkstyle.maven.plugin.version>2.12</checkstyle.maven.plugin.version>
-        <findbugs.maven.plugin.version>3.0.0</findbugs.maven.plugin.version>
+        <maven.compiler.plugin.version>3.3</maven.compiler.plugin.version>
+        <maven.surefire.plugin.version>2.18.1</maven.surefire.plugin.version>
+        <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
+        <maven.source.plugin.version>2.4</maven.source.plugin.version>
+        <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
+        <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
+        <maven.checkstyle.plugin.version>2.15</maven.checkstyle.plugin.version>
+        <maven.findbugs.plugin.version>3.0.1</maven.findbugs.plugin.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.basedir>${project.basedir}</main.basedir>
@@ -160,7 +165,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.0</version>
+                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -169,29 +174,29 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.10</version>
+                <version>${maven.surefire.plugin.version}</version>
                 <configuration>
                     <workingDirectory>${main.basedir}</workingDirectory>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.3</version>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${maven.deploy.plugin.version}</version>
                 <configuration>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.4</version>
+                <version>${maven.source.plugin.version}</version>
                 <configuration>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>2.8.2</version>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven.javadoc.plugin.version}</version>
                 <configuration>
                 </configuration>
             </plugin>
@@ -231,7 +236,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-checkstyle-plugin</artifactId>
-                        <version>${checkstyle.maven.plugin.version}</version>
+                        <version>${maven.checkstyle.plugin.version}</version>
                         <executions>
                             <execution>
                                 <phase>validate</phase>
@@ -265,7 +270,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>findbugs-maven-plugin</artifactId>
-                        <version>${findbugs.maven.plugin.version}</version>
+                        <version>${maven.findbugs.plugin.version}</version>
                         <executions>
                             <execution>
                                 <phase>compile</phase>

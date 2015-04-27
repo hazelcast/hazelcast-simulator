@@ -59,7 +59,7 @@ final class CommunicatorCli {
 
     void init() {
         String messageTypeString;
-        List<String> noArgOptions = options.nonOptionArguments();
+        List noArgOptions = options.nonOptionArguments();
         if (options.has(messageTypeSpec)) {
             if (!noArgOptions.isEmpty()) {
                 throw new CommandLineExitException("You cannot use --message-type simultaneously with a message shortcut."
@@ -70,7 +70,7 @@ final class CommunicatorCli {
             if (noArgOptions.size() > 1) {
                 throw new CommandLineExitException("You cannot use more than one message shortcut at a time." + HELP_ADVICE);
             }
-            messageTypeString = noArgOptions.get(0);
+            messageTypeString = (String) noArgOptions.get(0);
         } else {
             throw new CommandLineExitException("You have to use either --message-type or message shortcut." + HELP_ADVICE);
         }
