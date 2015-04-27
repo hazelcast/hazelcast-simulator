@@ -54,7 +54,7 @@ public final class AgentsFile {
         int lineNumber = 1;
         List<AgentAddress> pairs = new LinkedList<AgentAddress>();
         for (String line : addresses) {
-            int indexOfComment = line.indexOf("#");
+            int indexOfComment = line.indexOf('#');
             if (indexOfComment != -1) {
                 line = line.substring(0, indexOfComment);
             }

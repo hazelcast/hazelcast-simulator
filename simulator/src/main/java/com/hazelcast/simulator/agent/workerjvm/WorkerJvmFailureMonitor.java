@@ -116,7 +116,7 @@ public class WorkerJvmFailureMonitor {
         for (File exceptionFile : exceptionFiles) {
             String content = fileAsText(exceptionFile);
 
-            int indexOf = content.indexOf("\n");
+            int indexOf = content.indexOf('\n');
             String testId = content.substring(0, indexOf);
             String cause = content.substring(indexOf + 1);
 

@@ -106,7 +106,7 @@ public class TestSuite implements Serializable {
         Map<String, TestCase> testCases = new HashMap<String, TestCase>();
         for (String property : properties.stringPropertyNames()) {
             String value = (String) properties.get(property);
-            int indexOfAt = property.indexOf("@");
+            int indexOfAt = property.indexOf('@');
 
             String testCaseId = "";
             String field = property;

@@ -89,7 +89,7 @@ public final class NativeUtils {
 
     private static Integer getPidFromManagementBean() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
-        int indexOf = name.indexOf("@");
+        int indexOf = name.indexOf('@');
         if (indexOf == -1) {
             return null;
         }
