@@ -8,21 +8,18 @@ import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.SimpleMetronome;
+import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.io.IOException;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
@@ -30,27 +27,24 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 public class SqlPredicateTest {
 
     private static final ILogger LOGGER = Logger.getLogger(SqlPredicateTest.class);
+    private static final String[] NAMES = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
+
 
     // properties
-    public int threadCount = 40;
     public int keyLength = 10;
     // number of keys per member
     public int keyCount = 10000;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 1;
     public String basename = "sqlpredicate";
     public String sql = "age = 30 AND active = true";
-    public IntervalProbe search;
     public int intervalMs = 0;
+    public int maxAge = 75;
+    public double maxSalary = 1000.0;
 
     private IMap<String, DataSerializableEmployee> map;
-    private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private final AtomicLong operations = new AtomicLong();
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
         this.targetInstance = testContext.getTargetInstance();
         this.map = targetInstance.getMap(basename + "-" + testContext.getTestId());
     }
@@ -66,9 +60,8 @@ public class SqlPredicateTest {
         Random random = new Random();
         MapStreamer<String, DataSerializableEmployee> streamer = new MapStreamer<String, DataSerializableEmployee>(map);
         for (int k = 0; k < keyCount; k++) {
-            int id = random.nextInt();
             String key = generateString(keyLength);
-            DataSerializableEmployee value = new DataSerializableEmployee(id);
+            DataSerializableEmployee value = generateRandomEmployee(random);
             streamer.pushEntry(key, value);
         }
         streamer.await();
@@ -76,54 +69,33 @@ public class SqlPredicateTest {
         LOGGER.info("Map localKeySet size is: " + map.localKeySet().size());
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
     }
 
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
-    }
+    private class Worker extends AbstractMonotonicWorker {
+        private SqlPredicate sqlPredicate = new SqlPredicate(sql);
+        private Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
 
-    private class Worker implements Runnable {
         @Override
-        public void run() {
-            long iteration = 0;
-            Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
-            SqlPredicate sqlPredicate = new SqlPredicate(sql);
-
-            while (!testContext.isStopped()) {
-                metronome.waitForNext();
-                search.started();
-                map.values(sqlPredicate);
-                search.done();
-                
-                if (iteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
-                iteration++;
-            }
-
-            //operations.set(iteration);
+        protected void timeStep() {
+            metronome.waitForNext();
+            map.values(sqlPredicate);
         }
+    }
+
+    private DataSerializableEmployee generateRandomEmployee(Random random) {
+        int id = random.nextInt();
+        String name = NAMES[random.nextInt(NAMES.length)];
+        int age = random.nextInt(maxAge);
+        boolean active = random.nextBoolean();
+        double salary = random.nextDouble() * maxSalary;
+        return new DataSerializableEmployee(id, name, age, active, salary);
     }
 
     public static class DataSerializableEmployee implements DataSerializable {
-
-        public static final int MAX_AGE = 75;
-        public static final double MAX_SALARY = 1000.0;
-
         private static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
-        private static final Random random = new Random();
 
         private int id;
         private String name;
@@ -131,26 +103,15 @@ public class SqlPredicateTest {
         private boolean active;
         private double salary;
 
-        public DataSerializableEmployee(String name, int age, boolean live, double salary) {
+        public DataSerializableEmployee(int id, String name, int age, boolean live, double salary) {
+            this.id = id;
             this.name = name;
             this.age = age;
             this.active = live;
             this.salary = salary;
         }
 
-        public DataSerializableEmployee(int id) {
-            this.id = id;
-            randomizeProperties();
-        }
-
         public DataSerializableEmployee() {
-        }
-
-        public void randomizeProperties() {
-            name = names[random.nextInt(names.length)];
-            age = random.nextInt(MAX_AGE);
-            active = random.nextBoolean();
-            salary = random.nextDouble() * MAX_SALARY;
         }
 
         public int getId() {
