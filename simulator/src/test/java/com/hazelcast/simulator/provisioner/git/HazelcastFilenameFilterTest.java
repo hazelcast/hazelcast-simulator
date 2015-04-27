@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.provisioner.git;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -9,22 +8,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class HazelcastFilenameFilterTest {
-    private HazelcastFilenameFilter filter;
-    private File dir;
 
-    @Before
-    public void setUp() {
-        filter = new HazelcastFilenameFilter();
-        dir = null;
-    }
+    private final HazelcastFilenameFilter filter = new HazelcastFilenameFilter();
+    private final File dir = null;
 
     @Test
     public void accept_mustEndsWithJAR() {
-        assertDeniesName("hazelcast-client-3.5-SNAPSHOT");
+        assertDeniesName("hazelcast-client-3.5-SNAPSHOT-jar");
     }
 
     @Test
-    public void accept_mustContainsHazelcast() {
+    public void accept_mustStartWithHazelcast() {
         assertDeniesName("client-3.5-SNAPSHOT.jar");
     }
 
@@ -41,6 +35,11 @@ public class HazelcastFilenameFilterTest {
     @Test
     public void accept_doesntAcceptOriginal() {
         assertDeniesName("original-hazelcast-3.5-SNAPSHOT.jar");
+    }
+
+    @Test
+    public void accept_doesntAcceptCodeGenerator() {
+        assertDeniesName("hazelcast-code-generator-3.5-SNAPSHOT.jar");
     }
 
     @Test

@@ -66,8 +66,8 @@ public class BuildSupport {
     }
 
     private String getBuildCommand(String absolutePath) {
-        //TODO: This is probably not very safe, some escaping is probably necessary
-        return format("cd %s ; %s clean install -DskipTests", absolutePath, mavenExecutable);
+        // TODO: this is probably not very safe, some escaping is probably necessary
+        return format("cd %s; %s clean install -DskipTests", absolutePath, mavenExecutable);
     }
 
     private void logFilenames(File[] jars) {

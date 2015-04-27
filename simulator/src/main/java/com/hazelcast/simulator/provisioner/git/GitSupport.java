@@ -23,22 +23,12 @@ import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
 public class GitSupport {
 
-    public static final String CUSTOM_REPOSITORY_PREFIX = "custom";
-
     private static final String HAZELCAST_MAIN_REPO_URL = "https://github.com/hazelcast/hazelcast.git";
     private static final Logger LOGGER = Logger.getLogger(GitSupport.class);
 
     private final BuildSupport buildSupport;
     private final File baseDir;
     private final Set<GitRepository> customRepositories;
-
-    public GitSupport(BuildSupport buildSupport) {
-        this(buildSupport, null);
-    }
-
-    public GitSupport(BuildSupport buildSupport, String customRepositories) {
-        this(buildSupport, customRepositories, null);
-    }
 
     public GitSupport(BuildSupport buildSupport, String customRepositories, String basePath) {
         this.buildSupport = buildSupport;

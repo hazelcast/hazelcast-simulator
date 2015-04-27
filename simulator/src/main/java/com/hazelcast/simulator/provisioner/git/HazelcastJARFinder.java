@@ -13,7 +13,9 @@ public class HazelcastJARFinder {
         File memberJar = findJarAtPath(memberPath);
         File clientPath = newFile(path, "hazelcast-client", "target");
         File clientJar = findJarAtPath(clientPath);
-        return new File[]{memberJar, clientJar};
+        File wmPath = newFile(path, "hazelcast-wm", "target");
+        File wmJar = findJarAtPath(wmPath);
+        return new File[]{memberJar, clientJar, wmJar};
     }
 
     private File findJarAtPath(File memberPath) {
