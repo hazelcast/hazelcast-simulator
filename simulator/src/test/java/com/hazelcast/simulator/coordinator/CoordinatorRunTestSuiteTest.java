@@ -5,7 +5,9 @@ import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.worker.commands.Command;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,6 +26,8 @@ import static org.mockito.Mockito.when;
 
 public class CoordinatorRunTestSuiteTest {
 
+    private static String userDir;
+
     private final TestSuite testSuite = new TestSuite();
 
     @Mock
@@ -41,10 +45,19 @@ public class CoordinatorRunTestSuiteTest {
     @InjectMocks
     private Coordinator coordinator;
 
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUp() throws Exception {
+        userDir = System.getProperty("user.dir");
         System.setProperty("user.dir", "./dist/src/main/dist");
+    }
 
+    @AfterClass
+    public static void tearDown() {
+        System.setProperty("user.dir", userDir);
+    }
+
+    @Before
+    public void initMocks() {
         MockitoAnnotations.initMocks(this);
 
         List<String> privateAddressList = new ArrayList<String>(1);

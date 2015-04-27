@@ -3,7 +3,9 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -19,6 +21,8 @@ import static org.mockito.Mockito.when;
 
 public class CoordinatorInitMemberLayoutTest {
 
+    private static String userDir;
+
     @Mock
     private final WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
 
@@ -30,10 +34,19 @@ public class CoordinatorInitMemberLayoutTest {
 
     private List<AgentMemberLayout> agentMemberLayouts;
 
-    @Before
-    public void setUp() {
+    @BeforeClass
+    public static void setUp() throws Exception {
+        userDir = System.getProperty("user.dir");
         System.setProperty("user.dir", "./dist/src/main/dist");
+    }
 
+    @AfterClass
+    public static void tearDown() {
+        System.setProperty("user.dir", userDir);
+    }
+
+    @Before
+    public void initMocks() {
         MockitoAnnotations.initMocks(this);
 
         List<String> privateAddressList = new ArrayList<String>(3);

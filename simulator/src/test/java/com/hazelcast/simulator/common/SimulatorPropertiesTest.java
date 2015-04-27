@@ -1,9 +1,10 @@
 package com.hazelcast.simulator.common;
 
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -17,28 +18,32 @@ import static org.junit.Assert.assertTrue;
 
 public class SimulatorPropertiesTest {
 
-    private String userDir;
-    private SecurityManager oldSecurityManager;
-    private SimulatorProperties simulatorProperties;
+    private static String userDir;
 
-    private File workingDirFile = new File(SimulatorProperties.PROPERTIES_FILE_NAME);
-    private File customFile = new File("custom.properties");
+    private final SimulatorProperties simulatorProperties = new SimulatorProperties();
 
-    @Before
-    public void setUp() throws Exception {
-        oldSecurityManager = System.getSecurityManager();
-        System.setSecurityManager(new ExitExceptionSecurityManager());
+    private File workingDirFile;
+    private File customFile;
 
+    @BeforeClass
+    public static void setUp() throws Exception {
         userDir = System.getProperty("user.dir");
         System.setProperty("user.dir", "./dist/src/main/dist");
-        simulatorProperties = new SimulatorProperties();
+    }
+
+    @AfterClass
+    public static void tearDown() {
         System.setProperty("user.dir", userDir);
     }
 
-    @After
-    public void tearDown() {
-        System.setSecurityManager(oldSecurityManager);
+    @Before
+    public void initFiles() {
+        workingDirFile = new File(SimulatorProperties.PROPERTIES_FILE_NAME);
+        customFile = new File("custom.properties");
+    }
 
+    @After
+    public void cleanup() {
         deleteQuiet(customFile);
         deleteQuiet(workingDirFile);
     }
@@ -165,7 +170,7 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testGet_systemProperty() throws Exception {
-        assertEquals(userDir, simulatorProperties.get("user.dir", "ignored"));
+        assertEquals("./dist/src/main/dist", simulatorProperties.get("user.dir", "ignored"));
     }
 
     @Test
@@ -181,7 +186,7 @@ public class SimulatorPropertiesTest {
     @Test
     public void testGet_CLOUD_IDENTITY() throws Exception {
         appendText("testCloudIdentityString", customFile);
-        initProperty("CLOUD_IDENTITY", customFile.getAbsolutePath());
+        initProperty("CLOUD_IDENTITY", customFile.getName());
 
         assertEquals("testCloudIdentityString", simulatorProperties.get("CLOUD_IDENTITY"));
     }
@@ -196,7 +201,7 @@ public class SimulatorPropertiesTest {
     @Test
     public void testGet_CLOUD_CREDENTIAL() throws Exception {
         appendText("testCloudCredentialString", customFile);
-        initProperty("CLOUD_CREDENTIAL", customFile.getAbsolutePath());
+        initProperty("CLOUD_CREDENTIAL", customFile.getName());
 
         assertEquals("testCloudCredentialString", simulatorProperties.get("CLOUD_CREDENTIAL"));
     }
