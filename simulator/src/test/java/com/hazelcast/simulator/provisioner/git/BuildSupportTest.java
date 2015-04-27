@@ -13,19 +13,18 @@ import static org.mockito.Mockito.when;
 
 public class BuildSupportTest {
 
+    private final File basePath = new File("/foo/bar");
+    private final File[] expectedFiles = new File[]{new File("member.jar"), new File("client.jar"), new File("wm.jar")};
+
     private Bash mockBash;
     private HazelcastJARFinder mockHazelcastJARFinder;
-
-    private final File basePath = new File("/foo/bar");
-    private final File[] expectedFiles = new File[]{new File("member.jar"), new File("client.jar")};
 
     @Before
     public void setUp() {
         mockBash = mock(Bash.class);
         mockHazelcastJARFinder = mock(HazelcastJARFinder.class);
 
-        when(mockHazelcastJARFinder.find(basePath))
-                .thenReturn(expectedFiles);
+        when(mockHazelcastJARFinder.find(basePath)).thenReturn(expectedFiles);
     }
 
     @Test
@@ -33,8 +32,7 @@ public class BuildSupportTest {
         BuildSupport buildSupport = new BuildSupport(mockBash, mockHazelcastJARFinder);
         File[] returnedFiles = buildSupport.build(basePath);
 
-        verify(mockBash).execute("cd /foo/bar ; mvn clean install -DskipTests");
+        verify(mockBash).execute("cd /foo/bar; mvn clean install -DskipTests");
         assertArrayEquals(expectedFiles, returnedFiles);
     }
-
 }
