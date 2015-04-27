@@ -48,10 +48,10 @@ public class CreateDestroyICacheTest {
     private static final ILogger LOGGER = Logger.getLogger(CreateDestroyICacheTest.class);
 
     public int threadCount = 3;
-    public double createCacheProb=0.4;
-    public double putCacheProb=0.2;
-    public double closeCacheProb=0.2;
-    public double destroyCacheProb=0.2;
+    public double createCacheProb = 0.4;
+    public double putCacheProb = 0.2;
+    public double closeCacheProb = 0.2;
+    public double destroyCacheProb = 0.2;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -102,30 +102,30 @@ public class CreateDestroyICacheTest {
                         counter.createException++;
                     }
                 } else if ((chance -= putCacheProb) < 0) {
-                    try{
+                    try {
                         Cache cache = cacheManager.getCache(basename);
-                        if(cache!=null){
+                        if (cache != null) {
                             cache.put(random.nextInt(), random.nextInt());
                             counter.put++;
                         }
-                    } catch (IllegalStateException e){
+                    } catch (IllegalStateException e) {
                         counter.putException++;
                     }
-                } else if ((chance -= closeCacheProb) < 0){
-                    try{
+                } else if ((chance -= closeCacheProb) < 0) {
+                    try {
                         Cache cache = cacheManager.getCache(basename);
-                        if(cache!=null){
+                        if (cache != null) {
                             cache.close();
                             counter.close++;
                         }
-                    } catch (IllegalStateException e){
+                    } catch (IllegalStateException e) {
                         counter.closeException++;
                     }
                 } else if ((chance -= destroyCacheProb) < 0) {
-                    try{
+                    try {
                         cacheManager.destroyCache(basename);
                         counter.destroy++;
-                    } catch (IllegalStateException e){
+                    } catch (IllegalStateException e) {
                         counter.destroyException++;
                     }
                 }
@@ -138,7 +138,7 @@ public class CreateDestroyICacheTest {
     public void verify() throws Exception {
         IList<Counter> counters = targetInstance.getList(basename);
         Counter total = new Counter();
-        for(Counter c : counters){
+        for (Counter c : counters) {
             total.add(c);
         }
         LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
@@ -148,7 +148,7 @@ public class CreateDestroyICacheTest {
 
         public long put = 0;
         public long create = 0;
-        public long close=0;
+        public long close = 0;
         public long destroy = 0;
 
         public long putException = 0;
@@ -164,22 +164,22 @@ public class CreateDestroyICacheTest {
 
             putException += c.putException;
             createException += c.createException;
-            closeException += c. closeException;
+            closeException += c.closeException;
             destroyException += c.destroyException;
         }
 
         @Override
         public String toString() {
-            return "Counter{" +
-                    "put=" + put +
-                    ", create=" + create +
-                    ", close=" + close +
-                    ", destroy=" + destroy +
-                    ", putException=" + putException +
-                    ", createException=" + createException +
-                    ", closeException=" + closeException +
-                    ", destroyException=" + destroyException +
-                    '}';
+            return "Counter{"
+                    + "put=" + put
+                    + ", create=" + create
+                    + ", close=" + close
+                    + ", destroy=" + destroy
+                    + ", putException=" + putException
+                    + ", createException=" + createException
+                    + ", closeException=" + closeException
+                    + ", destroyException=" + destroyException
+                    + '}';
         }
     }
 }

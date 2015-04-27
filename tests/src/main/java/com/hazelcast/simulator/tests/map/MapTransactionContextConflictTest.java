@@ -24,13 +24,15 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 
 /**
-* Testing transaction context with multi keys.
+ * Testing transaction context with multi keys.
  *
  * A number of map keys (maxKeysPerTxn) are chosen at random to take part in the transaction. As maxKeysPerTxn increases as a
  * proportion of keyCount, more conflict will occur between the transactions, less transactions will be committed successfully and
  * more transactions are rolled back.
  */
 public class MapTransactionContextConflictTest {
+
+    private static final int MAX_INCREMENT = 999;
 
     private static final ILogger LOGGER = Logger.getLogger(MapTransactionContextConflictTest.class);
 
@@ -43,7 +45,6 @@ public class MapTransactionContextConflictTest {
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
-    private static final int maxIncrement = 999;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -80,7 +81,7 @@ public class MapTransactionContextConflictTest {
 
                 List<KeyIncrementPair> potentialIncrements = new ArrayList();
                 for (int i = 0; i < maxKeysPerTxn; i++) {
-                    KeyIncrementPair p = new KeyIncrementPair(random, keyCount, maxIncrement);
+                    KeyIncrementPair p = new KeyIncrementPair(random, keyCount, MAX_INCREMENT);
                     potentialIncrements.add(p);
                 }
 
@@ -107,7 +108,7 @@ public class MapTransactionContextConflictTest {
                 } catch (TransactionException e) {
 
                     LOGGER.warning(basename + ": commit fail. tried key increments=" + putIncrements + " " + e.getMessage());
-                    if(throwCommitException){
+                    if (throwCommitException) {
                         throw new RuntimeException(e);
                     }
 
@@ -119,7 +120,7 @@ public class MapTransactionContextConflictTest {
                         LOGGER.warning(basename + ": rollback fail " + rollBack.getMessage(), rollBack);
                         count.failedRoles++;
 
-                        if(throwRollBackException){
+                        if (throwRollBackException) {
                             throw new RuntimeException(rollBack);
                         }
                     }
@@ -140,7 +141,7 @@ public class MapTransactionContextConflictTest {
         LOGGER.info(basename + ": " + total + " from " + counts.size() + " worker threads");
 
         IList<long[]> allIncrements = targetInstance.getList(basename + "inc");
-        long expected[] = new long[keyCount];
+        long[] expected = new long[keyCount];
         for (long[] incs : allIncrements) {
             for (int i = 0; i < incs.length; i++) {
                 expected[i] += incs[i];

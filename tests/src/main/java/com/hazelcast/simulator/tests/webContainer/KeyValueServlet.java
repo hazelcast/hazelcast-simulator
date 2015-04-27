@@ -37,8 +37,8 @@ public class KeyValueServlet extends HttpServlet {
     private Pattern getKeyPattern = Pattern.compile("key/.*");
     private Pattern putKeyPattern = Pattern.compile("key/.*/.*");
 
-    public KeyValueServlet(){
-        System.out.println("deployed "+this.getClass());
+    public KeyValueServlet() {
+        System.out.println("deployed " + this.getClass());
     }
 
     @Override
@@ -53,10 +53,9 @@ public class KeyValueServlet extends HttpServlet {
 
             Object value = session.getAttribute(key);
 
-            if(value==null){
-                resp.getWriter().write("key="+key+" Not found in session "+session.getId());
-            }
-            else{
+            if (value == null) {
+                resp.getWriter().write("key=" + key + " Not found in session " + session.getId());
+            } else {
                 resp.getWriter().write(value.toString());
             }
         }

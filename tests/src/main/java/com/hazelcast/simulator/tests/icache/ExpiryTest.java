@@ -106,7 +106,7 @@ public class ExpiryTest {
         config.setName(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb).addOperation(Operation.PUT_ASYNC, putAsyncProb)
-                                .addOperation(Operation.GET, getProb).addOperation(Operation.GET_ASYNC, getAsyncProb);
+                .addOperation(Operation.GET, getProb).addOperation(Operation.GET_ASYNC, getAsyncProb);
     }
 
     @Warmup(global = true)
@@ -210,12 +210,12 @@ public class ExpiryTest {
         }
 
         public String toString() {
-            return "Counter{" +
-                    "putExpiry=" + putExpiry +
-                    ", putAsyncExpiry=" + putAsyncExpiry +
-                    ", getExpiry=" + getExpiry +
-                    ", getAsyncExpiry=" + getAsyncExpiry +
-                    '}';
+            return "Counter{"
+                    + "putExpiry=" + putExpiry
+                    + ", putAsyncExpiry=" + putAsyncExpiry
+                    + ", getExpiry=" + getExpiry
+                    + ", getAsyncExpiry=" + getAsyncExpiry
+                    + '}';
         }
     }
 }

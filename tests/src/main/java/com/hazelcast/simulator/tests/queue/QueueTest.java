@@ -36,15 +36,15 @@ public class QueueTest {
 
     private static final ILogger LOGGER = Logger.getLogger(QueueTest.class);
 
-    private IAtomicLong totalCounter;
-    private IQueue[] queues;
-
     // properties
     public int queueLength = 100;
     public int threadsPerQueue = 1;
     public int messagesPerQueue = 1;
     public String basename = this.getClass().getSimpleName();
+
     private TestContext testContext;
+    private IAtomicLong totalCounter;
+    private IQueue<Long>[] queues;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {

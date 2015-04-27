@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class GrowingMapTest {
-    
+
     private static final ILogger LOGGER = Logger.getLogger(GrowingMapTest.class);
 
     // properties

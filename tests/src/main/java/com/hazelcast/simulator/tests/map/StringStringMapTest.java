@@ -79,8 +79,8 @@ public class StringStringMapTest {
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         if (useSet) {
-            throw new IllegalArgumentException("The 'useSet' property is no longer supported. " +
-                    "Configure 'setProb' property to use IMap::set.");
+            throw new IllegalArgumentException("The 'useSet' property is no longer supported. "
+                    + "Configure 'setProb' property to use IMap::set.");
         }
 
         this.testContext = testContext;

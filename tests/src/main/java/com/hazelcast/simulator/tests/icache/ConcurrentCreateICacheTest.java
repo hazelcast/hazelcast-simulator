@@ -105,10 +105,10 @@ public class ConcurrentCreateICacheTest {
 
         @Override
         public String toString() {
-            return "Counter{" +
-                    " create=" + create +
-                    ", createException=" + createException +
-                    '}';
+            return "Counter{"
+                    + " create=" + create
+                    + ", createException=" + createException
+                    + '}';
         }
     }
 }

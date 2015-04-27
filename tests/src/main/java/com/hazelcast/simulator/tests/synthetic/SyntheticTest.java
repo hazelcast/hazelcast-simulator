@@ -116,7 +116,8 @@ public class SyntheticTest {
 
             if (isClient) {
                 HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy) targetInstance;
-                PartitionServiceProxy partitionService = (PartitionServiceProxy) hazelcastClientProxy.client.getPartitionService();
+                PartitionServiceProxy partitionService
+                        = (PartitionServiceProxy) hazelcastClientProxy.client.getPartitionService();
 
                 operationService = null;
                 clientInvocationService = hazelcastClientProxy.client.getInvocationService();

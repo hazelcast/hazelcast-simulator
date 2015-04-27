@@ -4,25 +4,25 @@ import java.io.Serializable;
 
 public class LockCounter implements Serializable {
 
-    public long locked = 0;
-    public long inced = 0;
-    public long unlocked = 0;
+    public long locked;
+    public long inced;
+    public long unlocked;
 
     public LockCounter() {
     }
 
-    public void add(LockCounter c) {
-        locked += c.locked;
-        inced += c.inced;
-        unlocked += c.unlocked;
+    public void add(LockCounter counter) {
+        locked += counter.locked;
+        inced += counter.inced;
+        unlocked += counter.unlocked;
     }
 
     @Override
     public String toString() {
-        return "LockCounter{" +
-                "locked=" + locked +
-                ", inced=" + inced +
-                ", unlocked=" + unlocked +
-                '}';
+        return "LockCounter{"
+                + "locked=" + locked
+                + ", inced=" + inced
+                + ", unlocked=" + unlocked
+                + '}';
     }
 }

@@ -205,11 +205,11 @@ public class EvictionICacheTest {
 
         @Override
         public String toString() {
-            return "Counter{" +
-                    "put=" + put +
-                    ", putAsync=" + putAsync +
-                    ", putAll=" + putAll +
-                    '}';
+            return "Counter{"
+                    + "put=" + put
+                    + ", putAsync=" + putAsync
+                    + ", putAll=" + putAll
+                    + '}';
         }
     }
 }

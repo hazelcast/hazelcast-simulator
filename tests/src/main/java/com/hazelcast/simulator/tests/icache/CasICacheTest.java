@@ -59,7 +59,7 @@ public class CasICacheTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-        basename=testContext.getTestId();
+        basename = testContext.getTestId();
         resultsPerWorker = targetInstance.getList(basename);
 
 
@@ -112,7 +112,7 @@ public class CasICacheTest {
         long[] amount = new long[keyCount];
 
         for (long[] incrments : resultsPerWorker) {
-            for (int i=0 ; i<keyCount; i++) {
+            for (int i = 0; i < keyCount; i++) {
                 amount[i] += incrments[i];
             }
         }

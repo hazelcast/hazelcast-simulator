@@ -111,5 +111,3 @@ public class SimpleLockTest {
         spawner.awaitCompletion();
     }
 }
-
-

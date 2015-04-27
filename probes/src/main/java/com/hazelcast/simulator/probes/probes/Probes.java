@@ -30,7 +30,7 @@ public final class Probes {
 
     /**
      * Creates a probe instance.
-     * <p/>
+     *
      * If the configuration for the given name is <tt>null</tt> a {@link DisabledProbe} instance will be returned.
      *
      * @param probeName              name of the probe
@@ -46,7 +46,7 @@ public final class Probes {
 
     /**
      * Creates a thread safe probe instance.
-     * <p/>
+     *
      * If the configuration for the given name is <tt>null</tt> a {@link DisabledProbe} instance will be returned.
      *
      * @param probeName              name of the probe

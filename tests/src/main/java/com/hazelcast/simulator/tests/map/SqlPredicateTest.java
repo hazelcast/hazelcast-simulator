@@ -95,7 +95,6 @@ public class SqlPredicateTest {
     }
 
     public static class DataSerializableEmployee implements DataSerializable {
-        private static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
 
         private int id;
         private String name;
@@ -103,15 +102,16 @@ public class SqlPredicateTest {
         private boolean active;
         private double salary;
 
+        @SuppressWarnings("unused")
+        public DataSerializableEmployee() {
+        }
+
         public DataSerializableEmployee(int id, String name, int age, boolean live, double salary) {
             this.id = id;
             this.name = name;
             this.age = age;
             this.active = live;
             this.salary = salary;
-        }
-
-        public DataSerializableEmployee() {
         }
 
         public int getId() {
@@ -154,13 +154,13 @@ public class SqlPredicateTest {
 
         @Override
         public String toString() {
-            return "Employee{" +
-                    "id=" + id +
-                    ", name='" + name + '\'' +
-                    ", age=" + age +
-                    ", active=" + active +
-                    ", salary=" + salary +
-                    '}';
+            return "Employee{"
+                    + "id=" + id
+                    + ", name='" + name + '\''
+                    + ", age=" + age
+                    + ", active=" + active
+                    + ", salary=" + salary
+                    + '}';
         }
     }
 }

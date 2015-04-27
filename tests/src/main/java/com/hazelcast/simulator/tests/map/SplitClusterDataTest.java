@@ -12,6 +12,7 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
 public class SplitClusterDataTest {
@@ -54,16 +55,11 @@ public class SplitClusterDataTest {
         spawner.awaitCompletion();
     }
 
-
     private class Worker implements Runnable {
         @Override
         public void run() {
             while (!testContext.isStopped()) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-
-                }
+                sleepSeconds(1);
             }
         }
     }

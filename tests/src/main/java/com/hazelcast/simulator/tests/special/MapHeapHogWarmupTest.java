@@ -135,7 +135,8 @@ public class MapHeapHogWarmupTest {
         double usedOfMax = 100.0 * ((double) used / (double) max);
 
         sb.append("\nfree = ").append(humanReadableByteCount(free, true)).append(" (").append(free).append(")")
-                .append("\ntotal free = ").append(humanReadableByteCount(totalFree, true)).append(" (").append(totalFree).append(")")
+                .append("\ntotal free = ").append(humanReadableByteCount(totalFree, true))
+                .append(" (").append(totalFree).append(")")
                 .append("\nused = ").append(humanReadableByteCount(used, true)).append(" (").append(used).append(")")
                 .append("\nmax = ").append(humanReadableByteCount(max, true)).append(" (").append(max).append(")")
                 .append(format("\nusedOfMax = %.2f%%", usedOfMax));

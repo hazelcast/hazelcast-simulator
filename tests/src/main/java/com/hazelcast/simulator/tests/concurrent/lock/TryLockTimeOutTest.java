@@ -26,7 +26,7 @@ import static org.junit.Assert.assertFalse;
 * */
 public class TryLockTimeOutTest {
 
-    private ILogger LOGGER = Logger.getLogger(TryLockTimeOutTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(TryLockTimeOutTest.class);
 
     public int threadCount = 3;
     public int maxAccounts = 100;
@@ -76,19 +76,19 @@ public class TryLockTimeOutTest {
                 int key2 = random.nextInt(maxAccounts);
 
                 ILock lock1 = targetInstance.getLock(basename + key1);
-                try{
+                try {
                     if (lock1.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
                         try {
                             ILock lock2 = targetInstance.getLock(basename + key2);
                             try {
-                                if (lock2.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS) ) {
+                                if (lock2.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
                                     try {
                                         IList<Long> accounts = targetInstance.getList(basename);
                                         int delta = random.nextInt(100);
 
                                         if (accounts.get(key1) >= delta) {
-                                            accounts.set(key1, accounts.get(key1) - delta );
-                                            accounts.set(key2, accounts.get(key2) + delta );
+                                            accounts.set(key1, accounts.get(key1) - delta);
+                                            accounts.set(key2, accounts.get(key2) + delta);
                                             counter.transfers++;
                                         }
 
@@ -96,7 +96,7 @@ public class TryLockTimeOutTest {
                                         lock2.unlock();
                                     }
                                 }
-                            }catch(InterruptedException e){
+                            } catch (InterruptedException e) {
                                 LOGGER.severe(" lock2 " + e, e);
                                 counter.interruptedException++;
                             }
@@ -104,18 +104,19 @@ public class TryLockTimeOutTest {
                             lock1.unlock();
                         }
                     }
-                }catch(InterruptedException e){
+                } catch (InterruptedException e) {
                     LOGGER.severe(" lock1 " + e, e);
                     counter.interruptedException++;
                 }
             }
-            targetInstance.getList(basename+"count").add(counter);
+            targetInstance.getList(basename + "count").add(counter);
         }
     }
 
     private static class Counter implements Serializable {
-        public long interruptedException=0;
-        public long transfers=0;
+
+        public long interruptedException = 0;
+        public long transfers = 0;
 
         public void add(Counter c) {
             interruptedException += c.interruptedException;
@@ -124,10 +125,10 @@ public class TryLockTimeOutTest {
 
         @Override
         public String toString() {
-            return "Counter{" +
-                    "interruptedException=" + interruptedException +
-                    ", transfers=" + transfers +
-                    '}';
+            return "Counter{"
+                    + "interruptedException=" + interruptedException
+                    + ", transfers=" + transfers
+                    + '}';
         }
     }
 
@@ -148,7 +149,7 @@ public class TryLockTimeOutTest {
         assertEquals(id + " totalInitalValue != totalValue ", totalInitalValue, totalValue);
 
         Counter total = new Counter();
-        IList<Counter> totals = targetInstance.getList(basename+"count");
+        IList<Counter> totals = targetInstance.getList(basename + "count");
         for (Counter count : totals) {
             total.add(count);
         }

@@ -34,9 +34,8 @@ public class MapTransactionContextTest {
     public String basename = this.getClass().getSimpleName();
     public int threadCount = 3;
     public int keyCount = 10;
-    public boolean rethrowAllException=false;
-    public boolean rethrowRollBackException=false;
-
+    public boolean rethrowAllException = false;
+    public boolean rethrowRollBackException = false;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
@@ -98,7 +97,7 @@ public class MapTransactionContextTest {
                         try {
                             LOGGER.warning(basename + ": commit   fail key=" + key + " inc=" + increment, commitFailedException);
 
-                            if(rethrowAllException){
+                            if (rethrowAllException) {
                                 throw new RuntimeException(commitFailedException);
                             }
 
@@ -108,7 +107,7 @@ public class MapTransactionContextTest {
                             LOGGER.warning(basename + ": rollback fail key=" + key + " inc=" + increment, rollBackFailed);
                             count.failedRoles++;
 
-                            if(rethrowRollBackException){
+                            if (rethrowRollBackException) {
                                 throw new RuntimeException(commitFailedException);
                             }
                         }
@@ -130,7 +129,7 @@ public class MapTransactionContextTest {
         LOGGER.info(basename + ": " + total + " from " + counts.size() + " workers");
 
         IList<long[]> allIncrements = targetInstance.getList(basename + "res");
-        long expected[] = new long[keyCount];
+        long[] expected = new long[keyCount];
         for (long[] incs : allIncrements) {
             for (int i = 0; i < incs.length; i++) {
                 expected[i] += incs[i];

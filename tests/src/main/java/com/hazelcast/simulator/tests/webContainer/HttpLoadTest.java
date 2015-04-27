@@ -34,14 +34,14 @@ import static org.junit.Assert.assertEquals;
 * */
 public class HttpLoadTest {
 
-    private final static ILogger LOGGER = Logger.getLogger(HttpLoadTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(HttpLoadTest.class);
 
-    public String serverIp="";
-    public int serverPort=0;
+    public String serverIp = "";
+    public int serverPort = 0;
 
     public String id;
     public int threadCount = 3;
-    public int maxKeys=1000;
+    public int maxKeys = 1000;
     public double getRequestProb = 0.5;
     public double postRequestProb = 0.5;
 
@@ -70,14 +70,14 @@ public class HttpLoadTest {
     private class Worker implements Runnable {
         private CookieStore cookieStore;
         private HttpClient client;
-        private String baseRul = "http://"+serverIp+":"+serverPort+"/";
+        private String baseRul = "http://" + serverIp + ":" + serverPort + "/";
 
         private Random random = new Random();
         private OperationSelector<RequestType> requestSelector;
 
-        Map<Integer, String> putKeyValues = new HashMap<Integer, String>();
+        private Map<Integer, String> putKeyValues = new HashMap<Integer, String>();
 
-        public Worker(){
+        public Worker() {
             cookieStore = new BasicCookieStore();
             client = HttpClientBuilder.create().disableRedirectHandling().setDefaultCookieStore(cookieStore).build();
 
@@ -85,17 +85,19 @@ public class HttpLoadTest {
 
             OperationSelectorBuilder operationSelectorBuilder = new OperationSelectorBuilder();
 
-            requestSelector =  operationSelectorBuilder.addOperation(RequestType.GET_REQUEST, getRequestProb)
-                                    .addOperation(RequestType.PUT_REQUEST, postRequestProb)
-                                    .build();
+            requestSelector = operationSelectorBuilder.addOperation(RequestType.GET_REQUEST, getRequestProb)
+                    .addOperation(RequestType.PUT_REQUEST, postRequestProb)
+                    .build();
 
-            try{
-                for(int key=0; key<maxKeys; key++){
+            try {
+                for (int key = 0; key < maxKeys; key++) {
                     int val = random.nextInt();
-                    String res = putRequest("key/"+key+"/"+val);
+                    String res = putRequest("key/" + key + "/" + val);
                     putKeyValues.put(key, res);
                 }
-            }catch(Exception e){throw new RuntimeException(e);}
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
 
         public void run() {
@@ -103,38 +105,38 @@ public class HttpLoadTest {
                 try {
                     int key = random.nextInt(maxKeys);
                     String res;
-                    switch ( requestSelector.select() ) {
+                    switch (requestSelector.select()) {
                         case PUT_REQUEST:
                             int val = random.nextInt();
-                            res = putRequest("key/"+key+"/"+val);
+                            res = putRequest("key/" + key + "/" + val);
                             putKeyValues.put(key, res);
 
                             break;
 
                         case GET_REQUEST:
-                            res = getRequest("key/"+key);
+                            res = getRequest("key/" + key);
 
-                            assertEquals(id+": not what i put", res, putKeyValues.get(key) );
+                            assertEquals(id + ": not what i put", res, putKeyValues.get(key));
 
                             break;
                     }
-                }catch (IOException e){
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
 
         protected String getRequest(String restOpp) throws IOException {
-            HttpUriRequest request = new HttpGet(baseRul+restOpp);
-            return responseToString( client.execute(request) );
+            HttpUriRequest request = new HttpGet(baseRul + restOpp);
+            return responseToString(client.execute(request));
         }
 
-        protected String putRequest(String restOpp)  throws IOException{
-            HttpUriRequest request = new HttpPut(baseRul+restOpp);
-            return responseToString( client.execute(request) );
+        protected String putRequest(String restOpp) throws IOException {
+            HttpUriRequest request = new HttpPut(baseRul + restOpp);
+            return responseToString(client.execute(request));
         }
 
-        protected String responseToString(HttpResponse response) throws IOException{
+        protected String responseToString(HttpResponse response) throws IOException {
             HttpEntity entity = response.getEntity();
             return EntityUtils.toString(entity);
         }

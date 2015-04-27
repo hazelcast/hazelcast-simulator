@@ -33,7 +33,7 @@ public class LockConflictTest {
     public int keyCount = 50;
     public int maxKeysPerTxn = 5;
     public int tryLockTimeOutMs = 10;
-    public boolean throwException=false;
+    public boolean throwException = false;
 
     private HazelcastInstance targetInstance;
     private TestContext testContext;
@@ -48,7 +48,7 @@ public class LockConflictTest {
     public void warmup() throws Exception {
         IList<Long> accounts = targetInstance.getList(basename);
         for (int k = 0; k < keyCount; k++) {
-            accounts.add(0l);
+            accounts.add(0L);
         }
     }
 
@@ -88,13 +88,13 @@ public class LockConflictTest {
                             }
                         } catch (Exception e) {
                             LOGGER.severe(basename + ": trying lock=" + i.key, e);
-                            if(throwException){
+                            if (throwException) {
                                 throw new RuntimeException(e);
                             }
                         }
                     } catch (Exception e) {
                         LOGGER.severe(basename + ": getting lock for locking=" + i.key, e);
-                        if(throwException){
+                        if (throwException) {
                             throw new RuntimeException(e);
                         }
                     }
@@ -109,7 +109,7 @@ public class LockConflictTest {
                         counter.inced++;
                     } catch (Exception e) {
                         LOGGER.severe(basename + ": updating account=" + i, e);
-                        if(throwException){
+                        if (throwException) {
                             throw new RuntimeException(e);
                         }
                     }
@@ -128,13 +128,13 @@ public class LockConflictTest {
                                 it.remove();
                             } catch (Exception e) {
                                 LOGGER.severe(basename + ": unlocking lock =" + i.key, e);
-                                if(throwException){
+                                if (throwException) {
                                     throw new RuntimeException(e);
                                 }
                             }
                         } catch (Exception e) {
                             LOGGER.severe(basename + ": getting lock for unlocking=" + i.key, e);
-                            if(throwException){
+                            if (throwException) {
                                 throw new RuntimeException(e);
                             }
                         }
@@ -162,7 +162,7 @@ public class LockConflictTest {
         LOGGER.info(basename + ": " + total + " from " + results.size() + " worker threads");
 
         IList<long[]> allIncrements = targetInstance.getList(basename + "res");
-        long expected[] = new long[keyCount];
+        long[] expected = new long[keyCount];
         for (long[] incs : allIncrements) {
             for (int i = 0; i < incs.length; i++) {
                 expected[i] += incs[i];

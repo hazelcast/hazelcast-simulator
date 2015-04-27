@@ -12,5 +12,4 @@ public interface ServletContainer {
     void start() throws Exception;
 
     boolean isRunning();
-
 }

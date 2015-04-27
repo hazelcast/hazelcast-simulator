@@ -46,20 +46,20 @@ import static org.junit.Assert.assertNotNull;
  * we can configure a delay in the load write and delete
  * a large delay and high concurrent calls to loadAll could overflow some internal queues
  * we Verify that the cache contains all keys,  and that the keys have been loaded through a loader instance
- * */
+ */
 public class ReadWriteICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(ReadWriteICacheTest.class);
 
     public int threadCount = 3;
-    public int keyCount=10;
-    public double putProb=0.4;
-    public double getProb=0.4;
-    public double removeProb=0.2;
+    public int keyCount = 10;
+    public double putProb = 0.4;
+    public double getProb = 0.4;
+    public double removeProb = 0.2;
 
-    public int putDelayMs=0;
-    public int getDelayMs=0;
-    public int removeDealyMs=0;
+    public int putDelayMs = 0;
+    public int getDelayMs = 0;
+    public int removeDealyMs = 0;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -67,7 +67,7 @@ public class ReadWriteICacheTest {
     private String basename;
 
     private MutableConfiguration config;
-    private Cache<Object,Object> cache;
+    private Cache<Object, Object> cache;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -77,10 +77,12 @@ public class ReadWriteICacheTest {
 
         if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         } else {
             HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         }
 
         config = new MutableConfiguration();
@@ -94,8 +96,8 @@ public class ReadWriteICacheTest {
         writer.writeDelayMs = putDelayMs;
         writer.deleteDelayMs = removeDealyMs;
 
-        config.setCacheLoaderFactory(FactoryBuilder.factoryOf( loader ));
-        config.setCacheWriterFactory(FactoryBuilder.factoryOf( writer ));
+        config.setCacheLoaderFactory(FactoryBuilder.factoryOf(loader));
+        config.setCacheWriterFactory(FactoryBuilder.factoryOf(writer));
 
         cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
@@ -120,22 +122,20 @@ public class ReadWriteICacheTest {
                 int key = random.nextInt(keyCount);
 
                 double chance = random.nextDouble();
-                if ( (chance -= putProb) < 0 ) {
+                if ((chance -= putProb) < 0) {
                     cache.put(key, key);
                     counter.put++;
 
-                }
-                else if ( (chance -= getProb) < 0 ) {
+                } else if ((chance -= getProb) < 0) {
                     Object o = cache.get(key);
                     assertNotNull(o);
                     counter.get++;
-                }
-                else if ( (chance -= removeProb) < 0) {
+                } else if ((chance -= removeProb) < 0) {
                     cache.remove(key);
                     counter.remove++;
                 }
             }
-            targetInstance.getList(basename+"counters").add(counter);
+            targetInstance.getList(basename + "counters").add(counter);
         }
     }
 
@@ -152,9 +152,9 @@ public class ReadWriteICacheTest {
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
-        IList<Counter> counters = targetInstance.getList(basename+"counters");
+        IList<Counter> counters = targetInstance.getList(basename + "counters");
         Counter total = new Counter();
-        for(Counter c : counters){
+        for (Counter c : counters) {
             total.add(c);
         }
         LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
@@ -173,11 +173,11 @@ public class ReadWriteICacheTest {
         }
 
         public String toString() {
-            return "Counter{" +
-                    "put=" + put +
-                    ", get=" + get +
-                    ", remove=" + remove +
-                    '}';
+            return "Counter{"
+                    + "put=" + put
+                    + ", get=" + get
+                    + ", remove=" + remove
+                    + '}';
         }
     }
 }

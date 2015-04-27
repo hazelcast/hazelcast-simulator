@@ -7,6 +7,7 @@ import org.apache.catalina.startup.ContextConfig;
 import org.apache.catalina.startup.Tomcat;
 
 public class TomcatContainer implements ServletContainer {
+
     Tomcat tomcat;
     String serverXml;
     String sourceDir;
@@ -48,7 +49,7 @@ public class TomcatContainer implements ServletContainer {
         tomcat.setBaseDir(base);
 
         Context context = tomcat.addContext("/", sourceDir);
-        context.getServletContext().setAttribute(Globals.ALT_DD_ATTR, base+"/webapps/"+sourceDir+"/WEB-INF/"+serverXml);
+        context.getServletContext().setAttribute(Globals.ALT_DD_ATTR, base + "/webapps/" + sourceDir + "/WEB-INF/" + serverXml);
         ContextConfig contextConfig = new ContextConfig();
         context.addLifecycleListener(contextConfig);
         context.setCookies(true);

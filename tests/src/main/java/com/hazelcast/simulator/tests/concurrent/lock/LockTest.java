@@ -156,7 +156,9 @@ public class LockTest {
         private long getRandomAccountKey() {
             long key = random.nextLong() % lockCounter.get();
 
-            if (key < 0) key = -key;
+            if (key < 0) {
+                key = -key;
+            }
             return key;
         }
     }

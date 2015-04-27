@@ -135,7 +135,8 @@ public class MapDataIntegrityTest {
                 int actualSize = integrityMap.size();
                 if (doRunAsserts) {
                     assertNotNull(testId + ": integrityMap=" + integrityMap.getName() + " key " + key + " == null", val);
-                    assertEquals(testId + ": integrityMap=" + integrityMap.getName() + " map size ", totalIntegrityKeys, actualSize);
+                    assertEquals(testId + ": integrityMap=" + integrityMap.getName() + " map size ",
+                            totalIntegrityKeys, actualSize);
                 } else {
                     if (val == null) {
                         nullValueCount++;

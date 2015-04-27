@@ -303,24 +303,24 @@ public class MangleICacheTest {
         }
 
         public String toString() {
-            return "Counter{" +
-                    "createCacheManager=" + createCacheManager +
-                    ", createCacheManagerException=" + createCacheManagerException +
-                    ", getCache=" + getCache +
-                    ", put=" + put +
-                    ", create=" + create +
-                    ", destroy=" + destroy +
-                    ", cacheClose=" + cacheClose +
-                    ", getCacheException=" + getCacheException +
-                    ", getPutException=" + getPutException +
-                    ", createException=" + createException +
-                    ", destroyException=" + destroyException +
-                    ", cacheCloseException=" + cacheCloseException +
-                    ", cacheManagerClose=" + cacheManagerClose +
-                    ", cachingProviderClose=" + cachingProviderClose +
-                    ", cacheManagerCloseException=" + cacheManagerCloseException +
-                    ", cachingProviderCloseException=" + cachingProviderCloseException +
-                    '}';
+            return "Counter{"
+                    + "createCacheManager=" + createCacheManager
+                    + ", createCacheManagerException=" + createCacheManagerException
+                    + ", getCache=" + getCache
+                    + ", put=" + put
+                    + ", create=" + create
+                    + ", destroy=" + destroy
+                    + ", cacheClose=" + cacheClose
+                    + ", getCacheException=" + getCacheException
+                    + ", getPutException=" + getPutException
+                    + ", createException=" + createException
+                    + ", destroyException=" + destroyException
+                    + ", cacheCloseException=" + cacheCloseException
+                    + ", cacheManagerClose=" + cacheManagerClose
+                    + ", cachingProviderClose=" + cachingProviderClose
+                    + ", cacheManagerCloseException=" + cacheManagerCloseException
+                    + ", cachingProviderCloseException=" + cachingProviderCloseException
+                    + '}';
         }
     }
 }

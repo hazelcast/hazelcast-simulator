@@ -32,7 +32,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberN
  * this test is out side of normal usage, however has found problems where put operations hang
  * this type of test could uncover memory leaks in the process of adding and removing listeners
  * The max size of the cache used in this test is keyCount int key/value pairs,
- * **/
+ */
 public class AddRemoveListenerICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(AddRemoveListenerICacheTest.class);
@@ -41,10 +41,10 @@ public class AddRemoveListenerICacheTest {
     public int keyCount = 1000;
     public boolean syncEvents = true;
 
-    public double register=0;
-    public double deregister=0;
-    public double put=0;
-    public double get=0;
+    public double register = 0;
+    public double deregister = 0;
+    public double put = 0;
+    public double get = 0;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -66,10 +66,12 @@ public class AddRemoveListenerICacheTest {
 
         if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         } else {
             HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager( hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         }
 
         config.setName(basename);
@@ -106,23 +108,21 @@ public class AddRemoveListenerICacheTest {
             while (!testContext.isStopped()) {
 
                 double chance = random.nextDouble();
-                if((chance -= register) < 0){
-                    try{
+                if ((chance -= register) < 0) {
+                    try {
                         cache.registerCacheEntryListener(m);
                         counter.register++;
-                    }catch(IllegalArgumentException e){
+                    } catch (IllegalArgumentException e) {
                         counter.registerIllegalArgException++;
                     }
-                }
-                else if((chance -= deregister) < 0){
+                } else if ((chance -= deregister) < 0) {
                     cache.deregisterCacheEntryListener(m);
                     counter.deregister++;
 
-                }else if((chance -= put) < 0){
-                    cache.put(random.nextInt(keyCount), 1l);
+                } else if ((chance -= put) < 0) {
+                    cache.put(random.nextInt(keyCount), 1L);
                     counter.put++;
-                }
-                else if((chance -= get) < 0){
+                } else if ((chance -= get) < 0) {
                     cache.get(random.nextInt(keyCount));
                     counter.put++;
                 }
@@ -160,13 +160,13 @@ public class AddRemoveListenerICacheTest {
         }
 
         public String toString() {
-            return "Counter{" +
-                    "put=" + put +
-                    ", get=" + get +
-                    ", register=" + register +
-                    ", registerIllegalArgException=" + registerIllegalArgException +
-                    ", deregister=" + deregister +
-                    '}';
+            return "Counter{"
+                    + "put=" + put
+                    + ", get=" + get
+                    + ", register=" + register
+                    + ", registerIllegalArgException=" + registerIllegalArgException
+                    + ", deregister=" + deregister
+                    + '}';
         }
     }
 }

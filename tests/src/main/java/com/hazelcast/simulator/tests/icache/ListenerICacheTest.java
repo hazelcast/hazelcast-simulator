@@ -18,6 +18,7 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.icache.helpers.MyCacheEntryEventFilter;
 import com.hazelcast.simulator.tests.icache.helpers.MyCacheEntryListener;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.util.EmptyStatement;
 
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
@@ -78,16 +79,19 @@ public class ListenerICacheTest {
 
         if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         } else {
             HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager( hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         }
 
         config.setName(basename);
         try {
             cacheManager.createCache(basename, config);
         } catch (CacheException ignored) {
+            EmptyStatement.ignore(ignored);
         }
     }
 
@@ -116,7 +120,7 @@ public class ListenerICacheTest {
 
         sleepSeconds(PAUSE_FOR_LAST_EVENTS_SECONDS);
 
-        targetInstance.getList(basename+"listeners").add(listener);
+        targetInstance.getList(basename + "listeners").add(listener);
     }
 
     private class Worker implements Runnable {
@@ -136,8 +140,7 @@ public class ListenerICacheTest {
                     cache.put(k, random.nextLong());
                     counter.put++;
 
-                }
-                else if ((chance -= putExpiry) < 0) {
+                } else if ((chance -= putExpiry) < 0) {
                     cache.put(k, random.nextLong(), expiryPolicy);
                     counter.putExpiry++;
 
@@ -159,12 +162,12 @@ public class ListenerICacheTest {
                     }
 
                 } else if ((chance -= remove) < 0) {
-                    if ( cache.remove(k) ){
+                    if (cache.remove(k)) {
                         counter.remove++;
                     }
 
                 } else if ((chance -= replace) < 0) {
-                    if ( cache.replace(k, random.nextLong()) ){
+                    if (cache.replace(k, random.nextLong())) {
                         counter.replace++;
                     }
 
@@ -190,9 +193,9 @@ public class ListenerICacheTest {
         }
         LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
-        IList<MyCacheEntryListener> listeners = targetInstance.getList(basename+"listeners");
+        IList<MyCacheEntryListener> listeners = targetInstance.getList(basename + "listeners");
         MyCacheEntryListener totalEvents = new MyCacheEntryListener();
-        for(MyCacheEntryListener listener : listeners){
+        for (MyCacheEntryListener listener : listeners) {
             totalEvents.add(listener);
         }
         LOGGER.info(basename + ": totalEvents " + totalEvents);
@@ -220,15 +223,15 @@ public class ListenerICacheTest {
         }
 
         public String toString() {
-            return "Counter{" +
-                    "put=" + put +
-                    ", putExpiry=" + putExpiry +
-                    ", putAsyncExpiry=" + putAsyncExpiry +
-                    ", getExpiry=" + getExpiry +
-                    ", getAsyncExpiry=" + getAsyncExpiry +
-                    ", remove=" + remove +
-                    ", replace=" + replace +
-                    '}';
+            return "Counter{"
+                    + "put=" + put
+                    + ", putExpiry=" + putExpiry
+                    + ", putAsyncExpiry=" + putAsyncExpiry
+                    + ", getExpiry=" + getExpiry
+                    + ", getAsyncExpiry=" + getAsyncExpiry
+                    + ", remove=" + remove
+                    + ", replace=" + replace
+                    + '}';
         }
     }
 }

@@ -50,7 +50,7 @@ import static junit.framework.Assert.assertTrue;
  * a large delay and high concurrent calls to loadAll could overflow some internal queues
  * if waitForLoadAllFutureComplition is false, again we could overflow some internal queues
  * we Verify that the cache contains all keys,  and that the keys have been loaded through a loader instance
- * */
+ */
 public class CacheLoaderTest {
 
     private static final ILogger LOGGER = Logger.getLogger(CacheLoaderTest.class);
@@ -58,7 +58,7 @@ public class CacheLoaderTest {
     public int threadCount = 3;
     public int keyCount = 10;
     public int loadAllDelayMs = 0;
-    public boolean waitForLoadAllFutureComplition = true;
+    public boolean waitForLoadAllFutureCompletion = true;
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -66,7 +66,7 @@ public class CacheLoaderTest {
     private String basename;
 
     private MutableConfiguration config;
-    private Cache<Object,Object> cache;
+    private Cache<Object, Object> cache;
     private Set keySet = new HashSet();
 
     @Setup
@@ -77,10 +77,12 @@ public class CacheLoaderTest {
 
         if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         } else {
             HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
+                    null);
         }
 
         config = new MutableConfiguration();
@@ -89,15 +91,15 @@ public class CacheLoaderTest {
         RecordingCacheLoader recordingCacheLoader = new RecordingCacheLoader();
         recordingCacheLoader.loadAllDelayMs = loadAllDelayMs;
 
-        config.setCacheLoaderFactory(FactoryBuilder.factoryOf( recordingCacheLoader ));
+        config.setCacheLoaderFactory(FactoryBuilder.factoryOf(recordingCacheLoader));
 
         cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
     }
 
     @Warmup(global = false)
-    public void warmup(){
-        for(int i=0; i< keyCount; i++){
+    public void warmup() {
+        for (int i = 0; i < keyCount; i++) {
             keySet.add(i);
         }
     }
@@ -118,7 +120,7 @@ public class CacheLoaderTest {
                 CompletionListenerFuture loaded = new CompletionListenerFuture();
                 cache.loadAll(keySet, true, loaded);
 
-                if ( waitForLoadAllFutureComplition ) {
+                if (waitForLoadAllFutureCompletion) {
                     try {
                         loaded.get();
                     } catch (Exception e) {
@@ -127,7 +129,7 @@ public class CacheLoaderTest {
                 }
             }
             RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
-            targetInstance.getList(basename+"loaders").add(loader);
+            targetInstance.getList(basename + "loaders").add(loader);
         }
     }
 
@@ -140,24 +142,24 @@ public class CacheLoaderTest {
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
-        for(int k=0; k< keyCount; k++){
-            assertTrue(basename + ": cache should contain key "+k, cache.containsKey(k) );
+        for (int k = 0; k < keyCount; k++) {
+            assertTrue(basename + ": cache should contain key " + k, cache.containsKey(k));
         }
 
-        IList<RecordingCacheLoader> loaders = targetInstance.getList(basename+"loaders");
+        IList<RecordingCacheLoader> loaders = targetInstance.getList(basename + "loaders");
 
         boolean[] loaded = new boolean[keyCount];
         Arrays.fill(loaded, false);
-        for(RecordingCacheLoader loader : loaders){
-            for(int k=0; k< keyCount; k++){
-                if(loader.hasLoaded(k)){
-                    loaded[k]=true;
+        for (RecordingCacheLoader loader : loaders) {
+            for (int k = 0; k < keyCount; k++) {
+                if (loader.hasLoaded(k)) {
+                    loaded[k] = true;
                 }
             }
         }
 
-        for(int i=0; i< keyCount; i++){
-            assertTrue(basename+": Key "+i+" not in loader",loaded[i]);
+        for (int i = 0; i < keyCount; i++) {
+            assertTrue(basename + ": Key " + i + " not in loader", loaded[i]);
         }
     }
 }

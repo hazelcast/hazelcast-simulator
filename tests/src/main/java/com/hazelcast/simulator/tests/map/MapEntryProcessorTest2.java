@@ -23,7 +23,7 @@ import static junit.framework.TestCase.assertEquals;
 
 public class MapEntryProcessorTest2 {
 
-    private final static ILogger LOGGER = Logger.getLogger(MapEntryProcessorTest2.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapEntryProcessorTest2.class);
 
     public String basename = this.getClass().getName();
     public int threadCount = 10;
@@ -34,24 +34,24 @@ public class MapEntryProcessorTest2 {
     private IMap<Integer, Long> map;
     private IList<long[]> allIncrementsOnKeys;
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) throws Exception {
         if (minProcessorDelayMs > maxProcessorDelayMs) {
-            throw new IllegalArgumentException("minProcessorDelayMs has to be >= maxProcessorDelayMs. " +
-                    "Current settings: minProcessorDelayMs = "+minProcessorDelayMs +
-                    " maxProcessorDelayMs = "+maxProcessorDelayMs);
+            throw new IllegalArgumentException("minProcessorDelayMs has to be >= maxProcessorDelayMs. "
+                    + "Current settings: minProcessorDelayMs = " + minProcessorDelayMs
+                    + " maxProcessorDelayMs = " + maxProcessorDelayMs);
         }
 
         this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         allIncrementsOnKeys = targetInstance.getList(basename + "Result");
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         map.destroy();
         allIncrementsOnKeys.destroy();
     }
@@ -106,12 +106,11 @@ public class MapEntryProcessorTest2 {
         long[] expectedValueForKey = new long[keyCount];
 
         for (long[] incrementsAtKey : allIncrementsOnKeys) {
-            for (int k=0; k<incrementsAtKey.length; k++) {
+            for (int k = 0; k < incrementsAtKey.length; k++) {
                 expectedValueForKey[k] += incrementsAtKey[k];
             }
         }
 
-        int failures = 0;
         for (int k = 0; k < keyCount; k++) {
             long actual = map.get(k);
             assertEquals(basename + ": expectedValueForKey " + k + " not in the map at key " + k, expectedValueForKey[k], actual);
@@ -120,7 +119,8 @@ public class MapEntryProcessorTest2 {
         LOGGER.info(basename + " OKOOKOKKKKKKKK");
     }
 
-    private static class IncrementEntryProcessor extends AbstractEntryProcessor<Integer, Long> {
+    private static final class IncrementEntryProcessor extends AbstractEntryProcessor<Integer, Long> {
+
         private final long increment;
         private final long delayMs;
 
@@ -131,7 +131,7 @@ public class MapEntryProcessorTest2 {
 
         @Override
         public Object process(Map.Entry<Integer, Long> entry) {
-            sleepMillis((int)delayMs);
+            sleepMillis((int) delayMs);
             long newValue = entry.getValue() + increment;
             entry.setValue(newValue);
             return null;
