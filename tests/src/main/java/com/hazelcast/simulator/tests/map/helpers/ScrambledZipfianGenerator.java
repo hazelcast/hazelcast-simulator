@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.map.helpers;
 
 import com.hazelcast.simulator.tests.helpers.IntegerGenerator;
 
-import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.FNVHash64;
+import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.hashFNV64;
 
 /**
  * A generator of a zipfian distribution. It produces a sequence of items, such that some items are more popular than others,
@@ -95,7 +95,7 @@ public class ScrambledZipfianGenerator extends IntegerGenerator {
      */
     public long nextLong() {
         long ret = gen.nextLong();
-        ret = min + FNVHash64(ret) % itemCount;
+        ret = min + hashFNV64(ret) % itemCount;
         setLastInt((int) ret);
         return ret;
     }

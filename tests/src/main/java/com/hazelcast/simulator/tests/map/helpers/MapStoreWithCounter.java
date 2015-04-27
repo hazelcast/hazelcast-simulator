@@ -13,8 +13,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
 public class MapStoreWithCounter implements MapStore<Object, Object> {
-    private static int minDelayMs = 0;
-    private static int maxDelayMs = 0;
+
+    private static int minDelayMs;
+    private static int maxDelayMs;
 
     private final Random random = new Random();
     private final Map<Object, Object> store = new ConcurrentHashMap<Object, Object>();

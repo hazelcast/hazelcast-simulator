@@ -7,11 +7,12 @@ import com.hazelcast.nio.serialization.DataSerializable;
 import java.io.IOException;
 
 public class PredicateOperationCounter implements DataSerializable {
-    public long predicateBuilderCount = 0;
-    public long sqlStringCount = 0;
-    public long pagePredicateCount = 0;
-    public long updateEmployeeCount = 0;
-    public long destroyCount = 0;
+
+    public long predicateBuilderCount;
+    public long sqlStringCount;
+    public long pagePredicateCount;
+    public long updateEmployeeCount;
+    public long destroyCount;
 
     public PredicateOperationCounter() {
     }

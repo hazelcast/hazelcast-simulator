@@ -9,8 +9,8 @@ public class Employee implements Serializable, Comparable<Employee> {
     public static final int MAX_AGE = 75;
     public static final double MAX_SALARY = 1000.0;
 
-    private static final String[] names = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
-    private static final Random random = new Random();
+    private static final String[] NAMES = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
+    private static final Random RANDOM = new Random();
 
     private int id;
     private String name;
@@ -36,14 +36,14 @@ public class Employee implements Serializable, Comparable<Employee> {
     }
 
     public static String getRandomName() {
-        return Employee.names[random.nextInt(Employee.names.length)];
+        return Employee.NAMES[RANDOM.nextInt(Employee.NAMES.length)];
     }
 
     public void randomizeProperties() {
-        name = names[random.nextInt(names.length)];
-        age = random.nextInt(MAX_AGE);
-        active = random.nextBoolean();
-        salary = random.nextDouble() * MAX_SALARY;
+        name = NAMES[RANDOM.nextInt(NAMES.length)];
+        age = RANDOM.nextInt(MAX_AGE);
+        active = RANDOM.nextBoolean();
+        salary = RANDOM.nextDouble() * MAX_SALARY;
     }
 
     public int getId() {
@@ -83,17 +83,31 @@ public class Employee implements Serializable, Comparable<Employee> {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:npathcomplexity")
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Employee employee = (Employee) o;
-
-        if (id != employee.id) return false;
-        if (age != employee.age) return false;
-        if (active != employee.active) return false;
-        if (Double.compare(employee.salary, salary) != 0) return false;
-        if (name != null ? !name.equals(employee.name) : employee.name != null) return false;
+        if (id != employee.id) {
+            return false;
+        }
+        if (age != employee.age) {
+            return false;
+        }
+        if (active != employee.active) {
+            return false;
+        }
+        if (Double.compare(employee.salary, salary) != 0) {
+            return false;
+        }
+        if (name != null ? !name.equals(employee.name) : employee.name != null) {
+            return false;
+        }
 
         return true;
     }

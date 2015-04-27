@@ -3,9 +3,10 @@ package com.hazelcast.simulator.tests.map.helpers;
 import java.io.Serializable;
 
 public class MapReduceOperationCounter implements Serializable {
-    public long mapReduce = 0;
-    public long getMapEntry = 0;
-    public long modifyMapEntry = 0;
+
+    public long mapReduce;
+    public long getMapEntry;
+    public long modifyMapEntry;
 
     public void add(MapReduceOperationCounter operationCounter) {
         mapReduce += operationCounter.mapReduce;

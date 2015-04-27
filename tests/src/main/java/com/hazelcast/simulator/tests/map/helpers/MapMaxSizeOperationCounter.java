@@ -3,10 +3,11 @@ package com.hazelcast.simulator.tests.map.helpers;
 import java.io.Serializable;
 
 public class MapMaxSizeOperationCounter implements Serializable {
-    public long put = 0;
-    public long putAsync = 0;
-    public long get = 0;
-    public long verified = 0;
+
+    public long put;
+    public long putAsync;
+    public long get;
+    public long verified;
 
     public MapMaxSizeOperationCounter() {
     }

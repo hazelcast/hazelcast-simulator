@@ -41,7 +41,8 @@ import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.random;
  */
 @SuppressWarnings("unused")
 public class ZipfianGenerator extends IntegerGenerator {
-    public static final double ZIPFIAN_CONSTANT = 0.99;
+
+    static final double ZIPFIAN_CONSTANT = 0.99;
 
     /**
      * Number of items.

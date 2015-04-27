@@ -11,6 +11,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
 public class EventCount implements DataSerializable {
+
     public AtomicLong addCount = new AtomicLong(0);
     public AtomicLong removeCount = new AtomicLong(0);
     public AtomicLong updateCount = new AtomicLong(0);

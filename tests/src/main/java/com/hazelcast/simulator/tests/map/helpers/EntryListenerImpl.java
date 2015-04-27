@@ -15,8 +15,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
 public class EntryListenerImpl<K, V> implements EntryListener<K, V>, DataSerializable {
 
-    private final Random random = new Random();
-
     public AtomicLong addCount = new AtomicLong();
     public AtomicLong removeCount = new AtomicLong();
     public AtomicLong updateCount = new AtomicLong();
@@ -24,6 +22,8 @@ public class EntryListenerImpl<K, V> implements EntryListener<K, V>, DataSeriali
 
     public int minDelayMs;
     public int maxDelayMs;
+
+    private final Random random = new Random();
 
     @SuppressWarnings("unused")
     public EntryListenerImpl() {
@@ -96,10 +96,10 @@ public class EntryListenerImpl<K, V> implements EntryListener<K, V>, DataSeriali
         }
 
         EntryListenerImpl that = (EntryListenerImpl) o;
-        return addCount.get() == that.addCount.get() &&
-                evictCount.get() == that.evictCount.get() &&
-                removeCount.get() == that.removeCount.get() &&
-                updateCount.get() == that.updateCount.get();
+        return addCount.get() == that.addCount.get()
+                && evictCount.get() == that.evictCount.get()
+                && removeCount.get() == that.removeCount.get()
+                && updateCount.get() == that.updateCount.get();
     }
 
     @Override
