@@ -23,6 +23,9 @@ import org.apache.commons.codec.binary.Base64;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
@@ -33,7 +36,7 @@ public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributi
     private final Histogram histogram;
 
     public HdrLatencyDistributionResult(Histogram histogram) {
-        this.histogram = histogram;
+        this.histogram = histogram.copy();
     }
 
     public Histogram getHistogram() {
@@ -45,8 +48,7 @@ public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributi
         if (other == null) {
             return this;
         }
-        Histogram combinedHistogram = new Histogram(histogram);
-        combinedHistogram.add(histogram);
+        Histogram combinedHistogram = histogram.copy();
         combinedHistogram.add(other.histogram);
         return new HdrLatencyDistributionResult(combinedHistogram);
     }
@@ -98,5 +100,21 @@ public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributi
     @Override
     public int hashCode() {
         return histogram != null ? histogram.hashCode() : 0;
+    }
+
+    private void writeObject(ObjectOutputStream stream) throws IOException {
+        stream.defaultWriteObject();
+        if (histogram != null) {
+            System.out.println("HdrLatencyDistributionResult.writeObject(): "
+                    + histogram.getNeededByteBufferCapacity() + " byte");
+        }
+    }
+
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        stream.defaultReadObject();
+        if (histogram != null) {
+            System.out.println("HdrLatencyDistributionResult.readObject(): "
+                    + histogram.getNeededByteBufferCapacity() + " byte");
+        }
     }
 }
