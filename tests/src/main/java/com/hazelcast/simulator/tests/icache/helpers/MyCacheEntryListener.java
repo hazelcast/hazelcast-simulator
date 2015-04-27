@@ -8,18 +8,31 @@ import javax.cache.event.CacheEntryUpdatedListener;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MyCacheEntryListener<K, V> implements CacheEntryCreatedListener<K, V>, CacheEntryRemovedListener<K, V>, CacheEntryUpdatedListener<K, V>, Serializable {
+public class MyCacheEntryListener<K, V> implements CacheEntryCreatedListener<K, V>, CacheEntryRemovedListener<K, V>,
+        CacheEntryUpdatedListener<K, V>, Serializable {
 
-    public AtomicLong created = new AtomicLong();
-    public AtomicLong updated = new AtomicLong();
-    public AtomicLong removed = new AtomicLong();
-    public AtomicLong expired = new AtomicLong();
-    public AtomicLong unExpected = new AtomicLong();
+    private AtomicLong created = new AtomicLong();
+    private AtomicLong updated = new AtomicLong();
+    private AtomicLong removed = new AtomicLong();
+    private AtomicLong expired = new AtomicLong();
+    private AtomicLong unExpected = new AtomicLong();
 
+    public long getUnexpected() {
+        return unExpected.get();
+    }
+
+    public void add(MyCacheEntryListener listener) {
+        created.addAndGet(listener.created.get());
+        updated.addAndGet(listener.updated.get());
+        removed.addAndGet(listener.removed.get());
+        expired.addAndGet(listener.expired.get());
+        unExpected.addAndGet(listener.unExpected.get());
+    }
+
+    @Override
     public void onCreated(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) throws CacheEntryListenerException {
-
         for (CacheEntryEvent<? extends K, ? extends V> event : events) {
-            switch (event.getEventType()){
+            switch (event.getEventType()) {
                 case CREATED:
                     created.incrementAndGet();
                     break;
@@ -32,9 +45,8 @@ public class MyCacheEntryListener<K, V> implements CacheEntryCreatedListener<K, 
 
     @Override
     public void onRemoved(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) throws CacheEntryListenerException {
-
         for (CacheEntryEvent<? extends K, ? extends V> event : events) {
-            switch (event.getEventType()){
+            switch (event.getEventType()) {
                 case REMOVED:
                     removed.incrementAndGet();
                     break;
@@ -47,9 +59,8 @@ public class MyCacheEntryListener<K, V> implements CacheEntryCreatedListener<K, 
 
     @Override
     public void onUpdated(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) throws CacheEntryListenerException {
-
         for (CacheEntryEvent<? extends K, ? extends V> event : events) {
-            switch (event.getEventType()){
+            switch (event.getEventType()) {
                 case UPDATED:
                     updated.incrementAndGet();
                     break;
@@ -60,22 +71,15 @@ public class MyCacheEntryListener<K, V> implements CacheEntryCreatedListener<K, 
         }
     }
 
+    @Override
     public String toString() {
-        return "MyCacheEntryListener{" +
-                "created=" + created +
-                ", updated=" + updated +
-                ", removed=" + removed +
-                ", expired=" + expired +
-                ", unExpected=" + unExpected +
-                '}';
-    }
-
-    public void add(MyCacheEntryListener listener){
-        created.addAndGet(listener.created.get());
-        updated.addAndGet(listener.updated.get());
-        removed.addAndGet( listener.removed.get() );
-        expired.addAndGet(listener.expired.get());
-        unExpected.addAndGet( listener.unExpected.get() );
+        return "MyCacheEntryListener{"
+                + "created=" + created
+                + ", updated=" + updated
+                + ", removed=" + removed
+                + ", expired=" + expired
+                + ", unExpected=" + unExpected
+                + '}';
     }
 }
 

@@ -197,7 +197,7 @@ public class ListenerICacheTest {
         }
         log.info(basename + ": totalEvents " + totalEvents);
 
-        assertEquals(basename + ": unExpected Events found ", 0, totalEvents.unExpected.get());
+        assertEquals(basename + ": unExpected Events found ", 0, totalEvents.getUnexpected());
     }
 
     private static class Counter implements Serializable {

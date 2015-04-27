@@ -11,11 +11,11 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
 public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable {
 
-    public ConcurrentHashMap<K, K> loaded = new ConcurrentHashMap<K, K>();
-    public AtomicInteger loadCount = new AtomicInteger(0);
+    public int loadDelayMs;
+    public int loadAllDelayMs;
 
-    public int loadDelayMs=0;
-    public int loadAllDelayMs=0;
+    private final ConcurrentHashMap<K, K> loaded = new ConcurrentHashMap<K, K>();
+    private final AtomicInteger loadCount = new AtomicInteger(0);
 
     @Override
     public K load(final K key) {
@@ -25,7 +25,7 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
         }
 
         if (key == null) {
-            throw new NullPointerException("load Null key!");
+            throw new NullPointerException("load null key!");
         }
 
         loaded.put(key, key);
@@ -54,9 +54,9 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
 
     @Override
     public String toString() {
-        return "RecordingCacheLoader{" +
-                "loaded=" + loaded +
-                ", loadCount=" + loadCount +
-                '}';
+        return "RecordingCacheLoader{"
+                + "loaded=" + loaded
+                + ", loadCount=" + loadCount
+                + '}';
     }
 }

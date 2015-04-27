@@ -12,16 +12,16 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
 public class RecordingCacheWriter<K, V> implements CacheWriter<K, V>, Serializable {
 
-    public ConcurrentHashMap<K, V> writtenKeys = new ConcurrentHashMap<K, V>();
-    public ConcurrentHashMap<K, V> deletedEntries = new ConcurrentHashMap<K, V>();
+    public int writeDelayMs;
+    public int writeAllDelayMs;
+    public int deleteDelayMs;
+    public int deleteAllDelayMs;
 
-    public AtomicLong writeCount = new AtomicLong();
-    public AtomicLong deleteCount = new AtomicLong();
+    private final ConcurrentHashMap<K, V> writtenKeys = new ConcurrentHashMap<K, V>();
+    private final ConcurrentHashMap<K, V> deletedEntries = new ConcurrentHashMap<K, V>();
 
-    public int writeDelayMs = 0;
-    public int writeAllDelayMs = 0;
-    public int deleteDelayMs = 0;
-    public int deleteAllDelayMs = 0;
+    private final AtomicLong writeCount = new AtomicLong();
+    private final AtomicLong deleteCount = new AtomicLong();
 
     @Override
     public void write(Cache.Entry<? extends K, ? extends V> entry) {
@@ -77,11 +77,11 @@ public class RecordingCacheWriter<K, V> implements CacheWriter<K, V>, Serializab
 
     @Override
     public String toString() {
-        return "RecordingCacheWriter{" +
-                "writtenKeys=" + writtenKeys +
-                ", deletedEntries=" + deletedEntries +
-                ", writeCount=" + writeCount +
-                ", deleteCount=" + deleteCount +
-                '}';
+        return "RecordingCacheWriter{"
+                + "writtenKeys=" + writtenKeys
+                + ", deletedEntries=" + deletedEntries
+                + ", writeCount=" + writeCount
+                + ", deleteCount=" + deleteCount
+                + '}';
     }
 }
