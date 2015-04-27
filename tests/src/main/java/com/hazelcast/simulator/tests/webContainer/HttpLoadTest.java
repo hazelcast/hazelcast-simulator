@@ -21,6 +21,7 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
@@ -74,7 +75,7 @@ public class HttpLoadTest {
         private Random random = new Random();
         private OperationSelector<RequestType> requestSelector;
 
-        HashMap<Integer, String> putKeyValues = new HashMap();
+        Map<Integer, String> putKeyValues = new HashMap<Integer, String>();
 
         public Worker(){
             cookieStore = new BasicCookieStore();

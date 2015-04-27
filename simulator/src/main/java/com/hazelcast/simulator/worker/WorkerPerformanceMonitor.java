@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.hazelcast.simulator.utils.CommonUtils.fillString;
 import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
@@ -46,14 +47,17 @@ class WorkerPerformanceMonitor {
     }
 
     private static final class WorkerPerformanceMonitorThread extends Thread {
+
         private static final Logger LOGGER = Logger.getLogger(WorkerPerformanceMonitorThread.class);
 
         private final File globalPerformanceFile = new File("performance.txt");
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        private final HashMap<String, TestStats> testStats = new HashMap<String, TestStats>();
+        private final Map<String, TestStats> testStats = new HashMap<String, TestStats>();
         private final Collection<TestContainer<TestContext>> testContainers;
+
         private long globalLastOpsCount;
         private long globalLastTimeMillis = System.currentTimeMillis();
+
         private volatile boolean running;
 
         private WorkerPerformanceMonitorThread(Collection<TestContainer<TestContext>> testContainers) {
