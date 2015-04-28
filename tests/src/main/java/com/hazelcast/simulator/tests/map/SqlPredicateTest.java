@@ -55,7 +55,7 @@ public class SqlPredicateTest {
         LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
-    @Warmup(global = false)
+    @Warmup(global = true)
     public void warmup() throws InterruptedException {
         Random random = new Random();
         MapStreamer<String, DataSerializableEmployee> streamer = new MapStreamer<String, DataSerializableEmployee>(map);
