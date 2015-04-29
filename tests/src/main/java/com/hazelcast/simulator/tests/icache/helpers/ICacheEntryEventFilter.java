@@ -7,7 +7,7 @@ import javax.cache.event.EventType;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MyCacheEntryEventFilter<K, V> implements CacheEntryEventFilter<K, V>, Serializable {
+public class ICacheEntryEventFilter<K, V> implements CacheEntryEventFilter<K, V>, Serializable {
 
     private final AtomicLong filtered = new AtomicLong();
 

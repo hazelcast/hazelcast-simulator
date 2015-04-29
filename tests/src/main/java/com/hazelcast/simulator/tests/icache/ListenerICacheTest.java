@@ -15,8 +15,8 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.tests.icache.helpers.MyCacheEntryEventFilter;
-import com.hazelcast.simulator.tests.icache.helpers.MyCacheEntryListener;
+import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryEventFilter;
+import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryListener;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.util.EmptyStatement;
 
@@ -68,8 +68,8 @@ public class ListenerICacheTest {
 
     private CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
     private ICache<Integer, Long> cache;
-    private MyCacheEntryListener<Integer, Long> listener;
-    private MyCacheEntryEventFilter<Integer, Long> filter;
+    private ICacheEntryListener<Integer, Long> listener;
+    private ICacheEntryEventFilter<Integer, Long> filter;
 
     @Setup
     public void setup(TestContext textConTx) {
@@ -99,8 +99,8 @@ public class ListenerICacheTest {
     public void warmup() {
         cache = (ICache) cacheManager.getCache(basename);
 
-        listener = new MyCacheEntryListener<Integer, Long>();
-        filter = new MyCacheEntryEventFilter<Integer, Long>();
+        listener = new ICacheEntryListener<Integer, Long>();
+        filter = new ICacheEntryEventFilter<Integer, Long>();
 
         CacheEntryListenerConfiguration<Integer, Long> conf = new MutableCacheEntryListenerConfiguration<Integer, Long>(
                 FactoryBuilder.factoryOf(listener),
@@ -193,9 +193,9 @@ public class ListenerICacheTest {
         }
         LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
-        IList<MyCacheEntryListener> listeners = targetInstance.getList(basename + "listeners");
-        MyCacheEntryListener totalEvents = new MyCacheEntryListener();
-        for (MyCacheEntryListener listener : listeners) {
+        IList<ICacheEntryListener> listeners = targetInstance.getList(basename + "listeners");
+        ICacheEntryListener totalEvents = new ICacheEntryListener();
+        for (ICacheEntryListener listener : listeners) {
             totalEvents.add(listener);
         }
         LOGGER.info(basename + ": totalEvents " + totalEvents);

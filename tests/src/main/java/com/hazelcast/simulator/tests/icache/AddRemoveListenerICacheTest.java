@@ -10,59 +10,65 @@ import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.tests.icache.helpers.MyCacheEntryEventFilter;
-import com.hazelcast.simulator.tests.icache.helpers.MyCacheEntryListener;
-import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryEventFilter;
+import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryListener;
+import com.hazelcast.simulator.tests.icache.helpers.ICacheListenerOperationCounter;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
-import java.io.Serializable;
-import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 
 /**
- * In This test we concurrently add remove cache listeners while putting and getting from the cache
- * this test is out side of normal usage, however has found problems where put operations hang
- * this type of test could uncover memory leaks in the process of adding and removing listeners
- * The max size of the cache used in this test is keyCount int key/value pairs,
+ * In this test we concurrently add remove cache listeners while putting and getting from the cache.
+ *
+ * This test is out side of normal usage, however has found problems where put operations hang.
+ * This type of test could uncover memory leaks in the process of adding and removing listeners.
+ * The max size of the cache used in this test is keyCount int key/value pairs.
  */
 public class AddRemoveListenerICacheTest {
 
+    private enum Operation {
+        REGISTER,
+        DE_REGISTER,
+        PUT,
+        GET
+    }
+
     private static final ILogger LOGGER = Logger.getLogger(AddRemoveListenerICacheTest.class);
 
-    public int threadCount = 3;
+    public String basename = AddRemoveListenerICacheTest.class.getSimpleName();
     public int keyCount = 1000;
     public boolean syncEvents = true;
 
-    public double register = 0;
-    public double deregister = 0;
-    public double put = 0;
-    public double get = 0;
+    public double registerProb = 0.25;
+    public double deRegisterProb = 0.25;
+    public double putProb = 0.25;
+    public double getProb = 0.25;
 
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
+    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
+    private final CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
+    private final ICacheEntryListener<Integer, Long> listener = new ICacheEntryListener<Integer, Long>();
+    private final ICacheEntryEventFilter<Integer, Long> filter = new ICacheEntryEventFilter<Integer, Long>();
+
     private CacheManager cacheManager;
-    private String basename;
-
-    private CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
     private Cache<Integer, Long> cache;
-    private MyCacheEntryListener<Integer, Long> listener;
-    private MyCacheEntryEventFilter<Integer, Long> filter;
-
-    private MutableCacheEntryListenerConfiguration m;
+    private MutableCacheEntryListenerConfiguration<Integer, Long> listenerConfiguration;
+    private IList<ICacheListenerOperationCounter> results;
 
     @Setup
-    public void setup(TestContext textConTx) {
-        testContext = textConTx;
-        targetInstance = testContext.getTargetInstance();
-        basename = testContext.getTestId();
+    public void setup(TestContext testContext) {
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
+        results = targetInstance.getList(basename);
 
         if (isMemberNode(targetInstance)) {
             HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
@@ -76,97 +82,81 @@ public class AddRemoveListenerICacheTest {
 
         config.setName(basename);
         cacheManager.createCache(basename, config);
+
+        builder.addOperation(Operation.REGISTER, registerProb)
+                .addOperation(Operation.DE_REGISTER, deRegisterProb)
+                .addOperation(Operation.PUT, putProb)
+                .addOperation(Operation.GET, getProb);
     }
 
     @Warmup(global = false)
     public void warmup() {
         cache = cacheManager.getCache(basename);
 
-        listener = new MyCacheEntryListener<Integer, Long>();
-        filter = new MyCacheEntryEventFilter<Integer, Long>();
-
-        m = new MutableCacheEntryListenerConfiguration<Integer, Long>(
+        listenerConfiguration = new MutableCacheEntryListenerConfiguration<Integer, Long>(
                 FactoryBuilder.factoryOf(listener),
                 FactoryBuilder.factoryOf(filter),
                 false, syncEvents);
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
-    private class Worker implements Runnable {
-        private Random random = new Random();
-        private Counter counter = new Counter();
-
-        public void run() {
-            while (!testContext.isStopped()) {
-
-                double chance = random.nextDouble();
-                if ((chance -= register) < 0) {
-                    try {
-                        cache.registerCacheEntryListener(m);
-                        counter.register++;
-                    } catch (IllegalArgumentException e) {
-                        counter.registerIllegalArgException++;
-                    }
-                } else if ((chance -= deregister) < 0) {
-                    cache.deregisterCacheEntryListener(m);
-                    counter.deregister++;
-
-                } else if ((chance -= put) < 0) {
-                    cache.put(random.nextInt(keyCount), 1L);
-                    counter.put++;
-                } else if ((chance -= get) < 0) {
-                    cache.get(random.nextInt(keyCount));
-                    counter.put++;
-                }
-            }
-            LOGGER.info(basename + ": " + counter);
-            targetInstance.getList(basename).add(counter);
-        }
-    }
-
     @Verify(global = true)
     public void globalVerify() throws Exception {
-
-        IList<Counter> results = targetInstance.getList(basename);
-        Counter total = new Counter();
-        for (Counter i : results) {
+        ICacheListenerOperationCounter total = new ICacheListenerOperationCounter();
+        for (ICacheListenerOperationCounter i : results) {
             total.add(i);
         }
-        LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads");
+        LOGGER.info(basename + ": " + total + " from " + results.size() + " worker threads");
     }
 
-    private static class Counter implements Serializable {
-        public long put;
-        public long get;
-        public long register;
-        public long registerIllegalArgException;
-        public long deregister;
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
+    }
 
+    private class Worker extends AbstractWorker<Operation> {
 
-        public void add(Counter c) {
-            put += c.put;
-            get += c.get;
-            register += c.register;
-            registerIllegalArgException += c.registerIllegalArgException;
-            deregister += c.deregister;
+        private final ICacheListenerOperationCounter operationCounter = new ICacheListenerOperationCounter();
+
+        public Worker() {
+            super(builder);
         }
 
-        public String toString() {
-            return "Counter{"
-                    + "put=" + put
-                    + ", get=" + get
-                    + ", register=" + register
-                    + ", registerIllegalArgException=" + registerIllegalArgException
-                    + ", deregister=" + deregister
-                    + '}';
+        @Override
+        protected void timeStep(Operation operation) {
+            switch (operation) {
+                case REGISTER:
+                    try {
+                        cache.registerCacheEntryListener(listenerConfiguration);
+                        operationCounter.register++;
+                    } catch (IllegalArgumentException e) {
+                        operationCounter.registerIllegalArgException++;
+                    }
+                    break;
+                case DE_REGISTER:
+                    cache.deregisterCacheEntryListener(listenerConfiguration);
+                    operationCounter.deRegister++;
+                    break;
+                case PUT:
+                    cache.put(randomInt(keyCount), 1L);
+                    operationCounter.put++;
+                    break;
+                case GET:
+                    cache.get(randomInt(keyCount));
+                    operationCounter.put++;
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
         }
+
+        @Override
+        protected void afterRun() {
+            LOGGER.info(basename + ": " + operationCounter);
+            results.add(operationCounter);
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        new TestRunner<AddRemoveListenerICacheTest>(new AddRemoveListenerICacheTest()).run();
     }
 }
