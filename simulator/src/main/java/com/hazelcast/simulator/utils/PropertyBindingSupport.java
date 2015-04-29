@@ -105,8 +105,8 @@ public final class PropertyBindingSupport {
             try {
                 object = field.get(object);
             } catch (IllegalAccessException e) {
-                throw new BindException(format("IllegalAccessException while binding property %s to field %s: %s",
-                        property, field, e.getMessage()));
+                throw new BindException(format("IllegalAccessException while binding property %s to field %s",
+                        property, field), e);
             }
             if (object == null) {
                 throw new BindException(format("Failed to bind to property: %s encountered a null value at field: %s",
@@ -300,7 +300,7 @@ public final class PropertyBindingSupport {
             try {
                 field.set(object, PropertyBindingSupport.class.getClassLoader().loadClass(value));
             } catch (Exception e) {
-                throw new BindException(e.getMessage());
+                throw new BindException(format("Exception while binding class to field %s", field), e);
             }
         }
     }
@@ -321,7 +321,7 @@ public final class PropertyBindingSupport {
                 Object enumValue = getEnumValue(value, field);
                 field.set(object, enumValue);
             } catch (Exception e) {
-                throw new BindException(format("Exception while binding Enum to field %s: %s", field, e.getMessage()));
+                throw new BindException(format("Exception while binding Enum to field %s", field), e);
             }
         }
     }
