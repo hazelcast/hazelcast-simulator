@@ -165,7 +165,7 @@ class WorkerCommandRequestProcessor {
 
                 Object testInstance = InitCommand.class.getClassLoader().loadClass(testCase.getClassname()).newInstance();
                 bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
-                TestContextImpl testContext = new TestContextImpl(testCase.id, getHazelcastInstance());
+                TestContextImpl testContext = new TestContextImpl(testCase.getId(), getHazelcastInstance());
                 ProbesConfiguration probesConfiguration = parseProbeConfiguration(testCase);
 
                 tests.put(testContext.getTestId(), new TestContainer<TestContext>(testInstance, testContext, probesConfiguration,
@@ -173,7 +173,7 @@ class WorkerCommandRequestProcessor {
                 testsPending.incrementAndGet();
 
                 if (serverInstance != null) {
-                    serverInstance.getUserContext().put(getUserContextKeyFromTestId(testCase.id), testInstance);
+                    serverInstance.getUserContext().put(getUserContextKeyFromTestId(testCase.getId()), testInstance);
                 }
             } catch (Exception e) {
                 throw e;

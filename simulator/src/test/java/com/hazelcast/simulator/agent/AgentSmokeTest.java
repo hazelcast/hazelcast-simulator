@@ -78,17 +78,15 @@ public class AgentSmokeTest {
 
     @Test
     public void testSuccess() throws Exception {
-        TestCase testCase = new TestCase();
+        TestCase testCase = new TestCase("testSuccess");
         testCase.setProperty("class", SuccessTest.class.getName());
-        testCase.id = "testSuccess";
         executeTestCase(testCase);
     }
 
     @Test
     public void testThrowingFailures() throws Exception {
-        TestCase testCase = new TestCase();
+        TestCase testCase = new TestCase("testThrowingFailures");
         testCase.setProperty("class", FailingTest.class.getName());
-        testCase.id = "testThrowingFailures";
         executeTestCase(testCase);
 
         cooldown();
@@ -97,7 +95,7 @@ public class AgentSmokeTest {
         assertEquals("Expected 1 failure!", 1, failures.size());
 
         Failure failure = failures.get(0);
-        assertEquals("Expected started test to fail", testCase.id, failure.testId);
+        assertEquals("Expected started test to fail", testCase.getId(), failure.testId);
         assertTrue("Expected started test to fail", failure.cause.contains("This test should fail"));
     }
 
@@ -119,18 +117,18 @@ public class AgentSmokeTest {
         agentsClient.executeOnAllWorkers(initTestCommand);
 
         LOGGER.info("Setup phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "setUp"));
+        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "setUp"));
 
         LOGGER.info("Local warmup phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localWarmup"));
-        agentsClient.waitForPhaseCompletion("", testCase.id, "localWarmup");
+        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "localWarmup"));
+        agentsClient.waitForPhaseCompletion("", testCase.getId(), "localWarmup");
 
         LOGGER.info("Global warmup phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "globalWarmup"));
-        agentsClient.waitForPhaseCompletion("", testCase.id, "globalWarmup");
+        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "globalWarmup"));
+        agentsClient.waitForPhaseCompletion("", testCase.getId(), "globalWarmup");
 
         LOGGER.info("Run phase...");
-        RunCommand runCommand = new RunCommand(testCase.id);
+        RunCommand runCommand = new RunCommand(testCase.getId());
         runCommand.clientOnly = false;
         agentsClient.executeOnAllWorkers(runCommand);
 
@@ -139,24 +137,24 @@ public class AgentSmokeTest {
         LOGGER.info("Finished running");
 
         LOGGER.info("Stopping test...");
-        agentsClient.executeOnAllWorkers(new StopCommand(testCase.id));
-        agentsClient.waitForPhaseCompletion("", testCase.id, "stop");
+        agentsClient.executeOnAllWorkers(new StopCommand(testCase.getId()));
+        agentsClient.waitForPhaseCompletion("", testCase.getId(), "stop");
 
         LOGGER.info("Local verify phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localVerify"));
-        agentsClient.waitForPhaseCompletion("", testCase.id, "localVerify");
+        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "localVerify"));
+        agentsClient.waitForPhaseCompletion("", testCase.getId(), "localVerify");
 
         LOGGER.info("Global verify phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "globalVerify"));
-        agentsClient.waitForPhaseCompletion("", testCase.id, "globalVerify");
+        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "globalVerify"));
+        agentsClient.waitForPhaseCompletion("", testCase.getId(), "globalVerify");
 
         LOGGER.info("Global teardown phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "globalTeardown"));
-        agentsClient.waitForPhaseCompletion("", testCase.id, "globalTeardown");
+        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "globalTeardown"));
+        agentsClient.waitForPhaseCompletion("", testCase.getId(), "globalTeardown");
 
         LOGGER.info("Local teardown phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localTeardown"));
-        agentsClient.waitForPhaseCompletion("", testCase.id, "localTeardown");
+        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "localTeardown"));
+        agentsClient.waitForPhaseCompletion("", testCase.getId(), "localTeardown");
 
         LOGGER.info("Terminating workers...");
         agentsClient.terminateWorkers();

@@ -78,8 +78,9 @@ final class CoordinatorHelper {
     static int getMaxTestCaseIdLength(List<TestCase> testCaseList) {
         int maxLength = Integer.MIN_VALUE;
         for (TestCase testCase : testCaseList) {
-            if (testCase.id != null && !testCase.id.isEmpty() && testCase.id.length() > maxLength) {
-                maxLength = testCase.id.length();
+            String testCaseId = testCase.getId();
+            if (testCaseId != null && !testCaseId.isEmpty() && testCaseId.length() > maxLength) {
+                maxLength = testCaseId.length();
             }
         }
         return (maxLength > 0) ? maxLength : 0;

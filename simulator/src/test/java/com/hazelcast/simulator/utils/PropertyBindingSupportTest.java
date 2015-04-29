@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 
 public class PropertyBindingSupportTest {
 
+    private final TestCase testCase = new TestCase("PropertyBindingSupportTest");
     private final BindPropertyTestClass bindPropertyTestClass = new BindPropertyTestClass();
 
     @Test
@@ -24,7 +25,6 @@ public class PropertyBindingSupportTest {
 
     @Test
     public void bindProperties_notFound_optional() {
-        TestCase testCase = new TestCase();
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("probe-getLatency", "willBeIgnored");
         testCase.setProperty("notExist", "isOptional");
@@ -42,7 +42,6 @@ public class PropertyBindingSupportTest {
 
     @Test
     public void testBindOptionalProperty_propertyNotDefined() {
-        TestCase testCase = new TestCase();
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("probe-getLatency", "willBeIgnored");
         testCase.setProperty("notExist", "isOptional");
@@ -52,7 +51,6 @@ public class PropertyBindingSupportTest {
 
     @Test
     public void testBindOptionalProperty_propertyNotFound() {
-        TestCase testCase = new TestCase();
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("probe-getLatency", "willBeIgnored");
         testCase.setProperty("notExist", "isOptional");
@@ -62,7 +60,6 @@ public class PropertyBindingSupportTest {
 
     @Test
     public void testBindOptionalProperty() {
-        TestCase testCase = new TestCase();
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("probe-getLatency", "willBeIgnored");
         testCase.setProperty("stringField", "foo");
@@ -73,7 +70,6 @@ public class PropertyBindingSupportTest {
 
     @Test
     public void testParseProbesConfiguration() {
-        TestCase testCase = new TestCase();
         testCase.setProperty("class", "foobar");
         testCase.setProperty("probe-probe1", "latency");
         testCase.setProperty("probe-probe2", "hdr");
