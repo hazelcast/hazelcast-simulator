@@ -40,9 +40,25 @@ public class TestContainerTest {
     private TestContainer<DummyTestContext> invoker;
 
     @Before
-    public void init() {
+    public void setUp() {
         testContext = new DummyTestContext();
         probesConfiguration = new ProbesConfiguration();
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testConstructor_testObject_isNull() {
+        createTestContainer(null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testConstructor_testContext_isNull() {
+        new TestContainer<DummyTestContext>(new DummyTest(), null, probesConfiguration, null);
+    }
+
+    @Test
+    public void testConstructor_getTestContext() {
+        invoker = createTestContainer(new DummyTest());
+        assertEquals(testContext, invoker.getTestContext());
     }
 
     // =============================================================
@@ -51,7 +67,7 @@ public class TestContainerTest {
 
     @Test(expected = IllegalTestException.class)
     public void testRunAnnotationMissing() throws Exception {
-        new TestContainer<DummyTestContext>(new MissingRunAnnotationTest(), testContext, probesConfiguration);
+        createTestContainer(new MissingRunAnnotationTest());
     }
 
     private static class MissingRunAnnotationTest {
@@ -59,7 +75,7 @@ public class TestContainerTest {
 
     @Test(expected = IllegalTestException.class)
     public void testTooManyMixedRunAnnotations() throws Exception {
-        new TestContainer<DummyTestContext>(new TooManyMixedRunAnnotationsTest(), testContext, probesConfiguration);
+        createTestContainer(new TooManyMixedRunAnnotationsTest());
     }
 
     private static class TooManyMixedRunAnnotationsTest {
@@ -76,7 +92,7 @@ public class TestContainerTest {
 
     @Test(expected = IllegalTestException.class)
     public void testDuplicateSetupAnnotation() {
-        new TestContainer<DummyTestContext>(new DuplicateSetupAnnotationTest(), testContext, probesConfiguration);
+        createTestContainer(new DuplicateSetupAnnotationTest());
     }
 
     private static class DuplicateSetupAnnotationTest {
@@ -95,7 +111,7 @@ public class TestContainerTest {
         // @Setup method will be called from child class, not from dummy class
         // @Run method will be called from dummy class, not from child class
         ChildWithOwnSetupMethodTest test = new ChildWithOwnSetupMethodTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.setUp();
         invoker.run();
 
@@ -122,7 +138,7 @@ public class TestContainerTest {
         // @Setup method will be called from dummy class, not from child class
         // @Run method will be called from child class, not from dummy class
         ChildWithOwnRunMethodTest test = new ChildWithOwnRunMethodTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.setUp();
         invoker.run();
 
@@ -150,7 +166,7 @@ public class TestContainerTest {
     @Test
     public void testRun() throws Exception {
         DummyTest test = new DummyTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.run();
 
         assertTrue(test.runCalled);
@@ -159,7 +175,7 @@ public class TestContainerTest {
     @Test
     public void testRunWithWorker() throws Exception {
         final RunWithWorkerTest test = new RunWithWorkerTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         Thread testStopper = new Thread() {
             @Override
             public void run() {
@@ -203,7 +219,7 @@ public class TestContainerTest {
     @Test
     public void testRunWithIWorker() throws Exception {
         final RunWithIWorkerTest test = new RunWithIWorkerTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         Thread testStopper = new Thread() {
             @Override
             public void run() {
@@ -247,7 +263,7 @@ public class TestContainerTest {
 
     @Test()
     public void testSetupWithoutArguments() throws Exception {
-        new TestContainer<DummyTestContext>(new SetupWithoutArgumentsTest(), testContext, probesConfiguration);
+        createTestContainer(new SetupWithoutArgumentsTest());
     }
 
     private static class SetupWithoutArgumentsTest extends DummyTest {
@@ -259,7 +275,7 @@ public class TestContainerTest {
 
     @Test()
     public void testSetupWithTestContextOnly() throws Exception {
-        new TestContainer<DummyTestContext>(new SetupWithTextContextOnlyTest(), testContext, probesConfiguration);
+        createTestContainer(new SetupWithTextContextOnlyTest());
     }
 
     private static class SetupWithTextContextOnlyTest extends DummyTest {
@@ -271,7 +287,7 @@ public class TestContainerTest {
 
     @Test(expected = IllegalTestException.class)
     public void testSetupWithSimpleProbeOnly() throws Exception {
-        new TestContainer<DummyTestContext>(new SetupWithSimpleProbeOnly(), testContext, probesConfiguration);
+        createTestContainer(new SetupWithSimpleProbeOnly());
     }
 
     private static class SetupWithSimpleProbeOnly extends DummyTest {
@@ -283,7 +299,7 @@ public class TestContainerTest {
 
     @Test(expected = IllegalTestException.class)
     public void testIllegalSetupArguments() throws Exception {
-        new TestContainer<DummyTestContext>(new IllegalSetupArgumentsTest(), testContext, probesConfiguration);
+        createTestContainer(new IllegalSetupArgumentsTest());
     }
 
     private static class IllegalSetupArgumentsTest extends DummyTest {
@@ -295,7 +311,7 @@ public class TestContainerTest {
 
     @Test
     public void testSetupWithValidArguments() throws Exception {
-        new TestContainer<DummyTestContext>(new SetupWithValidArgumentsTest(), testContext, probesConfiguration);
+        createTestContainer(new SetupWithValidArgumentsTest());
     }
 
     private static class SetupWithValidArgumentsTest extends DummyTest {
@@ -308,7 +324,7 @@ public class TestContainerTest {
     @Test
     public void testSetup() throws Exception {
         DummySetupTest test = new DummySetupTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.setUp();
 
         assertTrue(test.setupCalled);
@@ -323,7 +339,7 @@ public class TestContainerTest {
     @Test
     public void testLocalProbeInjected() throws Exception {
         ProbeTest test = new ProbeTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.setUp();
 
         assertNotNull(test.simpleProbe);
@@ -333,7 +349,7 @@ public class TestContainerTest {
     public void testProbeExplicitNameSetViaAnnotation() throws Exception {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("explicitProbeName", ProbesType.THROUGHPUT.getName());
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         Map probeResults = invoker.getProbeResults();
 
         assertTrue(probeResults.keySet().contains("explicitProbeName"));
@@ -343,7 +359,7 @@ public class TestContainerTest {
     public void testProbeImplicitName() throws Exception {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("Probe2", ProbesType.THROUGHPUT.getName());
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         Map probeResults = invoker.getProbeResults();
 
         assertTrue(probeResults.keySet().contains("Probe2"));
@@ -353,7 +369,7 @@ public class TestContainerTest {
     public void testProbeInjectSimpleProbeToField() {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("throughputProbe", ProbesType.THROUGHPUT.getName());
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         Map probeResults = invoker.getProbeResults();
 
         assertNotNull(test.throughputProbe);
@@ -364,7 +380,7 @@ public class TestContainerTest {
     public void testProbeInjectIntervalProbeToField() {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("latencyProbe", ProbesType.LATENCY.getName());
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         Map probeResults = invoker.getProbeResults();
 
         assertNotNull(test.latencyProbe);
@@ -375,7 +391,7 @@ public class TestContainerTest {
     public void testProbeInjectExplicitlyNamedProbeToField() {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("explicitProbeInjectedToField", ProbesType.THROUGHPUT.getName());
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         Map probeResults = invoker.getProbeResults();
 
         assertNotNull(test.fooProbe);
@@ -385,7 +401,7 @@ public class TestContainerTest {
     @Test
     public void testProbeInjectDisabledToField() {
         ProbeTest test = new ProbeTest();
-        new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        createTestContainer(test);
 
         assertNotNull(test.disabled);
         assertTrue(test.disabled instanceof DisabledProbe);
@@ -417,7 +433,7 @@ public class TestContainerTest {
     @Test
     public void testLocalWarmup() throws Exception {
         WarmupTest test = new WarmupTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.localWarmup();
 
         assertTrue(test.localWarmupCalled);
@@ -427,7 +443,7 @@ public class TestContainerTest {
     @Test
     public void testGlobalWarmup() throws Exception {
         WarmupTest test = new WarmupTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.globalWarmup();
 
         assertFalse(test.localWarmupCalled);
@@ -457,7 +473,7 @@ public class TestContainerTest {
     @Test
     public void testLocalVerify() throws Exception {
         VerifyTest test = new VerifyTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.localVerify();
 
         assertTrue(test.localVerifyCalled);
@@ -467,7 +483,7 @@ public class TestContainerTest {
     @Test
     public void testGlobalVerify() throws Exception {
         VerifyTest test = new VerifyTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.globalVerify();
 
         assertFalse(test.localVerifyCalled);
@@ -497,7 +513,7 @@ public class TestContainerTest {
     @Test
     public void testLocalTeardown() throws Exception {
         TeardownTest test = new TeardownTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.localTeardown();
 
         assertTrue(test.localTeardownCalled);
@@ -507,7 +523,7 @@ public class TestContainerTest {
     @Test
     public void testGlobalTeardown() throws Exception {
         TeardownTest test = new TeardownTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         invoker.globalTeardown();
 
         assertFalse(test.localTeardownCalled);
@@ -537,7 +553,7 @@ public class TestContainerTest {
     @Test
     public void testPerformance() throws Exception {
         PerformanceTest test = new PerformanceTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         long count = invoker.getOperationCount();
 
         assertEquals(20, count);
@@ -562,7 +578,7 @@ public class TestContainerTest {
     @Test
     public void testMessageReceiver() throws Exception {
         ReceiveTest test = new ReceiveTest();
-        invoker = new TestContainer<DummyTestContext>(test, testContext, probesConfiguration);
+        invoker = createTestContainer(test);
         Message message = Mockito.mock(Message.class);
         invoker.sendMessage(message);
 
@@ -582,6 +598,10 @@ public class TestContainerTest {
     // ==========================================================
     // =================== dummy classes ========================
     // ==========================================================
+
+    private <T> TestContainer<DummyTestContext> createTestContainer(T test) {
+        return new TestContainer<DummyTestContext>(test, testContext, probesConfiguration, null);
+    }
 
     private static class DummyTest {
 

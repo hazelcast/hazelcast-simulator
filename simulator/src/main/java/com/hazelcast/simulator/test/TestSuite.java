@@ -130,8 +130,7 @@ public class TestSuite implements Serializable {
                 ));
             }
 
-            testCase = new TestCase();
-            testCase.id = testCaseId;
+            testCase = new TestCase(testCaseId);
             testCases.put(testCaseId, testCase);
         }
         return testCase;

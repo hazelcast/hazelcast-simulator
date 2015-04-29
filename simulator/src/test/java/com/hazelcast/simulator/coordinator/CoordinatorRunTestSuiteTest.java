@@ -63,11 +63,8 @@ public class CoordinatorRunTestSuiteTest {
         List<String> privateAddressList = new ArrayList<String>(1);
         privateAddressList.add("127.0.0.1");
 
-        TestCase testCase1 = new TestCase();
-        testCase1.id = "CoordinatorTest1";
-
-        TestCase testCase2 = new TestCase();
-        testCase2.id = "CoordinatorTest2";
+        TestCase testCase1 = new TestCase("CoordinatorTest1");
+        TestCase testCase2 = new TestCase("CoordinatorTest2");
 
         testSuite.addTest(testCase1);
         testSuite.addTest(testCase2);

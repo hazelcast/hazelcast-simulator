@@ -2,6 +2,7 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.tests.PropertiesTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.tests.TestContextImplTest;
 import com.hazelcast.simulator.utils.FileUtils;
@@ -9,6 +10,8 @@ import org.junit.After;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -37,11 +40,28 @@ public class TestRunnerTest {
         assertNull(testRunner.getHazelcastInstance());
         assertTrue(testRunner.getDurationSeconds() > 0);
 
-        testRunner.withDuration(5);
-        assertEquals(5, testRunner.getDurationSeconds());
+        testRunner.withDuration(3);
+        assertEquals(3, testRunner.getDurationSeconds());
 
         testRunner.run();
         assertNotNull(testRunner.getHazelcastInstance());
+    }
+
+    @Test
+    public void testWithProperties() throws Exception {
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put("testProperty", "testValue");
+
+        PropertiesTest propertiesTest = new PropertiesTest();
+        assertNull(propertiesTest.testProperty);
+
+        TestRunner testRunner = new TestRunner<PropertiesTest>(propertiesTest, properties);
+
+        testRunner.withDuration(1);
+        assertEquals(1, testRunner.getDurationSeconds());
+
+        testRunner.run();
+        assertEquals("testValue", propertiesTest.testProperty);
     }
 
     @Test(expected = UnsupportedOperationException.class)

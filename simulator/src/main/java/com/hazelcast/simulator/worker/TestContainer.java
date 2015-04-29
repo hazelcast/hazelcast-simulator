@@ -117,10 +117,6 @@ public class TestContainer<T extends TestContext> {
     private IWorker operationCountWorkerInstance;
     private ThreadSpawner workerThreadSpawner;
 
-    public TestContainer(Object testObject, T testContext, ProbesConfiguration probesConfiguration) {
-        this(testObject, testContext, probesConfiguration, null);
-    }
-
     public TestContainer(Object testObject, T testContext, ProbesConfiguration probesConfiguration, TestCase testCase) {
         if (testObject == null) {
             throw new NullPointerException();

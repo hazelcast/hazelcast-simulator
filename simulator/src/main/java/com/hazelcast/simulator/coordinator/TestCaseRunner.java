@@ -42,6 +42,7 @@ final class TestCaseRunner {
     private final FailureMonitor failureMonitor;
     private final PerformanceMonitor performanceMonitor;
     private final Set<Failure.Type> nonCriticalFailures;
+    private final String testCaseId;
     private final String prefix;
 
     TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int maxTextCaseIdLength) {
@@ -52,12 +53,13 @@ final class TestCaseRunner {
         this.failureMonitor = coordinator.failureMonitor;
         this.performanceMonitor = coordinator.performanceMonitor;
         this.nonCriticalFailures = testSuite.tolerableFailures;
-        this.prefix = (testCase.id.isEmpty() ? "" : padRight(testCase.id, maxTextCaseIdLength + 1));
+        this.testCaseId = testCase.getId();
+        this.prefix = (testCaseId.isEmpty() ? "" : padRight(testCaseId, maxTextCaseIdLength + 1));
     }
 
     boolean run() {
         LOGGER.info("--------------------------------------------------------------\n"
-                + format("Running Test : %s%n%s%n", testCase.getId(), testCase)
+                + format("Running Test : %s%n%s%n", testCaseId, testCase)
                 + "--------------------------------------------------------------");
 
         int oldFailureCount = failureMonitor.getFailureCount();
@@ -67,18 +69,18 @@ final class TestCaseRunner {
             echo("Completed Test initialization");
 
             echo("Starting Test setup");
-            agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "setUp"));
-            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "setUp");
+            agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, "setUp"));
+            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "setUp");
             echo("Completed Test setup");
 
             echo("Starting Test local warmup");
-            agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localWarmup"));
-            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "localWarmup");
+            agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, "localWarmup"));
+            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "localWarmup");
             echo("Completed Test local warmup");
 
             echo("Starting Test global warmup");
-            agentsClient.executeOnFirstWorker(new GenericCommand(testCase.id, "globalWarmup"));
-            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "globalWarmup");
+            agentsClient.executeOnFirstWorker(new GenericCommand(testCaseId, "globalWarmup"));
+            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "globalWarmup");
             echo("Completed Test global warmup");
 
             echo("Starting Test start");
@@ -90,8 +92,8 @@ final class TestCaseRunner {
             echo("Test finished running");
 
             echo("Starting Test stop");
-            agentsClient.executeOnAllWorkers(new StopCommand(testCase.id));
-            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "stop");
+            agentsClient.executeOnAllWorkers(new StopCommand(testCaseId));
+            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "stop");
             echo("Completed Test stop");
 
             logPerformance();
@@ -99,26 +101,26 @@ final class TestCaseRunner {
 
             if (coordinator.verifyEnabled) {
                 echo("Starting Test global verify");
-                agentsClient.executeOnFirstWorker(new GenericCommand(testCase.id, "globalVerify"));
-                agentsClient.waitForPhaseCompletion(prefix, testCase.id, "globalVerify");
+                agentsClient.executeOnFirstWorker(new GenericCommand(testCaseId, "globalVerify"));
+                agentsClient.waitForPhaseCompletion(prefix, testCaseId, "globalVerify");
                 echo("Completed Test global verify");
 
                 echo("Starting Test local verify");
-                agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localVerify"));
-                agentsClient.waitForPhaseCompletion(prefix, testCase.id, "localVerify");
+                agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, "localVerify"));
+                agentsClient.waitForPhaseCompletion(prefix, testCaseId, "localVerify");
                 echo("Completed Test local verify");
             } else {
                 echo("Skipping Test verification");
             }
 
             echo("Starting Test global tear down");
-            agentsClient.executeOnFirstWorker(new GenericCommand(testCase.id, "globalTeardown"));
-            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "globalTeardown");
+            agentsClient.executeOnFirstWorker(new GenericCommand(testCaseId, "globalTeardown"));
+            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "globalTeardown");
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentsClient.waitForPhaseCompletion(prefix, testCase.id, "localTeardown");
-            agentsClient.executeOnAllWorkers(new GenericCommand(testCase.id, "localTeardown"));
+            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "localTeardown");
+            agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, "localTeardown"));
             echo("Completed Test local tear down");
 
             return (failureMonitor.getFailureCount() == oldFailureCount);
@@ -131,7 +133,7 @@ final class TestCaseRunner {
     private void processProbeResults() {
         Map<String, ? extends Result> probesResult = getProbesResult();
         if (!probesResult.isEmpty()) {
-            String fileName = "probes-" + coordinator.testSuite.id + "_" + testCase.id + ".xml";
+            String fileName = "probes-" + coordinator.testSuite.id + "_" + testCaseId + ".xml";
             ProbesResultXmlWriter.write(probesResult, new File(fileName));
             logProbesResultInHumanReadableFormat(probesResult);
         }
@@ -150,7 +152,7 @@ final class TestCaseRunner {
         Map<String, R> combinedResults = new HashMap<String, R>();
         List<List<Map<String, R>>> agentsProbeResults;
         try {
-            agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCase.id));
+            agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCaseId));
         } catch (TimeoutException e) {
             LOGGER.fatal("A timeout happened while retrieving the benchmark results");
             return combinedResults;
@@ -183,7 +185,7 @@ final class TestCaseRunner {
         }
 
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
-        RunCommand runCommand = new RunCommand(testCase.id);
+        RunCommand runCommand = new RunCommand(testCaseId);
         runCommand.clientOnly = workerJvmSettings.clientWorkerCount > 0;
         agentsClient.executeOnAllWorkers(runCommand);
     }

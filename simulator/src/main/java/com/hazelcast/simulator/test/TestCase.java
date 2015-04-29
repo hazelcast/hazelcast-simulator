@@ -24,16 +24,26 @@ import java.util.Map;
 
 public class TestCase implements Serializable {
 
-    public String id;
-
+    private final String id;
     private final Map<String, String> properties = new HashMap<String, String>();
 
-    public String getClassname() {
-        return properties.get("class");
+    public TestCase(String id) {
+        this(id, null);
+    }
+
+    public TestCase(String id, Map<String, String> properties) {
+        this.id = id;
+        if (properties != null) {
+            this.properties.putAll(properties);
+        }
     }
 
     public String getId() {
         return id;
+    }
+
+    public String getClassname() {
+        return properties.get("class");
     }
 
     public String getProperty(String name) {

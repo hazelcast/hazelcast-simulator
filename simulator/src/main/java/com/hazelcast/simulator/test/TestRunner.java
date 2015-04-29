@@ -26,10 +26,12 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static java.lang.String.format;
 
 /**
@@ -54,11 +56,21 @@ public class TestRunner<E> {
     private HazelcastInstance hazelcastInstance;
 
     public TestRunner(E test) {
+        this(test, null);
+    }
+
+    public TestRunner(E test, Map<String, String> properties) {
         if (test == null) {
             throw new NullPointerException("test can't be null");
         }
 
-        this.testInvoker = new TestContainer<TestContext>(test, testContext, new ProbesConfiguration());
+        TestCase testCase = null;
+        if (properties != null) {
+            testCase = new TestCase("TestRunner", properties);
+            bindProperties(test, testCase, null);
+        }
+
+        this.testInvoker = new TestContainer<TestContext>(test, testContext, new ProbesConfiguration(), testCase);
         this.test = test;
     }
 
