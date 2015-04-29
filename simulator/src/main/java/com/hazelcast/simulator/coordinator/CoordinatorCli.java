@@ -232,7 +232,7 @@ final class CoordinatorCli {
         } else if (testsuiteFiles.size() == 1) {
             testsuiteFileName = testsuiteFiles.get(0);
         } else if (testsuiteFiles.size() > 1) {
-            throw new CommandLineExitException("Too many testsuite files specified");
+            throw new CommandLineExitException(format("Too many testsuite files specified: %s", testsuiteFiles));
         }
         if (testsuiteFileName == null) {
             throw new CommandLineExitException("TestSuite filename was null");

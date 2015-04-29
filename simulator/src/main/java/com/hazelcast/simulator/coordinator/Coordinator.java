@@ -196,8 +196,8 @@ public final class Coordinator {
         }
 
         try {
-            LOGGER.info(format("Copying workerClasspath '%s' to agents", workerClassPath));
             List<File> upload = getFilesFromClassPath(workerClassPath);
+            LOGGER.info(format("Copying %d files from workerClasspath '%s' to agents", upload.size(), workerClassPath));
             for (String ip : agentsClient.getPublicAddresses()) {
                 for (File file : upload) {
                     bash.execute(
