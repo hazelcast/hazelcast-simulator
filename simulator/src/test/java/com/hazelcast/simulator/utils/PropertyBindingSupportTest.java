@@ -23,7 +23,7 @@ public class PropertyBindingSupportTest {
     }
 
     @Test
-    public void bindProperties_notFound_optional() throws NoSuchFieldException, IllegalAccessException {
+    public void bindProperties_notFound_optional() {
         TestCase testCase = new TestCase();
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("probe-getLatency", "willBeIgnored");
@@ -36,12 +36,12 @@ public class PropertyBindingSupportTest {
     }
 
     @Test
-    public void testBindOptionalProperty_testcaseIsNull() throws NoSuchFieldException, IllegalAccessException {
+    public void testBindOptionalProperty_testcaseIsNull() {
         bindOptionalProperty(bindPropertyTestClass, null, "ignored");
     }
 
     @Test
-    public void testBindOptionalProperty_propertyNotDefined() throws NoSuchFieldException, IllegalAccessException {
+    public void testBindOptionalProperty_propertyNotDefined() {
         TestCase testCase = new TestCase();
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("probe-getLatency", "willBeIgnored");
@@ -51,7 +51,7 @@ public class PropertyBindingSupportTest {
     }
 
     @Test
-    public void testBindOptionalProperty_propertyNotFound() throws NoSuchFieldException, IllegalAccessException {
+    public void testBindOptionalProperty_propertyNotFound() {
         TestCase testCase = new TestCase();
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("probe-getLatency", "willBeIgnored");
@@ -61,7 +61,7 @@ public class PropertyBindingSupportTest {
     }
 
     @Test
-    public void testBindOptionalProperty() throws NoSuchFieldException, IllegalAccessException {
+    public void testBindOptionalProperty() {
         TestCase testCase = new TestCase();
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("probe-getLatency", "willBeIgnored");

@@ -6,11 +6,12 @@ import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
 import static java.lang.String.format;
+import static java.lang.reflect.Modifier.isFinal;
+import static java.lang.reflect.Modifier.isStatic;
 
 /**
  * Contains support functionality for binding properties.
@@ -22,15 +23,26 @@ public final class PropertyBindingSupport {
     private PropertyBindingSupport() {
     }
 
+    public static ProbesConfiguration parseProbeConfiguration(TestCase testCase) {
+        ProbesConfiguration configuration = new ProbesConfiguration();
+        String probePrefix = "probe-";
+        for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
+            String property = entry.getKey();
+            if (property.startsWith(probePrefix)) {
+                String probeName = property.substring(probePrefix.length());
+                configuration.addConfig(probeName, entry.getValue());
+            }
+        }
+        return configuration;
+    }
+
     /**
      * Binds all the properties contained in the testCase object onto the test instance.
      *
      * @param testInstance Instance of the test class
      * @param testCase     TestCase which contains the properties
-     * @throws IllegalAccessException
      */
-    public static void bindProperties(Object testInstance, TestCase testCase, Set<String> optionalProperties)
-            throws IllegalAccessException {
+    public static void bindProperties(Object testInstance, TestCase testCase, Set<String> optionalProperties) {
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
             String property = entry.getKey();
             String value = entry.getValue();
@@ -76,13 +88,11 @@ public final class PropertyBindingSupport {
         }
     }
 
-    static void bindProperty(Object object, String property, String value) throws IllegalAccessException {
+    static void bindProperty(Object object, String property, String value) {
         bindProperty(object, property, value, null);
     }
 
-    private static void bindProperty(Object object, String property, String value, Set<String> optionalProperties)
-            throws IllegalAccessException {
-
+    private static void bindProperty(Object object, String property, String value, Set<String> optionalProperties) {
         String[] path = property.split("\\.");
 
         Field field;
@@ -92,10 +102,15 @@ public final class PropertyBindingSupport {
             if (field == null) {
                 throw new BindException(format("Failed to find property: %s in property: %s", element, property));
             }
-            object = field.get(object);
+            try {
+                object = field.get(object);
+            } catch (IllegalAccessException e) {
+                throw new BindException(format("IllegalAccessException while binding property %s to field %s: %s",
+                        property, field, e.getMessage()));
+            }
             if (object == null) {
-                throw new BindException(
-                        format("Failed to bind to property: %s encountered a null value at field: %s", property, field));
+                throw new BindException(format("Failed to bind to property: %s encountered a null value at field: %s",
+                        property, field));
             }
         }
 
@@ -120,6 +135,30 @@ public final class PropertyBindingSupport {
             String propertyName = object.getClass().getName() + "." + property;
             throw new BindException(
                     format("Failed to bind value [%s] to property [%s] of type [%s]", value, propertyName, field.getType()));
+        }
+    }
+
+    private static Field findPropertyField(Class clazz, String property) {
+        try {
+            Field field = clazz.getDeclaredField(property);
+
+            if (isStatic(field.getModifiers())) {
+                throw new BindException(format("Property [%s.%s] can't be static", clazz.getName(), property));
+            }
+
+            if (isFinal(field.getModifiers())) {
+                throw new BindException(format("Property [%s.%s] can't be final", clazz.getName(), property));
+            }
+
+            field.setAccessible(true);
+            return field;
+        } catch (NoSuchFieldException e) {
+            Class superClass = clazz.getSuperclass();
+            if (superClass == null) {
+                return null;
+            } else {
+                return findPropertyField(superClass, property);
+            }
         }
     }
 
@@ -282,7 +321,7 @@ public final class PropertyBindingSupport {
                 Object enumValue = getEnumValue(value, field);
                 field.set(object, enumValue);
             } catch (Exception e) {
-                throw new BindException(e.getMessage());
+                throw new BindException(format("Exception while binding Enum to field %s: %s", field, e.getMessage()));
             }
         }
     }
@@ -300,42 +339,5 @@ public final class PropertyBindingSupport {
         }
 
         throw new RuntimeException(format("Could not find enum value %s.%s", type.getSimpleName(), value));
-    }
-
-    private static Field findPropertyField(Class clazz, String property) {
-        try {
-            Field field = clazz.getDeclaredField(property);
-
-            if (Modifier.isStatic(field.getModifiers())) {
-                throw new BindException(format("Property [%s.%s] can't be static", clazz.getName(), property));
-            }
-
-            if (Modifier.isFinal(field.getModifiers())) {
-                throw new BindException(format("Property [%s.%s] can't be final", clazz.getName(), property));
-            }
-
-            field.setAccessible(true);
-            return field;
-        } catch (NoSuchFieldException e) {
-            Class superClass = clazz.getSuperclass();
-            if (superClass == null) {
-                return null;
-            } else {
-                return findPropertyField(superClass, property);
-            }
-        }
-    }
-
-    public static ProbesConfiguration parseProbeConfiguration(TestCase testCase) {
-        ProbesConfiguration configuration = new ProbesConfiguration();
-        String probePrefix = "probe-";
-        for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
-            String property = entry.getKey();
-            if (property.startsWith(probePrefix)) {
-                String probeName = property.substring(probePrefix.length());
-                configuration.addConfig(probeName, entry.getValue());
-            }
-        }
-        return configuration;
     }
 }

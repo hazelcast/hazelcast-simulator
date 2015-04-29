@@ -14,7 +14,7 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
     private final BindPropertyTestClass bindPropertyTestClass = new BindPropertyTestClass();
 
     @Test
-    public void bindProperty_boolean() throws IllegalAccessException {
+    public void bindProperty_boolean() {
         bindProperty(bindPropertyTestClass, "booleanField", "true");
         assertEquals(true, bindPropertyTestClass.booleanField);
 
@@ -23,12 +23,12 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_boolean_invalid() throws IllegalAccessException {
+    public void bindProperty_boolean_invalid() {
         bindProperty(bindPropertyTestClass, "booleanField", "invalid");
     }
 
     @Test
-    public void bindProperty_Boolean() throws IllegalAccessException {
+    public void bindProperty_Boolean() {
         bindProperty(bindPropertyTestClass, "booleanObjectField", "null");
         assertNull(bindPropertyTestClass.booleanObjectField);
 
@@ -40,12 +40,12 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_Boolean_invalid() throws IllegalAccessException {
+    public void bindProperty_Boolean_invalid() {
         bindProperty(bindPropertyTestClass, "booleanObjectField", "invalid");
     }
 
     @Test
-    public void bindProperty_class() throws IllegalAccessException {
+    public void bindProperty_class() {
         bindProperty(bindPropertyTestClass, "clazz", "null");
         assertNull(bindPropertyTestClass.clazz);
 
@@ -54,12 +54,12 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_class_notFound() throws IllegalAccessException {
+    public void bindProperty_class_notFound() {
         bindProperty(bindPropertyTestClass, "clazz", "com.hazelnuts.simulator.utils.NotFound");
     }
 
     @Test
-    public void bindProperty_string() throws IllegalAccessException {
+    public void bindProperty_string() {
         bindProperty(bindPropertyTestClass, "stringField", "null");
         assertNull(bindPropertyTestClass.stringField);
 
@@ -68,61 +68,61 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
     }
 
     @Test
-    public void bindProperty_enum_nullValue() throws IllegalAccessException {
+    public void bindProperty_enum_nullValue() {
         bindProperty(bindPropertyTestClass, "enumField", "null");
         assertNull(bindPropertyTestClass.enumField);
     }
 
     @Test
-    public void bindProperty_enum() throws IllegalAccessException {
+    public void bindProperty_enum() {
         bindProperty(bindPropertyTestClass, "enumField", TimeUnit.HOURS.name());
         assertEquals(bindPropertyTestClass.enumField, TimeUnit.HOURS);
     }
 
     @Test
-    public void bindProperty_enum_caseInsensitive() throws IllegalAccessException {
+    public void bindProperty_enum_caseInsensitive() {
         bindProperty(bindPropertyTestClass, "enumField", "dAyS");
         assertEquals(bindPropertyTestClass.enumField, TimeUnit.DAYS);
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_enum_notFound() throws IllegalAccessException {
+    public void bindProperty_enum_notFound() {
         bindProperty(bindPropertyTestClass, "enumField", "notExist");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_unknownField() throws IllegalAccessException {
+    public void bindProperty_unknownField() {
         bindProperty(bindPropertyTestClass, "notExist", "null");
     }
 
     @Test
-    public void bindProperty_withPath() throws IllegalAccessException {
+    public void bindProperty_withPath() {
         bindProperty(bindPropertyTestClass, "otherObject.stringField", "newValue");
         assertEquals("newValue", bindPropertyTestClass.otherObject.stringField);
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_withPathAndNullValue() throws IllegalAccessException {
+    public void bindProperty_withPathAndNullValue() {
         bindProperty(bindPropertyTestClass, "nullOtherObject.stringField", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_withPath_missingProperty() throws IllegalAccessException {
+    public void bindProperty_withPath_missingProperty() {
         bindProperty(bindPropertyTestClass, "notExist.stringField", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_staticField() throws IllegalAccessException {
+    public void bindProperty_staticField() {
         bindProperty(bindPropertyTestClass.otherObject, "staticField", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_finalField() throws IllegalAccessException {
+    public void bindProperty_finalField() {
         bindProperty(bindPropertyTestClass.otherObject, "finalField", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_fallsThroughAllChecks() throws IllegalAccessException {
+    public void bindProperty_fallsThroughAllChecks() {
         bindProperty(bindPropertyTestClass, "comparableField", "newValue");
     }
 
