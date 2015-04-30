@@ -59,7 +59,7 @@ final class TestCaseRunner {
 
     boolean run() {
         LOGGER.info("--------------------------------------------------------------\n"
-                + format("Running Test : %s%n%s%n", testCaseId, testCase)
+                + format("Running Test: %s%n%s%n", testCaseId, testCase)
                 + "--------------------------------------------------------------");
 
         int oldFailureCount = failureMonitor.getFailureCount();
