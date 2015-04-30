@@ -52,7 +52,7 @@ final class CoordinatorCli {
 
     private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
             "Controls the number of dedicated member machines. For example when there are 4 machines,"
-                    + " 2 members and 9 clients with 1 dedicated member machine defined, then "
+                    + " 2 members and 9 clients with 1 dedicated member machine defined, then"
                     + " 1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
             .withRequiredArg().ofType(Integer.class);
 
