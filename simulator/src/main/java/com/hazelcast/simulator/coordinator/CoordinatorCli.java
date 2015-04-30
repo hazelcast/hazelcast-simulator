@@ -65,7 +65,7 @@ final class CoordinatorCli {
             "If defined performance of tests is tracked.");
 
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
-            "If defined tests are verified.")
+            "Defines if tests are verified.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<Boolean> workerRefreshSpec = parser.accepts("workerFresh",
