@@ -2,18 +2,19 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
 /**
  * Asynchronous version of {@link AbstractWorker}.
  *
- * The operation counter is automatically increased after call of {@link com.hazelcast.core.ExecutionCallback#onResponse}.
+ * The operation counter is automatically increased after call of {@link ExecutionCallback#onResponse}.
+ * The throwable is automatically reported after call of {@link ExecutionCallback#onFailure(Throwable)}
  *
- * @param <O> Type of Enum used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
- * @param <V> Type of {@link com.hazelcast.core.ExecutionCallback}
+ * @param <O> Type of Enum used by the {@link OperationSelector}
+ * @param <V> Type of {@link ExecutionCallback}
  */
-public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends AbstractWorker<O>
-        implements ExecutionCallback<V> {
+public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends AbstractWorker<O> implements ExecutionCallback<V> {
 
     public AbstractAsyncWorker(OperationSelectorBuilder<O> operationSelectorBuilder) {
         super(operationSelectorBuilder);
@@ -22,37 +23,40 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
     @Override
     public final void run() {
         while (!testContext.isStopped()) {
-            intervalProbe.started();
             timeStep(selector.select());
-            intervalProbe.done();
         }
     }
 
     @Override
     public final void onResponse(V response) {
+        intervalProbe.done();
         increaseIteration();
-
         handleResponse(response);
     }
 
     @Override
     public final void onFailure(Throwable t) {
         ExceptionReporter.report(testContext.getTestId(), t);
-
         handleFailure(t);
     }
 
     /**
-     * Will be called on {@link ExecutionCallback#onResponse(Object)} after the iteration has been increased.
+     * Override this method if you need to execute code on each worker after the iteration has been increased in
+     * {@link ExecutionCallback#onResponse(Object)}.
      *
      * @param response the result of the successful execution
      */
-    protected abstract void handleResponse(V response);
+    @SuppressWarnings("unused")
+    protected void handleResponse(V response) {
+    }
 
     /**
-     * Will be called on {@link ExecutionCallback#onFailure(Throwable)} after the throwable has been reported.
+     * Override this method if you need to execute code on each worker after the throwable has been reported in
+     * {@link ExecutionCallback#onFailure(Throwable)}.
      *
      * @param t the exception that is thrown
      */
-    protected abstract void handleFailure(Throwable t);
+    @SuppressWarnings("unused")
+    protected void handleFailure(Throwable t) {
+    }
 }
