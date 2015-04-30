@@ -8,7 +8,9 @@ import joptsimple.OptionSpec;
 
 import java.io.File;
 
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static java.lang.String.format;
 
 class AwsProvisionerCli {
 
@@ -27,8 +29,10 @@ class AwsProvisionerCli {
             .withRequiredArg().ofType(Integer.class);
 
     private final OptionSpec<String> propertiesFile = parser.accepts("propertiesFile",
-            "The file containing the simulator properties. If no file is explicitly configured, first the working directory is "
-                    + "checked for a file 'simulator.properties'.")
+            format("The file containing the simulator properties. If no file is explicitly configured,"
+                            + " first the working directory is checked for a file '%s'."
+                            + " All missing properties are always loaded from SIMULATOR_HOME/conf/%s",
+                    PROPERTIES_FILE_NAME, PROPERTIES_FILE_NAME))
             .withRequiredArg().ofType(String.class);
 
     private final AwsProvisioner aws;

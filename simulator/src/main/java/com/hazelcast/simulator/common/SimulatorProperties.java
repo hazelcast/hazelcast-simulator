@@ -19,12 +19,12 @@ import static java.lang.String.format;
  * Loads the Hazelcast Simulator properties file.
  *
  * This class will always load the properties in the <tt>${SIMULATOR_HOME}/conf/simulator.properties</tt> as defaults. If an
- * explicit <tt>simulator.properties</tt> file is configured or <tt>simulator.properties</tt> is available in the working dir,
+ * explicit {$value #PROPERTIES_FILE_NAME} file is configured or {$value #PROPERTIES_FILE_NAME} is available in the working dir,
  * it will override the properties from the default.
  */
 public class SimulatorProperties {
 
-    static final String PROPERTIES_FILE_NAME = "simulator.properties";
+    public static final String PROPERTIES_FILE_NAME = "simulator.properties";
 
     private static final Logger LOGGER = Logger.getLogger(SimulatorProperties.class);
 
@@ -42,8 +42,8 @@ public class SimulatorProperties {
     /**
      * Initializes the SimulatorProperties.
      *
-     * @param file the file to load the properties from. If the file is null, then first the simulator.properties
-     *             in the working dir is checked.
+     * @param file the file to load the properties from. If the file is <code>null</code>, then first the simulator.properties
+     *             in the working directory is checked.
      */
     public void init(File file) {
         if (file == null) {

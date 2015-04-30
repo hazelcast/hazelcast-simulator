@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
@@ -28,99 +29,99 @@ final class CoordinatorCli {
     private final OptionParser parser = new OptionParser();
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
-            "Amount of time to run per test. Can be e.g. 10 or 10s, 1m or 2h or 3d.")
+            "Amount of time to run per test. Can be e.g. 10s, 1m, 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo("60");
 
     private final OptionSpec<String> overridesSpec = parser.accepts("overrides",
-            "Properties that override the properties in a given test-case. E.g. --overrides "
-                    + "\"threadcount=20,writePercentage=20\". This makes it easy to parametrize a test.")
+            "Properties that override the properties in a given test-case, e.g. --overrides"
+                    + " \"threadcount=20,writeProb=0.2\". This makes it easy to parametrize a test.")
             .withRequiredArg().ofType(String.class).defaultsTo("");
 
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
-            "Number of Cluster member Worker JVMs. If no value is specified and no mixed members are specified, "
-                    + "then the number of cluster members will be equal to the number of machines in the agents file")
+            "Number of cluster member worker JVMs. If no value is specified and no mixed members are specified,"
+                    + " then the number of cluster members will be equal to the number of machines in the agents file.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
 
     private final OptionSpec<Integer> clientWorkerCountSpec = parser.accepts("clientWorkerCount",
-            "Number of Cluster Client Worker JVMs")
+            "Number of Cluster Client Worker JVMs.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     private final OptionSpec<Boolean> autoCreateHZInstancesSpec = parser.accepts("autoCreateHzInstances",
-            "auto create Hazelcast Instance's default to true")
+            "Auto create Hazelcast instances.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
-            "Controls the number of dedicated member machines. For example when there are 4 machines"
-                    + "and 2 servers and 9 clients, and there is 1 dedicated member machine, then "
-                    + "1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
+            "Controls the number of dedicated member machines. For example when there are 4 machines,"
+                    + " 2 members and 9 clients with 1 dedicated member machine defined, then "
+                    + " 1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
             .withRequiredArg().ofType(Integer.class);
 
     private final OptionSpec<String> workerClassPathSpec = parser.accepts("workerClassPath",
-            "A file/directory containing the "
-                    + "classes/jars/resources that are going to be uploaded to the agents. "
-                    + "Use ';' as separator for multiple entries. Wildcard '*' can also be used.")
+            "A file/directory containing the classes/jars/resources that are going to be uploaded to the agents."
+                    + " Use ';' as separator for multiple entries. The wildcard '*' can also be used.")
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
-            "Track performance");
+            "If defined performance of tests is tracked.");
 
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
-            "If test should be verified")
+            "If defined tests are verified.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<Boolean> workerRefreshSpec = parser.accepts("workerFresh",
-            "If the worker JVMs should be replaced after every testsuite")
+            "If the worker JVMs should be replaced after every testsuite.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
-            "It the testsuite should fail immediately when a Test from a testsuite fails instead of continuing ")
+            "Defines if the testsuite should fail immediately when a test from a testsuite fails instead of continuing.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<String> tolerableFailureSpec = parser.accepts("tolerableFailure",
-            String.format("It the test should not fail when given failure is detected. List of known failures: '%s'",
+            String.format("Defines if tests should not fail when given failure is detected. List of known failures: %s",
                     Failure.Type.getIdsAsString()))
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec parallelSpec = parser.accepts("parallel",
-            "It tests should be run in parallel.");
+            "If defined tests are run in parallel.");
 
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
-            "Worker VM options (quotes can be used). These options will be applied to regular members and mixed members "
-                    + "(so with client + member in the same JVM).")
+            "Worker JVM options (quotes can be used). These options will be applied to regular members and mixed members"
+                    + " (so with client + member in the same JVM).")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> clientWorkerVmOptionsSpec = parser.accepts("clientWorkerVmOptions",
-            "Client worker VM options (quotes can be used).")
+            "Client worker JVM options (quotes can be used).")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> agentsFileSpec = parser.accepts("agentsFile",
-            "The file containing the list of agent machines")
+            "The file containing the list of agent machines.")
             .withRequiredArg().ofType(String.class).defaultsTo(AgentsFile.NAME);
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
-            "The file containing the simulator properties. If no file is explicitly configured, first the "
-                    + "working directory is checked for a file 'simulator.properties'. All missing properties"
-                    + "are always loaded from SIMULATOR_HOME/conf/simulator.properties")
+            format("The file containing the simulator properties. If no file is explicitly configured,"
+                            + " first the working directory is checked for a file '%s'."
+                            + " All missing properties are always loaded from SIMULATOR_HOME/conf/%s",
+                    PROPERTIES_FILE_NAME, PROPERTIES_FILE_NAME))
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> hzFileSpec = parser.accepts("hzFile",
-            "The Hazelcast xml configuration file for the worker. If one is not explicitly configured, first"
-                    + "the 'hazelcast.xml' in the working directory is loaded, if that doesn't exist then "
-                    + "SIMULATOR_HOME/conf/hazelcast.xml is loaded.")
+            "The Hazelcast XML configuration file for the worker. If no file is explicitly configured,"
+                    + " first the 'hazelcast.xml' in the working directory is loaded."
+                    + " If that doesn't exist then SIMULATOR_HOME/conf/hazelcast.xml is loaded.")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultHzFile());
 
     private final OptionSpec<String> clientHzFileSpec = parser.accepts("clientHzFile",
-            "The client Hazelcast xml configuration file for the worker. If one is not explicitly configured, first"
-                    + "the 'client-hazelcast.xml' in the working directory is loaded, if that doesn't exist then "
-                    + "SIMULATOR_HOME/conf/client-hazelcast.xml is loaded.")
+            "The client Hazelcast XML configuration file for the worker. If no file is explicitly configured,"
+                    + " first the 'client-hazelcast.xml' in the working directory is loaded."
+                    + " If that doesn't exist then SIMULATOR_HOME/conf/client-hazelcast.xml is loaded.")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
 
     private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
-            "The startup timeout in seconds for a worker")
+            "The startup timeout in seconds for a worker.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
     private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs",
-            "Maximum amount of time waiting for the Test to stop")
+            "Maximum amount of time in milliseconds waiting for the test to stop.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
 
     private final Coordinator coordinator;
