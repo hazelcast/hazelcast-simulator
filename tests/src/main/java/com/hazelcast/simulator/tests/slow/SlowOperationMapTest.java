@@ -35,9 +35,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationService;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
@@ -69,8 +67,6 @@ public class SlowOperationMapTest {
     public int valueLength = 10;
     public int keyCount = 100;
     public int valueCount = 100;
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
-    public int minNumberOfMembers = 0;
     public double putProb = 0.5;
     public int recursionDepth = 10;
 
@@ -78,14 +74,14 @@ public class SlowOperationMapTest {
     private final AtomicLong putCounter = new AtomicLong(0);
     private final AtomicLong getCounter = new AtomicLong(0);
 
-    private HazelcastInstance hazelcastInstance;
+    private int[] keys;
     private IMap<Integer, Integer> map;
     private Object slowOperationDetector;
-    private int[] keys;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
-        hazelcastInstance = testContext.getTargetInstance();
+    public void setUp(TestContext testContext) {
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, KeyLocality.LOCAL, hazelcastInstance);
         map = hazelcastInstance.getMap(basename);
 
         operationSelectorBuilder
@@ -100,28 +96,27 @@ public class SlowOperationMapTest {
     }
 
     @Teardown
-    public void tearDown() throws Exception {
+    public void tearDown() {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(hazelcastInstance));
     }
 
-    @Warmup(global = false)
-    public void warmup() throws InterruptedException {
-        waitClusterSize(LOGGER, hazelcastInstance, minNumberOfMembers);
-        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, hazelcastInstance);
-
+    @Warmup
+    public void localWarmup() {
         Random random = new Random();
         for (int key : keys) {
             int value = random.nextInt(Integer.MAX_VALUE);
             map.put(key, value);
         }
+    }
 
-        // add the interceptor after the warmup, otherwise this stage will take ages
+    @Warmup(global = true)
+    public void globalWarmup() {
+        // add the interceptor after local warmup, otherwise that stage will take ages
         map.addInterceptor(new SlowMapInterceptor(recursionDepth));
     }
 
-    @Verify(global = true)
-    public void verify() throws Exception {
+    @Verify
+    public void verify() {
         long putCount = putCounter.get();
         long getCount = getCounter.get();
         Map<Integer, Object> slowOperationLogs = getObjectFromField(slowOperationDetector, "slowOperationLogs");
