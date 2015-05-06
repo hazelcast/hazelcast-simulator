@@ -155,6 +155,12 @@ public final class Coordinator {
     private void initHzConfig(WorkerJvmSettings settings) {
         String addressConfig = createAddressConfig("member", agentsClient.getPrivateAddresses(), settings);
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", addressConfig);
+
+        String manCenterURL = props.get("MANAGEMENT_CENTER_URL");
+        if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
+            settings.hzConfig = settings.hzConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
+                    "<management-center enabled=\"true\">\n        " + manCenterURL + "\n" + "    </management-center>\n");
+        }
     }
 
     private void initClientHzConfig(WorkerJvmSettings settings) {
