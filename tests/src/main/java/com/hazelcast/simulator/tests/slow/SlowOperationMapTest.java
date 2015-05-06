@@ -30,12 +30,16 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.IWorker;
+import com.hazelcast.simulator.worker.tasks.NoOperationWorker;
 
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationService;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
@@ -47,7 +51,7 @@ import static org.junit.Assert.fail;
 
 /**
  * This test invokes slowed down map operations on a Hazelcast instance to provoke slow operation logs.
- *
+ * <p/>
  * In the verification phase we check for the correct number of slow operation logs (one per operation type).
  *
  * @since Hazelcast 3.5
@@ -74,6 +78,7 @@ public class SlowOperationMapTest {
     private final AtomicLong putCounter = new AtomicLong(0);
     private final AtomicLong getCounter = new AtomicLong(0);
 
+    private boolean isClient;
     private int[] keys;
     private IMap<Integer, Integer> map;
     private Object slowOperationDetector;
@@ -81,6 +86,7 @@ public class SlowOperationMapTest {
     @Setup
     public void setUp(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        isClient = isClient(hazelcastInstance);
         keys = generateIntKeys(keyCount, Integer.MAX_VALUE, KeyLocality.LOCAL, hazelcastInstance);
         map = hazelcastInstance.getMap(basename);
 
@@ -89,9 +95,11 @@ public class SlowOperationMapTest {
                 .addDefaultOperation(Operation.GET);
 
         // try to find the slowOperationDetector instance (since Hazelcast 3.5)
-        slowOperationDetector = getObjectFromField(getOperationService(hazelcastInstance), "slowOperationDetector");
-        if (slowOperationDetector == null) {
-            fail(basename + ": This test needs Hazelcast 3.5 or newer");
+        if (isMemberNode(hazelcastInstance)) {
+            slowOperationDetector = getObjectFromField(getOperationService(hazelcastInstance), "slowOperationDetector");
+            if (slowOperationDetector == null) {
+                fail(basename + ": This test needs Hazelcast 3.5 or newer");
+            }
         }
     }
 
@@ -102,6 +110,9 @@ public class SlowOperationMapTest {
 
     @Warmup
     public void localWarmup() {
+        if (isClient) {
+            return;
+        }
         Random random = new Random();
         for (int key : keys) {
             int value = random.nextInt(Integer.MAX_VALUE);
@@ -117,6 +128,9 @@ public class SlowOperationMapTest {
 
     @Verify
     public void verify() {
+        if (isClient) {
+            return;
+        }
         long putCount = putCounter.get();
         long getCount = getCounter.get();
         Map<Integer, Object> slowOperationLogs = getObjectFromField(slowOperationDetector, "slowOperationLogs");
@@ -129,11 +143,17 @@ public class SlowOperationMapTest {
 
         assertNotNull("Could not retrieve slow operation logs", slowOperationLogs);
         assertEqualsStringFormat("Expected %d slow operation logs, but was %d", expected, slowOperationLogs.size());
-        assertTrue("Expected at least one completed operations, but was " + operationCount, operationCount > 0);
+        assertTrue("Expected at least one completed operations, but was " + operationCount
+                + ". Please run the test for a longer time!", operationCount > 0);
     }
 
     @RunWithWorker
-    public Worker createWorker() {
+    public IWorker createWorker() {
+        if (isClient) {
+            // if clients execute put or get operations we may produce slow operation logs on a member with put/getCounter == 0
+            // in that case the verification will fail without reason, so we create a noop worker for clients
+            return new NoOperationWorker();
+        }
         return new Worker();
     }
 
