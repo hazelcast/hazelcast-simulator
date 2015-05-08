@@ -21,7 +21,7 @@ class AwsProvisionerCli {
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> agentsToLB = parser.accepts("addToLb",
-            "Adds the ips in '" + AgentsFile.NAME + "' file to the load balancer.")
+            "Adds the IP addresses in '" + AgentsFile.NAME + "' file to the load balancer.")
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<Integer> scale = parser.accepts("scale",

@@ -43,7 +43,7 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class AwsProvisioner {
 
-    // the file which will hole the public domain name of the created load balance
+    // the file which will holds the public domain name of the created load balancer
     private static final String AWS_ELB_FILE_NAME = "aws-elb.txt";
 
     // AWS specific magic strings
@@ -142,14 +142,13 @@ public class AwsProvisioner {
 
     void scaleInstanceCountTo(int totalInstancesWanted) {
         List agents = AgentsFile.load(agentsFile);
+        int agentsSize = agents.size();
 
-        if (totalInstancesWanted <= agents.size()) {
-            terminateInstances(agents.size() - totalInstancesWanted);
-            return;
+        if (totalInstancesWanted > agentsSize) {
+            createInstances(totalInstancesWanted - agentsSize);
+        } else {
+            terminateInstances(agentsSize - totalInstancesWanted);
         }
-        int instanceCount = totalInstancesWanted - agents.size();
-
-        createInstances(instanceCount);
     }
 
     private List<Instance> createInstances(int instanceCount) {
@@ -172,7 +171,7 @@ public class AwsProvisioner {
         List<Instance> checkedInstances = new ArrayList<Instance>();
         List<Instance> instances = runInstancesResult.getReservation().getInstances();
         for (Instance instance : instances) {
-            if (waiteForInstanceStatusRunning(instance)) {
+            if (waitForInstanceStatusRunning(instance)) {
                 addInstanceToAgentsFile(instance);
                 checkedInstances.add(instance);
             } else {
@@ -229,7 +228,7 @@ public class AwsProvisioner {
         return foundInstances;
     }
 
-    private boolean waiteForInstanceStatusRunning(Instance instance) {
+    private boolean waitForInstanceStatusRunning(Instance instance) {
         String instanceId = instance.getInstanceId();
         DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instanceId);
         int counter = 0;
