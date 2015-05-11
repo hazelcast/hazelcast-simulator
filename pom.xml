@@ -40,7 +40,7 @@
         <commons-codec.version>1.10</commons-codec.version>
         <commons-lang.version>3.3.2</commons-lang.version>
         <guava.version>18.0</guava.version>
-        <hdr-histogram.version>2.0.1</hdr-histogram.version>
+        <hdr-histogram.version>2.1.4</hdr-histogram.version>
         <jfreechart.version>1.0.19</jfreechart.version>
         <jgit.version>3.5.3.201412180710-r</jgit.version>
         <jopt.version>4.4</jopt.version>
