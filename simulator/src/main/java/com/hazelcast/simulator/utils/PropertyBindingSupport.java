@@ -96,28 +96,12 @@ public final class PropertyBindingSupport {
     private static void bindProperty(Object object, String property, String value, Set<String> optionalProperties) {
         String[] path = property.split("\\.");
 
-        Field field;
-        for (int i = 0; i < path.length - 1; i++) {
-            String element = path[i];
-            field = findPropertyField(object.getClass(), element);
-            if (field == null) {
-                throw new BindException(format("Failed to find property: %s in property: %s", element, property));
-            }
-            try {
-                object = field.get(object);
-            } catch (IllegalAccessException e) {
-                throw new BindException(format("IllegalAccessException while binding property %s to field %s",
-                        property, field), e);
-            }
-            if (object == null) {
-                throw new BindException(format("Failed to bind to property: %s encountered a null value at field: %s",
-                        property, field));
-            }
-        }
+        object = findPropertyObjectInPath(object, property, path);
 
-        field = findPropertyField(object.getClass(), path[path.length - 1]);
+        Field field = findPropertyField(object.getClass(), path[path.length - 1]);
         if (field == null) {
             if (optionalProperties != null && optionalProperties.contains(property)) {
+                // the property is optional so we just ignore that we couldn't bind it
                 return;
             }
             throw new BindException(format("Property [%s.%s] does not exist", object.getClass().getName(), property));
@@ -139,27 +123,46 @@ public final class PropertyBindingSupport {
         }
     }
 
+    private static Object findPropertyObjectInPath(Object object, String property, String[] path) {
+        Field field;
+        for (int i = 0; i < path.length - 1; i++) {
+            String element = path[i];
+            field = findPropertyField(object.getClass(), element);
+            if (field == null) {
+                throw new BindException(format("Failed to find property: %s in property: %s", element, property));
+            }
+            try {
+                object = field.get(object);
+            } catch (IllegalAccessException e) {
+                throw new BindException(format("IllegalAccessException while binding property %s to field %s",
+                        property, field), e);
+            }
+            if (object == null) {
+                throw new BindException(format("Failed to bind to property: %s encountered a null value at field: %s",
+                        property, field));
+            }
+        }
+        return object;
+    }
+
     private static Field findPropertyField(Class clazz, String property) {
         try {
             Field field = clazz.getDeclaredField(property);
-
             if (isStatic(field.getModifiers())) {
                 throw new BindException(format("Property [%s.%s] can't be static", clazz.getName(), property));
             }
-
             if (isFinal(field.getModifiers())) {
                 throw new BindException(format("Property [%s.%s] can't be final", clazz.getName(), property));
             }
-
             field.setAccessible(true);
+
             return field;
         } catch (NoSuchFieldException e) {
             Class superClass = clazz.getSuperclass();
             if (superClass == null) {
                 return null;
-            } else {
-                return findPropertyField(superClass, property);
             }
+            return findPropertyField(superClass, property);
         }
     }
 
