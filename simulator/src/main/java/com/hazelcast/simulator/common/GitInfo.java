@@ -9,14 +9,16 @@ import java.util.Properties;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 
 public final class GitInfo {
-    private static final String GIT_INFO_FILE = "simulator-git.properties";
-    private static final String UNKNOWN = "Unknown";
 
-    private static final String GIT_COMMIT_ID_AABREV = "git.commit.id.abbrev";
-    private static final String GIT_COMMIT_ID = "git.commit.id";
-    private static final String GIT_COMMIT_TIME = "git.commit.time";
-    private static final String GIT_BUILD_TIME = "git.build.time";
-    private static final String GIT_REMOTE_ORIGIN_URL = "git.remote.origin.url";
+    static final String GIT_INFO_FILE = "simulator-git.properties";
+
+    static final String UNKNOWN = "Unknown";
+
+    static final String GIT_COMMIT_ID_AABREV = "git.commit.id.abbrev";
+    static final String GIT_COMMIT_ID = "git.commit.id";
+    static final String GIT_COMMIT_TIME = "git.commit.time";
+    static final String GIT_BUILD_TIME = "git.build.time";
+    static final String GIT_REMOTE_ORIGIN_URL = "git.remote.origin.url";
 
     private static final Logger LOGGER = Logger.getLogger(GitInfo.class);
 
@@ -25,7 +27,7 @@ public final class GitInfo {
     private final Properties properties;
 
     private GitInfo() {
-        properties = loadGitProperties();
+        properties = loadGitProperties(GIT_INFO_FILE);
     }
 
     public static String getCommitIdAbbrev() {
@@ -48,22 +50,26 @@ public final class GitInfo {
         return INSTANCE.properties.getProperty(GIT_REMOTE_ORIGIN_URL, UNKNOWN);
     }
 
-    private Properties loadGitProperties() {
-        Properties properties = new Properties();
+    static Properties loadGitProperties(String fileName) {
         InputStream gitPropsStream = null;
         try {
-            gitPropsStream = getClass().getClassLoader().getResourceAsStream(GIT_INFO_FILE);
+            gitPropsStream = GitInfo.class.getClassLoader().getResourceAsStream(fileName);
+            if (gitPropsStream == null) {
+                return new DummyProperties();
+            }
+            Properties properties = new Properties();
             properties.load(gitPropsStream);
+            return properties;
         } catch (IOException e) {
-            LOGGER.warn("Error while loading Git properties.", e);
-            properties = new DummyProperties();
+            LOGGER.warn("Error while loading Git properties from " + fileName, e);
+            return new DummyProperties();
         } finally {
             closeQuietly(gitPropsStream);
         }
-        return properties;
     }
 
-    private static class DummyProperties extends Properties {
+    static class DummyProperties extends Properties {
+
         @Override
         public String getProperty(String key) {
             return UNKNOWN;
