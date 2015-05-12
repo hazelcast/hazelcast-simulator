@@ -12,6 +12,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
+import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -38,7 +39,7 @@ public class MapLongPerformanceTest {
     private IMap<Integer, Long> map;
 
     @Setup
-    public void setUp(TestContext testContext, @Name("latencyProbe")IntervalProbe intervalProbe,
+    public void setUp(TestContext testContext, @Name("latencyProbe") IntervalProbe intervalProbe,
                       @Name("set") SimpleProbe setProbe, @Name("get") SimpleProbe getProbe) {
         this.intervalProbe = intervalProbe;
         this.setProbe = setProbe;
@@ -59,7 +60,7 @@ public class MapLongPerformanceTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        MapStreamer<Integer, Long> streamer = new MapStreamer<Integer, Long>(map);
+        MapStreamer<Integer, Long> streamer = MapStreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {
             streamer.pushEntry(i, 0L);
         }
