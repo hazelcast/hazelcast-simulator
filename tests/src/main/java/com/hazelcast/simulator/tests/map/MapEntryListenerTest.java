@@ -64,8 +64,7 @@ public class MapEntryListenerTest {
     private static final ILogger LOGGER = Logger.getLogger(MapEntryListenerTest.class);
 
     // properties
-    public String basename = this.getClass().getSimpleName();
-    public int threadCount = 3;
+    public String basename = MapEntryListenerTest.class.getSimpleName();
     public int valueLength = 100;
     public int keyCount = 1000;
     public int valueCount = 1000;
@@ -188,41 +187,7 @@ public class MapEntryListenerTest {
 
             switch (mapOperation) {
                 case PUT:
-                    String value = values[randomInt(values.length)];
-
-                    switch (mapPutSelector.select()) {
-                        case PUT:
-                            map.lock(key);
-                            try {
-                                if (map.containsKey(key)) {
-                                    eventCount.updateCount.getAndIncrement();
-                                } else {
-                                    eventCount.addCount.getAndIncrement();
-                                }
-                                map.put(key, value);
-                            } finally {
-                                map.unlock(key);
-                            }
-                            break;
-                        case PUT_IF_ABSENT:
-                            map.lock(key);
-                            try {
-                                if (map.putIfAbsent(key, value) == null) {
-                                    eventCount.addCount.getAndIncrement();
-                                }
-                            } finally {
-                                map.unlock(key);
-                            }
-                            break;
-                        case REPLACE:
-                            String oldValue = map.get(key);
-                            if (oldValue != null && map.replace(key, oldValue, value)) {
-                                eventCount.updateCount.getAndIncrement();
-                            }
-                            break;
-                        default:
-                            throw new UnsupportedOperationException();
-                    }
+                    putOperation(key);
                     break;
                 case EVICT:
                     map.lock(key);
@@ -250,6 +215,44 @@ public class MapEntryListenerTest {
                         map.delete(key);
                     } finally {
                         map.unlock(key);
+                    }
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
+
+        private void putOperation(int key) {
+            String value = values[randomInt(values.length)];
+
+            switch (mapPutSelector.select()) {
+                case PUT:
+                    map.lock(key);
+                    try {
+                        if (map.containsKey(key)) {
+                            eventCount.updateCount.getAndIncrement();
+                        } else {
+                            eventCount.addCount.getAndIncrement();
+                        }
+                        map.put(key, value);
+                    } finally {
+                        map.unlock(key);
+                    }
+                    break;
+                case PUT_IF_ABSENT:
+                    map.lock(key);
+                    try {
+                        if (map.putIfAbsent(key, value) == null) {
+                            eventCount.addCount.getAndIncrement();
+                        }
+                    } finally {
+                        map.unlock(key);
+                    }
+                    break;
+                case REPLACE:
+                    String oldValue = map.get(key);
+                    if (oldValue != null && map.replace(key, oldValue, value)) {
+                        eventCount.updateCount.getAndIncrement();
                     }
                     break;
                 default:
