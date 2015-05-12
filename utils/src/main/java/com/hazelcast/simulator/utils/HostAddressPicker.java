@@ -6,6 +6,8 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+
 public final class HostAddressPicker {
 
     private HostAddressPicker() {
@@ -16,18 +18,21 @@ public final class HostAddressPicker {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             String loopbackHost = null;
             while (interfaces.hasMoreElements()) {
-                NetworkInterface iface = interfaces.nextElement();
-                if (!iface.isUp() || iface.isPointToPoint()) {
+                NetworkInterface networkInterface = interfaces.nextElement();
+                if (!networkInterface.isUp()) {
                     continue;
                 }
-                if (!iface.isLoopback()) {
-                    String candidateAddress = getHostAddressOrNull(iface);
+                if (networkInterface.isPointToPoint()) {
+                    continue;
+                }
+                if (!networkInterface.isLoopback()) {
+                    String candidateAddress = getHostAddressOrNull(networkInterface);
                     if (candidateAddress != null) {
                         return candidateAddress;
                     }
                 } else {
                     if (loopbackHost == null) {
-                        loopbackHost = getHostAddressOrNull(iface);
+                        loopbackHost = getHostAddressOrNull(networkInterface);
                     }
                 }
             }
@@ -37,18 +42,17 @@ public final class HostAddressPicker {
                 throw new IllegalStateException("Cannot find local host address");
             }
         } catch (SocketException e) {
-            throw CommonUtils.rethrow(e);
+            throw rethrow(e);
         }
     }
 
-    private static String getHostAddressOrNull(NetworkInterface iface) {
-        Enumeration<InetAddress> addresses = iface.getInetAddresses();
+    private static String getHostAddressOrNull(NetworkInterface networkInterface) {
+        Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
         while (addresses.hasMoreElements()) {
             InetAddress address = addresses.nextElement();
             if (!(address instanceof Inet6Address)) {
                 return address.getHostAddress();
             }
-
         }
         return null;
     }
