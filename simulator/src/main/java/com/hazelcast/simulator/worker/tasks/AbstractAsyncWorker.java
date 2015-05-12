@@ -2,7 +2,6 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
 /**
@@ -11,7 +10,7 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  * The operation counter is automatically increased after call of {@link ExecutionCallback#onResponse}.
  * The throwable is automatically reported after call of {@link ExecutionCallback#onFailure(Throwable)}
  *
- * @param <O> Type of Enum used by the {@link OperationSelector}
+ * @param <O> Type of Enum used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  * @param <V> Type of {@link ExecutionCallback}
  */
 public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends AbstractWorker<O> implements ExecutionCallback<V> {
