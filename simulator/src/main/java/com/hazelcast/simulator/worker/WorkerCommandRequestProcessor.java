@@ -353,18 +353,17 @@ class WorkerCommandRequestProcessor {
 
     private abstract class CommandThread extends Thread {
 
-        private final Command command;
         private final String testId;
 
         public CommandThread(Command command, String testId) {
-            this.command = command;
             this.testId = testId;
+
+            commands.put(testId, command);
         }
 
         @Override
         public final void run() {
             try {
-                commands.put(testId, command);
                 doRun();
             } catch (Throwable t) {
                 ExceptionReporter.report(testId, t);
