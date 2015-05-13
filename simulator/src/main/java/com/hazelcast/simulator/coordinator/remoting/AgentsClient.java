@@ -8,6 +8,7 @@ import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.test.Failure;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.commands.Command;
@@ -188,9 +189,9 @@ public class AgentsClient {
         executeOnAllWorkers(SERVICE_INIT_TESTSUITE, testSuite);
     }
 
-    public void waitForPhaseCompletion(String prefix, String testId, String phaseName) throws TimeoutException {
+    public void waitForPhaseCompletion(String prefix, String testId, TestPhase testPhase) throws TimeoutException {
         long start = System.nanoTime();
-        IsPhaseCompletedCommand command = new IsPhaseCompletedCommand(testId);
+        IsPhaseCompletedCommand command = new IsPhaseCompletedCommand(testId, testPhase);
         for (; ; ) {
             List<List<Boolean>> allResults = executeOnAllWorkers(command);
             boolean complete = true;
@@ -209,7 +210,7 @@ public class AgentsClient {
                 return;
             }
             long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start);
-            LOGGER.info(prefix + "Waiting for " + phaseName + " completion: " + secondsToHuman(duration));
+            LOGGER.info(prefix + "Waiting for " + testPhase.name + " completion: " + secondsToHuman(duration));
             sleepSeconds(5);
         }
     }

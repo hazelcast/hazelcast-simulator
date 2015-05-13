@@ -8,6 +8,7 @@ import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
@@ -116,18 +117,12 @@ public class AgentSmokeTest {
         LOGGER.info("InitTest phase...");
         agentsClient.executeOnAllWorkers(initTestCommand);
 
-        LOGGER.info("Setup phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "setUp"));
+        runPhase(testCase, TestPhase.SETUP);
 
-        LOGGER.info("Local warmup phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "localWarmup"));
-        agentsClient.waitForPhaseCompletion("", testCase.getId(), "localWarmup");
+        runPhase(testCase, TestPhase.LOCAL_WARMUP);
+        runPhase(testCase, TestPhase.GLOBAL_WARMUP);
 
-        LOGGER.info("Global warmup phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "globalWarmup"));
-        agentsClient.waitForPhaseCompletion("", testCase.getId(), "globalWarmup");
-
-        LOGGER.info("Run phase...");
+        LOGGER.info("Starting run phase...");
         RunCommand runCommand = new RunCommand(testCase.getId());
         runCommand.clientOnly = false;
         agentsClient.executeOnAllWorkers(runCommand);
@@ -138,23 +133,13 @@ public class AgentSmokeTest {
 
         LOGGER.info("Stopping test...");
         agentsClient.executeOnAllWorkers(new StopCommand(testCase.getId()));
-        agentsClient.waitForPhaseCompletion("", testCase.getId(), "stop");
+        agentsClient.waitForPhaseCompletion("", testCase.getId(), TestPhase.RUN);
 
-        LOGGER.info("Local verify phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "localVerify"));
-        agentsClient.waitForPhaseCompletion("", testCase.getId(), "localVerify");
+        runPhase(testCase, TestPhase.GLOBAL_VERIFY);
+        runPhase(testCase, TestPhase.LOCAL_VERIFY);
 
-        LOGGER.info("Global verify phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "globalVerify"));
-        agentsClient.waitForPhaseCompletion("", testCase.getId(), "globalVerify");
-
-        LOGGER.info("Global teardown phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "globalTeardown"));
-        agentsClient.waitForPhaseCompletion("", testCase.getId(), "globalTeardown");
-
-        LOGGER.info("Local teardown phase...");
-        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), "localTeardown"));
-        agentsClient.waitForPhaseCompletion("", testCase.getId(), "localTeardown");
+        runPhase(testCase, TestPhase.GLOBAL_TEARDOWN);
+        runPhase(testCase, TestPhase.LOCAL_TEARDOWN);
 
         LOGGER.info("Terminating workers...");
         agentsClient.terminateWorkers();
@@ -176,6 +161,12 @@ public class AgentSmokeTest {
         agentLayout.publicIp = AGENT_IP_ADDRESS;
 
         client.spawnWorkers(Collections.singletonList(agentLayout), true);
+    }
+
+    private void runPhase(TestCase testCase, TestPhase testPhase) throws TimeoutException {
+        LOGGER.info("Starting " + testPhase.name + " phase...");
+        agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), testPhase));
+        agentsClient.waitForPhaseCompletion("", testCase.getId(), testPhase);
     }
 
     private static AgentsClient getAgentsClient() throws IOException {

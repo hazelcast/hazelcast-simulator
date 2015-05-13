@@ -6,6 +6,7 @@ import com.hazelcast.simulator.probes.probes.ProbesResultXmlWriter;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.worker.commands.GenericCommand;
 import com.hazelcast.simulator.worker.commands.GetBenchmarkResultsCommand;
@@ -68,20 +69,10 @@ final class TestCaseRunner {
             agentsClient.executeOnAllWorkers(new InitCommand(testCase));
             echo("Completed Test initialization");
 
-            echo("Starting Test setup");
-            agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, "setUp"));
-            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "setUp");
-            echo("Completed Test setup");
+            runOnAllWorkers(TestPhase.SETUP);
 
-            echo("Starting Test local warmup");
-            agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, "localWarmup"));
-            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "localWarmup");
-            echo("Completed Test local warmup");
-
-            echo("Starting Test global warmup");
-            agentsClient.executeOnFirstWorker(new GenericCommand(testCaseId, "globalWarmup"));
-            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "globalWarmup");
-            echo("Completed Test global warmup");
+            runOnAllWorkers(TestPhase.LOCAL_WARMUP);
+            runOnFirstWorker(TestPhase.GLOBAL_WARMUP);
 
             echo("Starting Test start");
             startTestCase();
@@ -93,41 +84,52 @@ final class TestCaseRunner {
 
             echo("Starting Test stop");
             agentsClient.executeOnAllWorkers(new StopCommand(testCaseId));
-            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "stop");
+            agentsClient.waitForPhaseCompletion(prefix, testCaseId, TestPhase.RUN);
             echo("Completed Test stop");
 
             logPerformance();
             processProbeResults();
 
             if (coordinator.verifyEnabled) {
-                echo("Starting Test global verify");
-                agentsClient.executeOnFirstWorker(new GenericCommand(testCaseId, "globalVerify"));
-                agentsClient.waitForPhaseCompletion(prefix, testCaseId, "globalVerify");
-                echo("Completed Test global verify");
-
-                echo("Starting Test local verify");
-                agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, "localVerify"));
-                agentsClient.waitForPhaseCompletion(prefix, testCaseId, "localVerify");
-                echo("Completed Test local verify");
+                runOnFirstWorker(TestPhase.GLOBAL_VERIFY);
+                runOnAllWorkers(TestPhase.LOCAL_VERIFY);
             } else {
                 echo("Skipping Test verification");
             }
 
-            echo("Starting Test global tear down");
-            agentsClient.executeOnFirstWorker(new GenericCommand(testCaseId, "globalTeardown"));
-            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "globalTeardown");
-            echo("Finished Test global tear down");
-
-            echo("Starting Test local tear down");
-            agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, "localTeardown"));
-            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "localTeardown");
-            echo("Completed Test local tear down");
+            runOnFirstWorker(TestPhase.GLOBAL_TEARDOWN);
+            runOnAllWorkers(TestPhase.LOCAL_TEARDOWN);
 
             return (failureMonitor.getFailureCount() == oldFailureCount);
         } catch (Exception e) {
             LOGGER.fatal("Failed", e);
             return false;
         }
+    }
+
+    private void runOnAllWorkers(TestPhase testPhase) throws TimeoutException {
+        echo("Starting Test " + testPhase.name);
+        agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, testPhase));
+        agentsClient.waitForPhaseCompletion(prefix, testCaseId, testPhase);
+        echo("Completed Test " + testPhase.name);
+    }
+
+    private void runOnFirstWorker(TestPhase testPhase) throws TimeoutException {
+        echo("Starting Test " + testPhase.name);
+        agentsClient.executeOnFirstWorker(new GenericCommand(testCaseId, testPhase));
+        agentsClient.waitForPhaseCompletion(prefix, testCaseId, testPhase);
+        echo("Completed Test " + testPhase.name);
+    }
+
+    private void startTestCase() throws TimeoutException {
+        if (coordinator.monitorPerformance) {
+            performanceMonitor.start();
+        }
+
+        WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
+        RunCommand runCommand = new RunCommand(testCaseId);
+        runCommand.clientOnly = workerJvmSettings.clientWorkerCount > 0;
+        agentsClient.executeOnAllWorkers(runCommand);
     }
 
     private void processProbeResults() {
@@ -177,17 +179,6 @@ final class TestCaseRunner {
 
     private void logPerformance() {
         performanceMonitor.logDetailedPerformanceInfo(testSuite.duration);
-    }
-
-    private void startTestCase() throws TimeoutException {
-        if (coordinator.monitorPerformance) {
-            performanceMonitor.start();
-        }
-
-        WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
-        RunCommand runCommand = new RunCommand(testCaseId);
-        runCommand.clientOnly = workerJvmSettings.clientWorkerCount > 0;
-        agentsClient.executeOnAllWorkers(runCommand);
     }
 
     private void sleep(int seconds) {

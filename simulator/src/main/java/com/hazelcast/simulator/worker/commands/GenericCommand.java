@@ -15,23 +15,25 @@
  */
 package com.hazelcast.simulator.worker.commands;
 
+import com.hazelcast.simulator.test.TestPhase;
+
 public class GenericCommand extends Command {
 
     public static final long serialVersionUID = 0L;
 
     public String testId;
-    public String methodName;
+    public TestPhase testPhase;
 
-    public GenericCommand(String testId, String methodName) {
+    public GenericCommand(String testId, TestPhase testPhase) {
         this.testId = testId;
-        this.methodName = methodName;
+        this.testPhase = testPhase;
     }
 
     @Override
     public String toString() {
         return "GenericCommand{"
                 + "testId='" + testId + '\''
-                + ", methodName='" + methodName + '\''
+                + ", testPhase='" + testPhase + '\''
                 + '}';
     }
 }

@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.simulator.worker.commands.Command;
-import com.hazelcast.simulator.worker.commands.GenericCommand;
+import com.hazelcast.simulator.worker.commands.RunCommand;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
@@ -18,7 +18,7 @@ public class CommandFutureTest {
     private static final String DEFAULT_RESULT = "testResult";
     private static final int DEFAULT_TIMEOUT_MS = 500;
 
-    private final Command command = new GenericCommand("unitTest", "testMethod");
+    private final Command command = new RunCommand("unitTest");
 
     private final CommandFuture<String> future = new CommandFuture<String>(command);
     private final FutureSetter futureSetter = new FutureSetter(DEFAULT_RESULT, DEFAULT_TIMEOUT_MS);

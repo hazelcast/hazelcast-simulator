@@ -129,38 +129,21 @@ public class TestRunner<E> {
                 hazelcastInstance = Hazelcast.newHazelcastInstance();
             }
 
-            LOGGER.info("Starting setup");
-            testInvoker.setUp();
-            LOGGER.info("Finished setup");
+            runPhase(TestPhase.SETUP);
 
-            LOGGER.info("Starting local warmup");
-            testInvoker.localWarmup();
-            LOGGER.info("Finished local warmup");
-
-            LOGGER.info("Starting global warmup");
-            testInvoker.globalWarmup();
-            LOGGER.info("Finished global warmup");
+            runPhase(TestPhase.LOCAL_WARMUP);
+            runPhase(TestPhase.GLOBAL_WARMUP);
 
             LOGGER.info("Starting run");
             stopThread.start();
-            testInvoker.run();
+            testInvoker.invoke(TestPhase.RUN);
             LOGGER.info("Finished run");
 
-            LOGGER.info("Starting globalVerify");
-            testInvoker.globalVerify();
-            LOGGER.info("Finished globalVerify");
+            runPhase(TestPhase.GLOBAL_VERIFY);
+            runPhase(TestPhase.LOCAL_VERIFY);
 
-            LOGGER.info("Starting localVerify");
-            testInvoker.localVerify();
-            LOGGER.info("Finished localVerify");
-
-            LOGGER.info("Starting globalTearDown");
-            testInvoker.globalTeardown();
-            LOGGER.info("Finished globalTearDown");
-
-            LOGGER.info("Starting local teardown");
-            testInvoker.localTeardown();
-            LOGGER.info("Finished local teardown");
+            runPhase(TestPhase.GLOBAL_TEARDOWN);
+            runPhase(TestPhase.LOCAL_TEARDOWN);
         } finally {
             LOGGER.info("Shutdown...");
             hazelcastInstance.shutdown();
@@ -169,6 +152,12 @@ public class TestRunner<E> {
             stopThread.join();
             LOGGER.info("Finished");
         }
+    }
+
+    private void runPhase(TestPhase testPhase) throws Exception {
+        LOGGER.info("Starting " + testPhase.name);
+        testInvoker.invoke(testPhase);
+        LOGGER.info("Finished " + testPhase.name);
     }
 
     private final class StopThread extends Thread {
