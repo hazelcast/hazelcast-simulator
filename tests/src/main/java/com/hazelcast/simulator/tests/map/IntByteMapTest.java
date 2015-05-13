@@ -26,6 +26,7 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
+import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -76,7 +77,7 @@ public class IntByteMapTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        MapStreamer<Integer, Object> streamer = new MapStreamer<Integer, Object>(map);
+        MapStreamer<Integer, Object> streamer = MapStreamerFactory.getInstance(map);
         Random random = new Random();
         for (int key : keys) {
             Object value = generateByteArray(random, valueSize);
