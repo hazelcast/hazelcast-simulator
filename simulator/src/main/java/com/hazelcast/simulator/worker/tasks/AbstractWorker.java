@@ -110,6 +110,8 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     /**
      * Calls {@link Random#nextInt(int)} on an internal Random instance.
      *
+     * @param upperBond the bound on the random number to be returned.  Must be
+     *        positive.
      * @return the next pseudo random, uniformly distributed {@code int} value between {@code 0} (inclusive) and {@code n}
      * (exclusive) from this random number generator's sequence
      */

@@ -15,6 +15,8 @@ public @interface MessageSpec {
 
     /**
      * Specification of the message to be used when calling {@link Message#newBySpec(String, String)}
+     *
+     * @return message specification
      */
     String value();
 

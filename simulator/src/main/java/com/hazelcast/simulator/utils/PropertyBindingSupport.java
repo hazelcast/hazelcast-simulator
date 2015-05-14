@@ -39,8 +39,9 @@ public final class PropertyBindingSupport {
     /**
      * Binds all the properties contained in the testCase object onto the test instance.
      *
-     * @param testInstance Instance of the test class
-     * @param testCase     TestCase which contains the properties
+     * @param testInstance       Instance of the test class
+     * @param testCase           TestCase which contains the properties
+     * @param optionalProperties Set of optional properties which will not cause a failure if not found
      */
     public static void bindProperties(Object testInstance, TestCase testCase, Set<String> optionalProperties) {
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
