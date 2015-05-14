@@ -6,11 +6,11 @@ package com.hazelcast.simulator.worker.loadsupport;
  * With Hazelcast version 3.5 or newer it does use asynchronous IMap operations so it's extremely fast,
  * but it has own back-pressure and doesn't rely on back-pressure provided by Hazelcast.
  *
- * For older Hazelcast versions a synchronous version is available.
+ * For older Hazelcast versions a synchronous version is created by the factory.
  *
  * <pre>
  * {@code
- *   MapStreamer<String, Person> streamer = new MapStreamer(map);
+ *   MapStreamer<String, Person> streamer = MapStreamerFactory.getInstance(map);
  *   for (int i = 0; i < keyCount; i++) {
  *     String key = generateString(keyLength);
  *     Person value = new Person(i);
