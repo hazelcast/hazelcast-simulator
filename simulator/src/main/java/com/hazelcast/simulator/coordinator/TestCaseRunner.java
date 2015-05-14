@@ -119,8 +119,8 @@ final class TestCaseRunner {
             echo("Finished Test global tear down");
 
             echo("Starting Test local tear down");
-            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "localTeardown");
             agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, "localTeardown"));
+            agentsClient.waitForPhaseCompletion(prefix, testCaseId, "localTeardown");
             echo("Completed Test local tear down");
 
             return (failureMonitor.getFailureCount() == oldFailureCount);
