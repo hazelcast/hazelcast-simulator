@@ -1,32 +1,27 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.HazelcastInstanceAware;
-import com.hazelcast.core.Member;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.test.TestContext;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Random;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
-import static java.lang.String.format;
+import static com.hazelcast.simulator.utils.HazelcastUtils.injectHazelcastInstance;
+import static com.hazelcast.simulator.utils.HazelcastUtils.isMaster;
 
 /**
  * Processes {@link Message} instances on {@link MemberWorker} and {@link ClientWorker} instances.
  */
 class WorkerMessageProcessor {
 
-    private static final int TIMEOUT = 60;
+    private static final int DELAY_SECONDS = 10;
+
     private static final Logger LOGGER = Logger.getLogger(WorkerMessageProcessor.class);
 
     private final ConcurrentMap<String, TestContainer<TestContext>> tests;
@@ -59,8 +54,18 @@ class WorkerMessageProcessor {
         });
     }
 
+    private boolean shouldProcess(Message message) {
+        String workerAddress = message.getMessageAddress().getWorkerAddress();
+        if (workerAddress.equals(MessageAddress.WORKER_WITH_OLDEST_MEMBER)) {
+            return isMaster(hazelcastServerInstance, executor, DELAY_SECONDS);
+        }
+        return true;
+    }
+
     private void process(Message message) {
-        injectHazelcastInstance(message);
+        HazelcastInstance hazelcastInstance = hazelcastServerInstance != null ? hazelcastServerInstance : hazelcastClientInstance;
+        injectHazelcastInstance(hazelcastInstance, message);
+
         if (message.getMessageAddress().getTestAddress() == null) {
             processLocalMessage(message);
         } else {
@@ -72,52 +77,17 @@ class WorkerMessageProcessor {
         }
     }
 
-    private boolean shouldProcess(Message message) {
-        String workerAddress = message.getMessageAddress().getWorkerAddress();
-        if (workerAddress.equals(MessageAddress.WORKER_WITH_OLDEST_MEMBER)) {
-            return isMaster();
+    private void processLocalMessage(Message message) {
+        if (message instanceof Runnable) {
+            processLocalRunnableMessage((Runnable) message);
         } else {
-            return true;
+            throw new UnsupportedOperationException("Non-runnable messages to workers are not implemented yet");
         }
     }
 
-    // TODO: This should be really factored out
-    private boolean isMaster() {
-        if (hazelcastServerInstance == null || !isOldestMember()) {
-            return false;
-        }
-        try {
-            return executor.schedule(new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    return isOldestMember();
-                }
-            }, 10, TimeUnit.SECONDS).get(TIMEOUT, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new IllegalStateException(e);
-        } catch (ExecutionException e) {
-            throw new IllegalStateException(e);
-        } catch (TimeoutException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private boolean isOldestMember() {
-        Iterator<Member> memberIterator = hazelcastServerInstance.getCluster().getMembers().iterator();
-        return memberIterator.hasNext() && memberIterator.next().equals(hazelcastServerInstance.getLocalEndpoint());
-    }
-
-    private void injectHazelcastInstance(Message message) {
-        if (message instanceof HazelcastInstanceAware) {
-            if (hazelcastServerInstance != null) {
-                ((HazelcastInstanceAware) message).setHazelcastInstance(hazelcastServerInstance);
-            } else if (hazelcastClientInstance != null) {
-                ((HazelcastInstanceAware) message).setHazelcastInstance(hazelcastClientInstance);
-            } else {
-                LOGGER.warn(format("Message %s implements %s interface, but no instance is currently running in this worker.",
-                        message.getClass().getName(), HazelcastInstanceAware.class));
-            }
-        }
+    private void processLocalRunnableMessage(Runnable message) {
+        LOGGER.info("Processing local runnable message: " + message.getClass().getName());
+        message.run();
     }
 
     private void processTestMessage(Message message) throws Exception {
@@ -134,19 +104,6 @@ class WorkerMessageProcessor {
                 randomTestContainer.sendMessage(message);
             }
         }
-    }
-
-    private void processLocalMessage(Message message) {
-        if (message instanceof Runnable) {
-            processLocalRunnableMessage((Runnable) message);
-        } else {
-            throw new UnsupportedOperationException("Non-runnable messages to workers are not implemented yet");
-        }
-    }
-
-    private void processLocalRunnableMessage(Runnable message) {
-        LOGGER.info("Processing local runnable message: " + message.getClass().getName());
-        message.run();
     }
 
     private TestContainer<?> getRandomTestContainerOrNull() {

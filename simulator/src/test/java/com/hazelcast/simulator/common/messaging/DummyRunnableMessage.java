@@ -5,15 +5,15 @@ import com.hazelcast.simulator.common.KeyValuePair;
 @MessageSpec(value = "dummyMessage", description = "Dummy Runnable Message")
 public class DummyRunnableMessage extends RunnableMessage {
 
-    private volatile boolean executed = false;
     private final KeyValuePair<String, String> attribute;
+
+    private volatile boolean executed = false;
 
     public DummyRunnableMessage(MessageAddress messageAddress) {
         this(messageAddress, null);
     }
 
-    public DummyRunnableMessage(MessageAddress messageAddress,
-                                KeyValuePair<String, String> attribute) {
+    public DummyRunnableMessage(MessageAddress messageAddress, KeyValuePair<String, String> attribute) {
         super(messageAddress);
         this.attribute = attribute;
     }
