@@ -24,7 +24,7 @@ import static junit.framework.Assert.assertTrue;
 
 /**
  * This tests runs {@link IMap#put(Object, Object)} and {@link IMap#get(Object)} operations on a map, which is configured with
- * {@link MaxSizeConfig.MaxSizePolicy#PER_NODE}.
+ * {@link com.hazelcast.config.MaxSizeConfig.MaxSizePolicy#PER_NODE}.
  *
  * With some probability distribution we are doing put, putAsync, get and verification operations on the map.
  * We verify during the test and at the end that the map has not exceeded its max configured size.

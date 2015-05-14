@@ -35,7 +35,7 @@ public final class Probes {
      *
      * @param probeName              name of the probe
      * @param targetClassType        target class type the probe will be assigned to
-     * @param probesConfiguration    configuration of the probe, for allowed types see {@see ProbesType}
+     * @param probesConfiguration    configuration of the probe, for allowed types see {@link ProbesType}
      * @param <T>                    type of the probe which extends {@link SimpleProbe}
      * @return instance of a probe
      */
@@ -51,7 +51,7 @@ public final class Probes {
      *
      * @param probeName              name of the probe
      * @param targetClassType        target class type the probe will be assigned to
-     * @param probesConfiguration    configuration of the probe, for allowed types see {@see ProbesType}
+     * @param probesConfiguration    configuration of the probe, for allowed types see {@link ProbesType}
      * @param <T>                    type of the probe which extends {@link SimpleProbe}
      * @return thread safe instance of a probe
      */
