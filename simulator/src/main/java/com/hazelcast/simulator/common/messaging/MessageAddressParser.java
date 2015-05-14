@@ -12,8 +12,7 @@ import static java.util.regex.Pattern.compile;
 /**
  * Parses the {@link MessageAddress} from the command line argument.
  *
- * Warning: Change user help messageAddressSpec in {@link com.hazelcast.simulator.communicator.CommunicatorCli} when changing
- * input format accepted by this parser.
+ * Warning: Change user help in CommunicatorCli when changing input format accepted by this parser.
  */
 public class MessageAddressParser {
 

@@ -290,6 +290,8 @@ public class ZipfianGenerator extends IntegerGenerator {
      * Return the next value, skewed by the Zipfian distribution. The 0th item will be the most popular, followed by the 1st,
      * followed by the 2nd, etc. (Or, if min != 0, the min-th item is the most popular, the min+1th item the next most popular,
      * etc.) If you want the popular items scattered throughout the item space, use ScrambledZipfianGenerator instead.
+     *
+     * @return the next value of the Zipfian distribution
      */
     public long nextLong() {
         return nextLong(items);
