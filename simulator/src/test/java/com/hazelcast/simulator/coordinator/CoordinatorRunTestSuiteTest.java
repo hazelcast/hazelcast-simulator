@@ -3,6 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.worker.commands.Command;
 import org.junit.AfterClass;
@@ -99,8 +100,10 @@ public class CoordinatorRunTestSuiteTest {
         int phaseNumber = 8;
 
         verify(agentsClient, times(phaseNumber * numberOfTests)).executeOnAllWorkers(any(Command.class));
-        verify(agentsClient, times(phaseNumber)).waitForPhaseCompletion(anyString(), eq("CoordinatorTest1"), anyString());
-        verify(agentsClient, times(phaseNumber)).waitForPhaseCompletion(anyString(), eq("CoordinatorTest2"), anyString());
+        verify(agentsClient, times(phaseNumber))
+                .waitForPhaseCompletion(anyString(), eq("CoordinatorTest1"), any(TestPhase.class));
+        verify(agentsClient, times(phaseNumber))
+                .waitForPhaseCompletion(anyString(), eq("CoordinatorTest2"), any(TestPhase.class));
         verify(agentsClient, times(1)).terminateWorkers();
     }
 }

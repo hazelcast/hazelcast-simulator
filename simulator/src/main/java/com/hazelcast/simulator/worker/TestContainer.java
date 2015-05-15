@@ -10,6 +10,7 @@ import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.probes.probes.impl.DisabledResult;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Receive;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -151,50 +152,6 @@ public class TestContainer<T extends TestContext> {
         return testContext;
     }
 
-    public void run() throws Exception {
-        long now = Clock.currentTimeMillis();
-        for (SimpleProbe probe : probeMap.values()) {
-            probe.startProbing(now);
-        }
-        if (runWithWorkerMethod != null) {
-            invokeRunWithWorkerMethod(now);
-        } else {
-            invokeMethod(testClassInstance, runMethod);
-        }
-        now = Clock.currentTimeMillis();
-        for (SimpleProbe probe : probeMap.values()) {
-            probe.stopProbing(now);
-        }
-    }
-
-    public void setUp() throws Exception {
-        invokeMethod(testClassInstance, setupMethod, setupArguments);
-    }
-
-    public void localWarmup() throws Exception {
-        invokeMethod(testClassInstance, localWarmupMethod);
-    }
-
-    public void globalWarmup() throws Exception {
-        invokeMethod(testClassInstance, globalWarmupMethod);
-    }
-
-    public void localVerify() throws Exception {
-        invokeMethod(testClassInstance, localVerifyMethod);
-    }
-
-    public void globalVerify() throws Exception {
-        invokeMethod(testClassInstance, globalVerifyMethod);
-    }
-
-    public void globalTeardown() throws Exception {
-        invokeMethod(testClassInstance, globalTeardownMethod);
-    }
-
-    public void localTeardown() throws Exception {
-        invokeMethod(testClassInstance, localTeardownMethod);
-    }
-
     public long getOperationCount() throws Exception {
         Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
                 operationCountMethod);
@@ -210,6 +167,53 @@ public class TestContainer<T extends TestContext> {
 
     public void sendMessage(Message message) throws Exception {
         invokeMethod(testClassInstance, messageConsumerMethod, message);
+    }
+
+    public void invoke(TestPhase testPhase) throws Exception {
+        switch (testPhase) {
+            case SETUP:
+                invokeMethod(testClassInstance, setupMethod, setupArguments);
+                break;
+            case LOCAL_WARMUP:
+                invokeMethod(testClassInstance, localWarmupMethod);
+                break;
+            case GLOBAL_WARMUP:
+                invokeMethod(testClassInstance, globalWarmupMethod);
+                break;
+            case RUN:
+                run();
+                break;
+            case GLOBAL_VERIFY:
+                invokeMethod(testClassInstance, globalVerifyMethod);
+                break;
+            case LOCAL_VERIFY:
+                invokeMethod(testClassInstance, localVerifyMethod);
+                break;
+            case GLOBAL_TEARDOWN:
+                invokeMethod(testClassInstance, globalTeardownMethod);
+                break;
+            case LOCAL_TEARDOWN:
+                invokeMethod(testClassInstance, localTeardownMethod);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported test phase: " + testPhase);
+        }
+    }
+
+    private void run() throws Exception {
+        long now = Clock.currentTimeMillis();
+        for (SimpleProbe probe : probeMap.values()) {
+            probe.startProbing(now);
+        }
+        if (runWithWorkerMethod != null) {
+            invokeRunWithWorkerMethod(now);
+        } else {
+            invokeMethod(testClassInstance, runMethod);
+        }
+        now = Clock.currentTimeMillis();
+        for (SimpleProbe probe : probeMap.values()) {
+            probe.stopProbing(now);
+        }
     }
 
     private void initMethods() {

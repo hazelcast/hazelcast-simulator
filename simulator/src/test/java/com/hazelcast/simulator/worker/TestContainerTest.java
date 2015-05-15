@@ -8,6 +8,7 @@ import com.hazelcast.simulator.probes.probes.ProbesType;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.probes.probes.impl.DisabledProbe;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.Name;
 import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Receive;
@@ -37,7 +38,7 @@ public class TestContainerTest {
 
     private DummyTestContext testContext;
     private ProbesConfiguration probesConfiguration;
-    private TestContainer<DummyTestContext> invoker;
+    private TestContainer<DummyTestContext> testContainer;
 
     @Before
     public void setUp() {
@@ -57,8 +58,8 @@ public class TestContainerTest {
 
     @Test
     public void testConstructor_getTestContext() {
-        invoker = createTestContainer(new DummyTest());
-        assertEquals(testContext, invoker.getTestContext());
+        testContainer = createTestContainer(new DummyTest());
+        assertEquals(testContext, testContainer.getTestContext());
     }
 
     // =============================================================
@@ -111,9 +112,9 @@ public class TestContainerTest {
         // @Setup method will be called from child class, not from dummy class
         // @Run method will be called from dummy class, not from child class
         ChildWithOwnSetupMethodTest test = new ChildWithOwnSetupMethodTest();
-        invoker = createTestContainer(test);
-        invoker.setUp();
-        invoker.run();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.SETUP);
+        testContainer.invoke(TestPhase.RUN);
 
         // ChildWithOwnSetupMethodTest
         assertTrue(test.childSetupCalled);
@@ -138,9 +139,9 @@ public class TestContainerTest {
         // @Setup method will be called from dummy class, not from child class
         // @Run method will be called from child class, not from dummy class
         ChildWithOwnRunMethodTest test = new ChildWithOwnRunMethodTest();
-        invoker = createTestContainer(test);
-        invoker.setUp();
-        invoker.run();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.SETUP);
+        testContainer.invoke(TestPhase.RUN);
 
         // ChildWithOwnRunMethodTest
         assertTrue(test.childRunCalled);
@@ -166,8 +167,8 @@ public class TestContainerTest {
     @Test
     public void testRun() throws Exception {
         DummyTest test = new DummyTest();
-        invoker = createTestContainer(test);
-        invoker.run();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.RUN);
 
         assertTrue(test.runCalled);
     }
@@ -175,7 +176,7 @@ public class TestContainerTest {
     @Test
     public void testRunWithWorker() throws Exception {
         final RunWithWorkerTest test = new RunWithWorkerTest();
-        invoker = createTestContainer(test);
+        testContainer = createTestContainer(test);
         Thread testStopper = new Thread() {
             @Override
             public void run() {
@@ -187,7 +188,7 @@ public class TestContainerTest {
         };
 
         testStopper.start();
-        invoker.run();
+        testContainer.invoke(TestPhase.RUN);
         testStopper.join();
 
         assertTrue(test.runWithWorkerCalled);
@@ -219,7 +220,7 @@ public class TestContainerTest {
     @Test
     public void testRunWithIWorker() throws Exception {
         final RunWithIWorkerTest test = new RunWithIWorkerTest();
-        invoker = createTestContainer(test);
+        testContainer = createTestContainer(test);
         Thread testStopper = new Thread() {
             @Override
             public void run() {
@@ -231,7 +232,7 @@ public class TestContainerTest {
         };
 
         testStopper.start();
-        invoker.run();
+        testContainer.invoke(TestPhase.RUN);
         testStopper.join();
 
         assertTrue(test.runWithWorkerCalled);
@@ -324,8 +325,8 @@ public class TestContainerTest {
     @Test
     public void testSetup() throws Exception {
         DummySetupTest test = new DummySetupTest();
-        invoker = createTestContainer(test);
-        invoker.setUp();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.SETUP);
 
         assertTrue(test.setupCalled);
         assertSame(testContext, test.context);
@@ -339,8 +340,8 @@ public class TestContainerTest {
     @Test
     public void testLocalProbeInjected() throws Exception {
         ProbeTest test = new ProbeTest();
-        invoker = createTestContainer(test);
-        invoker.setUp();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.SETUP);
 
         assertNotNull(test.simpleProbe);
     }
@@ -349,8 +350,8 @@ public class TestContainerTest {
     public void testProbeExplicitNameSetViaAnnotation() throws Exception {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("explicitProbeName", ProbesType.THROUGHPUT.getName());
-        invoker = createTestContainer(test);
-        Map probeResults = invoker.getProbeResults();
+        testContainer = createTestContainer(test);
+        Map probeResults = testContainer.getProbeResults();
 
         assertTrue(probeResults.keySet().contains("explicitProbeName"));
     }
@@ -359,8 +360,8 @@ public class TestContainerTest {
     public void testProbeImplicitName() throws Exception {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("Probe2", ProbesType.THROUGHPUT.getName());
-        invoker = createTestContainer(test);
-        Map probeResults = invoker.getProbeResults();
+        testContainer = createTestContainer(test);
+        Map probeResults = testContainer.getProbeResults();
 
         assertTrue(probeResults.keySet().contains("Probe2"));
     }
@@ -369,8 +370,8 @@ public class TestContainerTest {
     public void testProbeInjectSimpleProbeToField() {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("throughputProbe", ProbesType.THROUGHPUT.getName());
-        invoker = createTestContainer(test);
-        Map probeResults = invoker.getProbeResults();
+        testContainer = createTestContainer(test);
+        Map probeResults = testContainer.getProbeResults();
 
         assertNotNull(test.throughputProbe);
         assertTrue(probeResults.keySet().contains("throughputProbe"));
@@ -380,8 +381,8 @@ public class TestContainerTest {
     public void testProbeInjectIntervalProbeToField() {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("latencyProbe", ProbesType.LATENCY.getName());
-        invoker = createTestContainer(test);
-        Map probeResults = invoker.getProbeResults();
+        testContainer = createTestContainer(test);
+        Map probeResults = testContainer.getProbeResults();
 
         assertNotNull(test.latencyProbe);
         assertTrue(probeResults.keySet().contains("latencyProbe"));
@@ -391,8 +392,8 @@ public class TestContainerTest {
     public void testProbeInjectExplicitlyNamedProbeToField() {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("explicitProbeInjectedToField", ProbesType.THROUGHPUT.getName());
-        invoker = createTestContainer(test);
-        Map probeResults = invoker.getProbeResults();
+        testContainer = createTestContainer(test);
+        Map probeResults = testContainer.getProbeResults();
 
         assertNotNull(test.fooProbe);
         assertTrue(probeResults.keySet().contains("explicitProbeInjectedToField"));
@@ -433,8 +434,8 @@ public class TestContainerTest {
     @Test
     public void testLocalWarmup() throws Exception {
         WarmupTest test = new WarmupTest();
-        invoker = createTestContainer(test);
-        invoker.localWarmup();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.LOCAL_WARMUP);
 
         assertTrue(test.localWarmupCalled);
         assertFalse(test.globalWarmupCalled);
@@ -443,8 +444,8 @@ public class TestContainerTest {
     @Test
     public void testGlobalWarmup() throws Exception {
         WarmupTest test = new WarmupTest();
-        invoker = createTestContainer(test);
-        invoker.globalWarmup();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.GLOBAL_WARMUP);
 
         assertFalse(test.localWarmupCalled);
         assertTrue(test.globalWarmupCalled);
@@ -473,8 +474,8 @@ public class TestContainerTest {
     @Test
     public void testLocalVerify() throws Exception {
         VerifyTest test = new VerifyTest();
-        invoker = createTestContainer(test);
-        invoker.localVerify();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.LOCAL_VERIFY);
 
         assertTrue(test.localVerifyCalled);
         assertFalse(test.globalVerifyCalled);
@@ -483,8 +484,8 @@ public class TestContainerTest {
     @Test
     public void testGlobalVerify() throws Exception {
         VerifyTest test = new VerifyTest();
-        invoker = createTestContainer(test);
-        invoker.globalVerify();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.GLOBAL_VERIFY);
 
         assertFalse(test.localVerifyCalled);
         assertTrue(test.globalVerifyCalled);
@@ -513,8 +514,8 @@ public class TestContainerTest {
     @Test
     public void testLocalTeardown() throws Exception {
         TeardownTest test = new TeardownTest();
-        invoker = createTestContainer(test);
-        invoker.localTeardown();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.LOCAL_TEARDOWN);
 
         assertTrue(test.localTeardownCalled);
         assertFalse(test.globalTeardownCalled);
@@ -523,8 +524,8 @@ public class TestContainerTest {
     @Test
     public void testGlobalTeardown() throws Exception {
         TeardownTest test = new TeardownTest();
-        invoker = createTestContainer(test);
-        invoker.globalTeardown();
+        testContainer = createTestContainer(test);
+        testContainer.invoke(TestPhase.GLOBAL_TEARDOWN);
 
         assertFalse(test.localTeardownCalled);
         assertTrue(test.globalTeardownCalled);
@@ -553,8 +554,8 @@ public class TestContainerTest {
     @Test
     public void testPerformance() throws Exception {
         PerformanceTest test = new PerformanceTest();
-        invoker = createTestContainer(test);
-        long count = invoker.getOperationCount();
+        testContainer = createTestContainer(test);
+        long count = testContainer.getOperationCount();
 
         assertEquals(20, count);
     }
@@ -578,9 +579,9 @@ public class TestContainerTest {
     @Test
     public void testMessageReceiver() throws Exception {
         ReceiveTest test = new ReceiveTest();
-        invoker = createTestContainer(test);
+        testContainer = createTestContainer(test);
         Message message = Mockito.mock(Message.class);
-        invoker.sendMessage(message);
+        testContainer.sendMessage(message);
 
         assertEquals(message, test.messagePassed);
     }
