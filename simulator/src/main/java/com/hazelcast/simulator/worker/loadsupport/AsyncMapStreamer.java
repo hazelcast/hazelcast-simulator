@@ -15,7 +15,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
  * @param <K> key type
  * @param <V> value type
  */
-final class AsyncMapStreamer<K, V> implements MapStreamer<K,V> {
+final class AsyncMapStreamer<K, V> implements MapStreamer<K, V> {
 
     private static final int DEFAULT_CONCURRENCY_LEVEL = 1000;
     private static final long DEFAULT_TIMEOUT_MINUTES = 2;
