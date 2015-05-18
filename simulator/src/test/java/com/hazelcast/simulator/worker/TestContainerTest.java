@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
@@ -572,6 +571,27 @@ public class TestContainerTest {
         }
     }
 
+    @Test
+    public void testPerformanceWithException() throws Exception {
+        PerformanceExceptionTest test = new PerformanceExceptionTest();
+        testContainer = createTestContainer(test);
+        long count = testContainer.getOperationCount();
+
+        assertEquals(-1, count);
+    }
+
+    private static class PerformanceExceptionTest {
+
+        @Performance
+        public long getCount() {
+            throw new RuntimeException("Should fail!");
+        }
+
+        @Run
+        void run() {
+        }
+    }
+
     // ====================================================
     // =================== receive ========================
     // ====================================================
@@ -623,31 +643,6 @@ public class TestContainerTest {
         public void setUp(TestContext context) {
             this.context = context;
             this.setupCalled = true;
-        }
-    }
-
-    private static class DummyTestContext implements TestContext {
-
-        volatile boolean isStopped;
-
-        @Override
-        public HazelcastInstance getTargetInstance() {
-            return null;
-        }
-
-        @Override
-        public String getTestId() {
-            return "";
-        }
-
-        @Override
-        public boolean isStopped() {
-            return isStopped;
-        }
-
-        @Override
-        public void stop() {
-            isStopped = true;
         }
     }
 }

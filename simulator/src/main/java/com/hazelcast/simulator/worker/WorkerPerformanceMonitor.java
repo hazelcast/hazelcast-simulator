@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -15,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.hazelcast.simulator.utils.CommonUtils.fillString;
 import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
 import static com.hazelcast.simulator.utils.CommonUtils.formatLong;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static java.lang.String.format;
 
@@ -23,11 +23,18 @@ import static java.lang.String.format;
  */
 class WorkerPerformanceMonitor {
 
-    private final MonitorThread thread;
+    private static final int DEFAULT_MONITORING_INTERVAL_SECONDS = 5;
+
     private final AtomicBoolean started = new AtomicBoolean();
 
+    private final MonitorThread thread;
+
     WorkerPerformanceMonitor(Collection<TestContainer<TestContext>> testContainers) {
-        thread = new MonitorThread(testContainers);
+        this(testContainers, DEFAULT_MONITORING_INTERVAL_SECONDS);
+    }
+
+    WorkerPerformanceMonitor(Collection<TestContainer<TestContext>> testContainers, int intervalSeconds) {
+        this.thread = new MonitorThread(testContainers, intervalSeconds);
     }
 
     boolean start() {
@@ -41,6 +48,7 @@ class WorkerPerformanceMonitor {
 
     void stop() {
         thread.stop = true;
+        thread.interrupt();
     }
 
     private static final class MonitorThread extends Thread {
@@ -51,17 +59,19 @@ class WorkerPerformanceMonitor {
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         private final Map<String, TestStats> testStats = new HashMap<String, TestStats>();
         private final Collection<TestContainer<TestContext>> testContainers;
+        private final int intervalSeconds;
 
         private long globalLastOpsCount;
         private long globalLastTimeMillis = System.currentTimeMillis();
 
         private volatile boolean stop;
 
-        private MonitorThread(Collection<TestContainer<TestContext>> testContainers) {
+        private MonitorThread(Collection<TestContainer<TestContext>> testContainers, int intervalSeconds) {
             super("WorkerPerformanceMonitorThread");
             setDaemon(true);
 
             this.testContainers = testContainers;
+            this.intervalSeconds = intervalSeconds;
 
             writeHeaderToFile(globalPerformanceFile, true);
         }
@@ -70,7 +80,7 @@ class WorkerPerformanceMonitor {
         public void run() {
             while (!stop) {
                 try {
-                    Thread.sleep(5000);
+                    sleepSeconds(intervalSeconds);
                     writeStatsToFiles();
                 } catch (Throwable t) {
                     LOGGER.fatal("Failed to run performance monitor", t);
@@ -128,15 +138,10 @@ class WorkerPerformanceMonitor {
         }
 
         private long getOpsCount(TestContainer container) {
-            try {
-                long operationCount = container.getOperationCount();
-                if (operationCount > 0) {
-                    return operationCount;
-                }
-            } catch (Throwable ignored) {
-                EmptyStatement.ignore(ignored);
+            long operationCount = container.getOperationCount();
+            if (operationCount > 0) {
+                return operationCount;
             }
-
             return 0;
         }
 
