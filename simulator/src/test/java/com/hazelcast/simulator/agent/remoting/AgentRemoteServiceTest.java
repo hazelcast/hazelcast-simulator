@@ -48,8 +48,12 @@ public class AgentRemoteServiceTest {
 
     @After
     public void tearDown() throws Exception {
-        client.stop();
-        agentRemoteService.stop();
+        if (client != null) {
+            client.stop();
+        }
+        if (agentRemoteService != null) {
+            agentRemoteService.stop();
+        }
     }
 
     @Test
