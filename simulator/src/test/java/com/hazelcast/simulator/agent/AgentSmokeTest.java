@@ -93,7 +93,7 @@ public class AgentSmokeTest {
         cooldown();
 
         List<Failure> failures = agentsClient.getFailures();
-        assertEquals("Expected 1 failure!", 1, failures.size());
+        assertEquals("Expected 2 failures!", 2, failures.size());
 
         Failure failure = failures.get(0);
         assertEquals("Expected started test to fail", testCase.getId(), failure.testId);

@@ -100,10 +100,9 @@ class WorkerCommandRequestProcessor {
             while (running) {
                 try {
                     CommandRequest request = requestQueue.take();
-                    if (request == null) {
-                        throw new NullPointerException("request can't be null");
+                    if (request != null) {
+                        doProcess(request.id, request.task);
                     }
-                    doProcess(request.id, request.task);
                 } catch (Throwable e) {
                     ExceptionReporter.report(null, e);
                 }
@@ -173,15 +172,14 @@ class WorkerCommandRequestProcessor {
 
                 Object testInstance = InitCommand.class.getClassLoader().loadClass(testCase.getClassname()).newInstance();
                 bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
-                TestContextImpl testContext = new TestContextImpl(testCase.getId(), getHazelcastInstance());
+                TestContextImpl testContext = new TestContextImpl(testId, getHazelcastInstance());
                 ProbesConfiguration probesConfiguration = parseProbeConfiguration(testCase);
 
-                tests.put(testContext.getTestId(), new TestContainer<TestContext>(testInstance, testContext, probesConfiguration,
-                        testCase));
+                tests.put(testId, new TestContainer<TestContext>(testInstance, testContext, probesConfiguration, testCase));
                 testsPending.incrementAndGet();
 
                 if (serverInstance != null) {
-                    serverInstance.getUserContext().put(getUserContextKeyFromTestId(testCase.getId()), testInstance);
+                    serverInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testInstance);
                 }
             } catch (Exception e) {
                 throw e;
@@ -329,21 +327,17 @@ class WorkerCommandRequestProcessor {
         }
 
         private List<String> process(GetStackTraceCommand command) throws Exception {
-            try {
-                String testId = command.testId;
-                final String testName = "".equals(testId) ? "test" : testId;
-                TestContainer<TestContext> test = tests.get(command.testId);
-                if (test == null) {
-                    LOGGER.warn("Can't get stacktraces, found no test with id " + command.testId);
-                    return null;
-                }
+            String testId = command.testId;
+            String testName = "".equals(testId) ? "test" : testId;
 
-                LOGGER.info(String.format("%s %s.getStackTraces() %s", DASHES, testName, DASHES));
-                return tests.get(testId).getStackTraces();
-            } catch (Exception e) {
-                LOGGER.fatal("Failed to execute test.getStackTraces()", e);
-                throw e;
+            TestContainer<TestContext> test = tests.get(testId);
+            if (test == null) {
+                LOGGER.warn("Can't get stacktraces, found no test with id " + testId);
+                return null;
             }
+
+            LOGGER.info(String.format("%s %s.getStackTraces() %s", DASHES, testName, DASHES));
+            return test.getStackTraces();
         }
 
         private HazelcastInstance getHazelcastInstance() {

@@ -18,6 +18,7 @@ package com.hazelcast.simulator.tests;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -34,6 +35,11 @@ public class FailingTest {
     @Warmup
     void warmup() {
         sleepSeconds(1);
+    }
+
+    @Verify
+    void verify() {
+        throw new RuntimeException("This test should fail");
     }
 
     @Run
