@@ -58,13 +58,13 @@ public class ZipfianGenerator extends IntegerGenerator {
      * Computed parameters for generating the distribution.
      */
     double alpha;
-    double zetan;
+    double zeta;
     double eta;
     double theta;
     double zeta2theta;
 
     /**
-     * The number of items used to compute zetan the last time.
+     * The number of items used to compute zeta the last time.
      */
     long countForZeta;
 
@@ -130,9 +130,9 @@ public class ZipfianGenerator extends IntegerGenerator {
      * @param min             The smallest integer to generate in the sequence.
      * @param max             The largest integer to generate in the sequence.
      * @param zipfianConstant The zipfian constant to use.
-     * @param zetan           The precomputed zeta constant.
+     * @param zeta            The precomputed zeta constant.
      */
-    public ZipfianGenerator(long min, long max, double zipfianConstant, double zetan) {
+    public ZipfianGenerator(long min, long max, double zipfianConstant, double zeta) {
         items = max - min + 1;
         base = min;
 
@@ -141,10 +141,10 @@ public class ZipfianGenerator extends IntegerGenerator {
         zeta2theta = zeta(2, theta);
 
         alpha = 1.0 / (1.0 - theta);
-        //zetan = zeta(items, theta);
-        this.zetan = zetan;
+        //zeta = zeta(items, theta);
+        this.zeta = zeta;
         countForZeta = items;
-        eta = (1 - Math.pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / this.zetan);
+        eta = (1 - Math.pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / this.zeta);
         nextInt();
     }
 
@@ -230,38 +230,12 @@ public class ZipfianGenerator extends IntegerGenerator {
         // from "Quickly Generating Billion-Record Synthetic Databases", Jim Gray et al, SIGMOD 1994
 
         if (itemCount != countForZeta) {
-
-            // have to recompute zetan and eta, since they depend on itemCount
-            synchronized (this) {
-                if (itemCount > countForZeta) {
-                    //System.err.println(
-                    //        "WARNING: Incrementally recomputing Zipfian distribution. (itemCount =" + itemCount
-                    //                + " countForZeta=" + countForZeta + ")");
-
-                    // we have added more items. can compute zetan incrementally, which is cheaper
-                    zetan = zeta(countForZeta, itemCount, theta, zetan);
-                    eta = (1 - Math.pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zetan);
-                } else if ((itemCount < countForZeta) && (allowItemCountDecrease)) {
-                    // have to start over with zetan
-                    // note : for large item sets, this is very slow. so don't do it!
-
-                    // TODO: can also have a negative incremental computation,
-                    // e.g. if you decrease the number of items, then just subtract
-                    // the zeta sequence terms for the items that went away. This would be faster than recomputing from scratch
-                    // when the number of items decreases
-
-                    System.err.println(
-                            "WARNING: Recomputing Zipfian distribution. This is slow and should be avoided. (itemCount="
-                                    + itemCount + " countForZeta=" + countForZeta + ")");
-
-                    zetan = zeta(itemCount, theta);
-                    eta = (1 - Math.pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zetan);
-                }
-            }
+            // have to recompute zeta and eta, since they depend on itemCount
+            recomputeValues(itemCount);
         }
 
         double u = random().nextDouble();
-        double uz = u * zetan;
+        double uz = u * zeta;
 
         if (uz < 1.0) {
             return 0;
@@ -274,6 +248,32 @@ public class ZipfianGenerator extends IntegerGenerator {
         long ret = base + (long) ((itemCount) * Math.pow(eta * u - eta + 1, alpha));
         setLastInt((int) ret);
         return ret;
+    }
+
+    private synchronized void recomputeValues(long itemCount) {
+        if (itemCount > countForZeta) {
+            //System.err.println(
+            //        "WARNING: Incrementally recomputing Zipfian distribution. (itemCount =" + itemCount
+            //                + " countForZeta=" + countForZeta + ")");
+
+            // we have added more items. can compute zeta incrementally, which is cheaper
+            zeta = zeta(countForZeta, itemCount, theta, zeta);
+            eta = (1 - Math.pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zeta);
+        } else if ((itemCount < countForZeta) && (allowItemCountDecrease)) {
+            // have to start over with zeta
+            // note: for large item sets, this is very slow. so don't do it!
+
+            // TODO: can also have a negative incremental computation, e.g. if you decrease the number of items, then just
+            // subtract the zeta sequence terms for the items that went away. This would be faster than recomputing from
+            // scratch when the number of items decreases
+
+            System.err.println(
+                    "WARNING: Recomputing Zipfian distribution. This is slow and should be avoided. (itemCount="
+                            + itemCount + " countForZeta=" + countForZeta + ")");
+
+            zeta = zeta(itemCount, theta);
+            eta = (1 - Math.pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zeta);
+        }
     }
 
     /**
