@@ -60,7 +60,7 @@ class FailureMonitor {
         return thread.hasCriticalFailure(nonCriticalFailures);
     }
 
-    private static class FailureThread extends Thread {
+    private static final class FailureThread extends Thread {
 
         private static final Logger LOGGER = Logger.getLogger(FailureMonitor.class);
 

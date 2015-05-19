@@ -51,7 +51,7 @@ public final class CommandFuture<E> implements Future<E> {
     @Override
     public E get() throws InterruptedException, ExecutionException {
         synchronized (this) {
-            while (result == NO_RESULT) {
+            while (NO_RESULT.equals(result)) {
                 wait();
             }
 
@@ -70,13 +70,13 @@ public final class CommandFuture<E> implements Future<E> {
 
         long remainingTimeoutNanos = timeUnit.toNanos(timeout);
         synchronized (this) {
-            while (result == NO_RESULT && remainingTimeoutNanos > 0) {
+            while (NO_RESULT.equals(result) && remainingTimeoutNanos > 0) {
                 long started = System.nanoTime();
                 wait(TimeUnit.NANOSECONDS.toMillis(remainingTimeoutNanos));
                 remainingTimeoutNanos -= System.nanoTime() - started;
             }
 
-            if (result == NO_RESULT) {
+            if (NO_RESULT.equals(result)) {
                 throw new TimeoutException(format(
                         "Timeout while executing: %s total timeout: %d ms", command, timeUnit.toMillis(timeout)));
             }
