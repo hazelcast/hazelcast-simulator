@@ -46,7 +46,8 @@ public class IntByteMapTest {
     public String basename = IntByteMapTest.class.getSimpleName();
     public int keyCount = 1000;
     public int valueCount = 1000;
-    public int valueSize = 16;
+    public int minSize = 16;
+    public int maxSize = 2000;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public double putProb = 0.3;
 
@@ -58,6 +59,7 @@ public class IntByteMapTest {
 
     private IMap<Integer, Object> map;
     private int[] keys;
+    private byte[][] values;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
@@ -77,11 +79,17 @@ public class IntByteMapTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        MapStreamer<Integer, Object> streamer = MapStreamerFactory.getInstance(map);
         Random random = new Random();
+        values = new byte[valueCount][];
+        for (int k = 0; k < values.length; k++) {
+            int delta = maxSize - minSize;
+            int length = delta == 0 ? minSize : minSize + random.nextInt(maxSize - minSize);
+            values[k] = generateByteArray(random, length);
+        }
+
+        MapStreamer<Integer, Object> streamer = MapStreamerFactory.getInstance(map);
         for (int key : keys) {
-            Object value = generateByteArray(random, valueSize);
-            streamer.pushEntry(key, value);
+            streamer.pushEntry(key, values[random.nextInt(values.length)]);
         }
         streamer.await();
     }
@@ -103,7 +111,7 @@ public class IntByteMapTest {
 
             switch (operation) {
                 case PUT:
-                    Object value = generateByteArray(getRandom(), valueSize);
+                    byte[] value = values[getRandom().nextInt(values.length)];
                     putLatency.started();
                     map.put(key, value);
                     putLatency.done();
