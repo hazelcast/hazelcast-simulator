@@ -67,6 +67,10 @@ public class IntByteMapTest {
         map = instance.getMap(basename);
         keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, instance);
 
+        if (minSize > maxSize) {
+            throw new IllegalStateException("minSize can't be larger than maxSize");
+        }
+
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProb)
                 .addDefaultOperation(Operation.GET);
