@@ -83,7 +83,7 @@ public class IntByteMapTest {
         values = new byte[valueCount][];
         for (int k = 0; k < values.length; k++) {
             int delta = maxSize - minSize;
-            int length = delta == 0 ? minSize : minSize + random.nextInt(maxSize - minSize);
+            int length = delta == 0 ? minSize : minSize + random.nextInt(delta);
             values[k] = generateByteArray(random, length);
         }
 
