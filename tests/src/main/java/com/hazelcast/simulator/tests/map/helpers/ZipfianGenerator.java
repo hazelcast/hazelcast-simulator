@@ -66,7 +66,7 @@ public class ZipfianGenerator extends IntegerGenerator {
     /**
      * The number of items used to compute zeta the last time.
      */
-    long countForZeta;
+    volatile long countForZeta;
 
     /**
      * Flag to prevent problems. If you increase the number of items the zipfian generator is allowed to choose from, this code
@@ -230,27 +230,19 @@ public class ZipfianGenerator extends IntegerGenerator {
         // from "Quickly Generating Billion-Record Synthetic Databases", Jim Gray et al, SIGMOD 1994
 
         if (itemCount != countForZeta) {
-            // have to recompute zeta and eta, since they depend on itemCount
-            recomputeValues(itemCount);
+            synchronized (this) {
+                if (itemCount != countForZeta) {
+                    // have to recompute zeta and eta, since they depend on itemCount
+                    recomputeZetaAndEta(itemCount);
+                    return computeNextLong(itemCount);
+                }
+            }
         }
 
-        double u = random().nextDouble();
-        double uz = u * zeta;
-
-        if (uz < 1.0) {
-            return 0;
-        }
-
-        if (uz < 1.0 + Math.pow(0.5, theta)) {
-            return 1;
-        }
-
-        long ret = base + (long) ((itemCount) * Math.pow(eta * u - eta + 1, alpha));
-        setLastInt((int) ret);
-        return ret;
+        return computeNextLong(itemCount);
     }
 
-    private synchronized void recomputeValues(long itemCount) {
+    private void recomputeZetaAndEta(long itemCount) {
         if (itemCount > countForZeta) {
             //System.err.println(
             //        "WARNING: Incrementally recomputing Zipfian distribution. (itemCount =" + itemCount
@@ -274,6 +266,24 @@ public class ZipfianGenerator extends IntegerGenerator {
             zeta = zeta(itemCount, theta);
             eta = (1 - Math.pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zeta);
         }
+    }
+
+    private long computeNextLong(long itemCount) {
+        double u = random().nextDouble();
+        double uz = u * zeta;
+
+        if (uz < 1.0) {
+            return 0;
+        }
+
+        if (uz < 1.0 + Math.pow(0.5, theta)) {
+            return 1;
+        }
+
+        long ret = base + (long) ((itemCount) * Math.pow(eta * u - eta + 1, alpha));
+        setLastInt((int) ret);
+        return ret;
+
     }
 
     /**
