@@ -25,6 +25,8 @@ import com.hazelcast.map.impl.QueryResultSizeLimiter;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
+import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
@@ -38,11 +40,11 @@ import static org.junit.Assert.fail;
 
 abstract class AbstractMapTest {
 
-    private static final ILogger LOGGER = Logger.getLogger(AbstractMapTest.class);
+    protected static final ILogger LOGGER = Logger.getLogger(AbstractMapTest.class);
 
     HazelcastInstance hazelcastInstance;
     GroupProperties groupProperties;
-    IMap<Object, Object> map;
+    IMap<Object, Integer> map;
     IAtomicLong operationCounter;
     IAtomicLong exceptionCounter;
     String basename;
@@ -55,7 +57,7 @@ abstract class AbstractMapTest {
     }
 
     void failIfFeatureDisabled() {
-        if (groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger() <= 0) {
+        if (groupProperties != null && groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger() <= 0) {
             fail(basename + ": QueryResultSizeLimiter is disabled");
         }
     }
@@ -63,7 +65,7 @@ abstract class AbstractMapTest {
     void baseSetup(TestContext testContext, String basename) {
         this.hazelcastInstance = testContext.getTargetInstance();
 
-        this.groupProperties = getNode(hazelcastInstance).getGroupProperties();
+        this.groupProperties = isMemberNode(hazelcastInstance) ? getNode(hazelcastInstance).getGroupProperties() : null;
         this.map = hazelcastInstance.getMap(basename);
         this.operationCounter = hazelcastInstance.getAtomicLong(basename + "Ops");
         this.exceptionCounter = hazelcastInstance.getAtomicLong(basename + "Exceptions");
@@ -75,10 +77,13 @@ abstract class AbstractMapTest {
             minResultSizeLimit = QueryResultSizeLimiter.MINIMUM_MAX_RESULT_LIMIT;
             resultLimitFactor = QueryResultSizeLimiter.MAX_RESULT_LIMIT_FACTOR;
 
-            LOGGER.info(format("%s: QueryResultSizeLimiter is configured with limit %d and pre-check partition limit %d",
-                    basename,
-                    groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger(),
-                    groupProperties.QUERY_MAX_LOCAL_PARTITION_LIMIT_FOR_PRE_CHECK.getInteger()));
+            if (groupProperties != null) {
+                LOGGER.info(format(
+                        "%s: QueryResultSizeLimiter is configured with result size limit %d and pre-check partition limit %d",
+                        basename,
+                        groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger(),
+                        groupProperties.QUERY_MAX_LOCAL_PARTITION_LIMIT_FOR_PRE_CHECK.getInteger()));
+            }
         } catch (Throwable e) {
             LOGGER.info(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
         }
@@ -98,29 +103,20 @@ abstract class AbstractMapTest {
             return;
         }
 
+        int i = 0;
+        MapStreamer<Object, Integer> streamer = MapStreamerFactory.getInstance(map);
         if ("String".equals(keyType)) {
-            baseWarmupStringKey();
+            for (String key : generateStringKeys(localKeyCount, 10, KeyLocality.LOCAL, hazelcastInstance)) {
+                streamer.pushEntry(key, i++);
+            }
         } else if ("Integer".equals(keyType)) {
-            baseWarmupIntKey();
+            for (int key : generateIntKeys(localKeyCount, Integer.MAX_VALUE, KeyLocality.LOCAL, hazelcastInstance)) {
+                streamer.pushEntry(key, i++);
+            }
         } else {
-            throw new IllegalArgumentException("Unknown key type " + keyType);
+            throw new IllegalArgumentException("Unknown key type: " + keyType);
         }
-    }
-
-    void baseWarmupStringKey() {
-        String[] keys = generateStringKeys(localKeyCount, 10, KeyLocality.LOCAL, hazelcastInstance);
-        int i = 0;
-        for (String key : keys) {
-            map.put(key, i++);
-        }
-    }
-
-    void baseWarmupIntKey() {
-        int[] keys = generateIntKeys(localKeyCount, Integer.MAX_VALUE, KeyLocality.LOCAL, hazelcastInstance);
-        int i = 0;
-        for (int key : keys) {
-            map.put(key, i++);
-        }
+        streamer.await();
     }
 
     IWorker baseRunWithWorker(String operationType) {
