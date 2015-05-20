@@ -47,7 +47,7 @@ import static org.junit.Assert.fail;
 public class MapLatencyTest extends AbstractMapTest {
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapLatencyTest.class.getSimpleName();
     public String keyType = "String";
     public String operationType = "values";
     public int keyCount = -1;

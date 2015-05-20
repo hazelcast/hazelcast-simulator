@@ -21,6 +21,8 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
+import com.hazelcast.instance.BuildInfo;
+import com.hazelcast.instance.BuildInfoProvider;
 import com.hazelcast.instance.HazelcastInstanceImpl;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
@@ -36,6 +38,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
+import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
+import static java.lang.String.format;
+import static org.junit.Assert.fail;
 
 public final class HazelcastTestUtils {
 
@@ -198,5 +203,12 @@ public final class HazelcastTestUtils {
 
     public static boolean isClient(HazelcastInstance instance) {
         return !isMemberNode(instance);
+    }
+
+    public static void failOnVersionMismatch(String minVersion, String message) {
+        BuildInfo buildInfo = BuildInfoProvider.getBuildInfo();
+        if (!isMinVersion(buildInfo.getVersion(), minVersion)) {
+            fail(format(message, minVersion));
+        }
     }
 }

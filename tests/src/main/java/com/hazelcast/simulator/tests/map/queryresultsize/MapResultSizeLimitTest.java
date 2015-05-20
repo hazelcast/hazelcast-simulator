@@ -44,7 +44,7 @@ import static org.junit.Assert.fail;
 public class MapResultSizeLimitTest extends AbstractMapTest {
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapResultSizeLimitTest.class.getSimpleName();
     public String keyType = "String";
     public String operationType = "values";
 
@@ -52,7 +52,8 @@ public class MapResultSizeLimitTest extends AbstractMapTest {
     public void setUp(TestContext testContext) throws Exception {
         baseSetup(testContext, basename);
 
-        failOnVersionMismatch(basename);
+        failOnVersionMismatch();
+        failIfFeatureDisabled();
     }
 
     @Override

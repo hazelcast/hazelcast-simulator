@@ -18,67 +18,74 @@ package com.hazelcast.simulator.tests.map.queryresultsize;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
+import com.hazelcast.instance.GroupProperties;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.map.impl.QueryResultSizeLimiter;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.utils.EmptyStatement;
-import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
+import static com.hazelcast.util.ExceptionUtil.rethrow;
 import static java.lang.String.format;
 import static org.junit.Assert.fail;
 
 abstract class AbstractMapTest {
 
-    private static final int DEFAULT_RESULT_SIZE_LIMIT = 100000;
-    private static final float DEFAULT_RESULT_LIMIT_FACTOR = 1.15f;
-
     private static final ILogger LOGGER = Logger.getLogger(AbstractMapTest.class);
 
     HazelcastInstance hazelcastInstance;
+    GroupProperties groupProperties;
     IMap<Object, Object> map;
     IAtomicLong operationCounter;
     IAtomicLong exceptionCounter;
+    String basename;
 
     long globalKeyCount;
     int localKeyCount;
 
-    private Class classType;
+    void failOnVersionMismatch() {
+        HazelcastTestUtils.failOnVersionMismatch("3.5", basename + ": This tests needs Hazelcast %s or newer");
+    }
 
-    void failOnVersionMismatch(String basename) {
-        if (classType == null) {
-            fail(basename + ": This test needs Hazelcast 3.5 or newer");
+    void failIfFeatureDisabled() {
+        if (groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger() <= 0) {
+            fail(basename + ": QueryResultSizeLimiter is disabled");
         }
     }
 
     void baseSetup(TestContext testContext, String basename) {
-        hazelcastInstance = testContext.getTargetInstance();
+        this.hazelcastInstance = testContext.getTargetInstance();
 
-        map = hazelcastInstance.getMap(basename);
-        operationCounter = hazelcastInstance.getAtomicLong(basename + "Ops");
-        exceptionCounter = hazelcastInstance.getAtomicLong(basename + "Exceptions");
+        this.groupProperties = getNode(hazelcastInstance).getGroupProperties();
+        this.map = hazelcastInstance.getMap(basename);
+        this.operationCounter = hazelcastInstance.getAtomicLong(basename + "Ops");
+        this.exceptionCounter = hazelcastInstance.getAtomicLong(basename + "Exceptions");
+        this.basename = basename;
 
-        Integer minResultSizeLimit = DEFAULT_RESULT_SIZE_LIMIT;
-        Float resultLimitFactor = DEFAULT_RESULT_LIMIT_FACTOR;
+        Integer minResultSizeLimit = 100000;
+        Float resultLimitFactor = 1.15f;
         try {
-            classType = Class.forName("com.hazelcast.map.impl.MapQueryResultSizeLimitHelper");
+            minResultSizeLimit = QueryResultSizeLimiter.MINIMUM_MAX_RESULT_LIMIT;
+            resultLimitFactor = QueryResultSizeLimiter.MAX_RESULT_LIMIT_FACTOR;
 
-            minResultSizeLimit = (Integer) classType.getDeclaredField("MINIMUM_MAX_RESULT_LIMIT").get(null);
-            resultLimitFactor = (Float) classType.getDeclaredField("MAX_RESULT_LIMIT_FACTOR").get(null);
-        } catch (ClassNotFoundException ignored) {
-            EmptyStatement.ignore(ignored);
-        } catch (Exception e) {
-            ExceptionReporter.report(basename, e);
+            LOGGER.info(format("%s: QueryResultSizeLimiter is configured with limit %d and pre-check partition limit %d",
+                    basename,
+                    groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger(),
+                    groupProperties.QUERY_MAX_LOCAL_PARTITION_LIMIT_FOR_PRE_CHECK.getInteger()));
+        } catch (Throwable e) {
+            LOGGER.info(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
         }
 
         int clusterSize = hazelcastInstance.getCluster().getMembers().size();
-        globalKeyCount = getGlobalKeyCount(minResultSizeLimit, resultLimitFactor);
-        localKeyCount = (int) Math.ceil(globalKeyCount / (double) clusterSize);
+        this.globalKeyCount = getGlobalKeyCount(minResultSizeLimit, resultLimitFactor);
+        this.localKeyCount = (int) Math.ceil(globalKeyCount / (double) clusterSize);
 
         LOGGER.info(format("%s: Filling map with %d items (%d items per member, %d members in cluster)",
                 basename, globalKeyCount, localKeyCount, clusterSize));
@@ -134,6 +141,22 @@ abstract class AbstractMapTest {
         protected long localExceptionCounter;
 
         @Override
+        protected void timeStep() {
+            localOperationCounter++;
+            try {
+                mapOperation();
+            } catch (Exception e) {
+                if ("QueryResultSizeExceededException".equals(e.getClass().getSimpleName())) {
+                    localExceptionCounter++;
+                } else {
+                    throw rethrow(e);
+                }
+            }
+        }
+
+        protected abstract void mapOperation();
+
+        @Override
         protected void afterRun() {
             operationCounter.addAndGet(localOperationCounter);
             exceptionCounter.addAndGet(localExceptionCounter);
@@ -143,39 +166,24 @@ abstract class AbstractMapTest {
     class ValuesWorker extends BaseWorker {
 
         @Override
-        protected void timeStep() {
-            localOperationCounter++;
-            try {
-                map.values();
-            } catch (Exception e) {
-                localExceptionCounter++;
-            }
+        protected void mapOperation() {
+            map.values();
         }
     }
 
     class KeySetWorker extends BaseWorker {
 
         @Override
-        protected void timeStep() {
-            localOperationCounter++;
-            try {
-                map.keySet();
-            } catch (Exception e) {
-                localExceptionCounter++;
-            }
+        protected void mapOperation() {
+            map.keySet();
         }
     }
 
     class EntrySetWorker extends BaseWorker {
 
         @Override
-        protected void timeStep() {
-            localOperationCounter++;
-            try {
-                map.entrySet();
-            } catch (Exception e) {
-                localExceptionCounter++;
-            }
+        protected void mapOperation() {
+            map.entrySet();
         }
     }
 }
