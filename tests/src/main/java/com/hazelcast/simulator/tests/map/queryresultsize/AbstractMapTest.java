@@ -32,6 +32,7 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.logPartitionStatistics;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.util.ExceptionUtil.rethrow;
@@ -103,20 +104,22 @@ abstract class AbstractMapTest {
             return;
         }
 
-        int i = 0;
+        int value = 0;
         MapStreamer<Object, Integer> streamer = MapStreamerFactory.getInstance(map);
         if ("String".equals(keyType)) {
             for (String key : generateStringKeys(localKeyCount, 10, KeyLocality.LOCAL, hazelcastInstance)) {
-                streamer.pushEntry(key, i++);
+                streamer.pushEntry(key, value++);
             }
         } else if ("Integer".equals(keyType)) {
             for (int key : generateIntKeys(localKeyCount, Integer.MAX_VALUE, KeyLocality.LOCAL, hazelcastInstance)) {
-                streamer.pushEntry(key, i++);
+                streamer.pushEntry(key, value++);
             }
         } else {
             throw new IllegalArgumentException("Unknown key type: " + keyType);
         }
         streamer.await();
+
+        logPartitionStatistics(LOGGER, basename, map, true);
     }
 
     IWorker baseRunWithWorker(String operationType) {

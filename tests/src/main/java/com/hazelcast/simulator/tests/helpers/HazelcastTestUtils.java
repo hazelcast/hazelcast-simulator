@@ -18,6 +18,7 @@ package com.hazelcast.simulator.tests.helpers;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.IExecutorService;
+import com.hazelcast.core.IMap;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
@@ -28,9 +29,13 @@ import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.map.impl.MapService;
+import com.hazelcast.map.impl.MapServiceContext;
+import com.hazelcast.map.impl.proxy.MapProxyImpl;
 import com.hazelcast.spi.OperationService;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -122,6 +127,27 @@ public final class HazelcastTestUtils {
         }
 
         return result;
+    }
+
+    public static void logPartitionStatistics(ILogger log, String basename, IMap<Object, Integer> map, boolean printSizes) {
+        MapProxyImpl mapProxy = (MapProxyImpl) map;
+        MapService mapService = (MapService) mapProxy.getService();
+        MapServiceContext mapServiceContext = mapService.getMapServiceContext();
+        Collection<Integer> localPartitions = mapServiceContext.getOwnedPartitions();
+        int localSize = 0;
+        StringBuilder partitionIDs = new StringBuilder();
+        StringBuilder partitionSizes = new StringBuilder();
+        String separator = "";
+        for (int partitionId : localPartitions) {
+            int partitionSize = mapServiceContext.getRecordStore(partitionId, map.getName()).size();
+            localSize += partitionSize;
+            partitionIDs.append(separator).append(partitionId);
+            partitionSizes.append(separator).append(partitionSize);
+            separator = ", ";
+        }
+        log.info(format("%s: Local partitions (count %d) (size %d) (avg %.2f) (IDs %s)%s",
+                basename, localPartitions.size(), localSize, localSize / (float) localPartitions.size(), partitionIDs.toString(),
+                printSizes ? format(" (sizes %s)", partitionSizes.toString()) : ""));
     }
 
     public static final class GetOperationCount implements Callable<Long>, HazelcastInstanceAware, Serializable {
