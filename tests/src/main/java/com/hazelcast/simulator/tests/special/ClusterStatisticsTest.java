@@ -24,12 +24,14 @@ public class ClusterStatisticsTest {
     public String basename = ClusterStatisticsTest.class.getSimpleName();
     public int isClusterSafeRetries = 10;
 
-    HazelcastInstance hazelcastInstance;
-    IMap<Object, Integer> map;
+    private HazelcastInstance hazelcastInstance;
+    private PartitionService partitionService;
+    private IMap<Object, Integer> map;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         this.hazelcastInstance = testContext.getTargetInstance();
+        this.partitionService = hazelcastInstance.getPartitionService();
         this.map = hazelcastInstance.getMap(basename);
     }
 
@@ -38,8 +40,6 @@ public class ClusterStatisticsTest {
         if (!isMemberNode(hazelcastInstance)) {
             return;
         }
-
-        PartitionService partitionService = hazelcastInstance.getPartitionService();
 
         int retry = 0;
         while (!partitionService.isClusterSafe() && retry++ < isClusterSafeRetries) {
