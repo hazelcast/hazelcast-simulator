@@ -12,6 +12,7 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import com.hazelcast.simulator.worker.tasks.NoOperationWorker;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.logPartitionStatistics;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
@@ -34,6 +35,10 @@ public class ClusterStatisticsTest {
 
     @Warmup
     public void warmup() {
+        if (!isMemberNode(hazelcastInstance)) {
+            return;
+        }
+
         PartitionService partitionService = hazelcastInstance.getPartitionService();
 
         int retry = 0;
