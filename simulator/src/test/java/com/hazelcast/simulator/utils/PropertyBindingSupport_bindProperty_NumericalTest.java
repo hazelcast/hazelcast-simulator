@@ -17,6 +17,12 @@ public class PropertyBindingSupport_bindProperty_NumericalTest {
     }
 
     @Test
+    public void bindProperty_byte_whitespace() {
+        bindProperty(bindPropertyTestClass, "byteField", " 10 ");
+        assertEquals(10, bindPropertyTestClass.byteField);
+    }
+
+    @Test
     public void bindProperty_Byte() {
         bindProperty(bindPropertyTestClass, "byteObjectField", "null");
         assertNull(bindPropertyTestClass.byteObjectField);
@@ -37,6 +43,12 @@ public class PropertyBindingSupport_bindProperty_NumericalTest {
     }
 
     @Test
+    public void bindProperty_short_whitespace() {
+        bindProperty(bindPropertyTestClass, "shortField", " 10");
+        assertEquals(10, bindPropertyTestClass.shortField);
+    }
+
+    @Test
     public void bindProperty_Short() {
         bindProperty(bindPropertyTestClass, "shortObjectField", "null");
         assertNull(bindPropertyTestClass.shortObjectField);
@@ -53,6 +65,12 @@ public class PropertyBindingSupport_bindProperty_NumericalTest {
     @Test
     public void bindProperty_int() {
         bindProperty(bindPropertyTestClass, "intField", "10");
+        assertEquals(10, bindPropertyTestClass.intField);
+    }
+
+    @Test
+    public void bindProperty_int_whitespace() {
+        bindProperty(bindPropertyTestClass, "intField", "10\n");
         assertEquals(10, bindPropertyTestClass.intField);
     }
 

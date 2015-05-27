@@ -94,6 +94,8 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindProperty(Object object, String property, String value, Set<String> optionalProperties) {
+        value = value.trim();
+
         String[] path = property.split("\\.");
 
         object = findPropertyObjectInPath(object, property, path);
