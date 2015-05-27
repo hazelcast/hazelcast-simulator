@@ -63,6 +63,7 @@
         <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
         <maven.source.plugin.version>2.4</maven.source.plugin.version>
         <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
+        <maven.jacoco.plugin.version>0.7.4.201502262128</maven.jacoco.plugin.version>
         <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
         <maven.checkstyle.plugin.version>2.15</maven.checkstyle.plugin.version>
         <maven.findbugs.plugin.version>3.0.1</maven.findbugs.plugin.version>
@@ -199,6 +200,11 @@
                 <version>${maven.javadoc.plugin.version}</version>
                 <configuration>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${maven.jacoco.plugin.version}</version>
             </plugin>
         </plugins>
     </build>
