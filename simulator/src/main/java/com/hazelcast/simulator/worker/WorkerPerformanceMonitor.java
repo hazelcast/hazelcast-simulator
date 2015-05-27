@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.fillString;
 import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
@@ -22,33 +23,29 @@ import static java.lang.String.format;
  */
 class WorkerPerformanceMonitor {
 
-    private final WorkerPerformanceMonitorThread workerPerformanceMonitorThread;
+    private final MonitorThread thread;
+    private final AtomicBoolean started = new AtomicBoolean();
 
     WorkerPerformanceMonitor(Collection<TestContainer<TestContext>> testContainers) {
-        workerPerformanceMonitorThread = new WorkerPerformanceMonitorThread(testContainers);
+        thread = new MonitorThread(testContainers);
     }
 
     boolean start() {
-        if (!workerPerformanceMonitorThread.running) {
-            synchronized (this) {
-                if (!workerPerformanceMonitorThread.running) {
-                    workerPerformanceMonitorThread.running = true;
-                    workerPerformanceMonitorThread.start();
-
-                    return true;
-                }
-            }
+        if (!started.compareAndSet(false, true)) {
+            return false;
         }
-        return false;
+
+        thread.start();
+        return true;
     }
 
     void stop() {
-        workerPerformanceMonitorThread.running = false;
+        thread.stop = true;
     }
 
-    private static final class WorkerPerformanceMonitorThread extends Thread {
+    private static final class MonitorThread extends Thread {
 
-        private static final Logger LOGGER = Logger.getLogger(WorkerPerformanceMonitorThread.class);
+        private static final Logger LOGGER = Logger.getLogger(MonitorThread.class);
 
         private final File globalPerformanceFile = new File("performance.txt");
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -58,9 +55,9 @@ class WorkerPerformanceMonitor {
         private long globalLastOpsCount;
         private long globalLastTimeMillis = System.currentTimeMillis();
 
-        private volatile boolean running;
+        private volatile boolean stop;
 
-        private WorkerPerformanceMonitorThread(Collection<TestContainer<TestContext>> testContainers) {
+        private MonitorThread(Collection<TestContainer<TestContext>> testContainers) {
             super("WorkerPerformanceMonitorThread");
             setDaemon(true);
 
@@ -71,7 +68,7 @@ class WorkerPerformanceMonitor {
 
         @Override
         public void run() {
-            while (running) {
+            while (!stop) {
                 try {
                     Thread.sleep(5000);
                     writeStatsToFiles();

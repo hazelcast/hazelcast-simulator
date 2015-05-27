@@ -24,11 +24,9 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * This test verifies that {@link IMap#values()}, {@link IMap#keySet()} and {@link IMap#entrySet()} throw an exception if the
@@ -37,26 +35,39 @@ import static org.junit.Assert.fail;
  * To achieve this we fill a map slightly above the trigger limit of the query result size limit, so we are sure it will always
  * trigger the exception. Then we call the map methods and verify that each call created an exception.
  *
- * The test can be configured to use {@link String} or {@link Integer} keys.
+ * The test can be configured to use {@link String} or {@link Integer} keys. You can also override the number of filled items
+ * with the {@link #keyCount} property, e.g. to test for missing exceptions with enabled result size limit and an empty map.
+ *
+ * You have to activate the query result size limit by providing a custom hazelcast.xml with the following setting:
+ * <pre>
+ *   <properties>
+ *     <property name="hazelcast.query.result.size.limit">100000</property>
+ *  </properties>
+ * </pre>
  *
  * @since Hazelcast 3.5
  */
 public class MapResultSizeLimitTest extends AbstractMapTest {
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapResultSizeLimitTest.class.getSimpleName();
     public String keyType = "String";
     public String operationType = "values";
+    public int keyCount = -1;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         baseSetup(testContext, basename);
 
-        failOnVersionMismatch(basename);
+        failOnVersionMismatch();
+        failIfFeatureDisabled();
     }
 
     @Override
     long getGlobalKeyCount(Integer minResultSizeLimit, Float resultLimitFactor) {
+        if (keyCount > -1) {
+            return keyCount;
+        }
         return Math.round(minResultSizeLimit * resultLimitFactor * 1.1);
     }
 
@@ -67,16 +78,13 @@ public class MapResultSizeLimitTest extends AbstractMapTest {
 
     @Verify(global = true)
     public void globalVerify() {
-        if (!isMemberNode(hazelcastInstance)) {
-            fail("We need a member worker to execute the global verify!");
-            return;
-        }
-
         int mapSize = map.size();
-        assertTrue(format("Expected mapSize >= globalKeyCount (%d >= %d)", mapSize, globalKeyCount), mapSize >= globalKeyCount);
-
         long ops = operationCounter.get();
         long exceptions = exceptionCounter.get();
+
+        LOGGER.info(basename + ": Map size: " + mapSize + ", Ops: " + ops + ", Exceptions: " + exceptions);
+
+        assertTrue(format("Expected mapSize >= globalKeyCount (%d >= %d)", mapSize, globalKeyCount), mapSize >= globalKeyCount);
         assertEquals("Expected as many exceptions as operations", ops, exceptions);
     }
 

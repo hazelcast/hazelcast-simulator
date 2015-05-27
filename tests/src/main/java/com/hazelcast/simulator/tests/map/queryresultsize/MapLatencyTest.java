@@ -24,11 +24,9 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * This test creates latency probe results for {@link IMap#values()}, {@link IMap#keySet()} and {@link IMap#entrySet()}. It is
@@ -38,7 +36,7 @@ import static org.junit.Assert.fail;
  * trigger the exception. Then we call the map methods and measure their latency.
  *
  * The test can be configured to use {@link String} or {@link Integer} keys. You can also override the number of filled items
- * with the {@link #keyCount} property.
+ * with the {@link #keyCount} property, e.g. to test the latency impact of this feature with an empty map.
  *
  * This test works fine with all Hazelcast versions, since it does not use any new functionality. Just be sure the default
  * values in {@link AbstractMapTest} match with the default values of the query result size limit in Hazelcast 3.5. Otherwise
@@ -47,7 +45,7 @@ import static org.junit.Assert.fail;
 public class MapLatencyTest extends AbstractMapTest {
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapLatencyTest.class.getSimpleName();
     public String keyType = "String";
     public String operationType = "values";
     public int keyCount = -1;
@@ -73,17 +71,14 @@ public class MapLatencyTest extends AbstractMapTest {
 
     @Verify(global = true)
     public void globalVerify() {
-        if (!isMemberNode(hazelcastInstance)) {
-            fail("We need a member worker to execute the global verify!");
-            return;
-        }
-
         int mapSize = map.size();
-        assertTrue(format("Expected mapSize >= globalKeyCount (%d >= %d)", mapSize, globalKeyCount), mapSize >= globalKeyCount);
-
         long ops = operationCounter.get();
-        assertTrue(format("Expected ops > 0 (%d > 0)", ops), ops > 0);
+        long exceptions = exceptionCounter.get();
 
+        LOGGER.info(basename + ": Map size: " + mapSize + ", Ops: " + ops + ", Exceptions: " + exceptions);
+
+        assertTrue(format("Expected mapSize >= globalKeyCount (%d >= %d)", mapSize, globalKeyCount), mapSize >= globalKeyCount);
+        assertTrue(format("Expected ops > 0 (%d > 0)", ops), ops > 0);
         assertEquals("Expected 0 exceptions", 0, exceptionCounter.get());
     }
 

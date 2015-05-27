@@ -362,6 +362,9 @@ public class TestContainer<T extends TestContext> {
         }
 
         LOGGER.info(format("Spawning %d worker threads for test %s with %s probe", threadCount, testId, workerProbeType));
+        if (threadCount <= 0) {
+            return;
+        }
 
         // create instance to get class of worker
         IWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
