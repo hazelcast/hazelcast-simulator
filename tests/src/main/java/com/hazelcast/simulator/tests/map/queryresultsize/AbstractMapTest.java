@@ -37,6 +37,8 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.util.ExceptionUtil.rethrow;
 import static java.lang.String.format;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 abstract class AbstractMapTest {
@@ -58,7 +60,15 @@ abstract class AbstractMapTest {
     }
 
     void failIfFeatureDisabled() {
-        if (groupProperties != null && groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger() <= 0) {
+        boolean featureDisabled = false;
+        try {
+            if (groupProperties != null && groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger() <= 0) {
+                featureDisabled = true;
+            }
+        } catch (Throwable e) {
+            fail(basename + ": This tests needs Hazelcast 3.5 or newer");
+        }
+        if (featureDisabled) {
             fail(basename + ": QueryResultSizeLimiter is disabled");
         }
     }
@@ -120,6 +130,22 @@ abstract class AbstractMapTest {
         streamer.await();
 
         logPartitionStatistics(LOGGER, basename, map, true);
+    }
+
+    protected void baseVerify(boolean expectedExceptions) {
+        int mapSize = map.size();
+        long ops = operationCounter.get();
+        long exceptions = exceptionCounter.get();
+
+        LOGGER.info(basename + ": Map size: " + mapSize + ", Ops: " + ops + ", Exceptions: " + exceptions);
+
+        assertTrue(format("Expected mapSize >= globalKeyCount (%d >= %d)", mapSize, globalKeyCount), mapSize >= globalKeyCount);
+        assertTrue(format("Expected ops > 0 (%d > 0)", ops), ops > 0);
+        if (expectedExceptions) {
+            assertEquals("Expected as many exceptions as operations", ops, exceptions);
+        } else {
+            assertEquals("Expected 0 exceptions", 0, exceptions);
+        }
     }
 
     IWorker baseRunWithWorker(String operationType) {

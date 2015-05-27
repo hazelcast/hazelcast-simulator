@@ -24,10 +24,6 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
  * This test creates latency probe results for {@link IMap#values()}, {@link IMap#keySet()} and {@link IMap#entrySet()}. It is
  * used to ensure that the query result size limit has no bad impact on the latency of those method calls.
@@ -57,11 +53,10 @@ public class MapLatencyTest extends AbstractMapTest {
 
     @Override
     long getGlobalKeyCount(Integer minResultSizeLimit, Float resultLimitFactor) {
-        long localKeyCount = Math.round(minResultSizeLimit * resultLimitFactor * 0.9);
         if (keyCount > -1) {
-            localKeyCount = Math.min(keyCount, localKeyCount);
+            return keyCount;
         }
-        return localKeyCount;
+        return Math.round(minResultSizeLimit * resultLimitFactor * 0.9);
     }
 
     @Warmup
@@ -71,15 +66,7 @@ public class MapLatencyTest extends AbstractMapTest {
 
     @Verify(global = true)
     public void globalVerify() {
-        int mapSize = map.size();
-        long ops = operationCounter.get();
-        long exceptions = exceptionCounter.get();
-
-        LOGGER.info(basename + ": Map size: " + mapSize + ", Ops: " + ops + ", Exceptions: " + exceptions);
-
-        assertTrue(format("Expected mapSize >= globalKeyCount (%d >= %d)", mapSize, globalKeyCount), mapSize >= globalKeyCount);
-        assertTrue(format("Expected ops > 0 (%d > 0)", ops), ops > 0);
-        assertEquals("Expected 0 exceptions", 0, exceptionCounter.get());
+        baseVerify(false);
     }
 
     @RunWithWorker

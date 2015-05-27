@@ -24,10 +24,6 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
  * This test verifies that {@link IMap#values()}, {@link IMap#keySet()} and {@link IMap#entrySet()} throw an exception if the
  * configured result size limit is exceeded.
@@ -78,14 +74,7 @@ public class MapResultSizeLimitTest extends AbstractMapTest {
 
     @Verify(global = true)
     public void globalVerify() {
-        int mapSize = map.size();
-        long ops = operationCounter.get();
-        long exceptions = exceptionCounter.get();
-
-        LOGGER.info(basename + ": Map size: " + mapSize + ", Ops: " + ops + ", Exceptions: " + exceptions);
-
-        assertTrue(format("Expected mapSize >= globalKeyCount (%d >= %d)", mapSize, globalKeyCount), mapSize >= globalKeyCount);
-        assertEquals("Expected as many exceptions as operations", ops, exceptions);
+        baseVerify(true);
     }
 
     @RunWithWorker
