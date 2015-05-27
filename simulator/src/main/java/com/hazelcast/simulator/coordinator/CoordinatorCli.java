@@ -227,11 +227,11 @@ final class CoordinatorCli {
     private File getTestSuiteFile() {
         String testsuiteFileName = null;
 
-        List<String> testsuiteFiles = options.nonOptionArguments();
+        List testsuiteFiles = options.nonOptionArguments();
         if (testsuiteFiles.isEmpty()) {
             testsuiteFileName = new File("test.properties").getAbsolutePath();
         } else if (testsuiteFiles.size() == 1) {
-            testsuiteFileName = testsuiteFiles.get(0);
+            testsuiteFileName = (String) testsuiteFiles.get(0);
         } else if (testsuiteFiles.size() > 1) {
             throw new CommandLineExitException(format("Too many testsuite files specified: %s", testsuiteFiles));
         }
