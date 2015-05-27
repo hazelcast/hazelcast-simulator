@@ -19,9 +19,6 @@
         </join>
     </network>
 
-    <partition-group enabled="true" group-type="HOST_AWARE">
-    </partition-group>
-
     <!--MANAGEMENT_CENTER_CONFIG-->
 
     <map name="MapStore*">
