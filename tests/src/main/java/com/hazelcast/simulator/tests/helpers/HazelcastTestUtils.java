@@ -233,7 +233,10 @@ public final class HazelcastTestUtils {
 
     public static void failOnVersionMismatch(String minVersion, String message) {
         BuildInfo buildInfo = BuildInfoProvider.getBuildInfo();
-        if (!isMinVersion(buildInfo.getVersion(), minVersion)) {
+        String actualVersion = buildInfo.getVersion();
+        LOGGER.info("Compare version " + actualVersion + " with minimum version " + minVersion + ": "
+                + isMinVersion(minVersion, actualVersion));
+        if (!isMinVersion(minVersion, actualVersion)) {
             fail(format(message, minVersion));
         }
     }

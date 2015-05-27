@@ -5,8 +5,8 @@ public final class VersionUtils {
     private VersionUtils() {
     }
 
-    public static boolean isMinVersion(String actualVersion, String minVersion) {
-        return (versionCompare(actualVersion, minVersion) <= 0);
+    public static boolean isMinVersion(String minVersion, String actualVersion) {
+        return (versionCompare(minVersion, actualVersion) <= 0);
     }
 
     /**
