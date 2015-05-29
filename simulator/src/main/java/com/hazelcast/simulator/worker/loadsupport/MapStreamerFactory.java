@@ -16,7 +16,7 @@ public final class MapStreamerFactory {
         boolean createAsync = false;
         try {
             BuildInfo buildInfo = BuildInfoProvider.getBuildInfo();
-            if (isMinVersion(buildInfo.getVersion(), "3.5")) {
+            if (isMinVersion("3.5", buildInfo.getVersion())) {
                 createAsync = true;
             }
         } finally {
