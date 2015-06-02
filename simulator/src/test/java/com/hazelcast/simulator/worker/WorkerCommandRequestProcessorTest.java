@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.exceptions.verification.WantedButNotInvoked;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -391,8 +393,17 @@ public class WorkerCommandRequestProcessorTest {
     }
 
     private void assertException(Class<?>... exceptionTypes) {
-        verifyStatic(times(exceptionTypes.length));
-        ExceptionReporter.report(testIdCaptor.capture(), exceptionCaptor.capture());
+        boolean invoked;
+        long timeoutNanoTime = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
+        do {
+            try {
+                verifyStatic(times(exceptionTypes.length));
+                ExceptionReporter.report(testIdCaptor.capture(), exceptionCaptor.capture());
+                invoked = true;
+            } catch (WantedButNotInvoked e) {
+                invoked = false;
+            }
+        } while (!invoked && System.nanoTime() < timeoutNanoTime);
         List<String> testIdList = testIdCaptor.getAllValues();
         List<Throwable> throwableList = exceptionCaptor.getAllValues();
 
