@@ -149,12 +149,14 @@ public class MapPredicateTest {
             spendTimeMs += durationMs;
 
             if (lastUpdateMs + SECONDS.toMillis(60) < nowMs) {
-                double avg = (iterationsLastMinute * 1000d) / spendTimeMs;
+                double avg = spendTimeMs/iterationsLastMinute;
+                double perf = (iterationsLastMinute * 1000d) / spendTimeMs;
 
                 LOGGER.info("last minute: iterations=" + iterationsLastMinute
                         + " min=" + minLastMinute + " ms"
                         + " max=" + maxLastMinute + " ms"
-                        + " avg=" + avg + " predicates/second");
+                        + " avg=" + avg + " ms"
+                        + " perf=" + perf + " predicates/second");
 
                 maxLastMinute = Long.MIN_VALUE;
                 minLastMinute = Long.MAX_VALUE;
