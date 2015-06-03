@@ -24,7 +24,6 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.Collection;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -152,9 +151,9 @@ public class MapPredicateTest {
             if (lastUpdateMs + SECONDS.toMillis(60) < nowMs) {
                 double avg = (iterationsLastMinute * 1000d) / spendTimeMs;
 
-                LOGGER.info("last minute: total=" + iterationsLastMinute
-                        + " min=" + minLastMinute
-                        + " max=" + maxLastMinute
+                LOGGER.info("last minute: iterations=" + iterationsLastMinute
+                        + " min=" + minLastMinute + " ms"
+                        + " max=" + maxLastMinute + " ms"
                         + " avg=" + avg + " predicates/second");
 
                 maxLastMinute = Long.MIN_VALUE;
