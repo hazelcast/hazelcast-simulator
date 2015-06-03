@@ -24,8 +24,10 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -70,10 +72,10 @@ public class MapPredicateTest {
         operationCounterList = targetInstance.getList(basename + "OperationCounter");
 
         operationSelectorBuilder.addOperation(Operation.PREDICATE_BUILDER, predicateBuilderProb)
-                                .addOperation(Operation.SQL_STRING, sqlStringProb)
-                                .addOperation(Operation.PAGING_PREDICATE, pagePredicateProb)
-                                .addOperation(Operation.UPDATE_EMPLOYEE, updateEmployeeProb)
-                                .addOperation(Operation.DESTROY_MAP, destroyProb);
+                .addOperation(Operation.SQL_STRING, sqlStringProb)
+                .addOperation(Operation.PAGING_PREDICATE, pagePredicateProb)
+                .addOperation(Operation.UPDATE_EMPLOYEE, updateEmployeeProb)
+                .addOperation(Operation.DESTROY_MAP, destroyProb);
     }
 
     @Warmup(global = true)
@@ -106,6 +108,11 @@ public class MapPredicateTest {
 
     private class Worker extends AbstractWorker<Operation> {
         private final PredicateOperationCounter operationCounter = new PredicateOperationCounter();
+        private long lastUpdateMs = System.currentTimeMillis();
+        private long iterationsLastMinute = 0;
+        private long maxLastMinute = Long.MIN_VALUE;
+        private long minLastMinute = Long.MAX_VALUE;
+        private long spendTimeMs = 0;
 
         public Worker() {
             super(operationSelectorBuilder);
@@ -113,6 +120,8 @@ public class MapPredicateTest {
 
         @Override
         public void timeStep(Operation operation) {
+            long startMs = System.currentTimeMillis();
+
             switch (operation) {
                 case PREDICATE_BUILDER:
                     predicateBuilder();
@@ -131,6 +140,27 @@ public class MapPredicateTest {
                     break;
                 default:
                     throw new UnsupportedOperationException();
+            }
+
+            long nowMs = System.currentTimeMillis();
+            long durationMs = nowMs - startMs;
+            maxLastMinute = Math.max(durationMs, maxLastMinute);
+            minLastMinute = Math.min(durationMs, minLastMinute);
+            iterationsLastMinute++;
+            spendTimeMs += durationMs;
+
+            if (lastUpdateMs + SECONDS.toMillis(60) < nowMs) {
+                double avg = (iterationsLastMinute * 1000d) / spendTimeMs;
+
+                LOGGER.info("last minute: total=" + iterationsLastMinute
+                        + " min=" + minLastMinute
+                        + " max=" + maxLastMinute
+                        + " avg=" + avg + " predicates/second");
+
+                maxLastMinute = Long.MIN_VALUE;
+                minLastMinute = Long.MAX_VALUE;
+                iterationsLastMinute = 0;
+                lastUpdateMs = nowMs;
             }
         }
 
