@@ -115,6 +115,8 @@ public class MapPredicateTest {
 
         public Worker() {
             super(operationSelectorBuilder);
+
+            LOGGER.info("Starting worker:" + this + " for " + MapPredicateTest.class.getName());
         }
 
         @Override
@@ -149,7 +151,7 @@ public class MapPredicateTest {
             spendTimeMs += durationMs;
 
             if (lastUpdateMs + SECONDS.toMillis(60) < nowMs) {
-                double avg = spendTimeMs/iterationsLastMinute;
+                double avg = spendTimeMs / iterationsLastMinute;
                 double perf = (iterationsLastMinute * 1000d) / spendTimeMs;
 
                 LOGGER.info("last minute: iterations=" + iterationsLastMinute
