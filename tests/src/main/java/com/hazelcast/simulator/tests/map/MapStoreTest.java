@@ -41,7 +41,8 @@ public class MapStoreTest {
     public double writeProb = 0.4;
     public double getProb = 0.2;
     public double getAsyncProb = 0.15;
-    public double deleteProb = 0.2;
+    public double deleteProb = 0.1;
+    public double loadAllProb = 0.1;
     public double destroyProb = 0.0;
 
     // check these add up to 1 (writeProb is split up into sub styles)
@@ -125,6 +126,8 @@ public class MapStoreTest {
                             }
                         }
 
+                    } else if ((chance -= loadAllProb) < 0) {
+                        map.loadAll(true);
                     } else if ((chance -= getProb) < 0) {
                         map.get(key);
                         count.getCount.incrementAndGet();
