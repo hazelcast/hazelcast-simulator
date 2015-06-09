@@ -33,8 +33,11 @@ import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.map.impl.proxy.MapProxyImpl;
 import com.hazelcast.spi.OperationService;
+import com.hazelcast.spi.impl.NodeEngineImpl;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -159,8 +162,7 @@ public final class HazelcastTestUtils {
         @Override
         public Long call() throws Exception {
             try {
-                Node node = getNode(hz);
-                OperationService operationService = node.getNodeEngine().getOperationService();
+                OperationService operationService = HazelcastTestUtils.getOperationService(hz);
                 return operationService.getExecutedOperationCount();
             } catch (NoSuchMethodError e) {
                 LOGGER.warning(e);
@@ -186,7 +188,27 @@ public final class HazelcastTestUtils {
     }
 
     public static OperationService getOperationService(HazelcastInstance hz) {
-        return getNode(hz).getNodeEngine().getOperationService();
+        NodeEngineImpl nodeEngine = getNode(hz).getNodeEngine();
+        try {
+            return nodeEngine.getOperationService();
+        } catch (NoSuchMethodError e) {
+            // fallback for a binary incompatible change
+            // https://github.com/jerrinot/hazelcast/commit/c5e4c1f779f49bcbc1e881e613f48b6a034e35ac#diff-b3e262104ca2692463bc0f125cb5fd22R146
+            return getOperationServiceViaReflection(nodeEngine);
+        }
+    }
+
+    private static OperationService getOperationServiceViaReflection(NodeEngineImpl nodeEngine) {
+        try {
+            Method method = NodeEngineImpl.class.getMethod("getOperationService");
+            return (OperationService) method.invoke(nodeEngine);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException(e);
+        } catch (InvocationTargetException e) {
+            throw new IllegalStateException(e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public static Node getNode(HazelcastInstance hz) {

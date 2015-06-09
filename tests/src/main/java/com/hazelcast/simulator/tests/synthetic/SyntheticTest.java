@@ -19,6 +19,7 @@ import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.tasks.IWorker;
@@ -125,7 +126,7 @@ public class SyntheticTest {
             } else {
                 Node node = getNode(targetInstance);
 
-                operationService = node.getNodeEngine().getOperationService();
+                operationService = HazelcastTestUtils.getOperationService(targetInstance);
                 clientInvocationService = null;
                 clientPartitionService = null;
             }

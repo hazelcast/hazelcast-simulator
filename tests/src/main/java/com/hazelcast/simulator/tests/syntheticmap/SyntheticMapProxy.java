@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.tests.syntheticmap;
 
 import com.hazelcast.nio.serialization.Data;
+import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.spi.AbstractDistributedObject;
 import com.hazelcast.spi.NodeEngine;
 import com.hazelcast.spi.OperationService;
@@ -28,7 +29,7 @@ public class SyntheticMapProxy<K, V> extends AbstractDistributedObject<Synthetic
         GetOperation operation = new GetOperation(name, keyData);
         int partitionId = nodeEngine.getPartitionService().getPartitionId(key);
 
-        OperationService operationService = nodeEngine.getOperationService();
+        OperationService operationService = HazelcastTestUtils.getOperationService(nodeEngine.getHazelcastInstance());
         return operationService
                 .<V>invokeOnPartition(SyntheticMapService.SERVICE_NAME, operation, partitionId)
                 .getSafely();
@@ -42,7 +43,7 @@ public class SyntheticMapProxy<K, V> extends AbstractDistributedObject<Synthetic
         PutOperation operation = new PutOperation(name, keyData, valueData);
         int partitionId = nodeEngine.getPartitionService().getPartitionId(key);
 
-        OperationService operationService = nodeEngine.getOperationService();
+        OperationService operationService = HazelcastTestUtils.getOperationService(nodeEngine.getHazelcastInstance());
         operationService
                 .<V>invokeOnPartition(SyntheticMapService.SERVICE_NAME, operation, partitionId)
                 .getSafely();
