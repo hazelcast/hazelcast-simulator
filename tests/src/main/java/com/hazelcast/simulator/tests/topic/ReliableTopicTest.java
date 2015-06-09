@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
@@ -46,7 +47,7 @@ public class ReliableTopicTest {
     private ITopic[] topics;
     private TestContext testContext;
     private HazelcastInstance hz;
-    private List<StressMessageListener> listeners;
+    private List<MessageListenerImpl> listeners;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -54,14 +55,14 @@ public class ReliableTopicTest {
         hz = testContext.getTargetInstance();
         totalMessagesSend = hz.getAtomicLong(testContext.getTestId() + ":TotalExpectedCounter");
         topics = new ITopic[topicCount];
-        listeners = new LinkedList<StressMessageListener>();
+        listeners = new LinkedList<MessageListenerImpl>();
 
         int listenerIdCounter = 0;
         for (int k = 0; k < topics.length; k++) {
             ITopic<MessageEntity> topic = hz.getReliableTopic(basename + "-" + k);
             topics[k] = topic;
             for (int l = 0; l < listenersPerTopic; l++) {
-                StressMessageListener topicListener = new StressMessageListener(listenerIdCounter);
+                MessageListenerImpl topicListener = new MessageListenerImpl(listenerIdCounter);
                 listenerIdCounter++;
                 topic.addMessageListener(topicListener);
                 listeners.add(topicListener);
@@ -71,11 +72,12 @@ public class ReliableTopicTest {
 
     private class Worker extends AbstractMonotonicWorker {
         private final Map<ITopic, AtomicLong> counterMap = new HashMap();
+        private final String id = UUID.randomUUID().toString();
         final Random random = new Random();
         long messagesSend = 0;
 
-        public Worker(){
-            for(ITopic topic:topics){
+        public Worker() {
+            for (ITopic topic : topics) {
                 counterMap.put(topic, new AtomicLong());
             }
         }
@@ -84,7 +86,7 @@ public class ReliableTopicTest {
         protected void timeStep() {
             ITopic topic = getRandomTopic();
             AtomicLong counter = counterMap.get(topic);
-            MessageEntity msg = new MessageEntity(Thread.currentThread().toString(), counter.incrementAndGet());
+            MessageEntity msg = new MessageEntity(id, counter.incrementAndGet());
             messagesSend++;
             topic.publish(msg);
         }
@@ -114,7 +116,7 @@ public class ReliableTopicTest {
             @Override
             public void run() throws Exception {
                 long actualCount = 0;
-                for (StressMessageListener topicListener : listeners) {
+                for (MessageListenerImpl topicListener : listeners) {
                     actualCount += topicListener.received;
                 }
                 assertEquals("published messages don't match received messages", expectedCount, actualCount);
@@ -178,12 +180,12 @@ public class ReliableTopicTest {
         }
     }
 
-    private class StressMessageListener implements MessageListener<MessageEntity> {
+    private class MessageListenerImpl implements MessageListener<MessageEntity> {
         private final int id;
         private volatile long received = 0;
         private Map<String, Long> values = new HashMap<String, Long>();
 
-        public StressMessageListener(int id) {
+        public MessageListenerImpl(int id) {
             this.id = id;
         }
 
@@ -191,17 +193,20 @@ public class ReliableTopicTest {
         public void onMessage(Message<MessageEntity> message) {
             String threadId = message.getMessageObject().thread;
             Long previousValue = values.get(threadId);
-            if(previousValue == null){
+            if (previousValue == null) {
                 previousValue = 0L;
             }
 
-            long value = message.getMessageObject().value;
-            if(previousValue+1!=value){
+            long actualValue = message.getMessageObject().value;
+            long expectedValue = previousValue + 1;
+            if (expectedValue != actualValue) {
                 failures.incrementAndGet();
-                ExceptionReporter.report(testContext.getTestId(), new RuntimeException("There is unexpected gap or equality between values"));
+                ExceptionReporter.report(testContext.getTestId(),
+                        new RuntimeException("There is unexpected gap or equality between values, " +
+                                "expected:" + expectedValue + " actual:" + actualValue));
             }
 
-            values.put(threadId, value);
+            values.put(threadId, actualValue);
 
             if (received % 100000 == 0) {
                 LOGGER.info(toString() + " is at: " + message.getMessageObject().toString());
