@@ -13,7 +13,7 @@
     <properties>
         <hazelcast.version>${hazelcast.version}</hazelcast.version>
         <hazelcast-simulator.version>${project.version}</hazelcast-simulator.version>
-        <java.version>${java.version}</java.version>
+        <java.version>1.6</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -74,8 +74,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>\${java.version}</source>
+                    <target>\${java.version}</target>
                 </configuration>
             </plugin>
             <plugin>
