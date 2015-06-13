@@ -113,6 +113,8 @@ public final class Provisioner {
     }
 
     void scale(int size, boolean enterpriseEnabled) {
+        ensureNotStaticCloudProvider("scale");
+
         int delta = size - addresses.size();
         if (delta == 0) {
             echo("Current number of machines: " + addresses.size());
@@ -126,7 +128,17 @@ public final class Provisioner {
     }
 
     void terminate() {
+        ensureNotStaticCloudProvider("terminate");
+
         scaleDown(Integer.MAX_VALUE);
+    }
+
+    void ensureNotStaticCloudProvider(String action) {
+        String cloudProvider = props.get("CLOUD_PROVIDER");
+        if ("static".equals(cloudProvider)) {
+            echo(format("'static' CLOUD_PROVIDER can't '%s'", action));
+            exitWithError();
+        }
     }
 
     void listAgents() {
