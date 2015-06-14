@@ -4,6 +4,8 @@ import com.hazelcast.core.Member;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.test.TestContext;
@@ -19,6 +21,7 @@ import com.hazelcast.spi.InternalCompletableFuture;
 import com.hazelcast.spi.UrgentSystemOperation;
 import com.hazelcast.spi.impl.operationservice.InternalOperationService;
 
+import java.io.IOException;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.locks.LockSupport;
@@ -40,7 +43,7 @@ public class GenericOperationTest {
 
     // properties
     public double priorityProb = 0.1;
-
+    public int delayNanos = 100 * 1000;
     // probes
     public IntervalProbe normalLatency;
     public IntervalProbe priorityLatency;
@@ -110,7 +113,7 @@ public class GenericOperationTest {
         }
 
         private void invokeNormalOperation(Address address) {
-            GenericOperation operation = new GenericOperation();
+            GenericOperation operation = new GenericOperation(delayNanos);
             normalLatency.started();
             InternalCompletableFuture f = operationService.invokeOnTarget(null, operation, address);
             f.getSafely();
@@ -118,7 +121,7 @@ public class GenericOperationTest {
         }
 
         private void invokePriorityOperation(Address address) {
-            GenericPriorityOperation operation = new GenericPriorityOperation();
+            GenericPriorityOperation operation = new GenericPriorityOperation(delayNanos);
             priorityLatency.started();
             InternalCompletableFuture f = operationService.invokeOnTarget(null, operation, address);
             f.getSafely();
@@ -128,18 +131,46 @@ public class GenericOperationTest {
 
     public static class GenericOperation extends AbstractOperation {
 
-        public GenericOperation(){
+        public int delayNanos;
+
+        public GenericOperation(int delayNanos) {
+            this();
+            this.delayNanos = delayNanos;
+        }
+
+        public GenericOperation() {
             setPartitionId(-1);
         }
 
         @Override
         public void run() throws Exception {
-            Random random = new Random();
-            LockSupport.parkNanos(random.nextInt(200 * 1000));
+            if (delayNanos > 0) {
+                Random random = new Random();
+                LockSupport.parkNanos(random.nextInt(delayNanos));
+            }
+        }
+
+        @Override
+        protected void writeInternal(ObjectDataOutput out) throws IOException {
+            super.writeInternal(out);
+            out.writeInt(delayNanos);
+        }
+
+        @Override
+        protected void readInternal(ObjectDataInput in) throws IOException {
+            super.readInternal(in);
+            delayNanos = in.readInt();
         }
     }
 
     public static class GenericPriorityOperation extends GenericOperation implements UrgentSystemOperation {
+
+        public GenericPriorityOperation(int delayNanos) {
+            super(delayNanos);
+        }
+
+        public GenericPriorityOperation() {
+        }
     }
 
     public static void main(String[] args) throws Exception {
