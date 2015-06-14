@@ -118,7 +118,7 @@ public class GenericOperationTest {
         }
 
         private void invokePriorityOperation(Address address) {
-            GenericOperation operation = new GenericOperation();
+            GenericPriorityOperation operation = new GenericPriorityOperation();
             priorityLatency.started();
             InternalCompletableFuture f = operationService.invokeOnTarget(null, operation, address);
             f.getSafely();
