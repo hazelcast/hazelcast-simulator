@@ -21,6 +21,7 @@ import com.hazelcast.spi.impl.operationservice.InternalOperationService;
 
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.locks.LockSupport;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
@@ -134,7 +135,7 @@ public class GenericOperationTest {
         @Override
         public void run() throws Exception {
             Random random = new Random();
-            Thread.sleep(random.nextInt(1));
+            LockSupport.parkNanos(random.nextInt(200 * 1000));
         }
     }
 
