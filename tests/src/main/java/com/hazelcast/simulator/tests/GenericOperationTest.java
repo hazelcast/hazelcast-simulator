@@ -43,7 +43,7 @@ public class GenericOperationTest {
 
     // properties
     public double priorityProb = 0.1;
-    public int delayNanos = 100 * 1000;
+    public int delayNs = 100 * 1000;
     // probes
     public IntervalProbe normalLatency;
     public IntervalProbe priorityLatency;
@@ -113,7 +113,7 @@ public class GenericOperationTest {
         }
 
         private void invokeNormalOperation(Address address) {
-            GenericOperation operation = new GenericOperation(delayNanos);
+            GenericOperation operation = new GenericOperation(delayNs);
             normalLatency.started();
             InternalCompletableFuture f = operationService.invokeOnTarget(null, operation, address);
             f.getSafely();
@@ -121,7 +121,7 @@ public class GenericOperationTest {
         }
 
         private void invokePriorityOperation(Address address) {
-            GenericPriorityOperation operation = new GenericPriorityOperation(delayNanos);
+            GenericPriorityOperation operation = new GenericPriorityOperation(delayNs);
             priorityLatency.started();
             InternalCompletableFuture f = operationService.invokeOnTarget(null, operation, address);
             f.getSafely();
