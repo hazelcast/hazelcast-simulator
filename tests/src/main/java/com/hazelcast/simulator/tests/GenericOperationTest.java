@@ -19,6 +19,7 @@ import com.hazelcast.spi.InternalCompletableFuture;
 import com.hazelcast.spi.UrgentSystemOperation;
 import com.hazelcast.spi.impl.operationservice.InternalOperationService;
 
+import java.util.Random;
 import java.util.Set;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
@@ -126,8 +127,14 @@ public class GenericOperationTest {
 
     public static class GenericOperation extends AbstractOperation {
 
+        public GenericOperation(){
+            setPartitionId(-1);
+        }
+
         @Override
         public void run() throws Exception {
+            Random random = new Random();
+            Thread.sleep(random.nextInt(1));
         }
     }
 
