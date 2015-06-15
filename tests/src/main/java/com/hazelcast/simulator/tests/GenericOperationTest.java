@@ -14,14 +14,17 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.utils.ReflectionUtils;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.spi.AbstractOperation;
 import com.hazelcast.spi.InternalCompletableFuture;
+import com.hazelcast.spi.OperationService;
 import com.hazelcast.spi.UrgentSystemOperation;
-import com.hazelcast.spi.impl.operationservice.InternalOperationService;
+import com.hazelcast.spi.impl.NodeEngineImpl;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.locks.LockSupport;
@@ -33,10 +36,7 @@ public class GenericOperationTest {
 
     private static final ILogger LOGGER = Logger.getLogger(GenericOperationTest.class);
 
-    private InternalOperationService operationService;
-    private Address[] memberAddresses;
-
-    private enum PrioritySelector {
+    public enum PrioritySelector {
         PRIORITY,
         NORMAL
     }
@@ -49,14 +49,20 @@ public class GenericOperationTest {
     public IntervalProbe priorityLatency;
     public SimpleProbe throughput;
 
-    private final OperationSelectorBuilder<PrioritySelector> operationSelectorBuilder = new OperationSelectorBuilder<PrioritySelector>();
 
+    private OperationService operationService;
+    private Address[] memberAddresses;
+    private final OperationSelectorBuilder<PrioritySelector> operationSelectorBuilder
+            = new OperationSelectorBuilder<PrioritySelector>();
     private TestContext testContext;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        this.operationService = getNode(testContext.getTargetInstance()).nodeEngine.getOperationService();
+
+        NodeEngineImpl nodeEngine = getNode(testContext.getTargetInstance()).nodeEngine;
+        Method method = ReflectionUtils.getMethodByName(NodeEngineImpl.class, "getOperationService");
+        this.operationService = (OperationService) method.invoke(nodeEngine);
         operationSelectorBuilder
                 .addOperation(PrioritySelector.PRIORITY, priorityProb)
                 .addDefaultOperation(PrioritySelector.NORMAL);
