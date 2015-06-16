@@ -95,7 +95,7 @@ public class TestRunner<E> {
         return this;
     }
 
-    public TestRunner withHazelcastConfig(File file) throws IOException {
+    public TestRunner withHazelcastConfigFile(File file) throws IOException {
         if (file == null) {
             throw new NullPointerException("file can't be null");
         }
@@ -110,6 +110,16 @@ public class TestRunner<E> {
         } finally {
             closeQuietly(inputStream);
         }
+
+        return this;
+    }
+
+    public TestRunner withHazelcastConfig(Config config) {
+        if (config == null) {
+            throw new NullPointerException("config can't be null");
+        }
+
+        hazelcastInstance = Hazelcast.newHazelcastInstance(config);
 
         return this;
     }
@@ -208,7 +218,7 @@ public class TestRunner<E> {
 
         @Override
         public void stop() {
-            throw new UnsupportedOperationException("Not implemented");
+            stopped = true;
         }
     }
 }

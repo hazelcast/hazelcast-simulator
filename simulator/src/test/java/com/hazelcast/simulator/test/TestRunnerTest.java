@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.test;
 
+import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.tests.PropertiesTest;
@@ -64,7 +65,7 @@ public class TestRunnerTest {
         assertEquals("testValue", propertiesTest.testProperty);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testTestContextImpl() throws Exception {
         TestContextImplTest test = new TestContextImplTest();
         TestRunner<TestContextImplTest> testRunner = new TestRunner<TestContextImplTest>(test);
@@ -96,20 +97,32 @@ public class TestRunnerTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testWithHazelcastConfig_null() throws Exception {
-        testRunner.withHazelcastConfig(null);
+    public void withHazelcastConfigFile_null() throws Exception {
+        testRunner.withHazelcastConfigFile(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testWithHazelcastConfig_notFound() throws Exception {
-        testRunner.withHazelcastConfig(new File("notFound"));
+    public void withHazelcastConfigFile_notFound() throws Exception {
+        testRunner.withHazelcastConfigFile(new File("notFound"));
     }
 
     @Test
-    public void testWithHazelcastConfig() throws Exception {
+    public void withHazelcastConfigFile() throws Exception {
         File configFile = File.createTempFile("config", "xml");
         FileUtils.appendText("<hazelcast />", configFile);
 
-        testRunner.withHazelcastConfig(configFile);
+        testRunner.withHazelcastConfigFile(configFile);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void withHazelcastConfig_null() {
+        testRunner.withHazelcastConfig(null);
+    }
+
+    @Test
+    public void withHazelcastConfig() {
+        Config config = new Config();
+
+        testRunner.withHazelcastConfig(config);
     }
 }
