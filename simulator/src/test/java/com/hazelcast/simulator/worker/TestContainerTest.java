@@ -6,6 +6,7 @@ import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.probes.probes.ProbesType;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.probes.probes.impl.DisabledProbe;
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.Name;
@@ -37,12 +38,14 @@ public class TestContainerTest {
 
     private DummyTestContext testContext;
     private ProbesConfiguration probesConfiguration;
+    private TestCase testCase;
     private TestContainer<DummyTestContext> testContainer;
 
     @Before
     public void setUp() {
         testContext = new DummyTestContext();
         probesConfiguration = new ProbesConfiguration();
+        testCase = new TestCase("TestContainerTest");
     }
 
     @Test(expected = NullPointerException.class)
@@ -621,7 +624,7 @@ public class TestContainerTest {
     // ==========================================================
 
     private <T> TestContainer<DummyTestContext> createTestContainer(T test) {
-        return new TestContainer<DummyTestContext>(test, testContext, probesConfiguration, null);
+        return new TestContainer<DummyTestContext>(test, testContext, probesConfiguration, testCase);
     }
 
     private static class DummyTest {
