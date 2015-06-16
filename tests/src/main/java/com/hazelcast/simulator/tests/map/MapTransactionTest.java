@@ -31,21 +31,21 @@ public class MapTransactionTest {
     private static final ILogger LOGGER = Logger.getLogger(MapTransactionTest.class);
 
     // properties
-    public String basename = this.getClass().getSimpleName();
-    public int threadCount = 5;
+    public String basename = MapTransactionTest.class.getSimpleName();
     public int keyCount = 1000;
     public boolean reThrowTransactionException = false;
     public TransactionType transactionType = TransactionType.TWO_PHASE;
 
     private HazelcastInstance targetInstance;
-    private TestContext testContext;
-    private int maxInc = 100;
+    private IMap<Integer, Long> map;
+    private IList<long[]> resultList;
     private TransactionOptions transactionOptions;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
+        map = targetInstance.getMap(basename);
+        resultList = targetInstance.getList(basename + "results");
 
         transactionOptions = new TransactionOptions();
         transactionOptions.setTransactionType(transactionType);
@@ -53,10 +53,33 @@ public class MapTransactionTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        IMap map = targetInstance.getMap(basename);
-        for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0L);
+        for (int i = 0; i < keyCount; i++) {
+            map.put(i, 0L);
         }
+    }
+
+    @Verify(global = true)
+    public void verify() {
+        long[] total = new long[keyCount];
+
+        LOGGER.info(basename + ": collected increments from " + resultList.size() + " worker threads");
+
+        for (long[] increments : resultList) {
+            for (int i = 0; i < increments.length; i++) {
+                total[i] += increments[i];
+            }
+        }
+
+        int failures = 0;
+        for (int i = 0; i < keyCount; i++) {
+            if (total[i] != map.get(i)) {
+                failures++;
+                LOGGER.info(basename + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
+            }
+        }
+
+        assertEquals(basename + ": " + failures + " keys have been incremented unexpectedly out of " + keyCount + " keys",
+                0, failures);
     }
 
     @RunWithWorker
@@ -65,12 +88,13 @@ public class MapTransactionTest {
     }
 
     private class Worker extends AbstractMonotonicWorker {
+
         private final long[] increments = new long[keyCount];
 
         @Override
         protected void timeStep() {
             final int key = randomInt(keyCount);
-            final int increment = randomInt(maxInc);
+            final int increment = randomInt(100);
 
             try {
                 targetInstance.executeTransaction(transactionOptions, new TransactionalTask<Object>() {
@@ -93,36 +117,7 @@ public class MapTransactionTest {
 
         @Override
         protected void afterRun() {
-            IList<long[]> results = targetInstance.getList(basename + "results");
-            results.add(increments);
+            resultList.add(increments);
         }
     }
-
-    @Verify(global = true)
-    public void verify() throws Exception {
-        IList<long[]> allIncrements = targetInstance.getList(basename + "results");
-        long[] total = new long[keyCount];
-
-        LOGGER.info(basename + ": collected increments from " + allIncrements.size() + " worker threads");
-
-        for (long[] increments : allIncrements) {
-            for (int i = 0; i < increments.length; i++) {
-                total[i] += increments[i];
-            }
-        }
-
-        int failures = 0;
-        for (int i = 0; i < keyCount; i++) {
-            IMap<Integer, Long> map = targetInstance.getMap(basename);
-            if (total[i] != map.get(i)) {
-                failures++;
-                LOGGER.info(basename + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
-            }
-        }
-
-        assertEquals(basename + ": " + failures + " keys have been incremented unexpectedly out of " + keyCount + " keys",
-                0, failures);
-    }
-
 }
-
