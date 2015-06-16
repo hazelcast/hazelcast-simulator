@@ -48,7 +48,7 @@ public class MapPredicateTest {
 
     private static final ILogger LOGGER = Logger.getLogger(MapPredicateTest.class);
 
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapPredicateTest.class.getSimpleName();
     public int threadCount = 3;
     public int keyCount = 100;
     public int pageSize = 5;
@@ -106,7 +106,9 @@ public class MapPredicateTest {
     }
 
     private class Worker extends AbstractWorker<Operation> {
+
         private final PredicateOperationCounter operationCounter = new PredicateOperationCounter();
+
         private long lastUpdateMs = System.currentTimeMillis();
         private long iterationsLastMinute = 0;
         private long maxLastMinute = Long.MIN_VALUE;
@@ -116,7 +118,7 @@ public class MapPredicateTest {
         public Worker() {
             super(operationSelectorBuilder);
 
-            LOGGER.info("Starting worker:" + this + " for " + MapPredicateTest.class.getName());
+            LOGGER.info("Starting worker: " + this + " for " + MapPredicateTest.class.getSimpleName());
         }
 
         @Override
@@ -151,14 +153,11 @@ public class MapPredicateTest {
             spendTimeMs += durationMs;
 
             if (lastUpdateMs + SECONDS.toMillis(60) < nowMs) {
-                double avg = spendTimeMs / iterationsLastMinute;
-                double perf = (iterationsLastMinute * 1000d) / spendTimeMs;
+                double avg = spendTimeMs / (double) iterationsLastMinute;
+                double perf = (iterationsLastMinute * 1000d) / (double) spendTimeMs;
 
-                LOGGER.info("last minute: iterations=" + iterationsLastMinute
-                        + " min=" + minLastMinute + " ms"
-                        + " max=" + maxLastMinute + " ms"
-                        + " avg=" + avg + " ms"
-                        + " perf=" + perf + " predicates/second");
+                LOGGER.info(format("last minute: iterations=%d, min=%d ms, max=%d ms, avg=%.2f ms, perf=%.2f predicates/second",
+                        iterationsLastMinute, minLastMinute, maxLastMinute, avg, perf));
 
                 maxLastMinute = Long.MIN_VALUE;
                 minLastMinute = Long.MAX_VALUE;
