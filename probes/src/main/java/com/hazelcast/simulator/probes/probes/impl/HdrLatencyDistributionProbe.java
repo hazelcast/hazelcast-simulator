@@ -27,11 +27,8 @@ public class HdrLatencyDistributionProbe
     private final Histogram histogram = new Histogram(MAXIMUM_LATENCY, 4);
 
     @Override
-    public void done() {
-        if (started == 0) {
-            throw new IllegalStateException("You have to call started() before done()");
-        }
-        histogram.recordValue((int) TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - started));
+    public void recordValue(long latencyNanos) {
+        histogram.recordValue((int) TimeUnit.NANOSECONDS.toMicros(latencyNanos));
     }
 
     @Override

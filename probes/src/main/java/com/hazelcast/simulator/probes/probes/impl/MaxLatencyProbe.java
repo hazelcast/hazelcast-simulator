@@ -22,12 +22,8 @@ public class MaxLatencyProbe extends AbstractIntervalProbe<MaxLatencyResult, Max
     private long maxLatency;
 
     @Override
-    public void done() {
-        if (started == 0) {
-            throw new IllegalStateException("You have to call started() before done()");
-        }
-        long latency = System.nanoTime() - started;
-        maxLatency = Math.max(maxLatency, latency);
+    public void recordValue(long latencyNanos) {
+        maxLatency = Math.max(maxLatency, latencyNanos);
         invocations++;
     }
 

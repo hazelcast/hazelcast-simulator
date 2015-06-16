@@ -29,8 +29,23 @@ public class WorkerProbeTest {
     }
 
     @Test
+    public void testRecordValues() {
+        workerProbe.recordValue(-1);
+        workerProbe.recordValue(5);
+
+        assertEquals(2, workerProbe.getInvocationCount());
+    }
+
+    @Test
     public void testResult() {
         workerProbe.done();
+
+        assertTrue(workerProbe.getResult() != null);
+    }
+
+    @Test
+    public void testResult_withRecordValues() {
+        workerProbe.recordValue(152);
 
         assertTrue(workerProbe.getResult() != null);
     }

@@ -82,6 +82,22 @@ public class ConcurrentProbeTest {
     }
 
     @Test
+    public void testInvocationCountOnIntervalProbeWithRecordValue() throws Exception {
+        concurrentProbe = (ConcurrentProbe) Probes.createConcurrentProbe("latency", IntervalProbe.class, config);
+
+        ProbeRecordValueTester probeTester1 = new ProbeRecordValueTester(concurrentProbe);
+        ProbeRecordValueTester probeTester2 = new ProbeRecordValueTester(concurrentProbe);
+
+        probeTester1.start();
+        probeTester2.start();
+
+        probeTester1.join();
+        probeTester2.join();
+
+        assertEquals(2, concurrentProbe.getInvocationCount());
+    }
+
+    @Test
     public void testEmptyResult() {
         Result result = concurrentProbe.getResult();
         assertNull(result);
@@ -125,6 +141,7 @@ public class ConcurrentProbeTest {
     }
 
     private static class ProbeTester extends Thread {
+
         private final ConcurrentProbe probe;
 
         private SimpleProbe threadLocalProbe;
@@ -138,6 +155,20 @@ public class ConcurrentProbeTest {
             threadLocalProbe = probe.getProbe();
             probe.started();
             probe.done();
+        }
+    }
+
+    private static class ProbeRecordValueTester extends Thread {
+
+        private final ConcurrentProbe probe;
+
+        public ProbeRecordValueTester(ConcurrentProbe probe) {
+            this.probe = probe;
+        }
+
+        @Override
+        public void run() {
+            probe.recordValue(TimeUnit.MICROSECONDS.toNanos(40));
         }
     }
 }

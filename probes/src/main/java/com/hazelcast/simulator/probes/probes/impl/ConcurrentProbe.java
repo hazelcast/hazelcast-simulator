@@ -41,6 +41,11 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
     }
 
     @Override
+    public void recordValue(long latencyNanos) {
+        getProbe().recordValue(latencyNanos);
+    }
+
+    @Override
     public void done() {
         getProbe().done();
     }

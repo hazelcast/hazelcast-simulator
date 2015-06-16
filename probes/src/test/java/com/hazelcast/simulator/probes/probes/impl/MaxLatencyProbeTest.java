@@ -31,6 +31,15 @@ public class MaxLatencyProbeTest {
     }
 
     @Test
+    public void testRecordValues() {
+        maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(500));
+        maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(200));
+        maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(1000));
+
+        assertEquals(3, maxLatencyProbe.getInvocationCount());
+    }
+
+    @Test
     public void testResult() {
         maxLatencyProbe.started();
         sleepNanos(TimeUnit.MILLISECONDS.toNanos(150));
@@ -42,6 +51,19 @@ public class MaxLatencyProbeTest {
         Long maxLatencyMs = getObjectFromField(result, "maxLatencyMs");
         assertTrue(maxLatencyMs >= 150);
         assertTrue(maxLatencyMs < 1000);
+    }
+
+    @Test
+    public void testResult_withRecordValues() {
+        maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(500));
+        maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(200));
+        maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(1000));
+
+        MaxLatencyResult result = maxLatencyProbe.getResult();
+        assertTrue(result != null);
+
+        Long maxLatencyMs = getObjectFromField(result, "maxLatencyMs");
+        assertEquals(1000, maxLatencyMs.longValue());
     }
 
     @Test

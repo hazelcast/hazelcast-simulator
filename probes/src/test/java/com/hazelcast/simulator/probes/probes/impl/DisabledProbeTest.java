@@ -35,6 +35,14 @@ public class DisabledProbeTest {
     }
 
     @Test
+    public void testRecordValues() {
+        disabledProbe.recordValue(-1);
+        disabledProbe.recordValue(500);
+
+        assertEquals(0, disabledProbe.getInvocationCount());
+    }
+
+    @Test
     public void testResultToHumanString() {
         DisabledResult result = disabledProbe.getResult();
         assertTrue(result != null);
@@ -44,6 +52,13 @@ public class DisabledProbeTest {
     @Test
     public void testResult() {
         disabledProbe.done();
+
+        assertTrue(disabledProbe.getResult() != null);
+    }
+
+    @Test
+    public void testResult_withRecordValues() {
+        disabledProbe.recordValue(152);
 
         assertTrue(disabledProbe.getResult() != null);
     }

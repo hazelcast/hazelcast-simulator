@@ -29,6 +29,11 @@ public abstract class AbstractSimpleProbe<R extends Result<R>, T extends Interva
     }
 
     @Override
+    public void recordValue(long latencyNanos) {
+        throw new UnsupportedOperationException("This method is just supported by IntervalProbe implementations");
+    }
+
+    @Override
     public long getInvocationCount() {
         return invocations;
     }
