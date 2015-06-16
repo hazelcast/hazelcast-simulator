@@ -152,10 +152,15 @@ public class TestContainer<T extends TestContext> {
         return testContext;
     }
 
-    public long getOperationCount() throws Exception {
-        Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
-                operationCountMethod);
-        return (count == null ? -1 : count);
+    public long getOperationCount() {
+        try {
+            Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
+                    operationCountMethod);
+            return (count == null ? -1 : count);
+        } catch (Exception e) {
+            LOGGER.debug("Exception while retrieving operation count from " + testCase.getId() + ": " + e.getMessage());
+            return -1;
+        }
     }
 
     public List<String> getStackTraces() throws Exception {
