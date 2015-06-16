@@ -8,7 +8,7 @@ import javax.cache.event.CacheEntryUpdatedListener;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MyCacheEntryListener<K, V> implements CacheEntryCreatedListener<K, V>, CacheEntryRemovedListener<K, V>,
+public class ICacheEntryListener<K, V> implements CacheEntryCreatedListener<K, V>, CacheEntryRemovedListener<K, V>,
         CacheEntryUpdatedListener<K, V>, Serializable {
 
     private AtomicLong created = new AtomicLong();
@@ -21,7 +21,7 @@ public class MyCacheEntryListener<K, V> implements CacheEntryCreatedListener<K, 
         return unExpected.get();
     }
 
-    public void add(MyCacheEntryListener listener) {
+    public void add(ICacheEntryListener listener) {
         created.addAndGet(listener.created.get());
         updated.addAndGet(listener.updated.get());
         removed.addAndGet(listener.removed.get());
