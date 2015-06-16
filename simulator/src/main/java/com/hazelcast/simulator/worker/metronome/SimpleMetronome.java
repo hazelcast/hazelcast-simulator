@@ -36,6 +36,27 @@ public final class SimpleMetronome implements Metronome {
         return new SimpleMetronome(TimeUnit.MILLISECONDS.toNanos(intervalMs));
     }
 
+    /**
+     * Creates a {@link Metronome} instance with a fixed frequency in Hz.
+     *
+     * If the frequency is 0 Hz the method {@link #waitForNext()} will have no delay.
+     *
+     * @param frequency frequency
+     * @return a {@link Metronome} instance
+     */
+    public static Metronome withFixedFrequency(float frequency) {
+        if (frequency == 0) {
+            return EMPTY_METRONOME;
+        }
+
+        long intervalNanos = Math.round((double) TimeUnit.SECONDS.toNanos(1) / frequency);
+        if (intervalNanos == 0) {
+            return EMPTY_METRONOME;
+        }
+
+        return new SimpleMetronome(intervalNanos);
+    }
+
     @Override
     public void waitForNext() {
         // set random interval on the first run
