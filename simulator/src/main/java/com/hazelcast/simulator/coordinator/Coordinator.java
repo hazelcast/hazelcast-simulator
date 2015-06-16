@@ -156,10 +156,13 @@ public final class Coordinator {
         String addressConfig = createAddressConfig("member", agentsClient.getPrivateAddresses(), settings);
         settings.hzConfig = settings.hzConfig.replace("<!--MEMBERS-->", addressConfig);
 
-        String manCenterURL = props.get("MANAGEMENT_CENTER_URL");
+        String manCenterURL = props.get("MANAGEMENT_CENTER_URL").trim();
         if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
+            String updateInterval = props.get("MANAGEMENT_CENTER_UPDATE_INTERVAL").trim();
+            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + "\"";
             settings.hzConfig = settings.hzConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
-                    "<management-center enabled=\"true\">\n        " + manCenterURL + "\n" + "    </management-center>\n");
+                    format("<management-center enabled=\"true\"%s>\n        %s\n" + "    </management-center>\n",
+                            updateIntervalAttr, manCenterURL));
         }
     }
 
