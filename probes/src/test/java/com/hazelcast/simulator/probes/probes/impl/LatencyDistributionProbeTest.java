@@ -32,6 +32,15 @@ public class LatencyDistributionProbeTest {
     }
 
     @Test
+    public void testRecordValues() {
+        latencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(500));
+        latencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(200));
+        latencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(1000));
+
+        assertEquals(3, latencyDistributionProbe.getInvocationCount());
+    }
+
+    @Test
     public void testResult() {
         long sleepTime = 150;
         long minLatency = TimeUnit.MILLISECONDS.toMicros(sleepTime) / 10;
@@ -50,11 +59,36 @@ public class LatencyDistributionProbeTest {
         for (int latency = 0; latency < buckets.length; latency++) {
             if (buckets[latency] == 1) {
                 assertTrue("latency should be >= " + minLatency + ", but was " + latency, latency >= minLatency);
-                assertTrue("latency should be < " + maxLatency + ", but was " + latency, latency < maxLatency);
+                assertTrue("latency should be <= " + maxLatency + ", but was " + latency, latency <= maxLatency);
                 foundBuckets++;
             }
         }
         assertEqualsStringFormat("Expected to find %d buckets with latency info, but found %d", 1, foundBuckets);
+    }
+
+    @Test
+    public void testResult_withRecordValues() {
+        long minLatency = TimeUnit.MILLISECONDS.toMicros(200) / 10;
+        long maxLatency = TimeUnit.MILLISECONDS.toMicros(1000) / 10;
+
+        latencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(500));
+        latencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(200));
+        latencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(1000));
+
+        LatencyDistributionResult result = latencyDistributionProbe.getResult();
+        assertTrue(result != null);
+
+        int foundBuckets = 0;
+        LinearHistogram linearHistogram = result.getHistogram();
+        int[] buckets = linearHistogram.getBuckets();
+        for (int latency = 0; latency < buckets.length; latency++) {
+            if (buckets[latency] == 1) {
+                assertTrue("latency should be >= " + minLatency + ", but was " + latency, latency >= minLatency);
+                assertTrue("latency should be <= " + maxLatency + ", but was " + latency, latency <= maxLatency);
+                foundBuckets++;
+            }
+        }
+        assertEqualsStringFormat("Expected to find %d buckets with latency info, but found %d", 3, foundBuckets);
     }
 
     @Test

@@ -27,11 +27,8 @@ public class LatencyDistributionProbe extends AbstractIntervalProbe<LatencyDistr
     private final LinearHistogram histogram = new LinearHistogram(MAXIMUM_LATENCY, STEP);
 
     @Override
-    public void done() {
-        if (started == 0) {
-            throw new IllegalStateException("You have to call started() before done()");
-        }
-        histogram.addValue((int) TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - started));
+    public void recordValue(long latencyNanos) {
+        histogram.addValue((int) TimeUnit.NANOSECONDS.toMicros(latencyNanos));
         invocations++;
     }
 

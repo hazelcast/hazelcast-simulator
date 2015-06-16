@@ -18,4 +18,13 @@ package com.hazelcast.simulator.probes.probes;
 public interface IntervalProbe<R extends Result<R>, T extends SimpleProbe<R, T>> extends SimpleProbe<R, T> {
 
     void started();
+
+    /**
+     * Adds a latency value in nanoseconds to the probe result.
+     *
+     * Can be used if {@link #started()} and {@link #done()} are not directly related, e.g. in asynchronous tests.
+     *
+     * @param latencyNanos latency value in nanoseconds
+     */
+    void recordValue(long latencyNanos);
 }

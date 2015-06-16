@@ -27,6 +27,11 @@ public class OperationsPerSecProbeTest {
         assertEquals(3, operationsPerSecProbe.getInvocationCount());
     }
 
+    @Test(expected = UnsupportedOperationException.class)
+    public void testRecordValues() {
+        operationsPerSecProbe.recordValue(500);
+    }
+
     @Test(expected = IllegalStateException.class)
     public void testResultWithInitialization() {
         operationsPerSecProbe.getResult();

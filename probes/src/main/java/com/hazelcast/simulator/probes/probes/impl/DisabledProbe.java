@@ -31,6 +31,10 @@ public final class DisabledProbe implements IntervalProbe<DisabledResult, Disabl
     }
 
     @Override
+    public void recordValue(long latencyNanos) {
+    }
+
+    @Override
     public void done() {
     }
 

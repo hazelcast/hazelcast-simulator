@@ -29,6 +29,14 @@ public abstract class AbstractIntervalProbe<R extends Result<R>, T extends Inter
     }
 
     @Override
+    public void done() {
+        if (started == 0) {
+            throw new IllegalStateException("You have to call started() before done()");
+        }
+        recordValue(System.nanoTime() - started);
+    }
+
+    @Override
     public long getInvocationCount() {
         return invocations;
     }
