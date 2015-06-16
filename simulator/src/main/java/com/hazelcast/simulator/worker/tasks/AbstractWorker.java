@@ -35,6 +35,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     // local variables
     long iteration;
+    boolean isWorkerStopped = false;
 
     public AbstractWorker(OperationSelectorBuilder<O> operationSelectorBuilder) {
         this.selector = operationSelectorBuilder.build();
@@ -51,7 +52,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     public void run() {
         beforeRun();
 
-        while (!testContext.isStopped()) {
+        while (!testContext.isStopped() && !isWorkerStopped) {
             intervalProbe.started();
             timeStep(selector.select());
             intervalProbe.done();
@@ -65,6 +66,24 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     @Performance
     public long getOperationCount() {
         return intervalProbe.getInvocationCount();
+    }
+
+    /**
+     * Stops the local worker, regardless of the {@link TestContext} stopped status.
+     *
+     * Calling this method will not affect the {@link TestContext} or other workers. It will just stop the local worker.
+     */
+    protected final void stopWorker() {
+        isWorkerStopped = true;
+    }
+
+    /**
+     * Stops the {@link TestContext}.
+     *
+     * Calling this method will affect all workers of the {@link TestContext}.
+     */
+    protected final void stopTestContext() {
+        testContext.stop();
     }
 
     /**
@@ -103,7 +122,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
      *
      * @return the next pseudo random, uniformly distributed {@code int} value from this random number generator's sequence
      */
-    protected int randomInt() {
+    protected final int randomInt() {
         return random.nextInt();
     }
 
@@ -115,7 +134,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
      * @return the next pseudo random, uniformly distributed {@code int} value between {@code 0} (inclusive) and {@code n}
      * (exclusive) from this random number generator's sequence
      */
-    protected int randomInt(int upperBond) {
+    protected final int randomInt(int upperBond) {
         return random.nextInt(upperBond);
     }
 
