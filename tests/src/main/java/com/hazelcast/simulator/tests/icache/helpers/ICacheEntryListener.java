@@ -2,7 +2,6 @@ package com.hazelcast.simulator.tests.icache.helpers;
 
 import javax.cache.event.CacheEntryCreatedListener;
 import javax.cache.event.CacheEntryEvent;
-import javax.cache.event.CacheEntryListenerException;
 import javax.cache.event.CacheEntryRemovedListener;
 import javax.cache.event.CacheEntryUpdatedListener;
 import java.io.Serializable;
@@ -30,7 +29,7 @@ public class ICacheEntryListener<K, V> implements CacheEntryCreatedListener<K, V
     }
 
     @Override
-    public void onCreated(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) throws CacheEntryListenerException {
+    public void onCreated(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) {
         for (CacheEntryEvent<? extends K, ? extends V> event : events) {
             switch (event.getEventType()) {
                 case CREATED:
@@ -44,7 +43,7 @@ public class ICacheEntryListener<K, V> implements CacheEntryCreatedListener<K, V
     }
 
     @Override
-    public void onRemoved(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) throws CacheEntryListenerException {
+    public void onRemoved(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) {
         for (CacheEntryEvent<? extends K, ? extends V> event : events) {
             switch (event.getEventType()) {
                 case REMOVED:
@@ -58,7 +57,7 @@ public class ICacheEntryListener<K, V> implements CacheEntryCreatedListener<K, V
     }
 
     @Override
-    public void onUpdated(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) throws CacheEntryListenerException {
+    public void onUpdated(Iterable<CacheEntryEvent<? extends K, ? extends V>> events) {
         for (CacheEntryEvent<? extends K, ? extends V> event : events) {
             switch (event.getEventType()) {
                 case UPDATED:

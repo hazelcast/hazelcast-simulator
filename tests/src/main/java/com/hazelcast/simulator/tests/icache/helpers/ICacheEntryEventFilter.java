@@ -2,7 +2,6 @@ package com.hazelcast.simulator.tests.icache.helpers;
 
 import javax.cache.event.CacheEntryEvent;
 import javax.cache.event.CacheEntryEventFilter;
-import javax.cache.event.CacheEntryListenerException;
 import javax.cache.event.EventType;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
@@ -13,7 +12,7 @@ public class ICacheEntryEventFilter<K, V> implements CacheEntryEventFilter<K, V>
 
     private EventType eventFilter;
 
-    public boolean evaluate(CacheEntryEvent<? extends K, ? extends V> event) throws CacheEntryListenerException {
+    public boolean evaluate(CacheEntryEvent<? extends K, ? extends V> event) {
 
         if (eventFilter != null && event.getEventType() == eventFilter) {
             filtered.incrementAndGet();
