@@ -161,7 +161,7 @@ public final class Coordinator {
             String updateInterval = props.get("MANAGEMENT_CENTER_UPDATE_INTERVAL").trim();
             String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + "\"";
             settings.hzConfig = settings.hzConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
-                    format("<management-center enabled=\"true\"%s>\n        %s\n" + "    </management-center>\n",
+                    format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
                             updateIntervalAttr, manCenterURL));
         }
     }
