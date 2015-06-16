@@ -146,7 +146,9 @@ public class TestRunner<E> {
             runPhase(TestPhase.LOCAL_TEARDOWN);
         } finally {
             LOGGER.info("Shutdown...");
-            hazelcastInstance.shutdown();
+            if (hazelcastInstance != null) {
+                hazelcastInstance.shutdown();
+            }
 
             stopThread.interrupt();
             stopThread.join();

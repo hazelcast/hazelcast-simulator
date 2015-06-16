@@ -40,8 +40,8 @@ public class TestRunnerTest {
         assertNull(testRunner.getHazelcastInstance());
         assertTrue(testRunner.getDurationSeconds() > 0);
 
-        testRunner.withDuration(3);
-        assertEquals(3, testRunner.getDurationSeconds());
+        testRunner.withDuration(6);
+        assertEquals(6, testRunner.getDurationSeconds());
 
         testRunner.run();
         assertNotNull(testRunner.getHazelcastInstance());
