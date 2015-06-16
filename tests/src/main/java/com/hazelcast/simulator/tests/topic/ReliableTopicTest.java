@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.tests.topic;
 
-
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ITopic;
@@ -25,7 +24,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -37,30 +35,30 @@ public class ReliableTopicTest {
     private static final ILogger LOGGER = Logger.getLogger(ReliableTopicTest.class);
 
     // properties
+    public String basename = ReliableTopicTest.class.getSimpleName();
     public int topicCount = 10;
     public int threadCount = 3;
     public int listenersPerTopic = 2;
-    public String basename = "reliableTopic";
 
     private AtomicLong failures = new AtomicLong();
     private IAtomicLong totalMessagesSend;
-    private ITopic[] topics;
+    private ITopic<MessageEntity>[] topics;
     private TestContext testContext;
-    private HazelcastInstance hz;
     private List<MessageListenerImpl> listeners;
 
     @Setup
+    @SuppressWarnings("unchecked")
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        hz = testContext.getTargetInstance();
-        totalMessagesSend = hz.getAtomicLong(testContext.getTestId() + ":TotalExpectedCounter");
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
+        totalMessagesSend = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalExpectedCounter");
         topics = new ITopic[topicCount];
         listeners = new LinkedList<MessageListenerImpl>();
 
         int listenerIdCounter = 0;
-        for (int k = 0; k < topics.length; k++) {
-            ITopic<MessageEntity> topic = hz.getReliableTopic(basename + "-" + k);
-            topics[k] = topic;
+        for (int i = 0; i < topics.length; i++) {
+            ITopic<MessageEntity> topic = targetInstance.getReliableTopic(basename + "-" + i);
+            topics[i] = topic;
             for (int l = 0; l < listenersPerTopic; l++) {
                 MessageListenerImpl topicListener = new MessageListenerImpl(listenerIdCounter);
                 listenerIdCounter++;
@@ -70,10 +68,30 @@ public class ReliableTopicTest {
         }
     }
 
+    @Verify(global = true)
+    public void verify() {
+        final long expectedCount = listenersPerTopic * totalMessagesSend.get();
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                long actualCount = 0;
+                for (MessageListenerImpl topicListener : listeners) {
+                    actualCount += topicListener.received.get();
+                }
+                assertEquals("published messages don't match received messages", expectedCount, actualCount);
+            }
+        });
+        assertEquals("Failures found", 0, failures.get());
+    }
+
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
+    }
+
     private class Worker extends AbstractMonotonicWorker {
-        private final Map<ITopic, AtomicLong> counterMap = new HashMap();
-        private final String id = UUID.randomUUID().toString();
-        final Random random = new Random();
+        private Map<ITopic, AtomicLong> counterMap = new HashMap<ITopic, AtomicLong>();
+        private String id = UUID.randomUUID().toString();
         long messagesSend = 0;
 
         public Worker() {
@@ -84,7 +102,7 @@ public class ReliableTopicTest {
 
         @Override
         protected void timeStep() {
-            ITopic topic = getRandomTopic();
+            ITopic<MessageEntity> topic = getRandomTopic();
             AtomicLong counter = counterMap.get(topic);
             MessageEntity msg = new MessageEntity(id, counter.incrementAndGet());
             messagesSend++;
@@ -96,37 +114,13 @@ public class ReliableTopicTest {
             totalMessagesSend.addAndGet(messagesSend);
         }
 
-        private ITopic getRandomTopic() {
-            int index = random.nextInt(topics.length);
+        private ITopic<MessageEntity> getRandomTopic() {
+            int index = randomInt(topics.length);
             return topics[index];
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
-
-    @Verify(global = true)
-    public void verify() {
-
-        final long expectedCount = listenersPerTopic * totalMessagesSend.get();
-
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                long actualCount = 0;
-                for (MessageListenerImpl topicListener : listeners) {
-                    actualCount += topicListener.received;
-                }
-                assertEquals("published messages don't match received messages", expectedCount, actualCount);
-            }
-        });
-
-        assertEquals("Failures found", 0, failures.get());
-    }
-
-    public static class MessageDataSerializableFactory implements DataSerializableFactory {
+    private static class MessageDataSerializableFactory implements DataSerializableFactory {
 
         public static final int FACTORY_ID = 18;
 
@@ -137,6 +131,7 @@ public class ReliableTopicTest {
     }
 
     private static class MessageEntity implements IdentifiedDataSerializable {
+
         private String thread;
         private long value;
 
@@ -150,10 +145,10 @@ public class ReliableTopicTest {
 
         @Override
         public String toString() {
-            return "MessageEntity{" +
-                    "thread=" + thread +
-                    ", value=" + value +
-                    '}';
+            return "MessageEntity{"
+                    + "thread=" + thread
+                    + ", value=" + value
+                    + '}';
         }
 
         @Override
@@ -181,9 +176,11 @@ public class ReliableTopicTest {
     }
 
     private class MessageListenerImpl implements MessageListener<MessageEntity> {
+
+        private final Map<String, Long> values = new HashMap<String, Long>();
+        private final AtomicLong received = new AtomicLong();
+
         private final int id;
-        private volatile long received = 0;
-        private Map<String, Long> values = new HashMap<String, Long>();
 
         public MessageListenerImpl(int id) {
             this.id = id;
@@ -208,19 +205,16 @@ public class ReliableTopicTest {
 
             values.put(threadId, actualValue);
 
-            if (received % 100000 == 0) {
+            if (received.getAndIncrement() % 100000 == 0) {
                 LOGGER.info(toString() + " is at: " + message.getMessageObject().toString());
             }
-
-            received++;
         }
 
         @Override
         public String toString() {
-            return "StressMessageListener{" +
-                    "id=" + id +
-                    '}';
+            return "StressMessageListener{"
+                    + "id=" + id
+                    + '}';
         }
     }
-
 }
