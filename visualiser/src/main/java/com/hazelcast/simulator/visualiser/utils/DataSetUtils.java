@@ -37,7 +37,8 @@ public final class DataSetUtils {
         if (probeData instanceof LatencyDistributionResult) {
             return calcSingleProbeDataSet((LatencyDistributionResult) probeData, accuracy, scalingPercentile);
         }
-        throw new IllegalArgumentException("unknown probe result type: " + probeData.getClass().getSimpleName());
+        System.err.println("Skipping unsupported probe result type: " + probeData.getClass().getSimpleName());
+        return null;
     }
 
     private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(HdrLatencyDistributionResult probeData, long accuracy,

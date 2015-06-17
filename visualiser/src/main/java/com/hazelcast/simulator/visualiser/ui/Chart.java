@@ -150,7 +150,9 @@ public class Chart extends JPanel {
                 }
                 String name = benchmarkName + " - " + selectedProbe;
                 SimpleHistogramDataSetContainer dataSet = calculateSingleProbeDataSet(probeData, accuracy, scalingPercentile);
-                aggregatedDataSet.addNewSeries(dataSet, name);
+                if (dataSet != null) {
+                    aggregatedDataSet.addNewSeries(dataSet, name);
+                }
             }
         }
         return aggregatedDataSet;
