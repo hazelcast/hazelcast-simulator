@@ -55,6 +55,9 @@ public final class Coordinator {
     static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
     static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
+    private static final int COOLDOWN_SECONDS = 10;
+    private static final int TEST_CASE_RUNNER_SLEEP_PERIOD = 30;
+
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
     // options
@@ -67,6 +70,8 @@ public final class Coordinator {
     int dedicatedMemberMachineCount;
     boolean parallel;
     WorkerJvmSettings workerJvmSettings;
+    int cooldownSeconds = COOLDOWN_SECONDS;
+    int testCaseRunnerSleepPeriod = TEST_CASE_RUNNER_SLEEP_PERIOD;
 
     // internal state
     final SimulatorProperties props = new SimulatorProperties();
@@ -332,7 +337,7 @@ public final class Coordinator {
 
         // the coordinator needs to sleep some time to make sure that it will get failures if they are there
         LOGGER.info("Starting cool down (10 sec)");
-        sleepSeconds(10);
+        sleepSeconds(cooldownSeconds);
         LOGGER.info("Finished cool down");
 
         long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
