@@ -183,10 +183,10 @@ public final class Coordinator {
                 return;
             }
 
-            LOGGER.info(format("Starting uploading '+%s+' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
+            LOGGER.info(format("Starting uploading '%s' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
             List<File> files = getFilesFromClassPath(UPLOAD_DIRECTORY.getAbsolutePath());
             for (String ip : agentsClient.getPublicAddresses()) {
-                LOGGER.info(format(" Uploading '+%s+' to agent %s", UPLOAD_DIRECTORY.getAbsolutePath(), ip));
+                LOGGER.info(format("Uploading '%s' to agent %s", UPLOAD_DIRECTORY.getAbsolutePath(), ip));
                 for (File file : files) {
                     bash.execute(format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/workers/%s/",
                             props.get("SSH_OPTIONS", ""),
@@ -198,7 +198,7 @@ public final class Coordinator {
                 }
                 LOGGER.info("    " + ip + " copied");
             }
-            LOGGER.info(format("Finished uploading '+%s+' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
+            LOGGER.info(format("Finished uploading '%s' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
         } catch (Exception e) {
             throw new CommandLineExitException("Could not copy upload directory to agents", e);
         }

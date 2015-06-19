@@ -30,6 +30,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static java.lang.String.format;
 
 public class WorkerJvmFailureMonitor {
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmFailureMonitor.class);
@@ -200,7 +201,7 @@ public class WorkerJvmFailureMonitor {
         workerJvmManager.terminateWorker(jvm);
 
         Failure failure = new Failure();
-        failure.message = "Worker terminated with exit code not 0, but  " + exitCode;
+        failure.message = format("Worker terminated with exit code %d instead of 0", exitCode);
         failure.type = Failure.Type.WORKER_EXIT;
         failure.agentAddress = getHostAddress();
         failure.workerAddress = jvm.memberAddress;
