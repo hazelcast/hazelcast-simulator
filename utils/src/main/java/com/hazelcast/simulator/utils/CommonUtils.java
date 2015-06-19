@@ -54,7 +54,7 @@ public final class CommonUtils {
      * @return formatted number
      */
     public static String formatDouble(double number, int length) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         Formatter f = new Formatter(sb);
         f.format("%,.2f", number);
 
@@ -62,7 +62,7 @@ public final class CommonUtils {
     }
 
     public static String formatLong(long number, int length) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         Formatter f = new Formatter(sb);
         f.format("%,d", number);
 

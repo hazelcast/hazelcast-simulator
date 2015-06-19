@@ -54,7 +54,7 @@ public final class NativeUtils {
     }
 
     public static void execute(String command) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Executing bash command: " + command);
@@ -126,16 +126,16 @@ public final class NativeUtils {
         }
     }
 
-    private static class BashStreamGobbler extends Thread {
+    public static class BashStreamGobbler extends Thread {
 
         private final InputStreamReader inputStreamReader;
         private final BufferedReader reader;
-        private final StringBuffer stringBuffer;
+        private final StringBuilder stringBuilder;
 
-        public BashStreamGobbler(InputStream in, StringBuffer stringBuffer) {
+        public BashStreamGobbler(InputStream in, StringBuilder stringBuilder) {
             this.inputStreamReader = new InputStreamReader(in);
             this.reader = new BufferedReader(inputStreamReader);
-            this.stringBuffer = stringBuffer;
+            this.stringBuilder = stringBuilder;
         }
 
         @Override
@@ -143,7 +143,7 @@ public final class NativeUtils {
             try {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    stringBuffer.append(line).append("\n");
+                    stringBuilder.append(line).append("\n");
                 }
             } catch (IOException ignored) {
                 EmptyStatement.ignore(ignored);
