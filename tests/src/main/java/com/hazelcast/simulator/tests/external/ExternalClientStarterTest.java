@@ -32,6 +32,6 @@ public class ExternalClientStarterTest {
     @Run
     public void run() {
         LOGGER.info("Starting external client: " + binaryName);
-        bash.execute("../upload/" + binaryName + " " + arguments + " &");
+        bash.execute("../upload/" + binaryName + " " + arguments + " >> external-client.log &");
     }
 }
