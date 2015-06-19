@@ -126,12 +126,15 @@ public final class NativeUtils {
         }
     }
 
-    public static class BashStreamGobbler extends Thread {
+    private static class BashStreamGobbler extends Thread {
+
+        private final InputStreamReader inputStreamReader;
         private final BufferedReader reader;
         private final StringBuffer stringBuffer;
 
         public BashStreamGobbler(InputStream in, StringBuffer stringBuffer) {
-            this.reader = new BufferedReader(new InputStreamReader(in));
+            this.inputStreamReader = new InputStreamReader(in);
+            this.reader = new BufferedReader(inputStreamReader);
             this.stringBuffer = stringBuffer;
         }
 
@@ -146,6 +149,7 @@ public final class NativeUtils {
                 EmptyStatement.ignore(ignored);
             } finally {
                 closeQuietly(reader);
+                closeQuietly(inputStreamReader);
             }
         }
     }
