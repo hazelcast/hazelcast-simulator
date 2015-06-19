@@ -29,7 +29,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 
 /**
- * TestCase runner is responsible for running a single test case. Multiple test-cases can be run in parallel,
+ * TestCaseRunner is responsible for running a single TestCase. Multiple TestCases can be run in parallel,
  * by having multiple TestCaseRunners in parallel.
  */
 final class TestCaseRunner {
@@ -45,6 +45,7 @@ final class TestCaseRunner {
     private final Set<Failure.Type> nonCriticalFailures;
     private final String testCaseId;
     private final String prefix;
+    private final int sleepPeriod;
 
     TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int maxTextCaseIdLength) {
         this.testCase = testCase;
@@ -56,6 +57,7 @@ final class TestCaseRunner {
         this.nonCriticalFailures = testSuite.tolerableFailures;
         this.testCaseId = testCase.getId();
         this.prefix = (testCaseId.isEmpty() ? "" : padRight(testCaseId, maxTextCaseIdLength + 1));
+        this.sleepPeriod = coordinator.testCaseRunnerSleepPeriod;
     }
 
     boolean run() {
@@ -74,18 +76,14 @@ final class TestCaseRunner {
             runOnAllWorkers(TestPhase.LOCAL_WARMUP);
             runOnFirstWorker(TestPhase.GLOBAL_WARMUP);
 
-            echo("Starting Test start");
+            startPerformanceMonitor();
+
             startTestCase();
-            echo("Completed Test start");
-
-            echo(format("Test will run for %s", secondsToHuman(testSuite.duration)));
-            sleep(testSuite.duration);
-            echo("Test finished running");
-
-            echo("Starting Test stop");
-            agentsClient.executeOnAllWorkers(new StopCommand(testCaseId));
-            agentsClient.waitForPhaseCompletion(prefix, testCaseId, TestPhase.RUN);
-            echo("Completed Test stop");
+            if (testSuite.duration > 0) {
+                stopTestCaseAfterDuration();
+            } else {
+                waitForTestCase();
+            }
 
             logPerformance();
             processProbeResults();
@@ -121,15 +119,40 @@ final class TestCaseRunner {
         echo("Completed Test " + testPhase.name);
     }
 
-    private void startTestCase() throws TimeoutException {
+    private void startPerformanceMonitor() {
         if (coordinator.monitorPerformance) {
             performanceMonitor.start();
         }
+    }
 
+    private void startTestCase() throws TimeoutException {
+        echo("Starting Test start");
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
         RunCommand runCommand = new RunCommand(testCaseId);
         runCommand.clientOnly = workerJvmSettings.clientWorkerCount > 0;
         agentsClient.executeOnAllWorkers(runCommand);
+        echo("Completed Test start");
+    }
+
+    private void stopTestCaseAfterDuration() throws TimeoutException {
+        echo(format("Test will run for %s", secondsToHuman(testSuite.duration)));
+        sleep(testSuite.duration);
+        echo("Test finished running");
+
+        echo("Starting Test stop");
+        agentsClient.executeOnAllWorkers(new StopCommand(testCaseId));
+        agentsClient.waitForPhaseCompletion(prefix, testCaseId, TestPhase.RUN);
+        echo("Completed Test stop");
+    }
+
+    private void waitForTestCase() throws TimeoutException {
+        echo("Test will run until it stops");
+        agentsClient.waitForPhaseCompletion(prefix, testCaseId, TestPhase.RUN);
+        echo("Test finished running");
+    }
+
+    private void logPerformance() {
+        performanceMonitor.logDetailedPerformanceInfo(testSuite.duration);
     }
 
     private void processProbeResults() {
@@ -138,15 +161,6 @@ final class TestCaseRunner {
             String fileName = "probes-" + coordinator.testSuite.id + "_" + testCaseId + ".xml";
             ProbesResultXmlWriter.write(probesResult, new File(fileName));
             logProbesResultInHumanReadableFormat(probesResult);
-        }
-    }
-
-    private <R extends Result<R>> void logProbesResultInHumanReadableFormat(Map<String, R> combinedResults) {
-        for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
-            String probeName = entry.getKey();
-            String result = entry.getValue().toHumanString();
-            String whitespace = (result.contains("\n") ? "\n" : " ");
-            echo("Results of probe " + probeName + ":" + whitespace + result);
         }
     }
 
@@ -177,24 +191,27 @@ final class TestCaseRunner {
         return combinedResults;
     }
 
-    private void logPerformance() {
-        performanceMonitor.logDetailedPerformanceInfo(testSuite.duration);
+    private <R extends Result<R>> void logProbesResultInHumanReadableFormat(Map<String, R> combinedResults) {
+        for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
+            String probeName = entry.getKey();
+            String result = entry.getValue().toHumanString();
+            String whitespace = (result.contains("\n") ? "\n" : " ");
+            echo("Results of probe " + probeName + ":" + whitespace + result);
+        }
     }
 
     private void sleep(int seconds) {
-        int period = 30;
-        int big = seconds / period;
-        int small = seconds % period;
-
-        for (int i = 1; i <= big; i++) {
+        int sleepLoops = seconds / sleepPeriod;
+        for (int i = 1; i <= sleepLoops; i++) {
             if (failureMonitor.hasCriticalFailure(nonCriticalFailures)) {
                 echo("Critical Failure detected, aborting execution of test");
                 return;
             }
 
-            sleepSeconds(period);
-            final int elapsed = period * i;
-            final float percentage = (100f * elapsed) / seconds;
+            sleepSeconds(sleepPeriod);
+
+            int elapsed = sleepPeriod * i;
+            float percentage = (100f * elapsed) / seconds;
             String msg = format("Running %s %s%% complete", secondsToHuman(elapsed), formatDouble(percentage, 7));
 
             if (coordinator.monitorPerformance) {
@@ -204,7 +221,7 @@ final class TestCaseRunner {
             LOGGER.info(prefix + msg);
         }
 
-        sleepSeconds(small);
+        sleepSeconds(seconds % sleepPeriod);
     }
 
     private void echo(String msg) {
