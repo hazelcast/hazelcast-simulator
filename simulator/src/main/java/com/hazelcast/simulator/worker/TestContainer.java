@@ -372,8 +372,7 @@ public class TestContainer<T extends TestContext> {
         }
 
         // create instance to get class of worker
-        IWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
-        Class workerClass = worker.getClass();
+        Class workerClass = invokeMethod(testClassInstance, runWithWorkerMethod).getClass();
 
         Field testContextField = getField(workerClass, "testContext", TestContext.class);
         Field intervalProbeField = getField(workerClass, "intervalProbe", IntervalProbe.class);
@@ -390,9 +389,18 @@ public class TestContainer<T extends TestContext> {
 
         operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
 
+        // spawn worker and wait for completion
+        spawnWorkerThreads(testContextField, intervalProbeField, intervalProbe);
+
+        // call the afterCompletion method on a single instance of the worker
+        operationCountWorkerInstance.afterCompletion();
+    }
+
+    private void spawnWorkerThreads(Field testContextField, Field intervalProbeField, IntervalProbe intervalProbe)
+            throws Exception {
         workerThreadSpawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
-            worker = invokeMethod(testClassInstance, runWithWorkerMethod);
+            IWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
 
             if (testContextField != null) {
                 injectObjectToInstance(worker, testContextField, testContext);
@@ -408,8 +416,5 @@ public class TestContainer<T extends TestContext> {
             workerThreadSpawner.spawn(worker);
         }
         workerThreadSpawner.awaitCompletion();
-
-        // call the afterCompletion method on a single instance of the worker
-        operationCountWorkerInstance.afterCompletion();
     }
 }
