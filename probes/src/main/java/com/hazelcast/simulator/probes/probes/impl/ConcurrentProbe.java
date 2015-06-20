@@ -73,6 +73,11 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
     }
 
     @Override
+    public void setValues(long durationMs, int invocations) {
+        getProbe().setValues(durationMs, invocations);
+    }
+
+    @Override
     public R getResult() {
         Iterator<T> probeIterator = probeMap.values().iterator();
         if (!probeIterator.hasNext()) {

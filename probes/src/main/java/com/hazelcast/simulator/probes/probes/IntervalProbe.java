@@ -22,7 +22,8 @@ public interface IntervalProbe<R extends Result<R>, T extends SimpleProbe<R, T>>
     /**
      * Adds a latency value in nanoseconds to the probe result.
      *
-     * Can be used if {@link #started()} and {@link #done()} are not directly related, e.g. in asynchronous tests.
+     * Can be used if {@link #started()} and {@link #done()} are not directly related, e.g. in asynchronous tests or are collected
+     * from an external source like a C++ client.
      *
      * @param latencyNanos latency value in nanoseconds
      */

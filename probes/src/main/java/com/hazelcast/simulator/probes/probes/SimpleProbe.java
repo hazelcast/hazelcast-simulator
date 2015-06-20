@@ -25,5 +25,16 @@ public interface SimpleProbe<R extends Result<R>, T extends SimpleProbe<R, T>> {
 
     void stopProbing(long timeStamp);
 
+    /**
+     * Sets the throughput result by passing invocations and duration in milliseconds.
+     *
+     * Can be used if {@link #startProbing(long)} and {@link #stopProbing(long)} are not directly related, e.g. in asynchronous
+     * tests or are collected from an external source like a C++ client.
+     *
+     * @param durationMs  duration of sampling in milliseconds
+     * @param invocations number of invocation during sampling period
+     */
+    void setValues(long durationMs, int invocations);
+
     R getResult();
 }

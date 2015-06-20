@@ -24,6 +24,11 @@ public abstract class AbstractIntervalProbe<R extends Result<R>, T extends Inter
     protected int invocations;
 
     @Override
+    public void setValues(long durationMs, int invocations) {
+        throw new UnsupportedOperationException("This method is just supported by IntervalProbe implementations");
+    }
+
+    @Override
     public void started() {
         started = System.nanoTime();
     }

@@ -31,8 +31,13 @@ public class LatencyDistributionProbeTest {
         assertEquals(5, latencyDistributionProbe.getInvocationCount());
     }
 
+    @Test(expected = UnsupportedOperationException.class)
+    public void testSetValues() {
+        latencyDistributionProbe.setValues(123, 125812);
+    }
+
     @Test
-    public void testRecordValues() {
+    public void testRecordValue() {
         latencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(500));
         latencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(200));
         latencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(1000));
@@ -67,7 +72,7 @@ public class LatencyDistributionProbeTest {
     }
 
     @Test
-    public void testResult_withRecordValues() {
+    public void testResult_withRecordValue() {
         long minLatency = TimeUnit.MILLISECONDS.toMicros(200) / 10;
         long maxLatency = TimeUnit.MILLISECONDS.toMicros(1000) / 10;
 

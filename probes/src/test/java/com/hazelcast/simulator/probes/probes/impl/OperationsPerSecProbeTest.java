@@ -28,13 +28,84 @@ public class OperationsPerSecProbeTest {
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void testRecordValues() {
+    public void testRecordValue() {
         operationsPerSecProbe.recordValue(500);
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testResultWithInitialization() {
+    public void testStopProbingWithoutInitialization() {
+        operationsPerSecProbe.stopProbing(0);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testResultWithoutInitialization() {
         operationsPerSecProbe.getResult();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testSetValues_ZeroDuration() {
+        operationsPerSecProbe.setValues(0, 10000);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testSetValues_ZeroInvocations() {
+        operationsPerSecProbe.setValues(10000, 0);
+    }
+
+    @Test
+    public void testSetValues_10ops() {
+        operationsPerSecProbe.setValues(1000, 10);
+
+        OperationsPerSecResult result = operationsPerSecProbe.getResult();
+        assertTrue(result != null);
+
+        Long invocations = getObjectFromField(result, "invocations");
+        assertEqualsStringFormat("Expected %d invocations, but was %d", 10L, invocations);
+
+        Double operationsPerSecond = getObjectFromField(result, "operationsPerSecond");
+        assertEqualsStringFormat("Expected %.2f op/s, but was %.2f", 10.0, operationsPerSecond, 0.01);
+    }
+
+    @Test
+    public void testSetValues_20ops() {
+        operationsPerSecProbe.setValues(500, 10);
+
+        OperationsPerSecResult result = operationsPerSecProbe.getResult();
+        assertTrue(result != null);
+
+        Long invocations = getObjectFromField(result, "invocations");
+        assertEqualsStringFormat("Expected %d invocations, but was %d", 10L, invocations);
+
+        Double operationsPerSecond = getObjectFromField(result, "operationsPerSecond");
+        assertEqualsStringFormat("Expected %.2f op/s, but was %.2f", 20.0, operationsPerSecond, 0.01);
+    }
+
+    @Test
+    public void testSetValues_800ops() {
+        operationsPerSecProbe.setValues(5, 4);
+
+        OperationsPerSecResult result = operationsPerSecProbe.getResult();
+        assertTrue(result != null);
+
+        Long invocations = getObjectFromField(result, "invocations");
+        assertEqualsStringFormat("Expected %d invocations, but was %d", 4L, invocations);
+
+        Double operationsPerSecond = getObjectFromField(result, "operationsPerSecond");
+        assertEqualsStringFormat("Expected %.2f op/s, but was %.2f", 800.0, operationsPerSecond, 0.01);
+    }
+
+    @Test
+    public void testSetValues_8ops() {
+        operationsPerSecProbe.setValues(500, 4);
+
+        OperationsPerSecResult result = operationsPerSecProbe.getResult();
+        assertTrue(result != null);
+
+        Long invocations = getObjectFromField(result, "invocations");
+        assertEqualsStringFormat("Expected %d invocations, but was %d", 4L, invocations);
+
+        Double operationsPerSecond = getObjectFromField(result, "operationsPerSecond");
+        assertEqualsStringFormat("Expected %.2f op/s, but was %.2f", 8.0, operationsPerSecond, 0.01);
     }
 
     @Test

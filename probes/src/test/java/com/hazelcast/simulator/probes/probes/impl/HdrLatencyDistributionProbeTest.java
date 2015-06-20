@@ -32,8 +32,13 @@ public class HdrLatencyDistributionProbeTest {
         assertEquals(5, hdrLatencyDistributionProbe.getInvocationCount());
     }
 
+    @Test(expected = UnsupportedOperationException.class)
+    public void testSetValues() {
+        hdrLatencyDistributionProbe.setValues(123, 125812);
+    }
+
     @Test
-    public void testRecordValues() {
+    public void testRecordValue() {
         hdrLatencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(500));
         hdrLatencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(200));
         hdrLatencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(1000));
@@ -67,7 +72,7 @@ public class HdrLatencyDistributionProbeTest {
     }
 
     @Test
-    public void testResult_withRecordValues() {
+    public void testResult_withRecordValue() {
         long sleepTime = TimeUnit.MILLISECONDS.toMicros(200);
         long tolerance = TimeUnit.MILLISECONDS.toMicros(801);
 

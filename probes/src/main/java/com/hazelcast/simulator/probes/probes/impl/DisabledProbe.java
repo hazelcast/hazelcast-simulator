@@ -52,6 +52,10 @@ public final class DisabledProbe implements IntervalProbe<DisabledResult, Disabl
     }
 
     @Override
+    public void setValues(long durationMs, int invocations) {
+    }
+
+    @Override
     public DisabledResult getResult() {
         return RESULT;
     }
