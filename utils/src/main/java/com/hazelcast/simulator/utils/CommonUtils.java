@@ -276,12 +276,13 @@ public final class CommonUtils {
     }
 
     public static void exitWithError(Logger logger, String msg, Throwable throwable) {
-        //if (throwable instanceof CommandLineExitException) {
-        //    logger.fatal(throwable.getMessage() + "\n" + throwable.getCause().getMessage());
-        //} else {
+        if (throwable instanceof CommandLineExitException) {
+            String throwableString = throwableToString(throwable.getCause());
+            logger.fatal(throwable.getMessage() + "\n" + throwableString);
+        } else {
             String throwableString = throwableToString(throwable);
             logger.fatal(msg + "\n" + throwableString);
-        //}
+        }
         System.exit(1);
     }
 }

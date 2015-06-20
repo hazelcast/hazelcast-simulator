@@ -355,6 +355,7 @@ public final class FileUtils {
         for (String filePath : classpath.split(";")) {
             File file = new File(filePath);
 
+            LOGGER.info("Get files from " + file.getName());
             if (file.getName().contains("*")) {
                 File parent = file.getParentFile();
                 if (!parent.isDirectory()) {
