@@ -30,28 +30,26 @@ public class ExternalClientTest {
 
     private HazelcastInstance hazelcastInstance;
     private ICountDownLatch clientsRunning;
-    private boolean isSingletonInstance;
+    private boolean isExternalResultsCollectorInstance;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         hazelcastInstance = testContext.getTargetInstance();
 
-        // limit to one instance per cluster
-        if (hazelcastInstance.getMap(basename).putIfAbsent(basename, true) != null) {
-            return;
-        }
-
         clientsRunning = hazelcastInstance.getCountDownLatch(basename);
         clientsRunning.trySetCount(waitForClientsCount);
 
-        isSingletonInstance = true;
+        // determine one instance per cluster
+        if (hazelcastInstance.getMap(basename).putIfAbsent(basename, true) != null) {
+            return;
+        }
+        isExternalResultsCollectorInstance = true;
+        LOGGER.info("This instance will collect all probe results from external clients");
     }
 
     @Run
     public void run() {
-        if (!isSingletonInstance) {
-            return;
-        }
+        // wait for external clients to finish
         while (true) {
             try {
                 clientsRunning.await(waitIntervalSeconds, TimeUnit.SECONDS);
@@ -67,11 +65,18 @@ public class ExternalClientTest {
             }
         }
 
+        // just a single instance will collect the results from all external clients
+        if (!isExternalResultsCollectorInstance) {
+            return;
+        }
+
+        // fetch latency results
         IList<Long> latencyResults = hazelcastInstance.getList("externalClientsLatencyResults");
         for (Long latency : latencyResults) {
             externalClientLatency.recordValue(latency);
         }
 
+        // fetch throughput results
         double totalDuration = 0;
         int totalInvocations = 0;
         IList<String> throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
