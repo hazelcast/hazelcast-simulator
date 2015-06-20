@@ -23,7 +23,7 @@ public class ExternalClientResponseTest {
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        this.clientsFinished = hazelcastInstance.getCountDownLatch(basename);
+        clientsFinished = hazelcastInstance.getCountDownLatch(basename);
     }
 
     @Run
