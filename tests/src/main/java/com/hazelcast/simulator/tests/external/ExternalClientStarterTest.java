@@ -11,6 +11,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import java.io.File;
 
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static java.lang.String.format;
 
 public class ExternalClientStarterTest {
 
@@ -19,6 +20,7 @@ public class ExternalClientStarterTest {
     // properties
     public String binaryName = "binaryName";
     public String arguments = "";
+    public String logFileName = "external-client";
 
     private final SimulatorProperties props = new SimulatorProperties();
     private final Bash bash = new Bash(props);
@@ -31,7 +33,7 @@ public class ExternalClientStarterTest {
 
     @Run
     public void run() {
-        LOGGER.info("Starting external client: " + binaryName);
-        bash.execute("../upload/" + binaryName + " " + arguments + " >> external-client.log &");
+        LOGGER.info(format("Starting external client: %s %s >> %s.log", binaryName, arguments, logFileName));
+        bash.execute(format("../upload/%s %s >> %s.log &", binaryName, arguments, logFileName));
     }
 }
