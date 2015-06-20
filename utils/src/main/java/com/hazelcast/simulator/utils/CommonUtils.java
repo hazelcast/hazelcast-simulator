@@ -277,8 +277,12 @@ public final class CommonUtils {
 
     public static void exitWithError(Logger logger, String msg, Throwable throwable) {
         if (throwable instanceof CommandLineExitException) {
-            String throwableString = throwableToString(throwable.getCause());
-            logger.fatal(throwable.getMessage() + "\n" + throwableString);
+            String logMessage = throwable.getMessage();
+            if (throwable.getCause() != null) {
+                String throwableString = throwableToString(throwable.getCause());
+                logMessage += "\n" + throwableString;
+            }
+            logger.fatal(logMessage);
         } else {
             String throwableString = throwableToString(throwable);
             logger.fatal(msg + "\n" + throwableString);

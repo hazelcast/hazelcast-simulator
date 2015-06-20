@@ -33,6 +33,12 @@ public class CommonUtils_SystemExitTest {
 
     @Test(expected = ExitStatusOneException.class)
     public void testExitWithError_withCommandLineExitException() {
+        exitWithError(logger, "expected failure", new CommandLineExitException("expected CommandLineExitException",
+                new RuntimeException("cause")));
+    }
+
+    @Test(expected = ExitStatusOneException.class)
+    public void testExitWithError_withCommandLineExitException_noCause() {
         exitWithError(logger, "expected failure", new CommandLineExitException("expected CommandLineExitException"));
     }
 
