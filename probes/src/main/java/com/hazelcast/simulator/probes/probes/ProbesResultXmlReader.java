@@ -85,10 +85,14 @@ public final class ProbesResultXmlReader {
                 }
             } else if (event.isEndElement()) {
                 EndElement endElement = event.asEndElement();
-                if (!PROBES_RESULT.matches(endElement.getName().getLocalPart())) {
+                boolean isProbeEnd = PROBE.matches(endElement.getName().getLocalPart());
+                boolean isProbeResultEnd = PROBES_RESULT.matches(endElement.getName().getLocalPart());
+                if (!isProbeEnd && !isProbeResultEnd) {
                     throw new XMLStreamException("Unexpected end element " + endElement.getName());
                 }
-                return;
+                if (isProbeResultEnd) {
+                    return;
+                }
             }
         }
     }
@@ -109,21 +113,6 @@ public final class ProbesResultXmlReader {
             probeResult = parseLatencyDistributionResult(reader);
         }
         result.put(name, probeResult);
-
-        while (reader.hasNext()) {
-            XMLEvent eventType = reader.nextEvent();
-            if (eventType.isEndElement()) {
-                EndElement endElement = eventType.asEndElement();
-                if (!PROBE.matches(endElement.getName().getLocalPart())) {
-                    throw new XMLStreamException("Unexpected end element " + endElement.getName());
-                }
-                return;
-            } else if (eventType.isStartElement()) {
-                throw new XMLStreamException("Unexpected start element " + eventType.asStartElement().getName());
-            } else if (eventType.isCharacters()) {
-                throw new XMLStreamException("Unexpected characters " + eventType.asCharacters().getData());
-            }
-        }
     }
 
     private static Result parseOperationsPerSecResult(XMLEventReader reader) throws XMLStreamException {
@@ -147,15 +136,15 @@ public final class ProbesResultXmlReader {
                     }
                     operationsPerSecond = Double.parseDouble(parseCharsAndEndCurrentElement(reader));
                 }
+                if (invocations != null && operationsPerSecond != null) {
+                    return new OperationsPerSecResult(invocations, operationsPerSecond);
+                }
             }
-        }
-        if (invocations != null && operationsPerSecond != null) {
-            return new OperationsPerSecResult(invocations, operationsPerSecond);
         }
         throw new XMLStreamException("Unexpected end of stream");
     }
 
-    private static MaxLatencyResult parseMaxLatencyResult(XMLEventReader reader) throws XMLStreamException {
+    private static Result parseMaxLatencyResult(XMLEventReader reader) throws XMLStreamException {
         Long maxLatency = null;
         while (reader.hasNext()) {
             XMLEvent xmlEvent = reader.nextEvent();
@@ -183,11 +172,8 @@ public final class ProbesResultXmlReader {
                 encodedData = xmlEvent.asCharacters().getData();
             } else if (xmlEvent.isEndElement()) {
                 EndElement endElement = xmlEvent.asEndElement();
-                if (!HDR_LATENCY_DATA.matches(endElement.getName().getLocalPart())) {
+                if (!HDR_LATENCY_DATA.matches(endElement.getName().getLocalPart()) || encodedData == null) {
                     throw new XMLStreamException("Unexpected end element " + endElement.getName());
-                }
-                if (encodedData == null) {
-                    throw new XMLStreamException("Unexpected end element " + HDR_LATENCY_DATA.getName());
                 }
                 try {
                     byte[] bytes = Base64.decodeBase64(encodedData);
@@ -201,7 +187,7 @@ public final class ProbesResultXmlReader {
         throw new XMLStreamException("Unexpected end of stream");
     }
 
-    private static LatencyDistributionResult parseLatencyDistributionResult(XMLEventReader reader) throws XMLStreamException {
+    private static Result parseLatencyDistributionResult(XMLEventReader reader) throws XMLStreamException {
         Integer step = null;
         Integer maxValue = null;
 

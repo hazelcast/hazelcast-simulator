@@ -37,7 +37,6 @@ public final class DataSetUtils {
         if (probeData instanceof LatencyDistributionResult) {
             return calcSingleProbeDataSet((LatencyDistributionResult) probeData, accuracy, scalingPercentile);
         }
-        System.err.println("Skipping unsupported probe result type: " + probeData.getClass().getSimpleName());
         return null;
     }
 
