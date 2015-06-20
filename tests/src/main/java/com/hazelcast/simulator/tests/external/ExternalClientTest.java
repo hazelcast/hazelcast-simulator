@@ -28,12 +28,14 @@ public class ExternalClientTest {
     IntervalProbe externalClientLatency;
     SimpleProbe externalClientThroughput;
 
+    private TestContext testContext;
     private HazelcastInstance hazelcastInstance;
     private ICountDownLatch clientsRunning;
     private boolean isExternalResultsCollectorInstance;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
+        this.testContext = testContext;
         hazelcastInstance = testContext.getTargetInstance();
 
         clientsRunning = hazelcastInstance.getCountDownLatch(basename);
@@ -95,5 +97,8 @@ public class ExternalClientTest {
         LOGGER.info(format("All external clients executed %d operations in %d ms", totalInvocations, durationAvg));
 
         externalClientThroughput.setValues(durationAvg, totalInvocations);
+
+        LOGGER.info("Stopping ExternalClientTest");
+        testContext.stop();
     }
 }
