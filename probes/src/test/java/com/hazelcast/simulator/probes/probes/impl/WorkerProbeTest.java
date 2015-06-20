@@ -29,7 +29,7 @@ public class WorkerProbeTest {
     }
 
     @Test
-    public void testRecordValues() {
+    public void testRecordValue() {
         workerProbe.recordValue(-1);
         workerProbe.recordValue(5);
 
@@ -40,13 +40,23 @@ public class WorkerProbeTest {
     public void testResult() {
         workerProbe.done();
 
+        assertEquals(1, workerProbe.getInvocationCount());
         assertTrue(workerProbe.getResult() != null);
     }
 
     @Test
-    public void testResult_withRecordValues() {
+    public void testResult_withSetValues() {
+        workerProbe.setValues(123914, 12932);
+
+        assertEquals(12932, workerProbe.getInvocationCount());
+        assertTrue(workerProbe.getResult() != null);
+    }
+
+    @Test
+    public void testResult_withRecordValue() {
         workerProbe.recordValue(152);
 
+        assertEquals(1, workerProbe.getInvocationCount());
         assertTrue(workerProbe.getResult() != null);
     }
 }

@@ -21,7 +21,7 @@ import com.hazelcast.simulator.probes.probes.Result;
 public abstract class AbstractSimpleProbe<R extends Result<R>, T extends IntervalProbe<R, T>> implements IntervalProbe<R, T> {
 
     protected long started;
-    protected long stopped;
+    protected long durationMs;
     protected int invocations;
 
     @Override
@@ -31,6 +31,11 @@ public abstract class AbstractSimpleProbe<R extends Result<R>, T extends Interva
     @Override
     public void recordValue(long latencyNanos) {
         throw new UnsupportedOperationException("This method is just supported by IntervalProbe implementations");
+    }
+
+    @Override
+    public void done() {
+        invocations++;
     }
 
     @Override
@@ -45,16 +50,32 @@ public abstract class AbstractSimpleProbe<R extends Result<R>, T extends Interva
 
     @Override
     public void stopProbing(long timeStamp) {
-        stopped = timeStamp;
+        if (started == 0) {
+            throw new IllegalStateException("Can't get result as probe has not been started yet.");
+        }
+
+        long stopOrNow = (timeStamp == 0 ? System.currentTimeMillis() : timeStamp);
+        durationMs = stopOrNow - started;
+    }
+
+    @Override
+    public void setValues(long durationMs, int invocations) {
+        if (durationMs < 1) {
+            throw new IllegalArgumentException("durationMs must be positive!");
+        }
+        if (invocations < 1) {
+            throw new IllegalArgumentException("invocations must be positive!");
+        }
+
+        this.durationMs = durationMs;
+        this.invocations = invocations;
     }
 
     @Override
     public R getResult() {
-        if (started == 0) {
-            throw new IllegalStateException("Can't get result as probe has no be started yet.");
+        if (durationMs == 0) {
+            throw new IllegalStateException("Can't get result as probe has no duration.");
         }
-        long stopOrNow = (stopped == 0 ? System.currentTimeMillis() : stopped);
-        long durationMs = stopOrNow - started;
 
         return getResult(durationMs);
     }

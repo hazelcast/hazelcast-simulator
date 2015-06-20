@@ -29,6 +29,11 @@ public class WorkerProbe extends AbstractIntervalProbe<DisabledResult, WorkerPro
     }
 
     @Override
+    public void setValues(long durationMs, int invocations) {
+        this.invocations += invocations;
+    }
+
+    @Override
     public void done() {
         invocations++;
     }

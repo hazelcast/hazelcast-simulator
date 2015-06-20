@@ -30,8 +30,13 @@ public class MaxLatencyProbeTest {
         assertEquals(5, maxLatencyProbe.getInvocationCount());
     }
 
+    @Test(expected = UnsupportedOperationException.class)
+    public void testSetValues() {
+        maxLatencyProbe.setValues(123, 125812);
+    }
+
     @Test
-    public void testRecordValues() {
+    public void testRecordValue() {
         maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(500));
         maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(200));
         maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(1000));
@@ -54,7 +59,7 @@ public class MaxLatencyProbeTest {
     }
 
     @Test
-    public void testResult_withRecordValues() {
+    public void testResult_withRecordValue() {
         maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(500));
         maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(200));
         maxLatencyProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(1000));
