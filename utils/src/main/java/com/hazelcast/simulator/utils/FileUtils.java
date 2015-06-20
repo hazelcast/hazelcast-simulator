@@ -355,11 +355,10 @@ public final class FileUtils {
         for (String filePath : classpath.split(";")) {
             File file = new File(filePath);
 
-            LOGGER.info("Get files from " + file.getName());
             if (file.getName().contains("*")) {
                 File parent = file.getParentFile();
-                if (!parent.isDirectory()) {
-                    throw new IOException(format("Cannot convert classpath to java.io.File. [%s] is not a directory", parent));
+                if (parent == null || !parent.isDirectory()) {
+                    throw new IOException(format("Could not find matching files for wildcard classpath %s", file.getName()));
                 }
 
                 String regex = file.getName().replace("*", "(.*)");
