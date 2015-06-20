@@ -11,39 +11,40 @@ import com.hazelcast.util.EmptyStatement;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-
 public class ExternalClientTest {
 
     private static final ILogger LOGGER = Logger.getLogger(ExternalClientTest.class);
 
     // properties
-    public String basename = "externalClientsFinished";
+    public String basename = "externalClientsRunning";
     public int waitForClientsCount = 1;
     public int waitIntervalSeconds = 60;
 
-    private ICountDownLatch clientsFinished;
+    private ICountDownLatch clientsRunning;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        this.clientsFinished = hazelcastInstance.getCountDownLatch(basename);
+        this.clientsRunning = hazelcastInstance.getCountDownLatch(basename);
 
-        clientsFinished.trySetCount(waitForClientsCount);
+        clientsRunning.trySetCount(waitForClientsCount);
     }
 
     @Run
     public void run() {
-        long finishedClients;
-        do {
-            sleepSeconds(waitIntervalSeconds);
+        while (true) {
             try {
-                clientsFinished.await(waitIntervalSeconds, TimeUnit.SECONDS);
+                clientsRunning.await(waitIntervalSeconds, TimeUnit.SECONDS);
             } catch (InterruptedException ignored) {
                 EmptyStatement.ignore(ignored);
             }
-            finishedClients = clientsFinished.getCount();
-        } while (finishedClients < waitForClientsCount);
-        LOGGER.info("Got response from " + finishedClients + " clients, stopping now!");
+            long clientsRunningCount = clientsRunning.getCount();
+            if (clientsRunningCount > 0) {
+                LOGGER.info("Waiting for " + clientsRunningCount + " clients...");
+            } else {
+                LOGGER.info("Got response from " + waitForClientsCount + " clients, stopping now!");
+                break;
+            }
+        }
     }
 }
