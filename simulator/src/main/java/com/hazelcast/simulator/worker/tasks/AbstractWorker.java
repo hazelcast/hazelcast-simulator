@@ -35,7 +35,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     // local variables
     long iteration;
-    boolean isWorkerStopped = false;
+    boolean isWorkerStopped;
 
     public AbstractWorker(OperationSelectorBuilder<O> operationSelectorBuilder) {
         this.selector = operationSelectorBuilder.build();
