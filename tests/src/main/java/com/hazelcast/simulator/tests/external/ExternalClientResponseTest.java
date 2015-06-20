@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.tests.external;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IAtomicLong;
+import com.hazelcast.core.ICountDownLatch;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
@@ -18,18 +18,18 @@ public class ExternalClientResponseTest {
     public String basename = "externalClientsFinished";
     public int delaySeconds = 60;
 
-    private IAtomicLong clientsFinished;
+    private ICountDownLatch clientsFinished;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        this.clientsFinished = hazelcastInstance.getAtomicLong(basename);
+        this.clientsFinished = hazelcastInstance.getCountDownLatch(basename);
     }
 
     @Run
     public void run() {
         sleepSeconds(delaySeconds);
-        clientsFinished.incrementAndGet();
+        clientsFinished.countDown();
         LOGGER.info("Client response sent!");
     }
 }
