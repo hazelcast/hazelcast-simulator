@@ -28,19 +28,30 @@ public class ExternalClientTest {
     IntervalProbe externalClientLatency;
     SimpleProbe externalClientThroughput;
 
-    private ICountDownLatch clientsRunning;
     private HazelcastInstance hazelcastInstance;
+    private ICountDownLatch clientsRunning;
+    private boolean isSingletonInstance;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         hazelcastInstance = testContext.getTargetInstance();
-        this.clientsRunning = hazelcastInstance.getCountDownLatch(basename);
 
+        // limit to one instance per cluster
+        if (hazelcastInstance.getMap(basename).putIfAbsent(basename, true) != null) {
+            return;
+        }
+
+        clientsRunning = hazelcastInstance.getCountDownLatch(basename);
         clientsRunning.trySetCount(waitForClientsCount);
+
+        isSingletonInstance = true;
     }
 
     @Run
     public void run() {
+        if (!isSingletonInstance) {
+            return;
+        }
         while (true) {
             try {
                 clientsRunning.await(waitIntervalSeconds, TimeUnit.SECONDS);
