@@ -69,6 +69,8 @@ public class ExternalClientTest {
 
         // just a single instance will collect the results from all external clients
         if (!isExternalResultsCollectorInstance) {
+            LOGGER.info("Stopping non result collecting ExternalClientTest");
+            testContext.stop();
             return;
         }
 
@@ -98,7 +100,7 @@ public class ExternalClientTest {
 
         externalClientThroughput.setValues(durationAvg, totalInvocations);
 
-        LOGGER.info("Stopping ExternalClientTest");
+        LOGGER.info("Stopping result collecting ExternalClientTest");
         testContext.stop();
     }
 }
