@@ -83,10 +83,14 @@ public class ExternalClientTest {
         // fetch latency results
         IList<Long> latencyResults = hazelcastInstance.getList("externalClientsLatencyResults");
         int latencyResultSize = latencyResults.size();
-        LOGGER.info(format("Collecting %d latency results...", latencyResultSize));
 
+        LOGGER.info(format("Collecting %d latency results...", latencyResultSize));
+        Long[] latencyArray = new Long[latencyResultSize];
+        latencyResults.<Long>toArray(latencyArray);
+
+        LOGGER.info(format("Adding %d latency results to probe...", latencyResultSize));
         int counter = 0;
-        for (Long latency : latencyResults) {
+        for (Long latency : latencyArray) {
             externalClientLatency.recordValue(latency);
             if (++counter % 100000 == 0) {
                 LOGGER.info(format("Collected %d/%d latency results...", counter, latencyResultSize));
