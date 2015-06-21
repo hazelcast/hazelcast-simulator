@@ -144,12 +144,14 @@ class PerformanceMonitor {
                 return;
             }
 
-            double performance = (totalOperationCount * 1.0d) / duration;
             appendText(performance + "\n", new File("performance.txt"));
-            LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
-                    formatDouble(100, 7),
-                    formatLong(totalOperationCount, 15),
-                    formatDouble(performance, 15)));
+            if (totalOperationCount > 0) {
+                double performance = (totalOperationCount * 1.0d) / duration;
+                LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
+                        formatDouble(100, 7),
+                        formatLong(totalOperationCount, 15),
+                        formatDouble(performance, 15)));
+            }
 
             for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
                 AgentClient client = entry.getKey();
