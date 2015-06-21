@@ -156,7 +156,10 @@ class PerformanceMonitor {
             for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
                 AgentClient client = entry.getKey();
                 long operationCountPerAgent = entry.getValue();
-                double percentage = 100 * (operationCountPerAgent * 1.0d) / totalOperationCount;
+                double percentage = 0;
+                if (totalOperationCount > 0) {
+                    percentage = 100 * (operationCountPerAgent * 1.0d) / totalOperationCount;
+                }
                 performance = (operationCountPerAgent * 1.0d) / duration;
                 LOGGER.info(format("  Agent %-15s %s%% %s ops %s ops/s",
                         client.getPublicAddress(),
