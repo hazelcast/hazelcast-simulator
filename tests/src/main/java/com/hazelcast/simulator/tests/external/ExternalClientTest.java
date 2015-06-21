@@ -14,6 +14,7 @@ import com.hazelcast.util.EmptyStatement;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static java.lang.String.format;
 
 public class ExternalClientTest {
@@ -38,6 +39,10 @@ public class ExternalClientTest {
         this.testContext = testContext;
         hazelcastInstance = testContext.getTargetInstance();
 
+        if (isMemberNode(hazelcastInstance)) {
+            return;
+        }
+
         clientsRunning = hazelcastInstance.getCountDownLatch(basename);
         clientsRunning.trySetCount(waitForClientsCount);
 
@@ -52,6 +57,10 @@ public class ExternalClientTest {
 
     @Run
     public void run() {
+        if (isMemberNode(hazelcastInstance)) {
+            return;
+        }
+
         // wait for external clients to finish
         while (true) {
             try {
