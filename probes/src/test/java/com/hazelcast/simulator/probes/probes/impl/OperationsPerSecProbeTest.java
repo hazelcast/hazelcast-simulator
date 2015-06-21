@@ -7,6 +7,8 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class OperationsPerSecProbeTest {
@@ -37,9 +39,15 @@ public class OperationsPerSecProbeTest {
         operationsPerSecProbe.stopProbing(0);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testResultWithoutInitialization() {
-        operationsPerSecProbe.getResult();
+    @Test(expected = IllegalArgumentException.class)
+    public void testStopProbingNegativeTimeStamp() {
+        operationsPerSecProbe.stopProbing(-1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testStopProbingNegativeDuration() {
+        operationsPerSecProbe.startProbing(1000);
+        operationsPerSecProbe.stopProbing(999);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -159,6 +167,8 @@ public class OperationsPerSecProbeTest {
         OperationsPerSecResult result2 = operationsPerSecProbe.getResult();
         assertTrue(result2 != null);
 
+        assertNotEquals(result1.hashCode(), result2.hashCode());
+
         OperationsPerSecResult combined = result1.combine(result2);
         assertTrue(combined != null);
 
@@ -167,5 +177,14 @@ public class OperationsPerSecProbeTest {
 
         Double operationsPerSecond = getObjectFromField(combined, "operationsPerSecond");
         assertEqualsStringFormat("Expected %.2f op/s, but was %.2f", 1.2, operationsPerSecond, 0.01);
+    }
+
+    @Test
+    public void testDisable() {
+        assertFalse(operationsPerSecProbe.isDisabled());
+
+        operationsPerSecProbe.disable();
+
+        assertTrue(operationsPerSecProbe.isDisabled());
     }
 }

@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -63,6 +64,21 @@ public class ConcurrentProbeTest {
         probeTester2.join();
 
         assertEquals(2, concurrentProbe.getInvocationCount());
+    }
+
+    @Test
+    public void testInvocationCountOnSimpleProbe_disableOneProbe() throws Exception {
+        ProbeTester probeTester1 = new ProbeTester(concurrentProbe);
+        ProbeDisableTester probeTester2 = new ProbeDisableTester(concurrentProbe);
+
+        probeTester1.start();
+        probeTester2.start();
+
+        probeTester1.join();
+        probeTester2.join();
+
+        assertEquals(1, concurrentProbe.getInvocationCount());
+        assertTrue(probeTester2.threadLocalProbe.isDisabled());
     }
 
     @Test
@@ -169,6 +185,24 @@ public class ConcurrentProbeTest {
             threadLocalProbe = probe.getProbe();
             probe.started();
             probe.done();
+        }
+    }
+
+    private static class ProbeDisableTester extends Thread {
+
+        private final ConcurrentProbe probe;
+
+        private SimpleProbe threadLocalProbe;
+
+        public ProbeDisableTester(ConcurrentProbe probe) {
+            this.probe = probe;
+        }
+
+        @Override
+        public void run() {
+            threadLocalProbe = probe.getProbe();
+            assertFalse(probe.isDisabled());
+            probe.disable();
         }
     }
 

@@ -85,13 +85,22 @@ public class DisabledProbeTest {
         result.writeTo(null);
     }
 
-    @Test()
+    @Test
     public void testResultHashCode() {
         assertEquals(1, disabledProbe.getResult().hashCode());
     }
 
-    @Test()
+    @Test
     public void testResultEquals() {
         assertTrue(disabledProbe.getResult().equals(DisabledProbe.INSTANCE.getResult()));
+    }
+
+    @Test
+    public void testDisable() {
+        assertTrue(disabledProbe.isDisabled());
+
+        disabledProbe.disable();
+
+        assertTrue(disabledProbe.isDisabled());
     }
 }

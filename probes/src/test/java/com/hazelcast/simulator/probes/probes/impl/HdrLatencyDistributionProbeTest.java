@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -130,6 +131,8 @@ public class HdrLatencyDistributionProbeTest {
         assertTrue(result2 != null);
         assertEqualsStringFormat("Expected %d records, but was %d", 1L, result2.getHistogram().getTotalCount());
 
+        assertNotEquals(result1.hashCode(), result2.hashCode());
+
         HdrLatencyDistributionResult combined = result1.combine(result2);
         assertTrue(combined != null);
 
@@ -151,5 +154,14 @@ public class HdrLatencyDistributionProbeTest {
         double latency = histogram.getMean();
         assertTrue("latency should be >= " + sleepTime1 + ", but was " + latency, latency >= sleepTime1);
         assertTrue("latency should be < " + sleepTime2 + tolerance + ", but was " + latency, latency < sleepTime2 + tolerance);
+    }
+
+    @Test
+    public void testDisable() {
+        assertFalse(hdrLatencyDistributionProbe.isDisabled());
+
+        hdrLatencyDistributionProbe.disable();
+
+        assertTrue(hdrLatencyDistributionProbe.isDisabled());
     }
 }

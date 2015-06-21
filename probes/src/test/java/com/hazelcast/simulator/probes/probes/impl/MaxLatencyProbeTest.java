@@ -7,6 +7,8 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class MaxLatencyProbeTest {
@@ -98,11 +100,22 @@ public class MaxLatencyProbeTest {
         MaxLatencyResult result2 = maxLatencyProbe.getResult();
         assertTrue(result2 != null);
 
+        assertNotEquals(result1.hashCode(), result2.hashCode());
+
         MaxLatencyResult combined = result1.combine(result2);
         assertTrue(combined != null);
 
         Long maxLatencyMs = getObjectFromField(combined, "maxLatencyMs");
         assertTrue(maxLatencyMs >= 300);
         assertTrue(maxLatencyMs < 1000);
+    }
+
+    @Test
+    public void testDisable() {
+        assertFalse(maxLatencyProbe.isDisabled());
+
+        maxLatencyProbe.disable();
+
+        assertTrue(maxLatencyProbe.isDisabled());
     }
 }

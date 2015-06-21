@@ -37,4 +37,18 @@ public interface SimpleProbe<R extends Result<R>, T extends SimpleProbe<R, T>> {
     void setValues(long durationMs, int invocations);
 
     R getResult();
+
+    /**
+     * Disable this probe during runtime, e.g. when just a single test instance should collect the results.
+     *
+     * Results from disabled probes are not collected, so {@link IllegalStateException} from uninitialized probes are ignored.
+     */
+    void disable();
+
+    /**
+     * Checks if a probe is disabled.
+     *
+     * @return <tt>true</tt> if probe is disabled, <tt>false</tt> otherwise.
+     */
+    boolean isDisabled();
 }
