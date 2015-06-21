@@ -97,17 +97,17 @@ public class ExternalClientTest {
         IList<String> throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
         LOGGER.info("Collecting " + throughputResults.size() + " throughput results...");
 
-        double totalDuration = 0;
         int totalInvocations = 0;
+        double totalDuration = 0;
         for (String throughputString : throughputResults) {
             String[] throughput = throughputString.split("\\|");
-            long operationCount = Long.valueOf(throughput[0]);
+            int operationCount = Integer.valueOf(throughput[0]);
             long duration = TimeUnit.NANOSECONDS.toMillis(Long.valueOf(throughput[1]));
 
             LOGGER.info(format("External client executed %d operations in %d ms", operationCount, duration));
 
-            totalDuration += duration;
             totalInvocations += operationCount;
+            totalDuration += duration;
         }
         LOGGER.info("Done!");
 
