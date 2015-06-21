@@ -1,33 +1,34 @@
 package com.hazelcast.simulator.probes.probes.impl;
 
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.Probes;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.probes.probes.ProbesType;
-import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.probes.probes.Probes.createConcurrentProbe;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ConcurrentProbeTest {
 
     private ProbesConfiguration config = new ProbesConfiguration();
-    private ConcurrentProbe concurrentProbe;
+    private ConcurrentProbe<?, ?> concurrentProbe;
 
     @Before
+    @SuppressWarnings("unchecked")
     public void setUp() {
         config.addConfig("throughput", ProbesType.THROUGHPUT.getName());
         config.addConfig("latency", ProbesType.MAX_LATENCY.getName());
-        concurrentProbe = (ConcurrentProbe) Probes.createConcurrentProbe("throughput", SimpleProbe.class, config);
+        concurrentProbe = (ConcurrentProbe) createConcurrentProbe("throughput", SimpleProbe.class, config);
     }
 
     @Test
@@ -64,26 +65,66 @@ public class ConcurrentProbeTest {
         probeTester2.join();
 
         assertEquals(2, concurrentProbe.getInvocationCount());
+        assertNotNull(concurrentProbe.getResult());
+        assertEquals(2, concurrentProbe.probeMapSize());
     }
 
     @Test
-    public void testInvocationCountOnSimpleProbe_disableOneProbe() throws Exception {
+    public void testInvocationCountOnSimpleProbe_disableSomeProbes() throws Exception {
         ProbeTester probeTester1 = new ProbeTester(concurrentProbe);
-        ProbeDisableTester probeTester2 = new ProbeDisableTester(concurrentProbe);
+        ProbeTester probeTester2 = new ProbeTester(concurrentProbe);
+        ProbeDisableTester probeTester3 = new ProbeDisableTester(concurrentProbe);
+        ProbeDisableTester probeTester4 = new ProbeDisableTester(concurrentProbe);
 
         probeTester1.start();
         probeTester2.start();
+        probeTester3.start();
+        probeTester4.start();
 
         probeTester1.join();
         probeTester2.join();
+        probeTester3.join();
+        probeTester4.join();
 
-        assertEquals(1, concurrentProbe.getInvocationCount());
-        assertTrue(probeTester2.threadLocalProbe.isDisabled());
+        assertFalse(probeTester1.threadLocalProbe.isDisabled());
+        assertFalse(probeTester2.threadLocalProbe.isDisabled());
+        assertTrue(probeTester3.threadLocalProbe.isDisabled());
+        assertTrue(probeTester4.threadLocalProbe.isDisabled());
+        assertFalse(concurrentProbe.isDisabled());
+
+        assertEquals(2, concurrentProbe.getInvocationCount());
+        assertNotNull(concurrentProbe.getResult());
+        assertEquals(4, concurrentProbe.probeMapSize());
     }
 
     @Test
+    public void testInvocationCountOnSimpleProbe_disableAllProbes() throws Exception {
+        ProbeDisableTester probeTester1 = new ProbeDisableTester(concurrentProbe);
+        ProbeDisableTester probeTester2 = new ProbeDisableTester(concurrentProbe);
+        ProbeDisableTester probeTester3 = new ProbeDisableTester(concurrentProbe);
+
+        probeTester1.start();
+        probeTester2.start();
+        probeTester3.start();
+
+        probeTester1.join();
+        probeTester2.join();
+        probeTester3.join();
+
+        assertTrue(probeTester1.threadLocalProbe.isDisabled());
+        assertTrue(probeTester2.threadLocalProbe.isDisabled());
+        assertTrue(probeTester3.threadLocalProbe.isDisabled());
+        assertTrue(concurrentProbe.isDisabled());
+
+        assertEquals(0, concurrentProbe.getInvocationCount());
+        assertNull(concurrentProbe.getResult());
+        assertEquals(3, concurrentProbe.probeMapSize());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     public void testInvocationCountOnIntervalProbe() throws Exception {
-        concurrentProbe = (ConcurrentProbe) Probes.createConcurrentProbe("latency", IntervalProbe.class, config);
+        concurrentProbe = (ConcurrentProbe) createConcurrentProbe("latency", IntervalProbe.class, config);
 
         ProbeTester probeTester1 = new ProbeTester(concurrentProbe);
         ProbeTester probeTester2 = new ProbeTester(concurrentProbe);
@@ -95,6 +136,8 @@ public class ConcurrentProbeTest {
         probeTester2.join();
 
         assertEquals(2, concurrentProbe.getInvocationCount());
+        assertNotNull(concurrentProbe.getResult());
+        assertEquals(2, concurrentProbe.probeMapSize());
     }
 
     @Test
@@ -109,11 +152,14 @@ public class ConcurrentProbeTest {
         probeTester2.join();
 
         assertEquals(10, concurrentProbe.getInvocationCount());
+        assertNotNull(concurrentProbe.getResult());
+        assertEquals(2, concurrentProbe.probeMapSize());
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testInvocationCountOnIntervalProbeWithRecordValue() throws Exception {
-        concurrentProbe = (ConcurrentProbe) Probes.createConcurrentProbe("latency", IntervalProbe.class, config);
+        concurrentProbe = (ConcurrentProbe) createConcurrentProbe("latency", IntervalProbe.class, config);
 
         ProbeRecordValueTester probeTester1 = new ProbeRecordValueTester(concurrentProbe);
         ProbeRecordValueTester probeTester2 = new ProbeRecordValueTester(concurrentProbe);
@@ -125,12 +171,13 @@ public class ConcurrentProbeTest {
         probeTester2.join();
 
         assertEquals(2, concurrentProbe.getInvocationCount());
+        assertNotNull(concurrentProbe.getResult());
+        assertEquals(2, concurrentProbe.probeMapSize());
     }
 
     @Test
     public void testEmptyResult() {
-        Result result = concurrentProbe.getResult();
-        assertNull(result);
+        assertNull(concurrentProbe.getResult());
     }
 
     @Test

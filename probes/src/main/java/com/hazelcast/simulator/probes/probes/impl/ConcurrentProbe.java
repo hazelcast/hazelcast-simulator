@@ -80,18 +80,33 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
     @Override
     public R getResult() {
         Iterator<T> probeIterator = probeMap.values().iterator();
-        if (!probeIterator.hasNext()) {
+
+        T firstProbe = findNextEnabledProbeOrNull(probeIterator);
+        if (firstProbe == null) {
             return null;
         }
 
-        R result = probeIterator.next().getResult();
+        R result = firstProbe.getResult();
         while (probeIterator.hasNext()) {
             T nextProbe = probeIterator.next();
+            if (nextProbe.isDisabled()) {
+                continue;
+            }
             R nextData = nextProbe.getResult();
             result = result.combine(nextData);
         }
 
         return result;
+    }
+
+    private T findNextEnabledProbeOrNull(Iterator<T> probeIterator) {
+        while (probeIterator.hasNext()) {
+            T nextProbe = probeIterator.next();
+            if (!nextProbe.isDisabled()) {
+                return nextProbe;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -101,7 +116,12 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
 
     @Override
     public boolean isDisabled() {
-        return getProbe().isDisabled();
+        for (SimpleProbe probe : probeMap.values()) {
+            if (!probe.isDisabled()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     T getProbe() {
@@ -121,5 +141,9 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
         threadLocalProbe.set(probe);
 
         return probe;
+    }
+
+    int probeMapSize() {
+        return probeMap.size();
     }
 }
