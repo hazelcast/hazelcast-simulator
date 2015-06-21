@@ -61,7 +61,7 @@ public abstract class AbstractSimpleProbe<R extends Result<R>, T extends Interva
 
         long stopOrNow = (timeStamp == 0 ? System.currentTimeMillis() : timeStamp);
         durationMs = stopOrNow - started;
-        if (durationMs < 1) {
+        if (durationMs < 0) {
             throw new IllegalArgumentException("durationMs must be positive.");
         }
     }
