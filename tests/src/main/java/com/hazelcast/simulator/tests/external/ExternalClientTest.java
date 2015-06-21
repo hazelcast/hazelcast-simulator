@@ -25,6 +25,7 @@ public class ExternalClientTest {
     public String basename = "externalClientsRunning";
     public int waitForClientsCount = 1;
     public int waitIntervalSeconds = 60;
+    public int logFrequency = 10000;
 
     SimpleProbe externalClientThroughput;
     IntervalProbe externalClientLatency;
@@ -119,7 +120,7 @@ public class ExternalClientTest {
         int counter = 0;
         for (Long latency : latencyResults) {
             externalClientLatency.recordValue(latency);
-            if (++counter % 10000 == 0) {
+            if (++counter % logFrequency == 0) {
                 LOGGER.info(format("Collected %d/%d latency results...", counter, latencyResultSize));
             }
         }
