@@ -23,6 +23,8 @@ package com.hazelcast.simulator.probes.probes.impl;
  */
 public class WorkerProbe extends AbstractIntervalProbe<DisabledResult, WorkerProbe> {
 
+    private static final DisabledResult RESULT = new DisabledResult();
+
     @Override
     public void recordValue(long latencyNanos) {
         invocations++;
@@ -40,6 +42,11 @@ public class WorkerProbe extends AbstractIntervalProbe<DisabledResult, WorkerPro
 
     @Override
     public DisabledResult getResult() {
-        return new DisabledResult();
+        return RESULT;
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return true;
     }
 }
