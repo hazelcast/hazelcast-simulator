@@ -149,7 +149,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     void increaseIteration() {
         iteration++;
-        if (iteration % logFrequency == 0) {
+        if (logFrequency > 0 && iteration % logFrequency == 0) {
             LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
         }
     }
