@@ -94,6 +94,16 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
         return result;
     }
 
+    @Override
+    public void disable() {
+        getProbe().disable();
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return getProbe().isDisabled();
+    }
+
     T getProbe() {
         T probe = threadLocalProbe.get();
         if (probe != null) {

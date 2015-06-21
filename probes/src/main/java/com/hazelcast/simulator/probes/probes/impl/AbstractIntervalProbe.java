@@ -23,6 +23,8 @@ public abstract class AbstractIntervalProbe<R extends Result<R>, T extends Inter
     protected long started;
     protected int invocations;
 
+    private boolean disabled;
+
     @Override
     public void setValues(long durationMs, int invocations) {
         throw new UnsupportedOperationException("This method is just supported by IntervalProbe implementations");
@@ -52,5 +54,15 @@ public abstract class AbstractIntervalProbe<R extends Result<R>, T extends Inter
 
     @Override
     public void stopProbing(long timeStamp) {
+    }
+
+    @Override
+    public void disable() {
+        disabled = true;
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return disabled;
     }
 }

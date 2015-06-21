@@ -24,6 +24,8 @@ public abstract class AbstractSimpleProbe<R extends Result<R>, T extends Interva
     protected long durationMs;
     protected int invocations;
 
+    private boolean disabled;
+
     @Override
     public void started() {
     }
@@ -50,21 +52,27 @@ public abstract class AbstractSimpleProbe<R extends Result<R>, T extends Interva
 
     @Override
     public void stopProbing(long timeStamp) {
+        if (timeStamp < 0) {
+            throw new IllegalArgumentException("timeStamp must be zero or positive.");
+        }
         if (started == 0) {
             throw new IllegalStateException("Can't get result as probe has not been started yet.");
         }
 
         long stopOrNow = (timeStamp == 0 ? System.currentTimeMillis() : timeStamp);
         durationMs = stopOrNow - started;
+        if (durationMs < 1) {
+            throw new IllegalArgumentException("durationMs must be positive.");
+        }
     }
 
     @Override
     public void setValues(long durationMs, int invocations) {
         if (durationMs < 1) {
-            throw new IllegalArgumentException("durationMs must be positive!");
+            throw new IllegalArgumentException("durationMs must be positive.");
         }
         if (invocations < 1) {
-            throw new IllegalArgumentException("invocations must be positive!");
+            throw new IllegalArgumentException("invocations must be positive.");
         }
 
         this.durationMs = durationMs;
@@ -73,12 +81,18 @@ public abstract class AbstractSimpleProbe<R extends Result<R>, T extends Interva
 
     @Override
     public R getResult() {
-        if (durationMs == 0) {
-            throw new IllegalStateException("Can't get result as probe has no duration.");
-        }
-
         return getResult(durationMs);
     }
 
     protected abstract R getResult(long durationMs);
+
+    @Override
+    public void disable() {
+        disabled = true;
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return disabled;
+    }
 }

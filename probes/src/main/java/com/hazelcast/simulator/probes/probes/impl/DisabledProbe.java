@@ -59,4 +59,13 @@ public final class DisabledProbe implements IntervalProbe<DisabledResult, Disabl
     public DisabledResult getResult() {
         return RESULT;
     }
+
+    @Override
+    public void disable() {
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return true;
+    }
 }

@@ -7,7 +7,6 @@ import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.probes.probes.ProbesType;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
-import com.hazelcast.simulator.probes.probes.impl.DisabledResult;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
@@ -140,8 +139,8 @@ public class TestContainer<T extends TestContext> {
         for (Map.Entry<String, SimpleProbe<?, ?>> entry : probeMap.entrySet()) {
             String probeName = entry.getKey();
             SimpleProbe<?, ?> probe = entry.getValue();
-            Result<?> result = probe.getResult();
-            if (!(result instanceof DisabledResult)) {
+            if (!probe.isDisabled()) {
+                Result<?> result = probe.getResult();
                 results.put(probeName, result);
             }
         }

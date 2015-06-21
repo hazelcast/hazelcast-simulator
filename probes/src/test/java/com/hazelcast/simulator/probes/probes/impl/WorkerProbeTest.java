@@ -3,6 +3,7 @@ package com.hazelcast.simulator.probes.probes.impl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class WorkerProbeTest {
@@ -58,5 +59,14 @@ public class WorkerProbeTest {
 
         assertEquals(1, workerProbe.getInvocationCount());
         assertTrue(workerProbe.getResult() != null);
+    }
+
+    @Test
+    public void testDisable() {
+        assertFalse(workerProbe.isDisabled());
+
+        workerProbe.disable();
+
+        assertTrue(workerProbe.isDisabled());
     }
 }

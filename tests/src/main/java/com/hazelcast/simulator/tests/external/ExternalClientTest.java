@@ -69,6 +69,10 @@ public class ExternalClientTest {
 
         // just a single instance will collect the results from all external clients
         if (!isExternalResultsCollectorInstance) {
+            // disable probes
+            externalClientLatency.disable();
+            externalClientThroughput.disable();
+
             LOGGER.info("Stopping non result collecting ExternalClientTest");
             testContext.stop();
             return;

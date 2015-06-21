@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class LatencyDistributionProbeTest {
@@ -122,12 +124,15 @@ public class LatencyDistributionProbeTest {
         LatencyDistributionResult result1 = latencyDistributionProbe.getResult();
         assertTrue(result1 != null);
 
+        latencyDistributionProbe = new LatencyDistributionProbe();
         latencyDistributionProbe.started();
         sleepNanos(TimeUnit.MILLISECONDS.toNanos(sleepTime2));
         latencyDistributionProbe.done();
 
         LatencyDistributionResult result2 = latencyDistributionProbe.getResult();
         assertTrue(result2 != null);
+
+        assertNotEquals(result1.hashCode(), result2.hashCode());
 
         LatencyDistributionResult combined = result1.combine(result2);
         assertTrue(combined != null);
@@ -143,5 +148,14 @@ public class LatencyDistributionProbeTest {
             }
         }
         assertEqualsStringFormat("Expected to find %d buckets with latency info, but found %d", 2, foundBuckets);
+    }
+
+    @Test
+    public void testDisable() {
+        assertFalse(latencyDistributionProbe.isDisabled());
+
+        latencyDistributionProbe.disable();
+
+        assertTrue(latencyDistributionProbe.isDisabled());
     }
 }
