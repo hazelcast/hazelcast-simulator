@@ -3,7 +3,6 @@ package com.hazelcast.simulator.tests.external;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICountDownLatch;
 import com.hazelcast.core.IList;
-import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
@@ -15,7 +14,6 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.util.EmptyStatement;
 
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -118,57 +116,16 @@ public class ExternalClientTest {
         externalClientThroughput.setValues(durationAvg, totalInvocations);
 
         // fetch latency results
-        final IMap<String, List<Long>> latencyMap = hazelcastInstance.getMap("externalClientsLatencyResults");
-        LOGGER.info(format("Collecting %d latency result lists...", latencyMap.size()));
-        for (String key : latencyMap.keySet()) {
-            List<Long> values = latencyMap.get(key);
+        IList<String> latencyLists = hazelcastInstance.getList("externalClientsLatencyResults");
+        LOGGER.info(format("Collecting %d latency result lists...", latencyLists.size()));
+        for (String key : latencyLists) {
+            IList<Long> values = hazelcastInstance.getList(key);
             LOGGER.info(format("Adding %d latency results...", values.size()));
             for (Long latency : values) {
                 externalClientLatency.recordValue(latency);
             }
         }
         LOGGER.info("Done!");
-
-        /*
-        IExecutorService executorService = hazelcastInstance.getExecutorService("externalClientsLatencyResults");
-        Map<Member, Future<HdrLatencyDistributionResult>> futureMap;
-        futureMap = executorService.submitToAllMembers(new Callable<HdrLatencyDistributionResult>() {
-
-            @Override
-            public HdrLatencyDistributionResult call() {
-                HdrLatencyDistributionProbe probe = new HdrLatencyDistributionProbe();
-                for (String key : latencyMap.localKeySet()) {
-                    List<Long> values = latencyMap.get(key);
-                    for (Long latency : values) {
-                        probe.recordValue(latency);
-                    }
-                }
-                return probe.getResult();
-            }
-        });
-
-        HdrLatencyDistributionResult totalLatency = externalClientLatency.getResult();
-        for (Future<HdrLatencyDistributionResult> future : futureMap.values()) {
-            HdrLatencyDistributionResult result = future.get();
-            totalLatency.combine(result);
-        }
-        externalClientLatency = new HdrLatencyDistributionProbe(totalLatency.getHistogram());
-        */
-
-        /*
-        IList<Long> latencyResults = hazelcastInstance.getList("externalClientsLatencyResults");
-        int latencyResultSize = latencyResults.size();
-        LOGGER.info(format("Collecting %d latency results...", latencyResultSize));
-
-        int counter = 0;
-        for (Long latency : latencyResults) {
-            externalClientLatency.recordValue(latency);
-            if (++counter % logFrequency == 0) {
-                LOGGER.info(format("Collected %d/%d latency results...", counter, latencyResultSize));
-            }
-        }
-        LOGGER.info("Done!");
-        */
 
         LOGGER.info("Stopping result collecting ExternalClientTest");
         testContext.stop();
