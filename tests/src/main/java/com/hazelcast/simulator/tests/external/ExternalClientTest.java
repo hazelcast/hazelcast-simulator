@@ -111,9 +111,11 @@ public class ExternalClientTest {
         }
         LOGGER.info("Done!");
 
-        long durationAvg = Math.round(totalDuration / throughputResults.size());
-        LOGGER.info(format("All external clients executed %d operations in %d ms", totalInvocations, durationAvg));
-        externalClientThroughput.setValues(durationAvg, totalInvocations);
+        long avgDuration = Math.round(totalDuration / throughputResults.size());
+        externalClientThroughput.setValues(avgDuration, totalInvocations);
+        double performance = ((double) totalInvocations / avgDuration) * 1000;
+        LOGGER.info(format("All external clients executed %d operations in %d ms (%.3f ops/s)",
+                totalInvocations, avgDuration, performance));
 
         // fetch latency results
         IList<String> latencyLists = hazelcastInstance.getList("externalClientsLatencyResults");

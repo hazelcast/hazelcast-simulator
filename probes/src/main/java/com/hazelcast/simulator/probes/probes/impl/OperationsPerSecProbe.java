@@ -18,7 +18,7 @@ package com.hazelcast.simulator.probes.probes.impl;
 public class OperationsPerSecProbe extends AbstractSimpleProbe<OperationsPerSecResult, OperationsPerSecProbe> {
 
     @Override
-    public OperationsPerSecResult getResult(long durationMs) {
+    public OperationsPerSecResult getResult() {
         return new OperationsPerSecResult(invocations, ((double) invocations / durationMs) * 1000);
     }
 }

@@ -80,13 +80,6 @@ public abstract class AbstractSimpleProbe<R extends Result<R>, T extends Interva
     }
 
     @Override
-    public R getResult() {
-        return getResult(durationMs);
-    }
-
-    protected abstract R getResult(long durationMs);
-
-    @Override
     public void disable() {
         disabled = true;
     }
