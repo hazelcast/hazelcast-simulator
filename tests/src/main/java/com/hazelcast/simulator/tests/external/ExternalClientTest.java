@@ -77,17 +77,21 @@ public class ExternalClientTest {
             testContext.stop();
             return;
         }
+        LOGGER.info("Collecting results from external clients...");
 
         // fetch latency results
         IList<Long> latencyResults = hazelcastInstance.getList("externalClientsLatencyResults");
+        LOGGER.info("Collecting " + latencyResults.size() + " latency results...");
         for (Long latency : latencyResults) {
             externalClientLatency.recordValue(latency);
         }
+        LOGGER.info("Done!");
 
         // fetch throughput results
         double totalDuration = 0;
         int totalInvocations = 0;
         IList<String> throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
+        LOGGER.info("Collecting " + throughputResults.size() + " throughput results...");
         for (String throughputString : throughputResults) {
             String[] throughput = throughputString.split("\\|");
             long operationCount = Long.valueOf(throughput[0]);
@@ -98,10 +102,10 @@ public class ExternalClientTest {
             totalDuration += duration;
             totalInvocations += operationCount;
         }
+        LOGGER.info("Done!");
+
         long durationAvg = Math.round(totalDuration / throughputResults.size());
-
         LOGGER.info(format("All external clients executed %d operations in %d ms", totalInvocations, durationAvg));
-
         externalClientThroughput.setValues(durationAvg, totalInvocations);
 
         LOGGER.info("Stopping result collecting ExternalClientTest");
