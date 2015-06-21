@@ -4,6 +4,7 @@ import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.probes.probes.ProbesType;
+import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.probes.probes.impl.DisabledProbe;
 import com.hazelcast.simulator.test.TestCase;
@@ -353,9 +354,8 @@ public class TestContainerTest {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("explicitProbeName", ProbesType.THROUGHPUT.getName());
         testContainer = createTestContainer(test);
-        Map probeResults = testContainer.getProbeResults();
 
-        assertTrue(probeResults.keySet().contains("explicitProbeName"));
+        assertTrue(testContainer.hasProbe("explicitProbeName"));
     }
 
     @Test
@@ -363,31 +363,38 @@ public class TestContainerTest {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("Probe2", ProbesType.THROUGHPUT.getName());
         testContainer = createTestContainer(test);
-        Map probeResults = testContainer.getProbeResults();
 
-        assertTrue(probeResults.keySet().contains("Probe2"));
+        assertTrue(testContainer.hasProbe("Probe2"));
     }
 
     @Test
-    public void testProbeInjectSimpleProbeToField() {
+    public void testProbeInjectSimpleProbeToField() throws Exception {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("throughputProbe", ProbesType.THROUGHPUT.getName());
         testContainer = createTestContainer(test);
-        Map probeResults = testContainer.getProbeResults();
 
         assertNotNull(test.throughputProbe);
-        assertTrue(probeResults.keySet().contains("throughputProbe"));
+        assertTrue(testContainer.hasProbe("throughputProbe"));
+
+        testContainer.invoke(TestPhase.RUN);
+        Map<String, Result<?>> resultMap = testContainer.getProbeResults();
+        assertNotNull(resultMap);
+        assertTrue(resultMap.keySet().contains("throughputProbe"));
     }
 
     @Test
-    public void testProbeInjectIntervalProbeToField() {
+    public void testProbeInjectIntervalProbeToField() throws Exception {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("latencyProbe", ProbesType.LATENCY.getName());
         testContainer = createTestContainer(test);
-        Map probeResults = testContainer.getProbeResults();
 
         assertNotNull(test.latencyProbe);
-        assertTrue(probeResults.keySet().contains("latencyProbe"));
+        assertTrue(testContainer.hasProbe("latencyProbe"));
+
+        testContainer.invoke(TestPhase.RUN);
+        Map<String, Result<?>> resultMap = testContainer.getProbeResults();
+        assertNotNull(resultMap);
+        assertTrue(resultMap.keySet().contains("latencyProbe"));
     }
 
     @Test
@@ -395,10 +402,9 @@ public class TestContainerTest {
         ProbeTest test = new ProbeTest();
         probesConfiguration.addConfig("explicitProbeInjectedToField", ProbesType.THROUGHPUT.getName());
         testContainer = createTestContainer(test);
-        Map probeResults = testContainer.getProbeResults();
 
         assertNotNull(test.fooProbe);
-        assertTrue(probeResults.keySet().contains("explicitProbeInjectedToField"));
+        assertTrue(testContainer.hasProbe("explicitProbeInjectedToField"));
     }
 
     @Test
@@ -412,6 +418,7 @@ public class TestContainerTest {
 
     @SuppressWarnings("unused")
     private static class ProbeTest extends DummyTest {
+
         TestContext context;
         SimpleProbe simpleProbe;
 
@@ -426,6 +433,13 @@ public class TestContainerTest {
         public void setUp(TestContext context, @Name("explicitProbeName") SimpleProbe probe1, SimpleProbe probe2) {
             this.context = context;
             this.simpleProbe = probe1;
+        }
+
+        @Run
+        public void run() {
+            throughputProbe.done();
+            latencyProbe.started();
+            latencyProbe.done();
         }
     }
 

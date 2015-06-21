@@ -416,4 +416,8 @@ public class TestContainer<T extends TestContext> {
         }
         workerThreadSpawner.awaitCompletion();
     }
+
+    boolean hasProbe(String probeName) {
+        return probeMap.keySet().contains(probeName);
+    }
 }
