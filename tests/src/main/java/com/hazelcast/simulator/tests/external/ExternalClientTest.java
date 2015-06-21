@@ -42,11 +42,12 @@ public class ExternalClientTest {
         clientsRunning.trySetCount(waitForClientsCount);
 
         // determine one instance per cluster
-        if (hazelcastInstance.getMap(basename).putIfAbsent(basename, true) != null) {
-            return;
+        if (hazelcastInstance.getMap(basename).putIfAbsent(basename, true) == null) {
+            isExternalResultsCollectorInstance = true;
+            LOGGER.info("This instance will collect all probe results from external clients");
+        } else {
+            LOGGER.info("This instance will not collect probe results");
         }
-        isExternalResultsCollectorInstance = true;
-        LOGGER.info("This instance will collect all probe results from external clients");
     }
 
     @Run
