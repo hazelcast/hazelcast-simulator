@@ -26,8 +26,8 @@ public class ExternalClientTest {
     public int waitForClientsCount = 1;
     public int waitIntervalSeconds = 60;
 
-    IntervalProbe externalClientLatency;
     SimpleProbe externalClientThroughput;
+    IntervalProbe externalClientLatency;
 
     private TestContext testContext;
     private HazelcastInstance hazelcastInstance;
@@ -80,32 +80,14 @@ public class ExternalClientTest {
         // just a single instance will collect the results from all external clients
         if (!isExternalResultsCollectorInstance) {
             // disable probes
-            externalClientLatency.disable();
             externalClientThroughput.disable();
+            externalClientLatency.disable();
 
             LOGGER.info("Stopping non result collecting ExternalClientTest");
             testContext.stop();
             return;
         }
         LOGGER.info("Collecting results from external clients...");
-
-        // fetch latency results
-        IList<Long> latencyResults = hazelcastInstance.getList("externalClientsLatencyResults");
-        int latencyResultSize = latencyResults.size();
-
-        LOGGER.info(format("Collecting %d latency results...", latencyResultSize));
-        Long[] latencyArray = new Long[latencyResultSize];
-        latencyResults.<Long>toArray(latencyArray);
-
-        LOGGER.info(format("Adding %d latency results to probe...", latencyResultSize));
-        int counter = 0;
-        for (Long latency : latencyArray) {
-            externalClientLatency.recordValue(latency);
-            if (++counter % 100000 == 0) {
-                LOGGER.info(format("Collected %d/%d latency results...", counter, latencyResultSize));
-            }
-        }
-        LOGGER.info("Done!");
 
         // fetch throughput results
         IList<String> throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
@@ -128,6 +110,20 @@ public class ExternalClientTest {
         long durationAvg = Math.round(totalDuration / throughputResults.size());
         LOGGER.info(format("All external clients executed %d operations in %d ms", totalInvocations, durationAvg));
         externalClientThroughput.setValues(durationAvg, totalInvocations);
+
+        // fetch latency results
+        IList<Long> latencyResults = hazelcastInstance.getList("externalClientsLatencyResults");
+        int latencyResultSize = latencyResults.size();
+
+        LOGGER.info(format("Collecting %d latency results...", latencyResultSize));
+        int counter = 0;
+        for (Long latency : latencyResults) {
+            externalClientLatency.recordValue(latency);
+            if (++counter % 10000 == 0) {
+                LOGGER.info(format("Collected %d/%d latency results...", counter, latencyResultSize));
+            }
+        }
+        LOGGER.info("Done!");
 
         LOGGER.info("Stopping result collecting ExternalClientTest");
         testContext.stop();
