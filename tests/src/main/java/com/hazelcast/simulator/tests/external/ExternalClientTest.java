@@ -82,17 +82,24 @@ public class ExternalClientTest {
 
         // fetch latency results
         IList<Long> latencyResults = hazelcastInstance.getList("externalClientsLatencyResults");
-        LOGGER.info("Collecting " + latencyResults.size() + " latency results...");
+        int latencyResultSize = latencyResults.size();
+        LOGGER.info(format("Collecting %d latency results...", latencyResultSize));
+
+        int counter = 0;
         for (Long latency : latencyResults) {
             externalClientLatency.recordValue(latency);
+            if (++counter % 100000 == 0) {
+                LOGGER.info(format("Collected %d/%d latency results...", counter, latencyResultSize));
+            }
         }
         LOGGER.info("Done!");
 
         // fetch throughput results
-        double totalDuration = 0;
-        int totalInvocations = 0;
         IList<String> throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
         LOGGER.info("Collecting " + throughputResults.size() + " throughput results...");
+
+        double totalDuration = 0;
+        int totalInvocations = 0;
         for (String throughputString : throughputResults) {
             String[] throughput = throughputString.split("\\|");
             long operationCount = Long.valueOf(throughput[0]);
