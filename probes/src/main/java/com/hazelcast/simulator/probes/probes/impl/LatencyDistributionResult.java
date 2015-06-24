@@ -108,7 +108,6 @@ public class LatencyDistributionResult implements Result<LatencyDistributionResu
         }
 
         LatencyDistributionResult that = (LatencyDistributionResult) o;
-
         if (!linearHistogram.equals(that.linearHistogram)) {
             return false;
         }

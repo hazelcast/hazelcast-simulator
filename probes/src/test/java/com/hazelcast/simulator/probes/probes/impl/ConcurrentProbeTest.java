@@ -7,9 +7,13 @@ import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.NotSerializableException;
+import java.io.ObjectOutputStream;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.probes.probes.Probes.createConcurrentProbe;
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -215,6 +219,19 @@ public class ConcurrentProbeTest {
         assertEquals(1.0, operationsPerSecond1.doubleValue(), 0.0001);
         assertEquals(1.0, operationsPerSecond2.doubleValue(), 0.0001);
         assertEquals(2.0, combinedOperationsPerSecond.doubleValue(), 0.0001);
+    }
+
+    @Test(expected = NotSerializableException.class)
+    public void testWriteObject() throws Exception {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream out = null;
+        try {
+            out = new ObjectOutputStream(bos);
+            out.writeObject(concurrentProbe);
+        } finally {
+            closeQuietly(out);
+            closeQuietly(bos);
+        }
     }
 
     private static class ProbeTester extends Thread {

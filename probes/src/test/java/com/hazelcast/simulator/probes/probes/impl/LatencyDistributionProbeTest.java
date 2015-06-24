@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.probes.probes.impl.ProbeTestUtils.assertResult;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static org.junit.Assert.assertEquals;
@@ -71,6 +72,8 @@ public class LatencyDistributionProbeTest {
             }
         }
         assertEqualsStringFormat("Expected to find %d buckets with latency info, but found %d", 1, foundBuckets);
+
+        assertResult(result, new LatencyDistributionProbe().getResult());
     }
 
     @Test
@@ -96,17 +99,6 @@ public class LatencyDistributionProbeTest {
             }
         }
         assertEqualsStringFormat("Expected to find %d buckets with latency info, but found %d", 3, foundBuckets);
-    }
-
-    @Test
-    public void testResultToHumanString() {
-        latencyDistributionProbe.started();
-        sleepNanos(TimeUnit.MILLISECONDS.toNanos(150));
-        latencyDistributionProbe.done();
-
-        LatencyDistributionResult result = latencyDistributionProbe.getResult();
-        assertTrue(result != null);
-        assertTrue(result.toHumanString() != null);
     }
 
     @Test

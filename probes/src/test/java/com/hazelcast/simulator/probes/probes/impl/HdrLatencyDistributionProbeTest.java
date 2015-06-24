@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.probes.probes.impl.ProbeTestUtils.assertResult;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static org.junit.Assert.assertEquals;
@@ -70,6 +71,8 @@ public class HdrLatencyDistributionProbeTest {
         double latency = histogram.getMean();
         assertTrue("latency should be >= " + sleepTime + ", but was " + latency, latency >= sleepTime);
         assertTrue("latency should be <= " + (sleepTime + tolerance) + ", but was " + latency, latency <= sleepTime + tolerance);
+
+        assertResult(result, new HdrLatencyDistributionProbe().getResult());
     }
 
     @Test
@@ -95,17 +98,6 @@ public class HdrLatencyDistributionProbeTest {
         double latency = histogram.getMean();
         assertTrue("latency should be >= " + sleepTime + ", but was " + latency, latency >= sleepTime);
         assertTrue("latency should be <= " + (sleepTime + tolerance) + ", but was " + latency, latency <= sleepTime + tolerance);
-    }
-
-    @Test
-    public void testResultToHumanString() {
-        hdrLatencyDistributionProbe.started();
-        sleepNanos(TimeUnit.MICROSECONDS.toNanos(150));
-        hdrLatencyDistributionProbe.done();
-
-        HdrLatencyDistributionResult result = hdrLatencyDistributionProbe.getResult();
-        assertTrue(result != null);
-        assertTrue(result.toHumanString() != null);
     }
 
     @Test

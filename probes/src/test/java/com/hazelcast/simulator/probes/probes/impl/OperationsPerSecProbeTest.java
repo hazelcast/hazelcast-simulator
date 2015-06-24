@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.probes.probes.impl.ProbeTestUtils.assertResult;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static org.junit.Assert.assertEquals;
@@ -134,18 +135,11 @@ public class OperationsPerSecProbeTest {
 
         Double operationsPerSecond = getObjectFromField(result, "operationsPerSecond");
         assertEqualsStringFormat("Expected %.2f op/s, but was %.2f", 0.8, operationsPerSecond, 0.01);
-    }
 
-    @Test
-    public void testResultToHumanString() {
-        long started = System.currentTimeMillis();
-        operationsPerSecProbe.startProbing(started);
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.stopProbing(started + TimeUnit.SECONDS.toMillis(5));
-
-        OperationsPerSecResult result = operationsPerSecProbe.getResult();
-        assertTrue(result != null);
-        assertTrue(result.toHumanString() != null);
+        OperationsPerSecProbe nonEqualsProbe = new OperationsPerSecProbe();
+        assertResult(result, nonEqualsProbe.getResult());
+        nonEqualsProbe.setValues(12345, 4);
+        assertResult(result, nonEqualsProbe.getResult());
     }
 
     @Test
