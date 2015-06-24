@@ -15,7 +15,9 @@
  */
 package com.hazelcast.simulator.probes.probes;
 
-public interface SimpleProbe<R extends Result<R>, T extends SimpleProbe<R, T>> {
+import java.io.Serializable;
+
+public interface SimpleProbe<R extends Result<R>, T extends SimpleProbe<R, T>> extends Serializable {
 
     void done();
 
