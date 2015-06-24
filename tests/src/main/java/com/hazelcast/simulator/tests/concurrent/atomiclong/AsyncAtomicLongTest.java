@@ -61,7 +61,7 @@ public class AsyncAtomicLongTest {
     public String basename = AsyncAtomicLongTest.class.getSimpleName();
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int countersLength = 1000;
-    private int metronomeIntervalMs = (int) TimeUnit.SECONDS.toMillis(1);
+    public int metronomeIntervalMs = (int) TimeUnit.SECONDS.toMillis(1);
     public int assertEventuallySeconds = 300;
     public int batchSize = -1;
 
