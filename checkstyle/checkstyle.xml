@@ -116,6 +116,7 @@
 
         <module name="JavadocStyle">
             <property name="checkFirstSentence" value="false"/>
+            <property name="checkHtml" value="false"/>
         </module>
 
         <module name="TrailingComment"/>
