@@ -20,16 +20,20 @@ import com.hazelcast.simulator.probes.probes.ProbesType;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
 
+import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>> implements IntervalProbe<R, T> {
 
-    private final ThreadLocal<T> threadLocalProbe = new ThreadLocal<T>();
-    private final ConcurrentHashMap<Long, T> probeMap = new ConcurrentHashMap<Long, T>();
-    private final ProbesType probesType;
+    private final transient ThreadLocal<T> threadLocalProbe = new ThreadLocal<T>();
+    private final transient ConcurrentHashMap<Long, T> probeMap = new ConcurrentHashMap<Long, T>();
+    private final transient ProbesType probesType;
 
-    private long startedAt;
+    private transient long startedAt;
 
     public ConcurrentProbe(ProbesType probesType) {
         this.probesType = probesType;
@@ -145,5 +149,13 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
 
     int probeMapSize() {
         return probeMap.size();
+    }
+
+    private void writeObject(ObjectOutputStream oos) throws IOException {
+        throw new NotSerializableException();
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException {
+        throw new NotSerializableException();
     }
 }
