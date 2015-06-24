@@ -192,8 +192,7 @@ public final class HazelcastTestUtils {
         try {
             return nodeEngine.getOperationService();
         } catch (NoSuchMethodError e) {
-            // fallback for a binary incompatible change
-            // https://github.com/jerrinot/hazelcast/commit/c5e4c1f779f49bcbc1e881e613f48b6a034e35ac#diff-b3e262104ca2692463bc0f125cb5fd22R146
+            // fallback for a binary incompatible change (see commit http://git.io/vtfKU)
             return getOperationServiceViaReflection(nodeEngine);
         }
     }
