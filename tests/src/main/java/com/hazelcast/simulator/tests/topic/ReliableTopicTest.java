@@ -28,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
 public class ReliableTopicTest {
@@ -90,9 +91,11 @@ public class ReliableTopicTest {
     }
 
     private class Worker extends AbstractMonotonicWorker {
-        private Map<ITopic, AtomicLong> counterMap = new HashMap<ITopic, AtomicLong>();
-        private String id = UUID.randomUUID().toString();
-        long messagesSend = 0;
+
+        private long messagesSend = 0;
+
+        private final Map<ITopic, AtomicLong> counterMap = new HashMap<ITopic, AtomicLong>();
+        private final String id = UUID.randomUUID().toString();
 
         public Worker() {
             for (ITopic topic : topics) {
@@ -199,14 +202,14 @@ public class ReliableTopicTest {
             if (expectedValue != actualValue) {
                 failures.incrementAndGet();
                 ExceptionReporter.report(testContext.getTestId(),
-                        new RuntimeException("There is unexpected gap or equality between values, " +
-                                "expected:" + expectedValue + " actual:" + actualValue));
+                        new RuntimeException(format("There is unexpected gap or equality between values. Expected %d, but was %d",
+                                expectedValue,  actualValue)));
             }
 
             values.put(threadId, actualValue);
 
             if (received.getAndIncrement() % 100000 == 0) {
-                LOGGER.info(toString() + " is at: " + message.getMessageObject().toString());
+                LOGGER.info(toString() + " is at " + message.getMessageObject().toString());
             }
         }
 
