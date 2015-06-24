@@ -65,7 +65,6 @@ public class MaxLatencyResult implements Result<MaxLatencyResult> {
         }
 
         MaxLatencyResult that = (MaxLatencyResult) o;
-
         if (maxLatencyMs != that.maxLatencyMs) {
             return false;
         }

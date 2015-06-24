@@ -87,7 +87,6 @@ public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributi
         }
 
         HdrLatencyDistributionResult that = (HdrLatencyDistributionResult) o;
-
         if (histogram != null ? !histogram.equals(that.histogram) : that.histogram != null) {
             return false;
         }

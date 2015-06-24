@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.probes.probes.impl.ProbeTestUtils.assertResult;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static org.junit.Assert.assertEquals;
@@ -58,6 +59,8 @@ public class MaxLatencyProbeTest {
         Long maxLatencyMs = getObjectFromField(result, "maxLatencyMs");
         assertTrue(maxLatencyMs >= 150);
         assertTrue(maxLatencyMs < 1000);
+
+        assertResult(result, new MaxLatencyProbe().getResult());
     }
 
     @Test
@@ -71,17 +74,6 @@ public class MaxLatencyProbeTest {
 
         Long maxLatencyMs = getObjectFromField(result, "maxLatencyMs");
         assertEquals(1000, maxLatencyMs.longValue());
-    }
-
-    @Test
-    public void testResultToHumanString() {
-        maxLatencyProbe.started();
-        sleepNanos(TimeUnit.MILLISECONDS.toNanos(150));
-        maxLatencyProbe.done();
-
-        MaxLatencyResult result = maxLatencyProbe.getResult();
-        assertTrue(result != null);
-        assertTrue(result.toHumanString() != null);
     }
 
     @Test

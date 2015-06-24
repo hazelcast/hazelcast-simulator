@@ -77,7 +77,6 @@ public class OperationsPerSecResult implements Result<OperationsPerSecResult> {
         }
 
         OperationsPerSecResult that = (OperationsPerSecResult) o;
-
         if (that.invocations != invocations) {
             return false;
         }
