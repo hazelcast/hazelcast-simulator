@@ -28,7 +28,6 @@ public class ExternalClientTest {
     public String basename = "externalClientsRunning";
     public int waitForClientsCount = 1;
     public int waitIntervalSeconds = 60;
-    public int logFrequency = 10000;
 
     SimpleProbe externalClientThroughput;
     IntervalProbe<HdrLatencyDistributionResult, HdrLatencyDistributionProbe> externalClientLatency;
