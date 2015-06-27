@@ -100,7 +100,7 @@ final class TestCaseRunner {
 
             return (failureMonitor.getFailureCount() == oldFailureCount);
         } catch (Exception e) {
-            LOGGER.fatal("Failed", e);
+            LOGGER.fatal("Exception in TestCaseRunner", e);
             return false;
         }
     }

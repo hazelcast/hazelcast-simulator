@@ -45,7 +45,7 @@ class ClientSocketTask implements Runnable {
                 AgentRemoteService.Service service = (AgentRemoteService.Service) in.readObject();
                 result = execute(service, in);
             } catch (Throwable e) {
-                LOGGER.fatal(e);
+                LOGGER.fatal("Exception in ClientSocketTask.run(): ", e);
                 result = e;
             }
             if (out != null) {
@@ -53,7 +53,7 @@ class ClientSocketTask implements Runnable {
                 out.flush();
             }
         } catch (Throwable e) {
-            LOGGER.fatal(e);
+            LOGGER.fatal("Exception in ClientSocketTask.run(): ", e);
         } finally {
             closeQuietly(in, out);
             closeQuietly(clientSocket);

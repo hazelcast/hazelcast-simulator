@@ -87,7 +87,7 @@ class FailureMonitor {
                     sleepSeconds(1);
                     scan();
                 } catch (Throwable e) {
-                    LOGGER.fatal(e);
+                    LOGGER.fatal("Exception in FailureThread.run()", e);
                 }
             }
         }

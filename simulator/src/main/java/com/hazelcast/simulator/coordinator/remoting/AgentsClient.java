@@ -175,11 +175,11 @@ public class AgentsClient {
                 List<Failure> list = future.get(30, TimeUnit.SECONDS);
                 result.addAll(list);
             } catch (InterruptedException e) {
-                LOGGER.fatal(e);
+                LOGGER.fatal("Exception in getFailures()", e);
             } catch (ExecutionException e) {
-                LOGGER.fatal(e);
+                LOGGER.fatal("Exception in getFailures()", e);
             } catch (TimeoutException e) {
-                LOGGER.fatal(e);
+                LOGGER.fatal("Exception in getFailures()", e);
             }
         }
         return result;
@@ -299,11 +299,7 @@ public class AgentsClient {
                     try {
                         return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
                     } catch (RuntimeException e) {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(e.getMessage(), e);
-                        } else {
-                            LOGGER.fatal(e.getMessage());
-                        }
+                        LOGGER.fatal("Exception in executeOnAllWorkers()", e);
                         throw e;
                     }
                 }
@@ -323,7 +319,7 @@ public class AgentsClient {
                     try {
                         return agentClient.execute(SERVICE_EXECUTE_ALL_WORKERS, command);
                     } catch (RuntimeException e) {
-                        LOGGER.fatal(e);
+                        LOGGER.fatal("Exception in executeOnAllWorkersDetailed()", e);
                         throw e;
                     }
                 }

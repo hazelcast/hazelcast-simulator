@@ -276,7 +276,7 @@ public class AwsProvisioner {
             return true;
 
         } catch (AmazonServiceException e) {
-            LOGGER.fatal(e);
+            LOGGER.fatal("Exception in isBalancerAlive(" + name + ")", e);
         }
         return false;
     }

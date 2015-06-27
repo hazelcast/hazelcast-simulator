@@ -99,8 +99,8 @@ class PerformanceMonitor {
                     checkPerformance();
                 } catch (TimeoutException e) {
                     LOGGER.warn("There was a timeout retrieving performance information from the members.");
-                } catch (Throwable cause) {
-                    LOGGER.fatal(cause);
+                } catch (Throwable e) {
+                    LOGGER.fatal("Exception in PerformanceThread.run()", e);
                 }
             }
         }
