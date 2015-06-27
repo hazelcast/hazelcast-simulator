@@ -115,6 +115,7 @@ public class Agent {
         } catch (IOException e) {
             EmptyStatement.ignore(e);
         }
+        workerJvmManager.stop();
     }
 
     private void startRestServer() {

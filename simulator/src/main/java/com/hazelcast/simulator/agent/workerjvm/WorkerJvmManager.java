@@ -72,10 +72,11 @@ public class WorkerJvmManager {
     private final ConcurrentMap<String, WorkerJvm> workerJVMs = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
 
-    private final ConcurrentMap<Long, CommandFuture> futureMap = new ConcurrentHashMap<Long, CommandFuture>();
+    private final ConcurrentMap<Long, CommandFuture<Object>> futureMap = new ConcurrentHashMap<Long, CommandFuture<Object>>();
     private final AtomicLong requestIdGenerator = new AtomicLong(0);
 
     private final Executor executor = createFixedThreadPool(20, WorkerJvmManager.class);
+    private final AcceptorThread acceptorThread = new AcceptorThread();
     private final Random random = new Random();
 
     private ServerSocket serverSocket;
@@ -98,9 +99,20 @@ public class WorkerJvmManager {
 
             LOGGER.info("Started Worker JVM Socket on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
 
-            new AcceptorThread().start();
+            acceptorThread.start();
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to start WorkerJvmManager", e);
+        }
+    }
+
+    public void stop() {
+        acceptorThread.isRunning = false;
+        acceptorThread.interrupt();
+
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            LOGGER.info("Exception when closing serverSocket", e);
         }
     }
 
@@ -203,7 +215,7 @@ public class WorkerJvmManager {
                 continue;
             }
 
-            CommandFuture future = new CommandFuture(command);
+            CommandFuture<Object> future = new CommandFuture<Object>(command);
             CommandRequest request = new CommandRequest();
             request.id = requestIdGenerator.incrementAndGet();
             request.task = command;
@@ -293,7 +305,7 @@ public class WorkerJvmManager {
                 LOGGER.warn("WorkerJVM is still busy terminating: " + jvm);
             }
         } catch (Exception e) {
-            LOGGER.fatal(e);
+            LOGGER.fatal("Exception in terminateWorker()", e);
         }
     }
 
@@ -347,6 +359,7 @@ public class WorkerJvmManager {
     }
 
     private final class ClientSocketTask implements Runnable {
+
         private final Socket clientSocket;
 
         private ClientSocketTask(Socket clientSocket) {
@@ -378,9 +391,9 @@ public class WorkerJvmManager {
                         } else if (COMMAND_PUSH_RESPONSE.equals(service)) {
                             CommandResponse response = (CommandResponse) in.readObject();
                             //LOGGER.info("Received response: " + response.commandId);
-                            CommandFuture f = futureMap.remove(response.commandId);
-                            if (f != null) {
-                                f.set(response.result);
+                            CommandFuture<Object> future = futureMap.remove(response.commandId);
+                            if (future != null) {
+                                future.set(response.result);
                             } else {
                                 LOGGER.fatal("No future found for commandId: " + response.commandId);
                             }
@@ -399,21 +412,23 @@ public class WorkerJvmManager {
                 out.flush();
                 clientSocket.close();
             } catch (ClassNotFoundException e) {
-                LOGGER.fatal(e);
+                LOGGER.fatal("ClassNotFoundException in WorkerJvmManager", e);
             } catch (IOException e) {
-                LOGGER.fatal(e);
+                LOGGER.fatal("IOException in WorkerJvmManager", e);
             }
         }
     }
 
     private class AcceptorThread extends Thread {
 
+        private volatile boolean isRunning = true;
+
         public AcceptorThread() {
             super("AcceptorThread");
         }
 
         public void run() {
-            for (; ; ) {
+            while (isRunning) {
                 try {
                     Socket clientSocket = serverSocket.accept();
                     if (LOGGER.isDebugEnabled()) {
@@ -421,7 +436,7 @@ public class WorkerJvmManager {
                     }
                     executor.execute(new ClientSocketTask(clientSocket));
                 } catch (Throwable e) {
-                    LOGGER.fatal(e);
+                    LOGGER.fatal("Exception in AcceptorThread.run()", e);
                 }
             }
         }
