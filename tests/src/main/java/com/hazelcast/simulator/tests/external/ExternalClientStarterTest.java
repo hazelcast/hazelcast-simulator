@@ -30,14 +30,13 @@ public class ExternalClientStarterTest {
     private final Bash bash = new Bash(props);
     private final String ipAddress = pickHostAddress();
 
-    private boolean isClient;
+    private HazelcastInstance hazelcastInstance;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        hazelcastInstance = testContext.getTargetInstance();
         if (isClient(hazelcastInstance)) {
             hazelcastInstance.getAtomicLong("externalClientsStarted").addAndGet(processCount);
-            isClient = true;
         }
 
         // delete the local binary, so it won't get downloaded again
@@ -46,7 +45,7 @@ public class ExternalClientStarterTest {
 
     @Run
     public void run() {
-        if (!isClient) {
+        if (!isClient(hazelcastInstance)) {
             return;
         }
 
