@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.tests.external;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.common.SimulatorProperties;
@@ -10,6 +11,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 
 import java.io.File;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.HostAddressPicker.pickHostAddress;
 import static java.lang.String.format;
@@ -28,9 +30,15 @@ public class ExternalClientStarterTest {
     private final Bash bash = new Bash(props);
     private final String ipAddress = pickHostAddress();
 
+    private boolean isClient;
+
     @Setup
     public void setUp(TestContext testContext) throws Exception {
-        testContext.getTargetInstance().getAtomicLong("externalClientsStarted").addAndGet(processCount);
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        if (isClient(hazelcastInstance)) {
+            hazelcastInstance.getAtomicLong("externalClientsStarted").addAndGet(processCount);
+            isClient = true;
+        }
 
         // delete the local binary, so it won't get downloaded again
         deleteQuiet(new File(binaryName));
@@ -38,6 +46,10 @@ public class ExternalClientStarterTest {
 
     @Run
     public void run() {
+        if (!isClient) {
+            return;
+        }
+
         for (int i = 1; i <= processCount; i++) {
             String tmpArguments = arguments
                     .replace("$PROCESS_INDEX", String.valueOf(i))
