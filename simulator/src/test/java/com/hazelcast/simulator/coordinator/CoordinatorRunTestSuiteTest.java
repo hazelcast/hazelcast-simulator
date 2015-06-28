@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.exceptions.verification.TooManyActualInvocations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -234,7 +235,7 @@ public class CoordinatorRunTestSuiteTest {
 
         try {
             verify(agentsClient, times(executeOnAllWorkersTimes * numberOfTests)).executeOnAllWorkers(any(Command.class));
-        } catch (AssertionError e) {
+        } catch (TooManyActualInvocations e) {
             if (!retryVerifyExecuteOnAllWorkersWithLowerCount) {
                 throw e;
             }
