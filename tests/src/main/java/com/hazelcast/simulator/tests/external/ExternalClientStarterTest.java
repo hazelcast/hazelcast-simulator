@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.tests.external;
 
+import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.common.SimulatorProperties;
@@ -28,8 +29,12 @@ public class ExternalClientStarterTest {
     private final Bash bash = new Bash(props);
     private final String ipAddress = pickHostAddress();
 
+    private IAtomicLong externalClientsStarted;
+
     @Setup
     public void setUp(TestContext testContext) throws Exception {
+        externalClientsStarted = testContext.getTargetInstance().getAtomicLong("externalClientsStarted");
+
         // delete the local binary, so it won't get downloaded again
         deleteQuiet(new File(binaryName));
     }
@@ -45,6 +50,8 @@ public class ExternalClientStarterTest {
 
             LOGGER.info(format("Starting external client: %s %s >> %s.log", binaryName, tmpArguments, tmpLogFileName));
             bash.execute(format("../upload/%s %s >> %s.log &", binaryName, tmpArguments, tmpLogFileName));
+
+            externalClientsStarted.incrementAndGet();
         }
     }
 }

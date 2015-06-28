@@ -26,6 +26,7 @@ public class ExternalClientTest {
 
     // properties
     public String basename = "externalClientsRunning";
+    public boolean waitForClientsCountAutoDetection = true;
     public int waitForClientsCount = 1;
     public int waitIntervalSeconds = 60;
 
@@ -46,6 +47,9 @@ public class ExternalClientTest {
             return;
         }
 
+        if (waitForClientsCountAutoDetection) {
+            waitForClientsCount = (int) hazelcastInstance.getAtomicLong("externalClientsStarted").get();
+        }
         clientsRunning = hazelcastInstance.getCountDownLatch(basename);
         clientsRunning.trySetCount(waitForClientsCount);
 
