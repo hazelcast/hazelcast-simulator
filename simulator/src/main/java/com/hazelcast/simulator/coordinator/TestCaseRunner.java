@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
@@ -36,6 +38,8 @@ final class TestCaseRunner {
 
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
 
+    private final CountDownLatch waitForStopThread = new CountDownLatch(1);
+
     private final TestCase testCase;
     private final TestSuite testSuite;
     private final Coordinator coordinator;
@@ -46,6 +50,9 @@ final class TestCaseRunner {
     private final String testCaseId;
     private final String prefix;
     private final int sleepPeriod;
+
+    private StopThread stopThread;
+    private int runPhaseDuration;
 
     TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int maxTextCaseIdLength) {
         this.testCase = testCase;
@@ -79,11 +86,7 @@ final class TestCaseRunner {
             startPerformanceMonitor();
 
             startTestCase();
-            if (testSuite.duration > 0) {
-                stopTestCaseAfterDuration();
-            } else {
-                waitForTestCase();
-            }
+            waitForTestCase();
 
             logPerformance();
             processProbeResults();
@@ -134,25 +137,33 @@ final class TestCaseRunner {
         echo("Completed Test start");
     }
 
-    private void stopTestCaseAfterDuration() throws TimeoutException {
-        echo(format("Test will run for %s", secondsToHuman(testSuite.duration)));
-        sleep(testSuite.duration);
-        echo("Test finished running");
+    private void waitForTestCase() throws TimeoutException, InterruptedException {
+        long started = System.nanoTime();
 
-        echo("Starting Test stop");
-        agentsClient.executeOnAllWorkers(new StopCommand(testCaseId));
-        agentsClient.waitForPhaseCompletion(prefix, testCaseId, TestPhase.RUN);
-        echo("Completed Test stop");
-    }
+        if (testSuite.durationSeconds > 0) {
+            stopThread = new StopThread();
+            stopThread.start();
+        }
 
-    private void waitForTestCase() throws TimeoutException {
-        echo("Test will run until it stops");
-        agentsClient.waitForPhaseCompletion(prefix, testCaseId, TestPhase.RUN);
-        echo("Test finished running");
+        if (testSuite.waitForTestCase) {
+            echo("Test will run until it stops");
+            agentsClient.waitForPhaseCompletion(prefix, testCaseId, TestPhase.RUN);
+            echo("Test finished running");
+
+            if (stopThread != null) {
+                stopThread.shutdown();
+                stopThread.interrupt();
+            }
+        } else {
+            waitForStopThread.await();
+        }
+
+        runPhaseDuration = (int) TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
     }
 
     private void logPerformance() {
-        performanceMonitor.logDetailedPerformanceInfo(testSuite.duration);
+        int duration = testSuite.durationSeconds > 0 ? testSuite.durationSeconds : runPhaseDuration;
+        performanceMonitor.logDetailedPerformanceInfo(duration);
     }
 
     private void processProbeResults() {
@@ -200,32 +211,65 @@ final class TestCaseRunner {
         }
     }
 
-    private void sleep(int seconds) {
-        int sleepLoops = seconds / sleepPeriod;
-        for (int i = 1; i <= sleepLoops; i++) {
-            if (failureMonitor.hasCriticalFailure(nonCriticalFailures)) {
-                echo("Critical Failure detected, aborting execution of test");
-                return;
-            }
-
-            sleepSeconds(sleepPeriod);
-
-            int elapsed = sleepPeriod * i;
-            float percentage = (100f * elapsed) / seconds;
-            String msg = format("Running %s %s%% complete", secondsToHuman(elapsed), formatDouble(percentage, 7));
-
-            if (coordinator.monitorPerformance) {
-                msg += performanceMonitor.getPerformanceNumbers();
-            }
-
-            LOGGER.info(prefix + msg);
-        }
-
-        sleepSeconds(seconds % sleepPeriod);
-    }
-
     private void echo(String msg) {
         agentsClient.echo(prefix + msg);
         LOGGER.info(prefix + msg);
+    }
+
+    private final class StopThread extends Thread {
+
+        private volatile boolean isRunning = true;
+
+        public void shutdown() {
+            isRunning = false;
+        }
+
+        @Override
+        public void run() {
+            try {
+                echo(format("Test will run for %s", secondsToHuman(testSuite.durationSeconds)));
+                sleepUntilFailure(testSuite.durationSeconds);
+                echo("Test finished running");
+
+                echo("Starting Test stop");
+                agentsClient.executeOnAllWorkers(new StopCommand(testCaseId));
+                agentsClient.waitForPhaseCompletion(prefix, testCaseId, TestPhase.RUN);
+                echo("Completed Test stop");
+            } catch (TimeoutException e) {
+                LOGGER.error("TimeoutException in TestCaseRunner.StopThread.run()", e);
+            } finally {
+                waitForStopThread.countDown();
+            }
+        }
+
+        private void sleepUntilFailure(int seconds) {
+            int sleepLoops = seconds / sleepPeriod;
+            for (int i = 1; i <= sleepLoops; i++) {
+                if (failureMonitor.hasCriticalFailure(nonCriticalFailures)) {
+                    echo("Critical Failure detected, aborting execution of test");
+                    return;
+                }
+
+                sleepSeconds(sleepPeriod);
+
+                int elapsed = sleepPeriod * i;
+                float percentage = (100f * elapsed) / seconds;
+                String msg = format("Running %s %s%% complete", secondsToHuman(elapsed), formatDouble(percentage, 7));
+
+                if (coordinator.monitorPerformance) {
+                    msg += performanceMonitor.getPerformanceNumbers();
+                }
+
+                LOGGER.info(prefix + msg);
+
+                if (!isRunning) {
+                    break;
+                }
+            }
+
+            if (isRunning) {
+                sleepSeconds(seconds % sleepPeriod);
+            }
+        }
     }
 }

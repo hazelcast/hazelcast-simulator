@@ -322,8 +322,8 @@ public final class Coordinator {
     void runTestSuite() {
         echo("Starting testsuite: %s", testSuite.id);
         echo("Tests in testsuite: %s", testSuite.size());
-        echo("Running time per test: %s ", secondsToHuman(testSuite.duration));
-        echo("Expected total testsuite time: %s", secondsToHuman(testSuite.size() * testSuite.duration));
+        echo("Running time per test: %s ", secondsToHuman(testSuite.durationSeconds));
+        echo("Expected total testsuite time: %s", secondsToHuman(testSuite.size() * testSuite.durationSeconds));
 
         long started = System.nanoTime();
 

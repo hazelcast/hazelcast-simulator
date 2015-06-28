@@ -44,7 +44,8 @@ public class TestSuite implements Serializable {
 
     public Set<Failure.Type> tolerableFailures = Collections.emptySet();
 
-    public int duration;
+    public int durationSeconds;
+    public boolean waitForTestCase;
     public boolean failFast;
 
     public TestCase getTestCase(String testCaseId) {
@@ -71,7 +72,8 @@ public class TestSuite implements Serializable {
     @Override
     public String toString() {
         return "TestSuite{"
-                + "duration=" + duration
+                + "durationSeconds=" + durationSeconds
+                + "waitForTestCase=" + waitForTestCase
                 + ", id='" + id + '\''
                 + ", testRecipeList=" + testCaseList
                 + ", failFast=" + failFast
