@@ -19,7 +19,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.exceptions.verification.TooManyActualInvocations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -36,6 +35,8 @@ import static org.mockito.Matchers.anySetOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -205,7 +206,7 @@ public class CoordinatorRunTestSuiteTest {
     }
 
     private void verifyAgentsClient(Coordinator coordinator) throws Exception {
-        boolean retryVerifyExecuteOnAllWorkersWithLowerCount = false;
+        boolean verifyExecuteOnAllWorkersWithRange = false;
         int numberOfTests = coordinator.testSuite.size();
         int phaseNumber = TestPhase.values().length;
         int executeOnFirstWorkerTimes = 0;
@@ -224,7 +225,7 @@ public class CoordinatorRunTestSuiteTest {
         } else if (coordinator.testSuite.waitForTestCase) {
             // has duration and waitForTestCase
             waitForPhaseCompletionTimes++;
-            retryVerifyExecuteOnAllWorkersWithLowerCount = true;
+            verifyExecuteOnAllWorkersWithRange = true;
         }
         if (!coordinator.verifyEnabled) {
             // no GenericCommand for global and local verify phase are sent
@@ -233,13 +234,11 @@ public class CoordinatorRunTestSuiteTest {
             waitForPhaseCompletionTimes -= 2;
         }
 
-        try {
+        if (verifyExecuteOnAllWorkersWithRange) {
+            verify(agentsClient, atLeast((executeOnAllWorkersTimes - 1) * numberOfTests)).executeOnAllWorkers(any(Command.class));
+            verify(agentsClient, atMost(executeOnAllWorkersTimes * numberOfTests)).executeOnAllWorkers(any(Command.class));
+        } else {
             verify(agentsClient, times(executeOnAllWorkersTimes * numberOfTests)).executeOnAllWorkers(any(Command.class));
-        } catch (TooManyActualInvocations e) {
-            if (!retryVerifyExecuteOnAllWorkersWithLowerCount) {
-                throw e;
-            }
-            verify(agentsClient, times((executeOnAllWorkersTimes - 1) * numberOfTests)).executeOnAllWorkers(any(Command.class));
         }
         verify(agentsClient, times(executeOnFirstWorkerTimes * numberOfTests)).executeOnFirstWorker(any(Command.class));
         verify(agentsClient, times(waitForPhaseCompletionTimes))
