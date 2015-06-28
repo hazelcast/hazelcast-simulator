@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 
 public class ExternalClientTest {
@@ -27,6 +28,7 @@ public class ExternalClientTest {
     // properties
     public String basename = "externalClientsRunning";
     public boolean waitForClientsCountAutoDetection = true;
+    public int waitForClientCountAutoDetectionDelaySeconds = 10;
     public int waitForClientsCount = 1;
     public int waitIntervalSeconds = 60;
 
@@ -35,8 +37,8 @@ public class ExternalClientTest {
 
     private TestContext testContext;
     private HazelcastInstance hazelcastInstance;
-    private ICountDownLatch clientsRunning;
     private boolean isExternalResultsCollectorInstance;
+    private ICountDownLatch clientsRunning;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
@@ -47,9 +49,6 @@ public class ExternalClientTest {
             return;
         }
 
-        if (waitForClientsCountAutoDetection) {
-            waitForClientsCount = (int) hazelcastInstance.getAtomicLong("externalClientsStarted").get();
-        }
         clientsRunning = hazelcastInstance.getCountDownLatch(basename);
         clientsRunning.trySetCount(waitForClientsCount);
 
@@ -66,6 +65,15 @@ public class ExternalClientTest {
     public void run() throws ExecutionException, InterruptedException {
         if (isMemberNode(hazelcastInstance)) {
             return;
+        }
+
+        // lazy set CountdownLatch if client count auto detection is enabled
+        if (waitForClientsCountAutoDetection) {
+            // wait some seconds to be sure that all external clients are started
+            LOGGER.info("Waiting for all external clients to be started...");
+            sleepSeconds(waitForClientCountAutoDetectionDelaySeconds);
+            waitForClientsCount = (int) hazelcastInstance.getAtomicLong("externalClientsStarted").get();
+            clientsRunning.trySetCount(waitForClientsCount);
         }
 
         // wait for external clients to finish
