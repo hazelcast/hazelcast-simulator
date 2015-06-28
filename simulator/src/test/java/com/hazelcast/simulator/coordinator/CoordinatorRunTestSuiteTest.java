@@ -10,6 +10,7 @@ import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.GetBenchmarkResultsCommand;
+import com.hazelcast.simulator.worker.commands.StopCommand;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -101,8 +102,20 @@ public class CoordinatorRunTestSuiteTest {
     }
 
     @Test
-    public void runTestSuiteParallel_durationZero_noVerify() throws Exception {
-        coordinator.testSuite.duration = 0;
+    public void runTestSuiteParallel_waitForTestCase_duration() throws Exception {
+        coordinator.testSuite.waitForTestCase = true;
+        coordinator.testSuite.durationSeconds = 3;
+        coordinator.parallel = true;
+
+        coordinator.runTestSuite();
+
+        verifyAgentsClient(coordinator);
+    }
+
+    @Test
+    public void runTestSuiteParallel_waitForTestCase_noVerify() throws Exception {
+        coordinator.testSuite.waitForTestCase = true;
+        coordinator.testSuite.durationSeconds = 0;
         coordinator.parallel = true;
         coordinator.verifyEnabled = false;
 
@@ -113,7 +126,7 @@ public class CoordinatorRunTestSuiteTest {
 
     @Test
     public void runTestSuiteParallel_performanceMonitorEnabled() throws Exception {
-        coordinator.testSuite.duration = 4;
+        coordinator.testSuite.durationSeconds = 4;
         coordinator.parallel = true;
         coordinator.monitorPerformance = true;
 
@@ -126,7 +139,7 @@ public class CoordinatorRunTestSuiteTest {
     public void runTestSuiteSequential_hasCriticalFailures() throws Exception {
         when(failureMonitor.hasCriticalFailure(anySetOf(Failure.Type.class))).thenReturn(true);
 
-        coordinator.testSuite.duration = 4;
+        coordinator.testSuite.durationSeconds = 4;
         coordinator.parallel = false;
 
         coordinator.runTestSuite();
@@ -155,7 +168,7 @@ public class CoordinatorRunTestSuiteTest {
         };
         when(agentsClient.executeOnAllWorkers(isA(GetBenchmarkResultsCommand.class))).thenAnswer(probeResultsAnswer);
 
-        coordinator.testSuite.duration = 1;
+        coordinator.testSuite.durationSeconds = 1;
         coordinator.parallel = false;
 
         coordinator.runTestSuite();
@@ -167,7 +180,17 @@ public class CoordinatorRunTestSuiteTest {
     public void runTestSuite_getProbeResultsTimeoutException() throws Exception {
         when(agentsClient.executeOnAllWorkers(isA(GetBenchmarkResultsCommand.class))).thenThrow(new TimeoutException());
 
-        coordinator.testSuite.duration = 1;
+        coordinator.testSuite.durationSeconds = 1;
+        coordinator.parallel = true;
+
+        coordinator.runTestSuite();
+    }
+
+    @Test
+    public void runTestSuite_stopThreadTimeoutException() throws Exception {
+        when(agentsClient.executeOnAllWorkers(isA(StopCommand.class))).thenThrow(new TimeoutException());
+
+        coordinator.testSuite.durationSeconds = 1;
         coordinator.parallel = true;
 
         coordinator.runTestSuite();
@@ -193,9 +216,12 @@ public class CoordinatorRunTestSuiteTest {
             }
         }
         int waitForPhaseCompletionTimes = phaseNumber;
-        if (coordinator.testSuite.duration < 1) {
+        if (coordinator.testSuite.durationSeconds == 0) {
             // no StopCommand is sent
             executeOnAllWorkersTimes--;
+        } else if (coordinator.testSuite.waitForTestCase) {
+            // has duration and waitForTestCase
+            waitForPhaseCompletionTimes++;
         }
         if (!coordinator.verifyEnabled) {
             // no GenericCommand for global and local verify phase are sent

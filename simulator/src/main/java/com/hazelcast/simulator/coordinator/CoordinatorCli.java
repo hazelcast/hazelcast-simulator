@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
+import static com.hazelcast.simulator.test.Failure.Type.fromPropertyValue;
+import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
@@ -29,8 +31,11 @@ final class CoordinatorCli {
     private final OptionParser parser = new OptionParser();
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
-            "Amount of time to run per test. Can be e.g. 10s, 1m, 2h or 3d.")
-            .withRequiredArg().ofType(String.class).defaultsTo("60");
+            "Amount of time to execute run phase per test, e.g. 10s, 1m, 2h or 3d.")
+            .withRequiredArg().ofType(String.class);
+
+    private final OptionSpec waitForTestCaseSpec = parser.accepts("waitForTestCaseCompletion",
+            "Wait for the TestCase to finish its run phase. Can be combined with --duration to limit runtime.");
 
     private final OptionSpec<String> overridesSpec = parser.accepts("overrides",
             "Properties that override the properties in a given test-case, e.g. --overrides"
@@ -164,11 +169,16 @@ final class CoordinatorCli {
         coordinator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
         coordinator.parallel = options.has(parallelSpec);
 
-        TestSuite testSuite = TestSuite.loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec));
-        testSuite.duration = getDuration();
+        TestSuite testSuite = loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec));
+        testSuite.durationSeconds = getDurationSeconds();
+        testSuite.waitForTestCase = options.has(waitForTestCaseSpec);
         testSuite.failFast = options.valueOf(failFastSpec);
-        testSuite.tolerableFailures = Failure.Type.fromPropertyValue(options.valueOf(tolerableFailureSpec));
+        testSuite.tolerableFailures = fromPropertyValue(options.valueOf(tolerableFailureSpec));
         coordinator.testSuite = testSuite;
+
+        if (testSuite.durationSeconds == 0 && !testSuite.waitForTestCase) {
+            throw new CommandLineExitException("You need to define --duration or --waitForTestCase or both!");
+        }
 
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
         workerJvmSettings.vmOptions = options.valueOf(workerVmOptionsSpec);
@@ -225,49 +235,54 @@ final class CoordinatorCli {
     }
 
     private File getTestSuiteFile() {
-        String testsuiteFileName = null;
+        File testSuiteFile;
 
         List testsuiteFiles = options.nonOptionArguments();
-        if (testsuiteFiles.isEmpty()) {
-            testsuiteFileName = new File("test.properties").getAbsolutePath();
-        } else if (testsuiteFiles.size() == 1) {
-            testsuiteFileName = (String) testsuiteFiles.get(0);
-        } else if (testsuiteFiles.size() > 1) {
+        if (testsuiteFiles.size() > 1) {
             throw new CommandLineExitException(format("Too many testsuite files specified: %s", testsuiteFiles));
-        }
-        if (testsuiteFileName == null) {
-            throw new CommandLineExitException("TestSuite filename was null");
+        } else if (testsuiteFiles.size() == 1) {
+            testSuiteFile = new File((String) testsuiteFiles.get(0));
+        } else {
+            testSuiteFile = new File("test.properties");
         }
 
-        File testSuiteFile = new File(testsuiteFileName);
         LOGGER.info("Loading testsuite file: " + testSuiteFile.getAbsolutePath());
         if (!testSuiteFile.exists()) {
-            throw new CommandLineExitException(format("Can't find testsuite file [%s]", testSuiteFile));
+            throw new CommandLineExitException(format("TestSuite file '%s' not found", testSuiteFile));
         }
         return testSuiteFile;
     }
 
-    private int getDuration() {
-        String value = options.valueOf(durationSpec);
+    private int getDurationSeconds() {
+        if (!options.has(durationSpec)) {
+            return 0;
+        }
 
+        int duration;
+        String value = options.valueOf(durationSpec);
         try {
             if (value.endsWith("s")) {
                 String sub = value.substring(0, value.length() - 1);
-                return Integer.parseInt(sub);
+                duration = Integer.parseInt(sub);
             } else if (value.endsWith("m")) {
                 String sub = value.substring(0, value.length() - 1);
-                return (int) TimeUnit.MINUTES.toSeconds(Integer.parseInt(sub));
+                duration = (int) TimeUnit.MINUTES.toSeconds(Integer.parseInt(sub));
             } else if (value.endsWith("h")) {
                 String sub = value.substring(0, value.length() - 1);
-                return (int) TimeUnit.HOURS.toSeconds(Integer.parseInt(sub));
+                duration = (int) TimeUnit.HOURS.toSeconds(Integer.parseInt(sub));
             } else if (value.endsWith("d")) {
                 String sub = value.substring(0, value.length() - 1);
-                return (int) TimeUnit.DAYS.toSeconds(Integer.parseInt(sub));
+                duration = (int) TimeUnit.DAYS.toSeconds(Integer.parseInt(sub));
             } else {
-                return Integer.parseInt(value);
+                duration = Integer.parseInt(value);
             }
         } catch (NumberFormatException e) {
-            throw new CommandLineExitException(format("Failed to parse duration [%s], cause: %s", value, e.getMessage()));
+            throw new CommandLineExitException(format("Failed to parse duration '%s'", value), e);
         }
+
+        if (duration < 1) {
+            throw new CommandLineExitException("duration must be a positive number, but was: " + duration);
+        }
+        return duration;
     }
 }
