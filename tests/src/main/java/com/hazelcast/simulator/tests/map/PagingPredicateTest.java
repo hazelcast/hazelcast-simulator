@@ -12,6 +12,7 @@ import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
 import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
+import com.hazelcast.simulator.worker.tasks.IWorker;
 
 import static java.lang.Math.abs;
 
@@ -27,12 +28,11 @@ import static java.lang.Math.abs;
  *
  * Implementation note: There is a small code duplication in worker implementations - it could be eliminated by
  * introducing a common superclass, but I believe it would just make things more complicated.
- *
  */
 public class PagingPredicateTest {
 
-    public String basename = this.getClass().getSimpleName();
-    //this is rather high number, make sure you have enough heap space. I use -Xmx20g
+    public String basename = PagingPredicateTest.class.getSimpleName();
+    // this is rather high number, make sure you have enough heap space, e.g. with JVM option -Xmx20g
     public int keyCount = 10000000;
     public boolean useIndex;
     public int pageSize = 10000;
@@ -56,15 +56,6 @@ public class PagingPredicateTest {
         if (useIndex) {
             map.addIndex("salary", true);
         }
-        initMapLoad();
-    }
-
-    @RunWithWorker
-    public AbstractMonotonicWorker createWorker() {
-        return sequentialWorker ? new SequentialWorker() : new RandomWorker();
-    }
-
-    private void initMapLoad() {
         MapStreamer<Integer, Employee> streamer = MapStreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {
             Employee employee = new Employee(i);
@@ -73,14 +64,12 @@ public class PagingPredicateTest {
         streamer.await();
     }
 
-    private class SequentialWorker extends AbstractMonotonicWorker {
-        private PagingPredicate predicate;
-        private int predicateReusedCount;
+    @RunWithWorker
+    public IWorker createWorker() {
+        return sequentialWorker ? new SequentialWorker() : new RandomWorker();
+    }
 
-        @Override
-        protected void beforeRun() {
-            predicate = createNewPredicate();
-        }
+    private class SequentialWorker extends BaseWorker {
 
         @Override
         protected void timeStep() {
@@ -88,46 +77,15 @@ public class PagingPredicateTest {
             evaluatePredicate();
             predicate.nextPage();
         }
-
-        private void evaluatePredicate() {
-            map.entrySet(predicate);
-            predicateReusedCount++;
-        }
-
-        private void createNewPredicateIfNeeded() {
-            if (predicateReusedCount == maxPredicateReuseCount) {
-                predicate = createNewPredicate();
-                predicateReusedCount = 0;
-            }
-        }
     }
 
-    private class RandomWorker extends AbstractMonotonicWorker {
-        private PagingPredicate predicate;
-        private int predicateReusedCount;
-
-        @Override
-        protected void beforeRun() {
-            predicate = createNewPredicate();
-        }
+    private class RandomWorker extends BaseWorker {
 
         @Override
         protected void timeStep() {
             createNewPredicateIfNeeded();
             goToRandomPage();
             evaluatePredicate();
-        }
-
-        private void evaluatePredicate() {
-            map.entrySet(predicate);
-            predicateReusedCount++;
-        }
-
-        private void createNewPredicateIfNeeded() {
-            if (predicateReusedCount == maxPredicateReuseCount) {
-                predicate = createNewPredicate();
-                predicateReusedCount = 0;
-            }
         }
 
         private void goToRandomPage() {
@@ -142,8 +100,26 @@ public class PagingPredicateTest {
         }
     }
 
-    private PagingPredicate createNewPredicate() {
-        return new PagingPredicate(innerPredicate, pageSize);
-    }
+    private abstract class BaseWorker extends AbstractMonotonicWorker {
 
+        protected PagingPredicate predicate = createNewPredicate();
+
+        private int predicateReusedCount;
+
+        protected void createNewPredicateIfNeeded() {
+            if (predicateReusedCount == maxPredicateReuseCount) {
+                predicate = createNewPredicate();
+                predicateReusedCount = 0;
+            }
+        }
+
+        protected void evaluatePredicate() {
+            map.entrySet(predicate);
+            predicateReusedCount++;
+        }
+
+        private PagingPredicate createNewPredicate() {
+            return new PagingPredicate(innerPredicate, pageSize);
+        }
+    }
 }
