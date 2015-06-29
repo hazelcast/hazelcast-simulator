@@ -28,11 +28,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>> implements IntervalProbe<R, T> {
 
-    private final transient ThreadLocal<T> threadLocalProbe = new ThreadLocal<T>();
-    private final transient ConcurrentHashMap<Long, T> probeMap = new ConcurrentHashMap<Long, T>();
-    private final transient ProbesType probesType;
+    private static final long serialVersionUID = -40067197121643927L;
 
-    private transient long startedAt;
+    private final ThreadLocal<T> threadLocalProbe = new ThreadLocal<T>();
+    private final ConcurrentHashMap<Long, T> probeMap = new ConcurrentHashMap<Long, T>();
+    private final ProbesType probesType;
+
+    private long startedAt;
 
     public ConcurrentProbe(ProbesType probesType) {
         this.probesType = probesType;
@@ -151,6 +153,6 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
     }
 
     private void writeObject(ObjectOutputStream oos) throws IOException {
-        throw new NotSerializableException();
+        throw new NotSerializableException("ConcurrentProbe is not serializable!");
     }
 }
