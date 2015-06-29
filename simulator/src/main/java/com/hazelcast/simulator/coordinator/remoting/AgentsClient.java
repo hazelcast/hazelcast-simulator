@@ -44,13 +44,14 @@ import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSecondsThrowException;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
+import static java.lang.Integer.parseInt;
 
 public class AgentsClient {
 
-    private static final Logger LOGGER = Logger.getLogger(AgentsClient.class);
+    private static final long TEST_METHOD_TIMEOUT_SECONDS = parseInt(System.getProperty("worker.testmethod.timeout", "10000"));
+    private static final long TEST_METHOD_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(TEST_METHOD_TIMEOUT_SECONDS);
 
-    private static final long TEST_METHOD_TIMEOUT = TimeUnit.SECONDS.toMillis(Integer.parseInt(System.getProperty(
-            "worker.testmethod.timeout", "10000")));
+    private static final Logger LOGGER = Logger.getLogger(AgentsClient.class);
 
     private final ExecutorService agentExecutor = createFixedThreadPool(100, AgentsClient.class);
     private final List<AgentClient> agents = new LinkedList<AgentClient>();
@@ -227,13 +228,11 @@ public class AgentsClient {
             if (member) {
                 settings = spawnPlan.memberSettings;
                 if (spawnPlan.memberSettings.clientWorkerCount > 0) {
-                    // TODO: remove
                     LOGGER.fatal("Found clients during member startup");
                 }
             } else {
                 settings = spawnPlan.clientSettings;
                 if (spawnPlan.clientSettings.memberWorkerCount > 0) {
-                    // TODO: remove
                     LOGGER.fatal("Found members during client startup");
                 }
             }
@@ -373,31 +372,16 @@ public class AgentsClient {
         });
     }
 
-    // TODO: probably we don't want to throw exceptions to make sure that don't abort when an agent goes down
+    // TODO: probably we don't want to throw exceptions to make sure that we don't abort when an agent goes down
     private <E> List<E> getAllFutures(Collection<Future<E>> futures) throws TimeoutException {
-        CountdownWatch watch = CountdownWatch.started(TEST_METHOD_TIMEOUT);
+        CountdownWatch watch = CountdownWatch.started(TEST_METHOD_TIMEOUT_MILLIS);
         List<E> resultList = new LinkedList<E>();
         for (Future<E> future : futures) {
             try {
                 E result = future.get(watch.getRemainingMs(), TimeUnit.MILLISECONDS);
                 resultList.add(result);
-            //} catch (TimeoutException e) {
-                //Failure failure = new Failure();
-                //failure.message = "Timeout waiting for remote operation to complete";
-                //failure.agentAddress = getHostAddress();
-                //failure.testRecipe = console.getTestRecipe();
-                //failure.cause = e;
-                //console.statusTopic.publish(failure);
-                //throw e;
             } catch (ExecutionException e) {
                 Throwable cause = e.getCause();
-                //if (!(cause instanceof FailureAlreadyThrownRuntimeException)) {
-                //Failure failure = new Failure();
-                //failure.agentAddress = getHostAddress();
-                //failure.testRecipe = console.getTestRecipe();
-                //failure.cause = e;
-                //console.statusTopic.publish(failure);
-                //}
                 fixRemoteStackTrace(cause, Thread.currentThread().getStackTrace());
                 if (cause instanceof TimeoutException) {
                     throw (TimeoutException) cause;
