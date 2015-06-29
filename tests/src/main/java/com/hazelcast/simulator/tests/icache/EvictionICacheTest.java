@@ -153,6 +153,9 @@ public class EvictionICacheTest {
                         cache.putAll(putAllMap);
                         counter.putAll++;
                         break;
+
+                    default:
+                        throw new UnsupportedOperationException();
                 }
 
                 int size = cache.size();
