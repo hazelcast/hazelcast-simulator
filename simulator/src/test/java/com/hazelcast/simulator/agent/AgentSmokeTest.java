@@ -50,7 +50,6 @@ public class AgentSmokeTest {
     public static void setUp() throws Exception {
         userDir = System.getProperty("user.dir");
 
-        System.setProperty("worker.testmethod.timeout", "5");
         System.setProperty("user.dir", "./dist/src/main/dist");
 
         LOGGER.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
@@ -67,12 +66,12 @@ public class AgentSmokeTest {
     public static void tearDown() throws Exception {
         try {
             agentsClient.stop();
-
             agentStarter.stop();
         } finally {
             Hazelcast.shutdownAll();
 
             System.setProperty("user.dir", userDir);
+
             deleteQuiet(new File("./dist/src/main/dist/workers"));
         }
     }
