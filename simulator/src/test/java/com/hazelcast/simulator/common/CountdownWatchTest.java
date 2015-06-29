@@ -54,5 +54,4 @@ public class CountdownWatchTest {
         Thread.sleep(10);
         assertThat(watch.getRemainingMs(), is(0l));
     }
-
 }

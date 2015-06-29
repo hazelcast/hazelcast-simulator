@@ -5,13 +5,13 @@ public class CountdownWatch {
 
     private final long limit;
 
-    private CountdownWatch(long delay) {
-        if (delay < 0) {
-            throw new IllegalArgumentException("Delay cannot be negative, passed " + delay + ".");
+    private CountdownWatch(long delayMillis) {
+        if (delayMillis < 0) {
+            throw new IllegalArgumentException("Delay cannot be negative, passed " + delayMillis + ".");
         }
 
         long now = System.currentTimeMillis();
-        long candidate = now + delay;
+        long candidate = now + delayMillis;
         // overflow protection
         limit = (candidate >= now ? candidate : Long.MAX_VALUE);
     }
@@ -24,8 +24,8 @@ public class CountdownWatch {
         return System.currentTimeMillis() >= limit;
     }
 
-    public static CountdownWatch started(long delay) {
-        return new CountdownWatch(delay);
+    public static CountdownWatch started(long delayMillis) {
+        return new CountdownWatch(delayMillis);
     }
 
     public static CountdownWatch unboundedStarted() {
