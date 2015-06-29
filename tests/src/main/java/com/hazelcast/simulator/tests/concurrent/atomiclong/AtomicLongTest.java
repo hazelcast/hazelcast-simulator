@@ -32,6 +32,7 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
 import static org.junit.Assert.assertEquals;
 
@@ -80,6 +81,7 @@ public class AtomicLongTest {
         }
         totalCounter.destroy();
         LOGGER.info(getOperationCountInformation(targetInstance));
+        LOGGER.info(getPartitionDistributionInformation(targetInstance));
     }
 
     @Warmup
