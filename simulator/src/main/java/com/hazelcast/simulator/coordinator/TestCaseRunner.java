@@ -109,17 +109,17 @@ final class TestCaseRunner {
     }
 
     private void runOnAllWorkers(TestPhase testPhase) throws TimeoutException {
-        echo("Starting Test " + testPhase.name);
+        echo("Starting Test " + testPhase.desc());
         agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, testPhase));
         agentsClient.waitForPhaseCompletion(prefix, testCaseId, testPhase);
-        echo("Completed Test " + testPhase.name);
+        echo("Completed Test " + testPhase.desc());
     }
 
     private void runOnFirstWorker(TestPhase testPhase) throws TimeoutException {
-        echo("Starting Test " + testPhase.name);
+        echo("Starting Test " + testPhase.desc());
         agentsClient.executeOnFirstWorker(new GenericCommand(testCaseId, testPhase));
         agentsClient.waitForPhaseCompletion(prefix, testCaseId, testPhase);
-        echo("Completed Test " + testPhase.name);
+        echo("Completed Test " + testPhase.desc());
     }
 
     private void startPerformanceMonitor() {

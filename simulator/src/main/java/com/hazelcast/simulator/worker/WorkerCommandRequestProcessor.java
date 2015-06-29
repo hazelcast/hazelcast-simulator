@@ -277,18 +277,18 @@ class WorkerCommandRequestProcessor {
                     @Override
                     public void doRun() throws Exception {
                         try {
-                            LOGGER.info(format("%s Starting %s of %s %s", DASHES, testPhase.name, testName, DASHES));
+                            LOGGER.info(format("%s Starting %s of %s %s", DASHES, testPhase.desc(), testName, DASHES));
                             test.invoke(testPhase);
-                            LOGGER.info(format("%s Finished %s of %s %s", DASHES, testPhase.name, testName, DASHES));
+                            LOGGER.info(format("%s Finished %s of %s %s", DASHES, testPhase.desc(), testName, DASHES));
                         } catch (InvocationTargetException e) {
-                            LOGGER.fatal(format("%s Failed %s of %s %s", DASHES, testPhase.name, testName, DASHES));
+                            LOGGER.fatal(format("%s Failed %s of %s %s", DASHES, testPhase.desc(), testName, DASHES));
                             if (e.getCause() instanceof Error) {
                                 throw (Error) e.getCause();
                             }
                             if (e.getCause() instanceof Exception) {
                                 throw (Exception) e.getCause();
                             }
-                            throw new RuntimeException(format("Failed to execute %s of %s", testPhase.name, testName),
+                            throw new RuntimeException(format("Failed to execute %s of %s", testPhase.desc(), testName),
                                     e.getCause());
                         } finally {
                             if (testPhase == TestPhase.LOCAL_TEARDOWN) {
@@ -299,7 +299,7 @@ class WorkerCommandRequestProcessor {
                 };
                 commandThread.start();
             } catch (Exception e) {
-                LOGGER.fatal(format("Failed to execute %s of %s", testPhase.name, testName), e);
+                LOGGER.fatal(format("Failed to execute %s of %s", testPhase.desc(), testName), e);
                 throw e;
             }
         }

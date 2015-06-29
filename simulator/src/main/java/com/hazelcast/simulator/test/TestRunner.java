@@ -167,9 +167,9 @@ public class TestRunner<E> {
     }
 
     private void runPhase(TestPhase testPhase) throws Exception {
-        LOGGER.info("Starting " + testPhase.name);
+        LOGGER.info("Starting " + testPhase.desc());
         testInvoker.invoke(testPhase);
-        LOGGER.info("Finished " + testPhase.name);
+        LOGGER.info("Finished " + testPhase.desc());
     }
 
     private final class StopThread extends Thread {

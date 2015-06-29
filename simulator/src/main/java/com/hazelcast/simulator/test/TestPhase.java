@@ -10,9 +10,13 @@ public enum TestPhase {
     GLOBAL_TEARDOWN("global tear down"),
     LOCAL_TEARDOWN("local tear down");
 
-    public final String name;
+    private final String description;
 
-    TestPhase(String name) {
-        this.name = name;
+    TestPhase(String description) {
+        this.description = description;
+    }
+
+    public String desc() {
+        return description;
     }
 }

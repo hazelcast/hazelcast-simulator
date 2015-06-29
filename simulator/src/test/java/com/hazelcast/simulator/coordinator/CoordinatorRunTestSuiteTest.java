@@ -212,7 +212,7 @@ public class CoordinatorRunTestSuiteTest {
         int executeOnFirstWorkerTimes = 0;
         int executeOnAllWorkersTimes = 3; // InitCommand, StopCommand and GetBenchmarkResultsCommand
         for (TestPhase testPhase : TestPhase.values()) {
-            if (testPhase.name.startsWith("global")) {
+            if (testPhase.desc().startsWith("global")) {
                 executeOnFirstWorkerTimes++;
             } else {
                 executeOnAllWorkersTimes++;

@@ -211,7 +211,7 @@ public class AgentsClient {
                 return;
             }
             long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start);
-            LOGGER.info(prefix + "Waiting " + secondsToHuman(duration) + " for " + testPhase.name + " completion");
+            LOGGER.info(prefix + "Waiting " + secondsToHuman(duration) + " for " + testPhase.desc() + " completion");
             sleepSeconds(5);
         }
     }

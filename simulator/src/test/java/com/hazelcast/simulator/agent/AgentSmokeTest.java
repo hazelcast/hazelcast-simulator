@@ -166,7 +166,7 @@ public class AgentSmokeTest {
     }
 
     private void runPhase(TestCase testCase, TestPhase testPhase) throws TimeoutException {
-        LOGGER.info("Starting " + testPhase.name + " phase...");
+        LOGGER.info("Starting " + testPhase.desc() + " phase...");
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), testPhase));
         agentsClient.waitForPhaseCompletion("", testCase.getId(), testPhase);
     }
