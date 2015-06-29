@@ -65,8 +65,11 @@ public class AgentSmokeTest {
     @AfterClass
     public static void tearDown() throws Exception {
         try {
-            agentsClient.stop();
-            agentStarter.stop();
+            try {
+                agentsClient.stop();
+            } finally {
+                agentStarter.stop();
+            }
         } finally {
             Hazelcast.shutdownAll();
 
@@ -198,10 +201,7 @@ public class AgentSmokeTest {
 
             @Override
             public void run() {
-                String[] args = new String[]{
-                        "--bindAddress", AGENT_IP_ADDRESS,
-                };
-                agent = Agent.createAgent(args);
+                agent = Agent.createAgent(new String[]{});
                 agent.start();
                 latch.countDown();
             }

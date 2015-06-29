@@ -40,7 +40,6 @@ public class Agent {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
-    String bindAddress;
     String cloudIdentity;
     String cloudCredential;
     String cloudProvider;
@@ -72,10 +71,6 @@ public class Agent {
 
     public void signalUsed() {
         lastUsed = System.currentTimeMillis();
-    }
-
-    public String getBindAddress() {
-        return bindAddress;
     }
 
     public TestSuite getTestSuite() {
@@ -149,7 +144,6 @@ public class Agent {
         Agent agent = new Agent();
         AgentCli.init(agent, args);
 
-        LOGGER.info("Bind address: " + agent.bindAddress);
         LOGGER.info("CloudIdentity: " + agent.cloudIdentity);
         LOGGER.info("CloudCredential: " + agent.cloudCredential);
         LOGGER.info("CloudProvider: " + agent.cloudProvider);
