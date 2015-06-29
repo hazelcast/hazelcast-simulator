@@ -152,6 +152,7 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
         return probeMap.size();
     }
 
+    @SuppressWarnings("unused")
     private void writeObject(ObjectOutputStream oos) throws IOException {
         throw new NotSerializableException("ConcurrentProbe is not serializable!");
     }
