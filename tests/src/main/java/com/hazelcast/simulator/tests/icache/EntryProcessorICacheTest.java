@@ -32,6 +32,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 
 public class EntryProcessorICacheTest {
@@ -39,7 +40,7 @@ public class EntryProcessorICacheTest {
     private static final ILogger LOGGER = Logger.getLogger(EntryProcessorICacheTest.class);
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = EntryProcessorICacheTest.class.getSimpleName();
     public int threadCount = 10;
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
@@ -51,12 +52,11 @@ public class EntryProcessorICacheTest {
     private Cache<Integer, Long> cache;
     private IList<Map<Integer, Long>> resultsPerWorker;
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         CacheManager cacheManager;
         if (isMemberNode(targetInstance)) {
@@ -91,23 +91,9 @@ public class EntryProcessorICacheTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for (int k = 0; k < keyCount; k++) {
-            cache.put(k, 0L);
+        for (int i = 0; i < keyCount; i++) {
+            cache.put(i, 0L);
         }
-    }
-
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
     }
 
     @Verify
@@ -121,9 +107,9 @@ public class EntryProcessorICacheTest {
         }
 
         int failures = 0;
-        for (int k = 0; k < keyCount; k++) {
-            long expected = amount[k];
-            long found = cache.get(k);
+        for (int i = 0; i < keyCount; i++) {
+            long expected = amount[i];
+            long found = cache.get(i);
             if (expected != found) {
                 failures++;
             }
@@ -132,13 +118,27 @@ public class EntryProcessorICacheTest {
         assertEquals("Failures have been found", 0, failures);
     }
 
+    @Performance
+    public long getOperationCount() {
+        return operations.get();
+    }
+
+    @Run
+    public void run() {
+        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+        for (int i = 0; i < threadCount; i++) {
+            spawner.spawn(new Worker());
+        }
+        spawner.awaitCompletion();
+    }
+
     private class Worker implements Runnable {
         private final Random random = new Random();
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         public Worker() {
-            for (int k = 0; k < keyCount; k++) {
-                result.put(k, 0L);
+            for (int i = 0; i < keyCount; i++) {
+                result.put(i, 0L);
             }
         }
 
@@ -168,11 +168,7 @@ public class EntryProcessorICacheTest {
             operations.addAndGet(iteration % performanceUpdateFrequency);
 
             // sleep to give time for the last EntryProcessor tasks to complete
-            try {
-                Thread.sleep(maxProcessorDelayMs * 2);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            sleepMillis(maxProcessorDelayMs * 2);
             resultsPerWorker.add(result);
         }
 
@@ -181,7 +177,8 @@ public class EntryProcessorICacheTest {
         }
     }
 
-    private static class IncrementEntryProcessor implements EntryProcessor<Integer, Long, Object> , Serializable {
+    private static final class IncrementEntryProcessor implements EntryProcessor<Integer, Long, Object>, Serializable {
+
         private final long increment;
         private final long delayMs;
 
@@ -214,4 +211,3 @@ public class EntryProcessorICacheTest {
         new TestRunner<EntryProcessorICacheTest>(test).run();
     }
 }
-
