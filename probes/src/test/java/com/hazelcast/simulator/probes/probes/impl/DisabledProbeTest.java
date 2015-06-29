@@ -11,8 +11,19 @@ public class DisabledProbeTest {
     private DisabledProbe disabledProbe = DisabledProbe.INSTANCE;
 
     @Test
-    public void testStarted() {
-        disabledProbe.started();
+    public void testDisable() {
+        assertTrue(disabledProbe.isDisabled());
+
+        disabledProbe.disable();
+
+        assertTrue(disabledProbe.isDisabled());
+    }
+
+    @Test
+    public void testSetValues() {
+        disabledProbe.setValues(123, 1254);
+
+        assertEquals(0, disabledProbe.getInvocationCount());
     }
 
     @Test
@@ -26,7 +37,12 @@ public class DisabledProbeTest {
     }
 
     @Test
-    public void testInvocations() {
+    public void testStarted() {
+        disabledProbe.started();
+    }
+
+    @Test
+    public void testInvocationCount() {
         disabledProbe.done();
         disabledProbe.done();
         disabledProbe.done();
@@ -38,13 +54,6 @@ public class DisabledProbeTest {
     public void testRecordValue() {
         disabledProbe.recordValue(-1);
         disabledProbe.recordValue(500);
-
-        assertEquals(0, disabledProbe.getInvocationCount());
-    }
-
-    @Test
-    public void testSetValues() {
-        disabledProbe.setValues(123, 1254);
 
         assertEquals(0, disabledProbe.getInvocationCount());
     }
@@ -93,14 +102,5 @@ public class DisabledProbeTest {
     @Test
     public void testResultEquals() {
         assertTrue(disabledProbe.getResult().equals(DisabledProbe.INSTANCE.getResult()));
-    }
-
-    @Test
-    public void testDisable() {
-        assertTrue(disabledProbe.isDisabled());
-
-        disabledProbe.disable();
-
-        assertTrue(disabledProbe.isDisabled());
     }
 }

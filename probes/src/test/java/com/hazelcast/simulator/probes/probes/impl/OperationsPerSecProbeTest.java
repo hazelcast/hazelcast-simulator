@@ -4,11 +4,11 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.probes.probes.impl.ProbeTestUtils.assertDisable;
 import static com.hazelcast.simulator.probes.probes.impl.ProbeTestUtils.assertResult;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -17,12 +17,17 @@ public class OperationsPerSecProbeTest {
     private OperationsPerSecProbe operationsPerSecProbe = new OperationsPerSecProbe();
 
     @Test
+    public void testDisable() {
+        assertDisable(operationsPerSecProbe);
+    }
+
+    @Test
     public void testStarted() {
         operationsPerSecProbe.started();
     }
 
     @Test
-    public void testInvocations() {
+    public void testInvocationCount() {
         operationsPerSecProbe.done();
         operationsPerSecProbe.done();
         operationsPerSecProbe.done();
@@ -171,14 +176,5 @@ public class OperationsPerSecProbeTest {
 
         Double operationsPerSecond = getObjectFromField(combined, "operationsPerSecond");
         assertEqualsStringFormat("Expected %.2f op/s, but was %.2f", 1.2, operationsPerSecond, 0.01);
-    }
-
-    @Test
-    public void testDisable() {
-        assertFalse(operationsPerSecProbe.isDisabled());
-
-        operationsPerSecProbe.disable();
-
-        assertTrue(operationsPerSecProbe.isDisabled());
     }
 }

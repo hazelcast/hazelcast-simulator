@@ -10,6 +10,15 @@ public class WorkerProbeTest {
     private WorkerProbe workerProbe = new WorkerProbe();
 
     @Test
+    public void testDisable() {
+        assertTrue(workerProbe.isDisabled());
+
+        workerProbe.disable();
+
+        assertTrue(workerProbe.isDisabled());
+    }
+
+    @Test
     public void testStartProbing() {
         workerProbe.startProbing(0);
     }
@@ -20,7 +29,7 @@ public class WorkerProbeTest {
     }
 
     @Test
-    public void testInvocations() {
+    public void testInvocationCount() {
         workerProbe.done();
         workerProbe.done();
         workerProbe.done();
@@ -58,14 +67,5 @@ public class WorkerProbeTest {
 
         assertEquals(1, workerProbe.getInvocationCount());
         assertTrue(workerProbe.getResult() != null);
-    }
-
-    @Test
-    public void testDisable() {
-        assertTrue(workerProbe.isDisabled());
-
-        workerProbe.disable();
-
-        assertTrue(workerProbe.isDisabled());
     }
 }
