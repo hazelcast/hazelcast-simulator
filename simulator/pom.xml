@@ -41,11 +41,6 @@
             <artifactId>utils</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>visualiser</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.reflections</groupId>
