@@ -23,9 +23,10 @@ import static com.hazelcast.simulator.utils.HazelcastUtils.isOldestMember;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -140,9 +141,11 @@ public class HazelcastUtilsTest {
     private ScheduledExecutorService createMockScheduledExecutorService(Exception exceptionToThrow) throws Exception {
         ScheduledFuture future = mock(ScheduledFuture.class);
         when(future.get(anyInt(), eq(TimeUnit.SECONDS))).thenThrow(exceptionToThrow);
+        when(future.get(anyLong(), eq(TimeUnit.SECONDS))).thenThrow(exceptionToThrow);
 
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
-        when(executor.schedule(any(Callable.class), anyInt(), eq(TimeUnit.SECONDS))).thenReturn(future);
+        when(executor.schedule(isA(Callable.class), anyInt(), eq(TimeUnit.SECONDS))).thenReturn(future);
+        when(executor.schedule(isA(Callable.class), anyLong(), eq(TimeUnit.SECONDS))).thenReturn(future);
 
         return executor;
     }

@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -30,12 +31,14 @@ public final class HazelcastUtils {
             return false;
         }
         try {
-            return executor.schedule(new Callable<Boolean>() {
+            Callable<Boolean> callable = new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
                     return isOldestMember(hazelcastInstance);
                 }
-            }, delaySeconds, TimeUnit.SECONDS).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            };
+            ScheduledFuture<Boolean> future = executor.schedule(callable, delaySeconds, TimeUnit.SECONDS);
+            return future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             throw new IllegalStateException(e);
         } catch (ExecutionException e) {
