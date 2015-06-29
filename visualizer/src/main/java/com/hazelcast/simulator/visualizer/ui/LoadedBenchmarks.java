@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.visualiser;
+package com.hazelcast.simulator.visualizer.ui;
 
-import com.hazelcast.simulator.visualiser.ui.MainUI;
+import com.hazelcast.simulator.visualizer.data.Model;
 
 import javax.swing.*;
+import java.awt.*;
 
-public final class Main {
+public class LoadedBenchmarks extends JPanel implements Model.BenchmarkChangeListener {
 
-    private Main() {
+    public LoadedBenchmarks() {
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        setBorder(BorderFactory.createTitledBorder("Benchmarks"));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                new MainUI();
-            }
-        });
+    @Override
+    public void benchmarkChanged(String benchmarkName) {
+        JLabel label = new JLabel(benchmarkName);
+        add(label);
     }
 }

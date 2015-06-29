@@ -10,7 +10,7 @@
     </appender>
 
     <appender name="file" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="logs/visualiser.log"/>
+        <param name="File" value="logs/visualizer.log"/>
         <param name="Threshold" value="DEBUG"/>
         <param name="MaxBackupIndex" value="10"/>
         <layout class="org.apache.log4j.PatternLayout">

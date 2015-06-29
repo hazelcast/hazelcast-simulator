@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.visualiser.utils;
+package com.hazelcast.simulator.visualizer.utils;
 
 import com.hazelcast.simulator.probes.probes.LinearHistogram;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionResult;
 import com.hazelcast.simulator.probes.probes.impl.LatencyDistributionResult;
-import com.hazelcast.simulator.visualiser.data.SimpleHistogramDataSetContainer;
+import com.hazelcast.simulator.visualizer.data.SimpleHistogramDataSetContainer;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramIterationValue;
 import org.jfree.data.statistics.SimpleHistogramBin;

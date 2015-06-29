@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.visualiser.ui;
+package com.hazelcast.simulator.visualizer.ui;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,33 +25,38 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-public class AutoScaleRadioButtons extends JPanel {
+public class AccuracyRadioButtons extends JPanel {
 
-    private static final double DEFAULT_SCALE = 0.99d;
-    private static final double[] SCALE_PERCENTILES = {1, 0.9999, 0.999, 0.99, 0.98, 0.97, 0.95, 0.9, 0.85, 0.8, 0.7, 0.5};
+    private static final int DEFAULT_ACCURACY = (int) TimeUnit.MICROSECONDS.toMicros(10);
+    private static final int[] MICRO_SECONDS_ACCURACY = {10, 50, 100, 500};
+    private static final int[] MILLI_SECONDS_ACCURACY = {1, 10, 50, 100, 1000};
 
-    private final Map<Double, JRadioButton> radioButtonMap = new HashMap<Double, JRadioButton>();
-    private final List<Double> percentileList = new ArrayList<Double>();
+    private final Map<Integer, JRadioButton> radioButtonMap = new HashMap<Integer, JRadioButton>();
+    private final List<Integer> accuracyList = new ArrayList<Integer>();
     private final ButtonGroup buttonGroup = new ButtonGroup();
 
     private Chart chart;
 
-    public AutoScaleRadioButtons() {
+    public AccuracyRadioButtons() {
         setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-        setBorder(BorderFactory.createTitledBorder("AutoScale Percentile"));
+        setBorder(BorderFactory.createTitledBorder("Accuracy"));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        for (double percentile : SCALE_PERCENTILES) {
-            addButton(percentile, String.valueOf(percentile));
+        for (int accuracy : MICRO_SECONDS_ACCURACY) {
+            addButton(TimeUnit.MICROSECONDS.toMicros(accuracy), accuracy + " µs");
+        }
+        for (int accuracy : MILLI_SECONDS_ACCURACY) {
+            addButton(TimeUnit.MILLISECONDS.toMicros(accuracy), accuracy + " ms");
         }
     }
 
-    private void addButton(double percentile, String title) {
-        addButton(percentile, title, (percentile - DEFAULT_SCALE < 0.0001));
+    private void addButton(long accuracy, String title) {
+        addButton((int) accuracy, title, (accuracy == DEFAULT_ACCURACY));
     }
 
-    private void addButton(double percentile, String title, boolean selected) {
+    private void addButton(int accuracy, String title, boolean selected) {
         JRadioButton radioButton = new JRadioButton(title);
         if (selected) {
             radioButton.setSelected(true);
@@ -73,8 +78,8 @@ public class AutoScaleRadioButtons extends JPanel {
             }
         });
         add(radioButton);
-        radioButtonMap.put(percentile, radioButton);
-        percentileList.add(percentile);
+        radioButtonMap.put(accuracy, radioButton);
+        accuracyList.add(accuracy);
         buttonGroup.add(radioButton);
     }
 
@@ -86,21 +91,21 @@ public class AutoScaleRadioButtons extends JPanel {
     }
 
     private void selectNextRadioButton() {
-        double percentile = getEnabledPercentile();
-        int index = percentileList.indexOf(percentile);
-        if (index < percentileList.size() - 1) {
-            percentile = percentileList.get(index + 1);
-            radioButtonMap.get(percentile).setSelected(true);
+        int accuracy = getEnabledAccuracy();
+        int index = accuracyList.indexOf(accuracy);
+        if (index < accuracyList.size() - 1) {
+            accuracy = accuracyList.get(index + 1);
+            radioButtonMap.get(accuracy).setSelected(true);
             update();
         }
     }
 
     private void selectPrevRadioButton() {
-        double percentile = getEnabledPercentile();
-        int index = percentileList.indexOf(percentile);
+        int accuracy = getEnabledAccuracy();
+        int index = accuracyList.indexOf(accuracy);
         if (index > 0) {
-            percentile = percentileList.get(index - 1);
-            radioButtonMap.get(percentile).setSelected(true);
+            accuracy = accuracyList.get(index - 1);
+            radioButtonMap.get(accuracy).setSelected(true);
             update();
         }
     }
@@ -109,13 +114,13 @@ public class AutoScaleRadioButtons extends JPanel {
         this.chart = chart;
     }
 
-    public double getEnabledPercentile() {
-        for (Map.Entry<Double, JRadioButton> entry : radioButtonMap.entrySet()) {
+    public int getEnabledAccuracy() {
+        for (Map.Entry<Integer, JRadioButton> entry : radioButtonMap.entrySet()) {
             JRadioButton radioButton = entry.getValue();
             if (radioButton.isSelected()) {
                 return entry.getKey();
             }
         }
-        return DEFAULT_SCALE;
+        return DEFAULT_ACCURACY;
     }
 }

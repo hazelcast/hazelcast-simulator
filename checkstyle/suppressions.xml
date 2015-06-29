@@ -23,8 +23,8 @@
     <suppress checks="JUnitTestCase" files=".*Test\.java$"/>
     <suppress checks="ExplicitInitialization" files=".*Test\.java$"/>
 
-    <!-- Visualiser -->
+    <!-- Visualizer -->
     <suppress checks="ClassDataAbstractionCoupling" files=".*MainUI\.java$"/>
-    <suppress checks="AvoidStarImport" files="[\\/]visualiser[\\/]"/>
+    <suppress checks="AvoidStarImport" files="[\\/]visualizer[\\/]"/>
 
 </suppressions>
