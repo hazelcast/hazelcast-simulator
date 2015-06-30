@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.visualiser.ui;
+package com.hazelcast.simulator.visualizer.ui;
 
-import com.hazelcast.simulator.visualiser.data.BenchmarkResults;
-import com.hazelcast.simulator.visualiser.data.Model;
+import com.hazelcast.simulator.visualizer.data.BenchmarkResults;
+import com.hazelcast.simulator.visualizer.data.Model;
 
 import javax.swing.*;
 import java.awt.*;

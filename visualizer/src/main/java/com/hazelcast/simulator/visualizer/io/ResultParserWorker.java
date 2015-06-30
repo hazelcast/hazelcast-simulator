@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.visualiser.io;
+package com.hazelcast.simulator.visualizer.io;
 
 import com.hazelcast.simulator.probes.probes.ProbesResultXmlReader;
 import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.visualiser.data.BenchmarkResults;
-import com.hazelcast.simulator.visualiser.data.Model;
+import com.hazelcast.simulator.visualizer.data.BenchmarkResults;
+import com.hazelcast.simulator.visualizer.data.Model;
 
 import javax.swing.*;
 import java.io.File;

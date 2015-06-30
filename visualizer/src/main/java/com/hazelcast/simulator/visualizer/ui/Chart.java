@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.visualiser.ui;
+package com.hazelcast.simulator.visualizer.ui;
 
 import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.visualiser.data.AggregatedDataSet;
-import com.hazelcast.simulator.visualiser.data.BenchmarkResults;
-import com.hazelcast.simulator.visualiser.data.Model;
-import com.hazelcast.simulator.visualiser.data.SimpleHistogramDataSetContainer;
+import com.hazelcast.simulator.visualizer.data.AggregatedDataSet;
+import com.hazelcast.simulator.visualizer.data.BenchmarkResults;
+import com.hazelcast.simulator.visualizer.data.Model;
+import com.hazelcast.simulator.visualizer.data.SimpleHistogramDataSetContainer;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -33,9 +33,9 @@ import java.awt.*;
 import java.util.List;
 import java.util.Set;
 
-import static com.hazelcast.simulator.visualiser.utils.DataSetUtils.calculateSingleProbeDataSet;
-import static com.hazelcast.simulator.visualiser.utils.ListenerUtils.addHorizontalMouseListener;
-import static com.hazelcast.simulator.visualiser.utils.ListenerUtils.addVerticalMouseListener;
+import static com.hazelcast.simulator.visualizer.utils.DataSetUtils.calculateSingleProbeDataSet;
+import static com.hazelcast.simulator.visualizer.utils.ListenerUtils.addHorizontalMouseListener;
+import static com.hazelcast.simulator.visualizer.utils.ListenerUtils.addVerticalMouseListener;
 
 public class Chart extends JPanel {
 
