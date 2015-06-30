@@ -117,7 +117,7 @@ public class ExternalClientTest {
         IList<String> throughputResults = getThroughputResultList();
         int resultSize = throughputResults.size();
 
-        LOGGER.info("Collecting " + resultSize + " throughput results...");
+        LOGGER.info(format("Collecting %d throughput results (expected %d)...", resultSize, expectedResultSize));
         int totalInvocations = 0;
         double totalDuration = 0;
         for (String throughputString : throughputResults) {
