@@ -31,6 +31,7 @@ public class ExternalClientTest {
     public int waitForClientCountAutoDetectionDelaySeconds = 10;
     public int waitForClientsCount = 1;
     public int waitIntervalSeconds = 60;
+    public int expectedResultSize = 0;
 
     SimpleProbe externalClientThroughput;
     IntervalProbe<HdrLatencyDistributionResult, HdrLatencyDistributionProbe> externalClientLatency;
@@ -102,12 +103,21 @@ public class ExternalClientTest {
             testContext.stop();
             return;
         }
+
+        // get probe results
         LOGGER.info("Collecting results from external clients...");
+        getThroughputResults();
+        getLatencyResults();
+        LOGGER.info("Result collecting ExternalClientTest done!");
 
-        // fetch throughput results
-        IList<String> throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
-        LOGGER.info("Collecting " + throughputResults.size() + " throughput results...");
+        testContext.stop();
+    }
 
+    private void getThroughputResults() {
+        IList<String> throughputResults = getThroughputResultList();
+        int resultSize = throughputResults.size();
+
+        LOGGER.info("Collecting " + resultSize + " throughput results...");
         int totalInvocations = 0;
         double totalDuration = 0;
         for (String throughputString : throughputResults) {
@@ -126,20 +136,34 @@ public class ExternalClientTest {
         }
         LOGGER.info("Done!");
 
-        int resultSize = throughputResults.size();
         if (resultSize == 0 || totalInvocations == 0 || totalDuration == 0) {
             LOGGER.info(format("No valid throughput probe data collected! results: %d, totalInvocations: %d, totalDuration: %.0f",
                     resultSize, totalInvocations, totalDuration));
-        } else {
-            long avgDuration = Math.round(totalDuration / resultSize);
-            externalClientThroughput.setValues(avgDuration, totalInvocations);
-            double performance = ((double) totalInvocations / avgDuration) * 1000;
-            LOGGER.info(format("All external clients executed %d operations in %d ms (%.3f ops/s)",
-                    totalInvocations, avgDuration, performance));
+            return;
         }
 
-        // fetch latency results
+        long avgDuration = Math.round(totalDuration / resultSize);
+        externalClientThroughput.setValues(avgDuration, totalInvocations);
+        double performance = ((double) totalInvocations / avgDuration) * 1000;
+        LOGGER.info(format("All external clients executed %d operations in %d ms (%.3f ops/s)",
+                totalInvocations, avgDuration, performance));
+    }
+
+    private IList<String> getThroughputResultList() {
+        IList<String> throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
+
+        // wait for all throughput results to arrive
+        while (expectedResultSize > 0 && expectedResultSize < throughputResults.size()) {
+            LOGGER.info(format("Waiting for %d/%d throughput results...", throughputResults.size(), expectedResultSize));
+            throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
+            sleepSeconds(1);
+        }
+        return throughputResults;
+    }
+
+    private void getLatencyResults() {
         IList<String> latencyLists = hazelcastInstance.getList("externalClientsLatencyResults");
+
         LOGGER.info(format("Collecting %d latency result lists...", latencyLists.size()));
         for (String key : latencyLists) {
             IList<Long> values = hazelcastInstance.getList(key);
@@ -149,8 +173,5 @@ public class ExternalClientTest {
             }
         }
         LOGGER.info("Done!");
-
-        LOGGER.info("Stopping result collecting ExternalClientTest");
-        testContext.stop();
     }
 }
