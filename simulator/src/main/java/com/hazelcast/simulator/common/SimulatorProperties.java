@@ -86,8 +86,21 @@ public class SimulatorProperties {
         }
     }
 
+    public CloudProvider getCloudProvider() {
+        String cloudProviderProperty = get("CLOUD_PROVIDER");
+        CloudProvider candidate = CloudProvider.getFromProperties(cloudProviderProperty);
+        if (candidate == null) {
+            throw new CommandLineExitException("Invalid CLOUD_PROVIDER property: " + cloudProviderProperty);
+        }
+        return candidate;
+    }
+
+    public String cloudProvider() {
+        return getCloudProvider().desc();
+    }
+
     public boolean isEC2() {
-        return "aws-ec2".equals(get("CLOUD_PROVIDER"));
+        return getCloudProvider() == CloudProvider.AWS_EC2;
     }
 
     public String getUser() {

@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.agent;
 
+import com.hazelcast.simulator.common.CloudProvider;
 import com.hazelcast.simulator.utils.CliUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -17,9 +18,9 @@ final class AgentCli {
             "Cloud credential")
             .withRequiredArg().ofType(String.class);
 
-    private final OptionSpec<String> cloudProviderSpec = parser.accepts("cloudProvider",
+    private final OptionSpec<CloudProvider> cloudProviderSpec = parser.accepts("cloudProvider",
             "Cloud provider")
-            .withRequiredArg().ofType(String.class);
+            .withRequiredArg().ofType(CloudProvider.class);
 
     private AgentCli() {
     }
