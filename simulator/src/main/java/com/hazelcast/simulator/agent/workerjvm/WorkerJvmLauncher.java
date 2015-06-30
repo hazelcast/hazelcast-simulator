@@ -72,20 +72,6 @@ public class WorkerJvmLauncher {
         spawn(settings.clientWorkerCount, "client");
     }
 
-    private void spawn(int count, String mode) throws Exception {
-        LOGGER.info(format("Starting %s %s worker Java Virtual Machines", count, mode));
-
-        for (int k = 0; k < count; k++) {
-            WorkerJvm worker = startWorkerJvm(mode);
-            workersInProgress.add(worker);
-        }
-
-        LOGGER.info(format("Finished starting %s %s worker Java Virtual Machines", count, mode));
-
-        waitForWorkersStartup(workersInProgress, settings.workerStartupTimeout);
-        workersInProgress.clear();
-    }
-
     private File createTmpXmlFile(String name, String content) throws IOException {
         File tmpXmlFile = File.createTempFile(name, ".xml");
         tmpXmlFile.deleteOnExit();
@@ -94,14 +80,18 @@ public class WorkerJvmLauncher {
         return tmpXmlFile;
     }
 
-    @SuppressWarnings("unused")
-    private String getJavaHome(String javaVendor, String javaVersion) {
-        String javaHome = System.getProperty("java.home");
-        if (javaHomePrinted.compareAndSet(false, true)) {
-            LOGGER.info("java.home=" + javaHome);
+    private void spawn(int count, String mode) throws Exception {
+        LOGGER.info(format("Starting %s %s worker Java Virtual Machines", count, mode));
+
+        for (int i = 0; i < count; i++) {
+            WorkerJvm worker = startWorkerJvm(mode);
+            workersInProgress.add(worker);
         }
 
-        return javaHome;
+        LOGGER.info(format("Finished starting %s %s worker Java Virtual Machines", count, mode));
+
+        waitForWorkersStartup(workersInProgress, settings.workerStartupTimeout);
+        workersInProgress.clear();
     }
 
     private WorkerJvm startWorkerJvm(String mode) throws IOException {
@@ -135,6 +125,63 @@ public class WorkerJvmLauncher {
         return workerJvm;
     }
 
+    private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) {
+        List<WorkerJvm> todo = new ArrayList<WorkerJvm>(workers);
+
+        for (int i = 0; i < workerTimeoutSec; i++) {
+            for (Iterator<WorkerJvm> it = todo.iterator(); it.hasNext();) {
+                WorkerJvm jvm = it.next();
+
+                if (hasExited(jvm)) {
+                    String message = format("Startup failure: worker on host %s failed during startup, "
+                                    + "check '%s/out.log' for more info",
+                            getHostAddress(), jvm.workerHome
+                    );
+                    throw new SpawnWorkerFailedException(message);
+                }
+
+                String address = readAddress(jvm);
+                if (address != null) {
+                    jvm.memberAddress = address;
+
+                    it.remove();
+                    LOGGER.info(format("Worker: %s Started %s of %s", jvm.id, workers.size() - todo.size(), workers.size()));
+                }
+            }
+
+            if (todo.isEmpty()) {
+                return;
+            }
+
+            sleepSeconds(1);
+        }
+
+        workerTimeout(workerTimeoutSec, todo);
+    }
+
+    @SuppressWarnings("unused")
+    private String getJavaHome(String javaVendor, String javaVersion) {
+        String javaHome = System.getProperty("java.home");
+        if (javaHomePrinted.compareAndSet(false, true)) {
+            LOGGER.info("java.home=" + javaHome);
+        }
+        return javaHome;
+    }
+
+    private void generateWorkerStartScript(String mode, WorkerJvm workerJvm) {
+        String[] args = buildArgs(workerJvm, mode);
+        File startScript = new File(workerJvm.workerHome, "worker.sh");
+
+        StringBuilder sb = new StringBuilder("#!/bin/bash\n");
+        for (String arg : args) {
+            sb.append(arg).append(" ");
+        }
+        //sb.append(" > sysout.log");
+        sb.append("\n");
+
+        writeText(sb.toString(), startScript);
+    }
+
     private void copyResourcesToWorkerId(String workerId) {
         final String testSuiteId = agent.getTestSuite().id;
         File uploadDirectory = new File(WORKERS_PATH + "/" + testSuiteId + "/upload/");
@@ -152,40 +199,40 @@ public class WorkerJvmLauncher {
         LOGGER.info(format("Finished copying '+%s+' to worker", WORKERS_PATH));
     }
 
-    private void generateWorkerStartScript(String mode, WorkerJvm workerJvm) {
-        String[] args = buildArgs(workerJvm, mode);
-        File startScript = new File(workerJvm.workerHome, "worker.sh");
-
-        StringBuilder sb = new StringBuilder("#!/bin/bash\n");
-        for (String arg : args) {
-            sb.append(arg).append(" ");
+    private boolean hasExited(WorkerJvm workerJvm) {
+        try {
+            workerJvm.process.exitValue();
+            return true;
+        } catch (IllegalThreadStateException e) {
+            return false;
         }
-        //sb.append(" > sysout.log");
-        sb.append("\n");
-
-        writeText(sb.toString(), startScript);
     }
 
-    private String getClasspath() {
-        File libDir = new File(agent.getTestSuiteDir(), "lib");
-        return CLASSPATH + CLASSPATH_SEPARATOR
-                + SIMULATOR_HOME + "/user-lib/*" + CLASSPATH_SEPARATOR
-                + new File(libDir, "*").getAbsolutePath();
+    private String readAddress(WorkerJvm jvm) {
+        File file = new File(jvm.workerHome, "worker.address");
+        if (!file.exists()) {
+            return null;
+        }
+
+        String address = readObject(file);
+        deleteQuiet(file);
+
+        return address;
     }
 
-    private List<String> getJvmOptions(WorkerJvmSettings settings, String mode) {
-        String workerVmOptions;
-        if ("client".equals(mode)) {
-            workerVmOptions = settings.clientVmOptions;
-        } else {
-            workerVmOptions = settings.vmOptions;
+    private void workerTimeout(int workerTimeoutSec, List<WorkerJvm> todo) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        sb.append(todo.get(0).id);
+        for (int i = 1; i < todo.size(); i++) {
+            sb.append(",").append(todo.get(i).id);
         }
+        sb.append("]");
 
-        String[] vmOptionsArray = new String[]{};
-        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
-            vmOptionsArray = workerVmOptions.split("\\s+");
-        }
-        return asList(vmOptionsArray);
+        throw new SpawnWorkerFailedException(format(
+                "Timeout: workers %s of testsuite %s on host %s didn't start within %s seconds",
+                sb, agent.getTestSuite().id, getHostAddress(),
+                workerTimeoutSec));
     }
 
     private String[] buildArgs(WorkerJvm workerJvm, String mode) {
@@ -196,30 +243,7 @@ public class WorkerJvmLauncher {
             args.add(numaCtl);
         }
 
-        String profiler = settings.profiler;
-        if ("perf".equals(profiler)) {
-            // perf command always need to be in front of the java command.
-            args.add(settings.perfSettings);
-            args.add("java");
-        } else if ("vtune".equals(profiler)) {
-            // vtune command always need to be in front of the java command.
-            args.add(settings.vtuneSettings);
-            args.add("java");
-        } else if ("yourkit".equals(profiler)) {
-            args.add("java");
-            String agentSetting = settings.yourkitConfig
-                    .replace("${SIMULATOR_HOME}", SIMULATOR_HOME.getAbsolutePath())
-                    .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());
-            args.add(agentSetting);
-        } else if ("hprof".equals(profiler)) {
-            args.add("java");
-            args.add(settings.hprofSettings);
-        } else if ("flightrecorder".equals(profiler)) {
-            args.add("java");
-            args.add(settings.flightrecorderSettings);
-        } else {
-            args.add("java");
-        }
+        addProfilerSettings(workerJvm, args);
 
         args.add("-XX:OnOutOfMemoryError=\"touch worker.oome\"");
         args.add("-DSIMULATOR_HOME=" + SIMULATOR_HOME);
@@ -244,75 +268,52 @@ public class WorkerJvmLauncher {
         return args.toArray(new String[args.size()]);
     }
 
-    private boolean hasExited(WorkerJvm workerJvm) {
-        try {
-            workerJvm.process.exitValue();
-            return true;
-        } catch (IllegalThreadStateException e) {
-            return false;
+    private void addProfilerSettings(WorkerJvm workerJvm, List<String> args) {
+        String profiler = settings.profiler;
+        if ("perf".equals(profiler)) {
+            // perf command always need to be in front of the java command.
+            args.add(settings.perfSettings);
+            args.add("java");
+        } else if ("vtune".equals(profiler)) {
+            // vtune command always need to be in front of the java command.
+            args.add(settings.vtuneSettings);
+            args.add("java");
+        } else if ("yourkit".equals(profiler)) {
+            args.add("java");
+            String agentSetting = settings.yourkitConfig
+                    .replace("${SIMULATOR_HOME}", SIMULATOR_HOME.getAbsolutePath())
+                    .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());
+            args.add(agentSetting);
+        } else if ("hprof".equals(profiler)) {
+            args.add("java");
+            args.add(settings.hprofSettings);
+        } else if ("flightrecorder".equals(profiler)) {
+            args.add("java");
+            args.add(settings.flightrecorderSettings);
+        } else {
+            args.add("java");
         }
     }
 
-    private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) {
-        List<WorkerJvm> todo = new ArrayList<WorkerJvm>(workers);
-
-        for (int l = 0; l < workerTimeoutSec; l++) {
-            for (Iterator<WorkerJvm> it = todo.iterator(); it.hasNext(); ) {
-                WorkerJvm jvm = it.next();
-
-                if (hasExited(jvm)) {
-                    String message = format("Startup failure: worker on host %s failed during startup, "
-                                    + "check '%s/out.log' for more info",
-                            getHostAddress(), jvm.workerHome
-                    );
-                    throw new SpawnWorkerFailedException(message);
-                }
-
-                String address = readAddress(jvm);
-
-                if (address != null) {
-                    jvm.memberAddress = address;
-
-                    it.remove();
-                    LOGGER.info(format("Worker: %s Started %s of %s",
-                            jvm.id, workers.size() - todo.size(), workers.size()));
-                }
-            }
-
-            if (todo.isEmpty()) {
-                return;
-            }
-
-            sleepSeconds(1);
-        }
-
-        workerTimeout(workerTimeoutSec, todo);
+    private String getClasspath() {
+        File libDir = new File(agent.getTestSuiteDir(), "lib");
+        return CLASSPATH + CLASSPATH_SEPARATOR
+                + SIMULATOR_HOME + "/user-lib/*" + CLASSPATH_SEPARATOR
+                + new File(libDir, "*").getAbsolutePath();
     }
 
-    private void workerTimeout(int workerTimeoutSec, List<WorkerJvm> todo) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        sb.append(todo.get(0).id);
-        for (int l = 1; l < todo.size(); l++) {
-            sb.append(",").append(todo.get(l).id);
-        }
-        sb.append("]");
-
-        throw new SpawnWorkerFailedException(format(
-                "Timeout: workers %s of testsuite %s on host %s didn't start within %s seconds",
-                sb, agent.getTestSuite().id, getHostAddress(),
-                workerTimeoutSec));
-    }
-
-    private String readAddress(WorkerJvm jvm) {
-        File file = new File(jvm.workerHome, "worker.address");
-        if (!file.exists()) {
-            return null;
+    private List<String> getJvmOptions(WorkerJvmSettings settings, String mode) {
+        String workerVmOptions;
+        if ("client".equals(mode)) {
+            workerVmOptions = settings.clientVmOptions;
+        } else {
+            workerVmOptions = settings.vmOptions;
         }
 
-        String address = readObject(file);
-        deleteQuiet(file);
-
-        return address;
+        String[] vmOptionsArray = new String[]{};
+        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
+            vmOptionsArray = workerVmOptions.split("\\s+");
+        }
+        return asList(vmOptionsArray);
     }
 }
