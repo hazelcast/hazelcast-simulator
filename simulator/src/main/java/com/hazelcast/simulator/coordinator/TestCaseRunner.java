@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -38,6 +40,8 @@ final class TestCaseRunner {
 
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
 
+    private static final ConcurrentMap<TestPhase, Boolean> logTestPhaseCompletion = new ConcurrentHashMap<TestPhase, Boolean>();
+
     private final CountDownLatch waitForStopThread = new CountDownLatch(1);
 
     private final TestCase testCase;
@@ -50,11 +54,13 @@ final class TestCaseRunner {
     private final String testCaseId;
     private final String prefix;
     private final int sleepPeriod;
+    private final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap;
 
     private StopThread stopThread;
     private int runPhaseDuration;
 
-    TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int maxTextCaseIdLength) {
+    TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int paddingLength,
+                   ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap) {
         this.testCase = testCase;
         this.testSuite = testSuite;
         this.coordinator = coordinator;
@@ -63,8 +69,9 @@ final class TestCaseRunner {
         this.performanceMonitor = coordinator.performanceMonitor;
         this.nonCriticalFailures = testSuite.tolerableFailures;
         this.testCaseId = testCase.getId();
-        this.prefix = (testCaseId.isEmpty() ? "" : padRight(testCaseId, maxTextCaseIdLength + 1));
+        this.prefix = (testCaseId.isEmpty() ? "" : padRight(testCaseId, paddingLength + 1));
         this.sleepPeriod = coordinator.testCaseRunnerSleepPeriod;
+        this.testPhaseSyncMap = testPhaseSyncMap;
     }
 
     boolean run() {
@@ -74,10 +81,7 @@ final class TestCaseRunner {
 
         int oldFailureCount = failureMonitor.getFailureCount();
         try {
-            echo("Starting Test initialization");
-            agentsClient.executeOnAllWorkers(new InitCommand(testCase));
-            echo("Completed Test initialization");
-
+            initTestCase();
             runOnAllWorkers(TestPhase.SETUP);
 
             runOnAllWorkers(TestPhase.LOCAL_WARMUP);
@@ -108,11 +112,18 @@ final class TestCaseRunner {
         }
     }
 
+    private void initTestCase() throws TimeoutException {
+        echo("Starting Test initialization");
+        agentsClient.executeOnAllWorkers(new InitCommand(testCase));
+        echo("Completed Test initialization");
+    }
+
     private void runOnAllWorkers(TestPhase testPhase) throws TimeoutException {
         echo("Starting Test " + testPhase.desc());
         agentsClient.executeOnAllWorkers(new GenericCommand(testCaseId, testPhase));
         agentsClient.waitForPhaseCompletion(prefix, testCaseId, testPhase);
         echo("Completed Test " + testPhase.desc());
+        waitForTestPhaseCompletion(testPhase);
     }
 
     private void runOnFirstWorker(TestPhase testPhase) throws TimeoutException {
@@ -120,6 +131,23 @@ final class TestCaseRunner {
         agentsClient.executeOnFirstWorker(new GenericCommand(testCaseId, testPhase));
         agentsClient.waitForPhaseCompletion(prefix, testCaseId, testPhase);
         echo("Completed Test " + testPhase.desc());
+        waitForTestPhaseCompletion(testPhase);
+    }
+
+    private void waitForTestPhaseCompletion(TestPhase testPhase) {
+        if (testPhaseSyncMap == null) {
+            return;
+        }
+        try {
+            CountDownLatch latch = testPhaseSyncMap.get(testPhase);
+            latch.countDown();
+            latch.await();
+            if (logTestPhaseCompletion.putIfAbsent(testPhase, Boolean.TRUE) == null) {
+                LOGGER.info("Completed TestPhase " + testPhase.desc());
+            }
+        } catch (InterruptedException e) {
+            LOGGER.warn("Interrupted Test while waiting for " + testPhase.desc() + " completion", e);
+        }
     }
 
     private void startPerformanceMonitor() {
@@ -159,6 +187,7 @@ final class TestCaseRunner {
         }
 
         runPhaseDuration = (int) TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
+        waitForTestPhaseCompletion(TestPhase.RUN);
     }
 
     private void logPerformance() {

@@ -90,11 +90,14 @@ public class CoordinatorRunTestSuiteTest {
         coordinator.testSuite = testSuite;
         coordinator.cooldownSeconds = 0;
         coordinator.testCaseRunnerSleepPeriod = 3;
+        coordinator.lastTestPhaseToSync = TestPhase.SETUP;
 
         when(agentsClient.getPublicAddresses()).thenReturn(privateAddressList);
         when(agentsClient.getAgentCount()).thenReturn(1);
 
         when(failureMonitor.getFailureCount()).thenReturn(0);
+
+        when(performanceMonitor.getPerformanceNumbers()).thenReturn(" (PerformanceMonitor is mocked)");
     }
 
     @After

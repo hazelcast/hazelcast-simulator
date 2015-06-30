@@ -3,6 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.test.Failure;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
@@ -89,6 +90,10 @@ final class CoordinatorCli {
     private final OptionSpec parallelSpec = parser.accepts("parallel",
             "If defined tests are run in parallel.");
 
+    private final OptionSpec<TestPhase> syncToTestPhaseSpec = parser.accepts("syncToTestPhase",
+            "Defines the last TestPhase which is synchronized between all parallel running tests."
+            ).withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.SETUP);
+
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
             "Worker JVM options (quotes can be used). These options will be applied to regular members and mixed members"
                     + " (so with client + member in the same JVM).")
@@ -168,6 +173,7 @@ final class CoordinatorCli {
         coordinator.testStopTimeoutMs = options.valueOf(testStopTimeoutMsSpec);
         coordinator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
         coordinator.parallel = options.has(parallelSpec);
+        coordinator.lastTestPhaseToSync = options.valueOf(syncToTestPhaseSpec);
 
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec));
         testSuite.durationSeconds = getDurationSeconds();
