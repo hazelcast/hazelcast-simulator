@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.tests.helpers;
 
+import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
@@ -64,8 +66,25 @@ public final class KeyUtils {
     }
 
     public static String[] generateStringKeys(int keyCount, String basename, KeyLocality keyLocality, HazelcastInstance instance) {
-        int keyLength = (int) (basename.length() + Math.ceil(Math.log10(keyCount)));
+        int keyLength = (int) (basename.length() + Math.ceil(Math.log10(keyCount))) + 2;
         return generateStringKeys(keyLength, keyCount, basename, keyLocality, instance);
+    }
+
+    public static void main(String[] args) {
+        Config config = new Config();
+        // config.setProperty(GroupProperties.PROP_PARTITION_COUNT, "10");
+        HazelcastInstance hz1 = Hazelcast.newHazelcastInstance(config);
+        HazelcastInstance hz2 = Hazelcast.newHazelcastInstance(config);
+        HazelcastInstance hz3 = Hazelcast.newHazelcastInstance(config);
+        HazelcastInstance hz4 = Hazelcast.newHazelcastInstance(config);
+
+        String[] keys = generateStringKeys(3000, "IAtomicLong", KeyLocality.RANDOM, hz1);
+        PartitionService partitionService = hz1.getPartitionService();
+
+        for (String key : keys) {
+            Partition partition = partitionService.getPartition(key);
+            System.out.println(key + " partitionId: " + partition.getPartitionId() + " owner:" + partition.getOwner());
+        }
     }
 
     public static String[] generateStringKeys(int keyLength, int keyCount, String basename, KeyLocality keyLocality, HazelcastInstance instance) {
@@ -77,7 +96,10 @@ public final class KeyUtils {
             keysPerPartitionMap.put(partitionId, new HashSet<String>());
         }
 
-        int maxKeysPerPartition = (int) Math.ceil(keyCount / targetPartitions.size());
+        int maxKeysPerPartition = (int) Math.ceil(keyCount / (float) targetPartitions.size());
+
+        System.out.println("maxKeysPerPartition: " + maxKeysPerPartition);
+        System.out.println("targetPartitionCount:" + targetPartitions.size());
 
         int generatedKeyCount = 0;
         for (; ; ) {
@@ -86,16 +108,19 @@ public final class KeyUtils {
             Set<String> keysPerPartition = keysPerPartitionMap.get(partition.getPartitionId());
 
             if (keysPerPartition == null) {
+                //   System.out.println("wrong partition");
                 // we are not interested in this key.
                 continue;
             }
 
             if (keysPerPartition.size() == maxKeysPerPartition) {
+                //     System.out.println("max keys per partitions reached");
                 // we have reached the maximum number of keys for this given partition
                 continue;
             }
 
             if (!keysPerPartition.add(key)) {
+                //   System.out.println("duplicate key");
                 // duplicate key, we can ignore it
                 continue;
             }
@@ -104,6 +129,8 @@ public final class KeyUtils {
             if (generatedKeyCount == keyCount) {
                 break;
             }
+
+            System.out.println("generatedKeyCount:" + generatedKeyCount);
         }
 
         String[] result = new String[keyCount];
