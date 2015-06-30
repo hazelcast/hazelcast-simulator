@@ -10,6 +10,7 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 
 import java.io.File;
+import java.util.UUID;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -52,7 +53,8 @@ public class ExternalClientStarterTest {
         for (int i = 1; i <= processCount; i++) {
             String tmpArguments = arguments
                     .replace("$PROCESS_INDEX", String.valueOf(i))
-                    .replace("$IP_ADDRESS", ipAddress);
+                    .replace("$IP_ADDRESS", ipAddress)
+                    .replace("$UUID", UUID.randomUUID().toString());
 
             String tmpLogFileName = logFileName + "_" + i;
 
