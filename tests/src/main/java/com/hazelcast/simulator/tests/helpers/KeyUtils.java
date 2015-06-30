@@ -5,7 +5,11 @@ import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -59,6 +63,92 @@ public final class KeyUtils {
         return generateKey(keyLocality, instance, new StringGenerator(keyLength));
     }
 
+    public static String[] generateStringKeys(int keyCount, String basename, KeyLocality keyLocality, HazelcastInstance instance) {
+        int keyLength = (int) (basename.length() + Math.ceil(Math.log10(keyCount)));
+        return generateStringKeys(keyLength, keyCount, basename, keyLocality, instance);
+    }
+
+    public static String[] generateStringKeys(int keyLength, int keyCount, String basename, KeyLocality keyLocality, HazelcastInstance instance) {
+        Set<Integer> targetPartitions = getTargetPartitions(keyLocality, instance);
+        PartitionService partitionService = instance.getPartitionService();
+
+        Map<Integer, Set<String>> keysPerPartitionMap = new HashMap<Integer, Set<String>>();
+        for (Integer partitionId : targetPartitions) {
+            keysPerPartitionMap.put(partitionId, new HashSet<String>());
+        }
+
+        int maxKeysPerPartition = (int) Math.ceil(keyCount / targetPartitions.size());
+
+        int generatedKeyCount = 0;
+        for (; ; ) {
+            String key = basename + generateString(keyLength - basename.length());
+            Partition partition = partitionService.getPartition(key);
+            Set<String> keysPerPartition = keysPerPartitionMap.get(partition.getPartitionId());
+
+            if (keysPerPartition == null) {
+                // we are not interested in this key.
+                continue;
+            }
+
+            if (keysPerPartition.size() == maxKeysPerPartition) {
+                // we have reached the maximum number of keys for this given partition
+                continue;
+            }
+
+            if (!keysPerPartition.add(key)) {
+                // duplicate key, we can ignore it
+                continue;
+            }
+
+            generatedKeyCount++;
+            if (generatedKeyCount == keyCount) {
+                break;
+            }
+        }
+
+        String[] result = new String[keyCount];
+        int index = 0;
+        for (Set<String> keysPerPartition : keysPerPartitionMap.values()) {
+            for (String s : keysPerPartition) {
+                result[index] = s;
+                index++;
+            }
+        }
+        return result;
+    }
+
+    private static Set<Integer> getTargetPartitions(KeyLocality keyLocality, HazelcastInstance hz) {
+        Set<Integer> targetPartitions = new HashSet<Integer>();
+        PartitionService partitionService = hz.getPartitionService();
+        Member localMember = hz.getCluster().getLocalMember();
+        switch (keyLocality) {
+            case LOCAL:
+                for (Partition partition : partitionService.getPartitions()) {
+                    if (localMember == null || localMember.equals(partition.getOwner())) {
+                        targetPartitions.add(partition.getPartitionId());
+                    }
+                }
+                break;
+            case RANDOM:
+                for (Partition partition : partitionService.getPartitions()) {
+                    targetPartitions.add(partition.getPartitionId());
+                }
+                break;
+            case REMOTE:
+                for (Partition partition : partitionService.getPartitions()) {
+                    if (localMember == null || !localMember.equals(partition.getOwner())) {
+                        targetPartitions.add(partition.getPartitionId());
+                    }
+                }
+                break;
+            case SINGLE_PARTITION:
+                targetPartitions.add(0);
+                break;
+        }
+        return targetPartitions;
+    }
+
+
     /**
      * Generates an array of string keys with a configurable locality.
      *
@@ -81,8 +171,8 @@ public final class KeyUtils {
     /**
      * Checks if a key is located on a Hazelcast instance.
      *
-     * @param instance    the HazelcastInstance the key should belong to
-     * @param key         the key to check
+     * @param instance the HazelcastInstance the key should belong to
+     * @param key      the key to check
      * @return <tt>true</tt> if the key belongs to the Hazelcast instance, <tt>false</tt> otherwise
      */
     public static boolean isLocalKey(HazelcastInstance instance, Object key) {

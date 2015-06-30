@@ -33,7 +33,7 @@ import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
-import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static org.junit.Assert.assertEquals;
 
 public class AtomicLongTest {
@@ -65,9 +65,12 @@ public class AtomicLongTest {
 
         totalCounter = targetInstance.getAtomicLong("TotalCounter:" + context.getTestId());
         counters = new IAtomicLong[countersLength];
+
+        String[] names = generateStringKeys((int) (basename.length() + Math.ceil(Math.log10(countersLength))),
+                countersLength, basename, keyLocality, context.getTargetInstance());
+
         for (int i = 0; i < counters.length; i++) {
-            String key = basename + generateStringKey(8, keyLocality, targetInstance);
-            counters[i] = targetInstance.getAtomicLong(key);
+            counters[i] = targetInstance.getAtomicLong(names[i]);
         }
 
         builder.addOperation(Operation.PUT, writeProb)

@@ -19,7 +19,7 @@ import java.util.Random;
 
 public final class GeneratorUtils {
 
-    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz1234567890";
+    private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
     private static final Random RANDOM = new Random();
 
     private GeneratorUtils() {
