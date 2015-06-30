@@ -86,10 +86,6 @@ public class SimulatorProperties {
         }
     }
 
-    public boolean isEC2() {
-        return "aws-ec2".equals(get("CLOUD_PROVIDER"));
-    }
-
     public String getUser() {
         return get("USER", "simulator");
     }
