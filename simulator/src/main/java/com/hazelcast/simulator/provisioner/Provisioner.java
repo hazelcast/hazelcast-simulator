@@ -248,7 +248,7 @@ public final class Provisioner {
                 future.get();
             }
         } catch (Exception e) {
-            throw new CommandLineExitException("Failed to provision machines", e);
+            throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
 
         echo("Pausing for machine warmup... (10 sec)");
