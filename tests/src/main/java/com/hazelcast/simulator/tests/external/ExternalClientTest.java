@@ -115,7 +115,11 @@ public class ExternalClientTest {
             int operationCount = Integer.parseInt(throughput[0]);
             long duration = TimeUnit.NANOSECONDS.toMillis(Long.parseLong(throughput[1]));
 
-            LOGGER.info(format("External client executed %d operations in %d ms", operationCount, duration));
+            String publisherId = "n/a";
+            if (throughput.length > 2) {
+                publisherId = throughput[2];
+            }
+            LOGGER.info(format("External client executed %d operations in %d ms (%s)", operationCount, duration, publisherId));
 
             totalInvocations += operationCount;
             totalDuration += duration;
