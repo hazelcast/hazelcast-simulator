@@ -28,6 +28,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.common.CloudProvider.STATIC;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
@@ -134,10 +135,8 @@ public final class Provisioner {
     }
 
     void ensureNotStaticCloudProvider(String action) {
-        String cloudProvider = props.get("CLOUD_PROVIDER");
-        if ("static".equals(cloudProvider)) {
-            echo(format("'static' CLOUD_PROVIDER can't '%s'", action));
-            exitWithError();
+        if (props.getCloudProvider() == STATIC) {
+            throw new CommandLineExitException(format("'%s' CLOUD_PROVIDER can't '%s'", STATIC.desc(), action));
         }
     }
 
@@ -195,7 +194,7 @@ public final class Provisioner {
     }
 
     private void scaleUp(int delta, boolean enterpriseEnabled) {
-        echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
+        echoImportant("Provisioning %s %s machines", delta, props.cloudProvider());
         echo("Current number of machines: " + addresses.size());
         echo("Desired number of machines: " + (addresses.size() + delta));
         String groupName = props.get("GROUP_NAME", "simulator-agent");
@@ -255,7 +254,7 @@ public final class Provisioner {
         sleepSeconds(10);
 
         echo("Duration: " + secondsToHuman(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started)));
-        echoImportant(format("Successfully provisioned %s %s machines", delta, props.get("CLOUD_PROVIDER")));
+        echoImportant(format("Successfully provisioned %s %s machines", delta, props.cloudProvider()));
     }
 
     private void scaleDown(int count) {
@@ -263,7 +262,7 @@ public final class Provisioner {
             count = addresses.size();
         }
 
-        echoImportant(format("Terminating %s %s machines (can take some time)", count, props.get("CLOUD_PROVIDER")));
+        echoImportant(format("Terminating %s %s machines (can take some time)", count, props.cloudProvider()));
         echo("Current number of machines: " + addresses.size());
         echo("Desired number of machines: " + (addresses.size() - count));
 
@@ -384,10 +383,9 @@ public final class Provisioner {
                     "nohup hazelcast-simulator-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s "
                             + "> agent.out 2> agent.err < /dev/null &",
                     getSimulatorVersion(),
-                    props.get("CLOUD_PROVIDER"),
+                    props.getCloudProvider(),
                     props.get("CLOUD_IDENTITY"),
                     props.get("CLOUD_CREDENTIAL")));
-
         } else {
             bash.ssh(ip, format(
                     "nohup hazelcast-simulator-%s/bin/agent > agent.out 2> agent.err < /dev/null &",

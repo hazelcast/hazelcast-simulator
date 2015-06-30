@@ -36,7 +36,7 @@ class ComputeServiceBuilder {
     ComputeService build() {
         ensurePublicPrivateKeyExist();
 
-        String cloudProvider = props.get("CLOUD_PROVIDER");
+        String cloudProvider = props.cloudProvider();
         String identity = props.get("CLOUD_IDENTITY");
         String credential = props.get("CLOUD_CREDENTIAL");
 

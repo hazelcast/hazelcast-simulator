@@ -19,6 +19,7 @@ import com.hazelcast.simulator.agent.remoting.AgentMessageProcessor;
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.simulator.common.CloudProvider;
 import com.hazelcast.simulator.coordinator.Coordinator;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -40,9 +41,9 @@ public class Agent {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
+    CloudProvider cloudProvider;
     String cloudIdentity;
     String cloudCredential;
-    String cloudProvider;
 
     // internal state
     volatile long lastUsed = System.currentTimeMillis();
