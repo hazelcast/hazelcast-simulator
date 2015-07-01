@@ -79,11 +79,6 @@ public final class KeyUtils {
 
         int maxKeysPerPartition = (int) Math.ceil(keyCount / (float) targetPartitions.size());
 
-        System.out.println("keyCount:"+keyCount);
-        System.out.println("targetPartitions.size:" + targetPartitions.size());
-        System.out.println("maxKeysPerPartition: " + maxKeysPerPartition);
-        System.out.println("targetPartitionCount:" + targetPartitions.size());
-
         int generatedKeyCount = 0;
         for (; ; ) {
             String key = basename + generateString(keyLength - basename.length());
@@ -91,19 +86,16 @@ public final class KeyUtils {
             Set<String> keysPerPartition = keysPerPartitionMap.get(partition.getPartitionId());
 
             if (keysPerPartition == null) {
-                //   System.out.println("wrong partition");
                 // we are not interested in this key.
                 continue;
             }
 
             if (keysPerPartition.size() == maxKeysPerPartition) {
-                //     System.out.println("max keys per partitions reached");
                 // we have reached the maximum number of keys for this given partition
                 continue;
             }
 
             if (!keysPerPartition.add(key)) {
-                //   System.out.println("duplicate key");
                 // duplicate key, we can ignore it
                 continue;
             }
@@ -112,8 +104,6 @@ public final class KeyUtils {
             if (generatedKeyCount == keyCount) {
                 break;
             }
-
-            System.out.println("generatedKeyCount:" + generatedKeyCount);
         }
 
         String[] result = new String[keyCount];
