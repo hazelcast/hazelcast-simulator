@@ -12,7 +12,7 @@ public abstract class AbstractMonotonicWorker extends AbstractWorker {
     public final void run() {
         beforeRun();
 
-        while (!testContext.isStopped()) {
+        while (!testContext.isStopped() && !isWorkerStopped) {
             intervalProbe.started();
             timeStep();
             intervalProbe.done();
