@@ -23,6 +23,7 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.provisioner.Bash;
 import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
@@ -30,6 +31,9 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -69,6 +73,7 @@ public final class Coordinator {
     TestSuite testSuite;
     int dedicatedMemberMachineCount;
     boolean parallel;
+    TestPhase lastTestPhaseToSync;
     WorkerJvmSettings workerJvmSettings;
     int cooldownSeconds = COOLDOWN_SECONDS;
     int testCaseRunnerSleepPeriod = TEST_CASE_RUNNER_SLEEP_PERIOD;
@@ -348,6 +353,8 @@ public final class Coordinator {
         echo("Running %s tests parallel", testSuite.size());
 
         final int maxTestCaseIdLength = getMaxTestCaseIdLength(testSuite.testCaseList);
+        final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testSuite.testCaseList.size());
+
         parallelExecutor = createFixedThreadPool(testSuite.size(), Coordinator.class);
 
         List<Future> futures = new LinkedList<Future>();
@@ -356,10 +363,12 @@ public final class Coordinator {
                 @Override
                 public void run() {
                     try {
-                        TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this, maxTestCaseIdLength);
+                        TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this, maxTestCaseIdLength,
+                                testPhaseSyncMap);
                         boolean success = runner.run();
                         if (!success && testSuite.failFast) {
-                            LOGGER.info("Aborting testsuite due to failure");
+                            LOGGER.info("Aborting testsuite due to failure (not implemented yet)");
+                            // FIXME: we should abort here as logged
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -383,7 +392,7 @@ public final class Coordinator {
         int maxTestCaseIdLength = getMaxTestCaseIdLength(testSuite.testCaseList);
 
         for (TestCase testCase : testSuite.testCaseList) {
-            TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this, maxTestCaseIdLength);
+            TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this, maxTestCaseIdLength, null);
             boolean success = runner.run();
             if (!success && testSuite.failFast) {
                 LOGGER.info("Aborting testsuite due to failure");
@@ -394,6 +403,18 @@ public final class Coordinator {
                 startWorkers();
             }
         }
+    }
+
+    private ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(int testCount) {
+        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
+        boolean useTestCount = true;
+        for (TestPhase testPhase : TestPhase.values()) {
+            testPhaseSyncMap.put(testPhase, new CountDownLatch(useTestCount ? testCount : 0));
+            if (testPhase == lastTestPhaseToSync) {
+                useTestCount = false;
+            }
+        }
+        return testPhaseSyncMap;
     }
 
     private void terminateWorkers() {

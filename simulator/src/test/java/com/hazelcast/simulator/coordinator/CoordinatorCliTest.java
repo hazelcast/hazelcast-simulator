@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -216,6 +217,46 @@ public class CoordinatorCliTest {
 
         CoordinatorCli cli = new CoordinatorCli(coordinator, getArgs(false));
         cli.init();
+    }
+
+    @Test(expected = Exception.class)
+    public void testInit_syncToTestPhase_invalid() {
+        args.add("--waitForTestCaseCompletion");
+        args.add("--syncToTestPhase");
+        args.add("INVALID");
+
+        coordinatorCliInit();
+    }
+
+    @Test
+    public void testInit_syncToTestPhase_default() {
+        args.add("--waitForTestCaseCompletion");
+
+        coordinatorCliInit();
+
+        assertEquals(TestPhase.SETUP, coordinator.lastTestPhaseToSync);
+    }
+
+    @Test
+    public void testInit_syncToTestPhase_globalWarmup() {
+        args.add("--waitForTestCaseCompletion");
+        args.add("--syncToTestPhase");
+        args.add("GLOBAL_WARMUP");
+
+        coordinatorCliInit();
+
+        assertEquals(TestPhase.GLOBAL_WARMUP, coordinator.lastTestPhaseToSync);
+    }
+
+    @Test
+    public void testInit_syncToTestPhase_localVerify() {
+        args.add("--waitForTestCaseCompletion");
+        args.add("--syncToTestPhase");
+        args.add("LOCAL_VERIFY");
+
+        coordinatorCliInit();
+
+        assertEquals(TestPhase.LOCAL_VERIFY, coordinator.lastTestPhaseToSync);
     }
 
     private void coordinatorCliInit() {
