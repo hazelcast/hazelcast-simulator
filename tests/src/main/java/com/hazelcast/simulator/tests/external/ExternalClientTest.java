@@ -114,7 +114,7 @@ public class ExternalClientTest {
     }
 
     private void getThroughputResults() {
-        IList<String> throughputResults = getThroughputResultList();
+        IList<String> throughputResults = getResultList("throughput", "externalClientsThroughputResults");
         int resultSize = throughputResults.size();
 
         LOGGER.info(format("Collecting %d throughput results (expected %d)...", resultSize, expectedResultSize));
@@ -149,21 +149,8 @@ public class ExternalClientTest {
                 totalInvocations, avgDuration, performance));
     }
 
-    private IList<String> getThroughputResultList() {
-        IList<String> throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
-
-        // wait for all throughput results to arrive
-        int retries = 0;
-        while (expectedResultSize > 0 && throughputResults.size() < expectedResultSize && retries++ < 60) {
-            LOGGER.info(format("Waiting for %d/%d throughput results...", throughputResults.size(), expectedResultSize));
-            throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
-            sleepSeconds(1);
-        }
-        return throughputResults;
-    }
-
     private void getLatencyResults() {
-        IList<String> latencyLists = hazelcastInstance.getList("externalClientsLatencyResults");
+        IList<String> latencyLists = getResultList("latency", "externalClientsLatencyResults");
 
         LOGGER.info(format("Collecting %d latency result lists...", latencyLists.size()));
         for (String key : latencyLists) {
@@ -174,5 +161,18 @@ public class ExternalClientTest {
             }
         }
         LOGGER.info("Done!");
+    }
+
+    private IList<String> getResultList(String typeName, String listName) {
+        IList<String> resultList = hazelcastInstance.getList(listName);
+
+        // wait for all throughput results to arrive
+        int retries = 0;
+        while (expectedResultSize > 0 && resultList.size() < expectedResultSize && retries++ < 60) {
+            LOGGER.info(format("Waiting for %d/%d %s results...", resultList.size(), expectedResultSize, typeName));
+            resultList = hazelcastInstance.getList(listName);
+            sleepSeconds(1);
+        }
+        return resultList;
     }
 }
