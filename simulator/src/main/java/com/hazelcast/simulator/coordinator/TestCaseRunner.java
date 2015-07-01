@@ -40,7 +40,7 @@ final class TestCaseRunner {
 
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
 
-    private static final ConcurrentMap<TestPhase, Boolean> logTestPhaseCompletion = new ConcurrentHashMap<TestPhase, Boolean>();
+    private static final ConcurrentMap<TestPhase, Object> LOG_TEST_PHASE_COMPLETION = new ConcurrentHashMap<TestPhase, Object>();
 
     private final CountDownLatch waitForStopThread = new CountDownLatch(1);
 
@@ -142,7 +142,7 @@ final class TestCaseRunner {
             CountDownLatch latch = testPhaseSyncMap.get(testPhase);
             latch.countDown();
             latch.await();
-            if (logTestPhaseCompletion.putIfAbsent(testPhase, Boolean.TRUE) == null) {
+            if (LOG_TEST_PHASE_COMPLETION.putIfAbsent(testPhase, true) == null) {
                 LOGGER.info("Completed TestPhase " + testPhase.desc());
             }
         } catch (InterruptedException e) {
