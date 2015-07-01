@@ -32,6 +32,7 @@ public class ExternalClientTest {
     public int waitForClientsCount = 1;
     public int waitIntervalSeconds = 60;
     public int expectedResultSize = 0;
+    public int expectedResultsMaxRetries = 60;
 
     SimpleProbe externalClientThroughput;
     IntervalProbe<HdrLatencyDistributionResult, HdrLatencyDistributionProbe> externalClientLatency;
@@ -164,13 +165,31 @@ public class ExternalClientTest {
     }
 
     private IList<String> getResultList(String typeName, String listName) {
+        int lastSize = 0;
+        int retries = 0;
         IList<String> resultList = hazelcastInstance.getList(listName);
 
         // wait for all throughput results to arrive
-        int retries = 0;
-        while (expectedResultSize > 0 && resultList.size() < expectedResultSize && retries++ < 60) {
+        while (expectedResultSize > 0) {
+            int listSize = resultList.size();
+
+            // check if we should stop
+            if (listSize >= expectedResultSize) {
+                break;
+            }
+
+            // check if there is progress
+            if (lastSize == listSize) {
+                retries++;
+            } else {
+                retries = 0;
+            }
+            if (retries > expectedResultsMaxRetries) {
+                break;
+            }
+            lastSize = listSize;
+
             LOGGER.info(format("Waiting for %d/%d %s results...", resultList.size(), expectedResultSize, typeName));
-            resultList = hazelcastInstance.getList(listName);
             sleepSeconds(1);
         }
         return resultList;
