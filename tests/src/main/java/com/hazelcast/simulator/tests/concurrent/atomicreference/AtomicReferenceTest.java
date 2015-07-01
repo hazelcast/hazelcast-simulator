@@ -32,7 +32,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
-import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 
@@ -83,9 +83,9 @@ public class AtomicReferenceTest {
         }
 
         counters = new IAtomicReference[countersLength];
+        String[] names = generateStringKeys(countersLength, basename + "-" + context.getTestId(), keyLocality, targetInstance);
         for (int k = 0; k < counters.length; k++) {
-            String key = generateStringKey(8, keyLocality, targetInstance);
-            IAtomicReference atomicReference = targetInstance.getAtomicReference(key);
+            IAtomicReference atomicReference = targetInstance.getAtomicReference(names[k]);
             atomicReference.set(values[random.nextInt(values.length)]);
             counters[k] = atomicReference;
         }
