@@ -58,8 +58,8 @@ public class ExternalClientStarterTest {
 
             String tmpLogFileName = logFileName + "_" + i;
 
-            LOGGER.info(format("Starting external client: %s %s >> %s.log", binaryName, tmpArguments, tmpLogFileName));
-            bash.execute(format("../upload/%s %s >> %s.log &", binaryName, tmpArguments, tmpLogFileName));
+            LOGGER.info(format("Starting external client: %s %s &>> %s.log", binaryName, tmpArguments, tmpLogFileName));
+            bash.execute(format("../upload/%s %s &>> %s.log &", binaryName, tmpArguments, tmpLogFileName));
         }
     }
 }
