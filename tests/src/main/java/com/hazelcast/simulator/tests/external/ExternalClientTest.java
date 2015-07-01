@@ -153,7 +153,7 @@ public class ExternalClientTest {
         IList<String> throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
 
         // wait for all throughput results to arrive
-        while (expectedResultSize > 0 && expectedResultSize < throughputResults.size()) {
+        while (expectedResultSize > 0 && throughputResults.size() < expectedResultSize) {
             LOGGER.info(format("Waiting for %d/%d throughput results...", throughputResults.size(), expectedResultSize));
             throughputResults = hazelcastInstance.getList("externalClientsThroughputResults");
             sleepSeconds(1);
