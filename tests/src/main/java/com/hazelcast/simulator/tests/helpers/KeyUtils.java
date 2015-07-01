@@ -1,7 +1,5 @@
 package com.hazelcast.simulator.tests.helpers;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
@@ -70,23 +68,6 @@ public final class KeyUtils {
         return generateStringKeys(keyLength, keyCount, basename, keyLocality, instance);
     }
 
-    public static void main(String[] args) {
-        Config config = new Config();
-        // config.setProperty(GroupProperties.PROP_PARTITION_COUNT, "10");
-        HazelcastInstance hz1 = Hazelcast.newHazelcastInstance(config);
-        HazelcastInstance hz2 = Hazelcast.newHazelcastInstance(config);
-        HazelcastInstance hz3 = Hazelcast.newHazelcastInstance(config);
-        HazelcastInstance hz4 = Hazelcast.newHazelcastInstance(config);
-
-        String[] keys = generateStringKeys(3000, "IAtomicLong", KeyLocality.RANDOM, hz1);
-        PartitionService partitionService = hz1.getPartitionService();
-
-        for (String key : keys) {
-            Partition partition = partitionService.getPartition(key);
-            System.out.println(key + " partitionId: " + partition.getPartitionId() + " owner:" + partition.getOwner());
-        }
-    }
-
     public static String[] generateStringKeys(int keyLength, int keyCount, String basename, KeyLocality keyLocality, HazelcastInstance instance) {
         Set<Integer> targetPartitions = getTargetPartitions(keyLocality, instance);
         PartitionService partitionService = instance.getPartitionService();
@@ -98,6 +79,8 @@ public final class KeyUtils {
 
         int maxKeysPerPartition = (int) Math.ceil(keyCount / (float) targetPartitions.size());
 
+        System.out.println("keyCount:"+keyCount);
+        System.out.println("targetPartitions.size:" + targetPartitions.size());
         System.out.println("maxKeysPerPartition: " + maxKeysPerPartition);
         System.out.println("targetPartitionCount:" + targetPartitions.size());
 
@@ -144,7 +127,7 @@ public final class KeyUtils {
         return result;
     }
 
-    private static Set<Integer> getTargetPartitions(KeyLocality keyLocality, HazelcastInstance hz) {
+    public static Set<Integer> getTargetPartitions(KeyLocality keyLocality, HazelcastInstance hz) {
         Set<Integer> targetPartitions = new HashSet<Integer>();
         PartitionService partitionService = hz.getPartitionService();
         Member localMember = hz.getCluster().getLocalMember();
