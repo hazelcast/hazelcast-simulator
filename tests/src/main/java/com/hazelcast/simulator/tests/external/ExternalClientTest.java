@@ -87,9 +87,9 @@ public class ExternalClientTest {
             }
             long clientsRunningCount = clientsRunning.getCount();
             if (clientsRunningCount > 0) {
-                LOGGER.info(format("Waiting for %d/%d clients...", clientsRunningCount, waitForClientsCount));
+                LOGGER.info(format("Got response from %d/%d clients, waiting...", clientsRunningCount, waitForClientsCount));
             } else {
-                LOGGER.info(format("Got response from %d clients, stopping now!", waitForClientsCount));
+                LOGGER.info(format("Got response from all %d clients, stopping now!", waitForClientsCount));
                 break;
             }
         }
