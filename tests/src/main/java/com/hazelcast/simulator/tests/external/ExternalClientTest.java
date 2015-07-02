@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
+import static org.junit.Assert.fail;
 
 public class ExternalClientTest {
 
@@ -27,9 +28,7 @@ public class ExternalClientTest {
 
     // properties
     public String basename = "externalClientsRunning";
-    public boolean waitForClientsCountAutoDetection = true;
-    public int waitForClientCountAutoDetectionDelaySeconds = 10;
-    public int waitForClientsCount = 1;
+    public int waitForClientsCount = 0;
     public int waitIntervalSeconds = 60;
     public int expectedResultSize = 0;
     public int expectedResultsMaxRetries = 60;
@@ -52,7 +51,10 @@ public class ExternalClientTest {
         }
 
         clientsRunning = hazelcastInstance.getCountDownLatch(basename);
-        clientsRunning.trySetCount(waitForClientsCount);
+        if (!clientsRunning.trySetCount(waitForClientsCount)) {
+            LOGGER.severe("Could not set ICountDownLatch value of " + waitForClientsCount);
+            fail("Could not set ICountDownLatch value of " + waitForClientsCount);
+        }
 
         // determine one instance per cluster
         if (hazelcastInstance.getMap(basename).putIfAbsent(basename, true) == null) {
@@ -67,15 +69,6 @@ public class ExternalClientTest {
     public void run() throws ExecutionException, InterruptedException {
         if (isMemberNode(hazelcastInstance)) {
             return;
-        }
-
-        // lazy set CountdownLatch if client count auto detection is enabled
-        if (waitForClientsCountAutoDetection) {
-            // wait some seconds to be sure that all external clients are started
-            LOGGER.info("Waiting for all external clients to be started...");
-            sleepSeconds(waitForClientCountAutoDetectionDelaySeconds);
-            waitForClientsCount = (int) hazelcastInstance.getAtomicLong("externalClientsStarted").get();
-            clientsRunning.trySetCount(waitForClientsCount);
         }
 
         // wait for external clients to finish
