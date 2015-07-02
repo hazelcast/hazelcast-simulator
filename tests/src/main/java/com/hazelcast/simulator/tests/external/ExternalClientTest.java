@@ -50,6 +50,10 @@ public class ExternalClientTest {
             return;
         }
 
+        if (waitForClientsCount < 1) {
+            fail("waitForClientsCount must be positive, but was: " + waitForClientsCount);
+        }
+
         clientsRunning = hazelcastInstance.getCountDownLatch(basename);
         if (!clientsRunning.trySetCount(waitForClientsCount)) {
             LOGGER.severe("Could not set ICountDownLatch value of " + waitForClientsCount);
