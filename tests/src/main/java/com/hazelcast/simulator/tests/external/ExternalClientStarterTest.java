@@ -13,6 +13,7 @@ import java.io.File;
 import java.util.UUID;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.HostAddressPicker.pickHostAddress;
 import static java.lang.String.format;
@@ -46,7 +47,7 @@ public class ExternalClientStarterTest {
 
     @Run
     public void run() {
-        if (!isClient(hazelcastInstance)) {
+        if (isMemberNode(hazelcastInstance)) {
             return;
         }
 
