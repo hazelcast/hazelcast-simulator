@@ -190,7 +190,7 @@ public class WorkerCommandRequestProcessorTest {
 
         initTestCase(defaultTestCase);
         RunCommand command = new RunCommand(DEFAULT_TEST_ID);
-        command.clientOnly = true;
+        command.passiveMembers = true;
         handleRequestAndAssertId(command);
 
         waitForPhaseCompletion(DEFAULT_TEST_ID, TestPhase.RUN);

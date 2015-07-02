@@ -204,8 +204,7 @@ class WorkerCommandRequestProcessor {
                     return;
                 }
 
-                boolean passive = (command.clientOnly && clientInstance == null);
-                if (passive) {
+                if (command.passiveMembers && clientInstance == null) {
                     LOGGER.info(format("%s Skipping run of %s (member is passive) %s", DASHES, testName, DASHES));
                     return;
                 }

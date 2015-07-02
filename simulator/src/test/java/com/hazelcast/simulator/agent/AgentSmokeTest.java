@@ -126,7 +126,7 @@ public class AgentSmokeTest {
 
         LOGGER.info("Starting run phase...");
         RunCommand runCommand = new RunCommand(testCase.getId());
-        runCommand.clientOnly = false;
+        runCommand.passiveMembers = false;
         agentsClient.executeOnAllWorkers(runCommand);
 
         LOGGER.info("Running for " + TEST_RUNTIME_SECONDS + " seconds");

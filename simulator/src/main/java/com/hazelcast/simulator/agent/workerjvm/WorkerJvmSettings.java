@@ -18,6 +18,7 @@ package com.hazelcast.simulator.agent.workerjvm;
 import java.io.Serializable;
 
 public class WorkerJvmSettings implements Serializable {
+
     public String vmOptions;
     public String clientVmOptions;
     public String hzConfig;
@@ -27,6 +28,7 @@ public class WorkerJvmSettings implements Serializable {
     public int memberWorkerCount;
     public int clientWorkerCount;
     public boolean autoCreateHZInstances = true;
+    public boolean passiveMembers = true;
 
     public int workerStartupTimeout;
     public boolean refreshJvm;
@@ -49,9 +51,12 @@ public class WorkerJvmSettings implements Serializable {
         this.hzConfig = settings.hzConfig;
         this.clientHzConfig = settings.clientHzConfig;
         this.log4jConfig = settings.log4jConfig;
+
         this.memberWorkerCount = settings.memberWorkerCount;
         this.clientWorkerCount = settings.clientWorkerCount;
         this.autoCreateHZInstances = settings.autoCreateHZInstances;
+        this.passiveMembers = settings.passiveMembers;
+
         this.workerStartupTimeout = settings.workerStartupTimeout;
         this.refreshJvm = settings.refreshJvm;
         this.javaVendor = settings.javaVendor;
