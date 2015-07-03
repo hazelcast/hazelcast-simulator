@@ -15,41 +15,43 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.icache.helpers.ReadWriteICacheCounter;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheLoader;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheWriter;
-import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableConfiguration;
-import java.io.Serializable;
-import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCacheManager;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * This tests concurrent load write and delete calls to CacheLoader. via put remove get calls to a cache
- * we can configure a delay in the load write and delete
- * a large delay and high concurrent calls to loadAll could overflow some internal queues
- * we Verify that the cache contains all keys,  and that the keys have been loaded through a loader instance
+ * This tests concurrent load write and delete calls to CacheLoader. Via put, remove and get calls to a cache
+ * we can configure a delay in the load write and delete.
+ * A large delay and high concurrent calls to loadAll could overflow some internal queues.
+ * We verify that the cache contains all keys and that the keys have been loaded through a loader instance.
  */
 public class ReadWriteICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(ReadWriteICacheTest.class);
+
+    private enum Operation {
+        PUT,
+        GET,
+        REMOVE
+    }
 
     public int threadCount = 3;
     public int keyCount = 10;
@@ -59,89 +61,45 @@ public class ReadWriteICacheTest {
 
     public int putDelayMs = 0;
     public int getDelayMs = 0;
-    public int removeDealyMs = 0;
+    public int removeDelayMs = 0;
 
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
-    private CacheManager cacheManager;
+    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
+
     private String basename;
-
-    private MutableConfiguration config;
-    private Cache<Object, Object> cache;
+    private IList<ReadWriteICacheCounter> counters;
+    private MutableConfiguration<Integer, Integer> config;
+    private Cache<Integer, Integer> cache;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
+        counters = hazelcastInstance.getList(basename + "counters");
 
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        }
+        RecordingCacheLoader<Integer> loader = new RecordingCacheLoader<Integer>();
+        loader.loadDelayMs = getDelayMs;
 
-        config = new MutableConfiguration();
+        RecordingCacheWriter<Integer, Integer> writer = new RecordingCacheWriter<Integer, Integer>();
+        writer.writeDelayMs = putDelayMs;
+        writer.deleteDelayMs = removeDelayMs;
+
+        config = new MutableConfiguration<Integer, Integer>();
         config.setReadThrough(true);
         config.setWriteThrough(true);
-
-        RecordingCacheLoader loader = new RecordingCacheLoader();
-        RecordingCacheWriter writer = new RecordingCacheWriter();
-
-        loader.loadDelayMs = getDelayMs;
-        writer.writeDelayMs = putDelayMs;
-        writer.deleteDelayMs = removeDealyMs;
-
         config.setCacheLoaderFactory(FactoryBuilder.factoryOf(loader));
         config.setCacheWriterFactory(FactoryBuilder.factoryOf(writer));
 
+        CacheManager cacheManager = getCacheManager(hazelcastInstance);
         cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
-    }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
-    private class Worker implements Runnable {
-        private final Random random = new Random();
-        private final Counter counter = new Counter();
-
-        @Override
-        public void run() {
-            while (!testContext.isStopped()) {
-                int key = random.nextInt(keyCount);
-
-                double chance = random.nextDouble();
-                if ((chance -= putProb) < 0) {
-                    cache.put(key, key);
-                    counter.put++;
-
-                } else if ((chance -= getProb) < 0) {
-                    Object o = cache.get(key);
-                    assertNotNull(o);
-                    counter.get++;
-                } else if ((chance -= removeProb) < 0) {
-                    cache.remove(key);
-                    counter.remove++;
-                }
-            }
-            targetInstance.getList(basename + "counters").add(counter);
-        }
+        builder.addOperation(Operation.PUT, putProb)
+                .addOperation(Operation.GET, getProb)
+                .addOperation(Operation.REMOVE, removeProb);
     }
 
     @Verify(global = false)
     public void verify() throws Exception {
-
         RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
         RecordingCacheWriter writer = (RecordingCacheWriter) config.getCacheWriterFactory().create();
 
@@ -151,33 +109,55 @@ public class ReadWriteICacheTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-
-        IList<Counter> counters = targetInstance.getList(basename + "counters");
-        Counter total = new Counter();
-        for (Counter c : counters) {
-            total.add(c);
+        ReadWriteICacheCounter total = new ReadWriteICacheCounter();
+        for (ReadWriteICacheCounter counter : counters) {
+            total.add(counter);
         }
         LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
 
-    static class Counter implements Serializable {
+    @RunWithWorker
+    public Worker run() {
+        return new Worker();
+    }
 
-        public long put = 0;
-        public long get = 0;
-        public long remove = 0;
+    private class Worker extends AbstractWorker<Operation> {
 
-        public void add(Counter c) {
-            put += c.put;
-            get += c.get;
-            remove += c.remove;
+        private final ReadWriteICacheCounter counter = new ReadWriteICacheCounter();
+
+        private Worker() {
+            super(builder);
         }
 
-        public String toString() {
-            return "Counter{"
-                    + "put=" + put
-                    + ", get=" + get
-                    + ", remove=" + remove
-                    + '}';
+        @Override
+        protected void timeStep(Operation operation) {
+            int key = randomInt(keyCount);
+
+            switch (operation) {
+                case PUT:
+                    cache.put(key, key);
+                    counter.put++;
+                    break;
+
+                case GET:
+                    Object o = cache.get(key);
+                    assertNotNull(o);
+                    counter.get++;
+                    break;
+
+                case REMOVE:
+                    cache.remove(key);
+                    counter.remove++;
+                    break;
+
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
+
+        @Override
+        protected void afterRun() {
+            counters.add(counter);
         }
     }
 }
