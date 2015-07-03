@@ -5,7 +5,7 @@ public class RunCommand extends Command {
     public static final long serialVersionUID = 0L;
 
     public String testId;
-    public boolean clientOnly;
+    public boolean passiveMembers;
 
     public RunCommand(String testId) {
         this.testId = testId;
@@ -15,7 +15,7 @@ public class RunCommand extends Command {
     public String toString() {
         return "RunCommand{"
                 + "testId='" + testId + '\''
-                + ", clientOnly=" + clientOnly
+                + ", passiveMembers=" + passiveMembers
                 + '}';
     }
 }

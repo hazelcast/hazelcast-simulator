@@ -23,6 +23,7 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static java.lang.Boolean.parseBoolean;
 import static java.lang.String.format;
 
 final class CoordinatorCli {
@@ -192,6 +193,7 @@ final class CoordinatorCli {
         workerJvmSettings.memberWorkerCount = options.valueOf(memberWorkerCountSpec);
         workerJvmSettings.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
         workerJvmSettings.autoCreateHZInstances = options.valueOf(autoCreateHZInstancesSpec);
+        workerJvmSettings.passiveMembers = parseBoolean(coordinator.props.get("PASSIVE_MEMBERS", "true"));
 
         workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
         workerJvmSettings.hzConfig = loadHzConfig();
