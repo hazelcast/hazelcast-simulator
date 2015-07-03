@@ -2,9 +2,12 @@ package com.hazelcast.simulator.utils;
 
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
+
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 
 public final class HostAddressPicker {
 
@@ -41,7 +44,16 @@ public final class HostAddressPicker {
                 throw new IllegalStateException("Cannot find local host address");
             }
         } catch (SocketException e) {
-            throw new RuntimeException("Error during pickHostAddress() at network interface: " + networkInterface, e);
+            if (networkInterface == null) {
+                throw rethrow(e);
+            }
+            StringBuilder sb = new StringBuilder("Error during pickHostAddress()");
+            sb.append("\ndisplayName: ").append(networkInterface.getDisplayName());
+            sb.append("\nname: ").append(networkInterface.getName());
+            for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
+                sb.append("\ninterfaceAddress: ").append(interfaceAddress.getAddress());
+            }
+            throw new RuntimeException(sb.toString(), e);
         }
     }
 
