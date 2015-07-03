@@ -1,23 +1,20 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryEventFilter;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryListener;
-import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.util.EmptyStatement;
 
 import javax.cache.CacheException;
@@ -29,28 +26,36 @@ import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 import java.io.Serializable;
-import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCacheManager;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static junit.framework.Assert.assertEquals;
 
-/*
-* In this test was adding listeners to a cache, and recording the number of events the listeners recive
-* and compare that to the number of events we should have generated using put / get operations ect
-* we Verify that no unexpected events have been received
-* */
+/**
+ * In this test we add listeners to a cache and record the number of events the listeners receive.
+ * We compare those to the number of events we have generated using different cache operations.
+ * We verify that no unexpected events have been received.
+ */
 public class ListenerICacheTest {
 
     private static final int PAUSE_FOR_LAST_EVENTS_SECONDS = 10;
 
     private static final ILogger LOGGER = Logger.getLogger(ListenerICacheTest.class);
 
-    public int threadCount = 3;
-    public int maxExpiryDurationMs = 500;
+    private enum Operation {
+        PUT,
+        PUT_EXPIRY,
+        PUT_EXPIRY_ASYNC,
+        GET_EXPIRY,
+        GET_EXPIRY_ASYNC,
+        REMOVE,
+        REPLACE
+    }
+
     public int keyCount = 1000;
+    public int maxExpiryDurationMs = 500;
     public boolean syncEvents = true;
 
     public double put = 0.5;
@@ -61,43 +66,43 @@ public class ListenerICacheTest {
     public double remove = 0.1;
     public double replace = 0.1;
 
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
-    private CacheManager cacheManager;
-    private String basename;
+    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
-    private CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
+    private HazelcastInstance hazelcastInstance;
+    private String basename;
+    private CacheManager cacheManager;
     private ICache<Integer, Long> cache;
     private ICacheEntryListener<Integer, Long> listener;
     private ICacheEntryEventFilter<Integer, Long> filter;
 
     @Setup
-    public void setup(TestContext textConTx) {
-        testContext = textConTx;
-        targetInstance = testContext.getTargetInstance();
+    public void setup(TestContext testContext) {
+        hazelcastInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
 
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        }
+        cacheManager = getCacheManager(hazelcastInstance);
 
+        CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
         config.setName(basename);
+
         try {
             cacheManager.createCache(basename, config);
         } catch (CacheException ignored) {
             EmptyStatement.ignore(ignored);
         }
+
+        builder.addOperation(Operation.PUT, put)
+                .addOperation(Operation.PUT_EXPIRY, putExpiry)
+                .addOperation(Operation.PUT_EXPIRY_ASYNC, putAsyncExpiry)
+                .addOperation(Operation.GET_EXPIRY, getExpiry)
+                .addOperation(Operation.GET_EXPIRY_ASYNC, getAsyncExpiry)
+                .addOperation(Operation.REMOVE, remove)
+                .addOperation(Operation.REPLACE, replace);
     }
 
     @Warmup(global = false)
     public void warmup() {
-        cache = (ICache) cacheManager.getCache(basename);
+        cache = (ICache<Integer, Long>) cacheManager.<Integer, Long>getCache(basename);
 
         listener = new ICacheEntryListener<Integer, Long>();
         filter = new ICacheEntryEventFilter<Integer, Long>();
@@ -110,73 +115,6 @@ public class ListenerICacheTest {
         cache.registerCacheEntryListener(conf);
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-
-        sleepSeconds(PAUSE_FOR_LAST_EVENTS_SECONDS);
-
-        targetInstance.getList(basename + "listeners").add(listener);
-    }
-
-    private class Worker implements Runnable {
-        private Random random = new Random();
-        private Counter counter = new Counter();
-
-        public void run() {
-            while (!testContext.isStopped()) {
-
-                int expiryDuration = random.nextInt(maxExpiryDurationMs);
-                ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
-
-                int k = random.nextInt(keyCount);
-
-                double chance = random.nextDouble();
-                if ((chance -= put) < 0) {
-                    cache.put(k, random.nextLong());
-                    counter.put++;
-
-                } else if ((chance -= putExpiry) < 0) {
-                    cache.put(k, random.nextLong(), expiryPolicy);
-                    counter.putExpiry++;
-
-                } else if ((chance -= putAsyncExpiry) < 0) {
-                    cache.putAsync(k, random.nextLong(), expiryPolicy);
-                    counter.putAsyncExpiry++;
-
-                } else if ((chance -= getExpiry) < 0) {
-                    cache.get(k, expiryPolicy);
-                    counter.getExpiry++;
-
-                } else if ((chance -= getAsyncExpiry) < 0) {
-                    Future<Long> f = cache.getAsync(k, expiryPolicy);
-                    try {
-                        f.get();
-                        counter.getAsyncExpiry++;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-
-                } else if ((chance -= remove) < 0) {
-                    if (cache.remove(k)) {
-                        counter.remove++;
-                    }
-
-                } else if ((chance -= replace) < 0) {
-                    if (cache.replace(k, random.nextLong())) {
-                        counter.replace++;
-                    }
-
-                }
-            }
-            targetInstance.getList(basename).add(counter);
-        }
-    }
-
     @Verify(global = false)
     public void verify() throws Exception {
         LOGGER.info(basename + ": listener " + listener);
@@ -186,14 +124,14 @@ public class ListenerICacheTest {
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
-        IList<Counter> results = targetInstance.getList(basename);
+        IList<Counter> results = hazelcastInstance.getList(basename);
         Counter total = new Counter();
         for (Counter i : results) {
             total.add(i);
         }
         LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
-        IList<ICacheEntryListener> listeners = targetInstance.getList(basename + "listeners");
+        IList<ICacheEntryListener> listeners = hazelcastInstance.getList(basename + "listeners");
         ICacheEntryListener totalEvents = new ICacheEntryListener();
         for (ICacheEntryListener listener : listeners) {
             totalEvents.add(listener);
@@ -203,7 +141,89 @@ public class ListenerICacheTest {
         assertEquals(basename + ": unExpected Events found ", 0, totalEvents.getUnexpected());
     }
 
+    @RunWithWorker
+    public Worker run() {
+        return new Worker();
+    }
+
+    private final class Worker extends AbstractWorker<Operation> {
+
+        private final Counter counter = new Counter();
+
+        private Worker() {
+            super(builder);
+        }
+
+        @Override
+        protected void timeStep(Operation operation) {
+            int expiryDuration = randomInt(maxExpiryDurationMs);
+            ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
+
+            int key = randomInt(keyCount);
+
+            switch (operation) {
+                case PUT:
+                    cache.put(key, getRandom().nextLong());
+                    counter.put++;
+                    break;
+
+                case PUT_EXPIRY:
+                    cache.put(key, getRandom().nextLong(), expiryPolicy);
+                    counter.putExpiry++;
+                    break;
+
+                case PUT_EXPIRY_ASYNC:
+                    cache.putAsync(key, getRandom().nextLong(), expiryPolicy);
+                    counter.putAsyncExpiry++;
+                    break;
+
+                case GET_EXPIRY:
+                    cache.get(key, expiryPolicy);
+                    counter.getExpiry++;
+                    break;
+
+                case GET_EXPIRY_ASYNC:
+                    Future<Long> future = cache.getAsync(key, expiryPolicy);
+                    try {
+                        future.get();
+                        counter.getAsyncExpiry++;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    break;
+
+                case REMOVE:
+                    if (cache.remove(key)) {
+                        counter.remove++;
+                    }
+                    break;
+
+                case REPLACE:
+                    if (cache.replace(key, getRandom().nextLong())) {
+                        counter.replace++;
+                    }
+                    break;
+
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
+
+        @Override
+        protected void afterRun() {
+            hazelcastInstance.getList(basename).add(counter);
+        }
+
+        @Override
+        public void afterCompletion() {
+            sleepSeconds(PAUSE_FOR_LAST_EVENTS_SECONDS);
+
+            hazelcastInstance.getList(basename + "listeners").add(listener);
+        }
+    }
+
     private static class Counter implements Serializable {
+
         public long put;
         public long putExpiry;
         public long putAsyncExpiry;
