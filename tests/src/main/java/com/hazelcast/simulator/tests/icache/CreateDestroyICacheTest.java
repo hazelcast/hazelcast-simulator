@@ -15,103 +15,117 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.tests.icache.helpers.ICacheCreateDestroyCounter;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
-import java.io.Serializable;
-import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
-
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCacheManager;
 
 /**
- * In This tests we are concurrently creating deleting destroying and putting to a cache.
- * However this test is a sub set of MangleIcacheTest ? so could be deleted
+ * In this test we are concurrently creating, deleting, destroying and putting to a cache.
+ * However this test is a sub set of {@link MangleICacheTest}, so could be deleted.
  */
 public class CreateDestroyICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(CreateDestroyICacheTest.class);
 
-    public int threadCount = 3;
+    private enum Operation {
+        CREATE_CACHE,
+        PUT_CACHE,
+        CLOSE_CACHE,
+        DESTROY_CACHE
+    }
+
     public double createCacheProb = 0.4;
     public double putCacheProb = 0.2;
     public double closeCacheProb = 0.2;
     public double destroyCacheProb = 0.2;
 
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
+    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
+
+    private HazelcastInstance hazelcastInstance;
     private CacheManager cacheManager;
     private String basename;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+        hazelcastInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
 
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        }
+        cacheManager = getCacheManager(hazelcastInstance);
+
+        builder.addOperation(Operation.CREATE_CACHE, createCacheProb)
+                .addOperation(Operation.PUT_CACHE, putCacheProb)
+                .addOperation(Operation.CLOSE_CACHE, closeCacheProb)
+                .addOperation(Operation.DESTROY_CACHE, destroyCacheProb);
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
+    @Verify(global = true)
+    public void verify() throws Exception {
+        IList<ICacheCreateDestroyCounter> counters = hazelcastInstance.getList(basename);
+        ICacheCreateDestroyCounter total = new ICacheCreateDestroyCounter();
+        for (ICacheCreateDestroyCounter c : counters) {
+            total.add(c);
         }
-        spawner.awaitCompletion();
+        LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
 
-    private class Worker implements Runnable {
-        private final Random random = new Random();
-        private final CacheConfig config = new CacheConfig();
-        private final Counter counter = new Counter();
+    @RunWithWorker
+    public Worker run() {
+        return new Worker();
+    }
 
-        public void run() {
+    private final class Worker extends AbstractWorker<Operation> {
+
+        private final ICacheCreateDestroyCounter counter = new ICacheCreateDestroyCounter();
+
+        private final CacheConfig config;
+
+        private Worker() {
+            super(builder);
+
+            config = new CacheConfig();
             config.setName(basename);
+        }
 
-            while (!testContext.isStopped()) {
-                double chance = random.nextDouble();
-                if ((chance -= createCacheProb) < 0) {
+        @Override
+        protected void timeStep(Operation operation) {
+            switch (operation) {
+                case CREATE_CACHE:
                     try {
                         cacheManager.createCache(basename, config);
                         counter.create++;
                     } catch (CacheException e) {
                         counter.createException++;
                     }
-                } else if ((chance -= putCacheProb) < 0) {
+                    break;
+
+                case PUT_CACHE:
                     try {
-                        Cache cache = cacheManager.getCache(basename);
+                        Cache<Integer, Integer> cache = cacheManager.getCache(basename);
                         if (cache != null) {
-                            cache.put(random.nextInt(), random.nextInt());
+                            cache.put(randomInt(), randomInt());
                             counter.put++;
                         }
                     } catch (IllegalStateException e) {
                         counter.putException++;
                     }
-                } else if ((chance -= closeCacheProb) < 0) {
+                    break;
+
+                case CLOSE_CACHE:
                     try {
                         Cache cache = cacheManager.getCache(basename);
                         if (cache != null) {
@@ -121,65 +135,25 @@ public class CreateDestroyICacheTest {
                     } catch (IllegalStateException e) {
                         counter.closeException++;
                     }
-                } else if ((chance -= destroyCacheProb) < 0) {
+                    break;
+
+                case DESTROY_CACHE:
                     try {
                         cacheManager.destroyCache(basename);
                         counter.destroy++;
                     } catch (IllegalStateException e) {
                         counter.destroyException++;
                     }
-                }
+                    break;
+
+                default:
+                    throw new UnsupportedOperationException();
             }
-            targetInstance.getList(basename).add(counter);
-        }
-    }
-
-    @Verify(global = true)
-    public void verify() throws Exception {
-        IList<Counter> counters = targetInstance.getList(basename);
-        Counter total = new Counter();
-        for (Counter c : counters) {
-            total.add(c);
-        }
-        LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
-    }
-
-    public static class Counter implements Serializable {
-
-        public long put = 0;
-        public long create = 0;
-        public long close = 0;
-        public long destroy = 0;
-
-        public long putException = 0;
-        public long createException = 0;
-        public long closeException = 0;
-        public long destroyException = 0;
-
-        public void add(Counter c) {
-            put += c.put;
-            create += c.create;
-            close += c.close;
-            destroy += c.destroy;
-
-            putException += c.putException;
-            createException += c.createException;
-            closeException += c.closeException;
-            destroyException += c.destroyException;
         }
 
         @Override
-        public String toString() {
-            return "Counter{"
-                    + "put=" + put
-                    + ", create=" + create
-                    + ", close=" + close
-                    + ", destroy=" + destroy
-                    + ", putException=" + putException
-                    + ", createException=" + createException
-                    + ", closeException=" + closeException
-                    + ", destroyException=" + destroyException
-                    + '}';
+        protected void afterRun() {
+            hazelcastInstance.getList(basename).add(counter);
         }
     }
 }
