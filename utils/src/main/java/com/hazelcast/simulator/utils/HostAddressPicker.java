@@ -6,19 +6,18 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
-
 public final class HostAddressPicker {
 
     private HostAddressPicker() {
     }
 
     public static String pickHostAddress() {
+        NetworkInterface networkInterface = null;
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             String loopbackHost = null;
             while (interfaces.hasMoreElements()) {
-                NetworkInterface networkInterface = interfaces.nextElement();
+                networkInterface = interfaces.nextElement();
                 if (!networkInterface.isUp()) {
                     continue;
                 }
@@ -42,7 +41,7 @@ public final class HostAddressPicker {
                 throw new IllegalStateException("Cannot find local host address");
             }
         } catch (SocketException e) {
-            throw rethrow(e);
+            throw new RuntimeException("Error during pickHostAddress() at network interface: " + networkInterface, e);
         }
     }
 
