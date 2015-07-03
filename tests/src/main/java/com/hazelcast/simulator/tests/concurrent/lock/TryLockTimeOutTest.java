@@ -19,11 +19,11 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-/*
-* in this test we are using lock to control access to an Ilist of accounts
-* we are using tryLock with a configurable time out: tryLockTimeOutMs
-* we verify that the total value of accounts is the same at the end of the test
-* */
+/**
+ * In this test we are using locks to control access to an IList of accounts.
+ * We are using tryLock() with a configurable time out: tryLockTimeOutMs.
+ * We verify that the total value of accounts is the same at the end of the test.
+ */
 public class TryLockTimeOutTest {
 
     private static final ILogger LOGGER = Logger.getLogger(TryLockTimeOutTest.class);
@@ -34,40 +34,65 @@ public class TryLockTimeOutTest {
     public long initialAccountValue = 1000;
     public String basename = this.getClass().getSimpleName();
 
-    private long totalInitalValue;
+    private long totalInitialValue;
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
+    private HazelcastInstance hazelcastInstance;
     private String id;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+        hazelcastInstance = testContext.getTargetInstance();
         id = testContext.getTestId();
     }
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        IList<Long> accounts = targetInstance.getList(basename);
-        for (int k = 0; k < maxAccounts; k++) {
+        IList<Long> accounts = hazelcastInstance.getList(basename);
+        for (int i = 0; i < maxAccounts; i++) {
             accounts.add(initialAccountValue);
         }
-        totalInitalValue = initialAccountValue * maxAccounts;
-        LOGGER.info(" totalInitalValue=" + totalInitalValue);
+        totalInitialValue = initialAccountValue * maxAccounts;
+        LOGGER.info("totalInitialValue=" + totalInitialValue);
+    }
+
+    @Verify(global = true)
+    public void verify() {
+
+        for (int i = 0; i < maxAccounts; i++) {
+            ILock lock = hazelcastInstance.getLock(basename + i);
+            assertFalse(id + " Lock should be unlocked", lock.isLocked());
+        }
+
+        long totalValue = 0;
+        IList<Long> accounts = hazelcastInstance.getList(basename);
+        for (long value : accounts) {
+            totalValue += value;
+        }
+        LOGGER.info(": totalValue=" + totalValue);
+        assertEquals(id + " totalInitialValue != totalValue ", totalInitialValue, totalValue);
+
+        Counter total = new Counter();
+        IList<Counter> totals = hazelcastInstance.getList(basename + "count");
+        for (Counter count : totals) {
+            total.add(count);
+        }
+        LOGGER.info("total count " + total);
     }
 
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
     }
 
     private class Worker implements Runnable {
+
         private final Random random = new Random();
-        private Counter counter = new Counter();
+        private final Counter counter = new Counter();
 
         @Override
         public void run() {
@@ -75,41 +100,44 @@ public class TryLockTimeOutTest {
                 int key1 = random.nextInt(maxAccounts);
                 int key2 = random.nextInt(maxAccounts);
 
-                ILock lock1 = targetInstance.getLock(basename + key1);
+                ILock outerLock = hazelcastInstance.getLock(basename + key1);
                 try {
-                    if (lock1.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
+                    if (outerLock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
                         try {
-                            ILock lock2 = targetInstance.getLock(basename + key2);
-                            try {
-                                if (lock2.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
-                                    try {
-                                        IList<Long> accounts = targetInstance.getList(basename);
-                                        int delta = random.nextInt(100);
-
-                                        if (accounts.get(key1) >= delta) {
-                                            accounts.set(key1, accounts.get(key1) - delta);
-                                            accounts.set(key2, accounts.get(key2) + delta);
-                                            counter.transfers++;
-                                        }
-
-                                    } finally {
-                                        lock2.unlock();
-                                    }
-                                }
-                            } catch (InterruptedException e) {
-                                LOGGER.severe(" lock2 " + e, e);
-                                counter.interruptedException++;
-                            }
+                            innerLockOperation(key1, key2);
                         } finally {
-                            lock1.unlock();
+                            outerLock.unlock();
                         }
                     }
                 } catch (InterruptedException e) {
-                    LOGGER.severe(" lock1 " + e, e);
+                    LOGGER.severe("outerLock " + e.getMessage(), e);
                     counter.interruptedException++;
                 }
             }
-            targetInstance.getList(basename + "count").add(counter);
+            hazelcastInstance.getList(basename + "count").add(counter);
+        }
+
+        private void innerLockOperation(int key1, int key2) {
+            ILock innerLock = hazelcastInstance.getLock(basename + key2);
+            try {
+                if (innerLock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
+                    try {
+                        IList<Long> accounts = hazelcastInstance.getList(basename);
+                        int delta = random.nextInt(100);
+
+                        if (accounts.get(key1) >= delta) {
+                            accounts.set(key1, accounts.get(key1) - delta);
+                            accounts.set(key2, accounts.get(key2) + delta);
+                            counter.transfers++;
+                        }
+                    } finally {
+                        innerLock.unlock();
+                    }
+                }
+            } catch (InterruptedException e) {
+                LOGGER.severe("innerLock " + e.getMessage(), e);
+                counter.interruptedException++;
+            }
         }
     }
 
@@ -130,29 +158,5 @@ public class TryLockTimeOutTest {
                     + ", transfers=" + transfers
                     + '}';
         }
-    }
-
-    @Verify(global = true)
-    public void verify() {
-
-        for (int k = 0; k < maxAccounts; k++) {
-            ILock lock = targetInstance.getLock(basename + k);
-            assertFalse(id + " Lock should be unlocked", lock.isLocked());
-        }
-
-        long totalValue = 0;
-        IList<Long> accounts = targetInstance.getList(basename);
-        for (long value : accounts) {
-            totalValue += value;
-        }
-        LOGGER.info(": totalValue=" + totalValue);
-        assertEquals(id + " totalInitalValue != totalValue ", totalInitalValue, totalValue);
-
-        Counter total = new Counter();
-        IList<Counter> totals = targetInstance.getList(basename + "count");
-        for (Counter count : totals) {
-            total.add(count);
-        }
-        LOGGER.info(" total count " + total);
     }
 }
