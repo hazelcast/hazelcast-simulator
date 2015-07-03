@@ -139,11 +139,6 @@ public class SimulatorPropertiesTest {
     }
 
     @Test
-    public void testIsEC2() throws Exception {
-        assertTrue(simulatorProperties.isEC2());
-    }
-
-    @Test
     public void testGetUser() throws Exception {
         assertEquals("simulator", simulatorProperties.getUser());
     }

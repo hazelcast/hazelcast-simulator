@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
+
 class TemplateBuilder {
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
@@ -56,7 +58,7 @@ class TemplateBuilder {
             initSecurityGroup();
             template.getOptions().securityGroups(securityGroup);
         } else {
-            if (!props.isEC2()) {
+            if (!isEC2(props.get("CLOUD_PROVIDER"))) {
                 throw new IllegalStateException("SUBNET_ID can be used only when EC2 is configured as a cloud provider.");
             }
             LOGGER.info("Using VPC, Subnet ID = " + subnetId);
@@ -92,7 +94,7 @@ class TemplateBuilder {
     }
 
     private void initSecurityGroup() {
-        if (!props.isEC2()) {
+        if (!isEC2(props.get("CLOUD_PROVIDER"))) {
             return;
         }
 

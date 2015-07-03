@@ -28,6 +28,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
@@ -134,10 +136,8 @@ public final class Provisioner {
     }
 
     void ensureNotStaticCloudProvider(String action) {
-        String cloudProvider = props.get("CLOUD_PROVIDER");
-        if ("static".equals(cloudProvider)) {
-            echo(format("'static' CLOUD_PROVIDER can't '%s'", action));
-            exitWithError();
+        if (isStatic(props.get("CLOUD_PROVIDER"))) {
+            throw new CommandLineExitException(format("Cannot execute '%s' in static setup", action));
         }
     }
 
@@ -378,8 +378,7 @@ public final class Provisioner {
         bash.ssh(ip, "killall -9 java || true");
 
         echo("Starting Agent on: %s", ip);
-
-        if (props.isEC2()) {
+        if (isEC2(props.get("CLOUD_PROVIDER"))) {
             bash.ssh(ip, format(
                     "nohup hazelcast-simulator-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s "
                             + "> agent.out 2> agent.err < /dev/null &",
@@ -387,7 +386,6 @@ public final class Provisioner {
                     props.get("CLOUD_PROVIDER"),
                     props.get("CLOUD_IDENTITY"),
                     props.get("CLOUD_CREDENTIAL")));
-
         } else {
             bash.ssh(ip, format(
                     "nohup hazelcast-simulator-%s/bin/agent > agent.out 2> agent.err < /dev/null &",

@@ -40,9 +40,9 @@ public class Agent {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
+    String cloudProvider;
     String cloudIdentity;
     String cloudCredential;
-    String cloudProvider;
 
     // internal state
     volatile long lastUsed = System.currentTimeMillis();
