@@ -23,7 +23,7 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.tests.icache.helpers.ReadWriteICacheCounter;
+import com.hazelcast.simulator.tests.icache.helpers.ICacheReadWriteCounter;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheLoader;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheWriter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -66,7 +66,7 @@ public class ReadWriteICacheTest {
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private String basename;
-    private IList<ReadWriteICacheCounter> counters;
+    private IList<ICacheReadWriteCounter> counters;
     private MutableConfiguration<Integer, Integer> config;
     private Cache<Integer, Integer> cache;
 
@@ -109,8 +109,8 @@ public class ReadWriteICacheTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        ReadWriteICacheCounter total = new ReadWriteICacheCounter();
-        for (ReadWriteICacheCounter counter : counters) {
+        ICacheReadWriteCounter total = new ICacheReadWriteCounter();
+        for (ICacheReadWriteCounter counter : counters) {
             total.add(counter);
         }
         LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
@@ -121,9 +121,9 @@ public class ReadWriteICacheTest {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    private final class Worker extends AbstractWorker<Operation> {
 
-        private final ReadWriteICacheCounter counter = new ReadWriteICacheCounter();
+        private final ICacheReadWriteCounter counter = new ICacheReadWriteCounter();
 
         private Worker() {
             super(builder);
