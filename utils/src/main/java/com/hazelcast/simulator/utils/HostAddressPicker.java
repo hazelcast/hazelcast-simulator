@@ -15,45 +15,50 @@ public final class HostAddressPicker {
     }
 
     public static String pickHostAddress() {
-        NetworkInterface networkInterface = null;
+        Exception savedException = null;
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             String loopbackHost = null;
             while (interfaces.hasMoreElements()) {
-                networkInterface = interfaces.nextElement();
-                if (!networkInterface.isUp()) {
-                    continue;
-                }
-                if (networkInterface.isPointToPoint()) {
-                    continue;
-                }
-                if (!networkInterface.isLoopback()) {
-                    String candidateAddress = getHostAddressOrNull(networkInterface);
-                    if (candidateAddress != null) {
-                        return candidateAddress;
+                NetworkInterface networkInterface = null;
+                try {
+                    networkInterface = interfaces.nextElement();
+                    if (!networkInterface.isUp()) {
+                        continue;
                     }
-                } else {
-                    if (loopbackHost == null) {
-                        loopbackHost = getHostAddressOrNull(networkInterface);
+                    if (networkInterface.isPointToPoint()) {
+                        continue;
                     }
+                    if (!networkInterface.isLoopback()) {
+                        String candidateAddress = getHostAddressOrNull(networkInterface);
+                        if (candidateAddress != null) {
+                            return candidateAddress;
+                        }
+                    } else {
+                        if (loopbackHost == null) {
+                            loopbackHost = getHostAddressOrNull(networkInterface);
+                        }
+                    }
+                } catch (SocketException e) {
+                    StringBuilder sb = new StringBuilder("Error during pickHostAddress()");
+                    sb.append("\ndisplayName: ").append(networkInterface.getDisplayName());
+                    sb.append("\nname: ").append(networkInterface.getName());
+                    for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
+                        sb.append("\ninterfaceAddress: ").append(interfaceAddress.getAddress());
+                    }
+                    savedException = new IllegalStateException(sb.toString(), e);
                 }
             }
             if (loopbackHost != null) {
                 return loopbackHost;
             } else {
-                throw new IllegalStateException("Cannot find local host address");
+                if (savedException == null) {
+                    throw new IllegalStateException("Cannot find local host address");
+                }
+                throw new IllegalStateException("Cannot find local host address", savedException);
             }
         } catch (SocketException e) {
-            if (networkInterface == null) {
-                throw rethrow(e);
-            }
-            StringBuilder sb = new StringBuilder("Error during pickHostAddress()");
-            sb.append("\ndisplayName: ").append(networkInterface.getDisplayName());
-            sb.append("\nname: ").append(networkInterface.getName());
-            for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
-                sb.append("\ninterfaceAddress: ").append(interfaceAddress.getAddress());
-            }
-            throw new RuntimeException(sb.toString(), e);
+            throw rethrow(e);
         }
     }
 
