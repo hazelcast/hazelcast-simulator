@@ -20,13 +20,9 @@ public final class HostAddressPicker {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             String loopbackHost = null;
             while (interfaces.hasMoreElements()) {
-                NetworkInterface networkInterface = null;
+                NetworkInterface networkInterface = interfaces.nextElement();
                 try {
-                    networkInterface = interfaces.nextElement();
-                    if (!networkInterface.isUp()) {
-                        continue;
-                    }
-                    if (networkInterface.isPointToPoint()) {
+                    if (!checkInterface(networkInterface)) {
                         continue;
                     }
                     if (!networkInterface.isLoopback()) {
@@ -40,13 +36,7 @@ public final class HostAddressPicker {
                         }
                     }
                 } catch (SocketException e) {
-                    StringBuilder sb = new StringBuilder("Error during pickHostAddress()");
-                    sb.append("\ndisplayName: ").append(networkInterface.getDisplayName());
-                    sb.append("\nname: ").append(networkInterface.getName());
-                    for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
-                        sb.append("\ninterfaceAddress: ").append(interfaceAddress.getAddress());
-                    }
-                    savedException = new IllegalStateException(sb.toString(), e);
+                    savedException = getException(networkInterface, e);
                 }
             }
             if (loopbackHost != null) {
@@ -62,6 +52,16 @@ public final class HostAddressPicker {
         }
     }
 
+    private static boolean checkInterface(NetworkInterface networkInterface) throws SocketException {
+        if (!networkInterface.isUp()) {
+            return false;
+        }
+        if (networkInterface.isPointToPoint()) {
+            return false;
+        }
+        return true;
+    }
+
     private static String getHostAddressOrNull(NetworkInterface networkInterface) {
         Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
         while (addresses.hasMoreElements()) {
@@ -71,5 +71,17 @@ public final class HostAddressPicker {
             }
         }
         return null;
+    }
+
+    private static Exception getException(NetworkInterface networkInterface, SocketException e) {
+        Exception savedException;
+        StringBuilder sb = new StringBuilder("Error during pickHostAddress()");
+        sb.append("\ndisplayName: ").append(networkInterface.getDisplayName());
+        sb.append("\nname: ").append(networkInterface.getName());
+        for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
+            sb.append("\ninterfaceAddress: ").append(interfaceAddress.getAddress());
+        }
+        savedException = new IllegalStateException(sb.toString(), e);
+        return savedException;
     }
 }
