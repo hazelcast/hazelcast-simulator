@@ -94,7 +94,7 @@ public class MapTransactionContextConflictTest {
 
                     for (KeyIncrementPair p : potentialIncrements) {
                         long current = map.getForUpdate(p.key);
-                        map.put(p.key, current + p.inc);
+                        map.put(p.key, current + p.increment);
 
                         putIncrements.add(p);
                     }
@@ -103,7 +103,7 @@ public class MapTransactionContextConflictTest {
                     // Do local key increments if commit is successful
                     count.committed++;
                     for (KeyIncrementPair p : putIncrements) {
-                        localIncrements[p.key] += p.inc;
+                        localIncrements[p.key] += p.increment;
                     }
                 } catch (TransactionException e) {
 

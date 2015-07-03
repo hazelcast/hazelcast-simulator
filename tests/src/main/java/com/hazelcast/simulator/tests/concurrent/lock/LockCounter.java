@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class LockCounter implements Serializable {
 
     public long locked;
-    public long inced;
+    public long increased;
     public long unlocked;
 
     public LockCounter() {
@@ -13,7 +13,7 @@ public class LockCounter implements Serializable {
 
     public void add(LockCounter counter) {
         locked += counter.locked;
-        inced += counter.inced;
+        increased += counter.increased;
         unlocked += counter.unlocked;
     }
 
@@ -21,7 +21,7 @@ public class LockCounter implements Serializable {
     public String toString() {
         return "LockCounter{"
                 + "locked=" + locked
-                + ", inced=" + inced
+                + ", inced=" + increased
                 + ", unlocked=" + unlocked
                 + '}';
     }
