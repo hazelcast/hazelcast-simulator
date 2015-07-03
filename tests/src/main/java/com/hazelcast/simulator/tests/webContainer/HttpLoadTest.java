@@ -26,12 +26,10 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
-/*
-*
-* A Load producing HttpLoadTest test.  making http Put and Get requests,  the the serverIp address / port configured in the
-* properties.  each thread of this test represents a http client / "browser".
-*
-* */
+/**
+ * A load producing HTTP test. Making HTTP PUT and GET requests. The ip addresses and ports of the members are configured in the
+ * properties. Each thread of this test represents a HTTP client.
+ */
 public class HttpLoadTest {
 
     private static final ILogger LOGGER = Logger.getLogger(HttpLoadTest.class);
@@ -61,13 +59,14 @@ public class HttpLoadTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
     }
 
     private class Worker implements Runnable {
+
         private CookieStore cookieStore;
         private HttpClient client;
         private String baseRul = "http://" + serverIp + ":" + serverPort + "/";
@@ -83,9 +82,10 @@ public class HttpLoadTest {
 
             LOGGER.info(id + ": baseRul=" + baseRul + " cookie=" + cookieStore);
 
-            OperationSelectorBuilder operationSelectorBuilder = new OperationSelectorBuilder();
+            OperationSelectorBuilder<RequestType> operationSelectorBuilder = new OperationSelectorBuilder<RequestType>();
 
-            requestSelector = operationSelectorBuilder.addOperation(RequestType.GET_REQUEST, getRequestProb)
+            requestSelector = operationSelectorBuilder
+                    .addOperation(RequestType.GET_REQUEST, getRequestProb)
                     .addOperation(RequestType.PUT_REQUEST, postRequestProb)
                     .build();
 
@@ -110,15 +110,15 @@ public class HttpLoadTest {
                             int val = random.nextInt();
                             res = putRequest("key/" + key + "/" + val);
                             putKeyValues.put(key, res);
-
                             break;
 
                         case GET_REQUEST:
                             res = getRequest("key/" + key);
-
                             assertEquals(id + ": not what i put", res, putKeyValues.get(key));
-
                             break;
+
+                        default:
+                            throw new UnsupportedOperationException();
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
