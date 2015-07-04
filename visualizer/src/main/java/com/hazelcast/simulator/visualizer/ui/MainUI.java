@@ -105,6 +105,7 @@ public final class MainUI extends JFrame {
 
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(new ActionListener() {
+            @edu.umd.cs.findbugs.annotations.SuppressFBWarnings({"DM_EXIT"})
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.exit(0);

@@ -4,6 +4,7 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -86,6 +87,7 @@ class WorkerSocketProcessor {
     }
 
     // create a new socket for every request to avoid dependency on the state of a socket so nasty stuff can be done
+    @SuppressFBWarnings({"DM_EXIT"})
     @SuppressWarnings("unchecked")
     private <E> E execute(String service, Object... args) throws Exception {
         Socket socket = new Socket(InetAddress.getByName(null), WorkerJvmManager.PORT);
