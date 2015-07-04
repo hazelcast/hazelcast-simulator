@@ -8,7 +8,6 @@ import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.Partition;
-import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
@@ -30,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
@@ -96,8 +94,8 @@ public class SyntheticTest {
     private class Worker implements IWorker, ExecutionCallback<Object> {
 
         // these fields will be injected by the TestContainer
-        TestContext testContext;
-        IntervalProbe intervalProbe;
+        public TestContext testContext;
+        public IntervalProbe intervalProbe;
 
         private final List<Integer> partitionSequence = new ArrayList<Integer>();
         private final List<ICompletableFuture> futureList = new ArrayList<ICompletableFuture>(syncFrequency);
@@ -124,8 +122,6 @@ public class SyntheticTest {
                 clientInvocationService = hazelcastClientProxy.client.getInvocationService();
                 clientPartitionService = getObjectFromField(partitionService, "partitionService");
             } else {
-                Node node = getNode(targetInstance);
-
                 operationService = HazelcastTestUtils.getOperationService(targetInstance);
                 clientInvocationService = null;
                 clientPartitionService = null;
