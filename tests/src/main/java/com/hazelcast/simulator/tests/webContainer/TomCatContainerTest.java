@@ -15,18 +15,17 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 * */
 public class TomCatContainerTest {
 
-    public String basename = this.getClass().getSimpleName();
+    public String basename = TomCatContainerTest.class.getSimpleName();
     public int port = 6555;
     public String webAppPath = "webapp";
     public String configXml = "tomcat-hz.xml";
 
-    private TomcatContainer tomcat;
     private TestContext testContext;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        tomcat = new TomcatContainer(port, webAppPath, configXml);
+        new TomcatContainer(port, webAppPath, configXml);
     }
 
     @Run
