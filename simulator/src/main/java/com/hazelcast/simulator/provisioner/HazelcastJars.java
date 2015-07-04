@@ -2,11 +2,10 @@ package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.provisioner.git.GitSupport;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.FileUtilsException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -101,11 +100,8 @@ public class HazelcastJars {
                 String mavenMetadata;
                 try {
                     mavenMetadata = getText(mavenMetadataUrl);
-                } catch (FileNotFoundException e) {
-                    throw new CommandLineExitException("Failed to load " + artifact + "-" + version
-                            + ", because " + mavenMetadataUrl + " was not found");
-                } catch (IOException e) {
-                    throw new CommandLineExitException("Could not load " + mavenMetadataUrl);
+                } catch (FileUtilsException e) {
+                    throw new CommandLineExitException("Could not load " + mavenMetadataUrl, e);
                 }
 
                 LOGGER.debug(mavenMetadata);

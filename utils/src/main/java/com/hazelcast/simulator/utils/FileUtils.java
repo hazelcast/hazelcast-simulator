@@ -25,7 +25,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,8 +33,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Collections;
@@ -49,6 +46,9 @@ import static java.lang.String.format;
 public final class FileUtils {
 
     static final String USER_HOME = System.getProperty("user.home");
+
+    private static final int READ_BUFFER_SIZE = 8192;
+    private static final int COPY_BUFFER_SIZE = 1024;
 
     private static final Logger LOGGER = Logger.getLogger(FileUtils.class);
     private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-_]+$");
@@ -81,8 +81,8 @@ public final class FileUtils {
 
     public static File newFile(String... items) {
         File file = newFile(items[0]);
-        for (int k = 1; k < items.length; k++) {
-            file = new File(file, items[k]);
+        for (int i = 1; i < items.length; i++) {
+            file = new File(file, items[i]);
         }
         return file;
     }
@@ -90,46 +90,40 @@ public final class FileUtils {
     public static void writeObject(Object o, File file) {
         File tmpFile = new File(file.getParent(), file.getName() + ".tmp");
 
-        FileOutputStream fileOutputStream = null;
+        FileOutputStream stream = null;
+        ObjectOutputStream outputStream = null;
         try {
-            fileOutputStream = new FileOutputStream(tmpFile);
-            ObjectOutputStream objectOutputStream = null;
-            try {
-                objectOutputStream = new ObjectOutputStream(fileOutputStream);
-                objectOutputStream.writeObject(o);
-            } finally {
-                closeQuietly(objectOutputStream);
-            }
+            stream = new FileOutputStream(tmpFile);
+            outputStream = new ObjectOutputStream(stream);
+            outputStream.writeObject(o);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FileUtilsException(e);
         } finally {
-            closeQuietly(fileOutputStream);
+            closeQuietly(outputStream);
+            closeQuietly(stream);
         }
 
         if (!tmpFile.renameTo(file)) {
-            throw new RuntimeException(
-                    format("Could not rename [%s] to [%s]", tmpFile.getAbsolutePath(), file.getAbsolutePath()));
+            throw new FileUtilsException(format("Could not rename [%s] to [%s]",
+                    tmpFile.getAbsolutePath(), file.getAbsolutePath()));
         }
     }
 
     @SuppressWarnings("unchecked")
     public static <E> E readObject(File file) {
-        FileInputStream fileInputStream = null;
+        FileInputStream stream = null;
+        ObjectInputStream inputStream = null;
         try {
-            fileInputStream = new FileInputStream(file);
-            ObjectInputStream objectInputStream = null;
-            try {
-                objectInputStream = new ObjectInputStream(fileInputStream);
-                return (E) objectInputStream.readObject();
-            } finally {
-                closeQuietly(objectInputStream);
-            }
+            stream = new FileInputStream(file);
+            inputStream = new ObjectInputStream(stream);
+            return (E) inputStream.readObject();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FileUtilsException(e);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new FileUtilsException(e);
         } finally {
-            closeQuietly(fileInputStream);
+            closeQuietly(inputStream);
+            closeQuietly(stream);
         }
     }
 
@@ -142,17 +136,21 @@ public final class FileUtils {
             throw new NullPointerException("file can't be null");
         }
 
+        FileOutputStream stream = null;
+        OutputStreamWriter streamWriter = null;
+        BufferedWriter writer = null;
         try {
-            FileOutputStream stream = new FileOutputStream(file);
-            try {
-                Writer writer = new BufferedWriter(new OutputStreamWriter(stream));
-                writer.write(text);
-                writer.close();
-            } finally {
-                closeQuietly(stream);
-            }
+            stream = new FileOutputStream(file);
+            streamWriter = new OutputStreamWriter(stream);
+            writer = new BufferedWriter(streamWriter);
+            writer.write(text);
+            writer.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FileUtilsException(e);
+        } finally {
+            closeQuietly(writer);
+            closeQuietly(streamWriter);
+            closeQuietly(stream);
         }
     }
 
@@ -168,17 +166,47 @@ public final class FileUtils {
             throw new NullPointerException("File can't be null");
         }
 
+        FileOutputStream stream = null;
+        OutputStreamWriter streamWriter = null;
+        BufferedWriter writer = null;
         try {
-            FileOutputStream stream = new FileOutputStream(file, true);
+            stream = new FileOutputStream(file, true);
+            streamWriter = new OutputStreamWriter(stream);
+            writer = new BufferedWriter(streamWriter);
+            writer.append(text);
+            writer.close();
+        } catch (IOException e) {
+            throw new FileUtilsException("Could not append text", e);
+        } finally {
+            closeQuietly(writer);
+            closeQuietly(streamWriter);
+            closeQuietly(stream);
+        }
+    }
+
+    public static String getText(String url) {
+        try {
+            URL website = new URL(url);
+            URLConnection connection = website.openConnection();
+
+            InputStreamReader streamReader = null;
+            BufferedReader reader = null;
             try {
-                Writer writer = new BufferedWriter(new OutputStreamWriter(stream));
-                writer.write(text);
-                writer.close();
+                streamReader = new InputStreamReader(connection.getInputStream());
+                reader = new BufferedReader(streamReader);
+
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = reader.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                return response.toString();
             } finally {
-                closeQuietly(stream);
+                closeQuietly(reader);
+                closeQuietly(streamReader);
             }
         } catch (IOException e) {
-            throw new CommandLineExitException("Could not append text", e);
+            throw new FileUtilsException(e);
         }
     }
 
@@ -186,49 +214,27 @@ public final class FileUtils {
         return fileAsText(new File(filePath));
     }
 
-    public static String getText(String url) throws IOException {
-        URL website = new URL(url);
-        URLConnection connection = website.openConnection();
-
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-            StringBuilder response = new StringBuilder();
-            String inputLine;
-
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-            }
-
-            in.close();
-
-            return response.toString();
-        } finally {
-            closeQuietly(in);
-        }
-    }
-
     public static String fileAsText(File file) {
         FileInputStream stream = null;
+        InputStreamReader streamReader = null;
+        BufferedReader reader = null;
         try {
             stream = new FileInputStream(file);
-            Reader reader = null;
-            try {
-                reader = new BufferedReader(new InputStreamReader(stream));
-                StringBuilder builder = new StringBuilder();
-                char[] buffer = new char[8192];
-                int read;
-                while ((read = reader.read(buffer, 0, buffer.length)) > 0) {
-                    builder.append(buffer, 0, read);
-                }
-                return builder.toString();
-            } finally {
-                closeQuietly(reader);
+            streamReader = new InputStreamReader(stream);
+            reader = new BufferedReader(streamReader);
+
+            StringBuilder builder = new StringBuilder();
+            char[] buffer = new char[READ_BUFFER_SIZE];
+            int read;
+            while ((read = reader.read(buffer, 0, buffer.length)) > 0) {
+                builder.append(buffer, 0, read);
             }
+            return builder.toString();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FileUtilsException(e);
         } finally {
+            closeQuietly(reader);
+            closeQuietly(streamReader);
             closeQuietly(stream);
         }
     }
@@ -236,12 +242,12 @@ public final class FileUtils {
     public static void deleteQuiet(File file) {
         try {
             delete(file);
-        } catch (IOException ignored) {
+        } catch (Exception ignored) {
             EmptyStatement.ignore(ignored);
         }
     }
 
-    public static void delete(File file) throws IOException {
+    public static void delete(File file) {
         if (!file.exists()) {
             return;
         }
@@ -257,7 +263,7 @@ public final class FileUtils {
         }
 
         if (!file.delete()) {
-            throw new FileNotFoundException("Failed to delete file: " + file);
+            throw new FileUtilsException("Failed to delete file: " + file);
         }
     }
 
@@ -273,10 +279,10 @@ public final class FileUtils {
         if (!file.exists()) {
             try {
                 if (!file.createNewFile()) {
-                    throw new RuntimeException("Could not create file: " + file.getAbsolutePath());
+                    throw new FileUtilsException("Could not create file: " + file.getAbsolutePath());
                 }
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new FileUtilsException(e);
             }
         }
     }
@@ -291,27 +297,27 @@ public final class FileUtils {
         }
 
         if (!dir.mkdirs()) {
-            throw new RuntimeException("Could not create directory: " + dir.getAbsolutePath());
+            throw new FileUtilsException("Could not create directory: " + dir.getAbsolutePath());
         }
     }
 
-    private static void copy(InputStream in, OutputStream out) throws IOException {
-        byte[] buffer = new byte[1024];
-        while (true) {
-            int readCount = in.read(buffer);
-            if (readCount < 0) {
-                break;
-            }
-            out.write(buffer, 0, readCount);
-        }
-    }
-
-    static void copy(File file, OutputStream out) throws IOException {
-        InputStream in = new FileInputStream(file);
+    public static void copy(File file, OutputStream outputStream) {
+        InputStream inputStream = null;
         try {
-            copy(in, out);
+            inputStream = new FileInputStream(file);
+
+            byte[] buffer = new byte[COPY_BUFFER_SIZE];
+            while (true) {
+                int readCount = inputStream.read(buffer);
+                if (readCount < 0) {
+                    break;
+                }
+                outputStream.write(buffer, 0, readCount);
+            }
+        } catch (IOException e) {
+            throw new FileUtilsException(e);
         } finally {
-            in.close();
+            closeQuietly(inputStream);
         }
     }
 
@@ -327,7 +333,7 @@ public final class FileUtils {
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
-            throw new CommandLineExitException(format("%s [%s] does not exist%n", desc, file));
+            throw new FileUtilsException(format("%s [%s] does not exist%n", desc, file));
         }
         return file;
     }
@@ -338,7 +344,7 @@ public final class FileUtils {
             file = newFile(baseDir + File.separator + "conf" + File.separator + fileName);
         }
         if (!file.exists()) {
-            throw new CommandLineExitException(format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
+            throw new FileUtilsException(format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
         }
         LOGGER.info("Loading " + desc + ": " + file.getAbsolutePath());
 
@@ -346,7 +352,7 @@ public final class FileUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static List<File> getFilesFromClassPath(String classpath) throws IOException {
+    public static List<File> getFilesFromClassPath(String classpath) {
         if (classpath == null) {
             return Collections.EMPTY_LIST;
         }
@@ -358,7 +364,8 @@ public final class FileUtils {
             if (file.getName().contains("*")) {
                 File parent = file.getParentFile();
                 if (parent == null || !parent.isDirectory()) {
-                    throw new IOException(format("Could not find matching files for wildcard classpath %s", file.getName()));
+                    throw new FileUtilsException(format("Could not find matching files for wildcard classpath %s",
+                            file.getName()));
                 }
 
                 String regex = file.getName().replace("*", "(.*)");
@@ -373,8 +380,7 @@ public final class FileUtils {
             } else if (file.exists()) {
                 files.add(file);
             } else {
-                throw new CommandLineExitException(format(
-                        "Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
+                throw new FileUtilsException(format("Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
             }
         }
 
@@ -392,7 +398,7 @@ public final class FileUtils {
         try {
             Files.copy(sourceFile, targetFile);
         } catch (IOException e) {
-            throw new CommandLineExitException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
+            throw new FileUtilsException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
                     targetFile.getAbsolutePath()), e);
         }
     }
