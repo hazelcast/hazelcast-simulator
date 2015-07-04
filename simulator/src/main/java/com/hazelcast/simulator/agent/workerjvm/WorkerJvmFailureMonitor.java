@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -33,8 +34,9 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 
 public class WorkerJvmFailureMonitor {
+
+    private static final long LAST_SEEN_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(60);
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmFailureMonitor.class);
-    private static final int LAST_SEEN_TIMEOUT_MS = 60 * 1000;
 
     private final Agent agent;
     private final BlockingQueue<Failure> failureQueue = new LinkedBlockingQueue<Failure>();
@@ -79,13 +81,13 @@ public class WorkerJvmFailureMonitor {
     }
 
     private void detectInactivity(WorkerJvm jvm, List<Failure> failures) {
-        long currentMs = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
 
         if (jvm.oomeDetected) {
             return;
         }
 
-        if (currentMs - LAST_SEEN_TIMEOUT_MS > jvm.lastSeen) {
+        if (now - LAST_SEEN_TIMEOUT_MILLIS > jvm.lastSeen) {
             Failure failure = new Failure();
             failure.message = "Worker has not contacted agent for a too long period.";
             failure.type = Failure.Type.WORKER_TIMEOUT;
@@ -176,7 +178,10 @@ public class WorkerJvmFailureMonitor {
         // after the heap dump is done, and creating the heap dump can take a lot of time. And then the system could think there
         // is another problem (e.g. lack of inactivity; or timeouts). This hides the OOME.
         String[] hprofFiles = jvm.workerHome.list(new HProfExtFilter());
-        return hprofFiles.length > 0;
+        if (hprofFiles == null) {
+            return false;
+        }
+        return (hprofFiles.length > 0);
     }
 
     private void detectUnexpectedExit(WorkerJvm jvm, List<Failure> failures) {

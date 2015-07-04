@@ -25,6 +25,9 @@ public class HazelcastJARFinder {
 
     private File findHazelcastJar(File memberPathToTarget) {
         File[] files = memberPathToTarget.listFiles(new HazelcastFilenameFilter());
+        if (files == null) {
+            throw new CommandLineExitException("Hazelcast JARs not found!");
+        }
         checkIsSingleFile(files, memberPathToTarget);
         return files[0];
     }
