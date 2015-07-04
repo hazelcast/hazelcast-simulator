@@ -17,6 +17,7 @@ package com.hazelcast.simulator.probes.probes.impl;
 
 import com.hazelcast.simulator.probes.probes.ProbesResultXmlElements;
 import com.hazelcast.simulator.probes.probes.Result;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.HdrHistogram.Histogram;
 import org.apache.commons.codec.binary.Base64;
 
@@ -26,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
+@SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
 public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributionResult> {
 
     public static final String XML_TYPE = HdrLatencyDistributionResult.class.getSimpleName();

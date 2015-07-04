@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.util.EmptyStatement;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.io.PrintWriter;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 
+@SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
 public class WorkerJvmProcessOutputGobbler extends Thread {
 
     private final PrintWriter writer;

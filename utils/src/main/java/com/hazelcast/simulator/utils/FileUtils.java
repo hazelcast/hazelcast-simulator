@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.utils;
 
 import com.google.common.io.Files;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -43,6 +44,7 @@ import java.util.regex.Pattern;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static java.lang.String.format;
 
+@SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
 public final class FileUtils {
 
     static final String USER_HOME = System.getProperty("user.home");

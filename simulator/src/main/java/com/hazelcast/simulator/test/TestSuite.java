@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.utils.BindException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.File;
 import java.io.FileReader;
@@ -88,6 +89,7 @@ public class TestSuite implements Serializable {
         return createTestSuite(testPropertiesFile, testCases, propertiesOverrideString);
     }
 
+    @SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
     private static Properties loadProperties(File file) {
         FileReader reader = null;
         try {
