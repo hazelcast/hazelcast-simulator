@@ -10,10 +10,11 @@ import java.util.concurrent.TimeUnit;
 @MessageSpec(value = "oom", description = "Starts a new thread allocating memory in JVM heap indefinitely.")
 public class UseAllMemoryMessage extends RunnableMessage {
 
-    private static final Logger LOGGER = Logger.getLogger(UseAllMemoryMessage.class);
-    private static final List<Object> ALLOCATION_LIST = new ArrayList<Object>();
+    private static final int BUFFER_SIZE = 1000;
 
-    private final int bufferSize = 1000;
+    private static final List<Object> ALLOCATION_LIST = new ArrayList<Object>();
+    private static final Logger LOGGER = Logger.getLogger(UseAllMemoryMessage.class);
+
     private final int delay;
 
     public UseAllMemoryMessage(MessageAddress messageAddress, int delay) {
@@ -52,7 +53,7 @@ public class UseAllMemoryMessage extends RunnableMessage {
 
             private void allocateMemory() {
                 while (!interrupted()) {
-                    byte[] buff = new byte[bufferSize];
+                    byte[] buff = new byte[BUFFER_SIZE];
                     ALLOCATION_LIST.add(buff);
                     sleepMillisInterruptThread(delay);
                 }
