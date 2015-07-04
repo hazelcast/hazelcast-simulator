@@ -139,6 +139,6 @@ public class MapHeapHogWarmupTest {
                 .append(" (").append(totalFree).append(")")
                 .append("\nused = ").append(humanReadableByteCount(used, true)).append(" (").append(used).append(")")
                 .append("\nmax = ").append(humanReadableByteCount(max, true)).append(" (").append(max).append(")")
-                .append(format("\nusedOfMax = %.2f%%", usedOfMax));
+                .append('\n').append(format("usedOfMax = %.2f%%", usedOfMax));
     }
 }
