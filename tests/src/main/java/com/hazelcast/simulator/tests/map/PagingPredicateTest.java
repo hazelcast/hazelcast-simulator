@@ -37,7 +37,7 @@ public class PagingPredicateTest {
     public boolean useIndex;
     public int pageSize = 10000;
     public String innerPredicateQuery = "salary < 900";
-    public int maxPage = (int) ((keyCount / pageSize) * 0.9);
+    public int maxPage = (int) (((float) keyCount / pageSize) * 0.9);
     public int maxPredicateReuseCount = 100;
     public boolean sequentialWorker = true;
 
