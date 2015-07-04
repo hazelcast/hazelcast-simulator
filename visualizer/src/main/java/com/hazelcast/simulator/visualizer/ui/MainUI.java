@@ -17,6 +17,7 @@ package com.hazelcast.simulator.visualizer.ui;
 
 import com.hazelcast.simulator.visualizer.data.Model;
 import com.hazelcast.simulator.visualizer.io.ResultParserWorker;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jfree.ui.ExtensionFileFilter;
 
 import javax.swing.*;
@@ -105,7 +106,7 @@ public final class MainUI extends JFrame {
 
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(new ActionListener() {
-            @edu.umd.cs.findbugs.annotations.SuppressFBWarnings({"DM_EXIT"})
+            @SuppressFBWarnings({"DM_EXIT"})
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.exit(0);
