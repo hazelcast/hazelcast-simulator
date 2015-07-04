@@ -15,10 +15,6 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -40,7 +36,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static junit.framework.Assert.assertTrue;
 
 /**
@@ -61,8 +57,7 @@ public class CacheLoaderTest {
     public boolean waitForLoadAllFutureCompletion = true;
 
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
-    private CacheManager cacheManager;
+    private HazelcastInstance hazelcastInstance;
     private String basename;
 
     private MutableConfiguration config;
@@ -72,18 +67,10 @@ public class CacheLoaderTest {
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+        hazelcastInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
 
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        }
+        CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
         config = new MutableConfiguration();
         config.setReadThrough(true);
@@ -129,7 +116,7 @@ public class CacheLoaderTest {
                 }
             }
             RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
-            targetInstance.getList(basename + "loaders").add(loader);
+            hazelcastInstance.getList(basename + "loaders").add(loader);
         }
     }
 
@@ -146,7 +133,7 @@ public class CacheLoaderTest {
             assertTrue(basename + ": cache should contain key " + k, cache.containsKey(k));
         }
 
-        IList<RecordingCacheLoader> loaders = targetInstance.getList(basename + "loaders");
+        IList<RecordingCacheLoader> loaders = hazelcastInstance.getList(basename + "loaders");
 
         boolean[] loaded = new boolean[keyCount];
         Arrays.fill(loaded, false);

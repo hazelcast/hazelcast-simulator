@@ -16,10 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
@@ -45,14 +41,14 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 /**
- * In This tests we a putting and getting to/from a cache using an Expiry Policy
- * the expiryDuration can be configured
- * we Verify that the cache is empty and items have expired
+ * In this tests we a putting and getting to/from a cache using an expiry policy.
+ * The expiryDuration can be configured.
+ * We verify that the cache is empty and items have expired.
  */
 public class ExpiryTest {
 
@@ -77,7 +73,7 @@ public class ExpiryTest {
     public int performanceUpdateFrequency = 10000;
 
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
+    private HazelcastInstance hazelcastInstance;
     private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     private AtomicLong operations = new AtomicLong();
     private CacheManager cacheManager;
@@ -89,18 +85,10 @@ public class ExpiryTest {
     @Setup
     public void setup(TestContext textConTx) {
         testContext = textConTx;
-        targetInstance = testContext.getTargetInstance();
+        hazelcastInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
 
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        }
+        cacheManager = createCacheManager(hazelcastInstance);
         expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
 
         config.setName(basename);
@@ -167,7 +155,7 @@ public class ExpiryTest {
                 iteration++;
             }
             operations.addAndGet(iteration % performanceUpdateFrequency);
-            targetInstance.getList(basename).add(counter);
+            hazelcastInstance.getList(basename).add(counter);
         }
     }
 
@@ -179,7 +167,7 @@ public class ExpiryTest {
     @Verify(global = true)
     public void globalVerify() throws Exception {
 
-        IList<Counter> results = targetInstance.getList(basename);
+        IList<Counter> results = hazelcastInstance.getList(basename);
         Counter totalCounter = new Counter();
         for (Counter counter : results) {
             totalCounter.add(counter);

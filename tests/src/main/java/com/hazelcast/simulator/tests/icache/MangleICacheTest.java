@@ -1,9 +1,5 @@
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
@@ -13,6 +9,7 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.icache.helpers.CacheUtils;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheOperationCounter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
@@ -21,8 +18,6 @@ import javax.cache.Cache;
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
-
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 
 /**
  * In this tests we are intentionally creating, destroying, closing and using cache managers and their caches.
@@ -60,13 +55,13 @@ public class MangleICacheTest {
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance targetInstance;
+    private HazelcastInstance hazelcastInstance;
     private IList<ICacheOperationCounter> results;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        targetInstance = testContext.getTargetInstance();
-        results = targetInstance.getList(basename);
+        hazelcastInstance = testContext.getTargetInstance();
+        results = hazelcastInstance.getList(basename);
 
         operationSelectorBuilder.addOperation(Operation.CREATE_CACHE_MANAGER, createCacheManagerProb)
                 .addOperation(Operation.CLOSE_CACHE_MANAGER, cacheManagerCloseProb)
@@ -100,6 +95,7 @@ public class MangleICacheTest {
 
         public Worker() {
             super(operationSelectorBuilder);
+
             config.setName(basename);
             createNewCacheManager();
         }
@@ -228,27 +224,7 @@ public class MangleICacheTest {
                 currentCachingProvider = cacheManager.getCachingProvider();
                 cacheManager.close();
             }
-            if (isMemberNode(targetInstance)) {
-                cacheManager = createServerCacheManager((HazelcastServerCachingProvider) currentCachingProvider);
-            } else {
-                cacheManager = createClientCacheManager((HazelcastClientCachingProvider) currentCachingProvider);
-            }
-        }
-
-        private HazelcastServerCacheManager createServerCacheManager(HazelcastServerCachingProvider currentCachingProvider) {
-            HazelcastServerCachingProvider hcp = currentCachingProvider;
-            if (hcp == null) {
-                hcp = new HazelcastServerCachingProvider();
-            }
-            return new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        }
-
-        private HazelcastClientCacheManager createClientCacheManager(HazelcastClientCachingProvider currentCachingProvider) {
-            HazelcastClientCachingProvider hcp = currentCachingProvider;
-            if (hcp == null) {
-                hcp = new HazelcastClientCachingProvider();
-            }
-            return new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
+            cacheManager = CacheUtils.createCacheManager(hazelcastInstance, currentCachingProvider);
         }
 
         private Cache<Integer, Integer> getCacheIfExists(int cacheNumber) {

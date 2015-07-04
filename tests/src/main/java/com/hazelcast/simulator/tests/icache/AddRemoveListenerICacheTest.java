@@ -1,9 +1,5 @@
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
@@ -26,7 +22,7 @@ import javax.cache.CacheManager;
 import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 
 /**
  * In this test we concurrently add remove cache listeners while putting and getting from the cache.
@@ -67,18 +63,10 @@ public class AddRemoveListenerICacheTest {
 
     @Setup
     public void setup(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
-        results = targetInstance.getList(basename);
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        results = hazelcastInstance.getList(basename);
 
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        }
+        cacheManager = createCacheManager(hazelcastInstance);
 
         config.setName(basename);
         cacheManager.createCache(basename, config);

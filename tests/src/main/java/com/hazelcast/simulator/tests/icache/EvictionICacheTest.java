@@ -1,10 +1,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
@@ -24,17 +20,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static org.junit.Assert.fail;
 
-/*
-* This test is expecting to work with an ICache which has a max-size policy and an eviction-policy
-* defined.  the run body of the test simply puts random key value pairs to the ICache, and checks
-* the size of the ICache has not grown above the defined max size + a configurable size margin.
-* As the max-size policy is not a hard limit we use a configurable size margin in the verification
-* of the cache size.  The test also logs the global max size of the ICache observed from all test
-* participants, providing no assertion errors were throw.
-* */
+/**
+ * This test is expecting to work with an ICache which has a max-size policy and an eviction-policy
+ * defined. The run body of the test simply puts random key value pairs to the ICache, and checks
+ * the size of the ICache has not grown above the defined max size + a configurable size margin.
+ * As the max-size policy is not a hard limit we use a configurable size margin in the verification
+ * of the cache size. The test also logs the global max size of the ICache observed from all test
+ * participants, providing no assertion errors were throw.
+ */
 public class EvictionICacheTest {
 
     private enum Operation {
@@ -62,7 +58,7 @@ public class EvictionICacheTest {
 
     private String id;
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
+    private HazelcastInstance hazelcastInstance;
     private byte[] value;
     private ICache<Object, Object> cache;
     private int configuredMaxSize;
@@ -74,27 +70,18 @@ public class EvictionICacheTest {
     private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     @Setup
-    public void setup(TestContext testContex) throws Exception {
-        this.testContext = testContex;
-        targetInstance = testContext.getTargetInstance();
-        partitionCount = targetInstance.getPartitionService().getPartitions().size();
+    public void setup(TestContext testContext) throws Exception {
+        this.testContext = testContext;
+        hazelcastInstance = this.testContext.getTargetInstance();
+        partitionCount = hazelcastInstance.getPartitionService().getPartitions().size();
 
-        id = testContex.getTestId();
+        id = testContext.getTestId();
         value = new byte[valueSize];
         Random random = new Random();
         random.nextBytes(value);
 
-        CacheManager cacheManager;
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(),
-                    null);
+        CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
-        }
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
 
         CacheConfig config = cache.getConfiguration(CacheConfig.class);
@@ -112,8 +99,10 @@ public class EvictionICacheTest {
                 .calculateMaxPartitionSize(configuredMaxSize, partitionCount);
         estimatedMaxSize = maxEstimatedPartitionSize * partitionCount;
 
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addOperation(Operation.PUT_ASYNC, putAsyncProb)
-                                .addOperation(Operation.PUT_ALL, putAllProb);
+        operationSelectorBuilder
+                .addOperation(Operation.PUT, putProb)
+                .addOperation(Operation.PUT_ASYNC, putAsyncProb)
+                .addOperation(Operation.PUT_ALL, putAllProb);
     }
 
     @Run
@@ -168,15 +157,15 @@ public class EvictionICacheTest {
                             + " estimatedMaxSize=" + estimatedMaxSize);
                 }
             }
-            targetInstance.getList(basename + "max").add(max);
-            targetInstance.getList(basename + "counter").add(counter);
+            hazelcastInstance.getList(basename + "max").add(max);
+            hazelcastInstance.getList(basename + "counter").add(counter);
         }
 
     }
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-        IList<Integer> results = targetInstance.getList(basename + "max");
+        IList<Integer> results = hazelcastInstance.getList(basename + "max");
         int observedMaxSize = 0;
         for (int m : results) {
             if (observedMaxSize < m) {
@@ -186,7 +175,7 @@ public class EvictionICacheTest {
         LOGGER.info(id + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
                 + " observedMaxSize=" + observedMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
 
-        IList<Counter> counters = targetInstance.getList(basename + "counter");
+        IList<Counter> counters = hazelcastInstance.getList(basename + "counter");
         Counter total = new Counter();
         for (Counter c : counters) {
             total.add(c);

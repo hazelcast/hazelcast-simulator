@@ -32,7 +32,7 @@ import javax.cache.Cache;
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
 
-import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCacheManager;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 
 /**
  * In this test we are concurrently creating, deleting, destroying and putting to a cache.
@@ -65,7 +65,7 @@ public class CreateDestroyICacheTest {
         hazelcastInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
 
-        cacheManager = getCacheManager(hazelcastInstance);
+        cacheManager = createCacheManager(hazelcastInstance);
 
         builder.addOperation(Operation.CREATE_CACHE, createCacheProb)
                 .addOperation(Operation.PUT_CACHE, putCacheProb)

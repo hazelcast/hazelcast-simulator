@@ -1,10 +1,5 @@
 package com.hazelcast.simulator.tests.icache;
 
-
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
@@ -26,7 +21,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 
 /**
  * A performance test for the cache. The key is integer and value is a integer
@@ -46,7 +41,6 @@ public class PerformanceICacheTest {
     private Cache<Object, Object> cache;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -59,18 +53,9 @@ public class PerformanceICacheTest {
         }
 
         this.testContext = testContext;
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
 
-        targetInstance = testContext.getTargetInstance();
-        CacheManager cacheManager;
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        }
+        CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
         CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
         config.setName(basename);

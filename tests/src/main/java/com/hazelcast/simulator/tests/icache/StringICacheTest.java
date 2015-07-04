@@ -15,10 +15,6 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
@@ -40,9 +36,9 @@ import javax.cache.CacheManager;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
 public class StringICacheTest {
@@ -71,7 +67,7 @@ public class StringICacheTest {
     private String[] values;
     private final AtomicLong operations = new AtomicLong();
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
+    private HazelcastInstance hazelcastInstance;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -84,18 +80,9 @@ public class StringICacheTest {
         }
 
         this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+        hazelcastInstance = testContext.getTargetInstance();
 
-        CacheManager cacheManager;
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        }
+        CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
         CacheConfig<String, String> config = new CacheConfig<String, String>();
         config.setName(basename);
@@ -116,7 +103,7 @@ public class StringICacheTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
+        waitClusterSize(LOGGER, hazelcastInstance, minNumberOfMembers);
 
         keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = generateStrings(valueCount, valueLength);

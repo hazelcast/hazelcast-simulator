@@ -34,7 +34,7 @@ import javax.cache.CacheManager;
 import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableConfiguration;
 
-import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCacheManager;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -89,7 +89,7 @@ public class ReadWriteICacheTest {
         config.setCacheLoaderFactory(FactoryBuilder.factoryOf(loader));
         config.setCacheWriterFactory(FactoryBuilder.factoryOf(writer));
 
-        CacheManager cacheManager = getCacheManager(hazelcastInstance);
+        CacheManager cacheManager = createCacheManager(hazelcastInstance);
         cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
 

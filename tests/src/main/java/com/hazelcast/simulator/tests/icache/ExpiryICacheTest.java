@@ -16,10 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
@@ -40,7 +36,7 @@ import javax.cache.expiry.ExpiryPolicy;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static com.hazelcast.simulator.utils.CommonUtils.humanReadableByteCount;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
@@ -56,26 +52,15 @@ public class ExpiryICacheTest {
     public int performanceUpdateFrequency = 10000;
 
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
     private ICache<Object, Object> cache;
-    private long baseLineUsed;
     private final ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(Duration.ONE_MINUTE);
     private final AtomicLong operations = new AtomicLong();
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
-        CacheManager cacheManager;
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        }
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
         CacheConfig<Long, Long> config = new CacheConfig<Long, Long>();
         config.setName(basename);
@@ -110,11 +95,12 @@ public class ExpiryICacheTest {
     }
 
     private class Worker implements Runnable {
+
         @Override
         public void run() {
             long free = Runtime.getRuntime().freeMemory();
             long total = Runtime.getRuntime().totalMemory();
-            baseLineUsed = total - free;
+            long baseLineUsed = total - free;
             long maxBytes = Runtime.getRuntime().maxMemory();
             double usedOfMax = 100.0 * ((double) baseLineUsed / (double) maxBytes);
 

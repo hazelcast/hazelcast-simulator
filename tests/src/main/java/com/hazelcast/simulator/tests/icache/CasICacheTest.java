@@ -1,9 +1,5 @@
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
@@ -25,7 +21,7 @@ import javax.cache.CacheManager;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -49,29 +45,16 @@ public class CasICacheTest {
     private final AtomicLong operations = new AtomicLong();
     private IList<long[]> resultsPerWorker;
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
-    private CacheManager cacheManager;
     private Cache<Integer, Long> cache;
-    private String basename;
-
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
-        basename = testContext.getTestId();
-        resultsPerWorker = targetInstance.getList(basename);
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        String basename = testContext.getTestId();
+        resultsPerWorker = hazelcastInstance.getList(basename);
 
-
-        if (isMemberNode(targetInstance)) {
-            HazelcastServerCachingProvider hcp = new HazelcastServerCachingProvider();
-            cacheManager = new HazelcastServerCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        } else {
-            HazelcastClientCachingProvider hcp = new HazelcastClientCachingProvider();
-            cacheManager = new HazelcastClientCacheManager(
-                    hcp, targetInstance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-        }
+        CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
         CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
         config.setName(basename);
@@ -111,9 +94,9 @@ public class CasICacheTest {
     public void verify() throws Exception {
         long[] amount = new long[keyCount];
 
-        for (long[] incrments : resultsPerWorker) {
+        for (long[] increments : resultsPerWorker) {
             for (int i = 0; i < keyCount; i++) {
-                amount[i] += incrments[i];
+                amount[i] += increments[i];
             }
         }
 

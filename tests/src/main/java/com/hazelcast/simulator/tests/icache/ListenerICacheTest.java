@@ -29,7 +29,7 @@ import java.io.Serializable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCacheManager;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static junit.framework.Assert.assertEquals;
 
@@ -80,7 +80,7 @@ public class ListenerICacheTest {
         hazelcastInstance = testContext.getTargetInstance();
         basename = testContext.getTestId();
 
-        cacheManager = getCacheManager(hazelcastInstance);
+        cacheManager = createCacheManager(hazelcastInstance);
 
         CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
         config.setName(basename);
