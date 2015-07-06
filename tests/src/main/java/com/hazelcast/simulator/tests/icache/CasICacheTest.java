@@ -46,12 +46,13 @@ public class CasICacheTest {
     private IList<long[]> resultsPerWorker;
     private TestContext testContext;
     private Cache<Integer, Long> cache;
+    private String basename;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        String basename = testContext.getTestId();
+        basename = testContext.getTestId();
         resultsPerWorker = hazelcastInstance.getList(basename);
 
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
