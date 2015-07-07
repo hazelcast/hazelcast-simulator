@@ -37,6 +37,7 @@ public class CasICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(CasICacheTest.class);
 
+    public String basename;
     public int threadCount = 10;
     public int keyCount = 1000;
     public int logFrequency = 10000;
@@ -51,7 +52,7 @@ public class CasICacheTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        String basename = testContext.getTestId();
+        basename = testContext.getTestId();
         resultsPerWorker = hazelcastInstance.getList(basename);
 
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
