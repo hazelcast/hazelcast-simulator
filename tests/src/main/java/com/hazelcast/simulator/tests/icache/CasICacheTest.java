@@ -47,6 +47,7 @@ public class CasICacheTest {
     private IList<long[]> resultsPerWorker;
     private TestContext testContext;
     private Cache<Integer, Long> cache;
+    private String basename;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
