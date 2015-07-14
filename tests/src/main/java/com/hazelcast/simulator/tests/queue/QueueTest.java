@@ -27,7 +27,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Queue;
@@ -51,19 +50,20 @@ public class QueueTest {
     private IQueue<Long>[] queues;
 
     @Setup
+    @SuppressWarnings("unchecked")
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         totalCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalCounter");
         queues = new IQueue[queueLength];
-        String[] names = generateStringKeys(queueLength, basename + "-" + testContext.getTestId(), keyLocality, targetInstance);
-        for (int k = 0; k < queues.length; k++) {
-            queues[k] = targetInstance.getQueue(names[k]);
+        String[] names = generateStringKeys(basename + "-" + testContext.getTestId(), queueLength, keyLocality, targetInstance);
+        for (int i = 0; i < queues.length; i++) {
+            queues[i] = targetInstance.getQueue(names[i]);
         }
 
         for (IQueue<Long> queue : queues) {
-            for (int k = 0; k < messagesPerQueue; k++) {
+            for (int i = 0; i < messagesPerQueue; i++) {
                 queue.add(0L);
             }
         }
@@ -77,17 +77,6 @@ public class QueueTest {
         totalCounter.destroy();
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
-            for (int l = 0; l < threadsPerQueue; l++) {
-                spawner.spawn(new Worker(queueIndex));
-            }
-        }
-        spawner.awaitCompletion();
-    }
-
     @Verify
     public void verify() {
         long expected = totalCounter.get();
@@ -99,6 +88,17 @@ public class QueueTest {
         }
 
         assertEquals(expected, actual);
+    }
+
+    @Run
+    public void run() {
+        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+        for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
+            for (int i = 0; i < threadsPerQueue; i++) {
+                spawner.spawn(new Worker(queueIndex));
+            }
+        }
+        spawner.awaitCompletion();
     }
 
     private class Worker implements Runnable {

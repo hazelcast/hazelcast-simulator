@@ -1,29 +1,58 @@
 package com.hazelcast.simulator.tests.helpers;
 
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.GroupProperties;
-import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKey;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.isLocalKey;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class KeyUtilsTest {
 
     private static final int PARTITION_COUNT = 10;
 
-    @After
-    public void teardown() {
+    private static HazelcastInstance instance;
+    private static HazelcastInstance client;
+
+    @BeforeClass
+    public static void setUp() {
+        Config config = new Config();
+        config.setProperty(GroupProperties.PROP_PARTITION_COUNT, "" + PARTITION_COUNT);
+
+        instance = Hazelcast.newHazelcastInstance(config);
+        HazelcastInstance remoteInstance = Hazelcast.newHazelcastInstance(config);
+        warmUpPartitions(instance, remoteInstance);
+
+        ClientConfig clientconfig = new ClientConfig();
+        clientconfig.setProperty(GroupProperties.PROP_PARTITION_COUNT, "" + PARTITION_COUNT);
+
+        client = HazelcastClient.newHazelcastClient(clientconfig);
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        HazelcastClient.shutdownAll();
         Hazelcast.shutdownAll();
     }
 
@@ -33,7 +62,101 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateInt_singlePartition() {
+    public void generateIntKey_local_client() {
+        int key1 = generateIntKey(100, KeyLocality.LOCAL, client);
+        int key2 = generateIntKey(100, KeyLocality.LOCAL, client);
+
+        assertTrue(key1 != 0);
+        assertTrue(key2 != 0);
+        assertNotEquals(key1, key2);
+    }
+
+    @Test
+    public void generateIntKey_remote_client() {
+        int key1 = generateIntKey(100, KeyLocality.REMOTE, client);
+        int key2 = generateIntKey(100, KeyLocality.REMOTE, client);
+
+        assertTrue(key1 != 0);
+        assertTrue(key2 != 0);
+        assertNotEquals(key1, key2);
+    }
+
+    @Test
+    public void generateIntKey_local() {
+        int key1 = generateIntKey(100, KeyLocality.LOCAL, instance);
+        int key2 = generateIntKey(100, KeyLocality.LOCAL, instance);
+
+        assertTrue(key1 != 0);
+        assertTrue(key2 != 0);
+        assertNotEquals(key1, key2);
+        assertTrue(isLocalKey(instance, key1));
+        assertTrue(isLocalKey(instance, key2));
+    }
+
+    @Test
+    public void generateStringKey_local() {
+        String key1 = generateStringKey(100, KeyLocality.LOCAL, instance);
+        String key2 = generateStringKey(100, KeyLocality.LOCAL, instance);
+
+        assertNotNull(key1);
+        assertNotNull(key2);
+        assertTrue(!key1.isEmpty());
+        assertTrue(!key2.isEmpty());
+        assertNotEquals(key1, key2);
+        assertTrue(isLocalKey(instance, key1));
+        assertTrue(isLocalKey(instance, key2));
+    }
+
+    @Test
+    public void generateIntKey_remote() {
+        int key1 = generateIntKey(100, KeyLocality.REMOTE, instance);
+        int key2 = generateIntKey(100, KeyLocality.REMOTE, instance);
+
+        assertTrue(key1 != 0);
+        assertTrue(key2 != 0);
+        assertNotEquals(key1, key2);
+        assertFalse(isLocalKey(instance, key1));
+        assertFalse(isLocalKey(instance, key2));
+    }
+
+    @Test
+    public void generateStringKey_remote() {
+        String key1 = generateStringKey(100, KeyLocality.REMOTE, instance);
+        String key2 = generateStringKey(100, KeyLocality.REMOTE, instance);
+
+        assertNotNull(key1);
+        assertNotNull(key2);
+        assertTrue(!key1.isEmpty());
+        assertTrue(!key2.isEmpty());
+        assertNotEquals(key1, key2);
+        assertFalse(isLocalKey(instance, key1));
+        assertFalse(isLocalKey(instance, key2));
+    }
+
+    @Test
+    public void generateIntKey_random() {
+        int key1 = generateIntKey(100, KeyLocality.RANDOM, null);
+        int key2 = generateIntKey(100, KeyLocality.RANDOM, null);
+
+        assertTrue(key1 != 0);
+        assertTrue(key2 != 0);
+        assertNotEquals(key1, key2);
+    }
+
+    @Test
+    public void generateStringKey_random() {
+        String key1 = generateStringKey(100, KeyLocality.RANDOM, null);
+        String key2 = generateStringKey(100, KeyLocality.RANDOM, null);
+
+        assertNotNull(key1);
+        assertNotNull(key2);
+        assertTrue(!key1.isEmpty());
+        assertTrue(!key2.isEmpty());
+        assertNotEquals(key1, key2);
+    }
+
+    @Test
+    public void generateIntKey_singlePartition() {
         int key1 = generateIntKey(100, KeyLocality.SINGLE_PARTITION, null);
         int key2 = generateIntKey(100, KeyLocality.SINGLE_PARTITION, null);
 
@@ -42,7 +165,7 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateString_singlePartition() {
+    public void generateStringKey_singlePartition() {
         String key1 = generateStringKey(100, KeyLocality.SINGLE_PARTITION, null);
         String key2 = generateStringKey(100, KeyLocality.SINGLE_PARTITION, null);
 
@@ -51,22 +174,47 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateStringKeys_whenRandom_equalDistributionOverPartitions() throws InterruptedException {
-        Config config = new Config();
-        config.setProperty(GroupProperties.PROP_PARTITION_COUNT, "" + PARTITION_COUNT);
+    public void generateIntKeys_singlePartition() {
+        int[] keys = generateIntKeys(50, 100, KeyLocality.SINGLE_PARTITION, null);
 
-        HazelcastInstance hz = Hazelcast.newHazelcastInstance(config);
-        warmUpPartitions(hz);
+        assertEquals(50, keys.length);
+        for (int key : keys) {
+            assertEquals(0, key);
+        }
+    }
 
+    @Test
+    public void generateStringKeys_singlePartition() {
+        String[] keys = generateStringKeys(50, 100, KeyLocality.SINGLE_PARTITION, null);
+
+        assertEquals(50, keys.length);
+        for (String key : keys) {
+            assertEquals("", key);
+        }
+    }
+
+    @Test
+    public void generateStringKeys_singlePartition_withPrefix() {
+        String[] keys = generateStringKeys("test_", 10, 50, KeyLocality.SINGLE_PARTITION, instance);
+
+        assertEquals(10, keys.length);
+        for (String key : keys) {
+            assertTrue(key.startsWith("test_"));
+            assertEquals(50, key.length());
+        }
+    }
+
+    @Test
+    public void generateStringKeys_whenRandom_equalDistributionOverPartitions() {
         int keysPerPartition = 4;
         int keyCount = keysPerPartition * PARTITION_COUNT;
-        String[] keys = KeyUtils.generateStringKeys(keyCount, "foo", KeyLocality.RANDOM, hz);
+        String[] keys = KeyUtils.generateStringKeys("foo", keyCount, KeyLocality.RANDOM, instance);
 
         assertEquals(keyCount, keys.length);
 
         int[] countPerPartition = new int[PARTITION_COUNT];
         for (String key : keys) {
-            Partition partition = hz.getPartitionService().getPartition(key);
+            Partition partition = instance.getPartitionService().getPartition(key);
             countPerPartition[partition.getPartitionId()]++;
         }
 
@@ -76,16 +224,9 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateStringKeys_whenLocal_equalDistributionOverPartitions() throws InterruptedException {
-        Config config = new Config();
-        config.setProperty(GroupProperties.PROP_PARTITION_COUNT, "" + PARTITION_COUNT);
-
-        HazelcastInstance local = Hazelcast.newHazelcastInstance(config);
-        HazelcastInstance remote = Hazelcast.newHazelcastInstance(config);
-        warmUpPartitions(local, remote);
-
+    public void generateStringKeys_whenLocal_equalDistributionOverPartitions() {
         Map<Integer, Integer> countsPerPartition = new HashMap<Integer, Integer>();
-        for (Partition partition : local.getPartitionService().getPartitions()) {
+        for (Partition partition : instance.getPartitionService().getPartitions()) {
             if (partition.getOwner().localMember()) {
                 countsPerPartition.put(partition.getPartitionId(), 0);
             }
@@ -93,16 +234,19 @@ public class KeyUtilsTest {
 
         int keysPerPartition = 4;
         int keyCount = countsPerPartition.size() * keysPerPartition;
-        String[] keys = KeyUtils.generateStringKeys(keyCount, "foo", KeyLocality.LOCAL, local);
+        String[] keys = KeyUtils.generateStringKeys("foo", keyCount, KeyLocality.LOCAL, instance);
 
         assertEquals(keyCount, keys.length);
 
         for (String key : keys) {
-            Partition partition = local.getPartitionService().getPartition(key);
+            Partition partition = instance.getPartitionService().getPartition(key);
             Integer count = countsPerPartition.get(partition.getPartitionId());
             assertNotNull(count);
             countsPerPartition.put(partition.getPartitionId(), count + 1);
         }
+
+        String localKey = keys[0];
+        assertTrue(isLocalKey(instance, localKey));
 
         System.out.println(countsPerPartition);
         for (int count : countsPerPartition.values()) {
@@ -111,16 +255,9 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateStringKeys_whenRemote_equalDistributionOverPartitions() throws InterruptedException {
-        Config config = new Config();
-        config.setProperty(GroupProperties.PROP_PARTITION_COUNT, "" + PARTITION_COUNT);
-
-        HazelcastInstance local = Hazelcast.newHazelcastInstance(config);
-        HazelcastInstance remote = Hazelcast.newHazelcastInstance(config);
-        warmUpPartitions(local, remote);
-
+    public void generateStringKeys_whenRemote_equalDistributionOverPartitions() {
         Map<Integer, Integer> countsPerPartition = new HashMap<Integer, Integer>();
-        for (Partition partition : local.getPartitionService().getPartitions()) {
+        for (Partition partition : instance.getPartitionService().getPartitions()) {
             if (!partition.getOwner().localMember()) {
                 countsPerPartition.put(partition.getPartitionId(), 0);
             }
@@ -128,12 +265,12 @@ public class KeyUtilsTest {
 
         int keysPerPartition = 4;
         int keyCount = countsPerPartition.size() * keysPerPartition;
-        String[] keys = KeyUtils.generateStringKeys(keyCount, "foo", KeyLocality.REMOTE, local);
+        String[] keys = KeyUtils.generateStringKeys("foo", keyCount, KeyLocality.REMOTE, instance);
 
         assertEquals(keyCount, keys.length);
 
         for (String key : keys) {
-            Partition partition = local.getPartitionService().getPartition(key);
+            Partition partition = instance.getPartitionService().getPartition(key);
             Integer count = countsPerPartition.get(partition.getPartitionId());
             assertNotNull(count);
             countsPerPartition.put(partition.getPartitionId(), count + 1);
@@ -145,12 +282,12 @@ public class KeyUtilsTest {
         }
     }
 
-    private static void warmUpPartitions(HazelcastInstance... instances) throws InterruptedException {
+    private static void warmUpPartitions(HazelcastInstance... instances) {
         for (HazelcastInstance instance : instances) {
-            final PartitionService ps = instance.getPartitionService();
-            for (Partition partition : ps.getPartitions()) {
+            PartitionService partitionService = instance.getPartitionService();
+            for (Partition partition : partitionService.getPartitions()) {
                 while (partition.getOwner() == null) {
-                    Thread.sleep(10);
+                    sleepSeconds(1);
                 }
             }
         }
