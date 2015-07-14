@@ -26,10 +26,13 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Queue;
 
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static org.junit.Assert.assertEquals;
 
 public class QueueTest {
@@ -41,6 +44,7 @@ public class QueueTest {
     public int threadsPerQueue = 1;
     public int messagesPerQueue = 1;
     public String basename = this.getClass().getSimpleName();
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
 
     private TestContext testContext;
     private IAtomicLong totalCounter;
@@ -53,8 +57,9 @@ public class QueueTest {
 
         totalCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalCounter");
         queues = new IQueue[queueLength];
+        String[] names = generateStringKeys(queueLength, basename + "-" + testContext.getTestId(), keyLocality, targetInstance);
         for (int k = 0; k < queues.length; k++) {
-            queues[k] = targetInstance.getQueue(basename + "-" + testContext.getTestId() + "-" + k);
+            queues[k] = targetInstance.getQueue(names[k]);
         }
 
         for (IQueue<Long> queue : queues) {

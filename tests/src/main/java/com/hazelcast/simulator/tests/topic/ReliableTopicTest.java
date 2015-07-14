@@ -15,6 +15,7 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
@@ -40,6 +42,7 @@ public class ReliableTopicTest {
     public int topicCount = 10;
     public int threadCount = 3;
     public int listenersPerTopic = 2;
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
 
     private AtomicLong failures = new AtomicLong();
     private IAtomicLong totalMessagesSend;
@@ -56,9 +59,11 @@ public class ReliableTopicTest {
         topics = new ITopic[topicCount];
         listeners = new LinkedList<MessageListenerImpl>();
 
+        String[] names = generateStringKeys(topicCount, basename + "-" + testContext.getTestId(), keyLocality, targetInstance);
+
         int listenerIdCounter = 0;
         for (int i = 0; i < topics.length; i++) {
-            ITopic<MessageEntity> topic = targetInstance.getReliableTopic(basename + "-" + i);
+            ITopic<MessageEntity> topic = targetInstance.getReliableTopic(names[i]);
             topics[i] = topic;
             for (int l = 0; l < listenersPerTopic; l++) {
                 MessageListenerImpl topicListener = new MessageListenerImpl(listenerIdCounter);
@@ -203,7 +208,7 @@ public class ReliableTopicTest {
                 failures.incrementAndGet();
                 ExceptionReporter.report(testContext.getTestId(),
                         new RuntimeException(format("There is unexpected gap or equality between values. Expected %d, but was %d",
-                                expectedValue,  actualValue)));
+                                expectedValue, actualValue)));
             }
 
             values.put(threadId, actualValue);
