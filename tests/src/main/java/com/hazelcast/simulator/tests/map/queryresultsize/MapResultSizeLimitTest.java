@@ -36,9 +36,11 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
  *
  * You have to activate the query result size limit by providing a custom hazelcast.xml with the following setting:
  * <pre>
+ *   {@code
  *   <properties>
  *     <property name="hazelcast.query.result.size.limit">100000</property>
- *  </properties>
+ *   </properties>
+ *   }
  * </pre>
  *
  * @since Hazelcast 3.5
