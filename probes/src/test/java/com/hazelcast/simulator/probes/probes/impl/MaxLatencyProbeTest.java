@@ -56,7 +56,7 @@ public class MaxLatencyProbeTest {
         MaxLatencyResult result = maxLatencyProbe.getResult();
         assertResult(result, new MaxLatencyProbe().getResult());
 
-        Long maxLatencyMs = getObjectFromField(result, "maxLatencyMs");
+        long maxLatencyMs = result.getMaxLatencyMs();
         assertTrue(maxLatencyMs >= maxLatencyValue);
         assertTrue(maxLatencyMs < maxLatencyValue + TOLERANCE_MILLIS);
     }

@@ -31,6 +31,10 @@ public class MaxLatencyResult implements Result<MaxLatencyResult> {
         this.maxLatencyMs = maxLatencyMs;
     }
 
+    long getMaxLatencyMs() {
+        return maxLatencyMs;
+    }
+
     @Override
     public MaxLatencyResult combine(MaxLatencyResult other) {
         if (other == null) {
