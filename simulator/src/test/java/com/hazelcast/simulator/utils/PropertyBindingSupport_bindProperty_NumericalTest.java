@@ -151,22 +151,22 @@ public class PropertyBindingSupport_bindProperty_NumericalTest {
     @SuppressWarnings("unused")
     private class BindPropertyTestClass {
 
-        private byte byteField;
-        private Byte byteObjectField;
+        public byte byteField;
+        public Byte byteObjectField;
 
-        private short shortField;
-        private Short shortObjectField;
+        public short shortField;
+        public Short shortObjectField;
 
-        private int intField;
-        private Integer integerField;
+        public int intField;
+        public Integer integerField;
 
-        private long longField;
-        private Long longObjectField;
+        public long longField;
+        public Long longObjectField;
 
-        private float floatField;
-        private Float floatObjectField;
+        public float floatField;
+        public Float floatObjectField;
 
-        private double doubleField;
-        private Double doubleObjectField;
+        public double doubleField;
+        public Double doubleObjectField;
     }
 }

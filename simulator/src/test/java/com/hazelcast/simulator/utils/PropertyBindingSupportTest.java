@@ -83,6 +83,6 @@ public class PropertyBindingSupportTest {
     @SuppressWarnings("unused")
     private class BindPropertyTestClass {
 
-        private String stringField;
+        public String stringField;
     }
 }
