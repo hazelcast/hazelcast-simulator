@@ -122,6 +122,21 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
     }
 
     @Test(expected = BindException.class)
+    public void bindProperty_privateField() {
+        bindProperty(bindPropertyTestClass.otherObject, "privateField", "newValue");
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_protectedField() {
+        bindProperty(bindPropertyTestClass.otherObject, "protectedField", "newValue");
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_packageFriendlyField() {
+        bindProperty(bindPropertyTestClass.otherObject, "packageFriendlyField", "newValue");
+    }
+
+    @Test(expected = BindException.class)
     public void bindProperty_fallsThroughAllChecks() {
         bindProperty(bindPropertyTestClass, "comparableField", "newValue");
     }
@@ -129,17 +144,21 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
     @SuppressWarnings("unused")
     private class BindPropertyTestClass {
 
-        private boolean booleanField;
-        private Boolean booleanObjectField;
+        public boolean booleanField;
+        public Boolean booleanObjectField;
 
-        private Object objectField;
-        private String stringField;
-        private TimeUnit enumField;
-        private Comparable comparableField;
+        public Object objectField;
+        public String stringField;
+        public TimeUnit enumField;
+        public Comparable comparableField;
 
-        private OtherObject otherObject = new OtherObject();
-        private OtherObject nullOtherObject;
-        private Class clazz;
+        public OtherObject otherObject = new OtherObject();
+        public OtherObject nullOtherObject;
+        public Class clazz;
+
+        private String privateField;
+        protected String protectedField;
+        String packageFriendlyField;
     }
 
     @SuppressWarnings("unused")

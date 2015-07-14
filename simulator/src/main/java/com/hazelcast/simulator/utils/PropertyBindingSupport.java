@@ -6,11 +6,13 @@ import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isFinal;
+import static java.lang.reflect.Modifier.isPublic;
 import static java.lang.reflect.Modifier.isStatic;
 
 /**
@@ -107,6 +109,10 @@ public final class PropertyBindingSupport {
                 return;
             }
             throw new BindException(format("Property [%s.%s] does not exist", object.getClass().getName(), property));
+        }
+
+        if (!isPublic(field.getModifiers())) {
+            throw new BindException(format("Property [%s.%s] is not public", object.getClass().getName(), property));
         }
 
         try {
