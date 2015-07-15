@@ -11,6 +11,7 @@ import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.IsPhaseCompletedCommand;
 import org.apache.log4j.Logger;
@@ -391,7 +392,9 @@ public class AgentsClient {
                 }
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                LOGGER.info("Got interrupted while waiting for results from Agents!");
+                EmptyStatement.ignore(e);
+                break;
             }
         }
         return resultList;
