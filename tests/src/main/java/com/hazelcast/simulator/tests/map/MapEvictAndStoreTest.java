@@ -20,7 +20,7 @@ import static junit.framework.Assert.assertEquals;
 
 public class MapEvictAndStoreTest {
 
-    private final static ILogger LOGGER = Logger.getLogger(MapEvictAndStoreTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(MapEvictAndStoreTest.class);
 
     // properties
     public String basename = MapEvictAndStoreTest.class.getSimpleName();
