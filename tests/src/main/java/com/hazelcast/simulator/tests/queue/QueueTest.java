@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.queue;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -30,6 +29,7 @@ import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static org.junit.Assert.assertEquals;
@@ -39,14 +39,16 @@ public class QueueTest {
     private static final ILogger LOGGER = Logger.getLogger(QueueTest.class);
 
     // properties
+    public String basename = QueueTest.class.getSimpleName();
+    public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int queueLength = 100;
     public int threadsPerQueue = 1;
     public int messagesPerQueue = 1;
-    public String basename = this.getClass().getSimpleName();
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public int logFrequency = 200;
+
+    private final AtomicLong totalCounter = new AtomicLong(0);
 
     private TestContext testContext;
-    private IAtomicLong totalCounter;
     private IQueue<Long>[] queues;
 
     @Setup
@@ -55,9 +57,10 @@ public class QueueTest {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalCounter");
         queues = new IQueue[queueLength];
-        String[] names = generateStringKeys(basename + "-" + testContext.getTestId(), queueLength, keyLocality, targetInstance);
+
+        String prefix = basename + "-" + testContext.getTestId() + "-";
+        String[] names = generateStringKeys(prefix, queueLength, prefix.length() + 5, keyLocality, targetInstance);
         for (int i = 0; i < queues.length; i++) {
             queues[i] = targetInstance.getQueue(names[i]);
         }
@@ -74,7 +77,6 @@ public class QueueTest {
         for (IQueue queue : queues) {
             queue.destroy();
         }
-        totalCounter.destroy();
     }
 
     @Verify
@@ -102,25 +104,34 @@ public class QueueTest {
     }
 
     private class Worker implements Runnable {
+
         private final IQueue<Long> fromQueue;
         private final IQueue<Long> toQueue;
 
         public Worker(int fromIndex) {
-            int toIndex = queueLength - 1 == fromIndex ? 0 : fromIndex + 1;
-            this.fromQueue = queues[fromIndex];
-            this.toQueue = queues[toIndex];
+            int toIndex = (queueLength - 1 == fromIndex) ? 0 : fromIndex + 1;
+            fromQueue = queues[fromIndex];
+            toQueue = queues[toIndex];
+
+            LOGGER.info(String.format(
+                    "%s fromQueue[%d] %s: %d, toQueue[%d] %s: %d",
+                    Thread.currentThread().getName(),
+                    fromIndex, fromQueue.getName(), fromQueue.size(),
+                    toIndex, toQueue.getName(), toQueue.size()
+            ));
         }
 
         @Override
         public void run() {
             try {
                 long iteration = 0;
+
                 while (!testContext.isStopped()) {
                     long item = fromQueue.take();
                     toQueue.put(item + 1);
 
                     iteration++;
-                    if (iteration % 200 == 0) {
+                    if (logFrequency > 0 && iteration % logFrequency == 0) {
                         LOGGER.info(String.format(
                                 "%s iteration: %d, fromQueue size: %d, toQueue size: %d",
                                 Thread.currentThread().getName(), iteration, fromQueue.size(), toQueue.size()
