@@ -225,7 +225,7 @@ public final class KeyUtils {
     private static Set<Integer> getTargetPartitions(KeyLocality keyLocality, HazelcastInstance hz) {
         Set<Integer> targetPartitions = new HashSet<Integer>();
         PartitionService partitionService = hz.getPartitionService();
-        Member localMember = hz.getCluster().getLocalMember();
+        Member localMember = getLocalMember(hz);
         switch (keyLocality) {
             case LOCAL:
                 for (Partition partition : partitionService.getPartitions()) {
@@ -253,6 +253,15 @@ public final class KeyUtils {
                 throw new IllegalArgumentException("Unrecognized keyLocality:" + keyLocality);
         }
         return targetPartitions;
+    }
+
+    private static Member getLocalMember(HazelcastInstance hz) {
+        try {
+            return hz.getCluster().getLocalMember();
+        } catch (UnsupportedOperationException ignore) {
+            // clients throw UnsupportedOperationExceptions.
+            return null;
+        }
     }
 
     private static String[] toArray(int keyCount, Map<Integer, Set<String>> keysPerPartitionMap) {
