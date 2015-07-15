@@ -28,6 +28,16 @@
         </map-store>
     </map>
 
+    <map name="MapEvictAndStore*">
+        <map-store enabled="true">
+            <class-name>com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounterPerKey</class-name>
+            <write-delay-seconds>5</write-delay-seconds>
+            <write-coalescing>false</write-coalescing>
+        </map-store>
+        <time-to-live-seconds>10</time-to-live-seconds>
+        <max-size policy="PER_NODE">5000</max-size>
+    </map>
+
     <map name="MapMaxSize*">
         <eviction-policy>LRU</eviction-policy>
         <max-size policy="PER_NODE">1000</max-size>
