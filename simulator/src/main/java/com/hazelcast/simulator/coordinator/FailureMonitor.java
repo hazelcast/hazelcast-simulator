@@ -112,6 +112,8 @@ class FailureMonitor {
                 sb.append(failure.agentAddress);
                 sb.append(' ');
             }
+            sb.append(failure.testId);
+            sb.append(' ');
             sb.append(failure.type);
 
             if (failure.cause != null) {
