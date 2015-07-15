@@ -85,8 +85,8 @@ public class TestContainer<T extends TestContext> {
     }
 
     // properties
-    int threadCount = 10;
-    String workerProbeType = ProbesType.WORKER.getName();
+    public int threadCount = 10;
+    public String workerProbeType = ProbesType.WORKER.getName();
 
     private final Object testClassInstance;
     private final Class testClassType;
