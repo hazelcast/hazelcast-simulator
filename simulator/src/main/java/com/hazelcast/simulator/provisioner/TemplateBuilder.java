@@ -28,6 +28,7 @@ class TemplateBuilder {
     private static final int HAZELCAST_PORT_RANGE_END = 5751;
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
+    public static final String CIDR_RANGE = "0.0.0.0/0";
 
     private final ComputeService compute;
     private final SimulatorProperties props;
@@ -122,12 +123,12 @@ class TemplateBuilder {
 
         // this duplication of ports is ugly since we already do it in 'inboundPorts method'
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                SSH_PORT, SSH_PORT, "0.0.0.0/0");
+                SSH_PORT, SSH_PORT, CIDR_RANGE);
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                AgentRemoteService.PORT, AgentRemoteService.PORT, "0.0.0.0/0");
+                AgentRemoteService.PORT, AgentRemoteService.PORT, CIDR_RANGE);
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                WorkerJvmManager.PORT, WorkerJvmManager.PORT, "0.0.0.0/0");
+                WorkerJvmManager.PORT, WorkerJvmManager.PORT, CIDR_RANGE);
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                HAZELCAST_PORT_RANGE_START, HAZELCAST_PORT_RANGE_END, "0.0.0.0/0");
+                HAZELCAST_PORT_RANGE_START, HAZELCAST_PORT_RANGE_END, CIDR_RANGE);
     }
 }
