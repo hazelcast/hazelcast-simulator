@@ -6,11 +6,11 @@
 <suppressions>
 
     <!-- General -->
-    <suppress checks="JavadocMethod" files="/"/>
-    <suppress checks="JavadocType" files="/"/>
-    <suppress checks="JavadocMethod" files="/"/>
-    <suppress checks="JavadocVariable" files="/"/>
-    <suppress checks="JavadocPackage" files="/"/>
+    <suppress checks="JavadocMethod" files=".*"/>
+    <suppress checks="JavadocType" files=".*"/>
+    <suppress checks="JavadocMethod" files=".*"/>
+    <suppress checks="JavadocVariable" files=".*"/>
+    <suppress checks="JavadocPackage" files=".*"/>
 
     <!-- Suppress duplicate checking of copyright notice -->
     <suppress checks="StrictDuplicateCode" files="\.java" lines="1-15"/>
@@ -29,7 +29,6 @@
     <suppress checks="VisibilityModifier" files="/com/hazelcast/simulator/tests/"/>
 
     <!-- Visualizer -->
-    <suppress checks="ClassDataAbstractionCoupling" files="com/hazelcast/simulator/visualizer/ui/MainUI\.java$"/>
     <suppress checks="AvoidStarImport" files="com/hazelcast/simulator/visualizer/"/>
     <suppress checks="MagicNumber" files="/com/hazelcast/simulator/visualizer/"/>
 
