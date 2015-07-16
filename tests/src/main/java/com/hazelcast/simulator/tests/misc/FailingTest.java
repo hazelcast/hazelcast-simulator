@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.tests.misc;
 
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -16,6 +18,8 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
  * A test that causes a failure. This is useful for testing the simulator framework and for demonstration purposes.
  */
 public class FailingTest {
+
+    private static final ILogger LOGGER = Logger.getLogger(FailingTest.class);
 
     // properties
     public String failure = "Exception";
@@ -41,6 +45,7 @@ public class FailingTest {
                     break;
                 }
             }
+            LOGGER.severe("We should never reach this code! List size: " + list.size());
         } else if ("Exit".equals(failure)) {
             exitWithError();
         }
