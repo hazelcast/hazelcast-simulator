@@ -228,23 +228,13 @@ public final class KeyUtils {
         Member localMember = getLocalMember(hz);
         switch (keyLocality) {
             case LOCAL:
-                for (Partition partition : partitionService.getPartitions()) {
-                    if (localMember == null || localMember.equals(partition.getOwner())) {
-                        targetPartitions.add(partition.getPartitionId());
-                    }
-                }
-                break;
-            case RANDOM:
-                for (Partition partition : partitionService.getPartitions()) {
-                    targetPartitions.add(partition.getPartitionId());
-                }
+                addLocalPartitions(targetPartitions, partitionService, localMember);
                 break;
             case REMOTE:
-                for (Partition partition : partitionService.getPartitions()) {
-                    if (localMember == null || !localMember.equals(partition.getOwner())) {
-                        targetPartitions.add(partition.getPartitionId());
-                    }
-                }
+                addRemotePartitions(targetPartitions, partitionService, localMember);
+                break;
+            case RANDOM:
+                addAllPartitions(targetPartitions, partitionService);
                 break;
             case SINGLE_PARTITION:
                 targetPartitions.add(0);
@@ -261,6 +251,28 @@ public final class KeyUtils {
         } catch (UnsupportedOperationException ignore) {
             // clients throw UnsupportedOperationExceptions.
             return null;
+        }
+    }
+
+    private static void addLocalPartitions(Set<Integer> partitions, PartitionService partitionService, Member localMember) {
+        for (Partition partition : partitionService.getPartitions()) {
+            if (localMember == null || localMember.equals(partition.getOwner())) {
+                partitions.add(partition.getPartitionId());
+            }
+        }
+    }
+
+    private static void addRemotePartitions(Set<Integer> partitions, PartitionService partitionService, Member localMember) {
+        for (Partition partition : partitionService.getPartitions()) {
+            if (localMember == null || !localMember.equals(partition.getOwner())) {
+                partitions.add(partition.getPartitionId());
+            }
+        }
+    }
+
+    private static void addAllPartitions(Set<Integer> partitions, PartitionService partitionService) {
+        for (Partition partition : partitionService.getPartitions()) {
+            partitions.add(partition.getPartitionId());
         }
     }
 
