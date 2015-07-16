@@ -88,7 +88,6 @@ public class KeyUtilsTest {
 
         assertTrue(key1 != 0);
         assertTrue(key2 != 0);
-        assertNotEquals(key1, key2);
         assertTrue(isLocalKey(instance, key1));
         assertTrue(isLocalKey(instance, key2));
     }
@@ -140,7 +139,6 @@ public class KeyUtilsTest {
 
         assertTrue(key1 != 0);
         assertTrue(key2 != 0);
-        assertNotEquals(key1, key2);
     }
 
     @Test
