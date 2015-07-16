@@ -100,9 +100,9 @@ public class MapTransactionTest {
                 targetInstance.executeTransaction(transactionOptions, new TransactionalTask<Object>() {
                     @Override
                     public Object execute(TransactionalTaskContext txContext) throws TransactionException {
-                        TransactionalMap<Integer, Long> map = txContext.getMap(basename);
-                        Long current = map.getForUpdate(key);
-                        map.put(key, current + increment);
+                        TransactionalMap<Integer, Long> txMap = txContext.getMap(basename);
+                        Long current = txMap.getForUpdate(key);
+                        txMap.put(key, current + increment);
                         return null;
                     }
                 });
