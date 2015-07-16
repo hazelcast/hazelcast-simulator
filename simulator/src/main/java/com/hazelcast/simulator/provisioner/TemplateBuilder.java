@@ -26,9 +26,9 @@ class TemplateBuilder {
     private static final int SSH_PORT = 22;
     private static final int HAZELCAST_PORT_RANGE_START = 5701;
     private static final int HAZELCAST_PORT_RANGE_END = 5751;
+    private static final String CIDR_RANGE = "0.0.0.0/0";
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
-    public static final String CIDR_RANGE = "0.0.0.0/0";
 
     private final ComputeService compute;
     private final SimulatorProperties props;
