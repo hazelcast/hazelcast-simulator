@@ -162,10 +162,10 @@ class WorkerPerformanceMonitor {
                 dataString += " %s/%s";
             }
             int fieldLength = 1;
-            if (totalTests >= 10) {
-                fieldLength = 2;
-            } else if (totalTests >= 100) {
+            if (totalTests >= 100) {
                 fieldLength = 3;
+            } else if (totalTests >= 10) {
+                fieldLength = 2;
             }
             appendText(format(dataString + "\n", timestamp, formatLong(opsSum, 14), formatLong(opsDelta, 14),
                     formatDouble(opsPerSecDelta, 14), formatLong(numberOfTests, 14 - fieldLength),
