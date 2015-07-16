@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.probes.probes.impl.ProbeTestUtils.TOLERANCE_MILLIS;
 import static com.hazelcast.simulator.probes.probes.impl.ProbeTestUtils.assertDisable;
 import static com.hazelcast.simulator.probes.probes.impl.ProbeTestUtils.assertResult;
+import static com.hazelcast.simulator.probes.probes.impl.ProbeTestUtils.assertWithinTolerance;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static org.junit.Assert.assertEquals;
@@ -55,10 +56,7 @@ public class MaxLatencyProbeTest {
 
         MaxLatencyResult result = maxLatencyProbe.getResult();
         assertResult(result, new MaxLatencyProbe().getResult());
-
-        long maxLatencyMs = result.getMaxLatencyMs();
-        assertTrue(maxLatencyMs >= maxLatencyValue);
-        assertTrue(maxLatencyMs < maxLatencyValue + TOLERANCE_MILLIS);
+        assertWithinTolerance("maxLatencyMs", maxLatencyValue, result.getMaxLatencyMs(), TOLERANCE_MILLIS);
     }
 
     @Test
