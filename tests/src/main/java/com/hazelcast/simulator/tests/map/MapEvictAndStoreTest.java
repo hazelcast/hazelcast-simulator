@@ -19,7 +19,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static junit.framework.Assert.assertEquals;
 
 /**
- * This test checks for duplicate store entries when eviction happens and MapStore is slow (see hazelcast/issues/4448).
+ * This test checks for duplicate store entries when eviction happens and MapStore is slow (see Hazelcast issue #4448).
  */
 public class MapEvictAndStoreTest {
 
