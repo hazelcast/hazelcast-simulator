@@ -23,4 +23,3 @@ function install {
 function prepend {
     echo $1|cat - $2 > /tmp/out && mv /tmp/out $2
 }
-

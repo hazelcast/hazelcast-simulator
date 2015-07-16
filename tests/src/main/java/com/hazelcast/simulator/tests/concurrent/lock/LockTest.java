@@ -168,4 +168,3 @@ public class LockTest {
         new TestRunner<LockTest>(test).withDuration(10).run();
     }
 }
-

@@ -14,4 +14,3 @@ coordinator     --memberWorkerCount 2 \
                 test.properties
 
 provisioner --download
-

@@ -156,4 +156,3 @@ public class AtomicLongTest {
         new TestRunner<AtomicLongTest>(test).withDuration(10).run();
     }
 }
-

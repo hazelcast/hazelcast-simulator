@@ -204,4 +204,3 @@ public class AsyncAtomicLongTest {
         new TestRunner<AsyncAtomicLongTest>(test).withDuration(10).run();
     }
 }
-

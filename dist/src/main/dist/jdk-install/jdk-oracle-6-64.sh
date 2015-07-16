@@ -13,4 +13,3 @@ chmod +x jdk-6u45-linux-x64.bin
 
 prepend 'export PATH=$JAVA_HOME/bin:$PATH' ~/.bashrc
 prepend 'export JAVA_HOME=~/jdk1.6.0_45' ~/.bashrc
-

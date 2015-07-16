@@ -18,4 +18,3 @@ coordinator     --memberWorkerCount 2 \
 provisioner --download
 
 provisioner --terminate
-

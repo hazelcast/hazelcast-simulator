@@ -13,4 +13,3 @@ tar xfz jdk-7u55-linux-x64.tar.gz
 
 prepend 'export PATH=$JAVA_HOME/bin:$PATH'  ~/.bashrc
 prepend "export JAVA_HOME=~/jdk1.7.0_55"  ~/.bashrc
-

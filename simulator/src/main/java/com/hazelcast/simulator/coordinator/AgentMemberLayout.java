@@ -22,4 +22,3 @@ public final class AgentMemberLayout {
         clientSettings.memberWorkerCount = 0;
     }
 }
-

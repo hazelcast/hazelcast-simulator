@@ -161,4 +161,3 @@ public class AtomicReferenceTest {
         new TestRunner<AtomicReferenceTest>(test).withDuration(10).run();
     }
 }
-
