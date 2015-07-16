@@ -66,8 +66,8 @@ public class KeyUtilsTest {
         int key1 = generateIntKey(100, KeyLocality.LOCAL, client);
         int key2 = generateIntKey(100, KeyLocality.LOCAL, client);
 
-        assertTrue(key1 != 0);
-        assertTrue(key2 != 0);
+        assertTrue(key1 >= 0 && key1 < 100);
+        assertTrue(key2 >= 0 && key2 < 100);
     }
 
     @Test
@@ -75,8 +75,8 @@ public class KeyUtilsTest {
         int key1 = generateIntKey(100, KeyLocality.REMOTE, client);
         int key2 = generateIntKey(100, KeyLocality.REMOTE, client);
 
-        assertTrue(key1 != 0);
-        assertTrue(key2 != 0);
+        assertTrue(key1 >= 0 && key1 < 100);
+        assertTrue(key2 >= 0 && key2 < 100);
     }
 
     @Test
@@ -84,8 +84,8 @@ public class KeyUtilsTest {
         int key1 = generateIntKey(100, KeyLocality.LOCAL, instance);
         int key2 = generateIntKey(100, KeyLocality.LOCAL, instance);
 
-        assertTrue(key1 != 0);
-        assertTrue(key2 != 0);
+        assertTrue(key1 >= 0 && key1 < 100);
+        assertTrue(key2 >= 0 && key2 < 100);
         assertTrue(isLocalKey(instance, key1));
         assertTrue(isLocalKey(instance, key2));
     }
@@ -109,8 +109,8 @@ public class KeyUtilsTest {
         int key1 = generateIntKey(100, KeyLocality.REMOTE, instance);
         int key2 = generateIntKey(100, KeyLocality.REMOTE, instance);
 
-        assertTrue(key1 != 0);
-        assertTrue(key2 != 0);
+        assertTrue(key1 >= 0 && key1 < 100);
+        assertTrue(key2 >= 0 && key2 < 100);
         assertFalse(isLocalKey(instance, key1));
         assertFalse(isLocalKey(instance, key2));
     }
@@ -134,8 +134,8 @@ public class KeyUtilsTest {
         int key1 = generateIntKey(100, KeyLocality.RANDOM, null);
         int key2 = generateIntKey(100, KeyLocality.RANDOM, null);
 
-        assertTrue(key1 != 0);
-        assertTrue(key2 != 0);
+        assertTrue(key1 >= 0 && key1 < 100);
+        assertTrue(key2 >= 0 && key2 < 100);
     }
 
     @Test
