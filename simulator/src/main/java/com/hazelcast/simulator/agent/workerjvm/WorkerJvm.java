@@ -21,17 +21,20 @@ import java.io.File;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+@SuppressWarnings("checkstyle:visibilitymodifier")
 public class WorkerJvm {
-    public Mode mode;
-    public volatile boolean detectFailure = true;
-    public final String id;
-    public volatile String memberAddress;
-    public Process process;
-    public File workerHome;
-    public volatile long lastSeen = System.currentTimeMillis();
-    public volatile boolean oomeDetected;
 
     public final BlockingQueue<CommandRequest> commandQueue = new LinkedBlockingQueue<CommandRequest>();
+    public final String id;
+
+    public File workerHome;
+    public Process process;
+    public Mode mode;
+
+    public volatile String memberAddress;
+    public volatile long lastSeen = System.currentTimeMillis();
+    public volatile boolean detectFailure = true;
+    public volatile boolean oomeDetected;
 
     public WorkerJvm(String id) {
         this.id = id;

@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+@SuppressWarnings("checkstyle:visibilitymodifier")
 public final class Failure implements Serializable {
 
     public enum Type {

@@ -7,6 +7,7 @@ package com.hazelcast.simulator.common;
  *
  * publicAddress and privateAddress are the same if there is no public/private address separation, e.g. a static setup.
  */
+@SuppressWarnings("checkstyle:visibilitymodifier")
 public class AgentAddress {
 
     public final String publicAddress;

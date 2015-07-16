@@ -36,6 +36,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static java.lang.String.format;
 
+@SuppressWarnings("checkstyle:visibilitymodifier")
 public class TestSuite implements Serializable {
 
     private static final long serialVersionUID = 1;

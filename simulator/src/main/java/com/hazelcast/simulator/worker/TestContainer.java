@@ -87,7 +87,9 @@ public class TestContainer<T extends TestContext> {
     }
 
     // properties
+    @SuppressWarnings("checkstyle:visibilitymodifier")
     public int threadCount = DEFAULT_THREAD_COUNT;
+    @SuppressWarnings("checkstyle:visibilitymodifier")
     public String workerProbeType = ProbesType.WORKER.getName();
 
     private final Object testClassInstance;

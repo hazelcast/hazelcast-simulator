@@ -17,6 +17,7 @@ package com.hazelcast.simulator.agent.workerjvm;
 
 import java.io.Serializable;
 
+@SuppressWarnings("checkstyle:visibilitymodifier")
 public class WorkerJvmSettings implements Serializable {
 
     public String vmOptions;

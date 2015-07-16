@@ -15,7 +15,9 @@
  */
 package com.hazelcast.simulator.agent;
 
+@SuppressWarnings("checkstyle:visibilitymodifier")
 public class JavaInstallation {
+
     public String vendor;
     public String version;
     public String javaHome;
