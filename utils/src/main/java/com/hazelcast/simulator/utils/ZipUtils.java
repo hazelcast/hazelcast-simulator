@@ -36,6 +36,8 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 
 public final class ZipUtils {
 
+    private static final int BUFFER_SIZE = 1024;
+
     private ZipUtils() {
     }
 
@@ -95,7 +97,7 @@ public final class ZipUtils {
     }
 
     public static void unzip(byte[] content, final File destinationDir) throws IOException {
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[BUFFER_SIZE];
 
         ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(content));
         ZipEntry zipEntry = zis.getNextEntry();

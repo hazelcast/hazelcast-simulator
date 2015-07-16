@@ -18,6 +18,7 @@ package com.hazelcast.simulator.probes.probes.impl;
 public class OperationsPerSecProbe extends AbstractSimpleProbe<OperationsPerSecResult, OperationsPerSecProbe> {
 
     @Override
+    @SuppressWarnings("checkstyle:magicnumber")
     public OperationsPerSecResult getResult() {
         return new OperationsPerSecResult(invocations, ((double) invocations / durationMs) * 1000);
     }

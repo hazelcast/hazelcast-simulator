@@ -24,6 +24,7 @@ import static java.lang.String.format;
 /**
  * Responsible for collecting performance metrics from the agents and logging/storing it.
  */
+@SuppressWarnings("checkstyle:magicnumber")
 class PerformanceMonitor {
 
     private final PerformanceThread thread;

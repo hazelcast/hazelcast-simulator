@@ -61,6 +61,7 @@ public final class Coordinator {
 
     private static final int COOLDOWN_SECONDS = 10;
     private static final int TEST_CASE_RUNNER_SLEEP_PERIOD = 30;
+    private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
@@ -114,7 +115,7 @@ public final class Coordinator {
 
             if (parallelExecutor != null) {
                 parallelExecutor.shutdown();
-                parallelExecutor.awaitTermination(10, TimeUnit.SECONDS);
+                parallelExecutor.awaitTermination(EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             }
 
             if (agentsClient != null) {

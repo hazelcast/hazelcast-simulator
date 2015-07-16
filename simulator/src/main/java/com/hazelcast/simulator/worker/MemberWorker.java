@@ -40,11 +40,15 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeObject;
 import static java.lang.String.format;
 
 public final class MemberWorker {
+
+    private static final long PARTITION_WARMUP_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(5);
+    private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
 
     private static final Logger LOGGER = Logger.getLogger(MemberWorker.class);
 
@@ -124,19 +128,15 @@ public final class MemberWorker {
         logger.info("Waiting for partition warmup");
 
         PartitionService partitionService = hz.getPartitionService();
-        long startTime = System.currentTimeMillis();
+        long started = System.nanoTime();
         for (Partition partition : partitionService.getPartitions()) {
-            if (System.currentTimeMillis() - startTime > TimeUnit.MINUTES.toMillis(5)) {
+            if (System.nanoTime() - started > PARTITION_WARMUP_TIMEOUT_NANOS) {
                 throw new IllegalStateException("Partition warmup timeout. Partitions didn't get an owner in time");
             }
 
             while (partition.getOwner() == null) {
                 logger.debug("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                sleepMillisThrowException(PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS);
             }
         }
 

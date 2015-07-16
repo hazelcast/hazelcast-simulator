@@ -23,6 +23,10 @@ import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 
 class TemplateBuilder {
 
+    private static final int SSH_PORT = 22;
+    private static final int HAZELCAST_PORT_RANGE_START = 5701;
+    private static final int HAZELCAST_PORT_RANGE_END = 5751;
+
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
     private final ComputeService compute;
@@ -79,10 +83,10 @@ class TemplateBuilder {
 
     private int[] inboundPorts() {
         List<Integer> ports = new ArrayList<Integer>();
-        ports.add(22);
+        ports.add(SSH_PORT);
         ports.add(AgentRemoteService.PORT);
         ports.add(WorkerJvmManager.PORT);
-        for (int port = 5701; port < 5751; port++) {
+        for (int port = HAZELCAST_PORT_RANGE_START; port < HAZELCAST_PORT_RANGE_END; port++) {
             ports.add(port);
         }
 
@@ -117,8 +121,13 @@ class TemplateBuilder {
         securityGroupApi.createSecurityGroupInRegion(region, securityGroup, securityGroup);
 
         // this duplication of ports is ugly since we already do it in 'inboundPorts method'
-        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 22, 22, "0.0.0.0/0");
-        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 9000, 9001, "0.0.0.0/0");
-        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP, 5701, 5751, "0.0.0.0/0");
+        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
+                SSH_PORT, SSH_PORT, "0.0.0.0/0");
+        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
+                AgentRemoteService.PORT, AgentRemoteService.PORT, "0.0.0.0/0");
+        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
+                WorkerJvmManager.PORT, WorkerJvmManager.PORT, "0.0.0.0/0");
+        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
+                HAZELCAST_PORT_RANGE_START, HAZELCAST_PORT_RANGE_END, "0.0.0.0/0");
     }
 }

@@ -44,6 +44,7 @@ import static java.lang.String.format;
  */
 public class TestRunner<E> {
 
+    private static final int DEFAULT_DURATION_SECONDS = 60;
     private static final Logger LOGGER = Logger.getLogger(TestRunner.class);
 
     private final StopThread stopThread = new StopThread();
@@ -52,7 +53,7 @@ public class TestRunner<E> {
     private final TestContainer testInvoker;
     private final E test;
 
-    private int durationSeconds = 60;
+    private int durationSeconds = DEFAULT_DURATION_SECONDS;
     private HazelcastInstance hazelcastInstance;
 
     public TestRunner(E test) {
@@ -172,6 +173,7 @@ public class TestRunner<E> {
         LOGGER.info("Finished " + testPhase.desc());
     }
 
+    @SuppressWarnings("checkstyle:magicnumber")
     private final class StopThread extends Thread {
 
         @Override

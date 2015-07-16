@@ -46,11 +46,21 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSecondsThrowException;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static java.lang.Integer.parseInt;
+import static java.lang.String.format;
 
 public class AgentsClient {
 
     private static final long TEST_METHOD_TIMEOUT_SECONDS = parseInt(System.getProperty("worker.testmethod.timeout", "10000"));
     private static final long TEST_METHOD_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(TEST_METHOD_TIMEOUT_SECONDS);
+
+    private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
+    private static final int AGENT_KEEP_ALIVE_INTERVAL_SECONDS = 60;
+
+    private static final int WAIT_FOR_AGENT_START_TIMEOUT_SECONDS = 60;
+    private static final int WAIT_FOR_AGENT_START_INTERVAL_SECONDS = 5;
+
+    private static final int GET_FAILURES_TIMEOUT_SECONDS = 30;
+    private static final int WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS = 5;
 
     private static final Logger LOGGER = Logger.getLogger(AgentsClient.class);
 
@@ -75,14 +85,11 @@ public class AgentsClient {
             public void run() {
                 for (; ; ) {
                     try {
-                        sleepSecondsThrowException(60);
-                        asyncExecuteOnAllWorkers(SERVICE_POKE);
+                        sleepSecondsThrowException(AGENT_KEEP_ALIVE_INTERVAL_SECONDS);
                     } catch (RuntimeException e) {
-                        if (e.getCause() instanceof InterruptedException) {
-                            break;
-                        }
-                        throw e;
+                        break;
                     }
+                    asyncExecuteOnAllWorkers(SERVICE_POKE);
                 }
             }
         };
@@ -95,7 +102,8 @@ public class AgentsClient {
         LOGGER.info("--------------------------------------------------------------");
 
         List<AgentClient> uncheckedAgents = new LinkedList<AgentClient>(agents);
-        for (int i = 0; i < 12; i++) {
+        int maxRetries = WAIT_FOR_AGENT_START_TIMEOUT_SECONDS / WAIT_FOR_AGENT_START_INTERVAL_SECONDS;
+        for (int i = 0; i < maxRetries; i++) {
             Iterator<AgentClient> agentIterator = uncheckedAgents.iterator();
             while (agentIterator.hasNext()) {
                 AgentClient agent = agentIterator.next();
@@ -112,8 +120,8 @@ public class AgentsClient {
             if (uncheckedAgents.isEmpty()) {
                 break;
             }
-            LOGGER.info("Sleeping 5 seconds and retrying unchecked agents");
-            sleepSeconds(5);
+            LOGGER.info(format("Sleeping %d seconds and retrying unchecked agents", WAIT_FOR_AGENT_START_INTERVAL_SECONDS));
+            sleepSeconds(WAIT_FOR_AGENT_START_INTERVAL_SECONDS);
         }
 
         if (!uncheckedAgents.isEmpty()) {
@@ -146,7 +154,7 @@ public class AgentsClient {
         }
 
         agentExecutor.shutdown();
-        agentExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        agentExecutor.awaitTermination(EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
     public int getAgentCount() {
@@ -174,7 +182,7 @@ public class AgentsClient {
         List<Failure> result = new LinkedList<Failure>();
         for (Future<List<Failure>> future : futures) {
             try {
-                List<Failure> list = future.get(30, TimeUnit.SECONDS);
+                List<Failure> list = future.get(GET_FAILURES_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                 result.addAll(list);
             } catch (InterruptedException e) {
                 LOGGER.fatal("Exception in getFailures()", e);
@@ -213,7 +221,7 @@ public class AgentsClient {
             }
             long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start);
             LOGGER.info(prefix + "Waiting " + secondsToHuman(duration) + " for " + testPhase.desc() + " completion");
-            sleepSeconds(5);
+            sleepSeconds(WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS);
         }
     }
 

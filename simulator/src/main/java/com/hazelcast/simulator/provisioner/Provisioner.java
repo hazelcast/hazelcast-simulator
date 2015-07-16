@@ -43,9 +43,13 @@ import static java.lang.String.format;
 
 public final class Provisioner {
 
-    private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
+    private static final int MACHINE_WARMUP_WAIT_SECONDS = 10;
+    private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
+
     private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
     private static final String CONF_DIR = SIMULATOR_HOME + "/conf";
+
+    private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
     final SimulatorProperties props = new SimulatorProperties();
 
@@ -153,7 +157,7 @@ public final class Provisioner {
         // shutdown thread pool
         try {
             executor.shutdown();
-            executor.awaitTermination(10, TimeUnit.SECONDS);
+            executor.awaitTermination(EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (Exception ignored) {
             EmptyStatement.ignore(ignored);
         }
@@ -251,8 +255,8 @@ public final class Provisioner {
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
 
-        echo("Pausing for machine warmup... (10 sec)");
-        sleepSeconds(10);
+        echo(format("Pausing for machine warmup... (%d sec)", MACHINE_WARMUP_WAIT_SECONDS));
+        sleepSeconds(MACHINE_WARMUP_WAIT_SECONDS);
 
         echo("Duration: " + secondsToHuman(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started)));
         echoImportant(format("Successfully provisioned %s %s machines", delta, props.get("CLOUD_PROVIDER")));

@@ -23,9 +23,11 @@ import static org.junit.Assert.assertEquals;
 
 public final class TestUtils {
 
-    public static final String TEST_INSTANCE = "testInstance";
-    public static final int TIMEOUT = 1000;
-    public static final int ASSERT_TRUE_EVENTUALLY_TIMEOUT;
+    public static final long VERIFY_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(1);
+
+    private static final int ASSERT_TRUE_EVENTUALLY_INITIAL_SLEEP_MILLIS = 100;
+    private static final float ASSERT_TRUE_EVENTUALLY_SLEEP_FACTOR = 1.5f;
+    private static final int ASSERT_TRUE_EVENTUALLY_TIMEOUT;
 
     static {
         ASSERT_TRUE_EVENTUALLY_TIMEOUT = Integer.parseInt(System.getProperty(
@@ -36,7 +38,7 @@ public final class TestUtils {
     }
 
     public static String getUserContextKeyFromTestId(String testId) {
-        return TEST_INSTANCE + ":" + testId;
+        return "testInstance:" + testId;
     }
 
     /**
@@ -86,7 +88,7 @@ public final class TestUtils {
 
         // the time in ms when the assertTrue is going to expire.
         long expirationMs = System.currentTimeMillis() + timeoutMs;
-        int sleepMillis = 100;
+        int sleepMillis = ASSERT_TRUE_EVENTUALLY_INITIAL_SLEEP_MILLIS;
 
         for (; ; ) {
             try {
@@ -106,7 +108,7 @@ public final class TestUtils {
             }
 
             sleepMillisThrowException(sleepMillis);
-            sleepMillis *= 1.5;
+            sleepMillis *= ASSERT_TRUE_EVENTUALLY_SLEEP_FACTOR;
         }
     }
 

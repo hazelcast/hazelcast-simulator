@@ -88,6 +88,7 @@ class WorkerPerformanceMonitor {
             }
         }
 
+        @SuppressWarnings("checkstyle:magicnumber")
         private void writeStatsToFiles() {
             String timestamp = simpleDateFormat.format(new Date());
             long currentTimeMillis = System.currentTimeMillis();
@@ -153,6 +154,7 @@ class WorkerPerformanceMonitor {
             appendText(format("%s%n%s%n", columns, fillString(columns.length(), '-')), file);
         }
 
+        @SuppressWarnings("checkstyle:magicnumber")
         private void writeStatsToFile(File file, String timestamp, long opsSum, long opsDelta, double opsPerSecDelta,
                                       long numberOfTests, long totalTests) {
             String dataString = "[%s] %s ops %s ops %s ops/s";

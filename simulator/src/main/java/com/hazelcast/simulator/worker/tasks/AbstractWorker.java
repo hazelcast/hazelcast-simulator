@@ -23,6 +23,8 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
+    private static final int DEFAULT_LOG_FREQUENCY = 10000;
+
     final Random random = new Random();
     final OperationSelector<O> selector;
 
@@ -31,7 +33,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     IntervalProbe intervalProbe;
 
     // these fields will be injected by test.properties of the test
-    long logFrequency = 10000;
+    long logFrequency = DEFAULT_LOG_FREQUENCY;
 
     // local variables
     long iteration;

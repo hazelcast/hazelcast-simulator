@@ -18,6 +18,8 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
 @SuppressWarnings("checkstyle:finalclass")
 class FailureMonitor {
 
+    private static final long THREAD_JOIN_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(5);
+
     private final FailureThread thread;
     private final AtomicBoolean started = new AtomicBoolean();
 
@@ -39,7 +41,7 @@ class FailureMonitor {
             try {
                 thread.isRunning = false;
                 thread.interrupt();
-                thread.join(TimeUnit.SECONDS.toMillis(5));
+                thread.join(THREAD_JOIN_TIMEOUT_MILLIS);
             } catch (InterruptedException e) {
                 EmptyStatement.ignore(e);
             }

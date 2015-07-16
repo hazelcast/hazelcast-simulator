@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.utils.TestUtils.TIMEOUT;
+import static com.hazelcast.simulator.utils.TestUtils.VERIFY_TIMEOUT_MILLIS;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -70,8 +70,8 @@ public class WorkerMessageProcessorTest {
         workerMessageProcessor.submit(message);
 
         assertFalse(message.isExecuted());
-        verify(testContainerMock1, timeout(TIMEOUT)).sendMessage(message);
-        verify(testContainerMock2, timeout(TIMEOUT)).sendMessage(message);
+        verify(testContainerMock1, timeout(VERIFY_TIMEOUT_MILLIS)).sendMessage(message);
+        verify(testContainerMock2, timeout(VERIFY_TIMEOUT_MILLIS)).sendMessage(message);
     }
 
     @Test
@@ -168,7 +168,7 @@ public class WorkerMessageProcessorTest {
     private void verifyMessageSentToEitherOr(TestContainer<?> container1, TestContainer<?> container2, Message message)
             throws Exception {
         try {
-            verify(container1, timeout(TIMEOUT)).sendMessage(message);
+            verify(container1, timeout(VERIFY_TIMEOUT_MILLIS)).sendMessage(message);
         } catch (WantedButNotInvoked e) {
             // the message was not deliver to container1, so it should go to container2
             verify(container2).sendMessage(message);

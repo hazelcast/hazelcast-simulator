@@ -92,6 +92,7 @@ public final class CommonUtils {
         return new String(array);
     }
 
+    @SuppressWarnings("checkstyle:magicnumber")
     public static String secondsToHuman(long seconds) {
         long time = seconds;
 
@@ -109,6 +110,7 @@ public final class CommonUtils {
         return format("%02dd %02dh %02dm %02ds", days, h, m, s);
     }
 
+    @SuppressWarnings("checkstyle:magicnumber")
     public static String humanReadableByteCount(long bytes, boolean si) {
         int unit = si ? 1000 : 1024;
         if (bytes < unit) {

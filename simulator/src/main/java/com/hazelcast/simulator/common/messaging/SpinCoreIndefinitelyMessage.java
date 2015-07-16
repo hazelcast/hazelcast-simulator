@@ -32,6 +32,7 @@ public class SpinCoreIndefinitelyMessage extends RunnableMessage {
         private final Random random = new Random();
 
         @Override
+        @SuppressWarnings("checkstyle:magicnumber")
         public void run() {
             while (!interrupted()) {
                 if (random.nextInt(100) == 101) {

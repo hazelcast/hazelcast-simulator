@@ -62,6 +62,8 @@ public class TestContainer<T extends TestContext> {
      */
     public static final Set<String> OPTIONAL_TEST_PROPERTIES;
 
+    private static final int DEFAULT_THREAD_COUNT = 10;
+
     private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
 
     private enum OptionalTestProperties {
@@ -85,7 +87,7 @@ public class TestContainer<T extends TestContext> {
     }
 
     // properties
-    public int threadCount = 10;
+    public int threadCount = DEFAULT_THREAD_COUNT;
     public String workerProbeType = ProbesType.WORKER.getName();
 
     private final Object testClassInstance;

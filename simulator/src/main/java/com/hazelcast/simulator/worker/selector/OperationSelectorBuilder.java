@@ -20,8 +20,9 @@ import static java.lang.String.format;
  */
 public class OperationSelectorBuilder<T extends Enum<T>> {
 
-    public static final int PROBABILITY_PRECISION = 3;
-    public static final double PROBABILITY_INTERVAL = 1.0 / Math.pow(10, PROBABILITY_PRECISION);
+    static final int PROBABILITY_PRECISION = 3;
+    static final double PROBABILITY_LENGTH = Math.pow(10, PROBABILITY_PRECISION);
+    static final double PROBABILITY_INTERVAL = 1.0 / PROBABILITY_LENGTH;
 
     private final Map<T, Double> operations = new HashMap<T, Double>();
 
@@ -102,7 +103,7 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
     }
 
     private void populateOperationsArray() {
-        int arraySize = (int) Math.pow(10, PROBABILITY_PRECISION);
+        int arraySize = (int) PROBABILITY_LENGTH;
         operationsArray = new Object[arraySize];
         int index = 0;
         for (Map.Entry<T, Double> entry : operations.entrySet()) {

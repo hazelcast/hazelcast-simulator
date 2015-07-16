@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.simulator.utils.TestUtils.TIMEOUT;
+import static com.hazelcast.simulator.utils.TestUtils.VERIFY_TIMEOUT_MILLIS;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -53,6 +53,6 @@ public class AgentMessageProcessorTest {
         agentMessageProcessor.submit(message);
 
         assertFalse(message.isExecuted());
-        verify(workerJvmManagerMock, timeout(TIMEOUT)).sendMessage(message);
+        verify(workerJvmManagerMock, timeout(VERIFY_TIMEOUT_MILLIS)).sendMessage(message);
     }
 }

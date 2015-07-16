@@ -11,11 +11,16 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 
+import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.PORT;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSecondsThrowException;
+import static java.lang.String.format;
 
 public class AgentClient {
+
+    private static final int CREATE_SOCKET_MAX_RETRIES = 30;
+    private static final int LOG_FAILURE_AS_WARNING_THRESHOLD = 10;
 
     private static final Logger LOGGER = Logger.getLogger(AgentClient.class);
 
@@ -65,28 +70,26 @@ public class AgentClient {
     // and we don't want to depend on state within the socket
     private Socket newSocket() throws IOException {
         ConnectException connectException = null;
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < CREATE_SOCKET_MAX_RETRIES; i++) {
             try {
                 InetAddress hostAddress = InetAddress.getByName(publicAddress);
-                return new Socket(hostAddress, AgentRemoteService.PORT);
+                return new Socket(hostAddress, PORT);
             } catch (ConnectException e) {
-                if (i < 10) {
+                String logMessage = format("Failed to connect to public address %s:%s, sleeping for 1 second and trying again",
+                        publicAddress, PORT);
+                if (i < LOG_FAILURE_AS_WARNING_THRESHOLD) {
                     // it can happen that when a machine is under a lot of pressure, the connection can't be established
-                    LOGGER.debug("Failed to connect to public address: " + publicAddress
-                            + " sleeping for 1 second and trying again");
+                    LOGGER.debug(logMessage);
                 } else {
-                    LOGGER.warn("Failed to connect to public address: " + publicAddress
-                            + " sleeping for 1 second and trying again");
+                    LOGGER.warn(logMessage);
                 }
                 sleepSecondsThrowException(1);
                 connectException = e;
             } catch (IOException e) {
-                throw new IOException("Couldn't connect to publicAddress: " + publicAddress
-                        + ":" + AgentRemoteService.PORT, e);
+                throw new IOException(format("Couldn't connect to publicAddress %s:%s", publicAddress, PORT), e);
             }
         }
-        throw new IOException("Couldn't connect to publicAddress: " + publicAddress
-                + ":" + AgentRemoteService.PORT, connectException);
+        throw new IOException(format("Couldn't connect to publicAddress %s:%s", publicAddress, PORT), connectException);
     }
 
     @Override

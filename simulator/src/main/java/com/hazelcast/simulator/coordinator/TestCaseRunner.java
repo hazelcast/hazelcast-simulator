@@ -273,6 +273,7 @@ final class TestCaseRunner {
             }
         }
 
+        @SuppressWarnings("checkstyle:magicnumber")
         private void sleepUntilFailure(int seconds) {
             int sleepLoops = seconds / sleepPeriod;
             for (int i = 1; i <= sleepLoops; i++) {

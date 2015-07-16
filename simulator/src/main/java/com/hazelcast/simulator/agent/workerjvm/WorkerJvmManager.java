@@ -66,8 +66,10 @@ public class WorkerJvmManager {
     public static final String COMMAND_PUSH_RESPONSE = "push";
     public static final File WORKERS_HOME = new File(getSimulatorHome(), "workers");
 
-    private static final Logger LOGGER = Logger.getLogger(WorkerJvmManager.class);
     private static final int WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS = 10000;
+    private static final int EXECUTE_ON_WORKERS_TIMEOUT_SECONDS = 30;
+
+    private static final Logger LOGGER = Logger.getLogger(WorkerJvmManager.class);
 
     private final ConcurrentMap<String, WorkerJvm> workerJVMs = new ConcurrentHashMap<String, WorkerJvm>();
     private final Agent agent;
@@ -231,7 +233,7 @@ public class WorkerJvmManager {
             WorkerJvm workerJvm = entry.getKey();
             CommandFuture future = entry.getValue();
             try {
-                Object result = future.get(30, TimeUnit.SECONDS);
+                Object result = future.get(EXECUTE_ON_WORKERS_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                 results.add(result);
             } catch (TimeoutException e) {
                 if (!future.getCommand().ignoreTimeout()) {
