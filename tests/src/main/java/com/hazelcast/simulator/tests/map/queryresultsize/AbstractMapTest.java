@@ -30,7 +30,7 @@ import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getGroupProperties;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.logPartitionStatistics;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
@@ -65,7 +65,7 @@ abstract class AbstractMapTest {
             if (groupProperties != null && groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger() <= 0) {
                 featureDisabled = true;
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             fail(basename + ": This tests needs Hazelcast 3.5 or newer");
         }
         if (featureDisabled) {
@@ -76,7 +76,7 @@ abstract class AbstractMapTest {
     void baseSetup(TestContext testContext, String basename) {
         this.hazelcastInstance = testContext.getTargetInstance();
 
-        this.groupProperties = isMemberNode(hazelcastInstance) ? getNode(hazelcastInstance).getGroupProperties() : null;
+        this.groupProperties = getGroupProperties(hazelcastInstance);
         this.map = hazelcastInstance.getMap(basename);
         this.operationCounter = hazelcastInstance.getAtomicLong(basename + "Ops");
         this.exceptionCounter = hazelcastInstance.getAtomicLong(basename + "Exceptions");
@@ -95,7 +95,7 @@ abstract class AbstractMapTest {
                         groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger(),
                         groupProperties.QUERY_MAX_LOCAL_PARTITION_LIMIT_FOR_PRE_CHECK.getInteger()));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.info(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
         }
 
