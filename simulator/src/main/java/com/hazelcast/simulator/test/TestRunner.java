@@ -45,6 +45,7 @@ import static java.lang.String.format;
 public class TestRunner<E> {
 
     private static final int DEFAULT_DURATION_SECONDS = 60;
+
     private static final Logger LOGGER = Logger.getLogger(TestRunner.class);
 
     private final StopThread stopThread = new StopThread();
@@ -127,10 +128,19 @@ public class TestRunner<E> {
 
     public TestRunner withDuration(int durationSeconds) {
         if (durationSeconds < 0) {
-            throw new IllegalArgumentException("Duration can't be smaller than 0");
+            throw new IllegalArgumentException("durationSeconds can't be smaller than 0");
         }
 
         this.durationSeconds = durationSeconds;
+        return this;
+    }
+
+    TestRunner withSleepInterval(int sleepInterval) {
+        if (sleepInterval < 1) {
+            throw new IllegalArgumentException("sleepInterval can't be smaller than 1");
+        }
+
+        stopThread.defaultSleepInterval = sleepInterval;
         return this;
     }
 
@@ -176,22 +186,23 @@ public class TestRunner<E> {
     @SuppressWarnings("checkstyle:magicnumber")
     private final class StopThread extends Thread {
 
+        private volatile int defaultSleepInterval = 5;
+
         @Override
         public void run() {
             testContext.stopped = false;
 
-            int period = 5;
-            int sleepInterval = durationSeconds / period;
+            int sleepInterval = defaultSleepInterval;
+            int sleepIterations = durationSeconds / sleepInterval;
+            for (int i = 1; i <= sleepIterations; i++) {
+                sleepSeconds(sleepInterval);
 
-            for (int i = 1; i <= sleepInterval; i++) {
-                sleepSeconds(period);
-
-                int elapsed = i * period;
+                int elapsed = i * sleepInterval;
                 float percentage = elapsed * 100f / durationSeconds;
                 LOGGER.info(format("Running %d of %d seconds %-4.2f percent complete", elapsed, durationSeconds, percentage));
             }
 
-            sleepSeconds(durationSeconds % period);
+            sleepSeconds(durationSeconds % sleepInterval);
             testContext.stopped = true;
             LOGGER.info("Notified test to stop");
         }

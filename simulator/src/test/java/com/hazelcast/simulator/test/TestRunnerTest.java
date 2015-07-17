@@ -41,8 +41,8 @@ public class TestRunnerTest {
         assertNull(testRunner.getHazelcastInstance());
         assertTrue(testRunner.getDurationSeconds() > 0);
 
-        testRunner.withDuration(6);
-        assertEquals(6, testRunner.getDurationSeconds());
+        testRunner.withDuration(3).withSleepInterval(1);
+        assertEquals(3, testRunner.getDurationSeconds());
 
         testRunner.run();
         assertNotNull(testRunner.getHazelcastInstance());
@@ -81,6 +81,11 @@ public class TestRunnerTest {
     @Test(expected = IllegalArgumentException.class)
     public void testWithDuration_negative() {
         testRunner.withDuration(-1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testWithSleepInterval_zero() {
+        testRunner.withSleepInterval(0);
     }
 
     @Test(expected = NullPointerException.class)
