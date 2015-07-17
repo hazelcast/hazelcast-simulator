@@ -66,7 +66,7 @@ final class AsyncMapStreamer<K, V> implements MapStreamer<K, V> {
 
     private void rethrowExceptionIfAny() {
         if (storedException != null) {
-            rethrow(storedException);
+            throw rethrow(storedException);
         }
     }
 
@@ -80,7 +80,7 @@ final class AsyncMapStreamer<K, V> implements MapStreamer<K, V> {
                 throw new IllegalStateException("Timeout when trying to acquire a permit!");
             }
         } catch (InterruptedException e) {
-            rethrow(e);
+            throw rethrow(e);
         }
     }
 

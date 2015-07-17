@@ -18,7 +18,7 @@ final class SyncMapStreamer<K, V> implements MapStreamer<K, V> {
 
     @Override
     public void pushEntry(K key, V value) {
-        map.put(key, value);
+        map.set(key, value);
     }
 
     @Override
