@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class AgentSmokeTest {
 
     private static final String AGENT_IP_ADDRESS = System.getProperty("agentBindAddress", "127.0.0.1");
-    private static final int TEST_RUNTIME_SECONDS = Integer.parseInt(System.getProperty("testRuntimeSeconds", "10"));
+    private static final int TEST_RUNTIME_SECONDS = Integer.parseInt(System.getProperty("testRuntimeSeconds", "5"));
 
     private static final Logger LOGGER = Logger.getLogger(AgentSmokeTest.class);
 
@@ -104,7 +104,7 @@ public class AgentSmokeTest {
 
     private void cooldown() {
         LOGGER.info("Cooldown...");
-        sleepSeconds(3);
+        sleepSeconds(2);
         LOGGER.info("Finished cooldown");
     }
 

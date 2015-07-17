@@ -15,6 +15,6 @@ public class MapRaceTestTest {
     @Test(expected = AssertionError.class)
     public void test() throws Exception {
         MapRaceTest test = new MapRaceTest();
-        new TestRunner<MapRaceTest>(test).withDuration(10).run();
+        new TestRunner<MapRaceTest>(test).withDuration(5).run();
     }
 }

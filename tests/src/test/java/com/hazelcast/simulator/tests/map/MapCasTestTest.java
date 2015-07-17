@@ -15,6 +15,6 @@ public class MapCasTestTest {
     @Test
     public void test() throws Exception {
         MapCasTest test = new MapCasTest();
-        new TestRunner<MapCasTest>(test).withDuration(10).run();
+        new TestRunner<MapCasTest>(test).withDuration(5).run();
     }
 }
