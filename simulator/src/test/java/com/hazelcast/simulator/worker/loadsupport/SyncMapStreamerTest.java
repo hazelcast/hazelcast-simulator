@@ -8,10 +8,10 @@ import org.junit.Test;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 public class SyncMapStreamerTest {
 
@@ -30,13 +30,13 @@ public class SyncMapStreamerTest {
     public void testPushEntry() {
         streamer.pushEntry(15, "value");
 
-        verify(map).put(15, "value");
+        verify(map).set(15, "value");
         verifyNoMoreInteractions(map);
     }
 
     @Test(timeout = 1000)
     public void testPushEntry_withException() {
-        when(map.put(anyInt(), anyString())).thenThrow(new IllegalArgumentException());
+        doThrow(new IllegalArgumentException()).when(map).set(anyInt(), anyString());
 
         try {
             streamer.pushEntry(1, "foobar");
@@ -48,7 +48,7 @@ public class SyncMapStreamerTest {
         // this method should never block and never throw an exception
         streamer.await();
 
-        verify(map).put(1, "foobar");
+        verify(map).set(1, "foobar");
         verifyNoMoreInteractions(map);
     }
 }
