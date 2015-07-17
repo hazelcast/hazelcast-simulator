@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 
 public class ProbeTestUtils {
 
-    static final int TOLERANCE_MILLIS = 50;
+    static final int TOLERANCE_MILLIS = 500;
 
     private static final Integer WRONG_CLASS = 42;
 

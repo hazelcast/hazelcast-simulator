@@ -48,7 +48,7 @@ public class MaxLatencyProbeTest {
 
     @Test
     public void testStartedDone() {
-        long maxLatencyValue = 150;
+        long maxLatencyValue = 50;
 
         maxLatencyProbe.started();
         sleepNanos(TimeUnit.MILLISECONDS.toNanos(maxLatencyValue));
