@@ -1,6 +1,8 @@
 package com.hazelcast.simulator.utils;
 
+import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
+import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.test.TestCase;
 import org.apache.log4j.Logger;
 
@@ -24,14 +26,13 @@ public final class PropertyBindingSupport {
     private PropertyBindingSupport() {
     }
 
-    public static ProbesConfiguration parseProbeConfiguration(TestCase testCase) {
+    public static ProbesConfiguration parseProbeConfiguration(Object testInstance, TestCase testCase) {
         ProbesConfiguration configuration = new ProbesConfiguration();
-        String probePrefix = "probe-";
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
             String property = entry.getKey();
-            if (property.startsWith(probePrefix)) {
-                String probeName = property.substring(probePrefix.length());
-                configuration.addConfig(probeName, entry.getValue());
+            Field field = findPropertyField(testInstance.getClass(), property);
+            if (isProbeField(field)) {
+                configuration.addConfig(property, entry.getValue());
             }
         }
         return configuration;
@@ -51,11 +52,6 @@ public final class PropertyBindingSupport {
 
             // we ignore the class property
             if ("class".equals(property)) {
-                continue;
-            }
-
-            // we also ignore probe-properties
-            if (property.startsWith("probe-")) {
                 continue;
             }
 
@@ -117,7 +113,8 @@ public final class PropertyBindingSupport {
         try {
             if (!setIntegralValue(object, value, field)
                     && !setFloatingPointValue(object, value, field)
-                    && !setNonNumericValue(object, value, field)) {
+                    && !setNonNumericValue(object, value, field)
+                    && !isProbeField(field)) {
                 String fieldName = object.getClass().getName() + "." + field.getName();
                 throw new BindException(format("Unhandled type [%s] for field [%s]", field.getType(), fieldName));
             }
@@ -128,6 +125,14 @@ public final class PropertyBindingSupport {
             throw new BindException(
                     format("Failed to bind value [%s] to property [%s] of type [%s]", value, propertyName, field.getType()));
         }
+    }
+
+    private static boolean isProbeField(Field field) {
+        if (field == null) {
+            return false;
+        }
+        Class<?> fieldClass = field.getType();
+        return fieldClass.equals(IntervalProbe.class) || field.equals(SimpleProbe.class);
     }
 
     private static Object findPropertyObjectInPath(Object object, String property, String[] path) {

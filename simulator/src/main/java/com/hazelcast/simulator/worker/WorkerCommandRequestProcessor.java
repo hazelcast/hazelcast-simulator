@@ -173,7 +173,7 @@ class WorkerCommandRequestProcessor {
                 Object testInstance = InitCommand.class.getClassLoader().loadClass(testCase.getClassname()).newInstance();
                 bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
                 TestContextImpl testContext = new TestContextImpl(testId, getHazelcastInstance());
-                ProbesConfiguration probesConfiguration = parseProbeConfiguration(testCase);
+                ProbesConfiguration probesConfiguration = parseProbeConfiguration(testInstance, testCase);
 
                 tests.put(testId, new TestContainer<TestContext>(testInstance, testContext, probesConfiguration, testCase));
                 testsPending.incrementAndGet();

@@ -321,7 +321,7 @@ public class TestContainerTest {
     private static class SetupWithValidArgumentsTest extends DummyTest {
 
         @Setup
-        public void setUp(TestContext testContext, SimpleProbe simpleProbe, IntervalProbe intervalProbe) {
+        public void setUp(TestContext testContext) {
         }
     }
 
@@ -347,24 +347,6 @@ public class TestContainerTest {
         testContainer.invoke(TestPhase.SETUP);
 
         assertNotNull(test.simpleProbe);
-    }
-
-    @Test
-    public void testProbeExplicitNameSetViaAnnotation() throws Exception {
-        ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("explicitProbeName", ProbesType.THROUGHPUT.getName());
-        testContainer = createTestContainer(test);
-
-        assertTrue(testContainer.hasProbe("explicitProbeName"));
-    }
-
-    @Test
-    public void testProbeImplicitName() throws Exception {
-        ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("Probe2", ProbesType.THROUGHPUT.getName());
-        testContainer = createTestContainer(test);
-
-        assertTrue(testContainer.hasProbe("Probe2"));
     }
 
     @Test
@@ -430,9 +412,8 @@ public class TestContainerTest {
         private IntervalProbe disabled;
 
         @Setup
-        public void setUp(TestContext context, @Name("explicitProbeName") SimpleProbe probe1, SimpleProbe probe2) {
+        public void setUp(TestContext context) {
             this.context = context;
-            this.simpleProbe = probe1;
         }
 
         @Run

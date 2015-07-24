@@ -316,15 +316,6 @@ public class TestContainer<T extends TestContext> {
         if (parameterType.isAssignableFrom(TestContext.class)) {
             return testContext;
         }
-        String probeName = getValueFromNameAnnotations(parameterAnnotations, "Probe" + index);
-        if (IntervalProbe.class.equals(parameterType)) {
-            return getOrCreateConcurrentProbe(probeName, IntervalProbe.class);
-        }
-        if (SimpleProbe.class.equals(parameterType)) {
-            SimpleProbe probe = getOrCreateConcurrentProbe(probeName, SimpleProbe.class);
-            probeMap.put(probeName, probe);
-            return probe;
-        }
         throw new IllegalTestException(format("Unknown parameter type %s at index %s in setup method", parameterType, index));
     }
 
