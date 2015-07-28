@@ -42,7 +42,6 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostO
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getValueFromNameAnnotation;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getValueFromNameAnnotations;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.injectObjectToInstance;
