@@ -119,7 +119,7 @@ public final class CommonUtils {
         }
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
-        return format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+        return format(Locale.US, "%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
     public static String join(Iterable<?> collection) {
