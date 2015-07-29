@@ -34,9 +34,9 @@ public class SimpleHistogramDataSetContainer extends SimpleHistogramDataset {
             binsField.setAccessible(true);
             bins = (List) binsField.get(this);
         } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
+            throw new SimpleHistogramDatasetException(e);
         } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+            throw new SimpleHistogramDatasetException(e);
         }
     }
 
@@ -70,11 +70,7 @@ public class SimpleHistogramDataSetContainer extends SimpleHistogramDataset {
         if (autoScaleValue != that.autoScaleValue) {
             return false;
         }
-        if (bins != null ? !bins.equals(that.bins) : that.bins != null) {
-            return false;
-        }
-
-        return true;
+        return !(bins != null ? !bins.equals(that.bins) : that.bins != null);
     }
 
     @Override
