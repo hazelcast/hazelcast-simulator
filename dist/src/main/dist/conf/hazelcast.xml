@@ -82,6 +82,9 @@
             <portable-factory factory-id="10000000">
                 com.hazelcast.simulator.tests.synthetic.SyntheticRequestPortableFactory
             </portable-factory>
+            <portable-factory factory-id="10000002">
+                com.hazelcast.simulator.tests.map.helpers.ComplexDomainObjectPortableFactory
+            </portable-factory>
             <portable-factory factory-id="10000001">
                 com.hazelcast.simulator.tests.map.domain.PortableObjectFactory
             </portable-factory>
