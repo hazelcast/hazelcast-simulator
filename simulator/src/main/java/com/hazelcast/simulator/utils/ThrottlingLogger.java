@@ -9,13 +9,13 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Delegating Logger. It throttles the rate messages are logged.
- *
  */
 public class ThrottlingLogger {
+
+    private final AtomicLong nextMessageNotBefore = new AtomicLong();
+
     private final ILogger delegate;
     private final long maximumRateNanos;
-
-    private AtomicLong nextMessageNotBefore;
 
     public static ThrottlingLogger newLogger(ILogger delegate, long maximumRateMs) {
         return new ThrottlingLogger(delegate, maximumRateMs);
@@ -29,10 +29,8 @@ public class ThrottlingLogger {
             throw new IllegalArgumentException("Maximum rate must be great than 0. Current rate: " + maximumRateMs);
         }
 
-
         this.delegate = delegate;
         this.maximumRateNanos = MILLISECONDS.toNanos(maximumRateMs);
-        this.nextMessageNotBefore = new AtomicLong();
     }
 
     public void log(Level level, String message) {
@@ -44,7 +42,7 @@ public class ThrottlingLogger {
         long currentNotBefore = nextMessageNotBefore.get();
 
         if (timeNow < currentNotBefore) {
-            //it's soon to log
+            // it's too soon to log
             return;
         }
 

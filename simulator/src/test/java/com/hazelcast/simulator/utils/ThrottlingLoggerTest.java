@@ -5,18 +5,25 @@ import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class ThrottlingLoggerTest {
-    private ThrottlingLogger throttlingLogger;
+
     private static final String MESSAGE = "message";
+
+    private ThrottlingLogger throttlingLogger;
 
     @Test(expected = IllegalArgumentException.class)
     public void testLoggerCannotBeNull() {
@@ -32,7 +39,7 @@ public class ThrottlingLoggerTest {
     @Test(expected = IllegalArgumentException.class)
     public void testRateCannotBeNegative() {
         ILogger logger = mock(ILogger.class);
-        ThrottlingLogger.newLogger(logger, 0);
+        ThrottlingLogger.newLogger(logger, -1);
     }
 
     @Test
@@ -96,6 +103,4 @@ public class ThrottlingLoggerTest {
             }
         }.start();
     }
-
-
 }
