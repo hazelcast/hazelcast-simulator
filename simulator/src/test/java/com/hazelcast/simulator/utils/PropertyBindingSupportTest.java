@@ -2,6 +2,7 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
+import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.test.TestCase;
 import org.junit.Test;
 
@@ -11,6 +12,7 @@ import java.util.Set;
 
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperty;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.parseProbeConfiguration;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
@@ -72,31 +74,102 @@ public class PropertyBindingSupportTest {
     @Test
     public void testParseProbesConfiguration() {
         testCase.setProperty("class", "foobar");
-        testCase.setProperty("probe1", "latency");
+        testCase.setProperty("probe1", "throughput");
         testCase.setProperty("probe2", "hdr");
 
         TestClassWithProbes testInstance = new TestClassWithProbes();
 
         ProbesConfiguration config = parseProbeConfiguration(testInstance, testCase);
-        assertEquals("latency", config.getConfig("probe1"));
+        assertEquals("throughput", config.getConfig("probe1"));
         assertEquals("hdr", config.getConfig("probe2"));
         assertEquals(null, config.getConfig("notConfigured"));
+    }
+
+    @Test
+    public void bindProperty_withPath() {
+        bindProperty(bindPropertyTestClass, "otherObject.stringField", "newValue");
+        assertEquals("newValue", bindPropertyTestClass.otherObject.stringField);
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_withPathAndNullValue() {
+        bindProperty(bindPropertyTestClass, "nullOtherObject.stringField", "newValue");
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_withPath_missingProperty() {
+        bindProperty(bindPropertyTestClass, "notExist.stringField", "newValue");
     }
 
     @Test(expected = BindException.class)
     public void testFailFastWhenPropertyNotFound() {
         testCase.setProperty("doesNotExist", "foobar");
-        bindProperties(bindPropertyTestClass, testCase, Collections.EMPTY_SET);
+        bindProperties(bindPropertyTestClass, testCase, Collections.<String>emptySet());
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_unknownField() {
+        bindProperty(bindPropertyTestClass, "notExist", "null");
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_protectedField() {
+        bindProperty(bindPropertyTestClass, "protectedField", "newValue");
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_packagePrivateField() {
+        bindProperty(bindPropertyTestClass, "packagePrivateField", "newValue");
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_privateField() {
+        bindProperty(bindPropertyTestClass.otherObject, "privateField", "newValue");
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_staticField() {
+        bindProperty(bindPropertyTestClass.otherObject, "staticField", "newValue");
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_finalField() {
+        bindProperty(bindPropertyTestClass, "finalField", "newValue");
+    }
+
+    @Test(expected = BindException.class)
+    public void bindProperty_fallsThroughAllChecks() {
+        bindProperty(bindPropertyTestClass, "comparableField", "newValue");
     }
 
     @SuppressWarnings("unused")
     private class BindPropertyTestClass {
 
+        public final int finalField = 5;
+
+        public String stringField;
+        public Comparable comparableField;
+
+        public OtherObject otherObject = new OtherObject();
+        public OtherObject nullOtherObject;
+
+        protected String protectedField;
+        String packagePrivateField;
+        private String privateField;
+    }
+
+    @SuppressWarnings("unused")
+    private static class OtherObject {
+
+        public static Object staticField;
+
         public String stringField;
     }
 
+    @SuppressWarnings("unused")
     private class TestClassWithProbes {
-        public IntervalProbe probe1;
+
+        public SimpleProbe probe1;
         public IntervalProbe probe2;
     }
 }

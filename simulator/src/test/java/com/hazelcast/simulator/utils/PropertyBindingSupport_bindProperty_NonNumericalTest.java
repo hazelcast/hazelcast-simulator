@@ -90,57 +90,6 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
         bindProperty(bindPropertyTestClass, "enumField", "notExist");
     }
 
-    @Test(expected = BindException.class)
-    public void bindProperty_unknownField() {
-        bindProperty(bindPropertyTestClass, "notExist", "null");
-    }
-
-    @Test
-    public void bindProperty_withPath() {
-        bindProperty(bindPropertyTestClass, "otherObject.stringField", "newValue");
-        assertEquals("newValue", bindPropertyTestClass.otherObject.stringField);
-    }
-
-    @Test(expected = BindException.class)
-    public void bindProperty_withPathAndNullValue() {
-        bindProperty(bindPropertyTestClass, "nullOtherObject.stringField", "newValue");
-    }
-
-    @Test(expected = BindException.class)
-    public void bindProperty_withPath_missingProperty() {
-        bindProperty(bindPropertyTestClass, "notExist.stringField", "newValue");
-    }
-
-    @Test(expected = BindException.class)
-    public void bindProperty_staticField() {
-        bindProperty(bindPropertyTestClass.otherObject, "staticField", "newValue");
-    }
-
-    @Test(expected = BindException.class)
-    public void bindProperty_finalField() {
-        bindProperty(bindPropertyTestClass.otherObject, "finalField", "newValue");
-    }
-
-    @Test(expected = BindException.class)
-    public void bindProperty_privateField() {
-        bindProperty(bindPropertyTestClass.otherObject, "privateField", "newValue");
-    }
-
-    @Test(expected = BindException.class)
-    public void bindProperty_protectedField() {
-        bindProperty(bindPropertyTestClass.otherObject, "protectedField", "newValue");
-    }
-
-    @Test(expected = BindException.class)
-    public void bindProperty_packageFriendlyField() {
-        bindProperty(bindPropertyTestClass.otherObject, "packageFriendlyField", "newValue");
-    }
-
-    @Test(expected = BindException.class)
-    public void bindProperty_fallsThroughAllChecks() {
-        bindProperty(bindPropertyTestClass, "comparableField", "newValue");
-    }
-
     @SuppressWarnings("unused")
     private class BindPropertyTestClass {
 
@@ -150,24 +99,7 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
         public Object objectField;
         public String stringField;
         public TimeUnit enumField;
-        public Comparable comparableField;
 
-        public OtherObject otherObject = new OtherObject();
-        public OtherObject nullOtherObject;
         public Class clazz;
-
-        private String privateField;
-        protected String protectedField;
-        String packageFriendlyField;
-    }
-
-    @SuppressWarnings("unused")
-    private static class OtherObject {
-
-        private static Object staticField;
-
-        public final int finalField = 5;
-
-        public String stringField;
     }
 }
