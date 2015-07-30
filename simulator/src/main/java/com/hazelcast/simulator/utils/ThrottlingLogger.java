@@ -10,16 +10,12 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 /**
  * Delegating Logger. It throttles the rate messages are logged.
  */
-public class ThrottlingLogger {
+public final class ThrottlingLogger {
 
     private final AtomicLong nextMessageNotBefore = new AtomicLong();
 
     private final ILogger delegate;
     private final long maximumRateNanos;
-
-    public static ThrottlingLogger newLogger(ILogger delegate, long maximumRateMs) {
-        return new ThrottlingLogger(delegate, maximumRateMs);
-    }
 
     private ThrottlingLogger(ILogger delegate, long maximumRateMs) {
         if (delegate == null) {
@@ -31,6 +27,10 @@ public class ThrottlingLogger {
 
         this.delegate = delegate;
         this.maximumRateNanos = MILLISECONDS.toNanos(maximumRateMs);
+    }
+
+    public static ThrottlingLogger newLogger(ILogger delegate, long maximumRateMs) {
+        return new ThrottlingLogger(delegate, maximumRateMs);
     }
 
     public void log(Level level, String message) {
