@@ -340,7 +340,9 @@ public class AgentsClient {
             AgentClient agentClient = entry.getKey();
             Future<List<E>> future = entry.getValue();
             List<List<E>> result = getAllFutures(Collections.singletonList(future));
-            resultMap.put(agentClient, result.get(0));
+            if (result.size() > 0) {
+                resultMap.put(agentClient, result.get(0));
+            }
         }
         return resultMap;
     }
