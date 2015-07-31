@@ -79,7 +79,7 @@ public class ExecutorTest {
         for (IExecutorService executor : executors) {
             executor.shutdownNow();
             if (!executor.awaitTermination(120, TimeUnit.SECONDS)) {
-                LOGGER.severe("Time out while waiting for shutdown of executor: " + executor.getId());
+                LOGGER.severe("Time out while waiting for shutdown of executor: " + executor.getName());
             }
             executor.destroy();
         }
