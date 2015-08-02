@@ -63,9 +63,9 @@ public class ResultParserWorker extends SwingWorker<BenchmarkResults, Void> {
             BenchmarkResults results = get();
             model.addBenchmarkResults(results);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new ResultParserException(e);
         } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+            throw new ResultParserException(e);
         }
     }
 }

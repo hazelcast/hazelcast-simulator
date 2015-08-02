@@ -27,6 +27,7 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.Formatter;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -55,16 +56,16 @@ public final class CommonUtils {
      */
     public static String formatDouble(double number, int length) {
         StringBuilder sb = new StringBuilder();
-        Formatter f = new Formatter(sb);
-        f.format("%,.2f", number);
+        Formatter formatter = new Formatter(sb, Locale.US);
+        formatter.format("%,.2f", number);
 
         return padLeft(sb.toString(), length);
     }
 
     public static String formatLong(long number, int length) {
         StringBuilder sb = new StringBuilder();
-        Formatter f = new Formatter(sb);
-        f.format("%,d", number);
+        Formatter formatter = new Formatter(sb, Locale.US);
+        formatter.format("%,d", number);
 
         return padLeft(sb.toString(), length);
     }
@@ -118,7 +119,7 @@ public final class CommonUtils {
         }
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
-        return format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+        return format(Locale.US, "%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
     public static String join(Iterable<?> collection) {

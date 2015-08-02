@@ -27,7 +27,6 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
 import com.hazelcast.util.Clock;
 import org.apache.log4j.Logger;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -228,8 +227,8 @@ public class TestContainer<T extends TestContext> {
             runMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Run.class);
             runWithWorkerMethod = getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, IWorker.class);
             if (!(runMethod == null ^ runWithWorkerMethod == null)) {
-                throw new IllegalTestException(
-                        format("Test must contain either %s or %s method", Run.class, RunWithWorker.class));
+                throw new IllegalTestException(format("Test must contain either %s or %s method",
+                        Run.class, RunWithWorker.class));
             }
 
             setupMethod = getAtMostOneVoidMethodSkipArgsCheck(testClassType, Setup.class);
@@ -278,40 +277,36 @@ public class TestContainer<T extends TestContext> {
         }
         if (!testContextFound || illegalArgumentFound) {
             throw new IllegalTestException(
-                    format("Method %s.%s must have argument of type %s and zero or more arguments of type %s", testClassType,
-                            method, TestContext.class, SimpleProbe.class));
+                    format("Method %s.%s must have argument of type %s and zero or more arguments of type %s",
+                            testClassType, method, TestContext.class, SimpleProbe.class));
         }
     }
 
     private void assertArguments(Method method, Class... arguments) {
         Class<?>[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length != arguments.length) {
-            throw new IllegalTestException(
-                    format("Method %s must have %s arguments, but %s arguments found", method, arguments.length,
-                            parameterTypes.length));
+            throw new IllegalTestException(format("Method %s must have %s arguments, but %s arguments found",
+                    method, arguments.length, parameterTypes.length));
         }
 
         for (int i = 0; i < arguments.length; i++) {
             if (!parameterTypes[i].isAssignableFrom(arguments[i])) {
-                throw new IllegalTestException(
-                        format("Method %s has argument of type %s at index %d where type %s is expected", method,
-                                parameterTypes[i], i + 1, arguments[i]));
+                throw new IllegalTestException(format("Method %s has argument of type %s at index %d where type %s is expected",
+                        method, parameterTypes[i], i + 1, arguments[i]));
             }
         }
     }
 
     private Object[] getSetupArguments(Method setupMethod) {
         Class[] parameterTypes = setupMethod.getParameterTypes();
-        Annotation[][] parameterAnnotations = setupMethod.getParameterAnnotations();
-
         Object[] arguments = new Object[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
-            arguments[i] = getSetupArgumentForParameterType(parameterTypes[i], parameterAnnotations[i], i);
+            arguments[i] = getSetupArgumentForParameterType(parameterTypes[i], i);
         }
         return arguments;
     }
 
-    private Object getSetupArgumentForParameterType(Class<?> parameterType, Annotation[] parameterAnnotations, int index) {
+    private Object getSetupArgumentForParameterType(Class<?> parameterType, int index) {
         if (parameterType.isAssignableFrom(TestContext.class)) {
             return testContext;
         }

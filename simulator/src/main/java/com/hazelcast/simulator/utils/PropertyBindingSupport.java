@@ -31,7 +31,7 @@ public final class PropertyBindingSupport {
         for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
             String property = entry.getKey();
             Field field = findPropertyField(testInstance.getClass(), property);
-            if (isProbeField(field)) {
+            if (field != null && isProbeField(field)) {
                 configuration.addConfig(property, entry.getValue());
             }
         }
@@ -106,33 +106,17 @@ public final class PropertyBindingSupport {
             throw new BindException(format("Property [%s.%s] does not exist", object.getClass().getName(), property));
         }
 
-        if (!isPublic(field.getModifiers())) {
-            throw new BindException(format("Property [%s.%s] is not public", object.getClass().getName(), property));
-        }
-
         try {
-            if (!setIntegralValue(object, value, field)
-                    && !setFloatingPointValue(object, value, field)
-                    && !setNonNumericValue(object, value, field)
-                    && !isProbeField(field)) {
-                String fieldName = object.getClass().getName() + "." + field.getName();
-                throw new BindException(format("Unhandled type [%s] for field [%s]", field.getType(), fieldName));
+            if (isProbeField(field) || setValue(object, value, field)) {
+                return;
             }
-        } catch (BindException e) {
-            throw e;
         } catch (Exception e) {
-            String propertyName = object.getClass().getName() + "." + property;
-            throw new BindException(
-                    format("Failed to bind value [%s] to property [%s] of type [%s]", value, propertyName, field.getType()));
+            throw new BindException(format("Failed to bind value [%s] to property [%s.%s] of type [%s]",
+                    value, object.getClass().getName(), property, field.getType()));
         }
-    }
 
-    private static boolean isProbeField(Field field) {
-        if (field == null) {
-            return false;
-        }
-        Class<?> fieldClass = field.getType();
-        return fieldClass.equals(IntervalProbe.class) || field.equals(SimpleProbe.class);
+        throw new BindException(format("Unhandled type [%s] for field [%s.%s]",
+                field.getType(), object.getClass().getName(), field.getName()));
     }
 
     private static Object findPropertyObjectInPath(Object object, String property, String[] path) {
@@ -141,16 +125,16 @@ public final class PropertyBindingSupport {
             String element = path[i];
             field = findPropertyField(object.getClass(), element);
             if (field == null) {
-                throw new BindException(format("Failed to find property: %s in property: %s", element, property));
+                throw new BindException(format("Failed to find field [%s] in property [%s]", element, property));
             }
             try {
                 object = field.get(object);
             } catch (IllegalAccessException e) {
-                throw new BindException(format("IllegalAccessException while binding property %s to field %s",
+                throw new BindException(format("IllegalAccessException while binding property [%s] to field [%s]",
                         property, field), e);
             }
             if (object == null) {
-                throw new BindException(format("Failed to bind to property: %s encountered a null value at field: %s",
+                throw new BindException(format("Failed to bind to property [%s] encountered a null value at field [%s]",
                         property, field));
             }
         }
@@ -160,14 +144,15 @@ public final class PropertyBindingSupport {
     private static Field findPropertyField(Class clazz, String property) {
         try {
             Field field = clazz.getDeclaredField(property);
+            if (!isPublic(field.getModifiers())) {
+                throw new BindException(format("Property [%s.%s] is not public", clazz.getName(), property));
+            }
             if (isStatic(field.getModifiers())) {
-                throw new BindException(format("Property [%s.%s] can't be static", clazz.getName(), property));
+                throw new BindException(format("Property [%s.%s] is static", clazz.getName(), property));
             }
             if (isFinal(field.getModifiers())) {
-                throw new BindException(format("Property [%s.%s] can't be final", clazz.getName(), property));
+                throw new BindException(format("Property [%s.%s] is final", clazz.getName(), property));
             }
-            field.setAccessible(true);
-
             return field;
         } catch (NoSuchFieldException e) {
             Class superClass = clazz.getSuperclass();
@@ -176,6 +161,21 @@ public final class PropertyBindingSupport {
             }
             return findPropertyField(superClass, property);
         }
+    }
+
+    private static boolean isProbeField(Field field) {
+        Class<?> fieldClass = field.getType();
+        return fieldClass.equals(IntervalProbe.class) || fieldClass.equals(SimpleProbe.class);
+    }
+
+    private static boolean setValue(Object object, String value, Field field) throws IllegalAccessException {
+        if (setIntegralValue(object, value, field)) {
+            return true;
+        }
+        if (setFloatingPointValue(object, value, field)) {
+            return true;
+        }
+        return setNonNumericValue(object, value, field);
     }
 
     private static boolean setIntegralValue(Object object, String value, Field field) throws IllegalAccessException {
