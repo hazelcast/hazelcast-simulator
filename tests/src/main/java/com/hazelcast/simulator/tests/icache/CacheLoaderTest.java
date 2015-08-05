@@ -75,7 +75,7 @@ public class CacheLoaderTest {
         config = new MutableConfiguration<Integer, Integer>();
         config.setReadThrough(true);
 
-        RecordingCacheLoader recordingCacheLoader = new RecordingCacheLoader();
+        RecordingCacheLoader<Integer> recordingCacheLoader = new RecordingCacheLoader<Integer>();
         recordingCacheLoader.loadAllDelayMs = loadAllDelayMs;
         config.setCacheLoaderFactory(FactoryBuilder.factoryOf(recordingCacheLoader));
 
