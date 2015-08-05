@@ -11,6 +11,8 @@ import static java.lang.String.format;
 
 public final class CommandFuture<E> implements Future<E> {
 
+    private static final long ONE_MILLISECOND = TimeUnit.MILLISECONDS.toNanos(1);
+
     private static final Object NO_RESULT = new Object();
 
     private final Command command;
@@ -70,7 +72,7 @@ public final class CommandFuture<E> implements Future<E> {
 
         long remainingTimeoutNanos = timeUnit.toNanos(timeout);
         synchronized (this) {
-            while (NO_RESULT.equals(result) && remainingTimeoutNanos > 0) {
+            while (NO_RESULT.equals(result) && remainingTimeoutNanos > ONE_MILLISECOND) {
                 long started = System.nanoTime();
                 wait(TimeUnit.NANOSECONDS.toMillis(remainingTimeoutNanos));
                 remainingTimeoutNanos -= System.nanoTime() - started;
