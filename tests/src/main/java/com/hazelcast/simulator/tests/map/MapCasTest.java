@@ -29,7 +29,7 @@ public class MapCasTest {
 
     // properties
     public int keyCount = 1000;
-    public String basename = "mapCas";
+    public String basename = MapCasTest.class.getSimpleName();
 
     private IMap<Integer, Long> map;
     private IMap<String, Map<Integer, Long>> resultsPerWorker;

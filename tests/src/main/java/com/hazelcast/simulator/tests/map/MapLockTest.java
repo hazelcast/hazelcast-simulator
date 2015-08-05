@@ -27,7 +27,7 @@ public class MapLockTest {
     private static final ILogger LOGGER = Logger.getLogger(MapLockTest.class);
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapLockTest.class.getSimpleName();
     public int threadCount = 3;
     public int keyCount = 1000;
 

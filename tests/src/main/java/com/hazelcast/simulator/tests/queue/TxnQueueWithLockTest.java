@@ -25,7 +25,7 @@ public class TxnQueueWithLockTest {
 
     private static final ILogger LOGGER = Logger.getLogger(TxnQueueWithLockTest.class);
 
-    public String basename = this.getClass().getSimpleName();
+    public String basename = TxnQueueWithLockTest.class.getSimpleName();
     public int threadCount = 5;
 
     private HazelcastInstance instance = null;

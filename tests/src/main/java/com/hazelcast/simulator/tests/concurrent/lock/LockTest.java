@@ -25,7 +25,7 @@ public class LockTest {
     private static final ILogger LOGGER = Logger.getLogger(LockTest.class);
 
     // properties
-    public String basename = "lock";
+    public String basename = LockTest.class.getSimpleName();
     public int lockCount = 500;
     public int threadCount = 10;
     public int initialAmount = 1000;

@@ -38,6 +38,7 @@ public class ITopicTest {
     private static final ILogger LOGGER = Logger.getLogger(ITopicTest.class);
 
     // properties
+    public String basename = ITopicTest.class.getSimpleName();
     public int topicCount = 1000;
     public int threadCount = 5;
     public int listenersPerTopic = 1;
@@ -48,30 +49,28 @@ public class ITopicTest {
     // the maximum period the verification process is going to wait till the correct number of messags
     // have been received. A negative value indicates that no verification should be done.
     public int maxVerificationTimeSeconds = 60;
-    public String basename = "topic";
 
     private IAtomicLong totalExpectedCounter;
     private IAtomicLong totalFoundCounter;
     private ITopic[] topics;
     private AtomicLong operations = new AtomicLong();
     private TestContext testContext;
-    private HazelcastInstance hz;
     private List<TopicListener> listeners;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        hz = testContext.getTargetInstance();
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
 
-        totalExpectedCounter = hz.getAtomicLong(testContext.getTestId() + ":TotalExpectedCounter");
-        totalFoundCounter = hz.getAtomicLong(testContext.getTestId() + ":TotalFoundCounter");
+        totalExpectedCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalExpectedCounter");
+        totalFoundCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalFoundCounter");
         topics = new ITopic[topicCount];
         listeners = new LinkedList<TopicListener>();
-        for (int k = 0; k < topics.length; k++) {
-            ITopic<Long> topic = hz.getTopic(basename + "-" + testContext.getTestId() + "-" + k);
-            topics[k] = topic;
+        for (int topicIndex = 0; topicIndex < topics.length; topicIndex++) {
+            ITopic<Long> topic = targetInstance.getTopic(basename + "-" + testContext.getTestId() + "-" + topicIndex);
+            topics[topicIndex] = topic;
 
-            for (int l = 0; l < listenersPerTopic; l++) {
+            for (int listenerIndex = 0; listenerIndex < listenersPerTopic; listenerIndex++) {
                 TopicListener topicListener = new TopicListener();
                 topic.addMessageListener(topicListener);
                 listeners.add(topicListener);
@@ -82,7 +81,7 @@ public class ITopicTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();

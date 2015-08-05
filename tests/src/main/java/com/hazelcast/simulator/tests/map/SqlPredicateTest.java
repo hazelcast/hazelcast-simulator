@@ -30,12 +30,10 @@ public class SqlPredicateTest {
     private static final ILogger LOGGER = Logger.getLogger(SqlPredicateTest.class);
     private static final String[] NAMES = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
 
-
     // properties
-    public int keyLength = 10;
-    // number of keys per member
+    public String basename = SqlPredicateTest.class.getSimpleName();
     public int keyCount = 10000;
-    public String basename = "sqlpredicate";
+    public int keyLength = 10;
     public String sql = "age = 30 AND active = true";
     public int intervalMs = 0;
     public int maxAge = 75;

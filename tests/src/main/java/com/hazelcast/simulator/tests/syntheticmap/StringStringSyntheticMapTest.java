@@ -31,11 +31,11 @@ public class StringStringSyntheticMapTest {
     }
 
     // properties
+    public String basename = StringStringSyntheticMapTest.class.getSimpleName();
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 10000;
     public int valueCount = 10000;
-    public String basename = "stringStringMap";
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
 

@@ -31,11 +31,11 @@ public class PerformanceICacheTest {
     private static final ILogger LOGGER = Logger.getLogger(PerformanceICacheTest.class);
 
     // properties
+    public String basename = PerformanceICacheTest.class.getSimpleName();
     public int threadCount = 10;
     public int keyCount = 1000000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = "icacheperformance";
     public int writePercentage = 10;
 
     private Cache<Object, Object> cache;

@@ -45,7 +45,7 @@ public class MapMaxSizeTest {
     private static final ILogger LOGGER = Logger.getLogger(MapMaxSizeTest.class);
 
     // properties
-    public String basename = "MapMaxSize1";
+    public String basename = MapMaxSizeTest.class.getSimpleName();
     public int keyCount = Integer.MAX_VALUE;
 
     public double putProb = 0.5;

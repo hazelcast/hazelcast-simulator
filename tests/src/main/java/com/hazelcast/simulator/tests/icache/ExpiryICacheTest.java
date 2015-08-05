@@ -45,7 +45,7 @@ public class ExpiryICacheTest {
     private static final ILogger LOGGER = Logger.getLogger(ExpiryICacheTest.class);
 
     // properties
-    public String basename = "ttlicachetest";
+    public String basename = ExpiryICacheTest.class.getSimpleName();
     public int threadCount = 3;
     public double maxHeapUsagePercentage = 80;
     public int logFrequency = 10000;

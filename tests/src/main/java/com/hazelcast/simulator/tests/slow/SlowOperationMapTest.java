@@ -66,7 +66,7 @@ public class SlowOperationMapTest {
     }
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = SlowOperationMapTest.class.getSimpleName();
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 100;

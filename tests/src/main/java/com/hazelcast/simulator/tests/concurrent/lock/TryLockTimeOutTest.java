@@ -28,11 +28,11 @@ public class TryLockTimeOutTest {
 
     private static final ILogger LOGGER = Logger.getLogger(TryLockTimeOutTest.class);
 
+    public String basename = TryLockTimeOutTest.class.getSimpleName();
     public int threadCount = 3;
     public int maxAccounts = 100;
     public int tryLockTimeOutMs = 1;
     public long initialAccountValue = 1000;
-    public String basename = this.getClass().getSimpleName();
 
     private long totalInitialValue;
     private TestContext testContext;

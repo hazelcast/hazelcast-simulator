@@ -44,14 +44,13 @@ public class ExecutorTest {
 
     private static final ILogger LOGGER = Logger.getLogger(ExecutorTest.class);
 
-    // props
+    // properties
+    public String basename = ExecutorTest.class.getSimpleName();
     public int executorCount = 1;
-    // the number of threads submitting tasks to the executor
     public int threadCount = 5;
     // the number of outstanding submits, before doing get. A count of 1 means that you wait for every task to complete,
     // before sending in the next
     public int submitCount = 5;
-    public String basename = this.getClass().getSimpleName();
 
     private IExecutorService[] executors;
     private IAtomicLong executedCounter;

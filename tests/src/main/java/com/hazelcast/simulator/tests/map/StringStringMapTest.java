@@ -50,19 +50,16 @@ public class StringStringMapTest {
     }
 
     // properties
-    public int keyLength = 10;
-    public int valueLength = 10;
+    public String basename = StringStringMapTest.class.getSimpleName();
     public int keyCount = 10000;
     public int valueCount = 10000;
-    public String basename = "stringStringMap";
+    public int keyLength = 10;
+    public int valueLength = 10;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
 
     public double putProb = 0.1;
     public double setProb = 0;
-    @Deprecated
-    // use the setProb property instead
-    public boolean useSet = false;
 
     // probes
     public IntervalProbe putLatency;
@@ -79,11 +76,6 @@ public class StringStringMapTest {
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
-        if (useSet) {
-            throw new IllegalArgumentException("The 'useSet' property is no longer supported. "
-                    + "Configure 'setProb' property to use IMap::set.");
-        }
-
         this.testContext = testContext;
         map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
 

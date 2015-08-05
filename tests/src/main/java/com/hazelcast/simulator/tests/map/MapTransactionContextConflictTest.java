@@ -36,7 +36,7 @@ public class MapTransactionContextConflictTest {
 
     private static final ILogger LOGGER = Logger.getLogger(MapTransactionContextConflictTest.class);
 
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapTransactionContextConflictTest.class.getSimpleName();
     public int threadCount = 3;
     public int keyCount = 50;
     public int maxKeysPerTxn = 5;

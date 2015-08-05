@@ -24,6 +24,7 @@ public class GrowingMapTest {
     private static final ILogger LOGGER = Logger.getLogger(GrowingMapTest.class);
 
     // properties
+    public String basename = GrowingMapTest.class.getSimpleName();
     public int threadCount = 10;
     public int growCount = 10000;
     public boolean usePut = true;
@@ -31,7 +32,6 @@ public class GrowingMapTest {
     public int logFrequency = 10000;
     public boolean removeOnStop = true;
     public boolean readValidation = true;
-    public String basename = "growingMap";
 
     private TestContext testContext;
     private IdGenerator idGenerator;

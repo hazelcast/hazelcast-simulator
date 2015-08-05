@@ -46,8 +46,9 @@ public class StringICacheTest {
     private static final ILogger LOGGER = Logger.getLogger(StringICacheTest.class);
 
     // properties
-    public int writePercentage = 10;
+    public String basename = StringICacheTest.class.getSimpleName();
     public int threadCount = 10;
+    public int writePercentage = 10;
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 10000;
@@ -56,7 +57,6 @@ public class StringICacheTest {
     public int performanceUpdateFrequency = 10000;
     // if we use the putAndGet (so returning a value) or the put (which returns void)
     public boolean useGetAndPut = true;
-    public String basename = "stringicache";
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
     public IntervalProbe putLatency;
