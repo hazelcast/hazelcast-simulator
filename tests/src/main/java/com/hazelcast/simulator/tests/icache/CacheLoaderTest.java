@@ -31,7 +31,6 @@ import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableConfiguration;
-import javax.cache.integration.CacheLoader;
 import javax.cache.integration.CompletionListenerFuture;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -41,14 +40,14 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
 import static org.junit.Assert.assertTrue;
 
 /**
- * This tests concurrent load all calls to {@link CacheLoader}.
+ * This tests concurrent load all calls to {@link javax.cache.integration.CacheLoader}.
  *
- * We can configure a delay in {@link CacheLoader#loadAll(Iterable)} or to wait for completion.
+ * We can configure a delay in {@link javax.cache.integration.CacheLoader#loadAll(Iterable)} or to wait for completion.
  *
- * A large delay and high concurrent calls to {@link CacheLoader#loadAll(Iterable)} could overflow some internal queues. The same
- * can happen if {@link #waitForLoadAllFutureCompletion} is false.
+ * A large delay and high concurrent calls to {@link javax.cache.integration.CacheLoader#loadAll(Iterable)} could overflow some
+ * internal queues. The same can happen if {@link #waitForLoadAllFutureCompletion} is false.
  *
- * We verify that the cache contains all keys and that the keys have been loaded through a {@link CacheLoader} instance.
+ * We verify that the cache contains all keys and that the keys have been loaded through a the cache instance.
  */
 public class CacheLoaderTest {
 
