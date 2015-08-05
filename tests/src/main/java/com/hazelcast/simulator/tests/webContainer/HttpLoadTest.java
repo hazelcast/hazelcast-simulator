@@ -34,6 +34,11 @@ public class HttpLoadTest {
 
     private static final ILogger LOGGER = Logger.getLogger(HttpLoadTest.class);
 
+    private enum RequestType {
+        GET_REQUEST,
+        PUT_REQUEST
+    }
+
     public String serverIp = "";
     public int serverPort = 0;
 
@@ -43,17 +48,21 @@ public class HttpLoadTest {
     public double getRequestProb = 0.5;
     public double postRequestProb = 0.5;
 
-    private TestContext testContext;
+    private final OperationSelectorBuilder<RequestType> operationSelectorBuilder = new OperationSelectorBuilder<RequestType>();
 
-    private enum RequestType {
-        GET_REQUEST,
-        PUT_REQUEST
-    }
+    private TestContext testContext;
+    private String baseRul;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         id = testContext.getTestId();
+
+        baseRul = "http://" + serverIp + ":" + serverPort + "/";
+
+        operationSelectorBuilder
+                .addOperation(RequestType.GET_REQUEST, getRequestProb)
+                .addOperation(RequestType.PUT_REQUEST, postRequestProb);
     }
 
     @Run
@@ -67,27 +76,18 @@ public class HttpLoadTest {
 
     private class Worker implements Runnable {
 
-        private CookieStore cookieStore;
-        private HttpClient client;
-        private String baseRul = "http://" + serverIp + ":" + serverPort + "/";
+        private final Random random = new Random();
+        private final Map<Integer, String> putKeyValues = new HashMap<Integer, String>();
+        private final CookieStore cookieStore = new BasicCookieStore();
 
-        private Random random = new Random();
-        private OperationSelector<RequestType> requestSelector;
+        private final OperationSelector<RequestType> requestSelector = operationSelectorBuilder.build();
 
-        private Map<Integer, String> putKeyValues = new HashMap<Integer, String>();
+        private final HttpClient client;
 
         public Worker() {
-            cookieStore = new BasicCookieStore();
-            client = HttpClientBuilder.create().disableRedirectHandling().setDefaultCookieStore(cookieStore).build();
-
             LOGGER.info(id + ": baseRul=" + baseRul + " cookie=" + cookieStore);
 
-            OperationSelectorBuilder<RequestType> operationSelectorBuilder = new OperationSelectorBuilder<RequestType>();
-
-            requestSelector = operationSelectorBuilder
-                    .addOperation(RequestType.GET_REQUEST, getRequestProb)
-                    .addOperation(RequestType.PUT_REQUEST, postRequestProb)
-                    .build();
+            client = HttpClientBuilder.create().disableRedirectHandling().setDefaultCookieStore(cookieStore).build();
 
             try {
                 for (int key = 0; key < maxKeys; key++) {
@@ -126,17 +126,17 @@ public class HttpLoadTest {
             }
         }
 
-        protected String getRequest(String restOpp) throws IOException {
+        private String getRequest(String restOpp) throws IOException {
             HttpUriRequest request = new HttpGet(baseRul + restOpp);
             return responseToString(client.execute(request));
         }
 
-        protected String putRequest(String restOpp) throws IOException {
+        private String putRequest(String restOpp) throws IOException {
             HttpUriRequest request = new HttpPut(baseRul + restOpp);
             return responseToString(client.execute(request));
         }
 
-        protected String responseToString(HttpResponse response) throws IOException {
+        private String responseToString(HttpResponse response) throws IOException {
             HttpEntity entity = response.getEntity();
             return EntityUtils.toString(entity);
         }
