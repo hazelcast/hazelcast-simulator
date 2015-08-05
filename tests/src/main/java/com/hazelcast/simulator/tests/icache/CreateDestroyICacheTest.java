@@ -49,6 +49,7 @@ public class CreateDestroyICacheTest {
         DESTROY_CACHE
     }
 
+    public String basename = CreateDestroyICacheTest.class.getSimpleName();
     public double createCacheProb = 0.4;
     public double putCacheProb = 0.2;
     public double closeCacheProb = 0.2;
@@ -56,14 +57,13 @@ public class CreateDestroyICacheTest {
 
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance hazelcastInstance;
+    private IList<ICacheCreateDestroyCounter> counters;
     private CacheManager cacheManager;
-    private String basename;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        hazelcastInstance = testContext.getTargetInstance();
-        basename = testContext.getTestId();
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        counters = hazelcastInstance.getList(basename);
 
         cacheManager = createCacheManager(hazelcastInstance);
 
@@ -75,10 +75,9 @@ public class CreateDestroyICacheTest {
 
     @Verify(global = true)
     public void verify() throws Exception {
-        IList<ICacheCreateDestroyCounter> counters = hazelcastInstance.getList(basename);
         ICacheCreateDestroyCounter total = new ICacheCreateDestroyCounter();
-        for (ICacheCreateDestroyCounter c : counters) {
-            total.add(c);
+        for (ICacheCreateDestroyCounter counter : counters) {
+            total.add(counter);
         }
         LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
@@ -153,7 +152,7 @@ public class CreateDestroyICacheTest {
 
         @Override
         protected void afterRun() {
-            hazelcastInstance.getList(basename).add(counter);
+            counters.add(counter);
         }
     }
 }
