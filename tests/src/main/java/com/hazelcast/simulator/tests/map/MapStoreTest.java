@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * This test operates on a map which has a {@link com.hazelcast.core.MapStore} configured.

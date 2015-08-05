@@ -16,7 +16,7 @@ import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * This test checks for duplicate store entries when eviction happens and MapStore is slow (see Hazelcast issue #4448).

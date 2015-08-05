@@ -30,7 +30,7 @@ import javax.cache.CacheManager;
 import java.io.Serializable;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * In this test we concurrently call createCache. From multi clients/members we expect no exceptions

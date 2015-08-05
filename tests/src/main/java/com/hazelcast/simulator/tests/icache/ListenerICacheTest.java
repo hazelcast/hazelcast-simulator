@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * In this test we add listeners to a cache and record the number of events the listeners receive.
