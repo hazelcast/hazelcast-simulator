@@ -61,6 +61,7 @@ public class ExpiryTest {
 
     private static final ILogger LOGGER = Logger.getLogger(ExpiryTest.class);
 
+    public String basename = ExpiryTest.class.getSimpleName();
     public int threadCount = 3;
     public int expiryDuration = 500;
     public int keyCount = 1000;
@@ -77,7 +78,6 @@ public class ExpiryTest {
     private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     private AtomicLong operations = new AtomicLong();
     private CacheManager cacheManager;
-    private String basename;
 
     private ExpiryPolicy expiryPolicy;
     private CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
@@ -86,7 +86,6 @@ public class ExpiryTest {
     public void setup(TestContext textConTx) {
         testContext = textConTx;
         hazelcastInstance = testContext.getTargetInstance();
-        basename = testContext.getTestId();
 
         cacheManager = createCacheManager(hazelcastInstance);
         expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
