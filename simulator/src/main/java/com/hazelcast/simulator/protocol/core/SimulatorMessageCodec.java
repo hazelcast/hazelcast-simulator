@@ -5,13 +5,14 @@ import io.netty.buffer.ByteBuf;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.ADDRESS_SIZE;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.INT_SIZE;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.LONG_SIZE;
-import static com.hazelcast.simulator.protocol.core.BaseCodec.MAGIC_BYTES;
 import static io.netty.util.CharsetUtil.UTF_8;
 
 /**
  * Encodes and decodes a {@link SimulatorMessage}.
  */
 public final class SimulatorMessageCodec {
+
+    private static final int MAGIC_BYTES = 0xA5E1CA57;
 
     private static final int OFFSET_DST_ADDRESS = 2 * INT_SIZE;
     private static final int OFFSET_MESSAGE_ID = OFFSET_DST_ADDRESS + 2 * ADDRESS_SIZE;

@@ -6,8 +6,6 @@ package com.hazelcast.simulator.protocol.core;
 @SuppressWarnings("checkstyle:magicnumber")
 public final class BaseCodec {
 
-    public static final int MAGIC_BYTES = 0xA5E1CA57;
-
     public static final int INT_SIZE = 4;
     public static final int LONG_SIZE = 8;
 
