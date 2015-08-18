@@ -41,8 +41,9 @@ public class EvictionICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(EvictionICacheTest.class);
 
-    // number of threads each test participants will use to run the test
+    public String basename = EvictionICacheTest.class.getSimpleName();
     public int threadCount = 3;
+    public int partitionCount;
 
     // number of bytes for the value/payload of a key
     public int valueSize = 2;
@@ -50,11 +51,6 @@ public class EvictionICacheTest {
     public double putProb = 0.8;
     public double putAsyncProb = 0.1;
     public double putAllProb = 0.1;
-
-    // used as the basename of the data structure
-    public String basename;
-
-    public int partitionCount;
 
     private String id;
     private TestContext testContext;

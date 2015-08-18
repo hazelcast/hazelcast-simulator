@@ -38,10 +38,10 @@ public class ProducerConsumerTest {
     private static final ILogger LOGGER = Logger.getLogger(ProducerConsumerTest.class);
 
     // properties
+    public String basename = ProducerConsumerTest.class.getSimpleName();
     public int producerCount = 4;
     public int consumerCount = 4;
     public int maxIntervalMillis = 1000;
-    public String basename = "queue";
 
     private IAtomicLong produced;
     private IQueue workQueue;

@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * In this test we add listeners to a cache and record the number of events the listeners receive.
@@ -54,6 +54,7 @@ public class ListenerICacheTest {
         REPLACE
     }
 
+    public String basename = ListenerICacheTest.class.getSimpleName();
     public int keyCount = 1000;
     public int maxExpiryDurationMs = 500;
     public boolean syncEvents = true;
@@ -68,8 +69,8 @@ public class ListenerICacheTest {
 
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance hazelcastInstance;
-    private String basename;
+    private IList<Counter> results;
+    private IList<ICacheEntryListener> listeners;
     private CacheManager cacheManager;
     private ICache<Integer, Long> cache;
     private ICacheEntryListener<Integer, Long> listener;
@@ -77,8 +78,9 @@ public class ListenerICacheTest {
 
     @Setup
     public void setup(TestContext testContext) {
-        hazelcastInstance = testContext.getTargetInstance();
-        basename = testContext.getTestId();
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        results = hazelcastInstance.getList(basename);
+        listeners = hazelcastInstance.getList(basename + "listeners");
 
         cacheManager = createCacheManager(hazelcastInstance);
 
@@ -123,15 +125,12 @@ public class ListenerICacheTest {
 
     @Verify(global = true)
     public void globalVerify() throws Exception {
-
-        IList<Counter> results = hazelcastInstance.getList(basename);
         Counter total = new Counter();
         for (Counter i : results) {
             total.add(i);
         }
         LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
-        IList<ICacheEntryListener> listeners = hazelcastInstance.getList(basename + "listeners");
         ICacheEntryListener totalEvents = new ICacheEntryListener();
         for (ICacheEntryListener listener : listeners) {
             totalEvents.add(listener);
@@ -211,14 +210,13 @@ public class ListenerICacheTest {
 
         @Override
         protected void afterRun() {
-            hazelcastInstance.getList(basename).add(counter);
+            results.add(counter);
         }
 
         @Override
         public void afterCompletion() {
             sleepSeconds(PAUSE_FOR_LAST_EVENTS_SECONDS);
-
-            hazelcastInstance.getList(basename + "listeners").add(listener);
+            listeners.add(listener);
         }
     }
 
@@ -232,14 +230,14 @@ public class ListenerICacheTest {
         public long remove;
         public long replace;
 
-        public void add(Counter c) {
-            put += c.put;
-            putExpiry += c.putExpiry;
-            putAsyncExpiry += c.putAsyncExpiry;
-            getExpiry += c.getExpiry;
-            getAsyncExpiry += c.getAsyncExpiry;
-            remove += c.remove;
-            replace += c.replace;
+        public void add(Counter counter) {
+            put += counter.put;
+            putExpiry += counter.putExpiry;
+            putAsyncExpiry += counter.putAsyncExpiry;
+            getExpiry += counter.getExpiry;
+            getAsyncExpiry += counter.getAsyncExpiry;
+            remove += counter.remove;
+            replace += counter.replace;
         }
 
         public String toString() {

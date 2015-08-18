@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 public class MapEntryProcessorTest {
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapEntryProcessorTest.class.getSimpleName();
     public int keyCount = 1000;
     public int minProcessorDelayMs;
     public int maxProcessorDelayMs;

@@ -26,7 +26,7 @@ public class CommandFutureTest {
     private final CommandFuture<Object> exceptionFuture = new CommandFuture<Object>(command);
     private final FutureExceptionSetter futureExceptionSetter = new FutureExceptionSetter(exceptionFuture, DEFAULT_TIMEOUT_MS);
 
-    @Test()
+    @Test
     public void testGetCommand() throws Exception {
         assertEquals(command, future.getCommand());
     }
@@ -77,6 +77,11 @@ public class CommandFutureTest {
     @Test(timeout = 10000, expected = TimeoutException.class)
     public void testGet_withTimeout_noResult() throws Exception {
         future.get(50, TimeUnit.MILLISECONDS);
+    }
+
+    @Test(timeout = 10000, expected = TimeoutException.class)
+    public void testGet_withTimeout_belowOneMilliSecond_noResult() throws Exception {
+        future.get(1, TimeUnit.NANOSECONDS);
     }
 
     @Test(timeout = 10000, expected = TimeoutException.class)

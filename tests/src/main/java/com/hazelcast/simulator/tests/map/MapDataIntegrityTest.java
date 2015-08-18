@@ -27,6 +27,7 @@ public class MapDataIntegrityTest {
     private static final ILogger LOGGER = Logger.getLogger(MapDataIntegrityTest.class);
 
     // properties
+    public String basename = MapDataIntegrityTest.class.getSimpleName();
     public int mapIntegrityThreadCount = 8;
     public int stressThreadCount = 8;
     public int totalIntegrityKeys = 10000;
@@ -34,7 +35,6 @@ public class MapDataIntegrityTest {
     public int valueSize = 1000;
     public boolean mapLoad = true;
     public boolean doRunAsserts = true;
-    public String basename = this.getClass().getCanonicalName();
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;

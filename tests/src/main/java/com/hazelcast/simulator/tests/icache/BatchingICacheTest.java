@@ -45,10 +45,10 @@ public class BatchingICacheTest {
 
     // properties
     public int threadCount = 10;
+    public String basename = BatchingICacheTest.class.getSimpleName();
     public int keyCount = 1000000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 10000;
-    public String basename = getClass().getSimpleName().toLowerCase();
     public double writeProb = 0.1;
     public int batchSize = 1;
 

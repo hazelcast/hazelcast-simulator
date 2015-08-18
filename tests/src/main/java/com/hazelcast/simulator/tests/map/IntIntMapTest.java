@@ -48,11 +48,11 @@ public class IntIntMapTest {
     }
 
     // properties
-    public int keyLength = 10;
-    public int valueLength = 10;
+    public String basename = IntIntMapTest.class.getSimpleName();
     public int keyCount = 10000;
     public int valueCount = 10000;
-    public String basename = "intIntMap";
+    public int keyLength = 10;
+    public int valueLength = 10;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
 

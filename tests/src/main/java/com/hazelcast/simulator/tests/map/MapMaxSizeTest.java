@@ -20,7 +20,7 @@ import static com.hazelcast.config.MaxSizeConfig.MaxSizePolicy.PER_NODE;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This tests runs {@link IMap#put(Object, Object)} and {@link IMap#get(Object)} operations on a map, which is configured with
@@ -45,7 +45,7 @@ public class MapMaxSizeTest {
     private static final ILogger LOGGER = Logger.getLogger(MapMaxSizeTest.class);
 
     // properties
-    public String basename = "MapMaxSize1";
+    public String basename = MapMaxSizeTest.class.getSimpleName();
     public int keyCount = Integer.MAX_VALUE;
 
     public double putProb = 0.5;

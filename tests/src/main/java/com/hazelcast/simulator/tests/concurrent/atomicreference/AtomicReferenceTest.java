@@ -41,11 +41,11 @@ public class AtomicReferenceTest {
     private static final ILogger LOGGER = Logger.getLogger(AtomicReferenceTest.class);
 
     // properties
+    public String basename = AtomicReferenceTest.class.getSimpleName();
     public int countersLength = 1000;
     public int threadCount = 10;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
-    public String basename = "atomicreference";
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int writePercentage = 100;
     public int valueCount = 1000;

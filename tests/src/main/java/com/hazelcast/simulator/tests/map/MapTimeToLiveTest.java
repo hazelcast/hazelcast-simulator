@@ -56,7 +56,7 @@ public class MapTimeToLiveTest {
     }
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapTimeToLiveTest.class.getSimpleName();
     public int keyCount = 10;
 
     public double putTTLProb = 0.4;

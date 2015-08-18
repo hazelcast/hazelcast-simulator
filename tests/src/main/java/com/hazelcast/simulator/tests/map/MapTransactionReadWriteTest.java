@@ -39,6 +39,7 @@ public class MapTransactionReadWriteTest {
     private static final ILogger LOGGER = Logger.getLogger(MapTransactionReadWriteTest.class);
 
     // properties
+    public String basename = MapTransactionReadWriteTest.class.getSimpleName();
     public int threadCount = 10;
     public int keyLength = 10;
     public int valueLength = 10;
@@ -46,7 +47,6 @@ public class MapTransactionReadWriteTest {
     public int valueCount = 10000;
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1;
-    public String basename = "txintIntMap";
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
 

@@ -29,7 +29,7 @@ public class MapHeapHogWarmupTest {
     private static final ILogger LOGGER = Logger.getLogger(MapHeapHogWarmupTest.class);
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapHeapHogWarmupTest.class.getSimpleName();
     public int threadCount = 10;
     public int logFrequency = 50000;
     public int ttlHours = 24;

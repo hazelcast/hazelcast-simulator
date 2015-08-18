@@ -40,20 +40,18 @@ public class MapTTLSaturationTest {
     private static final ILogger LOGGER = Logger.getLogger(MapTTLSaturationTest.class);
 
     // properties
-    public String basename = "mapttlsaturation";
+    public String basename = MapTTLSaturationTest.class.getSimpleName();
     public int threadCount = 3;
     public double maxHeapUsagePercentage = 80;
 
     private TestContext testContext;
-    private HazelcastInstance targetInstance;
     private IMap map;
     private long baseLineUsed;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
-        map = targetInstance.getMap(basename);
+        map = testContext.getTargetInstance().getMap(basename);
     }
 
     private double heapUsedPercentage() {

@@ -31,7 +31,7 @@ public class MapTransactionGetForUpdateTest {
     private static final ILogger LOGGER = Logger.getLogger(MapTransactionGetForUpdateTest.class);
 
     // properties
-    public String basename = this.getClass().getSimpleName();
+    public String basename = MapTransactionGetForUpdateTest.class.getSimpleName();
     public int threadCount = 40;
     public int keyCount = 100;
     public boolean rethrowAllException = false;

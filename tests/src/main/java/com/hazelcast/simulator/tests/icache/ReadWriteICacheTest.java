@@ -53,6 +53,7 @@ public class ReadWriteICacheTest {
         REMOVE
     }
 
+    public String basename = ReadWriteICacheTest.class.getSimpleName();
     public int threadCount = 3;
     public int keyCount = 10;
     public double putProb = 0.4;
@@ -65,7 +66,6 @@ public class ReadWriteICacheTest {
 
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
-    private String basename;
     private IList<ICacheReadWriteCounter> counters;
     private MutableConfiguration<Integer, Integer> config;
     private Cache<Integer, Integer> cache;
@@ -73,7 +73,6 @@ public class ReadWriteICacheTest {
     @Setup
     public void setup(TestContext testContext) throws Exception {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        basename = testContext.getTestId();
         counters = hazelcastInstance.getList(basename + "counters");
 
         RecordingCacheLoader<Integer> loader = new RecordingCacheLoader<Integer>();

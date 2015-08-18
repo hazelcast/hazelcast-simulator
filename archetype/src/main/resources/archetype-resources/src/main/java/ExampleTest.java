@@ -12,7 +12,7 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class ExampleTest {
 
