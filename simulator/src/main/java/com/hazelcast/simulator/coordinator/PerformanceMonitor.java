@@ -94,7 +94,7 @@ class PerformanceMonitor {
         @Override
         public void run() {
             while (isRunning) {
-                sleepSeconds(10);
+                sleepSeconds(1);
 
                 try {
                     checkPerformance();
