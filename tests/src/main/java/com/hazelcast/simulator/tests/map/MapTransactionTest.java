@@ -35,6 +35,7 @@ public class MapTransactionTest {
     public int keyCount = 1000;
     public boolean reThrowTransactionException = false;
     public TransactionType transactionType = TransactionType.TWO_PHASE;
+    public int durability = 1;
 
     private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;
@@ -48,7 +49,7 @@ public class MapTransactionTest {
         resultList = targetInstance.getList(basename + "results");
 
         transactionOptions = new TransactionOptions();
-        transactionOptions.setTransactionType(transactionType);
+        transactionOptions.setTransactionType(transactionType).setDurability(durability);
     }
 
     @Warmup(global = true)
