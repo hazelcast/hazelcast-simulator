@@ -63,7 +63,11 @@ public class ExampleTest {
         LOGGER.info("Map size is:" + map.size());
 
         for (int i = 0; i < maxKeys; i++) {
-            assertEquals(map.get(i), "value" + i);
+            String actualValue = map.get(i);
+            if (actualValue != null) {
+                String expectedValue = "value" + i;
+                assertEquals(expectedValue, actualValue);
+            }
         }
     }
 
