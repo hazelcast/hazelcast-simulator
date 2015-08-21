@@ -41,4 +41,15 @@ public class SimulatorMessage {
     public String getMessageData() {
         return messageData;
     }
+
+    @Override
+    public String toString() {
+        return "SimulatorMessage{"
+                + "destination=" + destination
+                + ", source=" + source
+                + ", messageId=" + messageId
+                + ", messageType=" + messageType
+                + ", messageData='" + messageData + '\''
+                + '}';
+    }
 }

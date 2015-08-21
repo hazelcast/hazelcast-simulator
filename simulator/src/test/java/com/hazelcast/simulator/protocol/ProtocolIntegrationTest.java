@@ -15,6 +15,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertAllTargets;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertSingleTarget;
@@ -34,14 +35,17 @@ import static org.junit.Assert.assertEquals;
 public class ProtocolIntegrationTest {
 
     private static final Logger LOGGER = Logger.getLogger(ProtocolSmokeTest.class);
+    private static final Logger ROOT_LOGGER = Logger.getRootLogger();
 
+    private static Level level;
     private static CoordinatorConnector coordinatorConnector;
     private static List<AgentConnector> agentConnectors = Collections.synchronizedList(new ArrayList<AgentConnector>());
     private static List<WorkerConnector> workerConnectors = Collections.synchronizedList(new ArrayList<WorkerConnector>());
 
     @BeforeClass
     public static void setUp() {
-        LOGGER.setLevel(Level.INFO);
+        level = ROOT_LOGGER.getLevel();
+        ROOT_LOGGER.setLevel(Level.TRACE);
 
         workerConnectors.add(startWorker(1, 1, 10011));
         workerConnectors.add(startWorker(2, 1, 10012));
@@ -73,6 +77,9 @@ public class ProtocolIntegrationTest {
         }
 
         LOGGER.info("Shutdown complete!");
+        if (level != null) {
+            ROOT_LOGGER.setLevel(level);
+        }
     }
 
     @Test
@@ -161,6 +168,20 @@ public class ProtocolIntegrationTest {
         Response response = sendMessageAndAssertMessageId(destination);
 
         assertAllTargets(response, destination.getParent(), FAILURE_TEST_NOT_FOUND, 4);
+    }
+
+    @Test(expected = TimeoutException.class)
+    public void test_Coordinator_fromAgent() throws Exception {
+        AgentConnector agent = agentConnectors.get(1);
+        SimulatorAddress source = new SimulatorAddress(AGENT, 1, 2, 0);
+        agent.write(buildMessage(SimulatorAddress.COORDINATOR, source));
+    }
+
+    @Test(expected = TimeoutException.class)
+    public void test_Coordinator_fromWorker() throws Exception {
+        WorkerConnector worker = workerConnectors.get(1);
+        SimulatorAddress source = new SimulatorAddress(WORKER, 1, 2, 0);
+        worker.write(buildMessage(SimulatorAddress.COORDINATOR, source));
     }
 
     private static Response sendMessageAndAssertMessageId(SimulatorAddress destination) throws Exception {

@@ -44,7 +44,7 @@ public final class ResponseCodec {
         int dataLength = (frameLength - HEADER_SIZE) / DATA_ENTRY_SIZE;
 
         if (buffer.readInt() != MAGIC_BYTES) {
-            throw new IllegalArgumentException("Invalid magic bytes");
+            throw new IllegalArgumentException("Invalid magic bytes for Response");
         }
 
         long messageId = buffer.readLong();

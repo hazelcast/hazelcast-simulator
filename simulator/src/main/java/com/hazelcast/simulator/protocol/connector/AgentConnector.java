@@ -2,9 +2,11 @@ package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
+import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 
 /**
  * Connector which listens for incoming Simulator Coordinator connections and connects to remote Simulator Worker instances.
@@ -13,6 +15,7 @@ public class AgentConnector {
 
     private final AgentServerConfiguration configuration;
     private final ServerConnector server;
+    private final SimulatorAddress localAddress;
 
     /**
      * Creates an {@link AgentConnector}.
@@ -26,6 +29,7 @@ public class AgentConnector {
 
         this.configuration = new AgentServerConfiguration(localAddress, addressIndex, port, processor);
         this.server = new ServerConnector(configuration);
+        this.localAddress = new SimulatorAddress(AGENT, configuration.getAddressIndex(), 0, 0);
     }
 
     /**
@@ -52,7 +56,7 @@ public class AgentConnector {
     public void addWorker(int workerIndex, String remoteHost, int remotePort) {
         // TODO: spawn Simulator Worker instance
 
-        ClientConnector client = new ClientConnector(workerIndex, remoteHost, remotePort);
+        ClientConnector client = new ClientConnector(localAddress, WORKER, workerIndex, remoteHost, remotePort);
         client.start();
 
         configuration.addWorker(workerIndex, client);
@@ -65,5 +69,9 @@ public class AgentConnector {
      */
     public void removeWorker(int workerIndex) {
         configuration.removeWorker(workerIndex);
+    }
+
+    public void write(SimulatorMessage message) throws Exception {
+        server.write(message);
     }
 }

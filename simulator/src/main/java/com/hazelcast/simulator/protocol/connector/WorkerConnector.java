@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.protocol.configuration.WorkerServerConfiguration;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 
@@ -64,5 +65,9 @@ public class WorkerConnector {
      */
     public void removeTest(int testIndex) {
         configuration.removeTest(testIndex);
+    }
+
+    public void write(SimulatorMessage message) throws Exception {
+        server.write(message);
     }
 }

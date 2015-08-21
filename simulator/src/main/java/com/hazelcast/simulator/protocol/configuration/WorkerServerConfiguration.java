@@ -1,7 +1,10 @@
 package com.hazelcast.simulator.protocol.configuration;
 
 import com.hazelcast.simulator.protocol.core.AddressLevel;
+import com.hazelcast.simulator.protocol.core.MessageFuture;
+import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.handler.ChannelCollectorHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageDecoder;
 import com.hazelcast.simulator.protocol.handler.MessageTestConsumeHandler;
@@ -9,6 +12,9 @@ import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.group.ChannelGroup;
+
+import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 
@@ -17,6 +23,7 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
  */
 public class WorkerServerConfiguration extends AbstractBootstrapConfiguration {
 
+    private final ChannelCollectorHandler channelCollectorHandler = new ChannelCollectorHandler();
     private final MessageTestConsumeHandler messageTestConsumeHandler = new MessageTestConsumeHandler(localAddress);
 
     private final OperationProcessor processor;
@@ -32,8 +39,9 @@ public class WorkerServerConfiguration extends AbstractBootstrapConfiguration {
     }
 
     @Override
-    public void configurePipeline(ChannelPipeline pipeline) {
-        pipeline.addLast("encoder", new ResponseEncoder());
+    public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap) {
+        pipeline.addLast("collector", channelCollectorHandler);
+        pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("decoder", new MessageDecoder(localAddress, WORKER));
         pipeline.addLast("consumer", new MessageConsumeHandler(localAddress, processor));
@@ -47,5 +55,10 @@ public class WorkerServerConfiguration extends AbstractBootstrapConfiguration {
 
     public void removeTest(int testIndex) {
         messageTestConsumeHandler.removeTest(testIndex);
+    }
+
+    @Override
+    public ChannelGroup getChannelGroup() {
+        return channelCollectorHandler.getChannels();
     }
 }

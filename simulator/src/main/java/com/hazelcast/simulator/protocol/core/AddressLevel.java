@@ -57,6 +57,6 @@ public enum AddressLevel {
     }
 
     public boolean isParentAddressLevel(AddressLevel addressLevel) {
-        return (this.ordinal > addressLevel.ordinal);
+        return (this.ordinal < addressLevel.ordinal);
     }
 }

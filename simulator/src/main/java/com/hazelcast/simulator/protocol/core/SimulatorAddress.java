@@ -139,13 +139,13 @@ public class SimulatorAddress {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("C");
-        if (addressLevel.isParentAddressLevel(AddressLevel.COORDINATOR)) {
+        if (AddressLevel.COORDINATOR.isParentAddressLevel(addressLevel)) {
             sb.append("_A").append(agentIndex == 0 ? "*" : agentIndex);
         }
-        if (addressLevel.isParentAddressLevel(AddressLevel.AGENT)) {
+        if (AddressLevel.AGENT.isParentAddressLevel(addressLevel)) {
             sb.append("_W").append(workerIndex == 0 ? "*" : workerIndex);
         }
-        if (addressLevel.isParentAddressLevel(AddressLevel.WORKER)) {
+        if (AddressLevel.WORKER.isParentAddressLevel(addressLevel)) {
             sb.append("_T").append(testIndex == 0 ? "*" : testIndex);
         }
         return sb.toString();

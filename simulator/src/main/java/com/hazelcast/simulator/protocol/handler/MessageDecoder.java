@@ -45,6 +45,9 @@ public class MessageDecoder extends ByteToMessageDecoder {
         if (EMPTY_BUFFER.equals(in)) {
             return;
         }
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(format("[%d] MessageDecoder.decode() %s %s", 0, addressLevel, localAddress));
+        }
 
         long messageId = getMessageId(in);
         AddressLevel dstAddressLevel = AddressLevel.fromInt(getDestinationAddressLevel(in));

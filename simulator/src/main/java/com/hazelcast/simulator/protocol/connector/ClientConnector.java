@@ -1,7 +1,9 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.MessageFuture;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.MessageResponseHandler;
@@ -41,13 +43,17 @@ public class ClientConnector {
     private final ConcurrentMap<String, MessageFuture<Response>> futureMap
             = new ConcurrentHashMap<String, MessageFuture<Response>>();
 
+    private final SimulatorAddress localAddress;
+    private final AddressLevel addressLevel;
     private final int addressIndex;
     private final String host;
     private final int port;
 
     private Channel channel;
 
-    public ClientConnector(int addressIndex, String host, int port) {
+    public ClientConnector(SimulatorAddress localAddress, AddressLevel addressLevel, int addressIndex, String host, int port) {
+        this.localAddress = localAddress;
+        this.addressLevel = addressLevel;
         this.addressIndex = addressIndex;
         this.host = host;
         this.port = port;
@@ -63,9 +69,10 @@ public class ClientConnector {
                     public void initChannel(SocketChannel channel) {
                         ChannelPipeline pipeline = channel.pipeline();
                         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-                        pipeline.addLast("decoder", new ResponseDecoder());
-                        pipeline.addLast("encoder", new MessageEncoder());
-                        pipeline.addLast("handler", new MessageResponseHandler(addressIndex, futureMap));
+                        pipeline.addLast("decoder", new ResponseDecoder(localAddress, addressLevel, addressIndex));
+                        pipeline.addLast("encoder", new MessageEncoder(localAddress, addressLevel, addressIndex));
+                        pipeline.addLast("handler", new MessageResponseHandler(localAddress, addressLevel, addressIndex,
+                                futureMap));
                     }
                 });
 

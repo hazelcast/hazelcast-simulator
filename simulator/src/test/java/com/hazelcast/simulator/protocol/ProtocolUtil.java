@@ -95,7 +95,11 @@ public class ProtocolUtil {
     }
 
     static SimulatorMessage buildMessage(SimulatorAddress destination) {
-        return new SimulatorMessage(destination, COORDINATOR, MESSAGE_ID.incrementAndGet(), 0, MESSAGE_DATA);
+        return buildMessage(destination, COORDINATOR);
+    }
+
+    static SimulatorMessage buildMessage(SimulatorAddress destination, SimulatorAddress source) {
+        return new SimulatorMessage(destination, source, MESSAGE_ID.incrementAndGet(), 0, MESSAGE_DATA);
     }
 
     static void assertSingleTarget(Response response, SimulatorAddress destination, ResponseType responseType) {

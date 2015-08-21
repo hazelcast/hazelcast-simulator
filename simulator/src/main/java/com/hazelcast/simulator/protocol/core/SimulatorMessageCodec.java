@@ -42,7 +42,7 @@ public final class SimulatorMessageCodec {
         int dataLength = frameLength - HEADER_SIZE;
 
         if (buffer.readInt() != MAGIC_BYTES) {
-            throw new IllegalArgumentException("Invalid magic bytes");
+            throw new IllegalArgumentException("Invalid magic bytes for SimulatorMessage");
         }
 
         SimulatorAddress destination = SimulatorAddressCodec.decodeSimulatorAddress(buffer);
