@@ -7,8 +7,8 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.MessageResponseHandler;
-import com.hazelcast.simulator.protocol.handler.ResponseDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
+import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -69,7 +69,7 @@ public class ClientConnector {
                     public void initChannel(SocketChannel channel) {
                         ChannelPipeline pipeline = channel.pipeline();
                         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-                        pipeline.addLast("decoder", new ResponseDecoder(localAddress, addressLevel, addressIndex));
+                        pipeline.addLast("decoder", new SimulatorProtocolDecoder(localAddress, addressLevel));
                         pipeline.addLast("encoder", new MessageEncoder(localAddress, addressLevel, addressIndex));
                         pipeline.addLast("handler", new MessageResponseHandler(localAddress, addressLevel, addressIndex,
                                 futureMap));

@@ -17,6 +17,8 @@ public final class ResponseCodec {
 
     private static final int MAGIC_BYTES = 0x3E5D0B5E;
 
+    private static final int OFFSET_MAGIC_BYTES = INT_SIZE;
+
     private static final int HEADER_SIZE = INT_SIZE + LONG_SIZE;
     private static final int DATA_ENTRY_SIZE = ADDRESS_SIZE + INT_SIZE;
 
@@ -57,5 +59,9 @@ public final class ResponseCodec {
         }
 
         return response;
+    }
+
+    public static boolean isResponse(ByteBuf in) {
+        return (in.getInt(OFFSET_MAGIC_BYTES) == MAGIC_BYTES);
     }
 }

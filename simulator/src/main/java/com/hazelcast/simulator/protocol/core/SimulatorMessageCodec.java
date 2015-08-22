@@ -14,6 +14,7 @@ public final class SimulatorMessageCodec {
 
     private static final int MAGIC_BYTES = 0xA5E1CA57;
 
+    private static final int OFFSET_MAGIC_BYTES = INT_SIZE;
     private static final int OFFSET_DST_ADDRESS = 2 * INT_SIZE;
     private static final int OFFSET_MESSAGE_ID = OFFSET_DST_ADDRESS + 2 * ADDRESS_SIZE;
 
@@ -56,15 +57,19 @@ public final class SimulatorMessageCodec {
         return new SimulatorMessage(destination, source, messageId, messageType, messageData);
     }
 
+    public static boolean isSimulatorMessage(ByteBuf in) {
+        return (in.getInt(OFFSET_MAGIC_BYTES) == MAGIC_BYTES);
+    }
+
+    public static long getMessageId(ByteBuf in) {
+        return in.getLong(OFFSET_MESSAGE_ID);
+    }
+
     public static int getDestinationAddressLevel(ByteBuf in) {
         return in.getInt(OFFSET_DST_ADDRESS);
     }
 
     public static int getChildAddressIndex(ByteBuf in, int addressLevelValue) {
         return in.getInt(OFFSET_DST_ADDRESS + ((addressLevelValue + 1) * INT_SIZE));
-    }
-
-    public static long getMessageId(ByteBuf in) {
-        return in.getLong(OFFSET_MESSAGE_ID);
     }
 }

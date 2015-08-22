@@ -7,10 +7,10 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.handler.ChannelCollectorHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
-import com.hazelcast.simulator.protocol.handler.MessageDecoder;
 import com.hazelcast.simulator.protocol.handler.MessageForwardToWorkerHandler;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
+import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
@@ -44,7 +44,7 @@ public class AgentServerConfiguration extends AbstractBootstrapConfiguration {
         pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("encoder", new ResponseEncoder(localAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("decoder", new MessageDecoder(localAddress, AGENT));
+        pipeline.addLast("decoder", new SimulatorProtocolDecoder(localAddress, AGENT));
         pipeline.addLast("forwarder", messageForwardToWorkerHandler);
         pipeline.addLast("consumer", new MessageConsumeHandler(localAddress, processor));
     }

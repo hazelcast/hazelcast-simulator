@@ -6,16 +6,17 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.handler.ChannelCollectorHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
-import com.hazelcast.simulator.protocol.handler.MessageDecoder;
 import com.hazelcast.simulator.protocol.handler.MessageTestConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
+import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
 import java.util.concurrent.ConcurrentMap;
 
+import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 
 /**
@@ -43,9 +44,9 @@ public class WorkerServerConfiguration extends AbstractBootstrapConfiguration {
         pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("decoder", new MessageDecoder(localAddress, WORKER));
+        pipeline.addLast("decoder", new SimulatorProtocolDecoder(localAddress, WORKER));
         pipeline.addLast("consumer", new MessageConsumeHandler(localAddress, processor));
-        pipeline.addLast("testDecoder", new MessageDecoder(localAddress, AddressLevel.TEST));
+        pipeline.addLast("testDecoder", new SimulatorProtocolDecoder(localAddress, TEST));
         pipeline.addLast("testConsumer", messageTestConsumeHandler);
     }
 

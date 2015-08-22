@@ -49,4 +49,12 @@ public class Response {
     public Set<Map.Entry<SimulatorAddress, ResponseType>> entrySet() {
         return responseTypes.entrySet();
     }
+
+    @Override
+    public String toString() {
+        return "Response{"
+                + "messageId=" + messageId
+                + ", responseTypes=" + responseTypes
+                + '}';
+    }
 }
