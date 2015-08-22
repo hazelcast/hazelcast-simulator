@@ -39,6 +39,10 @@ public class MapTransactionContextTest {
 
         @Override
         protected void timeStep() {
+            if(true){
+                throw new RuntimeException();
+            }
+
             int key = nextRandom(0, range / 2);
 
             TransactionOptions transactionOptions = new TransactionOptions().setTransactionType(transactionType).setDurability(durability);
