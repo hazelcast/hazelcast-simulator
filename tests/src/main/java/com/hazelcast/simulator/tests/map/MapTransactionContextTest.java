@@ -9,11 +9,8 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.transaction.TransactionContext;
-import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionOptions.TransactionType;
-import com.hazelcast.transaction.TransactionalTask;
-import com.hazelcast.transaction.TransactionalTaskContext;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -46,81 +43,36 @@ public class MapTransactionContextTest {
 
         @Override
         protected void timeStep() {
+            int key = nextRandom(0, range / 2);
+
             TransactionOptions transactionOptions = new TransactionOptions().setTransactionType(transactionType).setDurability(durability);
 
-            hz.executeTransaction(transactionOptions, new TransactionalTask<Object>() {
-                @Override
-                public Object execute(TransactionalTaskContext context) throws TransactionException {
-                    int key = nextRandom(0, range / 2);
+            TransactionContext transactionContext = hz.newTransactionContext(transactionOptions);
 
-                    TransactionalMap<Object, Object> txMap = context.getMap("map");
+            transactionContext.beginTransaction();
 
-                    Object val = txMap.getForUpdate(key);
+            TransactionalMap<Object, Object> txMap = transactionContext.getMap("map");
 
-                    if (val != null) {
-                        key = nextRandom(range / 2, range);
-                    }
+            try {
+                Object val = txMap.getForUpdate(key);
 
-                    txMap.put(key, new SampleValue(key));
-
-                    return null;
+                if (val != null) {
+                    key = nextRandom(range / 2, range);
                 }
-            });
+
+                txMap.put(key, new Long(key));
+
+                transactionContext.commitTransaction();
+            } catch (Exception e) {
+
+                e.printStackTrace();
+
+                transactionContext.rollbackTransaction();
+            }
         }
 
         protected int nextRandom(int min, int max) {
             return ThreadLocalRandom.current().nextInt(max - min) + min;
-        }
-    }
-
-    /**
-     * Entity class for benchmark.
-     */
-    public static class SampleValue implements Externalizable {
-        /** */
-        private int id;
-
-        /** */
-        public SampleValue() {
-            // No-op.
-        }
-
-        /**
-         * @param id Id.
-         */
-        public SampleValue(int id) {
-            this.id = id;
-        }
-
-        /**
-         * @return Id.
-         */
-        public int id() {
-            return id;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-            id = in.readInt();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void writeExternal(ObjectOutput out) throws IOException {
-            out.writeInt(id);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String toString() {
-            return "Value [id=" + id + ']';
         }
     }
 }
