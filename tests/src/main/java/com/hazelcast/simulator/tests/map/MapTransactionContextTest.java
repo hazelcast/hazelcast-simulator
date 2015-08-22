@@ -22,7 +22,7 @@ public class MapTransactionContextTest {
     public TransactionType transactionType = TransactionType.TWO_PHASE;
     public int durability = 1;
     public int range = 1000;
-    public boolean failOnException = false;
+    public boolean failOnException = true;
     private HazelcastInstance hz;
 
     @Setup
@@ -38,11 +38,7 @@ public class MapTransactionContextTest {
     private class Worker extends AbstractMonotonicWorker {
 
         @Override
-        protected void timeStep() {
-             if(true){
-                throw new RuntimeException();
-            }
-
+        protected void timeStep()  {
             int key = nextRandom(0, range / 2);
 
             TransactionOptions transactionOptions = new TransactionOptions().setTransactionType(transactionType).setDurability(durability);
@@ -64,14 +60,13 @@ public class MapTransactionContextTest {
 
                 transactionContext.commitTransaction();
             } catch (Exception e) {
+                if (failOnException) {
+                    throw new RuntimeException(e);
+                }
 
                 e.printStackTrace();
 
                 transactionContext.rollbackTransaction();
-
-                if (failOnException) {
-                    throw new RuntimeException(e);
-                }
             }
         }
 
