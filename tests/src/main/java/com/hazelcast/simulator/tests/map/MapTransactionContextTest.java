@@ -12,10 +12,6 @@ import com.hazelcast.transaction.TransactionContext;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionOptions.TransactionType;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MapTransactionContextTest {
@@ -26,7 +22,7 @@ public class MapTransactionContextTest {
     public TransactionType transactionType = TransactionType.TWO_PHASE;
     public int durability = 1;
     public int range = 1000;
-
+    public boolean failOnException = false;
     private HazelcastInstance hz;
 
     @Setup
@@ -68,6 +64,10 @@ public class MapTransactionContextTest {
                 e.printStackTrace();
 
                 transactionContext.rollbackTransaction();
+
+                if (failOnException) {
+                    throw new RuntimeException(e);
+                }
             }
         }
 
