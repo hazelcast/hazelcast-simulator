@@ -60,6 +60,8 @@ public class MapTransactionContextTest {
 
                 transactionContext.commitTransaction();
             } catch (Exception e) {
+                LOGGER.severe("----------------------tx exception -------------------------");
+
                 if (failOnException) {
                     throw new RuntimeException(e);
                 }
