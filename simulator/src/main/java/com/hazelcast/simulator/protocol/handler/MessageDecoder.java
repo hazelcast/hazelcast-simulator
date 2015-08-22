@@ -28,7 +28,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
 
     private static final Logger LOGGER = Logger.getLogger(MessageDecoder.class);
 
-    private final AttributeKey<Integer> addressIndex = AttributeKey.valueOf("addressIndex");
+    private final AttributeKey<Integer> forwardAddressIndex = AttributeKey.valueOf("forwardAddressIndex");
 
     private final SimulatorAddress localAddress;
     private final AddressLevel addressLevel;
@@ -59,7 +59,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
             out.add(message);
         } else {
             int addressIndex = getChildAddressIndex(in, addressLevelValue);
-            ctx.attr(this.addressIndex).set(addressIndex);
+            ctx.attr(forwardAddressIndex).set(addressIndex);
 
             out.add(in.duplicate());
             in.readerIndex(in.readableBytes());

@@ -23,7 +23,7 @@ public class MessageForwardToWorkerHandler extends SimpleChannelInboundHandler<B
 
     private static final Logger LOGGER = Logger.getLogger(MessageEncoder.class);
 
-    private final AttributeKey<Integer> workerAddressIndex = AttributeKey.valueOf("addressIndex");
+    private final AttributeKey<Integer> workerAddressIndex = AttributeKey.valueOf("forwardAddressIndex");
 
     private final ConcurrentHashMap<Integer, ClientConnector> worker = new ConcurrentHashMap<Integer, ClientConnector>();
 
