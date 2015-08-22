@@ -10,10 +10,13 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static org.junit.Assert.assertEquals;
@@ -28,6 +31,22 @@ public class ProtocolUtil {
 
     private static final Random RANDOM = new Random();
     private static final AtomicLong MESSAGE_ID = new AtomicLong();
+
+    private static final Logger ROOT_LOGGER = Logger.getRootLogger();
+    private static final AtomicReference<Level> LOGGER_LEVEL = new AtomicReference<Level>();
+
+    static void setLogLevel(Level level) {
+        if (LOGGER_LEVEL.compareAndSet(null, ROOT_LOGGER.getLevel())) {
+            ROOT_LOGGER.setLevel(level);
+        }
+    }
+
+    static void resetLogLevel() {
+        Level level = LOGGER_LEVEL.get();
+        if (level != null && LOGGER_LEVEL.compareAndSet(level, null)) {
+            ROOT_LOGGER.setLevel(level);
+        }
+    }
 
     static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port) {
         return startWorker(addressIndex, parentAddressIndex, port, 2);
@@ -70,6 +89,10 @@ public class ProtocolUtil {
         }
 
         return coordinatorConnector;
+    }
+
+    static void resetMessageId() {
+        MESSAGE_ID.set(0);
     }
 
     static SimulatorMessage buildRandomMessage() {

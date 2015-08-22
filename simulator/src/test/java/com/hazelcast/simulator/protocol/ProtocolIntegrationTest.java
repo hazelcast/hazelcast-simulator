@@ -20,6 +20,9 @@ import java.util.concurrent.TimeoutException;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertAllTargets;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertSingleTarget;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.buildMessage;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.resetLogLevel;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.resetMessageId;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.setLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startAgent;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startCoordinator;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startWorker;
@@ -34,18 +37,15 @@ import static org.junit.Assert.assertEquals;
 
 public class ProtocolIntegrationTest {
 
-    private static final Logger LOGGER = Logger.getLogger(ProtocolSmokeTest.class);
-    private static final Logger ROOT_LOGGER = Logger.getRootLogger();
+    private static final Logger LOGGER = Logger.getLogger(ProtocolIntegrationTest.class);
 
-    private static Level level;
     private static CoordinatorConnector coordinatorConnector;
     private static List<AgentConnector> agentConnectors = Collections.synchronizedList(new ArrayList<AgentConnector>());
     private static List<WorkerConnector> workerConnectors = Collections.synchronizedList(new ArrayList<WorkerConnector>());
 
     @BeforeClass
     public static void setUp() {
-        level = ROOT_LOGGER.getLevel();
-        ROOT_LOGGER.setLevel(Level.TRACE);
+        setLogLevel(Level.TRACE);
 
         workerConnectors.add(startWorker(1, 1, 10011));
         workerConnectors.add(startWorker(2, 1, 10012));
@@ -57,6 +57,8 @@ public class ProtocolIntegrationTest {
         agentConnectors.add(startAgent(2, 10002, "127.0.0.1", 10020));
 
         coordinatorConnector = startCoordinator("127.0.0.1", 10000);
+
+        resetMessageId();
     }
 
     @AfterClass
@@ -77,9 +79,7 @@ public class ProtocolIntegrationTest {
         }
 
         LOGGER.info("Shutdown complete!");
-        if (level != null) {
-            ROOT_LOGGER.setLevel(level);
-        }
+        resetLogLevel();
     }
 
     @Test

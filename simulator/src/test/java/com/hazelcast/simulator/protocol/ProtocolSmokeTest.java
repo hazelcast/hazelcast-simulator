@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.simulator.protocol.ProtocolUtil.buildRandomMessage;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.resetLogLevel;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.resetMessageId;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.setLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startAgent;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startCoordinator;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startWorker;
@@ -39,7 +42,7 @@ public class ProtocolSmokeTest {
 
     @Before
     public void setUp() {
-        LOGGER.setLevel(Level.INFO);
+        setLogLevel(Level.INFO);
 
         workerConnectors.add(startWorker(1, 1, 10011));
         workerConnectors.add(startWorker(2, 1, 10012));
@@ -51,6 +54,8 @@ public class ProtocolSmokeTest {
         agentConnectors.add(startAgent(2, 10002, "127.0.0.1", 10020));
 
         coordinatorConnector = startCoordinator("127.0.0.1", 10000);
+
+        resetMessageId();
     }
 
     @After
@@ -71,6 +76,7 @@ public class ProtocolSmokeTest {
         }
 
         LOGGER.info("Shutdown complete!");
+        resetLogLevel();
     }
 
     @Test(timeout = 30000)
