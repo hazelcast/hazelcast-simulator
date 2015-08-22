@@ -31,11 +31,12 @@ public class MapTransactionTest {
     private static final ILogger LOGGER = Logger.getLogger(MapTransactionTest.class);
 
     // properties
-    public String basename = MapTransactionTest.class.getSimpleName();
+    public String basename = getClass().getSimpleName();
     public int keyCount = 1000;
     public boolean reThrowTransactionException = false;
     public TransactionType transactionType = TransactionType.TWO_PHASE;
     public int durability = 1;
+    public boolean getForUpdate = true;
 
     private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;
@@ -102,8 +103,13 @@ public class MapTransactionTest {
                     @Override
                     public Object execute(TransactionalTaskContext txContext) throws TransactionException {
                         TransactionalMap<Integer, Long> txMap = txContext.getMap(basename);
-                        Long current = txMap.getForUpdate(key);
-                        txMap.put(key, current + increment);
+                        Long value;
+                        if (getForUpdate) {
+                            value = txMap.getForUpdate(key);
+                        } else {
+                            value = txMap.get(key);
+                        }
+                        txMap.put(key, value + increment);
                         return null;
                     }
                 });
