@@ -39,7 +39,7 @@ public class MapTransactionContextTest {
 
         @Override
         protected void timeStep() {
-            if(true){
+             if(true){
                 throw new RuntimeException();
             }
 
