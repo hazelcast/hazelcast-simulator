@@ -64,28 +64,28 @@ public class ProtocolUtil {
         return workerConnector;
     }
 
-    static AgentConnector startAgent(int addressIndex, int port, String remoteHost, int remoteStartPort) {
-        return startAgent(addressIndex, port, remoteHost, remoteStartPort, 2);
+    static AgentConnector startAgent(int addressIndex, int port, String workerHost, int workerStartPort) {
+        return startAgent(addressIndex, port, workerHost, workerStartPort, 2);
     }
 
-    static AgentConnector startAgent(int addressIndex, int port, String remoteHost, int remoteStartPort, int numberOfWorkers) {
+    static AgentConnector startAgent(int addressIndex, int port, String workerHost, int workerStartPort, int numberOfWorkers) {
         AgentConnector agentConnector = new AgentConnector(addressIndex, port);
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
-            agentConnector.addWorker(workerIndex, remoteHost, remoteStartPort + workerIndex);
+            agentConnector.addWorker(workerIndex, workerHost, workerStartPort + workerIndex);
         }
 
         agentConnector.start();
         return agentConnector;
     }
 
-    static CoordinatorConnector startCoordinator(String remoteHost, int remoteStartPort) {
-        return startCoordinator(remoteHost, remoteStartPort, 2);
+    static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort) {
+        return startCoordinator(agentHost, agentStartPort, 2);
     }
 
-    static CoordinatorConnector startCoordinator(String remoteHost, int remoteStartPort, int numberOfAgents) {
+    static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort, int numberOfAgents) {
         CoordinatorConnector coordinatorConnector = new CoordinatorConnector();
         for (int i = 1; i <= numberOfAgents; i++) {
-            coordinatorConnector.addAgent(i, remoteHost, remoteStartPort + i);
+            coordinatorConnector.addAgent(i, agentHost, agentStartPort + i);
         }
 
         return coordinatorConnector;

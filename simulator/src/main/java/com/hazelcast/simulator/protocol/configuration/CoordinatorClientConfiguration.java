@@ -18,18 +18,18 @@ public class CoordinatorClientConfiguration extends AbstractClientConfiguration 
 
     private final OperationProcessor processor;
 
-    public CoordinatorClientConfiguration(int agentIndex, String host, int port, OperationProcessor processor) {
-        super(SimulatorAddress.COORDINATOR, agentIndex, host, port);
+    public CoordinatorClientConfiguration(int agentIndex, String agentHost, int agentPort, OperationProcessor processor) {
+        super(SimulatorAddress.COORDINATOR, agentIndex, agentHost, agentPort);
         this.processor = processor;
     }
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap) {
-        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, targetAddress));
+        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, remoteAddress));
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, targetAddress, futureMap));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, remoteAddress, futureMap));
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
     }
 }

@@ -49,7 +49,7 @@ public class ClientConnector {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
-                .remoteAddress(new InetSocketAddress(configuration.getHost(), configuration.getPort()))
+                .remoteAddress(new InetSocketAddress(configuration.getRemoteHost(), configuration.getRemotePort()))
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
@@ -60,7 +60,8 @@ public class ClientConnector {
         ChannelFuture future = bootstrap.connect().syncUninterruptibly();
         channel = future.channel();
 
-        LOGGER.info(format("%s started and sends to %s", ClientConnector.class.getName(), channel.remoteAddress()));
+        LOGGER.info(format("ClientConnector %s -> %s sends to %s", configuration.getLocalAddress(),
+                configuration.getRemoteAddress(), channel.remoteAddress()));
     }
 
     public void shutdown() {

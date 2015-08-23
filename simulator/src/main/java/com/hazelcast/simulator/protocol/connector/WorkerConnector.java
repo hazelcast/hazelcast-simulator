@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.protocol.configuration.WorkerServerConfiguration;
+import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
@@ -24,10 +25,10 @@ public class WorkerConnector {
      * @param port               the port for incoming connections
      */
     public WorkerConnector(int addressIndex, int parentAddressIndex, int port) {
-        SimulatorAddress localAddress = new SimulatorAddress(WORKER, parentAddressIndex, addressIndex, 0);
         OperationProcessor processor = new WorkerOperationProcessor();
+        SimulatorAddress localAddress = new SimulatorAddress(WORKER, parentAddressIndex, addressIndex, 0);
 
-        this.configuration = new WorkerServerConfiguration(localAddress, addressIndex, port, processor);
+        this.configuration = new WorkerServerConfiguration(processor, localAddress, port);
         this.server = new ServerConnector(configuration);
     }
 
@@ -67,7 +68,11 @@ public class WorkerConnector {
         configuration.removeTest(testIndex);
     }
 
-    public void write(SimulatorMessage message) throws Exception {
-        server.write(message);
+    public SimulatorAddress getAddress() {
+        return configuration.getLocalAddress();
+    }
+
+    public Response write(SimulatorMessage message) throws Exception {
+        return server.write(message);
     }
 }

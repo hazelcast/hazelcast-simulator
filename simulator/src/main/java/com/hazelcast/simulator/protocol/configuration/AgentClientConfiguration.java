@@ -13,15 +13,15 @@ import java.util.concurrent.ConcurrentMap;
 
 public class AgentClientConfiguration extends AbstractClientConfiguration {
 
-    public AgentClientConfiguration(SimulatorAddress localAddress, int workerIndex, String host, int port) {
-        super(localAddress, workerIndex, host, port);
+    public AgentClientConfiguration(SimulatorAddress localAddress, int workerIndex, String workerHost, int workerPort) {
+        super(localAddress, workerIndex, workerHost, workerPort);
     }
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap) {
-        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, targetAddress));
+        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, remoteAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, targetAddress, futureMap));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, remoteAddress, futureMap));
     }
 }

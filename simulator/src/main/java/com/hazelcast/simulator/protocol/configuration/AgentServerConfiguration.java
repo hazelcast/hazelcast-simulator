@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.protocol.configuration;
 
 import com.hazelcast.simulator.protocol.connector.ClientConnector;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.MessageFuture;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -17,8 +16,6 @@ import io.netty.channel.group.ChannelGroup;
 
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
-
 /**
  * Bootstrap configuration for a {@link com.hazelcast.simulator.protocol.connector.AgentConnector}.
  */
@@ -27,16 +24,13 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     private final ChannelCollectorHandler channelCollectorHandler = new ChannelCollectorHandler();
     private final MessageForwardToWorkerHandler messageForwardToWorkerHandler = new MessageForwardToWorkerHandler(localAddress);
 
-    private final OperationProcessor processor;
-
-    public AgentServerConfiguration(SimulatorAddress localAddress, int addressIndex, int port, OperationProcessor processor) {
-        super(localAddress, addressIndex, port);
-        this.processor = processor;
+    public AgentServerConfiguration(OperationProcessor processor, SimulatorAddress localAddress, int port) {
+        super(processor, localAddress, port);
     }
 
     @Override
-    public AddressLevel getAddressLevel() {
-        return AGENT;
+    public ChannelGroup getChannelGroup() {
+        return channelCollectorHandler.getChannels();
     }
 
     @Override
@@ -55,10 +49,5 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     public void removeWorker(int workerIndex) {
         messageForwardToWorkerHandler.removeWorker(workerIndex);
-    }
-
-    @Override
-    public ChannelGroup getChannelGroup() {
-        return channelCollectorHandler.getChannels();
     }
 }

@@ -5,32 +5,42 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 public abstract class AbstractClientConfiguration implements ClientConfiguration {
 
     final SimulatorAddress localAddress;
-    final SimulatorAddress targetAddress;
-    final int targetIndex;
+    final SimulatorAddress remoteAddress;
 
-    private final String host;
-    private final int port;
+    private final int remoteIndex;
+    private final String remoteHost;
+    private final int remotePort;
 
-    public AbstractClientConfiguration(SimulatorAddress localAddress, int targetIndex, String host, int port) {
+    public AbstractClientConfiguration(SimulatorAddress localAddress, int remoteIndex, String remoteHost, int remotePort) {
         this.localAddress = localAddress;
-        this.targetAddress = localAddress.getChild(targetIndex);
-        this.targetIndex = targetIndex;
-        this.host = host;
-        this.port = port;
+        this.remoteAddress = localAddress.getChild(remoteIndex);
+        this.remoteIndex = remoteIndex;
+        this.remoteHost = remoteHost;
+        this.remotePort = remotePort;
     }
 
     @Override
-    public String getHost() {
-        return host;
+    public SimulatorAddress getLocalAddress() {
+        return localAddress;
     }
 
     @Override
-    public int getPort() {
-        return port;
+    public SimulatorAddress getRemoteAddress() {
+        return remoteAddress;
+    }
+
+    @Override
+    public String getRemoteHost() {
+        return remoteHost;
+    }
+
+    @Override
+    public int getRemotePort() {
+        return remotePort;
     }
 
     @Override
     public String createFutureKey(long messageId) {
-        return messageId + "_" + targetIndex;
+        return messageId + "_" + remoteIndex;
     }
 }

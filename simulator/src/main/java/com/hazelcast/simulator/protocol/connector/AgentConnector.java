@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.connector;
 import com.hazelcast.simulator.protocol.configuration.AgentClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
+import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
@@ -14,9 +15,9 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
  */
 public class AgentConnector {
 
+    private final SimulatorAddress localAddress;
     private final AgentServerConfiguration configuration;
     private final ServerConnector server;
-    private final SimulatorAddress localAddress;
 
     /**
      * Creates an {@link AgentConnector}.
@@ -25,12 +26,11 @@ public class AgentConnector {
      * @param port         the port for incoming connections
      */
     public AgentConnector(int addressIndex, int port) {
-        SimulatorAddress localAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
         AgentOperationProcessor processor = new AgentOperationProcessor();
 
-        this.configuration = new AgentServerConfiguration(localAddress, addressIndex, port, processor);
+        this.localAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
+        this.configuration = new AgentServerConfiguration(processor, localAddress, port);
         this.server = new ServerConnector(configuration);
-        this.localAddress = new SimulatorAddress(AGENT, configuration.getAddressIndex(), 0, 0);
     }
 
     /**
@@ -51,13 +51,13 @@ public class AgentConnector {
      * Adds a Simulator Worker and connects to it.
      *
      * @param workerIndex the index of the Simulator Worker
-     * @param remoteHost  the host of the Simulator Worker
-     * @param remotePort  the port of the Simulator Worker
+     * @param workerHost  the host of the Simulator Worker
+     * @param workerPort  the port of the Simulator Worker
      */
-    public void addWorker(int workerIndex, String remoteHost, int remotePort) {
+    public void addWorker(int workerIndex, String workerHost, int workerPort) {
         // TODO: spawn Simulator Worker instance
 
-        ClientConfiguration clientConfiguration = new AgentClientConfiguration(localAddress, workerIndex, remoteHost, remotePort);
+        ClientConfiguration clientConfiguration = new AgentClientConfiguration(localAddress, workerIndex, workerHost, workerPort);
         ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 
@@ -73,7 +73,11 @@ public class AgentConnector {
         configuration.removeWorker(workerIndex);
     }
 
-    public void write(SimulatorMessage message) throws Exception {
-        server.write(message);
+    public SimulatorAddress getAddress() {
+        return configuration.getLocalAddress();
+    }
+
+    public Response write(SimulatorMessage message) throws Exception {
+        return server.write(message);
     }
 }

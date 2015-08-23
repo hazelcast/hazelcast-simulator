@@ -28,8 +28,6 @@ import static java.lang.String.format;
  */
 class ServerConnector {
 
-    private static final int DEFAULT_TIMEOUT_MILLIS = 100;
-
     private static final Logger LOGGER = Logger.getLogger(ServerConnector.class);
 
     private final EventLoopGroup group = new NioEventLoopGroup();
@@ -37,30 +35,28 @@ class ServerConnector {
     private final ConcurrentMap<String, MessageFuture<Response>> futureMap
             = new ConcurrentHashMap<String, MessageFuture<Response>>();
 
-    private final ServerConfiguration bootstrapConfiguration;
+    private final ServerConfiguration configuration;
 
-    public ServerConnector(ServerConfiguration bootstrapConfiguration) {
-        this.bootstrapConfiguration = bootstrapConfiguration;
+    public ServerConnector(ServerConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     public void start() {
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(group)
                 .channel(NioServerSocketChannel.class)
-                .localAddress(new InetSocketAddress(bootstrapConfiguration.getPort()))
+                .localAddress(new InetSocketAddress(configuration.getLocalPort()))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
-                        bootstrapConfiguration.configurePipeline(channel.pipeline(), futureMap);
+                        configuration.configurePipeline(channel.pipeline(), futureMap);
                     }
                 });
 
         ChannelFuture future = bootstrap.bind().syncUninterruptibly();
         Channel channel = future.channel();
 
-        LOGGER.info(format("%s started and listen on %s on addressLevel %s at addressIndex %d",
-                ServerConnector.class.getName(), channel.localAddress(),
-                bootstrapConfiguration.getAddressLevel(), bootstrapConfiguration.getAddressIndex()));
+        LOGGER.info(format("ServerConnector %s listens on %s", configuration.getLocalAddress(), channel.localAddress()));
     }
 
     public void shutdown() {
@@ -68,7 +64,7 @@ class ServerConnector {
     }
 
     public Response write(SimulatorMessage message) throws Exception {
-        return writeAsync(message).get(DEFAULT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+        return writeAsync(message).get();
     }
 
     private MessageFuture<Response> writeAsync(SimulatorMessage message) {
@@ -79,9 +75,9 @@ class ServerConnector {
     }
 
     private MessageFuture<Response> writeAsync(long messageId, Object msg) {
-        String futureKey = messageId + "_" + bootstrapConfiguration.getAddressIndex();
+        String futureKey = configuration.createFutureKey(messageId);
         MessageFuture<Response> future = MessageFuture.createInstance(futureMap, futureKey);
-        bootstrapConfiguration.getChannelGroup().writeAndFlush(msg);
+        configuration.getChannelGroup().writeAndFlush(msg);
 
         return future;
     }

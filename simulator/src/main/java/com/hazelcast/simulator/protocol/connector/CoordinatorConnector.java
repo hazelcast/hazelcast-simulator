@@ -34,14 +34,13 @@ public class CoordinatorConnector {
      * Adds a Simulator Agent and connects to it.
      *
      * @param agentIndex the index of the Simulator Agent
-     * @param remoteHost the host of the Simulator Agent
-     * @param remotePort the port of the Simulator Agent
+     * @param agentHost  the host of the Simulator Agent
+     * @param agentPort  the port of the Simulator Agent
      */
-    public void addAgent(int agentIndex, String remoteHost, int remotePort) {
+    public void addAgent(int agentIndex, String agentHost, int agentPort) {
         // TODO: spawn Simulator Agent instance
 
-        ClientConfiguration clientConfiguration = new CoordinatorClientConfiguration(agentIndex, remoteHost, remotePort,
-                processor);
+        ClientConfiguration clientConfiguration = new CoordinatorClientConfiguration(agentIndex, agentHost, agentPort, processor);
         ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 

@@ -19,15 +19,15 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
     private static final Logger LOGGER = Logger.getLogger(ResponseHandler.class);
 
     private final SimulatorAddress localAddress;
-    private final SimulatorAddress childAddress;
-    private final int childIndex;
+    private final SimulatorAddress remoteAddress;
+    private final int senderIndex;
     private final ConcurrentMap<String, MessageFuture<Response>> futureMap;
 
-    public ResponseHandler(SimulatorAddress localAddress, SimulatorAddress childAddress,
+    public ResponseHandler(SimulatorAddress localAddress, SimulatorAddress remoteAddress,
                            ConcurrentMap<String, MessageFuture<Response>> futureMap) {
         this.localAddress = localAddress;
-        this.childAddress = childAddress;
-        this.childIndex = childAddress.getAddressIndex();
+        this.remoteAddress = remoteAddress;
+        this.senderIndex = remoteAddress.getAddressIndex();
         this.futureMap = futureMap;
     }
 
@@ -38,17 +38,17 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
         }
         long messageId = response.getMessageId();
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("[%d] ResponseHandler.channelRead0() %s -> %s", messageId, localAddress, childAddress));
+            LOGGER.trace(format("[%d] ResponseHandler.channelRead0() %s <- %s", messageId, localAddress, remoteAddress));
         }
 
-        String futureKey = messageId + "_" + childIndex;
+        String futureKey = messageId + "_" + senderIndex;
         MessageFuture<Response> future = futureMap.get(futureKey);
         if (future != null) {
             future.set(response);
             return;
         }
 
-        String msg = format("[%d] %s -> %s No future found for %s", messageId, localAddress, childAddress, response);
+        String msg = format("[%d] %s <- %s No future found for %s", messageId, localAddress, remoteAddress, response);
         LOGGER.error(msg);
         throw new IllegalArgumentException(msg);
     }

@@ -10,12 +10,12 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertAllTargets;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertSingleTarget;
@@ -170,18 +170,22 @@ public class ProtocolIntegrationTest {
         assertAllTargets(response, destination.getParent(), FAILURE_TEST_NOT_FOUND, 4);
     }
 
-    @Test(expected = TimeoutException.class)
-    public void test_Coordinator_fromAgent() throws Exception {
-        AgentConnector agent = agentConnectors.get(1);
-        SimulatorAddress source = new SimulatorAddress(AGENT, 1, 2, 0);
-        agent.write(buildMessage(SimulatorAddress.COORDINATOR, source));
+    @Test
+    @Ignore
+    public void test_toCoordinator_fromAgent() throws Exception {
+        AgentConnector agent = agentConnectors.get(0);
+        Response response = agent.write(buildMessage(SimulatorAddress.COORDINATOR, agent.getAddress()));
+
+        assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
     }
 
-    @Test(expected = TimeoutException.class)
-    public void test_Coordinator_fromWorker() throws Exception {
-        WorkerConnector worker = workerConnectors.get(1);
-        SimulatorAddress source = new SimulatorAddress(WORKER, 1, 2, 0);
-        worker.write(buildMessage(SimulatorAddress.COORDINATOR, source));
+    @Test
+    @Ignore
+    public void test_toCoordinator_fromWorker() throws Exception {
+        WorkerConnector worker = workerConnectors.get(0);
+        Response response = worker.write(buildMessage(SimulatorAddress.COORDINATOR, worker.getAddress()));
+
+        assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
     }
 
     private static Response sendMessageAndAssertMessageId(SimulatorAddress destination) throws Exception {

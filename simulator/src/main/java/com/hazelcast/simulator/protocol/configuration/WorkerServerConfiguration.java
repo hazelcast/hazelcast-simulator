@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.protocol.configuration;
 
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.MessageFuture;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -16,8 +15,6 @@ import io.netty.channel.group.ChannelGroup;
 
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
-
 /**
  * Bootstrap configuration for a {@link com.hazelcast.simulator.protocol.connector.WorkerConnector}.
  */
@@ -26,16 +23,13 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
     private final ChannelCollectorHandler channelCollectorHandler = new ChannelCollectorHandler();
     private final MessageTestConsumeHandler messageTestConsumeHandler = new MessageTestConsumeHandler(localAddress);
 
-    private final OperationProcessor processor;
-
-    public WorkerServerConfiguration(SimulatorAddress localAddress, int addressIndex, int port, OperationProcessor processor) {
-        super(localAddress, addressIndex, port);
-        this.processor = processor;
+    public WorkerServerConfiguration(OperationProcessor processor, SimulatorAddress localAddress, int port) {
+        super(processor, localAddress, port);
     }
 
     @Override
-    public AddressLevel getAddressLevel() {
-        return WORKER;
+    public ChannelGroup getChannelGroup() {
+        return channelCollectorHandler.getChannels();
     }
 
     @Override
@@ -55,10 +49,5 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
 
     public void removeTest(int testIndex) {
         messageTestConsumeHandler.removeTest(testIndex);
-    }
-
-    @Override
-    public ChannelGroup getChannelGroup() {
-        return channelCollectorHandler.getChannels();
     }
 }
