@@ -47,6 +47,7 @@ public class MockIOService implements IOService {
     public volatile PacketHandler packetHandler;
     public int inputThreadCount;
     public int outputThreadCount;
+    public boolean socketNoDelay = true;
 
     public MockIOService(Address thisAddress, LoggingService loggingService) throws Exception {
         this.thisAddress = thisAddress;
@@ -210,7 +211,7 @@ public class MockIOService implements IOService {
 
     @Override
     public boolean getSocketNoDelay() {
-        return true;
+        return socketNoDelay;
     }
 
     @Override

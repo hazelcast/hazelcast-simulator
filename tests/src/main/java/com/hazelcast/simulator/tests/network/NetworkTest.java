@@ -13,7 +13,6 @@ import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.tcp.TcpIpConnection;
 import com.hazelcast.nio.tcp.TcpIpConnectionManager;
-import com.hazelcast.nio.tcp.TcpIpConnectionThreadingModel;
 import com.hazelcast.nio.tcp.nonblocking.NonBlockingTcpIpConnectionThreadingModel;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -48,8 +47,11 @@ public class NetworkTest {
     public int payloadSize = 0;
     public long requestTimeout = 60;
     public TimeUnit requestTimeUnit = TimeUnit.SECONDS;
-    public int inputThreadCount;
-    public int outputThreadCount;
+    public int inputThreadCount = 1;
+    public int outputThreadCount = 1;
+    public boolean inputSelectNow = false;
+    public boolean outputSelectNow = false;
+    public boolean socketNoDelay = true;
 
     private HazelcastInstance hz;
     private ILock networkCreateLock;
@@ -57,7 +59,7 @@ public class NetworkTest {
     private MockIOService ioService;
     private DummyPacketHandler packetHandler;
     private AtomicInteger workerIdGenerator = new AtomicInteger();
-    private TcpIpConnectionThreadingModel threadingModel;
+    private NonBlockingTcpIpConnectionThreadingModel threadingModel;
 
 
     @Setup
@@ -78,9 +80,11 @@ public class NetworkTest {
         ioService = new MockIOService(newThisAddress, loggingService);
         ioService.inputThreadCount = inputThreadCount;
         ioService.outputThreadCount = outputThreadCount;
-
+        ioService.socketNoDelay = socketNoDelay;
 
         threadingModel = new NonBlockingTcpIpConnectionThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
+        threadingModel.setInputSelectNow(inputSelectNow);
+        threadingModel.setOutputSelectNow(outputSelectNow);
 
         connectionManager = new TcpIpConnectionManager(
                 ioService, ioService.serverSocketChannel, loggingService, metricsRegistry, threadingModel);
