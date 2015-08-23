@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol.configuration;
 
 import com.hazelcast.simulator.protocol.core.MessageFuture;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
@@ -13,25 +14,22 @@ import io.netty.channel.ChannelPipeline;
 
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-
 public class CoordinatorClientConfiguration extends AbstractClientConfiguration {
 
     private final OperationProcessor processor;
 
     public CoordinatorClientConfiguration(int agentIndex, String host, int port, OperationProcessor processor) {
-        super(COORDINATOR, AGENT, agentIndex, host, port);
+        super(SimulatorAddress.COORDINATOR, agentIndex, host, port);
         this.processor = processor;
     }
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap) {
-        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, addressLevel, addressIndex));
+        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, targetAddress));
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress, addressLevel));
-        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, addressLevel, addressIndex, futureMap));
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, targetAddress, futureMap));
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
     }
 }

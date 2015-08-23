@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.protocol.handler;
 
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.MessageFuture;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -20,15 +19,15 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
     private static final Logger LOGGER = Logger.getLogger(ResponseHandler.class);
 
     private final SimulatorAddress localAddress;
-    private final AddressLevel addressLevel;
-    private final int addressIndex;
+    private final SimulatorAddress childAddress;
+    private final int childIndex;
     private final ConcurrentMap<String, MessageFuture<Response>> futureMap;
 
-    public ResponseHandler(SimulatorAddress localAddress, AddressLevel addressLevel, int addressIndex,
+    public ResponseHandler(SimulatorAddress localAddress, SimulatorAddress childAddress,
                            ConcurrentMap<String, MessageFuture<Response>> futureMap) {
         this.localAddress = localAddress;
-        this.addressLevel = addressLevel;
-        this.addressIndex = addressIndex;
+        this.childAddress = childAddress;
+        this.childIndex = childAddress.getAddressIndex();
         this.futureMap = futureMap;
     }
 
@@ -37,19 +36,20 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
         if (Response.isLastResponse(response)) {
             return;
         }
+        long messageId = response.getMessageId();
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("[%d] MessageResponseHandler.channelRead0() %s %s_%s", response.getMessageId(), localAddress,
-                    addressLevel, addressIndex));
+            LOGGER.trace(format("[%d] ResponseHandler.channelRead0() %s -> %s", messageId, localAddress, childAddress));
         }
 
-        String futureKey = response.getMessageId() + "_" + addressIndex;
+        String futureKey = messageId + "_" + childIndex;
         MessageFuture<Response> future = futureMap.get(futureKey);
         if (future != null) {
             future.set(response);
             return;
         }
 
-        LOGGER.error(format("[%d] %s %s_%s No future found for %s of %s", response.getMessageId(), localAddress,
-                addressLevel, addressIndex, futureKey, response));
+        String msg = format("[%d] %s -> %s No future found for %s", messageId, localAddress, childAddress, response);
+        LOGGER.error(msg);
+        throw new IllegalArgumentException(msg);
     }
 }

@@ -1,22 +1,20 @@
 package com.hazelcast.simulator.protocol.configuration;
 
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 public abstract class AbstractClientConfiguration implements ClientConfiguration {
 
     final SimulatorAddress localAddress;
-    final AddressLevel addressLevel;
-    final int addressIndex;
+    final SimulatorAddress targetAddress;
+    final int targetIndex;
 
     private final String host;
     private final int port;
 
-    public AbstractClientConfiguration(SimulatorAddress localAddress, AddressLevel addressLevel, int addressIndex,
-                                       String host, int port) {
+    public AbstractClientConfiguration(SimulatorAddress localAddress, int targetIndex, String host, int port) {
         this.localAddress = localAddress;
-        this.addressLevel = addressLevel;
-        this.addressIndex = addressIndex;
+        this.targetAddress = localAddress.getChild(targetIndex);
+        this.targetIndex = targetIndex;
         this.host = host;
         this.port = port;
     }
@@ -33,6 +31,6 @@ public abstract class AbstractClientConfiguration implements ClientConfiguration
 
     @Override
     public String createFutureKey(long messageId) {
-        return messageId + "_" + addressIndex;
+        return messageId + "_" + targetIndex;
     }
 }

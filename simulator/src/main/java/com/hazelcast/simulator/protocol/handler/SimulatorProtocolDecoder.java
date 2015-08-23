@@ -39,9 +39,9 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
     private final AddressLevel addressLevel;
     private final int addressLevelValue;
 
-    public SimulatorProtocolDecoder(SimulatorAddress localAddress, AddressLevel addressLevel) {
+    public SimulatorProtocolDecoder(SimulatorAddress localAddress) {
         this.localAddress = localAddress;
-        this.addressLevel = addressLevel;
+        this.addressLevel = localAddress.getAddressLevel();
         this.addressLevelValue = addressLevel.toInt();
     }
 
@@ -63,7 +63,7 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
             return;
         }
 
-        String msg = format("%s %s Invalid magic bytes in: %s", addressLevel, localAddress, buffer.toString(CharsetUtil.UTF_8));
+        String msg = format("%s %s Invalid magic bytes %s", addressLevel, localAddress, buffer.toString(CharsetUtil.UTF_8));
         LOGGER.error(msg);
         throw new IllegalArgumentException(msg);
     }

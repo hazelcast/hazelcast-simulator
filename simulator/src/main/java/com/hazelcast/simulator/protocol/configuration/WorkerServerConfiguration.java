@@ -16,7 +16,6 @@ import io.netty.channel.group.ChannelGroup;
 
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 
 /**
@@ -44,9 +43,9 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress, WORKER));
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
-        pipeline.addLast("testProtocolDecoder", new SimulatorProtocolDecoder(localAddress, TEST));
+        pipeline.addLast("testProtocolDecoder", new SimulatorProtocolDecoder(localAddress.getChild(0)));
         pipeline.addLast("testMessageConsumeHandler", messageTestConsumeHandler);
     }
 

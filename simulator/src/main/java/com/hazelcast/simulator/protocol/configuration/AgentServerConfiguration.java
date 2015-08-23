@@ -44,7 +44,7 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress, AGENT));
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("messageForwardHandler", messageForwardToWorkerHandler);
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
     }
