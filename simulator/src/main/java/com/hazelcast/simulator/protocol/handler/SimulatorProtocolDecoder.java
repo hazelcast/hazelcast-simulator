@@ -76,6 +76,9 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
 
         if (dstAddressLevel == addressLevel) {
             SimulatorMessage message = SimulatorMessageCodec.decodeSimulatorMessage(buffer);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace(format("[%d] %s %s will consume %s", messageId, addressLevel, localAddress, message));
+            }
             out.add(message);
         } else {
             int addressIndex = getChildAddressIndex(buffer, addressLevelValue);

@@ -171,7 +171,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = 500)
-    public void test_toCoordinator_fromAgent() throws Exception {
+    public void test_Coordinator_fromAgent() throws Exception {
         AgentConnector agent = agentConnectors.get(0);
         Response response = agent.write(buildMessage(SimulatorAddress.COORDINATOR, agent.getAddress()));
 
@@ -180,11 +180,20 @@ public class ProtocolIntegrationTest {
 
     @Ignore
     @Test(timeout = 500)
-    public void test_toCoordinator_fromWorker() throws Exception {
+    public void test_Coordinator_fromWorker() throws Exception {
         WorkerConnector worker = workerConnectors.get(0);
         Response response = worker.write(buildMessage(SimulatorAddress.COORDINATOR, worker.getAddress()));
 
         assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
+    }
+
+    @Test(timeout = 500)
+    public void test_SingleAgent_fromWorker() throws Exception {
+        WorkerConnector worker = workerConnectors.get(0);
+        SimulatorAddress destination = agentConnectors.get(0).getAddress();
+        Response response = worker.write(buildMessage(destination, worker.getAddress()));
+
+        assertSingleTarget(response, destination, SUCCESS);
     }
 
     private static Response sendMessageAndAssertMessageId(SimulatorAddress destination) throws Exception {
