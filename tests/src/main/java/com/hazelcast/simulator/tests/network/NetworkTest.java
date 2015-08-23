@@ -256,6 +256,9 @@ public class NetworkTest {
         public void set() {
             lock.lock();
             try {
+                if (result != null) {
+                    throw new RuntimeException("Result can't be null");
+                }
                 result = Boolean.TRUE;
                 condition.signal();
             } finally {
@@ -264,6 +267,9 @@ public class NetworkTest {
         }
 
         public void reset() {
+            if (result == null) {
+                throw new RuntimeException("result can't be null");
+            }
             result = null;
         }
     }
