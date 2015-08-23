@@ -10,6 +10,7 @@ import com.hazelcast.internal.ascii.TextCommandService;
 import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuilder;
 import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.LoggingService;
 import com.hazelcast.logging.LoggingServiceImpl;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Connection;
@@ -41,15 +42,15 @@ public class MockIOService implements IOService {
     public final ServerSocketChannel serverSocketChannel;
     public final Address thisAddress;
     public final SerializationService serializationService;
-    public final LoggingServiceImpl loggingService;
+    public final LoggingService loggingService;
     public final HazelcastThreadGroup hazelcastThreadGroup;
     public volatile PacketHandler packetHandler;
     public int inputThreadCount;
     public int outputThreadCount;
 
-    public MockIOService(Address thisAddress) throws Exception {
+    public MockIOService(Address thisAddress, LoggingService loggingService) throws Exception {
         this.thisAddress = thisAddress;
-        loggingService = new LoggingServiceImpl("somegroup", "log4j", BuildInfoProvider.getBuildInfo());
+        this.loggingService = loggingService;
         hazelcastThreadGroup = new HazelcastThreadGroup(
                 "hz",
                 loggingService.getLogger(HazelcastThreadGroup.class),

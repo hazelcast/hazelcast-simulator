@@ -65,20 +65,21 @@ public class NetworkTest {
     public void setup(TestContext context) throws Exception {
         hz = context.getTargetInstance();
 
-        // we don't know the number of worker threads (damn hidden property), so lets assume 1000.. that should be enough
-        packetHandler = new DummyPacketHandler(1000);
-
-        InetSocketAddress socketAddress = hz.getCluster().getLocalMember().getSocketAddress();
-        int serverPort = socketAddress.getPort();
-
-        ioService = new MockIOService(new Address(socketAddress.getHostName(), serverPort + PORT_OFFSET));
-        ioService.inputThreadCount = inputThreadCount;
-        ioService.outputThreadCount = outputThreadCount;
-
         Node node = HazelcastTestUtils.getNode(hz);
         MetricsRegistry metricsRegistry = node.nodeEngine.getMetricsRegistry();
         LoggingService loggingService = node.loggingService;
         HazelcastThreadGroup threadGroup = node.getHazelcastThreadGroup();
+
+        // we don't know the number of worker threads (damn hidden property), so lets assume 1000.. that should be enough
+        packetHandler = new DummyPacketHandler(1000);
+
+        Address socketAddress = hz.getCluster().getLocalMember().getAddress();
+        Address newThisAddress = new Address(socketAddress.getHost(), socketAddress.getPort() + PORT_OFFSET);
+        LOGGER.info("ThisAddress: " + newThisAddress);
+        ioService = new MockIOService(newThisAddress, loggingService);
+        ioService.inputThreadCount = inputThreadCount;
+        ioService.outputThreadCount = outputThreadCount;
+
 
         threadingModel = new NonBlockingTcpIpConnectionThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
 
