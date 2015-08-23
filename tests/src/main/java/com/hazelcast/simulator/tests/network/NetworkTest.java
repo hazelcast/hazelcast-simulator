@@ -143,7 +143,7 @@ public class NetworkTest {
     private class Worker extends AbstractMonotonicWorker {
 
         private final int workerId;
-        private final RequestFuture future;
+        private final RequestFuture responseFuture;
         private final List<TcpIpConnection> connections;
         private byte[] payload;
 
@@ -153,7 +153,7 @@ public class NetworkTest {
                 payload = new byte[payloadSize];
                 getRandom().nextBytes(payload);
             }
-            future = packetHandler.futures[workerId];
+            responseFuture = packetHandler.futures[workerId];
             connections = new ArrayList<TcpIpConnection>(connectionManager.getActiveConnections());
         }
 
@@ -167,12 +167,12 @@ public class NetworkTest {
             }
 
             try {
-                future.get(requestTimeout, requestTimeUnit);
+                responseFuture.get(requestTimeout, requestTimeUnit);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to receive request from connection:"
                         + connection + " within timeout:" + requestTimeout + " " + requestTimeUnit);
             }
-            future.reset();
+            responseFuture.reset();
         }
 
         private TcpIpConnection nextConnection() {
@@ -240,7 +240,7 @@ public class NetworkTest {
             lock.lock();
             try {
                 while (result == null) {
-                    if (timeout <= 0) {
+                    if (timeoutNs <= 0) {
                         throw new TimeoutException();
                     }
 
