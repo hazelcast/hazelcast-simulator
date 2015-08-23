@@ -72,8 +72,8 @@ public class NetworkTest {
         // we don't know the number of worker threads (damn hidden property), so lets assume 1000.. that should be enough
         packetHandler = new DummyPacketHandler(1000);
 
-        Address socketAddress = hz.getCluster().getLocalMember().getAddress();
-        Address newThisAddress = new Address(socketAddress.getHost(), socketAddress.getPort() + PORT_OFFSET);
+        Address thisAddress = node.getThisAddress();
+        Address newThisAddress = new Address(thisAddress.getHost(), thisAddress.getPort() + PORT_OFFSET);
         LOGGER.info("ThisAddress: " + newThisAddress);
         ioService = new MockIOService(newThisAddress, loggingService);
         ioService.inputThreadCount = inputThreadCount;
@@ -104,19 +104,19 @@ public class NetworkTest {
                     continue;
                 }
 
-                Address targetAddress = member.getAddress();
-                Address newAddress = new Address(targetAddress.getHost(), targetAddress.getPort() + PORT_OFFSET);
+                Address memberAddress = member.getAddress();
+                Address targetAddress = new Address(memberAddress.getHost(), memberAddress.getPort() + PORT_OFFSET);
 
-                LOGGER.info("Connecting to:" + newAddress);
+                LOGGER.info("Connecting to:" + targetAddress);
 
-                connectionManager.getOrConnect(newAddress);
+                connectionManager.getOrConnect(targetAddress);
 
                 for (; ; ) {
-                    if (connectionManager.getConnection(newAddress) != null) {
-                        LOGGER.info("Successfully created connection to:" + newAddress);
+                    if (connectionManager.getConnection(targetAddress) != null) {
+                        LOGGER.info("Successfully created connection to:" + targetAddress);
                         break;
                     }
-                    LOGGER.info("Waiting for connection to:" + newAddress);
+                    LOGGER.info("Waiting for connection to:" + targetAddress);
                     Thread.sleep(100);
                 }
             }
