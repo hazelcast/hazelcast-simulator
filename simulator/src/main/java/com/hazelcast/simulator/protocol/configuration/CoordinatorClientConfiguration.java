@@ -2,8 +2,10 @@ package com.hazelcast.simulator.protocol.configuration;
 
 import com.hazelcast.simulator.protocol.core.MessageFuture;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
-import com.hazelcast.simulator.protocol.handler.MessageResponseHandler;
+import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
+import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
@@ -25,10 +27,11 @@ public class CoordinatorClientConfiguration extends AbstractClientConfiguration 
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap) {
+        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, addressLevel, addressIndex));
+        pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("decoder", new SimulatorProtocolDecoder(localAddress, addressLevel));
-        pipeline.addLast("encoder", new MessageEncoder(localAddress, addressLevel, addressIndex));
-        pipeline.addLast("handler", new MessageResponseHandler(localAddress, addressLevel, addressIndex,
-                futureMap));
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress, addressLevel));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, addressLevel, addressIndex, futureMap));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
     }
 }

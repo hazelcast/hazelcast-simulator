@@ -41,12 +41,12 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap) {
+        pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("collector", channelCollectorHandler);
-        pipeline.addLast("encoder", new ResponseEncoder(localAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("decoder", new SimulatorProtocolDecoder(localAddress, AGENT));
-        pipeline.addLast("forwarder", messageForwardToWorkerHandler);
-        pipeline.addLast("consumer", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress, AGENT));
+        pipeline.addLast("messageForwardHandler", messageForwardToWorkerHandler);
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
     }
 
     public void addWorker(int workerIndex, ClientConnector clientConnector) {

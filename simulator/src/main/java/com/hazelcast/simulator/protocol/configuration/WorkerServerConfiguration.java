@@ -41,13 +41,13 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap) {
-        pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
+        pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("decoder", new SimulatorProtocolDecoder(localAddress, WORKER));
-        pipeline.addLast("consumer", new MessageConsumeHandler(localAddress, processor));
-        pipeline.addLast("testDecoder", new SimulatorProtocolDecoder(localAddress, TEST));
-        pipeline.addLast("testConsumer", messageTestConsumeHandler);
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress, WORKER));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("testProtocolDecoder", new SimulatorProtocolDecoder(localAddress, TEST));
+        pipeline.addLast("testMessageConsumeHandler", messageTestConsumeHandler);
     }
 
     public void addTest(int testIndex, OperationProcessor processor) {

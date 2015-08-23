@@ -15,17 +15,17 @@ import static java.lang.String.format;
 /**
  * A {@link SimpleChannelInboundHandler} to set a received {@link Response} as result of the corresponding {@link MessageFuture}.
  */
-public class MessageResponseHandler extends SimpleChannelInboundHandler<Response> {
+public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
 
-    private static final Logger LOGGER = Logger.getLogger(MessageResponseHandler.class);
+    private static final Logger LOGGER = Logger.getLogger(ResponseHandler.class);
 
     private final SimulatorAddress localAddress;
     private final AddressLevel addressLevel;
     private final int addressIndex;
     private final ConcurrentMap<String, MessageFuture<Response>> futureMap;
 
-    public MessageResponseHandler(SimulatorAddress localAddress, AddressLevel addressLevel, int addressIndex,
-                                  ConcurrentMap<String, MessageFuture<Response>> futureMap) {
+    public ResponseHandler(SimulatorAddress localAddress, AddressLevel addressLevel, int addressIndex,
+                           ConcurrentMap<String, MessageFuture<Response>> futureMap) {
         this.localAddress = localAddress;
         this.addressLevel = addressLevel;
         this.addressIndex = addressIndex;
