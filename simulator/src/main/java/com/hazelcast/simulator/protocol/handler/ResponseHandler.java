@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.protocol.handler;
 
-import com.hazelcast.simulator.protocol.core.MessageFuture;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentMap;
 import static java.lang.String.format;
 
 /**
- * A {@link SimpleChannelInboundHandler} to set a received {@link Response} as result of the corresponding {@link MessageFuture}.
+ * A {@link SimpleChannelInboundHandler} to set a received {@link Response} as result of the corresponding {@link ResponseFuture}.
  */
 public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
 
@@ -21,10 +21,10 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
     private final SimulatorAddress localAddress;
     private final SimulatorAddress remoteAddress;
     private final int senderIndex;
-    private final ConcurrentMap<String, MessageFuture<Response>> futureMap;
+    private final ConcurrentMap<String, ResponseFuture> futureMap;
 
     public ResponseHandler(SimulatorAddress localAddress, SimulatorAddress remoteAddress,
-                           ConcurrentMap<String, MessageFuture<Response>> futureMap) {
+                           ConcurrentMap<String, ResponseFuture> futureMap) {
         this.localAddress = localAddress;
         this.remoteAddress = remoteAddress;
         this.senderIndex = remoteAddress.getAddressIndex();
@@ -42,7 +42,7 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
         }
 
         String futureKey = messageId + "_" + senderIndex;
-        MessageFuture<Response> future = futureMap.get(futureKey);
+        ResponseFuture future = futureMap.get(futureKey);
         if (future != null) {
             future.set(response);
             return;

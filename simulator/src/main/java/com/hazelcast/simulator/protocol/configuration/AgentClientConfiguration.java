@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.protocol.configuration;
 
-import com.hazelcast.simulator.protocol.core.MessageFuture;
-import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseHandler;
@@ -18,7 +17,7 @@ public class AgentClientConfiguration extends AbstractClientConfiguration {
     }
 
     @Override
-    public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap) {
+    public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, ResponseFuture> futureMap) {
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, remoteAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));

@@ -170,8 +170,8 @@ public class ProtocolIntegrationTest {
         assertAllTargets(response, destination.getParent(), FAILURE_TEST_NOT_FOUND, 4);
     }
 
-    @Test
     @Ignore
+    @Test(timeout = 500)
     public void test_toCoordinator_fromAgent() throws Exception {
         AgentConnector agent = agentConnectors.get(0);
         Response response = agent.write(buildMessage(SimulatorAddress.COORDINATOR, agent.getAddress()));
@@ -179,8 +179,8 @@ public class ProtocolIntegrationTest {
         assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
     }
 
-    @Test
     @Ignore
+    @Test(timeout = 500)
     public void test_toCoordinator_fromWorker() throws Exception {
         WorkerConnector worker = workerConnectors.get(0);
         Response response = worker.write(buildMessage(SimulatorAddress.COORDINATOR, worker.getAddress()));

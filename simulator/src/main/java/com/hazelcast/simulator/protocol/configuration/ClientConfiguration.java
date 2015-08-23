@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.protocol.configuration;
 
-import com.hazelcast.simulator.protocol.core.MessageFuture;
-import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import io.netty.channel.ChannelPipeline;
 
@@ -44,15 +43,15 @@ public interface ClientConfiguration {
      * Configured the {@link ChannelPipeline} of the {@link com.hazelcast.simulator.protocol.connector.ClientConnector}.
      *
      * @param pipeline  the {@link ChannelPipeline} which should be configured
-     * @param futureMap the map of {@link MessageFuture} for write methods to this client
+     * @param futureMap the map of {@link ResponseFuture} for write methods to this client
      */
-    void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap);
+    void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, ResponseFuture> futureMap);
 
     /**
-     * Created a map key for a {@link MessageFuture}.
+     * Created a map key for a {@link ResponseFuture}.
      *
      * @param messageId the messageId of a {@link com.hazelcast.simulator.protocol.core.SimulatorMessage}
-     * @return the key for the {@link MessageFuture} map
+     * @return the key for the {@link ResponseFuture} map
      */
     String createFutureKey(long messageId);
 }

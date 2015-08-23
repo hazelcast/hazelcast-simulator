@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
-import com.hazelcast.simulator.protocol.core.MessageFuture;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -34,8 +34,7 @@ public class ClientConnector {
 
     private final EventLoopGroup group = new NioEventLoopGroup();
 
-    private final ConcurrentMap<String, MessageFuture<Response>> futureMap
-            = new ConcurrentHashMap<String, MessageFuture<Response>>();
+    private final ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
     private final ClientConfiguration configuration;
 
@@ -76,17 +75,17 @@ public class ClientConnector {
         return writeAsync(buffer).get();
     }
 
-    private MessageFuture<Response> writeAsync(SimulatorMessage message) {
+    private ResponseFuture writeAsync(SimulatorMessage message) {
         return writeAsync(message.getMessageId(), message);
     }
 
-    private MessageFuture<Response> writeAsync(ByteBuf buffer) {
+    private ResponseFuture writeAsync(ByteBuf buffer) {
         return writeAsync(getMessageId(buffer), buffer);
     }
 
-    private MessageFuture<Response> writeAsync(long messageId, Object msg) {
+    private ResponseFuture writeAsync(long messageId, Object msg) {
         String futureKey = configuration.createFutureKey(messageId);
-        MessageFuture<Response> future = MessageFuture.createInstance(futureMap, futureKey);
+        ResponseFuture future = ResponseFuture.createInstance(futureMap, futureKey);
         channel.writeAndFlush(msg);
 
         return future;

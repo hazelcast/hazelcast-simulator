@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.protocol.configuration;
 
-import com.hazelcast.simulator.protocol.core.MessageFuture;
-import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.handler.ChannelCollectorHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
@@ -33,7 +32,7 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
     }
 
     @Override
-    public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap) {
+    public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, ResponseFuture> futureMap) {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
