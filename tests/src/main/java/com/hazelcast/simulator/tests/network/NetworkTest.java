@@ -257,7 +257,7 @@ public class NetworkTest {
             lock.lock();
             try {
                 if (result != null) {
-                    throw new RuntimeException("Result can't be null");
+                    throw new RuntimeException("Result should be null");
                 }
                 result = Boolean.TRUE;
                 condition.signal();
