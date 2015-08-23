@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.protocol.configuration.BootstrapConfiguration;
+import com.hazelcast.simulator.protocol.configuration.ServerConfiguration;
 import com.hazelcast.simulator.protocol.core.MessageFuture;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
@@ -19,8 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.protocol.configuration.BootstrapConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
-import static com.hazelcast.simulator.protocol.configuration.BootstrapConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
+import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
+import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
 import static java.lang.String.format;
 
 /**
@@ -37,9 +37,9 @@ class ServerConnector {
     private final ConcurrentMap<String, MessageFuture<Response>> futureMap
             = new ConcurrentHashMap<String, MessageFuture<Response>>();
 
-    private final BootstrapConfiguration bootstrapConfiguration;
+    private final ServerConfiguration bootstrapConfiguration;
 
-    public ServerConnector(BootstrapConfiguration bootstrapConfiguration) {
+    public ServerConnector(ServerConfiguration bootstrapConfiguration) {
         this.bootstrapConfiguration = bootstrapConfiguration;
     }
 

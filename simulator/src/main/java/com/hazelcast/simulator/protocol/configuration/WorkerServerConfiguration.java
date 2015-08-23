@@ -22,7 +22,7 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 /**
  * Bootstrap configuration for a {@link com.hazelcast.simulator.protocol.connector.WorkerConnector}.
  */
-public class WorkerServerConfiguration extends AbstractBootstrapConfiguration {
+public class WorkerServerConfiguration extends AbstractServerConfiguration {
 
     private final ChannelCollectorHandler channelCollectorHandler = new ChannelCollectorHandler();
     private final MessageTestConsumeHandler messageTestConsumeHandler = new MessageTestConsumeHandler(localAddress);

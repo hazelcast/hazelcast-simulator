@@ -1,12 +1,13 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.protocol.configuration.AgentClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
+import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
-import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 
 /**
  * Connector which listens for incoming Simulator Coordinator connections and connects to remote Simulator Worker instances.
@@ -56,7 +57,8 @@ public class AgentConnector {
     public void addWorker(int workerIndex, String remoteHost, int remotePort) {
         // TODO: spawn Simulator Worker instance
 
-        ClientConnector client = new ClientConnector(localAddress, WORKER, workerIndex, remoteHost, remotePort);
+        ClientConfiguration clientConfiguration = new AgentClientConfiguration(localAddress, workerIndex, remoteHost, remotePort);
+        ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 
         configuration.addWorker(workerIndex, client);

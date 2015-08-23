@@ -1,20 +1,14 @@
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.protocol.core.AddressLevel;
+import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.MessageFuture;
 import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
-import com.hazelcast.simulator.protocol.handler.MessageEncoder;
-import com.hazelcast.simulator.protocol.handler.MessageResponseHandler;
-import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
-import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -26,8 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.protocol.configuration.BootstrapConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
-import static com.hazelcast.simulator.protocol.configuration.BootstrapConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
+import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
+import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getMessageId;
 import static java.lang.String.format;
 
@@ -43,36 +37,23 @@ public class ClientConnector {
     private final ConcurrentMap<String, MessageFuture<Response>> futureMap
             = new ConcurrentHashMap<String, MessageFuture<Response>>();
 
-    private final SimulatorAddress localAddress;
-    private final AddressLevel addressLevel;
-    private final int addressIndex;
-    private final String host;
-    private final int port;
+    private final ClientConfiguration configuration;
 
     private Channel channel;
 
-    public ClientConnector(SimulatorAddress localAddress, AddressLevel addressLevel, int addressIndex, String host, int port) {
-        this.localAddress = localAddress;
-        this.addressLevel = addressLevel;
-        this.addressIndex = addressIndex;
-        this.host = host;
-        this.port = port;
+    public ClientConnector(ClientConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     public void start() {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
-                .remoteAddress(new InetSocketAddress(host, port))
+                .remoteAddress(new InetSocketAddress(configuration.getHost(), configuration.getPort()))
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
-                        ChannelPipeline pipeline = channel.pipeline();
-                        pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-                        pipeline.addLast("decoder", new SimulatorProtocolDecoder(localAddress, addressLevel));
-                        pipeline.addLast("encoder", new MessageEncoder(localAddress, addressLevel, addressIndex));
-                        pipeline.addLast("handler", new MessageResponseHandler(localAddress, addressLevel, addressIndex,
-                                futureMap));
+                        configuration.configurePipeline(channel.pipeline(), futureMap);
                     }
                 });
 
@@ -103,7 +84,7 @@ public class ClientConnector {
     }
 
     private MessageFuture<Response> writeAsync(long messageId, Object msg) {
-        String futureKey = messageId + "_" + addressIndex;
+        String futureKey = configuration.createFutureKey(messageId);
         MessageFuture<Response> future = MessageFuture.createInstance(futureMap, futureKey);
         channel.writeAndFlush(msg);
 

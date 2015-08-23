@@ -22,7 +22,7 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 /**
  * Bootstrap configuration for a {@link com.hazelcast.simulator.protocol.connector.AgentConnector}.
  */
-public class AgentServerConfiguration extends AbstractBootstrapConfiguration {
+public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     private final ChannelCollectorHandler channelCollectorHandler = new ChannelCollectorHandler();
     private final MessageForwardToWorkerHandler messageForwardToWorkerHandler = new MessageForwardToWorkerHandler(localAddress);

@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Configuration interface for a Simulator {@link com.hazelcast.simulator.protocol.connector.ServerConnector}.
  */
-public interface BootstrapConfiguration {
+public interface ServerConfiguration {
 
     int DEFAULT_SHUTDOWN_QUIET_PERIOD = 0;
     int DEFAULT_SHUTDOWN_TIMEOUT = 15;

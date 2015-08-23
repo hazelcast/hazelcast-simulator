@@ -1,13 +1,15 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
+import com.hazelcast.simulator.protocol.configuration.CoordinatorClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
+import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 
@@ -17,6 +19,7 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
 public class CoordinatorConnector {
 
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
+    private final OperationProcessor processor = new CoordinatorOperationProcessor();
 
     /**
      * Disconnects from all Simulator Agent instances.
@@ -37,7 +40,9 @@ public class CoordinatorConnector {
     public void addAgent(int agentIndex, String remoteHost, int remotePort) {
         // TODO: spawn Simulator Agent instance
 
-        ClientConnector client = new ClientConnector(SimulatorAddress.COORDINATOR, AGENT, agentIndex, remoteHost, remotePort);
+        ClientConfiguration clientConfiguration = new CoordinatorClientConfiguration(agentIndex, remoteHost, remotePort,
+                processor);
+        ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 
         agents.put(agentIndex, client);
