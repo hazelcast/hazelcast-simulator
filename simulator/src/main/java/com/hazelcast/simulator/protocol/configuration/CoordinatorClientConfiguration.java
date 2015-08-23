@@ -15,11 +15,8 @@ import java.util.concurrent.ConcurrentMap;
 
 public class CoordinatorClientConfiguration extends AbstractClientConfiguration {
 
-    private final OperationProcessor processor;
-
-    public CoordinatorClientConfiguration(int agentIndex, String agentHost, int agentPort, OperationProcessor processor) {
-        super(SimulatorAddress.COORDINATOR, agentIndex, agentHost, agentPort);
-        this.processor = processor;
+    public CoordinatorClientConfiguration(OperationProcessor processor, int agentIndex, String agentHost, int agentPort) {
+        super(processor, SimulatorAddress.COORDINATOR, agentIndex, agentHost, agentPort);
     }
 
     @Override

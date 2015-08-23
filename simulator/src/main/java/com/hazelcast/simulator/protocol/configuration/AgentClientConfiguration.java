@@ -8,7 +8,6 @@ import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
-import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelPipeline;
 
@@ -16,10 +15,9 @@ import java.util.concurrent.ConcurrentMap;
 
 public class AgentClientConfiguration extends AbstractClientConfiguration {
 
-    private final OperationProcessor processor = new AgentOperationProcessor();
-
-    public AgentClientConfiguration(SimulatorAddress localAddress, int workerIndex, String workerHost, int workerPort) {
-        super(localAddress, workerIndex, workerHost, workerPort);
+    public AgentClientConfiguration(OperationProcessor processor, SimulatorAddress localAddress, int workerIndex,
+                                    String workerHost, int workerPort) {
+        super(processor, localAddress, workerIndex, workerHost, workerPort);
     }
 
     @Override

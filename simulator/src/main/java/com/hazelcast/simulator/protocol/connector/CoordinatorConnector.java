@@ -21,8 +21,8 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
  */
 public class CoordinatorConnector {
 
-    private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
     private final OperationProcessor processor = new CoordinatorOperationProcessor();
+    private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
 
     /**
      * Disconnects from all Simulator Agent instances.
@@ -43,7 +43,7 @@ public class CoordinatorConnector {
     public void addAgent(int agentIndex, String agentHost, int agentPort) {
         // TODO: spawn Simulator Agent instance
 
-        ClientConfiguration clientConfiguration = new CoordinatorClientConfiguration(agentIndex, agentHost, agentPort, processor);
+        ClientConfiguration clientConfiguration = new CoordinatorClientConfiguration(processor, agentIndex, agentHost, agentPort);
         ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 

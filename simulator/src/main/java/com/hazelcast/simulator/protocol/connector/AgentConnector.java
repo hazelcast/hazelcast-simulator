@@ -15,8 +15,10 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
  */
 public class AgentConnector {
 
+    private final AgentOperationProcessor processor = new AgentOperationProcessor();
+
     private final SimulatorAddress localAddress;
-    private final AgentServerConfiguration configuration;
+    private final AgentServerConfiguration serverConfiguration;
     private final ServerConnector server;
 
     /**
@@ -26,11 +28,9 @@ public class AgentConnector {
      * @param port         the port for incoming connections
      */
     public AgentConnector(int addressIndex, int port) {
-        AgentOperationProcessor processor = new AgentOperationProcessor();
-
         this.localAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
-        this.configuration = new AgentServerConfiguration(processor, localAddress, port);
-        this.server = new ServerConnector(configuration);
+        this.serverConfiguration = new AgentServerConfiguration(processor, localAddress, port);
+        this.server = new ServerConnector(serverConfiguration);
     }
 
     /**
@@ -57,11 +57,12 @@ public class AgentConnector {
     public void addWorker(int workerIndex, String workerHost, int workerPort) {
         // TODO: spawn Simulator Worker instance
 
-        ClientConfiguration clientConfiguration = new AgentClientConfiguration(localAddress, workerIndex, workerHost, workerPort);
+        ClientConfiguration clientConfiguration = new AgentClientConfiguration(processor, localAddress, workerIndex,
+                workerHost, workerPort);
         ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 
-        configuration.addWorker(workerIndex, client);
+        serverConfiguration.addWorker(workerIndex, client);
     }
 
     /**
@@ -70,11 +71,11 @@ public class AgentConnector {
      * @param workerIndex the index of the remote Simulator Worker
      */
     public void removeWorker(int workerIndex) {
-        configuration.removeWorker(workerIndex);
+        serverConfiguration.removeWorker(workerIndex);
     }
 
     public SimulatorAddress getAddress() {
-        return configuration.getLocalAddress();
+        return serverConfiguration.getLocalAddress();
     }
 
     public Response write(SimulatorMessage message) throws Exception {
