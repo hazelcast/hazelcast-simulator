@@ -239,7 +239,7 @@ public class NetworkTest {
             long timeoutNs = unit.toNanos(timeout);
             lock.lock();
             try {
-                while (result != null) {
+                while (result == null) {
                     if (timeout <= 0) {
                         throw new TimeoutException();
                     }
