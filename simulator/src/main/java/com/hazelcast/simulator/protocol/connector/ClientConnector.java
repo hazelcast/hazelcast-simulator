@@ -75,11 +75,11 @@ public class ClientConnector {
         return writeAsync(buffer).get();
     }
 
-    private ResponseFuture writeAsync(SimulatorMessage message) {
+    public ResponseFuture writeAsync(SimulatorMessage message) {
         return writeAsync(message.getMessageId(), message);
     }
 
-    private ResponseFuture writeAsync(ByteBuf buffer) {
+    public ResponseFuture writeAsync(ByteBuf buffer) {
         return writeAsync(getMessageId(buffer), buffer);
     }
 

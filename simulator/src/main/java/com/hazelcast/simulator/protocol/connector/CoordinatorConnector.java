@@ -3,10 +3,13 @@ package com.hazelcast.simulator.protocol.connector;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.CoordinatorClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -70,8 +73,12 @@ public class CoordinatorConnector {
         int agentAddressIndex = message.getDestination().getAgentIndex();
         Response response = new Response(message.getMessageId());
         if (agentAddressIndex == 0) {
+            List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
             for (ClientConnector agent : agents.values()) {
-                response.addResponse(agent.write(message));
+                futureList.add(agent.writeAsync(message));
+            }
+            for (ResponseFuture future : futureList) {
+                response.addResponse(future.get());
             }
         } else {
             ClientConnector agent = agents.get(agentAddressIndex);

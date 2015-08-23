@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.handler;
 import com.hazelcast.simulator.protocol.connector.ClientConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -10,6 +11,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_WORKER_NOT_FOUND;
@@ -54,9 +57,13 @@ public class MessageForwardToWorkerHandler extends SimpleChannelInboundHandler<B
         Response response = new Response(messageId);
         if (workerAddressIndex == 0) {
             LOGGER.debug(format("[%d] %s forwarding message to all workers", messageId, addressLevel));
+            List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
             for (ClientConnector clientConnector : worker.values()) {
                 buffer.retain();
-                response.addResponse(clientConnector.write(buffer));
+                futureList.add(clientConnector.writeAsync(buffer));
+            }
+            for (ResponseFuture future : futureList) {
+                response.addResponse(future.get());
             }
         } else {
             ClientConnector clientConnector = worker.get(workerAddressIndex);
