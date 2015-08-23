@@ -81,6 +81,7 @@ public class NetworkTest {
 
         connectionManager = new TcpIpConnectionManager(
                 ioService, ioService.serverSocketChannel, loggingService, metricsRegistry, threadingModel);
+        connectionManager.start();
         networkCreateLock = hz.getLock("connectionCreateLock");
     }
 
