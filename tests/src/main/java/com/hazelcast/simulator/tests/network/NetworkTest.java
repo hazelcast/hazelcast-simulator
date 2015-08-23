@@ -81,6 +81,7 @@ public class NetworkTest {
         ioService.inputThreadCount = inputThreadCount;
         ioService.outputThreadCount = outputThreadCount;
         ioService.socketNoDelay = socketNoDelay;
+        ioService.packetHandler = packetHandler;
 
         threadingModel = new NonBlockingTcpIpConnectionThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
         threadingModel.setInputSelectNow(inputSelectNow);
