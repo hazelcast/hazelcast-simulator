@@ -13,7 +13,7 @@ import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.tcp.TcpIpConnection;
 import com.hazelcast.nio.tcp.TcpIpConnectionManager;
-import com.hazelcast.nio.tcp.nonblocking.NonBlockingTcpIpConnectionThreadingModel;
+import com.hazelcast.nio.tcp.nonblocking.NonBlockingIOThreadingModel;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -59,8 +59,7 @@ public class NetworkTest {
     private MockIOService ioService;
     private DummyPacketHandler packetHandler;
     private AtomicInteger workerIdGenerator = new AtomicInteger();
-    private NonBlockingTcpIpConnectionThreadingModel threadingModel;
-
+    private NonBlockingIOThreadingModel threadingModel;
 
     @Setup
     public void setup(TestContext context) throws Exception {
@@ -83,7 +82,7 @@ public class NetworkTest {
         ioService.socketNoDelay = socketNoDelay;
         ioService.packetHandler = packetHandler;
 
-        threadingModel = new NonBlockingTcpIpConnectionThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
+        threadingModel = new NonBlockingIOThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
         threadingModel.setInputSelectNow(inputSelectNow);
         threadingModel.setOutputSelectNow(outputSelectNow);
 
