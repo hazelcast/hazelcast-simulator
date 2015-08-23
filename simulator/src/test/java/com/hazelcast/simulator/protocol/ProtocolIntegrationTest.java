@@ -170,7 +170,6 @@ public class ProtocolIntegrationTest {
         assertAllTargets(response, destination.getParent(), FAILURE_TEST_NOT_FOUND, 4);
     }
 
-    @Ignore
     @Test(timeout = 500)
     public void test_toCoordinator_fromAgent() throws Exception {
         AgentConnector agent = agentConnectors.get(0);

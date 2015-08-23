@@ -20,15 +20,22 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
 
     private final SimulatorAddress localAddress;
     private final SimulatorAddress remoteAddress;
-    private final int senderIndex;
+
     private final ConcurrentMap<String, ResponseFuture> futureMap;
+    private final int futureKeyIndex;
 
     public ResponseHandler(SimulatorAddress localAddress, SimulatorAddress remoteAddress,
                            ConcurrentMap<String, ResponseFuture> futureMap) {
+        this(localAddress, remoteAddress, futureMap, remoteAddress.getAddressIndex());
+    }
+
+    public ResponseHandler(SimulatorAddress localAddress, SimulatorAddress remoteAddress,
+                           ConcurrentMap<String, ResponseFuture> futureMap, int futureKeyIndex) {
         this.localAddress = localAddress;
         this.remoteAddress = remoteAddress;
-        this.senderIndex = remoteAddress.getAddressIndex();
+
         this.futureMap = futureMap;
+        this.futureKeyIndex = futureKeyIndex;
     }
 
     @Override
@@ -41,14 +48,14 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
             LOGGER.trace(format("[%d] ResponseHandler.channelRead0() %s <- %s", messageId, localAddress, remoteAddress));
         }
 
-        String futureKey = messageId + "_" + senderIndex;
-        ResponseFuture future = futureMap.get(futureKey);
+        String key = messageId + "_" + futureKeyIndex;
+        ResponseFuture future = futureMap.get(key);
         if (future != null) {
             future.set(response);
             return;
         }
 
-        String msg = format("[%d] %s <- %s No future found for %s", messageId, localAddress, remoteAddress, response);
+        String msg = format("[%d] %s <- %s No future %s found for %s", messageId, localAddress, remoteAddress, key, response);
         LOGGER.error(msg);
         throw new IllegalArgumentException(msg);
     }

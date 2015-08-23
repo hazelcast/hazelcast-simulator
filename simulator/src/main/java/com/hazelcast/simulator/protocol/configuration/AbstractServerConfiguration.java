@@ -7,8 +7,8 @@ abstract class AbstractServerConfiguration implements ServerConfiguration {
 
     final OperationProcessor processor;
     final SimulatorAddress localAddress;
+    final int addressIndex;
 
-    private final int addressIndex;
     private final int port;
 
     AbstractServerConfiguration(OperationProcessor processor, SimulatorAddress localAddress, int port) {
