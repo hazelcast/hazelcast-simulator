@@ -27,7 +27,6 @@ import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.spi.impl.PacketHandler;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -98,14 +97,18 @@ public class NetworkTest {
     public void warmup() throws Exception {
         networkCreateLock.lock();
         try {
-            LOGGER.info("Starting connections");
+            LOGGER.info("Starting connections: " + (hz.getCluster().getMembers().size() - 1));
             for (Member member : hz.getCluster().getMembers()) {
+
                 if (member.localMember()) {
                     continue;
                 }
 
                 Address targetAddress = member.getAddress();
                 Address newAddress = new Address(targetAddress.getHost(), targetAddress.getPort() + PORT_OFFSET);
+
+                LOGGER.info("Connecting to:" + newAddress);
+
                 connectionManager.getOrConnect(newAddress);
 
                 for (; ; ) {
@@ -113,6 +116,7 @@ public class NetworkTest {
                         LOGGER.info("Successfully created connection to:" + newAddress);
                         break;
                     }
+                    LOGGER.info("Waiting for connection to:" + newAddress);
                     Thread.sleep(100);
                 }
             }
