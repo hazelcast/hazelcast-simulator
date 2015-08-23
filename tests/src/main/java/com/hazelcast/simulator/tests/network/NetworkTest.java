@@ -27,6 +27,7 @@ import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.spi.impl.PacketHandler;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -67,8 +68,10 @@ public class NetworkTest {
         // we don't know the number of worker threads (damn hidden property), so lets assume 1000.. that should be enough
         packetHandler = new DummyPacketHandler(1000);
 
-        int serverPort = hz.getCluster().getLocalMember().getSocketAddress().getPort();
-        ioService = new MockIOService(serverPort + PORT_OFFSET);
+        InetSocketAddress socketAddress = hz.getCluster().getLocalMember().getSocketAddress();
+        int serverPort = socketAddress.getPort();
+
+        ioService = new MockIOService(new Address(socketAddress.getHostName(), serverPort + PORT_OFFSET));
         ioService.inputThreadCount = inputThreadCount;
         ioService.outputThreadCount = outputThreadCount;
 
@@ -94,6 +97,7 @@ public class NetworkTest {
     public void warmup() throws Exception {
         networkCreateLock.lock();
         try {
+            LOGGER.info("Starting connections");
             for (Member member : hz.getCluster().getMembers()) {
                 if (member.localMember()) {
                     continue;
@@ -105,11 +109,14 @@ public class NetworkTest {
 
                 for (; ; ) {
                     if (connectionManager.getConnection(newAddress) != null) {
+                        LOGGER.info("Successfully created connection to:" + newAddress);
                         break;
                     }
                     Thread.sleep(100);
                 }
             }
+
+            LOGGER.info("Successfully started all connections");
         } finally {
             networkCreateLock.unlock();
         }

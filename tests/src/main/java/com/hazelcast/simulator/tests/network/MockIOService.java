@@ -47,7 +47,8 @@ public class MockIOService implements IOService {
     public int inputThreadCount;
     public int outputThreadCount;
 
-    public MockIOService(int port) throws Exception {
+    public MockIOService(Address thisAddress) throws Exception {
+        this.thisAddress = thisAddress;
         loggingService = new LoggingServiceImpl("somegroup", "log4j", BuildInfoProvider.getBuildInfo());
         hazelcastThreadGroup = new HazelcastThreadGroup(
                 "hz",
@@ -58,8 +59,8 @@ public class MockIOService implements IOService {
         ServerSocket serverSocket = serverSocketChannel.socket();
         serverSocket.setReuseAddress(true);
         serverSocket.setSoTimeout(1000);
-        serverSocket.bind(new InetSocketAddress("0.0.0.0", port));
-        thisAddress = new Address("127.0.0.1", port);
+        serverSocket.bind(new InetSocketAddress("0.0.0.0", thisAddress.getPort()));
+
         this.serializationService = new DefaultSerializationServiceBuilder()
                 .build();
     }
