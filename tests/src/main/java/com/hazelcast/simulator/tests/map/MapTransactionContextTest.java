@@ -61,13 +61,11 @@ public class MapTransactionContextTest {
 
                 transactionContext.commitTransaction();
             } catch (Exception e) {
-                LOGGER.severe("----------------------tx exception -------------------------");
+                LOGGER.severe("----------------------tx exception -------------------------", e);
 
                 if (failOnException) {
                     throw new RuntimeException(e);
                 }
-
-                e.printStackTrace();
 
                 transactionContext.rollbackTransaction();
             }
