@@ -15,8 +15,8 @@ public class SimulatorAddressTest {
     private SimulatorAddress addressOtherWorker = new SimulatorAddress(AddressLevel.TEST, 5, 9, 7);
     private SimulatorAddress addressOtherTest = new SimulatorAddress(AddressLevel.TEST, 5, 6, 9);
 
-    private SimulatorAddress addressWorkerAddressLevel = new SimulatorAddress(AddressLevel.WORKER, 5, 6, 7);
     private SimulatorAddress addressAgentAddressLevel = new SimulatorAddress(AddressLevel.AGENT, 5, 6, 7);
+    private SimulatorAddress addressWorkerAddressLevel = new SimulatorAddress(AddressLevel.WORKER, 5, 6, 7);
 
     @Test
     public void testGetAddressLevel() {
@@ -38,9 +38,34 @@ public class SimulatorAddressTest {
         assertEquals(7, address.getTestIndex());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetAddressIndex_fromCoordinator() {
+        SimulatorAddress.COORDINATOR.getAddressIndex();
+    }
+
     @Test
-    public void getParent_fromTest() {
-        assertEquals(AddressLevel.WORKER, address.getParent().getAddressLevel());
+    public void testGetAddressIndex_fromAgent() {
+        assertEquals(5, addressAgentAddressLevel.getAddressIndex());
+    }
+
+    @Test
+    public void testGetAddressIndex_fromWorker() {
+        assertEquals(6, addressWorkerAddressLevel.getAddressIndex());
+    }
+
+    @Test
+    public void testGetAddressIndex_fromTest() {
+        assertEquals(7, address.getAddressIndex());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void getParent_fromCoordinator() {
+        SimulatorAddress.COORDINATOR.getParent();
+    }
+
+    @Test
+    public void getParent_fromAgent() {
+        assertEquals(AddressLevel.COORDINATOR, addressAgentAddressLevel.getParent().getAddressLevel());
     }
 
     @Test
@@ -49,13 +74,28 @@ public class SimulatorAddressTest {
     }
 
     @Test
-    public void getParent_fromAgent() {
-        assertEquals(AddressLevel.COORDINATOR, addressAgentAddressLevel.getParent().getAddressLevel());
+    public void getParent_fromTest() {
+        assertEquals(AddressLevel.WORKER, address.getParent().getAddressLevel());
+    }
+
+    @Test
+    public void getChild_fromCoordinator() {
+        assertEquals(new SimulatorAddress(AddressLevel.AGENT, 3, 0, 0), SimulatorAddress.COORDINATOR.getChild(3));
+    }
+
+    @Test
+    public void getChild_fromAgent() {
+        assertEquals(new SimulatorAddress(AddressLevel.WORKER, 5, 9, 0), addressAgentAddressLevel.getChild(9));
+    }
+
+    @Test
+    public void getChild_fromWorker() {
+        assertEquals(new SimulatorAddress(AddressLevel.TEST, 5, 6, 2), addressWorkerAddressLevel.getChild(2));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void getParent_fromCoordinator() {
-        SimulatorAddress.COORDINATOR.getParent();
+    public void getChild_fromTest() {
+        address.getChild(1);
     }
 
     @Test
