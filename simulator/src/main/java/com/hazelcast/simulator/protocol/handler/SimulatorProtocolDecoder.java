@@ -95,7 +95,7 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
 
         if (dstAddressLevel == addressLevel || dstAddressLevel.isParentAddressLevel(addressLevel)) {
             Response response = ResponseCodec.decodeResponse(buffer);
-            if (LOGGER.isTraceEnabled() && !Response.isLastResponse(response)) {
+            if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(format("[%d] %s %s received %s", response.getMessageId(), addressLevel, localAddress, response));
             }
             out.add(response);

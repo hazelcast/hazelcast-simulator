@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-
 /**
  * Response which is sent back to the sender {@link SimulatorAddress} of a {@link SimulatorMessage}.
  *
@@ -13,8 +11,6 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
  * e.g. if multiple Simulator components have been addressed by a single {@link SimulatorMessage}.
  */
 public class Response {
-
-    static final Response LAST_RESPONSE = new Response(-1, COORDINATOR);
 
     private final Map<SimulatorAddress, ResponseType> responseTypes = new HashMap<SimulatorAddress, ResponseType>();
 
@@ -33,10 +29,6 @@ public class Response {
     public Response(long messageId, SimulatorAddress destination) {
         this.messageId = messageId;
         this.destination = destination;
-    }
-
-    public static boolean isLastResponse(Response response) {
-        return (response.messageId == LAST_RESPONSE.messageId && response.destination.equals(COORDINATOR));
     }
 
     public void addResponse(SimulatorAddress address, ResponseType responseType) {

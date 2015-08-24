@@ -5,11 +5,8 @@ import io.netty.buffer.Unpooled;
 import org.junit.After;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.protocol.core.Response.isLastResponse;
 import static com.hazelcast.simulator.protocol.core.ResponseCodec.decodeResponse;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
-import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
-import static org.junit.Assert.assertTrue;
 
 public class ResponseCodecTest {
 
@@ -35,11 +32,5 @@ public class ResponseCodecTest {
         buffer.resetReaderIndex();
 
         decodeResponse(buffer);
-    }
-
-    @Test
-    public void decodeResponse_emptyBuffer() {
-        Response response = decodeResponse(EMPTY_BUFFER);
-        assertTrue(isLastResponse(response));
     }
 }

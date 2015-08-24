@@ -22,7 +22,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_RESPONS
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_WORKER_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getSourceAddress;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.isSimulatorMessage;
-import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 import static java.lang.String.format;
 
 /**
@@ -57,9 +56,6 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final ByteBuf buffer) throws Exception {
-        if (EMPTY_BUFFER.equals(buffer)) {
-            return;
-        }
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(format("ForwardToWorkerHandler.channelRead0() %s %s", addressLevel, localAddress));
         }

@@ -40,9 +40,6 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, Response response) {
-        if (Response.isLastResponse(response)) {
-            return;
-        }
         long messageId = response.getMessageId();
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(format("[%d] ResponseHandler.channelRead0() %s <- %s %s", messageId, localAddress, remoteAddress,

@@ -7,9 +7,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.ADDRESS_SIZE;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.INT_SIZE;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.LONG_SIZE;
-import static com.hazelcast.simulator.protocol.core.Response.LAST_RESPONSE;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddressCodec.decodeSimulatorAddress;
-import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 
 /**
  * Encodes and decodes a {@link Response}.
@@ -42,10 +40,6 @@ public final class ResponseCodec {
     }
 
     public static Response decodeResponse(ByteBuf buffer) {
-        if (EMPTY_BUFFER.equals(buffer)) {
-            return LAST_RESPONSE;
-        }
-
         int frameLength = buffer.readInt();
         int dataLength = (frameLength - HEADER_SIZE) / DATA_ENTRY_SIZE;
 
