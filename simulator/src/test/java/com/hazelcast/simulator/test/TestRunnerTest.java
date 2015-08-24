@@ -114,7 +114,11 @@ public class TestRunnerTest {
     @Test
     public void withHazelcastConfigFile() throws Exception {
         File configFile = File.createTempFile("config", "xml");
-        FileUtils.appendText("<hazelcast />", configFile);
+        FileUtils.appendText("<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n" +
+                "                               http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd\"\n" +
+                "           xmlns=\"http://www.hazelcast.com/schema/config\"\n" +
+                "           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
+                "</hazelcast>", configFile);
 
         testRunner.withHazelcastConfigFile(configFile);
     }
