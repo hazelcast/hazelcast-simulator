@@ -204,7 +204,7 @@ public class NetworkTest {
         }
     }
 
-    public class RequestFuture implements Future {
+    public static class RequestFuture implements Future {
 
         private final Lock lock = new ReentrantLock(false);
         private final Condition condition = lock.newCondition();
