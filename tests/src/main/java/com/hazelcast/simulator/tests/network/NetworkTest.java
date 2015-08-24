@@ -84,7 +84,8 @@ public class NetworkTest {
         ioService.socketNoDelay = socketNoDelay;
         ioService.packetHandler = packetHandler;
 
-        NonBlockingIOThreadingModel threadingModel = new NonBlockingIOThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
+        NonBlockingIOThreadingModel threadingModel = new NonBlockingIOThreadingModel(
+                ioService, loggingService, metricsRegistry, threadGroup);
         threadingModel.setInputSelectNow(inputSelectNow);
         threadingModel.setOutputSelectNow(outputSelectNow);
 
