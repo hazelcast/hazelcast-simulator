@@ -13,6 +13,8 @@ import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,6 +25,10 @@ import static org.junit.Assert.assertEquals;
 
 public class ProtocolUtil {
 
+    private static final Logger LOGGER = Logger.getLogger(ProtocolUtil.class);
+    private static final Logger ROOT_LOGGER = Logger.getRootLogger();
+    private static final AtomicReference<Level> LOGGER_LEVEL = new AtomicReference<Level>();
+
     private static final int MAX_ADDRESS_INDEX = 3;
     private static final AddressLevel MIN_ADDRESS_LEVEL = AddressLevel.AGENT;
 
@@ -32,8 +38,12 @@ public class ProtocolUtil {
     private static final Random RANDOM = new Random();
     private static final AtomicLong MESSAGE_ID = new AtomicLong();
 
-    private static final Logger ROOT_LOGGER = Logger.getRootLogger();
-    private static final AtomicReference<Level> LOGGER_LEVEL = new AtomicReference<Level>();
+    private static final int AGENT_START_PORT = 10000;
+    private static final int WORKER_START_PORT = 10100;
+
+    private static CoordinatorConnector coordinatorConnector;
+    private static List<AgentConnector> agentConnectors = new ArrayList<AgentConnector>();
+    private static List<WorkerConnector> workerConnectors = new ArrayList<WorkerConnector>();
 
     static void setLogLevel(Level level) {
         if (LOGGER_LEVEL.compareAndSet(null, ROOT_LOGGER.getLevel())) {
@@ -48,8 +58,40 @@ public class ProtocolUtil {
         }
     }
 
-    static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port) {
-        return startWorker(addressIndex, parentAddressIndex, port, 2);
+    static void startSimulatorComponents(int numberOfAgents, int numberOfWorkers, int numberOfTests) {
+        for (int agentIndex = 1; agentIndex <= numberOfAgents; agentIndex++) {
+            int workerStartPort = WORKER_START_PORT + (100 * (agentIndex - 1));
+            for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
+                workerConnectors.add(startWorker(workerIndex, agentIndex, workerStartPort + workerIndex, numberOfTests));
+            }
+
+            int agentPort = AGENT_START_PORT + agentIndex;
+            agentConnectors.add(startAgent(agentIndex, agentPort, "127.0.0.1", workerStartPort, numberOfWorkers));
+        }
+
+        coordinatorConnector = startCoordinator("127.0.0.1", AGENT_START_PORT, numberOfAgents);
+    }
+
+    static void stopSimulatorComponents() {
+        LOGGER.info("Shutdown of Coordinator...");
+        if (coordinatorConnector != null) {
+            coordinatorConnector.shutdown();
+            coordinatorConnector = null;
+        }
+
+        LOGGER.info("Shutdown of Agents...");
+        for (AgentConnector agentConnector : agentConnectors) {
+            agentConnector.shutdown();
+        }
+        agentConnectors.clear();
+
+        LOGGER.info("Shutdown of Workers...");
+        for (WorkerConnector workerConnector : workerConnectors) {
+            workerConnector.shutdown();
+        }
+        workerConnectors.clear();
+
+        LOGGER.info("Shutdown complete!");
     }
 
     static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
@@ -64,10 +106,6 @@ public class ProtocolUtil {
         return workerConnector;
     }
 
-    static AgentConnector startAgent(int addressIndex, int port, String workerHost, int workerStartPort) {
-        return startAgent(addressIndex, port, workerHost, workerStartPort, 2);
-    }
-
     static AgentConnector startAgent(int addressIndex, int port, String workerHost, int workerStartPort, int numberOfWorkers) {
         AgentConnector agentConnector = new AgentConnector(addressIndex, port);
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
@@ -76,10 +114,6 @@ public class ProtocolUtil {
 
         agentConnector.start();
         return agentConnector;
-    }
-
-    static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort) {
-        return startCoordinator(agentHost, agentStartPort, 2);
     }
 
     static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort, int numberOfAgents) {
@@ -123,6 +157,22 @@ public class ProtocolUtil {
 
     static SimulatorMessage buildMessage(SimulatorAddress destination, SimulatorAddress source) {
         return new SimulatorMessage(destination, source, MESSAGE_ID.incrementAndGet(), 0, MESSAGE_DATA);
+    }
+
+    static Response sendFromCoordinator(SimulatorMessage message) throws Exception {
+        return coordinatorConnector.send(message);
+    }
+
+    static CoordinatorConnector getCoordinatorConnector() {
+        return coordinatorConnector;
+    }
+
+    static AgentConnector getAgentConnector(int index) {
+        return agentConnectors.get(index);
+    }
+
+    static WorkerConnector getWorkerConnector(int index) {
+        return workerConnectors.get(index);
     }
 
     static void assertSingleTarget(Response response, SimulatorAddress destination, ResponseType responseType) {
