@@ -12,8 +12,6 @@ import com.hazelcast.transaction.TransactionContext;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionOptions.TransactionType;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 public class MapTransactionContextTest {
 
     private static final ILogger LOGGER = Logger.getLogger(MapTransactionContextTest.class);
@@ -23,6 +21,7 @@ public class MapTransactionContextTest {
     public int durability = 1;
     public int range = 1000;
     public boolean failOnException = true;
+
     private HazelcastInstance hz;
 
     @Setup
@@ -38,10 +37,12 @@ public class MapTransactionContextTest {
     private class Worker extends AbstractMonotonicWorker {
 
         @Override
-        protected void timeStep()  {
+        protected void timeStep() {
             int key = nextRandom(0, range / 2);
 
-            TransactionOptions transactionOptions = new TransactionOptions().setTransactionType(transactionType).setDurability(durability);
+            TransactionOptions transactionOptions = new TransactionOptions()
+                    .setTransactionType(transactionType)
+                    .setDurability(durability);
 
             TransactionContext transactionContext = hz.newTransactionContext(transactionOptions);
 
@@ -56,7 +57,7 @@ public class MapTransactionContextTest {
                     key = nextRandom(range / 2, range);
                 }
 
-                txMap.put(key, new Long(key));
+                txMap.put(key, (long) key);
 
                 transactionContext.commitTransaction();
             } catch (Exception e) {
@@ -72,8 +73,8 @@ public class MapTransactionContextTest {
             }
         }
 
-        protected int nextRandom(int min, int max) {
-            return ThreadLocalRandom.current().nextInt(max - min) + min;
+        private int nextRandom(int min, int max) {
+            return getRandom().nextInt(max - min) + min;
         }
     }
 }
