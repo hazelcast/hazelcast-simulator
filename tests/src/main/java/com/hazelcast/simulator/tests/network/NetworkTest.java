@@ -21,7 +21,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.tests.concurrent.atomiclong.AtomicLongTest;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.spi.impl.PacketHandler;
@@ -37,12 +36,14 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+
 
 public class NetworkTest {
 
-    private static final ILogger LOGGER = Logger.getLogger(NetworkTest.class);
-
     private static final int PORT_OFFSET = 1000;
+
+    private static final ILogger LOGGER = Logger.getLogger(NetworkTest.class);
 
     public int payloadSize = 0;
     public long requestTimeout = 60;
@@ -53,19 +54,20 @@ public class NetworkTest {
     public boolean outputSelectNow = false;
     public boolean socketNoDelay = true;
 
+    private final AtomicInteger workerIdGenerator = new AtomicInteger();
     private HazelcastInstance hz;
     private ILock networkCreateLock;
     private TcpIpConnectionManager connectionManager;
-    private MockIOService ioService;
     private DummyPacketHandler packetHandler;
-    private AtomicInteger workerIdGenerator = new AtomicInteger();
-    private NonBlockingIOThreadingModel threadingModel;
 
     @Setup
     public void setup(TestContext context) throws Exception {
         hz = context.getTargetInstance();
 
         Node node = HazelcastTestUtils.getNode(hz);
+        if (node == null) {
+            throw new IllegalStateException("node is null");
+        }
         MetricsRegistry metricsRegistry = node.nodeEngine.getMetricsRegistry();
         LoggingService loggingService = node.loggingService;
         HazelcastThreadGroup threadGroup = node.getHazelcastThreadGroup();
@@ -76,13 +78,13 @@ public class NetworkTest {
         Address thisAddress = node.getThisAddress();
         Address newThisAddress = new Address(thisAddress.getHost(), thisAddress.getPort() + PORT_OFFSET);
         LOGGER.info("ThisAddress: " + newThisAddress);
-        ioService = new MockIOService(newThisAddress, loggingService);
+        MockIOService ioService = new MockIOService(newThisAddress, loggingService);
         ioService.inputThreadCount = inputThreadCount;
         ioService.outputThreadCount = outputThreadCount;
         ioService.socketNoDelay = socketNoDelay;
         ioService.packetHandler = packetHandler;
 
-        threadingModel = new NonBlockingIOThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
+        NonBlockingIOThreadingModel threadingModel = new NonBlockingIOThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
         threadingModel.setInputSelectNow(inputSelectNow);
         threadingModel.setOutputSelectNow(outputSelectNow);
 
@@ -111,18 +113,15 @@ public class NetworkTest {
                 Address memberAddress = member.getAddress();
                 Address targetAddress = new Address(memberAddress.getHost(), memberAddress.getPort() + PORT_OFFSET);
 
-                LOGGER.info("Connecting to:" + targetAddress);
+                LOGGER.info("Connecting to: " + targetAddress);
 
                 connectionManager.getOrConnect(targetAddress);
 
-                for (; ; ) {
-                    if (connectionManager.getConnection(targetAddress) != null) {
-                        LOGGER.info("Successfully created connection to:" + targetAddress);
-                        break;
-                    }
-                    LOGGER.info("Waiting for connection to:" + targetAddress);
-                    Thread.sleep(100);
+                while (connectionManager.getConnection(targetAddress) == null) {
+                    LOGGER.info("Waiting for connection to: " + targetAddress);
+                    sleepMillis(100);
                 }
+                LOGGER.info("Successfully created connection to: " + targetAddress);
             }
 
             LOGGER.info("Successfully started all connections");
@@ -275,9 +274,7 @@ public class NetworkTest {
     }
 
     public static void main(String[] args) throws Exception {
-        AtomicLongTest test = new AtomicLongTest();
-        new TestRunner<AtomicLongTest>(test).withDuration(10).run();
+        NetworkTest test = new NetworkTest();
+        new TestRunner<NetworkTest>(test).withDuration(10).run();
     }
-
-
 }
