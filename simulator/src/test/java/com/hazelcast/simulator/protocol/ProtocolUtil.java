@@ -29,7 +29,6 @@ public class ProtocolUtil {
     private static final Logger ROOT_LOGGER = Logger.getRootLogger();
     private static final AtomicReference<Level> LOGGER_LEVEL = new AtomicReference<Level>();
 
-    private static final int MAX_ADDRESS_INDEX = 3;
     private static final AddressLevel MIN_ADDRESS_LEVEL = AddressLevel.AGENT;
 
     private static final String MESSAGE_DATA = "{\"testId\":\"StringStringMapTest\"}";
@@ -129,13 +128,13 @@ public class ProtocolUtil {
         MESSAGE_ID.set(0);
     }
 
-    static SimulatorMessage buildRandomMessage() {
+    static SimulatorMessage buildRandomMessage(int maxAddressIndex) {
         int addressLevelValue = MIN_ADDRESS_LEVEL_VALUE + RANDOM.nextInt(AddressLevel.values().length - MIN_ADDRESS_LEVEL_VALUE);
         AddressLevel addressLevel = AddressLevel.fromInt(addressLevelValue);
 
-        int agentIndex = RANDOM.nextInt(MAX_ADDRESS_INDEX + 1);
-        int workerIndex = RANDOM.nextInt(MAX_ADDRESS_INDEX + 1);
-        int testIndex = RANDOM.nextInt(MAX_ADDRESS_INDEX + 1);
+        int agentIndex = RANDOM.nextInt(maxAddressIndex + 1);
+        int workerIndex = RANDOM.nextInt(maxAddressIndex + 1);
+        int testIndex = RANDOM.nextInt(maxAddressIndex + 1);
 
         switch (addressLevel) {
             case COORDINATOR:
