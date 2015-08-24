@@ -4,14 +4,12 @@ import com.hazelcast.client.impl.protocol.ClientMessage;
 import com.hazelcast.config.SSLConfig;
 import com.hazelcast.config.SocketInterceptorConfig;
 import com.hazelcast.config.SymmetricEncryptionConfig;
-import com.hazelcast.instance.BuildInfoProvider;
 import com.hazelcast.instance.HazelcastThreadGroup;
 import com.hazelcast.internal.ascii.TextCommandService;
 import com.hazelcast.internal.serialization.SerializationService;
 import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuilder;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.LoggingService;
-import com.hazelcast.logging.LoggingServiceImpl;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Connection;
 import com.hazelcast.nio.IOService;
@@ -37,6 +35,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.util.Collection;
 import java.util.Collections;
 
+@SuppressWarnings("checkstyle:methodcount")
 public class MockIOService implements IOService {
 
     public final ServerSocketChannel serverSocketChannel;
@@ -63,8 +62,7 @@ public class MockIOService implements IOService {
         serverSocket.setSoTimeout(1000);
         serverSocket.bind(new InetSocketAddress("0.0.0.0", thisAddress.getPort()));
 
-        this.serializationService = new DefaultSerializationServiceBuilder()
-                .build();
+        this.serializationService = new DefaultSerializationServiceBuilder().build();
     }
 
     @Override
@@ -79,7 +77,6 @@ public class MockIOService implements IOService {
 
     @Override
     public void onOutOfMemory(OutOfMemoryError oom) {
-
     }
 
     @Override
@@ -89,7 +86,6 @@ public class MockIOService implements IOService {
 
     @Override
     public void onFatalError(Exception e) {
-
     }
 
     @Override
@@ -109,12 +105,10 @@ public class MockIOService implements IOService {
 
     @Override
     public void handleClientPacket(Packet p) {
-
     }
 
     @Override
     public void handleClientMessage(ClientMessage cm, Connection connection) {
-
     }
 
     @Override
@@ -134,7 +128,6 @@ public class MockIOService implements IOService {
 
     @Override
     public void removeEndpoint(Address endpoint) {
-
     }
 
     @Override
@@ -149,12 +142,10 @@ public class MockIOService implements IOService {
 
     @Override
     public void onSuccessfulConnection(Address address) {
-
     }
 
     @Override
     public void onFailedConnection(Address address) {
-
     }
 
     @Override
@@ -241,7 +232,6 @@ public class MockIOService implements IOService {
 
     @Override
     public void onDisconnect(Address endpoint) {
-
     }
 
     @Override
@@ -264,92 +254,7 @@ public class MockIOService implements IOService {
 
     @Override
     public EventService getEventService() {
-        return new EventService() {
-            @Override
-            public int getEventThreadCount() {
-                return 0;
-            }
-
-            @Override
-            public int getEventQueueCapacity() {
-                return 0;
-            }
-
-            @Override
-            public int getEventQueueSize() {
-                return 0;
-            }
-
-            @Override
-            public EventRegistration registerLocalListener(String serviceName, String topic, Object listener) {
-                return null;
-            }
-
-            @Override
-            public EventRegistration registerLocalListener(String serviceName, String topic, EventFilter filter, Object listener) {
-                return null;
-            }
-
-            @Override
-            public EventRegistration registerListener(String serviceName, String topic, Object listener) {
-                return null;
-            }
-
-            @Override
-            public EventRegistration registerListener(String serviceName, String topic, EventFilter filter, Object listener) {
-                return null;
-            }
-
-            @Override
-            public boolean deregisterListener(String serviceName, String topic, Object id) {
-                return false;
-            }
-
-            @Override
-            public void deregisterAllListeners(String serviceName, String topic) {
-
-            }
-
-            @Override
-            public Collection<EventRegistration> getRegistrations(String serviceName, String topic) {
-                return null;
-            }
-
-            @Override
-            public EventRegistration[] getRegistrationsAsArray(String serviceName, String topic) {
-                return new EventRegistration[0];
-            }
-
-            @Override
-            public boolean hasEventRegistration(String serviceName, String topic) {
-                return false;
-            }
-
-            @Override
-            public void publishEvent(String serviceName, String topic, Object event, int orderKey) {
-
-            }
-
-            @Override
-            public void publishEvent(String serviceName, EventRegistration registration, Object event, int orderKey) {
-
-            }
-
-            @Override
-            public void publishEvent(String serviceName, Collection<EventRegistration> registrations, Object event, int orderKey) {
-
-            }
-
-            @Override
-            public void publishRemoteEvent(String serviceName, Collection<EventRegistration> registrations, Object event, int orderKey) {
-
-            }
-
-            @Override
-            public void executeEventCallback(Runnable callback) {
-                new Thread(callback).start();
-            }
-        };
+        return new MockEventService();
     }
 
     @Override
@@ -410,4 +315,87 @@ public class MockIOService implements IOService {
         return new MemberPacketWriter();
     }
 
+    private static class MockEventService implements EventService {
+        @Override
+        public int getEventThreadCount() {
+            return 0;
+        }
+
+        @Override
+        public int getEventQueueCapacity() {
+            return 0;
+        }
+
+        @Override
+        public int getEventQueueSize() {
+            return 0;
+        }
+
+        @Override
+        public EventRegistration registerLocalListener(String serviceName, String topic, Object listener) {
+            return null;
+        }
+
+        @Override
+        public EventRegistration registerLocalListener(String serviceName, String topic, EventFilter filter,
+                                                       Object listener) {
+            return null;
+        }
+
+        @Override
+        public EventRegistration registerListener(String serviceName, String topic, Object listener) {
+            return null;
+        }
+
+        @Override
+        public EventRegistration registerListener(String serviceName, String topic, EventFilter filter, Object listener) {
+            return null;
+        }
+
+        @Override
+        public boolean deregisterListener(String serviceName, String topic, Object id) {
+            return false;
+        }
+
+        @Override
+        public void deregisterAllListeners(String serviceName, String topic) {
+        }
+
+        @Override
+        public Collection<EventRegistration> getRegistrations(String serviceName, String topic) {
+            return null;
+        }
+
+        @Override
+        public EventRegistration[] getRegistrationsAsArray(String serviceName, String topic) {
+            return new EventRegistration[0];
+        }
+
+        @Override
+        public boolean hasEventRegistration(String serviceName, String topic) {
+            return false;
+        }
+
+        @Override
+        public void publishEvent(String serviceName, String topic, Object event, int orderKey) {
+        }
+
+        @Override
+        public void publishEvent(String serviceName, EventRegistration registration, Object event, int orderKey) {
+        }
+
+        @Override
+        public void publishEvent(String serviceName, Collection<EventRegistration> registrations, Object event, int orderKey) {
+        }
+
+        @Override
+        public void publishRemoteEvent(String serviceName, Collection<EventRegistration> registrations, Object event,
+                                       int orderKey) {
+        }
+
+        @Override
+        public void executeEventCallback(Runnable callback) {
+            new Thread(callback).start();
+        }
+    }
 }
