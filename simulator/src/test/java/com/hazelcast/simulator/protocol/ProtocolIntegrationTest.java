@@ -143,6 +143,7 @@ public class ProtocolIntegrationTest {
         Response response = agent.write(buildMessage(SimulatorAddress.COORDINATOR, agent.getAddress()));
 
         assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
+        assertEquals(agent.getAddress(), response.getDestination());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -151,6 +152,17 @@ public class ProtocolIntegrationTest {
         Response response = worker.write(buildMessage(SimulatorAddress.COORDINATOR, worker.getAddress()));
 
         assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
+        assertEquals(worker.getAddress(), response.getDestination());
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void test_Coordinator_fromTest() throws Exception {
+        WorkerConnector worker = getWorkerConnector(0);
+        SimulatorAddress testAddress = worker.getAddress().getChild(1);
+        Response response = worker.write(buildMessage(SimulatorAddress.COORDINATOR, testAddress));
+
+        assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
+        assertEquals(testAddress, response.getDestination());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -160,6 +172,18 @@ public class ProtocolIntegrationTest {
         Response response = worker.write(buildMessage(destination, worker.getAddress()));
 
         assertSingleTarget(response, destination, SUCCESS);
+        assertEquals(worker.getAddress(), response.getDestination());
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void test_SingleAgent_fromTest() throws Exception {
+        WorkerConnector worker = getWorkerConnector(0);
+        SimulatorAddress testAddress = worker.getAddress().getChild(1);
+        SimulatorAddress destination = getAgentConnector(0).getAddress();
+        Response response = worker.write(buildMessage(destination, testAddress));
+
+        assertSingleTarget(response, destination, SUCCESS);
+        assertEquals(testAddress, response.getDestination());
     }
 
     private static Response sendMessageAndAssertMessageId(SimulatorAddress destination) throws Exception {
