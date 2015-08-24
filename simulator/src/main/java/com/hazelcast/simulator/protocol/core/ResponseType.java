@@ -9,9 +9,7 @@ public enum ResponseType {
 
     FAILURE_AGENT_NOT_FOUND(1),
     FAILURE_WORKER_NOT_FOUND(2),
-    FAILURE_TEST_NOT_FOUND(3),
-
-    FAILURE_RESPONSE_HAS_WILDCARD_DESTINATION(4);
+    FAILURE_TEST_NOT_FOUND(3);
 
     private final int ordinal;
 

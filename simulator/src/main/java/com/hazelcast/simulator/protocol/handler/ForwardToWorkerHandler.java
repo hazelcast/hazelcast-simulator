@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.hazelcast.simulator.protocol.core.ResponseCodec.isResponse;
-import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_RESPONSE_HAS_WILDCARD_DESTINATION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_WORKER_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getSourceAddress;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.isSimulatorMessage;
@@ -99,12 +98,6 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
 
     private void forwardResponse(ChannelHandlerContext ctx, ByteBuf buffer, int workerAddressIndex) throws Exception {
         long messageId = ResponseCodec.getMessageId(buffer);
-
-        if (workerAddressIndex == 0) {
-            LOGGER.debug(format("[%d] %s response has destination with wildcards!", messageId, addressLevel));
-            ctx.writeAndFlush(new Response(messageId, localAddress, localAddress, FAILURE_RESPONSE_HAS_WILDCARD_DESTINATION));
-            return;
-        }
 
         ClientConnector clientConnector = worker.get(workerAddressIndex);
         if (clientConnector == null) {
