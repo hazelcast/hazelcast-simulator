@@ -41,10 +41,11 @@ public interface ServerConfiguration {
     /**
      * Configured the {@link ChannelPipeline} of the {@link com.hazelcast.simulator.protocol.connector.ServerConnector}.
      *
-     * @param pipeline  the {@link ChannelPipeline} which should be configured
-     * @param futureMap the map of {@link ResponseFuture} for write methods to this client
+     * @param pipeline the {@link ChannelPipeline} which should be configured
      */
-    void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, ResponseFuture> futureMap);
+    void configurePipeline(ChannelPipeline pipeline);
+
+    ConcurrentMap<String, ResponseFuture> getFutureMap();
 
     /**
      * Created a map key for a {@link ResponseFuture}.

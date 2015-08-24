@@ -45,7 +45,8 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
         }
         long messageId = response.getMessageId();
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("[%d] ResponseHandler.channelRead0() %s <- %s", messageId, localAddress, remoteAddress));
+            LOGGER.trace(format("[%d] ResponseHandler.channelRead0() %s <- %s %s", messageId, localAddress, remoteAddress,
+                    response));
         }
 
         String key = messageId + "_" + futureKeyIndex;
@@ -55,7 +56,7 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
             return;
         }
 
-        String msg = format("[%d] %s <- %s No future %s found for %s", messageId, localAddress, remoteAddress, key, response);
+        String msg = format("[%d] %s <- %s Future %s not found for %s", messageId, localAddress, remoteAddress, key, response);
         LOGGER.error(msg);
         throw new IllegalArgumentException(msg);
     }

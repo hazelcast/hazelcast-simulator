@@ -60,7 +60,7 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
         LOGGER.debug(format("[%d] %s MessageTestConsumeHandler is consuming message...", msg.getMessageId(), localAddress));
         SimulatorOperation operation = SimulatorOperationFactory.fromJson(gson, msg);
 
-        Response response = new Response(msg.getMessageId());
+        Response response = new Response(msg);
         int testAddressIndex = ctx.attr(forwardAddressIndex).get();
         if (testAddressIndex == 0) {
             LOGGER.debug(format("[%d] forwarding message to all tests", msg.getMessageId()));

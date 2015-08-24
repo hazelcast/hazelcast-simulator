@@ -4,9 +4,9 @@ import com.hazelcast.simulator.protocol.connector.ClientConnector;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.handler.ChannelCollectorHandler;
+import com.hazelcast.simulator.protocol.handler.ForwardToWorkerHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
-import com.hazelcast.simulator.protocol.handler.MessageForwardToWorkerHandler;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
@@ -25,10 +25,11 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
 public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     private final ChannelCollectorHandler channelCollectorHandler = new ChannelCollectorHandler();
-    private final MessageForwardToWorkerHandler messageForwardToWorkerHandler = new MessageForwardToWorkerHandler(localAddress);
+    private final ForwardToWorkerHandler forwardToWorkerHandler = new ForwardToWorkerHandler(localAddress);
 
-    public AgentServerConfiguration(OperationProcessor processor, SimulatorAddress localAddress, int port) {
-        super(processor, localAddress, port);
+    public AgentServerConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
+                                    SimulatorAddress localAddress, int port) {
+        super(processor, futureMap, localAddress, port);
     }
 
     @Override
@@ -37,22 +38,22 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     }
 
     @Override
-    public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, ResponseFuture> futureMap) {
+    public void configurePipeline(ChannelPipeline pipeline) {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, COORDINATOR));
         pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("messageForwardHandler", messageForwardToWorkerHandler);
+        pipeline.addLast("forwardToWorkerHandler", forwardToWorkerHandler);
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, COORDINATOR, futureMap, addressIndex));
     }
 
     public void addWorker(int workerIndex, ClientConnector clientConnector) {
-        messageForwardToWorkerHandler.addWorker(workerIndex, clientConnector);
+        forwardToWorkerHandler.addWorker(workerIndex, clientConnector);
     }
 
     public void removeWorker(int workerIndex) {
-        messageForwardToWorkerHandler.removeWorker(workerIndex);
+        forwardToWorkerHandler.removeWorker(workerIndex);
     }
 }

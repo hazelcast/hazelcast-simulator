@@ -16,9 +16,6 @@ import org.apache.log4j.Logger;
 import java.util.List;
 
 import static com.hazelcast.simulator.protocol.core.ResponseCodec.isResponse;
-import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getChildAddressIndex;
-import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getDestinationAddressLevel;
-import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getMessageId;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.isSimulatorMessage;
 import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 import static java.lang.String.format;
@@ -59,7 +56,7 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
             return;
         }
         if (isResponse(buffer)) {
-            decodeResponse(buffer, out);
+            decodeResponse(ctx, buffer, out);
             return;
         }
 
@@ -69,8 +66,8 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
     }
 
     private void decodeSimulatorMessage(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out) {
-        long messageId = getMessageId(buffer);
-        AddressLevel dstAddressLevel = AddressLevel.fromInt(getDestinationAddressLevel(buffer));
+        long messageId = SimulatorMessageCodec.getMessageId(buffer);
+        AddressLevel dstAddressLevel = AddressLevel.fromInt(SimulatorMessageCodec.getDestinationAddressLevel(buffer));
         LOGGER.debug(format("[%d] %s %s received a message for addressLevel %s", messageId, addressLevel, localAddress,
                 dstAddressLevel));
 
@@ -81,7 +78,7 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
             }
             out.add(message);
         } else {
-            int addressIndex = getChildAddressIndex(buffer, addressLevelValue);
+            int addressIndex = SimulatorMessageCodec.getChildAddressIndex(buffer, addressLevelValue);
             ctx.attr(forwardAddressIndex).set(addressIndex);
 
             out.add(buffer.duplicate());
@@ -90,11 +87,25 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
         }
     }
 
-    private void decodeResponse(ByteBuf buffer, List<Object> out) {
-        Response response = ResponseCodec.decodeResponse(buffer);
-        if (LOGGER.isTraceEnabled() && response != Response.LAST_RESPONSE) {
-            LOGGER.trace(format("[%d] %s %s received %s", response.getMessageId(), addressLevel, localAddress, response));
+    private void decodeResponse(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out) {
+        long messageId = ResponseCodec.getMessageId(buffer);
+        AddressLevel dstAddressLevel = AddressLevel.fromInt(ResponseCodec.getDestinationAddressLevel(buffer));
+        LOGGER.debug(format("[%d] %s %s received a response for addressLevel %s", messageId, addressLevel, localAddress,
+                dstAddressLevel));
+
+        if (dstAddressLevel == addressLevel || dstAddressLevel.isParentAddressLevel(addressLevel)) {
+            Response response = ResponseCodec.decodeResponse(buffer);
+            if (LOGGER.isTraceEnabled() && !Response.isLastResponse(response)) {
+                LOGGER.trace(format("[%d] %s %s received %s", response.getMessageId(), addressLevel, localAddress, response));
+            }
+            out.add(response);
+        } else {
+            int addressIndex = ResponseCodec.getChildAddressIndex(buffer, addressLevelValue);
+            ctx.attr(forwardAddressIndex).set(addressIndex);
+
+            out.add(buffer.duplicate());
+            buffer.readerIndex(buffer.readableBytes());
+            buffer.retain();
         }
-        out.add(response);
     }
 }

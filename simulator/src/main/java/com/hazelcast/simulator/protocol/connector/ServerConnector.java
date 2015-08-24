@@ -15,7 +15,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
@@ -32,12 +31,12 @@ class ServerConnector {
 
     private final EventLoopGroup group = new NioEventLoopGroup();
 
-    private final ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
-
     private final ServerConfiguration configuration;
+    private final ConcurrentMap<String, ResponseFuture> futureMap;
 
     public ServerConnector(ServerConfiguration configuration) {
         this.configuration = configuration;
+        this.futureMap = configuration.getFutureMap();
     }
 
     public void start() {
@@ -48,7 +47,7 @@ class ServerConnector {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
-                        configuration.configurePipeline(channel.pipeline(), futureMap);
+                        configuration.configurePipeline(channel.pipeline());
                     }
                 });
 
@@ -76,6 +75,9 @@ class ServerConnector {
     private ResponseFuture writeAsync(long messageId, Object msg) {
         String futureKey = configuration.createFutureKey(messageId);
         ResponseFuture future = ResponseFuture.createInstance(futureMap, futureKey);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, configuration.getLocalAddress(), futureKey));
+        }
         configuration.getChannelGroup().writeAndFlush(msg);
 
         return future;

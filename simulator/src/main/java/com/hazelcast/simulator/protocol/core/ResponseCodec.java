@@ -8,6 +8,7 @@ import static com.hazelcast.simulator.protocol.core.BaseCodec.ADDRESS_SIZE;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.INT_SIZE;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.LONG_SIZE;
 import static com.hazelcast.simulator.protocol.core.Response.LAST_RESPONSE;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddressCodec.decodeSimulatorAddress;
 import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 
 /**
@@ -18,8 +19,10 @@ public final class ResponseCodec {
     private static final int MAGIC_BYTES = 0x3E5D0B5E;
 
     private static final int OFFSET_MAGIC_BYTES = INT_SIZE;
+    private static final int OFFSET_MESSAGE_ID = OFFSET_MAGIC_BYTES + INT_SIZE;
+    private static final int OFFSET_DST_ADDRESS = OFFSET_MESSAGE_ID + LONG_SIZE;
 
-    private static final int HEADER_SIZE = INT_SIZE + LONG_SIZE;
+    private static final int HEADER_SIZE = INT_SIZE + LONG_SIZE + ADDRESS_SIZE;
     private static final int DATA_ENTRY_SIZE = ADDRESS_SIZE + INT_SIZE;
 
     private ResponseCodec() {
@@ -30,6 +33,7 @@ public final class ResponseCodec {
         buffer.writeInt(MAGIC_BYTES);
 
         buffer.writeLong(response.getMessageId());
+        SimulatorAddressCodec.encodeByteBuf(response.getDestination(), buffer);
 
         for (Map.Entry<SimulatorAddress, ResponseType> entry : response.entrySet()) {
             SimulatorAddressCodec.encodeByteBuf(entry.getKey(), buffer);
@@ -50,10 +54,11 @@ public final class ResponseCodec {
         }
 
         long messageId = buffer.readLong();
-        Response response = new Response(messageId);
+        SimulatorAddress destination = decodeSimulatorAddress(buffer);
+        Response response = new Response(messageId, destination);
 
         for (int i = 0; i < dataLength; i++) {
-            SimulatorAddress source = SimulatorAddressCodec.decodeSimulatorAddress(buffer);
+            SimulatorAddress source = decodeSimulatorAddress(buffer);
             ResponseType responseType = ResponseType.fromInt(buffer.readInt());
             response.addResponse(source, responseType);
         }
@@ -63,5 +68,17 @@ public final class ResponseCodec {
 
     public static boolean isResponse(ByteBuf in) {
         return (in.getInt(OFFSET_MAGIC_BYTES) == MAGIC_BYTES);
+    }
+
+    public static long getMessageId(ByteBuf in) {
+        return in.getLong(OFFSET_MESSAGE_ID);
+    }
+
+    public static int getDestinationAddressLevel(ByteBuf in) {
+        return in.getInt(OFFSET_DST_ADDRESS);
+    }
+
+    public static int getChildAddressIndex(ByteBuf in, int addressLevelValue) {
+        return in.getInt(OFFSET_DST_ADDRESS + ((addressLevelValue + 1) * INT_SIZE));
     }
 }

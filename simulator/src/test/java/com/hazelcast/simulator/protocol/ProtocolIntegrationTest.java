@@ -10,7 +10,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -82,7 +81,7 @@ public class ProtocolIntegrationTest {
         resetLogLevel();
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_SingleAgent() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 1, 0, 0);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -90,7 +89,7 @@ public class ProtocolIntegrationTest {
         assertSingleTarget(response, destination, SUCCESS);
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_AllAgents() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 0, 0, 0);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -98,7 +97,7 @@ public class ProtocolIntegrationTest {
         assertAllTargets(response, destination, SUCCESS, 2);
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_AgentNotFound() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 3, 0, 0);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -106,7 +105,7 @@ public class ProtocolIntegrationTest {
         assertSingleTarget(response, destination.getParent(), FAILURE_AGENT_NOT_FOUND);
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_SingleWorker() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 1, 1, 0);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -114,7 +113,7 @@ public class ProtocolIntegrationTest {
         assertSingleTarget(response, destination, SUCCESS);
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_AllWorker() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 0, 0, 0);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -122,7 +121,7 @@ public class ProtocolIntegrationTest {
         assertAllTargets(response, destination, SUCCESS, 4);
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_WorkerNotFound() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 1, 3, 0);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -130,7 +129,7 @@ public class ProtocolIntegrationTest {
         assertSingleTarget(response, destination.getParent(), FAILURE_WORKER_NOT_FOUND);
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_AllAgents_WorkerNotFound() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 0, 3, 0);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -138,7 +137,7 @@ public class ProtocolIntegrationTest {
         assertAllTargets(response, destination.getParent(), FAILURE_WORKER_NOT_FOUND, 2);
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_SingleTest() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(TEST, 1, 1, 1);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -146,7 +145,7 @@ public class ProtocolIntegrationTest {
         assertSingleTarget(response, destination, SUCCESS);
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_AllTests() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(TEST, 0, 0, 0);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -154,7 +153,7 @@ public class ProtocolIntegrationTest {
         assertAllTargets(response, destination, SUCCESS, 8);
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_TestNotFound() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(TEST, 1, 1, 3);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -162,7 +161,7 @@ public class ProtocolIntegrationTest {
         assertSingleTarget(response, destination.getParent(), FAILURE_TEST_NOT_FOUND);
     }
 
-    @Test
+    @Test(timeout = 1000)
     public void test_AllAgents_AllWorkers_TestNotFound() throws Exception {
         SimulatorAddress destination = new SimulatorAddress(TEST, 0, 0, 3);
         Response response = sendMessageAndAssertMessageId(destination);
@@ -170,7 +169,7 @@ public class ProtocolIntegrationTest {
         assertAllTargets(response, destination.getParent(), FAILURE_TEST_NOT_FOUND, 4);
     }
 
-    @Test(timeout = 500)
+    @Test(timeout = 1000)
     public void test_Coordinator_fromAgent() throws Exception {
         AgentConnector agent = agentConnectors.get(0);
         Response response = agent.write(buildMessage(SimulatorAddress.COORDINATOR, agent.getAddress()));
@@ -178,8 +177,7 @@ public class ProtocolIntegrationTest {
         assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
     }
 
-    @Ignore
-    @Test(timeout = 500)
+    @Test(timeout = 1000)
     public void test_Coordinator_fromWorker() throws Exception {
         WorkerConnector worker = workerConnectors.get(0);
         Response response = worker.write(buildMessage(SimulatorAddress.COORDINATOR, worker.getAddress()));
@@ -187,7 +185,7 @@ public class ProtocolIntegrationTest {
         assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
     }
 
-    @Test(timeout = 500)
+    @Test(timeout = 1000)
     public void test_SingleAgent_fromWorker() throws Exception {
         WorkerConnector worker = workerConnectors.get(0);
         SimulatorAddress destination = agentConnectors.get(0).getAddress();

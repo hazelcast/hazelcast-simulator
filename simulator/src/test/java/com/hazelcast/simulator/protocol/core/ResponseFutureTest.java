@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -15,7 +17,7 @@ import static org.junit.Assert.fail;
 
 public class ResponseFutureTest {
 
-    private static final Response DEFAULT_RESULT = new Response(1L, SimulatorAddress.COORDINATOR, ResponseType.SUCCESS);
+    private static final Response DEFAULT_RESULT = new Response(1L, COORDINATOR, COORDINATOR, SUCCESS);
     private static final int DEFAULT_TIMEOUT_MS = 500;
 
     private final ResponseFuture future = ResponseFuture.createInstance(new ConcurrentHashMap<String, ResponseFuture>(), "key");

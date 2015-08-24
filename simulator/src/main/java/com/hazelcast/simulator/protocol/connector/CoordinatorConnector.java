@@ -71,7 +71,7 @@ public class CoordinatorConnector {
      */
     public Response send(SimulatorMessage message) throws Exception {
         int agentAddressIndex = message.getDestination().getAgentIndex();
-        Response response = new Response(message.getMessageId());
+        Response response = new Response(message);
         if (agentAddressIndex == 0) {
             List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
             for (ClientConnector agent : agents.values()) {

@@ -4,9 +4,13 @@ import com.hazelcast.simulator.protocol.configuration.AgentClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 
@@ -16,6 +20,7 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 public class AgentConnector {
 
     private final AgentOperationProcessor processor = new AgentOperationProcessor();
+    private final ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
     private final SimulatorAddress localAddress;
     private final AgentServerConfiguration serverConfiguration;
@@ -29,7 +34,7 @@ public class AgentConnector {
      */
     public AgentConnector(int addressIndex, int port) {
         this.localAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
-        this.serverConfiguration = new AgentServerConfiguration(processor, localAddress, port);
+        this.serverConfiguration = new AgentServerConfiguration(processor, futureMap, localAddress, port);
         this.server = new ServerConnector(serverConfiguration);
     }
 
@@ -57,8 +62,8 @@ public class AgentConnector {
     public void addWorker(int workerIndex, String workerHost, int workerPort) {
         // TODO: spawn Simulator Worker instance
 
-        ClientConfiguration clientConfiguration = new AgentClientConfiguration(processor, localAddress, workerIndex,
-                workerHost, workerPort);
+        ClientConfiguration clientConfiguration = new AgentClientConfiguration(processor, futureMap, localAddress,
+                workerIndex, workerHost, workerPort, serverConfiguration.getChannelGroup());
         ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 

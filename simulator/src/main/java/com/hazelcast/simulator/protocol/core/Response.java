@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+
 /**
  * Response which is sent back to the sender {@link SimulatorAddress} of a {@link SimulatorMessage}.
  *
@@ -12,22 +14,29 @@ import java.util.Set;
  */
 public class Response {
 
-    public static final Response LAST_RESPONSE = new Response(-1);
+    static final Response LAST_RESPONSE = new Response(-1, COORDINATOR);
 
-    private final long messageId;
     private final Map<SimulatorAddress, ResponseType> responseTypes = new HashMap<SimulatorAddress, ResponseType>();
 
-    public Response(long messageId, SimulatorAddress source, ResponseType responseType) {
-        this(messageId);
+    private final long messageId;
+    private final SimulatorAddress destination;
+
+    public Response(SimulatorMessage message) {
+        this(message.getMessageId(), message.getSource());
+    }
+
+    public Response(long messageId, SimulatorAddress destination, SimulatorAddress source, ResponseType responseType) {
+        this(messageId, destination);
         responseTypes.put(source, responseType);
     }
 
-    public Response(long messageId) {
+    public Response(long messageId, SimulatorAddress destination) {
         this.messageId = messageId;
+        this.destination = destination;
     }
 
     public static boolean isLastResponse(Response response) {
-        return (response.messageId == LAST_RESPONSE.messageId);
+        return (response.messageId == LAST_RESPONSE.messageId && response.destination.equals(COORDINATOR));
     }
 
     public void addResponse(SimulatorAddress address, ResponseType responseType) {
@@ -42,6 +51,10 @@ public class Response {
         return messageId;
     }
 
+    public SimulatorAddress getDestination() {
+        return destination;
+    }
+
     public int size() {
         return responseTypes.size();
     }
@@ -54,6 +67,7 @@ public class Response {
     public String toString() {
         return "Response{"
                 + "messageId=" + messageId
+                + ", destination=" + destination
                 + ", responseTypes=" + responseTypes
                 + '}';
     }

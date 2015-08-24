@@ -2,10 +2,14 @@ package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.protocol.configuration.WorkerServerConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 
@@ -26,9 +30,10 @@ public class WorkerConnector {
      */
     public WorkerConnector(int addressIndex, int parentAddressIndex, int port) {
         OperationProcessor processor = new WorkerOperationProcessor();
+        ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         SimulatorAddress localAddress = new SimulatorAddress(WORKER, parentAddressIndex, addressIndex, 0);
 
-        this.configuration = new WorkerServerConfiguration(processor, localAddress, port);
+        this.configuration = new WorkerServerConfiguration(processor, futureMap, localAddress, port);
         this.server = new ServerConnector(configuration);
     }
 

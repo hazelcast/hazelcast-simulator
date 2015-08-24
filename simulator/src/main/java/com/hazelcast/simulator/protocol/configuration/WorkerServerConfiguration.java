@@ -24,8 +24,9 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
     private final ChannelCollectorHandler channelCollectorHandler = new ChannelCollectorHandler();
     private final MessageTestConsumeHandler messageTestConsumeHandler = new MessageTestConsumeHandler(localAddress);
 
-    public WorkerServerConfiguration(OperationProcessor processor, SimulatorAddress localAddress, int port) {
-        super(processor, localAddress, port);
+    public WorkerServerConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
+                                     SimulatorAddress localAddress, int port) {
+        super(processor, futureMap, localAddress, port);
     }
 
     @Override
@@ -34,7 +35,7 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
     }
 
     @Override
-    public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, ResponseFuture> futureMap) {
+    public void configurePipeline(ChannelPipeline pipeline) {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, localAddress.getParent()));
         pipeline.addLast("collector", channelCollectorHandler);

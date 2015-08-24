@@ -16,7 +16,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
@@ -34,14 +33,14 @@ public class ClientConnector {
 
     private final EventLoopGroup group = new NioEventLoopGroup();
 
-    private final ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
-
     private final ClientConfiguration configuration;
+    private final ConcurrentMap<String, ResponseFuture> futureMap;
 
     private Channel channel;
 
     public ClientConnector(ClientConfiguration configuration) {
         this.configuration = configuration;
+        this.futureMap = configuration.getFutureMap();
     }
 
     public void start() {
@@ -52,7 +51,7 @@ public class ClientConnector {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
-                        configuration.configurePipeline(channel.pipeline(), futureMap);
+                        configuration.configurePipeline(channel.pipeline());
                     }
                 });
 
@@ -65,6 +64,10 @@ public class ClientConnector {
 
     public void shutdown() {
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
+    }
+
+    public void forwardToChannel(ByteBuf buffer) {
+        channel.writeAndFlush(buffer);
     }
 
     public Response write(SimulatorMessage message) throws Exception {
@@ -86,6 +89,9 @@ public class ClientConnector {
     private ResponseFuture writeAsync(long messageId, Object msg) {
         String futureKey = configuration.createFutureKey(messageId);
         ResponseFuture future = ResponseFuture.createInstance(futureMap, futureKey);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, configuration.getLocalAddress(), futureKey));
+        }
         channel.writeAndFlush(msg);
 
         return future;
