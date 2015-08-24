@@ -175,10 +175,21 @@ public class ProtocolUtil {
     }
 
     static void assertSingleTarget(Response response, SimulatorAddress destination, ResponseType responseType) {
-        assertAllTargets(response, destination, responseType, 1);
+        assertAllTargets(response, SimulatorAddress.COORDINATOR, destination, responseType, 1);
+    }
+
+    static void assertSingleTarget(Response response, SimulatorAddress source, SimulatorAddress destination,
+                                   ResponseType responseType) {
+        assertAllTargets(response, source, destination, responseType, 1);
     }
 
     static void assertAllTargets(Response response, SimulatorAddress destination, ResponseType responseType, int responseCount) {
+        assertAllTargets(response, SimulatorAddress.COORDINATOR, destination, responseType, responseCount);
+    }
+
+    static void assertAllTargets(Response response, SimulatorAddress source, SimulatorAddress destination,
+                                 ResponseType responseType, int responseCount) {
+        assertEquals(source, response.getDestination());
         assertEquals(responseCount, response.entrySet().size());
         for (Map.Entry<SimulatorAddress, ResponseType> entry : response.entrySet()) {
             assertEquals(responseType, entry.getValue());

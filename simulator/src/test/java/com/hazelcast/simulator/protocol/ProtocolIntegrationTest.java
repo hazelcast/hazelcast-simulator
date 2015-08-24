@@ -140,50 +140,51 @@ public class ProtocolIntegrationTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test_Coordinator_fromAgent() throws Exception {
         AgentConnector agent = getAgentConnector(0);
-        Response response = agent.write(buildMessage(SimulatorAddress.COORDINATOR, agent.getAddress()));
+        SimulatorAddress source = agent.getAddress();
+        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        Response response = agent.write(buildMessage(destination, source));
 
-        assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
-        assertEquals(agent.getAddress(), response.getDestination());
+        assertSingleTarget(response, source, destination, SUCCESS);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test_Coordinator_fromWorker() throws Exception {
         WorkerConnector worker = getWorkerConnector(0);
-        Response response = worker.write(buildMessage(SimulatorAddress.COORDINATOR, worker.getAddress()));
+        SimulatorAddress source = worker.getAddress();
+        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        Response response = worker.write(buildMessage(destination, source));
 
-        assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
-        assertEquals(worker.getAddress(), response.getDestination());
+        assertSingleTarget(response, source, destination, SUCCESS);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void test_Coordinator_fromTest() throws Exception {
         WorkerConnector worker = getWorkerConnector(0);
-        SimulatorAddress testAddress = worker.getAddress().getChild(1);
-        Response response = worker.write(buildMessage(SimulatorAddress.COORDINATOR, testAddress));
+        SimulatorAddress source = worker.getAddress().getChild(1);
+        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        Response response = worker.write(buildMessage(destination, source));
 
-        assertSingleTarget(response, SimulatorAddress.COORDINATOR, SUCCESS);
-        assertEquals(testAddress, response.getDestination());
+        assertSingleTarget(response, source, destination, SUCCESS);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void test_SingleAgent_fromWorker() throws Exception {
+    public void test_ParentAgent_fromWorker() throws Exception {
         WorkerConnector worker = getWorkerConnector(0);
-        SimulatorAddress destination = getAgentConnector(0).getAddress();
-        Response response = worker.write(buildMessage(destination, worker.getAddress()));
+        SimulatorAddress source = worker.getAddress();
+        SimulatorAddress destination = source.getParent();
+        Response response = worker.write(buildMessage(destination, source));
 
-        assertSingleTarget(response, destination, SUCCESS);
-        assertEquals(worker.getAddress(), response.getDestination());
+        assertSingleTarget(response, source, destination, SUCCESS);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void test_SingleAgent_fromTest() throws Exception {
+    public void test_ParentAgent_fromTest() throws Exception {
         WorkerConnector worker = getWorkerConnector(0);
-        SimulatorAddress testAddress = worker.getAddress().getChild(1);
-        SimulatorAddress destination = getAgentConnector(0).getAddress();
-        Response response = worker.write(buildMessage(destination, testAddress));
+        SimulatorAddress source = worker.getAddress().getChild(1);
+        SimulatorAddress destination = worker.getAddress().getParent();
+        Response response = worker.write(buildMessage(destination, source));
 
-        assertSingleTarget(response, destination, SUCCESS);
-        assertEquals(testAddress, response.getDestination());
+        assertSingleTarget(response, source, destination, SUCCESS);
     }
 
     private static Response sendMessageAndAssertMessageId(SimulatorAddress destination) throws Exception {
