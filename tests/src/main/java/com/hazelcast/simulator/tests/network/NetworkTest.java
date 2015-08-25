@@ -205,7 +205,7 @@ public class NetworkTest {
         }
     }
 
-    private class DummyPacketHandler implements PacketHandler {
+    private static class DummyPacketHandler implements PacketHandler {
 
         private final RequestFuture[] futures;
 
