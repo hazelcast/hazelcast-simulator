@@ -47,6 +47,9 @@ public class MockIOService implements IOService {
     public int inputThreadCount;
     public int outputThreadCount;
     public boolean socketNoDelay = true;
+    public int socketReceiveBufferSize = 32;
+    public int socketSendBufferSize = 32;
+
 
     public MockIOService(Address thisAddress, LoggingService loggingService) throws Exception {
         this.thisAddress = thisAddress;
@@ -167,12 +170,12 @@ public class MockIOService implements IOService {
 
     @Override
     public int getSocketReceiveBufferSize() {
-        return 32;
+         return socketReceiveBufferSize;
     }
 
     @Override
     public int getSocketSendBufferSize() {
-        return 32;
+        return socketSendBufferSize;
     }
 
     @Override

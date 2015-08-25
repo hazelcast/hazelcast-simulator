@@ -11,9 +11,11 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Packet;
+import com.hazelcast.nio.tcp.IOThreadingModel;
 import com.hazelcast.nio.tcp.TcpIpConnection;
 import com.hazelcast.nio.tcp.TcpIpConnectionManager;
 import com.hazelcast.nio.tcp.nonblocking.NonBlockingIOThreadingModel;
+import com.hazelcast.nio.tcp.spinning.SpinningIOThreadingModel;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -36,6 +38,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.hazelcast.simulator.tests.network.NetworkTest.IOThreadingModelEnum.NonBlocking;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
 
@@ -53,12 +56,20 @@ public class NetworkTest {
     public boolean inputSelectNow = false;
     public boolean outputSelectNow = false;
     public boolean socketNoDelay = true;
+    public int socketReceiveBufferSize = 32;
+    public int socketSendBufferSize = 32;
+    public IOThreadingModelEnum ioThreadingModel = NonBlocking;
 
     private final AtomicInteger workerIdGenerator = new AtomicInteger();
     private HazelcastInstance hz;
     private ILock networkCreateLock;
     private TcpIpConnectionManager connectionManager;
     private DummyPacketHandler packetHandler;
+
+    public enum IOThreadingModelEnum {
+        NonBlocking,
+        Spinning
+    }
 
     @Setup
     public void setup(TestContext context) throws Exception {
@@ -83,11 +94,24 @@ public class NetworkTest {
         ioService.outputThreadCount = outputThreadCount;
         ioService.socketNoDelay = socketNoDelay;
         ioService.packetHandler = packetHandler;
+        ioService.socketSendBufferSize = socketSendBufferSize;
+        ioService.socketReceiveBufferSize = socketReceiveBufferSize;
 
-        NonBlockingIOThreadingModel threadingModel = new NonBlockingIOThreadingModel(
-                ioService, loggingService, metricsRegistry, threadGroup);
-        threadingModel.setInputSelectNow(inputSelectNow);
-        threadingModel.setOutputSelectNow(outputSelectNow);
+        IOThreadingModel threadingModel;
+        switch (ioThreadingModel) {
+            case NonBlocking:
+                NonBlockingIOThreadingModel nonBlockingIOThreadingModel = new NonBlockingIOThreadingModel(
+                        ioService, loggingService, metricsRegistry, threadGroup);
+                nonBlockingIOThreadingModel.setInputSelectNow(inputSelectNow);
+                nonBlockingIOThreadingModel.setOutputSelectNow(outputSelectNow);
+                threadingModel = nonBlockingIOThreadingModel;
+                break;
+            case Spinning:
+                threadingModel = new SpinningIOThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
+                break;
+            default:
+                throw new IllegalStateException("Unrecognized threading model:" + ioThreadingModel);
+        }
 
         connectionManager = new TcpIpConnectionManager(
                 ioService, ioService.serverSocketChannel, loggingService, metricsRegistry, threadingModel);
