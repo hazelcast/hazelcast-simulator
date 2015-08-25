@@ -16,7 +16,7 @@ public enum OperationType {
         try {
             return OperationType.values()[classId];
         } catch (ArrayIndexOutOfBoundsException e) {
-            throw new IllegalArgumentException("Unknown message type: " + classId);
+            throw new IllegalArgumentException("Unknown message type: " + classId, e);
         }
     }
 

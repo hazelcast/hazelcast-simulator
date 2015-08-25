@@ -40,8 +40,8 @@ public enum ResponseType {
     public static ResponseType fromInt(int intValue) {
         try {
             return ResponseType.values()[intValue];
-        } catch (ArrayIndexOutOfBoundsException ignored) {
-            throw new IllegalArgumentException("Unknown response type: " + intValue);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new IllegalArgumentException("Unknown response type: " + intValue, e);
         }
     }
 

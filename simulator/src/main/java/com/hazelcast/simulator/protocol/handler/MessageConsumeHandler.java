@@ -4,7 +4,6 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -14,8 +13,8 @@ import static com.hazelcast.simulator.protocol.operation.OperationHandler.proces
 import static java.lang.String.format;
 
 /**
- * A {@link SimpleChannelInboundHandler} to deserialize a {@link SimulatorOperation} from a received {@link SimulatorMessage}
- * and execute it on the configured {@link OperationProcessor}.
+ * A {@link SimpleChannelInboundHandler} to deserialize a {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation}
+ * from a received {@link SimulatorMessage} and execute it on the configured {@link OperationProcessor}.
  */
 public class MessageConsumeHandler extends SimpleChannelInboundHandler<SimulatorMessage> {
 
