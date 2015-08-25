@@ -5,7 +5,6 @@ import com.hazelcast.nio.serialization.PortableReader;
 import com.hazelcast.nio.serialization.PortableWriter;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class PortableDomainObject implements Portable, DomainObject {
     public static final int CLASS_ID = 1;
@@ -100,18 +99,20 @@ public class PortableDomainObject implements Portable, DomainObject {
         if (this == o) {
             return true;
         }
-
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
-        PortableDomainObject data = (PortableDomainObject) o;
-        return Objects.equals(key, data.key);
+        PortableDomainObject that = (PortableDomainObject) o;
+        if (key != null ? !key.equals(that.key) : that.key != null) {
+            return false;
+        }
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key);
+        return (key != null ? key.hashCode() : 0);
     }
 
     @Override
