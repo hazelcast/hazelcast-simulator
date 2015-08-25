@@ -1,52 +1,50 @@
 package com.hazelcast.simulator.protocol.configuration;
 
-import com.hazelcast.simulator.protocol.core.AddressLevel;
-import com.hazelcast.simulator.protocol.core.MessageFuture;
-import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.handler.ChannelCollectorHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
-import com.hazelcast.simulator.protocol.handler.MessageDecoder;
+import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.MessageTestConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
+import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
+import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
-
 /**
  * Bootstrap configuration for a {@link com.hazelcast.simulator.protocol.connector.WorkerConnector}.
  */
-public class WorkerServerConfiguration extends AbstractBootstrapConfiguration {
+public class WorkerServerConfiguration extends AbstractServerConfiguration {
 
     private final ChannelCollectorHandler channelCollectorHandler = new ChannelCollectorHandler();
     private final MessageTestConsumeHandler messageTestConsumeHandler = new MessageTestConsumeHandler(localAddress);
 
-    private final OperationProcessor processor;
-
-    public WorkerServerConfiguration(SimulatorAddress localAddress, int addressIndex, int port, OperationProcessor processor) {
-        super(localAddress, addressIndex, port);
-        this.processor = processor;
+    public WorkerServerConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
+                                     SimulatorAddress localAddress, int port) {
+        super(processor, futureMap, localAddress, port);
     }
 
     @Override
-    public AddressLevel getAddressLevel() {
-        return WORKER;
+    public ChannelGroup getChannelGroup() {
+        return channelCollectorHandler.getChannels();
     }
 
     @Override
-    public void configurePipeline(ChannelPipeline pipeline, ConcurrentMap<String, MessageFuture<Response>> futureMap) {
-        pipeline.addLast("collector", channelCollectorHandler);
+    public void configurePipeline(ChannelPipeline pipeline) {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
+        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, localAddress.getParent()));
+        pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("decoder", new MessageDecoder(localAddress, WORKER));
-        pipeline.addLast("consumer", new MessageConsumeHandler(localAddress, processor));
-        pipeline.addLast("testDecoder", new MessageDecoder(localAddress, AddressLevel.TEST));
-        pipeline.addLast("testConsumer", messageTestConsumeHandler);
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("testProtocolDecoder", new SimulatorProtocolDecoder(localAddress.getChild(0)));
+        pipeline.addLast("testMessageConsumeHandler", messageTestConsumeHandler);
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, localAddress.getParent(), futureMap, addressIndex));
     }
 
     public void addTest(int testIndex, OperationProcessor processor) {
@@ -55,10 +53,5 @@ public class WorkerServerConfiguration extends AbstractBootstrapConfiguration {
 
     public void removeTest(int testIndex) {
         messageTestConsumeHandler.removeTest(testIndex);
-    }
-
-    @Override
-    public ChannelGroup getChannelGroup() {
-        return channelCollectorHandler.getChannels();
     }
 }

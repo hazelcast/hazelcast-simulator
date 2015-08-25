@@ -88,6 +88,24 @@ public class SimulatorAddress {
     }
 
     /**
+     * Returns the address index of the defined {@link AddressLevel} of this {@link SimulatorAddress}.
+     *
+     * @return the index of the {@link AddressLevel}
+     */
+    public int getAddressIndex() {
+        switch (addressLevel) {
+            case AGENT:
+                return agentIndex;
+            case WORKER:
+                return workerIndex;
+            case TEST:
+                return testIndex;
+            default:
+                throw new IllegalArgumentException("Coordinator has no addressIndex!");
+        }
+    }
+
+    /**
      * Returns the {@link SimulatorAddress} of the parent Simulator component.
      *
      * @return the {@link SimulatorAddress} of the parent Simulator component
@@ -102,6 +120,25 @@ public class SimulatorAddress {
                 return SimulatorAddress.COORDINATOR;
             default:
                 throw new IllegalArgumentException("Coordinator has no parent!");
+        }
+    }
+
+    /**
+     * Returns the {@link SimulatorAddress} of the addressed child of this Simulator component.
+     *
+     * @param childIndex the addressIndex of the child
+     * @return the {@link SimulatorAddress} of the addressed child of this Simulator component
+     */
+    public SimulatorAddress getChild(int childIndex) {
+        switch (addressLevel) {
+            case COORDINATOR:
+                return new SimulatorAddress(AddressLevel.AGENT, childIndex, 0, 0);
+            case AGENT:
+                return new SimulatorAddress(AddressLevel.WORKER, agentIndex, childIndex, 0);
+            case WORKER:
+                return new SimulatorAddress(AddressLevel.TEST, agentIndex, workerIndex, childIndex);
+            default:
+                throw new IllegalArgumentException("Test has no child!");
         }
     }
 

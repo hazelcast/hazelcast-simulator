@@ -1,20 +1,14 @@
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.protocol.core.AddressLevel;
-import com.hazelcast.simulator.protocol.core.MessageFuture;
+import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
-import com.hazelcast.simulator.protocol.handler.MessageEncoder;
-import com.hazelcast.simulator.protocol.handler.MessageResponseHandler;
-import com.hazelcast.simulator.protocol.handler.ResponseDecoder;
-import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -22,12 +16,11 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.protocol.configuration.BootstrapConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
-import static com.hazelcast.simulator.protocol.configuration.BootstrapConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
+import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
+import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getMessageId;
 import static java.lang.String.format;
 
@@ -40,50 +33,41 @@ public class ClientConnector {
 
     private final EventLoopGroup group = new NioEventLoopGroup();
 
-    private final ConcurrentMap<String, MessageFuture<Response>> futureMap
-            = new ConcurrentHashMap<String, MessageFuture<Response>>();
-
-    private final SimulatorAddress localAddress;
-    private final AddressLevel addressLevel;
-    private final int addressIndex;
-    private final String host;
-    private final int port;
+    private final ClientConfiguration configuration;
+    private final ConcurrentMap<String, ResponseFuture> futureMap;
 
     private Channel channel;
 
-    public ClientConnector(SimulatorAddress localAddress, AddressLevel addressLevel, int addressIndex, String host, int port) {
-        this.localAddress = localAddress;
-        this.addressLevel = addressLevel;
-        this.addressIndex = addressIndex;
-        this.host = host;
-        this.port = port;
+    public ClientConnector(ClientConfiguration configuration) {
+        this.configuration = configuration;
+        this.futureMap = configuration.getFutureMap();
     }
 
     public void start() {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
-                .remoteAddress(new InetSocketAddress(host, port))
+                .remoteAddress(new InetSocketAddress(configuration.getRemoteHost(), configuration.getRemotePort()))
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
-                        ChannelPipeline pipeline = channel.pipeline();
-                        pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-                        pipeline.addLast("decoder", new ResponseDecoder(localAddress, addressLevel, addressIndex));
-                        pipeline.addLast("encoder", new MessageEncoder(localAddress, addressLevel, addressIndex));
-                        pipeline.addLast("handler", new MessageResponseHandler(localAddress, addressLevel, addressIndex,
-                                futureMap));
+                        configuration.configurePipeline(channel.pipeline());
                     }
                 });
 
         ChannelFuture future = bootstrap.connect().syncUninterruptibly();
         channel = future.channel();
 
-        LOGGER.info(format("%s started and sends to %s", ClientConnector.class.getName(), channel.remoteAddress()));
+        LOGGER.info(format("ClientConnector %s -> %s sends to %s", configuration.getLocalAddress(),
+                configuration.getRemoteAddress(), channel.remoteAddress()));
     }
 
     public void shutdown() {
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
+    }
+
+    public void forwardToChannel(ByteBuf buffer) {
+        channel.writeAndFlush(buffer);
     }
 
     public Response write(SimulatorMessage message) throws Exception {
@@ -94,17 +78,20 @@ public class ClientConnector {
         return writeAsync(buffer).get();
     }
 
-    private MessageFuture<Response> writeAsync(SimulatorMessage message) {
+    public ResponseFuture writeAsync(SimulatorMessage message) {
         return writeAsync(message.getMessageId(), message);
     }
 
-    private MessageFuture<Response> writeAsync(ByteBuf buffer) {
+    public ResponseFuture writeAsync(ByteBuf buffer) {
         return writeAsync(getMessageId(buffer), buffer);
     }
 
-    private MessageFuture<Response> writeAsync(long messageId, Object msg) {
-        String futureKey = messageId + "_" + addressIndex;
-        MessageFuture<Response> future = MessageFuture.createInstance(futureMap, futureKey);
+    private ResponseFuture writeAsync(long messageId, Object msg) {
+        String futureKey = configuration.createFutureKey(messageId);
+        ResponseFuture future = ResponseFuture.createInstance(futureMap, futureKey);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, configuration.getLocalAddress(), futureKey));
+        }
         channel.writeAndFlush(msg);
 
         return future;

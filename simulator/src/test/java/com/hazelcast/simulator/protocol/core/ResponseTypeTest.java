@@ -31,7 +31,7 @@ public class ResponseTypeTest {
         assertEquals(FAILURE_TEST_NOT_FOUND, fromInt(FAILURE_TEST_NOT_FOUND.toInt()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = ArrayIndexOutOfBoundsException.class)
     public void testFromInt_invalid() {
         fromInt(-1);
     }

@@ -29,7 +29,7 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
     private static final Logger LOGGER = Logger.getLogger(MessageTestConsumeHandler.class);
 
     private final Gson gson = new Gson();
-    private final AttributeKey<Integer> addressIndex = AttributeKey.valueOf("addressIndex");
+    private final AttributeKey<Integer> forwardAddressIndex = AttributeKey.valueOf("forwardAddressIndex");
     private final ConcurrentMap<Integer, SimulatorAddress> testAddresses = new ConcurrentHashMap<Integer, SimulatorAddress>();
     private final ConcurrentMap<Integer, OperationProcessor> testProcessors
             = new ConcurrentHashMap<Integer, OperationProcessor>();
@@ -60,8 +60,8 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
         LOGGER.debug(format("[%d] %s MessageTestConsumeHandler is consuming message...", msg.getMessageId(), localAddress));
         SimulatorOperation operation = SimulatorOperationFactory.fromJson(gson, msg);
 
-        Response response = new Response(msg.getMessageId());
-        int testAddressIndex = ctx.attr(addressIndex).get();
+        Response response = new Response(msg);
+        int testAddressIndex = ctx.attr(forwardAddressIndex).get();
         if (testAddressIndex == 0) {
             LOGGER.debug(format("[%d] forwarding message to all tests", msg.getMessageId()));
             for (Map.Entry<Integer, OperationProcessor> entry : testProcessors.entrySet()) {

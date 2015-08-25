@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBuf;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.ADDRESS_SIZE;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.INT_SIZE;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.LONG_SIZE;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddressCodec.decodeSimulatorAddress;
 import static io.netty.util.CharsetUtil.UTF_8;
 
 /**
@@ -14,8 +15,10 @@ public final class SimulatorMessageCodec {
 
     private static final int MAGIC_BYTES = 0xA5E1CA57;
 
+    private static final int OFFSET_MAGIC_BYTES = INT_SIZE;
     private static final int OFFSET_DST_ADDRESS = 2 * INT_SIZE;
-    private static final int OFFSET_MESSAGE_ID = OFFSET_DST_ADDRESS + 2 * ADDRESS_SIZE;
+    private static final int OFFSET_SRC_ADDRESS = OFFSET_DST_ADDRESS + ADDRESS_SIZE;
+    private static final int OFFSET_MESSAGE_ID = OFFSET_SRC_ADDRESS + ADDRESS_SIZE;
 
     private static final int HEADER_SIZE = 2 * INT_SIZE + LONG_SIZE + 2 * ADDRESS_SIZE;
 
@@ -45,8 +48,8 @@ public final class SimulatorMessageCodec {
             throw new IllegalArgumentException("Invalid magic bytes for SimulatorMessage");
         }
 
-        SimulatorAddress destination = SimulatorAddressCodec.decodeSimulatorAddress(buffer);
-        SimulatorAddress source = SimulatorAddressCodec.decodeSimulatorAddress(buffer);
+        SimulatorAddress destination = decodeSimulatorAddress(buffer);
+        SimulatorAddress source = decodeSimulatorAddress(buffer);
 
         long messageId = buffer.readLong();
         int messageType = buffer.readInt();
@@ -54,6 +57,14 @@ public final class SimulatorMessageCodec {
         String messageData = buffer.readSlice(dataLength).toString(UTF_8);
 
         return new SimulatorMessage(destination, source, messageId, messageType, messageData);
+    }
+
+    public static boolean isSimulatorMessage(ByteBuf in) {
+        return (in.getInt(OFFSET_MAGIC_BYTES) == MAGIC_BYTES);
+    }
+
+    public static long getMessageId(ByteBuf in) {
+        return in.getLong(OFFSET_MESSAGE_ID);
     }
 
     public static int getDestinationAddressLevel(ByteBuf in) {
@@ -64,7 +75,7 @@ public final class SimulatorMessageCodec {
         return in.getInt(OFFSET_DST_ADDRESS + ((addressLevelValue + 1) * INT_SIZE));
     }
 
-    public static long getMessageId(ByteBuf in) {
-        return in.getLong(OFFSET_MESSAGE_ID);
+    public static SimulatorAddress getSourceAddress(ByteBuf in) {
+        return decodeSimulatorAddress(in.slice(OFFSET_SRC_ADDRESS, ADDRESS_SIZE));
     }
 }

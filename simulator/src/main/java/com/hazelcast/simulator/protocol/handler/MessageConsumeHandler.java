@@ -39,9 +39,9 @@ public class MessageConsumeHandler extends SimpleChannelInboundHandler<Simulator
     @Override
     public void channelRead0(ChannelHandlerContext ctx, SimulatorMessage msg) {
         long messageId = msg.getMessageId();
-        LOGGER.debug(format("[%d] %s MessageConsumeHandler is consuming message...", messageId, addressLevel));
+        LOGGER.debug(format("[%d] %s %s MessageConsumeHandler is consuming message...", messageId, addressLevel, localAddress));
 
         SimulatorOperation operation = SimulatorOperationFactory.fromJson(gson, msg);
-        ctx.writeAndFlush(new Response(messageId, localAddress, processor.process(operation)));
+        ctx.writeAndFlush(new Response(messageId, msg.getSource(), localAddress, processor.process(operation)));
     }
 }

@@ -12,22 +12,23 @@ import java.util.Set;
  */
 public class Response {
 
-    public static final Response LAST_RESPONSE = new Response(-1);
-
-    private final long messageId;
     private final Map<SimulatorAddress, ResponseType> responseTypes = new HashMap<SimulatorAddress, ResponseType>();
 
-    public Response(long messageId, SimulatorAddress source, ResponseType responseType) {
-        this(messageId);
+    private final long messageId;
+    private final SimulatorAddress destination;
+
+    public Response(SimulatorMessage message) {
+        this(message.getMessageId(), message.getSource());
+    }
+
+    public Response(long messageId, SimulatorAddress destination, SimulatorAddress source, ResponseType responseType) {
+        this(messageId, destination);
         responseTypes.put(source, responseType);
     }
 
-    public Response(long messageId) {
+    public Response(long messageId, SimulatorAddress destination) {
         this.messageId = messageId;
-    }
-
-    public static boolean isLastResponse(Response response) {
-        return (response.messageId == LAST_RESPONSE.messageId);
+        this.destination = destination;
     }
 
     public void addResponse(SimulatorAddress address, ResponseType responseType) {
@@ -42,11 +43,24 @@ public class Response {
         return messageId;
     }
 
+    public SimulatorAddress getDestination() {
+        return destination;
+    }
+
     public int size() {
         return responseTypes.size();
     }
 
     public Set<Map.Entry<SimulatorAddress, ResponseType>> entrySet() {
         return responseTypes.entrySet();
+    }
+
+    @Override
+    public String toString() {
+        return "Response{"
+                + "messageId=" + messageId
+                + ", destination=" + destination
+                + ", responseTypes=" + responseTypes
+                + '}';
     }
 }

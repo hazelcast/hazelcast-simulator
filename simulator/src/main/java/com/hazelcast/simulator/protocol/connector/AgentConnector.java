@@ -1,21 +1,30 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.protocol.configuration.AgentClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
+import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
+import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
-import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 
 /**
  * Connector which listens for incoming Simulator Coordinator connections and connects to remote Simulator Worker instances.
  */
 public class AgentConnector {
 
-    private final AgentServerConfiguration configuration;
-    private final ServerConnector server;
+    private final AgentOperationProcessor processor = new AgentOperationProcessor();
+    private final ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
+
     private final SimulatorAddress localAddress;
+    private final AgentServerConfiguration serverConfiguration;
+    private final ServerConnector server;
 
     /**
      * Creates an {@link AgentConnector}.
@@ -24,12 +33,9 @@ public class AgentConnector {
      * @param port         the port for incoming connections
      */
     public AgentConnector(int addressIndex, int port) {
-        SimulatorAddress localAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
-        AgentOperationProcessor processor = new AgentOperationProcessor();
-
-        this.configuration = new AgentServerConfiguration(localAddress, addressIndex, port, processor);
-        this.server = new ServerConnector(configuration);
-        this.localAddress = new SimulatorAddress(AGENT, configuration.getAddressIndex(), 0, 0);
+        this.localAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
+        this.serverConfiguration = new AgentServerConfiguration(processor, futureMap, localAddress, port);
+        this.server = new ServerConnector(serverConfiguration);
     }
 
     /**
@@ -50,16 +56,18 @@ public class AgentConnector {
      * Adds a Simulator Worker and connects to it.
      *
      * @param workerIndex the index of the Simulator Worker
-     * @param remoteHost  the host of the Simulator Worker
-     * @param remotePort  the port of the Simulator Worker
+     * @param workerHost  the host of the Simulator Worker
+     * @param workerPort  the port of the Simulator Worker
      */
-    public void addWorker(int workerIndex, String remoteHost, int remotePort) {
+    public void addWorker(int workerIndex, String workerHost, int workerPort) {
         // TODO: spawn Simulator Worker instance
 
-        ClientConnector client = new ClientConnector(localAddress, WORKER, workerIndex, remoteHost, remotePort);
+        ClientConfiguration clientConfiguration = new AgentClientConfiguration(processor, futureMap, localAddress,
+                workerIndex, workerHost, workerPort, serverConfiguration.getChannelGroup());
+        ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 
-        configuration.addWorker(workerIndex, client);
+        serverConfiguration.addWorker(workerIndex, client);
     }
 
     /**
@@ -68,10 +76,14 @@ public class AgentConnector {
      * @param workerIndex the index of the remote Simulator Worker
      */
     public void removeWorker(int workerIndex) {
-        configuration.removeWorker(workerIndex);
+        serverConfiguration.removeWorker(workerIndex);
     }
 
-    public void write(SimulatorMessage message) throws Exception {
-        server.write(message);
+    public SimulatorAddress getAddress() {
+        return serverConfiguration.getLocalAddress();
+    }
+
+    public Response write(SimulatorMessage message) throws Exception {
+        return server.write(message);
     }
 }

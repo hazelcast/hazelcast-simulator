@@ -1,13 +1,18 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
+import com.hazelcast.simulator.protocol.configuration.CoordinatorClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
+import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 
@@ -16,6 +21,7 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
  */
 public class CoordinatorConnector {
 
+    private final OperationProcessor processor = new CoordinatorOperationProcessor();
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
 
     /**
@@ -31,13 +37,14 @@ public class CoordinatorConnector {
      * Adds a Simulator Agent and connects to it.
      *
      * @param agentIndex the index of the Simulator Agent
-     * @param remoteHost the host of the Simulator Agent
-     * @param remotePort the port of the Simulator Agent
+     * @param agentHost  the host of the Simulator Agent
+     * @param agentPort  the port of the Simulator Agent
      */
-    public void addAgent(int agentIndex, String remoteHost, int remotePort) {
+    public void addAgent(int agentIndex, String agentHost, int agentPort) {
         // TODO: spawn Simulator Agent instance
 
-        ClientConnector client = new ClientConnector(SimulatorAddress.COORDINATOR, AGENT, agentIndex, remoteHost, remotePort);
+        ClientConfiguration clientConfiguration = new CoordinatorClientConfiguration(processor, agentIndex, agentHost, agentPort);
+        ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 
         agents.put(agentIndex, client);
@@ -64,10 +71,14 @@ public class CoordinatorConnector {
      */
     public Response send(SimulatorMessage message) throws Exception {
         int agentAddressIndex = message.getDestination().getAgentIndex();
-        Response response = new Response(message.getMessageId());
+        Response response = new Response(message);
         if (agentAddressIndex == 0) {
+            List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
             for (ClientConnector agent : agents.values()) {
-                response.addResponse(agent.write(message));
+                futureList.add(agent.writeAsync(message));
+            }
+            for (ResponseFuture future : futureList) {
+                response.addResponse(future.get());
             }
         } else {
             ClientConnector agent = agents.get(agentAddressIndex);
