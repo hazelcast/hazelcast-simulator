@@ -30,6 +30,7 @@ import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 public class SerializationStrategyTest {
+
     private enum Operation {
         GET_BY_KEY,
         GET_BY_INT_INDEX,
@@ -44,20 +45,18 @@ public class SerializationStrategyTest {
     }
 
     private static final ILogger LOGGER = Logger.getLogger(SerializationStrategyTest.class);
-    private static final ThrottlingLogger throttlingLogger = ThrottlingLogger.newLogger(LOGGER, 5000);
+    private static final ThrottlingLogger THROTTLING_LOGGER = ThrottlingLogger.newLogger(LOGGER, 5000);
 
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     public String basename = SerializationStrategyTest.class.getSimpleName();
-
     public Strategy strategy = Strategy.PORTABLE;
 
     public int itemCount = 1000000;
     public int recordsPerUnique = 10000;
 
-
     public double getByStringIndexProb = 1;
     public double getByIntIndexProb = 0;
 
+    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private IMap<String, DomainObject> map;
     private Set<String> uniqueStrings;
@@ -114,6 +113,7 @@ public class SerializationStrategyTest {
     }
 
     private class Worker extends AbstractWorker<Operation> {
+
         private String[] localUniqueStrings;
 
         public Worker() {
@@ -137,7 +137,7 @@ public class SerializationStrategyTest {
                     String string = getUniqueString();
                     Predicate predicate = Predicates.equal("stringVal", string);
                     Set<Map.Entry<String, DomainObject>> entries = map.entrySet(predicate);
-                    throttlingLogger.log(Level.INFO, "GetByStringIndex: " + entries.size() + " entries");
+                    THROTTLING_LOGGER.log(Level.INFO, "GetByStringIndex: " + entries.size() + " entries");
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown Operation: " + operation);

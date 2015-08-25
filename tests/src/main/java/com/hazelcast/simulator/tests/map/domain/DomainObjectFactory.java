@@ -2,7 +2,8 @@ package com.hazelcast.simulator.tests.map.domain;
 
 import com.hazelcast.simulator.tests.map.SerializationStrategyTest.Strategy;
 
-public class DomainObjectFactory {
+public final class DomainObjectFactory {
+
     private final Strategy strategy;
     private DomainObjectFactory(Strategy strategy) {
         this.strategy = strategy;

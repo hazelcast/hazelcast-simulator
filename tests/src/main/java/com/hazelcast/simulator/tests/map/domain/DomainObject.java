@@ -1,23 +1,24 @@
 package com.hazelcast.simulator.tests.map.domain;
 
 public interface DomainObject {
-    public String getKey();
 
-    public void setKey(String key);
+    String getKey();
 
-    public String getStringVal();
+    void setKey(String key);
 
-    public void setStringVal(String stringVal);
+    String getStringVal();
 
-    public double getDoubleVal();
+    void setStringVal(String stringVal);
 
-    public void setDoubleVal(double doubleVal);
+    double getDoubleVal();
 
-    public long getLongVal();
+    void setDoubleVal(double doubleVal);
 
-    public void setLongVal(long longVal);
+    long getLongVal();
 
-    public int getIntVal();
+    void setLongVal(long longVal);
 
-    public void setIntVal(int intVal);
+    int getIntVal();
+
+    void setIntVal(int intVal);
 }

@@ -116,13 +116,13 @@ public class PortableDomainObject implements Portable, DomainObject {
 
     @Override
     public String toString() {
-        return "HzData {" +
-                "intVal=" + intVal +
-                ", longVal=" + longVal +
-                ", doubleVal=" + doubleVal +
-                ", stringVal='" + stringVal + '\'' +
-                ", key='" + key + '\'' +
-                '}';
+        return "HzData {"
+                + "intVal=" + intVal
+                + ", longVal=" + longVal
+                + ", doubleVal=" + doubleVal
+                + ", stringVal='" + stringVal + '\''
+                + ", key='" + key + '\''
+                + '}';
     }
 
 }
