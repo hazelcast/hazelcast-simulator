@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.core;
 
+import com.hazelcast.simulator.protocol.operation.OperationType;
 import io.netty.buffer.ByteBuf;
 
 import static com.hazelcast.simulator.protocol.core.BaseCodec.ADDRESS_SIZE;
@@ -26,7 +27,7 @@ public final class SimulatorMessageCodec {
     }
 
     public static void encodeByteBuf(SimulatorMessage msg, ByteBuf buffer) {
-        byte[] data = msg.getMessageData().getBytes(UTF_8);
+        byte[] data = msg.getOperationData().getBytes(UTF_8);
 
         buffer.writeInt(HEADER_SIZE + data.length);
         buffer.writeInt(MAGIC_BYTES);
@@ -35,7 +36,7 @@ public final class SimulatorMessageCodec {
         SimulatorAddressCodec.encodeByteBuf(msg.getSource(), buffer);
 
         buffer.writeLong(msg.getMessageId());
-        buffer.writeInt(msg.getMessageType());
+        buffer.writeInt(msg.getOperationType().toInt());
 
         buffer.writeBytes(data);
     }
@@ -52,11 +53,11 @@ public final class SimulatorMessageCodec {
         SimulatorAddress source = decodeSimulatorAddress(buffer);
 
         long messageId = buffer.readLong();
-        int messageType = buffer.readInt();
+        OperationType operationType = OperationType.fromInt(buffer.readInt());
 
-        String messageData = buffer.readSlice(dataLength).toString(UTF_8);
+        String operationData = buffer.readSlice(dataLength).toString(UTF_8);
 
-        return new SimulatorMessage(destination, source, messageId, messageType, messageData);
+        return new SimulatorMessage(destination, source, messageId, operationType, operationData);
     }
 
     public static boolean isSimulatorMessage(ByteBuf in) {

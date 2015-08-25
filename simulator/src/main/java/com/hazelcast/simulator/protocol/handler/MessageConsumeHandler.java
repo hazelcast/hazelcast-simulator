@@ -1,17 +1,16 @@
 package com.hazelcast.simulator.protocol.handler;
 
-import com.google.gson.Gson;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperationFactory;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.log4j.Logger;
 
+import static com.hazelcast.simulator.protocol.operation.OperationHandler.processMessage;
 import static java.lang.String.format;
 
 /**
@@ -21,8 +20,6 @@ import static java.lang.String.format;
 public class MessageConsumeHandler extends SimpleChannelInboundHandler<SimulatorMessage> {
 
     private static final Logger LOGGER = Logger.getLogger(MessageConsumeHandler.class);
-
-    private final Gson gson = new Gson();
 
     private final SimulatorAddress localAddress;
     private final AddressLevel addressLevel;
@@ -41,7 +38,6 @@ public class MessageConsumeHandler extends SimpleChannelInboundHandler<Simulator
         long messageId = msg.getMessageId();
         LOGGER.debug(format("[%d] %s %s MessageConsumeHandler is consuming message...", messageId, addressLevel, localAddress));
 
-        SimulatorOperation operation = SimulatorOperationFactory.fromJson(gson, msg);
-        ctx.writeAndFlush(new Response(messageId, msg.getSource(), localAddress, processor.process(operation)));
+        ctx.writeAndFlush(new Response(messageId, msg.getSource(), localAddress, processMessage(msg, processor)));
     }
 }

@@ -1,11 +1,9 @@
 package com.hazelcast.simulator.protocol.handler;
 
-import com.google.gson.Gson;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperationFactory;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -18,6 +16,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NOT_FOUND;
+import static com.hazelcast.simulator.protocol.operation.OperationHandler.processMessage;
 import static java.lang.String.format;
 
 /**
@@ -28,7 +27,6 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
 
     private static final Logger LOGGER = Logger.getLogger(MessageTestConsumeHandler.class);
 
-    private final Gson gson = new Gson();
     private final AttributeKey<Integer> forwardAddressIndex = AttributeKey.valueOf("forwardAddressIndex");
     private final ConcurrentMap<Integer, SimulatorAddress> testAddresses = new ConcurrentHashMap<Integer, SimulatorAddress>();
     private final ConcurrentMap<Integer, OperationProcessor> testProcessors
@@ -58,14 +56,13 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
     @Override
     public void channelRead0(ChannelHandlerContext ctx, SimulatorMessage msg) {
         LOGGER.debug(format("[%d] %s MessageTestConsumeHandler is consuming message...", msg.getMessageId(), localAddress));
-        SimulatorOperation operation = SimulatorOperationFactory.fromJson(gson, msg);
 
         Response response = new Response(msg);
         int testAddressIndex = ctx.attr(forwardAddressIndex).get();
         if (testAddressIndex == 0) {
             LOGGER.debug(format("[%d] forwarding message to all tests", msg.getMessageId()));
             for (Map.Entry<Integer, OperationProcessor> entry : testProcessors.entrySet()) {
-                response.addResponse(testAddresses.get(entry.getKey()), entry.getValue().process(operation));
+                response.addResponse(testAddresses.get(entry.getKey()), processMessage(msg, entry.getValue()));
             }
         } else {
             LOGGER.debug(format("[%d] forwarding message to test %d", msg.getMessageId(), testAddressIndex));
@@ -73,7 +70,7 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
             if (processor == null) {
                 response.addResponse(localAddress, FAILURE_TEST_NOT_FOUND);
             } else {
-                response.addResponse(testAddresses.get(testAddressIndex), processor.process(operation));
+                response.addResponse(testAddresses.get(testAddressIndex), processMessage(msg, processor));
             }
         }
         ctx.writeAndFlush(response);

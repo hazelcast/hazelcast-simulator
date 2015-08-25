@@ -31,10 +31,10 @@ public enum AddressLevel {
     WORKER(2),
     TEST(3);
 
-    private final int ordinal;
+    private final int intValue;
 
-    AddressLevel(int ordinal) {
-        this.ordinal = ordinal;
+    AddressLevel(int intValue) {
+        this.intValue = intValue;
     }
 
     public static AddressLevel fromInt(int intValue) {
@@ -53,10 +53,10 @@ public enum AddressLevel {
     }
 
     public int toInt() {
-        return ordinal;
+        return intValue;
     }
 
     public boolean isParentAddressLevel(AddressLevel addressLevel) {
-        return (this.ordinal < addressLevel.ordinal);
+        return (this.intValue < addressLevel.intValue);
     }
 }

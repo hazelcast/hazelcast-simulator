@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.protocol.core;
 
+import com.hazelcast.simulator.protocol.operation.OperationType;
+
 /**
  * Message with a JSON serialized {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation} which can be sent
  * from any Simulator component to another.
@@ -10,16 +12,16 @@ public class SimulatorMessage {
     private final SimulatorAddress source;
     private final long messageId;
 
-    private final int messageType;
-    private final String messageData;
+    private final OperationType operationType;
+    private final String operationData;
 
     public SimulatorMessage(SimulatorAddress destination, SimulatorAddress source, long messageId,
-                            int messageType, String messageData) {
+                            OperationType operationType, String operationData) {
         this.destination = destination;
         this.source = source;
         this.messageId = messageId;
-        this.messageType = messageType;
-        this.messageData = messageData;
+        this.operationType = operationType;
+        this.operationData = operationData;
     }
 
     public SimulatorAddress getDestination() {
@@ -34,12 +36,12 @@ public class SimulatorMessage {
         return messageId;
     }
 
-    public int getMessageType() {
-        return messageType;
+    public OperationType getOperationType() {
+        return operationType;
     }
 
-    public String getMessageData() {
-        return messageData;
+    public String getOperationData() {
+        return operationData;
     }
 
     @Override
@@ -48,8 +50,8 @@ public class SimulatorMessage {
                 + "destination=" + destination
                 + ", source=" + source
                 + ", messageId=" + messageId
-                + ", messageType=" + messageType
-                + ", messageData='" + messageData + '\''
+                + ", operationType=" + operationType
+                + ", operationData='" + operationData + '\''
                 + '}';
     }
 }

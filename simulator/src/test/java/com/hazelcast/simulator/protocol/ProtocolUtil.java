@@ -8,6 +8,9 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.protocol.operation.OperationType;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import org.apache.log4j.Level;
@@ -21,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
 import static org.junit.Assert.assertEquals;
 
 public class ProtocolUtil {
@@ -30,9 +34,11 @@ public class ProtocolUtil {
     private static final AtomicReference<Level> LOGGER_LEVEL = new AtomicReference<Level>();
 
     private static final AddressLevel MIN_ADDRESS_LEVEL = AddressLevel.AGENT;
-
-    private static final String MESSAGE_DATA = "{\"testId\":\"StringStringMapTest\"}";
     private static final int MIN_ADDRESS_LEVEL_VALUE = MIN_ADDRESS_LEVEL.toInt();
+
+    private static final SimulatorOperation OPERATION = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
+    private static final OperationType OPERATION_TYPE = OPERATION.getOperationType();
+    private static final String OPERATION_JSON = encodeOperation(OPERATION);
 
     private static final Random RANDOM = new Random();
     private static final AtomicLong MESSAGE_ID = new AtomicLong();
@@ -155,7 +161,7 @@ public class ProtocolUtil {
     }
 
     static SimulatorMessage buildMessage(SimulatorAddress destination, SimulatorAddress source) {
-        return new SimulatorMessage(destination, source, MESSAGE_ID.incrementAndGet(), 0, MESSAGE_DATA);
+        return new SimulatorMessage(destination, source, MESSAGE_ID.incrementAndGet(), OPERATION_TYPE, OPERATION_JSON);
     }
 
     static Response sendFromCoordinator(SimulatorMessage message) throws Exception {

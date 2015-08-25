@@ -4,10 +4,10 @@ import org.junit.Test;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 
-public class SimulatorOperationFactoryTest {
+public class OperationHandlerTest {
 
     @Test
     public void testConstructor() throws Exception {
-        invokePrivateConstructor(SimulatorOperationFactory.class);
+        invokePrivateConstructor(OperationHandler.class);
     }
 }
