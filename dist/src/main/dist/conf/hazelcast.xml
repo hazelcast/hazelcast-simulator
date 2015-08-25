@@ -55,6 +55,14 @@
         <in-memory-format>OBJECT</in-memory-format>
     </map>
 
+    <map name="SerializationStrategyTest*">
+        <in-memory-format>BINARY</in-memory-format>
+        <indexes>
+            <index ordered="false">stringVal</index>
+        </indexes>
+    </map>
+
+
     <serialization>
         <portable-version>1</portable-version>
 
@@ -65,11 +73,17 @@
             <data-serializable-factory factory-id="3000">
                 com.hazelcast.simulator.tests.syntheticmap.SyntheticMapSerializableFactory
             </data-serializable-factory>
+            <data-serializable-factory factory-id="4000">
+                com.hazelcast.simulator.tests.map.domain.IdentifiedDataSerializableObjectFactory
+            </data-serializable-factory>
         </data-serializable-factories>
 
         <portable-factories>
             <portable-factory factory-id="10000000">
                 com.hazelcast.simulator.tests.synthetic.SyntheticRequestPortableFactory
+            </portable-factory>
+            <portable-factory factory-id="10000001">
+                com.hazelcast.simulator.tests.map.domain.PortableObjectFactory
             </portable-factory>
         </portable-factories>
     </serialization>
