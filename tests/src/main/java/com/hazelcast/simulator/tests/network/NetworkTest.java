@@ -176,6 +176,17 @@ public class NetworkTest {
             if (payloadSize > 0) {
                 payload = new byte[payloadSize];
                 getRandom().nextBytes(payload);
+
+                // put a well known head and tail on the payload; for debugging.
+                if (payload.length >= 6) {
+                    payload[0] = 10;
+                    payload[1] = 11;
+                    payload[2] = 10;
+
+                    payload[payload.length - 3] = 10;
+                    payload[payload.length - 2] = 11;
+                    payload[payload.length - 1] = 10;
+                }
             }
             responseFuture = packetHandler.futures[workerId];
             connections = new ArrayList<TcpIpConnection>(connectionManager.getActiveConnections());
