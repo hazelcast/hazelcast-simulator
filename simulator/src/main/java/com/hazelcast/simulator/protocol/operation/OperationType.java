@@ -34,6 +34,12 @@ public enum OperationType {
         OperationTypeRegistry.register(this, classType, classId);
     }
 
+    /**
+     * Returns the {@link OperationType} of a {@link SimulatorOperation}.
+     *
+     * @param operation the {@link SimulatorOperation}
+     * @return the {@link OperationType} of the {@link SimulatorOperation}
+     */
     public static OperationType getOperationType(SimulatorOperation operation) {
         OperationType operationType = OperationTypeRegistry.OPERATION_TYPES.get(operation.getClass());
         if (operationType == null) {
@@ -42,6 +48,12 @@ public enum OperationType {
         return operationType;
     }
 
+    /**
+     * Returns the {@link OperationType} of a registered classId.
+     *
+     * @param classId the registered classId
+     * @return the {@link OperationType}
+     */
     public static OperationType fromInt(int classId) {
         try {
             return OperationType.values()[classId];
@@ -50,14 +62,29 @@ public enum OperationType {
         }
     }
 
+    /**
+     * Returns the registered classId of a {@link OperationType}.
+     *
+     * @return the registered classId
+     */
     public int toInt() {
         return classId;
     }
 
+    /**
+     * Returns the registered {@link Class} of the {@link OperationType} to deserialize a {@link SimulatorOperation}.
+     *
+     * @return the {@link Class} of the {@link OperationType}
+     */
     public Class<? extends SimulatorOperation> getClassType() {
         return classType;
     }
 
+    /**
+     * Stores and validates the registered {@link OperationType} entries.
+     *
+     * This class prevents double registrations of class types or classIds, which would produce late failures during runtime.
+     */
     static class OperationTypeRegistry {
 
         private static final ConcurrentMap<Integer, OperationType> CLASS_IDS = new ConcurrentHashMap<Integer, OperationType>();

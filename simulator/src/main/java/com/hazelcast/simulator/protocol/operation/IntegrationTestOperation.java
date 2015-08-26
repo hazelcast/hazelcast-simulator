@@ -1,5 +1,8 @@
 package com.hazelcast.simulator.protocol.operation;
 
+/**
+ * Operation for integration tests of the Simulator Protocol.
+ */
 public class IntegrationTestOperation implements SimulatorOperation {
 
     public static final String TEST_DATA = "IntegrationTestData";

@@ -2,6 +2,9 @@ package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.test.TestPhase;
 
+/**
+ * Starts a {@link TestPhase} of a Simulator test.
+ */
 public class StartTestPhaseOperation implements SimulatorOperation {
 
     private final String testId;
