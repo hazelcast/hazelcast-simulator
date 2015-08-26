@@ -175,17 +175,17 @@ public class NetworkTest {
             workerId = workerIdGenerator.getAndIncrement();
             if (payloadSize > 0) {
                 payload = new byte[payloadSize];
-                getRandom().nextBytes(payload);
+                //getRandom().nextBytes(payload);
 
                 // put a well known head and tail on the payload; for debugging.
                 if (payload.length >= 6) {
-                    payload[0] = 10;
-                    payload[1] = 11;
-                    payload[2] = 10;
+                    payload[0] = 0xA;
+                    payload[1] = 0xB;
+                    payload[2] = 0xA;
 
-                    payload[payload.length - 3] = 10;
-                    payload[payload.length - 2] = 11;
-                    payload[payload.length - 1] = 10;
+                    payload[payload.length - 3] = 0xA;
+                    payload[payload.length - 2] = 0xB;
+                    payload[payload.length - 1] = 0xA;
                 }
             }
             responseFuture = packetHandler.futures[workerId];
