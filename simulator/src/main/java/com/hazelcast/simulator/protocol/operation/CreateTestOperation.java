@@ -14,11 +14,6 @@ public class CreateTestOperation implements SimulatorOperation {
         this.properties = testCase.getProperties();
     }
 
-    @Override
-    public OperationType getOperationType() {
-        return OperationType.CREATE_TEST;
-    }
-
     public TestCase getTestCase() {
         return new TestCase(testId, properties);
     }

@@ -5,7 +5,6 @@ public class StopCommand extends Command {
     public static final long serialVersionUID = 0L;
 
     public String testId;
-    public long timeoutMs;
 
     public StopCommand(String testId) {
         this.testId = testId;
@@ -15,7 +14,6 @@ public class StopCommand extends Command {
     public String toString() {
         return "StopCommand{"
                 + "testId='" + testId + '\''
-                + ", timeoutMs=" + timeoutMs
                 + '}';
     }
 }

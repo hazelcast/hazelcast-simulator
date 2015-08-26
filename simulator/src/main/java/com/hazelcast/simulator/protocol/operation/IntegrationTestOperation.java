@@ -10,11 +10,6 @@ public class IntegrationTestOperation implements SimulatorOperation {
         this.testData = testData;
     }
 
-    @Override
-    public OperationType getOperationType() {
-        return OperationType.INTEGRATION_TEST;
-    }
-
     public String getTestData() {
         return testData;
     }

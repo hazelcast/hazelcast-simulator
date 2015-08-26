@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -11,8 +12,8 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 public class AgentOperationProcessor extends OperationProcessor {
 
     @Override
-    protected ResponseType processOperation(SimulatorOperation operation) throws Exception {
-        switch (operation.getOperationType()) {
+    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception {
+        switch (operationType) {
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }

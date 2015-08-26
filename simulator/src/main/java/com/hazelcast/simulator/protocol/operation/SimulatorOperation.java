@@ -7,11 +7,4 @@ package com.hazelcast.simulator.protocol.operation;
  * Is processed by {@link OperationHandler} with a given {@link com.hazelcast.simulator.protocol.processors.OperationProcessor}.
  */
 public interface SimulatorOperation {
-
-    /**
-     * Returns the {@link OperationType} of the {@link SimulatorOperation}.
-     *
-     * @return the {@link OperationType}
-     */
-    OperationType getOperationType();
 }

@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
+import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static org.junit.Assert.assertEquals;
 
 public class ProtocolUtil {
@@ -37,7 +38,7 @@ public class ProtocolUtil {
     private static final int MIN_ADDRESS_LEVEL_VALUE = MIN_ADDRESS_LEVEL.toInt();
 
     private static final SimulatorOperation OPERATION = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
-    private static final OperationType OPERATION_TYPE = OPERATION.getOperationType();
+    private static final OperationType OPERATION_TYPE = getOperationType(OPERATION);
     private static final String OPERATION_JSON = encodeOperation(OPERATION);
 
     private static final Random RANDOM = new Random();
