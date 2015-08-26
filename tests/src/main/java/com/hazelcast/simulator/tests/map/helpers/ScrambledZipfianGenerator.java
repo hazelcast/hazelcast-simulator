@@ -17,6 +17,7 @@
 package com.hazelcast.simulator.tests.map.helpers;
 
 import com.hazelcast.simulator.tests.helpers.IntegerGenerator;
+import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.hashFNV64;
 
@@ -31,9 +32,12 @@ import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.hashFNV64;
  * {@link ZipfianGenerator}, if you don't want the head of the distribution (the popular items) clustered together.
  */
 public class ScrambledZipfianGenerator extends IntegerGenerator {
+
     public static final double ZETAN = 26.46902820178302;
     public static final double USED_ZIPFIAN_CONSTANT = 0.99;
     public static final long ITEM_COUNT = 10000000000L;
+
+    private static final Logger LOGGER = Logger.getLogger(ScrambledZipfianGenerator.class);
 
     private  ZipfianGenerator gen;
     private long min;
@@ -112,11 +116,11 @@ public class ScrambledZipfianGenerator extends IntegerGenerator {
 
     public static void main(String[] args) {
         double newZetan = ZipfianGenerator.zetaStatic(ITEM_COUNT, ZipfianGenerator.ZIPFIAN_CONSTANT);
-        System.out.println("zetan: " + newZetan);
+        LOGGER.info("zetan: " + newZetan);
 
         //ScrambledZipfianGenerator gen = new ScrambledZipfianGenerator(10000);
         //for (int i = 0; i < 1000000; i++) {
-        //    System.out.println(gen.nextInt());
+        //    LOGGER.info(gen.nextInt());
         //}
     }
 }

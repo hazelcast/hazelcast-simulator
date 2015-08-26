@@ -19,6 +19,7 @@ import com.hazelcast.simulator.worker.commands.MessageCommand;
 import com.hazelcast.simulator.worker.commands.RunCommand;
 import com.hazelcast.simulator.worker.commands.StopCommand;
 import com.hazelcast.util.ExceptionUtil;
+import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,6 +63,8 @@ public class WorkerCommandRequestProcessorTest {
 
     private static final String DEFAULT_TEST_ID = "SuccessTest";
     private static final String DEFAULT_TEST_CLASS = SuccessTest.class.getName();
+
+    private static final Logger LOGGER = Logger.getLogger(WorkerCommandRequestProcessorTest.class);
 
     private final AtomicLong idCounter = new AtomicLong();
 
@@ -384,7 +387,7 @@ public class WorkerCommandRequestProcessorTest {
             Throwable throwable = exceptionCaptor.getValue();
 
             if (throwable != null) {
-                throwable.printStackTrace();
+                LOGGER.error(throwable);
                 fail("Wanted no exception, but was: " + throwable.getClass().getSimpleName() + " in test " + testId);
                 throw ExceptionUtil.rethrow(throwable);
             }

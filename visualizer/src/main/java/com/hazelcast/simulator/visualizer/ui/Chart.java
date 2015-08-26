@@ -20,6 +20,7 @@ import com.hazelcast.simulator.visualizer.data.AggregatedDataSet;
 import com.hazelcast.simulator.visualizer.data.BenchmarkResults;
 import com.hazelcast.simulator.visualizer.data.Model;
 import com.hazelcast.simulator.visualizer.data.SimpleHistogramDataSetContainer;
+import org.apache.log4j.Logger;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -44,6 +45,8 @@ public class Chart extends JPanel {
     private static final int VERTICAL_SLIDER_MINIMUM = 100;
 
     private static final float ALPHA = 0.65f;
+
+    private static final Logger LOGGER = Logger.getLogger(Chart.class);
 
     private final JSlider mainHorizontalSlider = new JSlider();
     private final JSlider fineHorizontalSlider = new JSlider();
@@ -145,7 +148,7 @@ public class Chart extends JPanel {
             for (String selectedProbe : selectedProbes) {
                 Result probeData = benchmarkResults.getProbeData(selectedProbe);
                 if (probeData == null) {
-                    System.out.println("Couldn't find probe " + selectedProbe + " in benchmark " + benchmarkName);
+                    LOGGER.warn("Couldn't find probe " + selectedProbe + " in benchmark " + benchmarkName);
                     continue;
                 }
                 String name = benchmarkName + " - " + selectedProbe;

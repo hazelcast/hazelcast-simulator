@@ -17,8 +17,10 @@
 package com.hazelcast.simulator.tests.map.helpers;
 
 import com.hazelcast.simulator.tests.helpers.IntegerGenerator;
+import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.random;
+import static java.lang.String.format;
 
 /**
  * A generator of a zipfian distribution. It produces a sequence of items, such that some items are more popular than others,
@@ -43,6 +45,8 @@ import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.random;
 public class ZipfianGenerator extends IntegerGenerator {
 
     static final double ZIPFIAN_CONSTANT = 0.99;
+
+    private static final Logger LOGGER = Logger.getLogger(ZipfianGenerator.class);
 
     /**
      * Number of items.
@@ -244,9 +248,7 @@ public class ZipfianGenerator extends IntegerGenerator {
 
     private void recomputeZetaAndEta(long itemCount) {
         if (itemCount > countForZeta) {
-            //System.err.println(
-            //        "WARNING: Incrementally recomputing Zipfian distribution. (itemCount =" + itemCount
-            //                + " countForZeta=" + countForZeta + ")");
+            //LOGGER.warn(format("Incrementally Zipfian distribution. (itemCount=%d countForZeta=%d)", itemCount, countForZeta));
 
             // we have added more items. can compute zeta incrementally, which is cheaper
             zeta = zeta(countForZeta, itemCount, theta, zeta);
@@ -259,9 +261,8 @@ public class ZipfianGenerator extends IntegerGenerator {
             // subtract the zeta sequence terms for the items that went away. This would be faster than recomputing from
             // scratch when the number of items decreases
 
-            System.err.println(
-                    "WARNING: Recomputing Zipfian distribution. This is slow and should be avoided. (itemCount="
-                            + itemCount + " countForZeta=" + countForZeta + ")");
+            LOGGER.warn(format("Recomputing Zipfian distribution. This is slow and should be avoided."
+                    + " (itemCount=%d countForZeta=%d)", itemCount, countForZeta));
 
             zeta = zeta(itemCount, theta);
             eta = (1 - Math.pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zeta);

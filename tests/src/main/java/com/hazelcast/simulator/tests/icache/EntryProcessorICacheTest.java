@@ -167,29 +167,21 @@ public class EntryProcessorICacheTest {
     private static final class IncrementEntryProcessor implements EntryProcessor<Integer, Long, Object>, Serializable {
 
         private final long increment;
-        private final long delayMs;
+        private final int delayMs;
 
-        private IncrementEntryProcessor(long increment, long delayMs) {
+        private IncrementEntryProcessor(long increment, int delayMs) {
             this.increment = increment;
             this.delayMs = delayMs;
         }
 
         @Override
         public Object process(MutableEntry<Integer, Long> entry, Object... arguments) throws EntryProcessorException {
-            delay();
+            if (delayMs > 0) {
+                sleepMillis(delayMs);
+            }
             long newValue = entry.getValue() + increment;
             entry.setValue(newValue);
             return null;
-        }
-
-        private void delay() {
-            if (delayMs != 0) {
-                try {
-                    Thread.sleep(delayMs);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 

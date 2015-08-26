@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
+import org.apache.log4j.Logger;
+
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -28,6 +30,8 @@ public final class TestUtils {
     private static final int ASSERT_TRUE_EVENTUALLY_INITIAL_SLEEP_MILLIS = 100;
     private static final float ASSERT_TRUE_EVENTUALLY_SLEEP_FACTOR = 1.5f;
     private static final int ASSERT_TRUE_EVENTUALLY_TIMEOUT;
+
+    private static final Logger LOGGER = Logger.getLogger(TestUtils.class);
 
     static {
         ASSERT_TRUE_EVENTUALLY_TIMEOUT = Integer.parseInt(System.getProperty(
@@ -117,11 +121,13 @@ public final class TestUtils {
     }
 
     public static void printAllStackTraces() {
+        StringBuilder sb = new StringBuilder();
         for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {
-            System.err.println("Thread " + entry.getKey().getName());
+            sb.append("Thread ").append(entry.getKey().getName());
             for (StackTraceElement stackTraceElement : entry.getValue()) {
-                System.err.println("\tat " + stackTraceElement);
+                sb.append("\tat ").append(stackTraceElement);
             }
         }
+        LOGGER.error(sb.toString());
     }
 }
