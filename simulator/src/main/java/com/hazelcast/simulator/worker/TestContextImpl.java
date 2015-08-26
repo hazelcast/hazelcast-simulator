@@ -3,13 +3,13 @@ package com.hazelcast.simulator.worker;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.test.TestContext;
 
-class TestContextImpl implements TestContext {
+public class TestContextImpl implements TestContext {
     private final String testId;
     private final HazelcastInstance hazelcastInstance;
 
     private volatile boolean stopped;
 
-    TestContextImpl(String testId, HazelcastInstance hazelcastInstance) {
+    public TestContextImpl(String testId, HazelcastInstance hazelcastInstance) {
         this.testId = testId;
         this.hazelcastInstance = hazelcastInstance;
     }

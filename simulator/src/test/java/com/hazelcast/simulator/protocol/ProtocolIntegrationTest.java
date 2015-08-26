@@ -3,8 +3,11 @@ package com.hazelcast.simulator.protocol;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.apache.log4j.Level;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -28,6 +31,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_N
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_WORKER_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
+import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
 import static org.junit.Assert.assertEquals;
 
 public class ProtocolIntegrationTest {
@@ -185,6 +189,19 @@ public class ProtocolIntegrationTest {
         Response response = worker.write(buildMessage(destination, source));
 
         assertSingleTarget(response, source, destination, SUCCESS);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void test_singleTest_withExceptionDuringOperationProcessing() throws Exception {
+        SimulatorAddress source = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = new SimulatorAddress(TEST, 1, 1, 1);
+        SimulatorOperation operation = new IntegrationTestOperation("foobar");
+
+        SimulatorMessage message = buildMessage(destination, source, operation.getOperationType(), encodeOperation(operation));
+        Response response = sendFromCoordinator(message);
+
+        assertEquals(message.getMessageId(), response.getMessageId());
+        assertSingleTarget(response, destination, ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
     }
 
     private static Response sendMessageAndAssertMessageId(SimulatorAddress destination) throws Exception {
