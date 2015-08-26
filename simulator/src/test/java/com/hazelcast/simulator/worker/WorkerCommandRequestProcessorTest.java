@@ -407,6 +407,9 @@ public class WorkerCommandRequestProcessorTest {
         List<String> testIdList = testIdCaptor.getAllValues();
         List<Throwable> throwableList = exceptionCaptor.getAllValues();
 
+        assertEquals(format("Expected %d exceptions, but found %d", exceptionTypes.length, testIdList.size()),
+                exceptionTypes.length, testIdList.size());
+
         for (Class<?> exceptionType : exceptionTypes) {
             String testId = testIdList.remove(0);
             Throwable throwable = throwableList.remove(0);

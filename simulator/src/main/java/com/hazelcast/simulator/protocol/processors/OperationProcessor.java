@@ -4,6 +4,7 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
@@ -31,6 +32,7 @@ public abstract class OperationProcessor {
             }
         } catch (Exception e) {
             LOGGER.error("Error during processing an operation", e);
+            ExceptionReporter.report(null, e);
             return EXCEPTION_DURING_OPERATION_EXECUTION;
         }
     }
