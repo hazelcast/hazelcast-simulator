@@ -29,7 +29,13 @@ public enum ResponseType {
      * Is returned when an implementation of {@link com.hazelcast.simulator.protocol.processors.OperationProcessor}
      * does not implement the transmitted {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation}.
      */
-    UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR(4);
+    UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR(4),
+
+    /**
+     * Is returned when an exception occurs during the execution of a
+     * {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation}.
+     */
+    EXCEPTION_DURING_OPERATION_EXECUTION(5);
 
     private final int ordinal;
 

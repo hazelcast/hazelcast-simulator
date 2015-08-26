@@ -1,8 +1,15 @@
 package com.hazelcast.simulator.protocol.operation;
 
+/**
+ * Defines the operation type for a {@link com.hazelcast.simulator.protocol.core.SimulatorMessage}.
+ */
 public enum OperationType {
 
-    INTEGRATION_TEST_OPERATION(IntegrationTestOperation.class, 0);
+    INTEGRATION_TEST(IntegrationTestOperation.class, 0),
+
+    CREATE_AGENT(IntegrationTestOperation.class, 1),
+    CREATE_WORKER(IntegrationTestOperation.class, 2),
+    CREATE_TEST(CreateTestOperation.class, 3);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;

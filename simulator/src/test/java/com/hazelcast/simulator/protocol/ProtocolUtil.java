@@ -161,7 +161,12 @@ public class ProtocolUtil {
     }
 
     static SimulatorMessage buildMessage(SimulatorAddress destination, SimulatorAddress source) {
-        return new SimulatorMessage(destination, source, MESSAGE_ID.incrementAndGet(), OPERATION_TYPE, OPERATION_JSON);
+        return buildMessage(destination, source, OPERATION_TYPE, OPERATION_JSON);
+    }
+
+    static SimulatorMessage buildMessage(SimulatorAddress destination, SimulatorAddress source,
+                                         OperationType operationType, String operationData) {
+        return new SimulatorMessage(destination, source, MESSAGE_ID.incrementAndGet(), operationType, operationData);
     }
 
     static Response sendFromCoordinator(SimulatorMessage message) throws Exception {

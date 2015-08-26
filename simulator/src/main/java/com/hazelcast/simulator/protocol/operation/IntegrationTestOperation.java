@@ -12,7 +12,7 @@ public class IntegrationTestOperation implements SimulatorOperation {
 
     @Override
     public OperationType getOperationType() {
-        return OperationType.INTEGRATION_TEST_OPERATION;
+        return OperationType.INTEGRATION_TEST;
     }
 
     public String getTestData() {

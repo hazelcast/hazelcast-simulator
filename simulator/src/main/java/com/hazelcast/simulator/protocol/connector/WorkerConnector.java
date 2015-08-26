@@ -29,7 +29,7 @@ public class WorkerConnector {
      * @param port               the port for incoming connections
      */
     public WorkerConnector(int addressIndex, int parentAddressIndex, int port) {
-        OperationProcessor processor = new WorkerOperationProcessor();
+        OperationProcessor processor = new WorkerOperationProcessor(null, null);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         SimulatorAddress localAddress = new SimulatorAddress(WORKER, parentAddressIndex, addressIndex, 0);
 

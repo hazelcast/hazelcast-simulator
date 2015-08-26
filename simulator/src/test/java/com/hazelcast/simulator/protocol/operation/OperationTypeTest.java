@@ -9,7 +9,7 @@ public class OperationTypeTest {
 
     @Test
     public void testFromInt_OPERATION() {
-        assertEquals(OperationType.INTEGRATION_TEST_OPERATION, fromInt(OperationType.INTEGRATION_TEST_OPERATION.toInt()));
+        assertEquals(OperationType.INTEGRATION_TEST, fromInt(OperationType.INTEGRATION_TEST.toInt()));
     }
 
     @Test(expected = IllegalArgumentException.class)
