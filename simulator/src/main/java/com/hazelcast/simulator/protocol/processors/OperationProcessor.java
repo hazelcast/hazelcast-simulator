@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
+import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 
 /**
  * Processes {@link SimulatorOperation} instances on a Simulator component.
@@ -18,7 +19,7 @@ public abstract class OperationProcessor {
     private static final Logger LOGGER = Logger.getLogger(OperationProcessor.class);
 
     public final ResponseType process(SimulatorOperation operation) {
-        OperationType operationType = operation.getOperationType();
+        OperationType operationType = getOperationType(operation);
         LOGGER.info(getClass().getSimpleName() + ".process(" + operation.getClass().getSimpleName() + ")");
         try {
             switch (operationType) {
@@ -28,7 +29,7 @@ public abstract class OperationProcessor {
                     }
                     return SUCCESS;
                 default:
-                    return processOperation(operation);
+                    return processOperation(operationType, operation);
             }
         } catch (Exception e) {
             LOGGER.error("Error during processing an operation", e);
@@ -37,5 +38,5 @@ public abstract class OperationProcessor {
         }
     }
 
-    protected abstract ResponseType processOperation(SimulatorOperation operation) throws Exception;
+    protected abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception;
 }

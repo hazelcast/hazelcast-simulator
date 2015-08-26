@@ -32,6 +32,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NO
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_WORKER_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
+import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static org.junit.Assert.assertEquals;
 
 public class ProtocolIntegrationTest {
@@ -197,7 +198,7 @@ public class ProtocolIntegrationTest {
         SimulatorAddress destination = new SimulatorAddress(TEST, 1, 1, 1);
         SimulatorOperation operation = new IntegrationTestOperation("foobar");
 
-        SimulatorMessage message = buildMessage(destination, source, operation.getOperationType(), encodeOperation(operation));
+        SimulatorMessage message = buildMessage(destination, source, getOperationType(operation), encodeOperation(operation));
         Response response = sendFromCoordinator(message);
 
         assertEquals(message.getMessageId(), response.getMessageId());

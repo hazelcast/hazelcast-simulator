@@ -4,6 +4,9 @@ import com.hazelcast.simulator.test.TestCase;
 
 import java.util.Map;
 
+/**
+ * Creates a new Simulator test with the defined properties.
+ */
 public class CreateTestOperation implements SimulatorOperation {
 
     private final String testId;
@@ -12,11 +15,6 @@ public class CreateTestOperation implements SimulatorOperation {
     public CreateTestOperation(TestCase testCase) {
         this.testId = testCase.getId();
         this.properties = testCase.getProperties();
-    }
-
-    @Override
-    public OperationType getOperationType() {
-        return OperationType.CREATE_TEST;
     }
 
     public TestCase getTestCase() {

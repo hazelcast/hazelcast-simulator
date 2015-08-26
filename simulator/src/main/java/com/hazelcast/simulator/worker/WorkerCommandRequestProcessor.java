@@ -268,11 +268,11 @@ class WorkerCommandRequestProcessor {
                 final TestContainer<TestContext> test = tests.get(testId);
                 if (test == null) {
                     // we log a warning: it could be that it's a newly created machine from mama-monkey
-                    LOGGER.warn("Failed to process command: " + command + ", found no test with " + "testId " + testId);
+                    LOGGER.warn("Failed to process command: " + command + ", found no test with testId " + testId);
                     return;
                 }
 
-                CommandThread commandThread = new CommandThread(command.testId, testPhase) {
+                CommandThread commandThread = new CommandThread(testId, testPhase) {
                     @Override
                     public void doRun() throws Exception {
                         try {

@@ -1,5 +1,8 @@
 package com.hazelcast.simulator.protocol.operation;
 
+/**
+ * Operation for integration tests of the Simulator Protocol.
+ */
 public class IntegrationTestOperation implements SimulatorOperation {
 
     public static final String TEST_DATA = "IntegrationTestData";
@@ -8,11 +11,6 @@ public class IntegrationTestOperation implements SimulatorOperation {
 
     public IntegrationTestOperation(String testData) {
         this.testData = testData;
-    }
-
-    @Override
-    public OperationType getOperationType() {
-        return OperationType.INTEGRATION_TEST;
     }
 
     public String getTestData() {
