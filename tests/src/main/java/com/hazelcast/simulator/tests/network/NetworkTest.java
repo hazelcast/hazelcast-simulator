@@ -216,7 +216,7 @@ public class NetworkTest {
         }
     }
 
-    private static class DummyPacketHandler implements PacketHandler {
+    private class DummyPacketHandler implements PacketHandler {
 
         private final RequestFuture[] futures;
 
@@ -229,6 +229,14 @@ public class NetworkTest {
 
         @Override
         public void handle(Packet packet) throws Exception {
+            byte[] data = packet.toByteArray();
+            int foundPayloadSize = data == null ? 0 : data.length;
+
+            if (foundPayloadSize != payloadSize) {
+                throw new IllegalArgumentException("Unexpected payload size; expected:" + payloadSize
+                        + " but found:" + foundPayloadSize);
+            }
+
             if (packet.isHeaderSet(Packet.HEADER_RESPONSE)) {
                 futures[packet.getPartitionId()].set();
             } else {
