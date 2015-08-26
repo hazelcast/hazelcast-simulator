@@ -84,7 +84,7 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
         } else {
             ClientConnector clientConnector = worker.get(workerAddressIndex);
             if (clientConnector == null) {
-                LOGGER.debug(format("[%d] %s worker %d not found!", messageId, addressLevel, workerAddressIndex));
+                LOGGER.error(format("[%d] %s worker %d not found!", messageId, addressLevel, workerAddressIndex));
                 response.addResponse(localAddress, FAILURE_WORKER_NOT_FOUND);
                 ctx.writeAndFlush(response);
                 return;
@@ -101,7 +101,7 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
 
         ClientConnector clientConnector = worker.get(workerAddressIndex);
         if (clientConnector == null) {
-            LOGGER.debug(format("[%d] %s worker %d not found!", messageId, addressLevel, workerAddressIndex));
+            LOGGER.error(format("[%d] %s worker %d not found!", messageId, addressLevel, workerAddressIndex));
             ctx.writeAndFlush(new Response(messageId, localAddress, localAddress, FAILURE_WORKER_NOT_FOUND));
             return;
         }
