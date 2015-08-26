@@ -181,9 +181,9 @@ public class NetworkTest {
                 if (payload.length >= 6) {
                     payload[0] = 0xA;
                     payload[1] = 0xB;
-                    payload[2] = 0xA;
+                    payload[2] = 0xC;
 
-                    payload[payload.length - 3] = 0xA;
+                    payload[payload.length - 3] = 0xC;
                     payload[payload.length - 2] = 0xB;
                     payload[payload.length - 1] = 0xA;
                 }
@@ -236,9 +236,9 @@ public class NetworkTest {
                 byte[] payload = packet.toByteArray();
                 check(payload, 0, 0XA);
                 check(payload, 1, 0XB);
-                check(payload, 2, 0XA);
+                check(payload, 2, 0XC);
 
-                check(payload, payload.length - 3, 0XA);
+                check(payload, payload.length - 3, 0XC);
                 check(payload, payload.length - 2, 0XB);
                 check(payload, payload.length - 1, 0XA);
             }
