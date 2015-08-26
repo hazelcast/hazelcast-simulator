@@ -232,6 +232,17 @@ public class NetworkTest {
             byte[] data = packet.toByteArray();
             int foundPayloadSize = data == null ? 0 : data.length;
 
+            if (foundPayloadSize > 0) {
+                byte[] payload = packet.toByteArray();
+                check(payload, 0, 0XA);
+                check(payload, 1, 0XB);
+                check(payload, 2, 0XA);
+
+                check(payload, payload.length - 3, 0XA);
+                check(payload, payload.length - 2, 0XB);
+                check(payload, payload.length - 1, 0XA);
+            }
+
             if (foundPayloadSize != payloadSize) {
                 throw new IllegalArgumentException("Unexpected payload size; expected:" + payloadSize
                         + " but found:" + foundPayloadSize);
@@ -243,6 +254,12 @@ public class NetworkTest {
                 Packet response = new Packet(packet.toByteArray(), packet.getPartitionId());
                 response.setHeader(Packet.HEADER_RESPONSE);
                 packet.getConn().write(response);
+            }
+        }
+
+        private void check(byte[] payload, int index, int value) {
+            if (payload[index] != value) {
+                throw new IllegalStateException();
             }
         }
     }
