@@ -18,7 +18,6 @@ import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.tcp.DefaultSocketChannelWrapperFactory;
 import com.hazelcast.nio.tcp.MemberPacketReader;
-import com.hazelcast.nio.tcp.MemberPacketWriter;
 import com.hazelcast.nio.tcp.PacketReader;
 import com.hazelcast.nio.tcp.PacketWriter;
 import com.hazelcast.nio.tcp.SocketChannelWrapperFactory;
@@ -49,6 +48,7 @@ public class MockIOService implements IOService {
     public boolean socketNoDelay = true;
     public int socketReceiveBufferSize = 32;
     public int socketSendBufferSize = 32;
+    public PacketWriterFactory packetWriterFactory = new MemberPacketWriterFactory();
 
 
     public MockIOService(Address thisAddress, LoggingService loggingService) throws Exception {
@@ -60,6 +60,7 @@ public class MockIOService implements IOService {
                 getClass().getClassLoader());
 
         serverSocketChannel = ServerSocketChannel.open();
+
         ServerSocket serverSocket = serverSocketChannel.socket();
         serverSocket.setReuseAddress(true);
         serverSocket.setSoTimeout(1000);
@@ -170,7 +171,7 @@ public class MockIOService implements IOService {
 
     @Override
     public int getSocketReceiveBufferSize() {
-         return socketReceiveBufferSize;
+        return socketReceiveBufferSize;
     }
 
     @Override
@@ -315,7 +316,7 @@ public class MockIOService implements IOService {
 
     @Override
     public PacketWriter createPacketWriter(TcpIpConnection connection) {
-        return new MemberPacketWriter();
+        return packetWriterFactory.create();
     }
 
     private static class MockEventService implements EventService {

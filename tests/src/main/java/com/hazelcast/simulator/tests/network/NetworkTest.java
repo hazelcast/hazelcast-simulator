@@ -13,6 +13,7 @@ import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Connection;
 import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.tcp.IOThreadingModel;
+import com.hazelcast.nio.tcp.PacketWriter;
 import com.hazelcast.nio.tcp.TcpIpConnectionManager;
 import com.hazelcast.nio.tcp.nonblocking.NonBlockingIOThreadingModel;
 import com.hazelcast.nio.tcp.spinning.SpinningIOThreadingModel;
@@ -27,6 +28,7 @@ import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.spi.impl.PacketHandler;
 
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,7 +71,6 @@ public class NetworkTest {
     private TcpIpConnectionManager connectionManager;
     private DummyPacketHandler packetHandler;
     private List<Connection> connections = new LinkedList<Connection>();
-    private ConcurrentHashMap<Connection, AtomicLong> sequenceCounters = new ConcurrentHashMap<Connection, AtomicLong>();
 
     public enum IOThreadingModelEnum {
         NonBlocking,
@@ -101,6 +102,10 @@ public class NetworkTest {
         ioService.packetHandler = packetHandler;
         ioService.socketSendBufferSize = socketSendBufferSize;
         ioService.socketReceiveBufferSize = socketReceiveBufferSize;
+
+        if (trackSequenceId) {
+            ioService.packetWriterFactory = new TaggingPacketWriterFactory();
+        }
 
         IOThreadingModel threadingModel;
         switch (ioThreadingModel) {
@@ -159,7 +164,6 @@ public class NetworkTest {
                 }
 
                 connections.add(connection);
-                sequenceCounters.put(connection, new AtomicLong());
 
                 LOGGER.info("Successfully created connection to: " + targetAddress);
             }
@@ -167,6 +171,42 @@ public class NetworkTest {
             LOGGER.info("Successfully started all connections");
         } finally {
             networkCreateLock.unlock();
+        }
+    }
+
+    class TaggingPacketWriterFactory implements PacketWriterFactory {
+
+        @Override
+        public PacketWriter create() {
+            return new TaggingPacketWriter();
+        }
+    }
+
+    class TaggingPacketWriter implements PacketWriter {
+
+        private long sequenceId = 0;
+
+        @Override
+        public boolean write(Packet packet, ByteBuffer dst) throws Exception {
+            if (packet.dataSize() > 100) {
+                byte[] payload = packet.toByteArray();
+                // we also stuff in a sequence id at the beginning
+                long s = sequenceId;
+                for (int i = 7; i >= 0; i--) {
+                    payload[i + 3] = (byte) (s & 0xFF);
+                    s >>= 8;
+                }
+
+                // and a sequence id at the end.
+                s = sequenceId;
+                for (int i = 7; i >= 0; i--) {
+                    payload[i + payload.length - (8 + 3)] = (byte) (s & 0xFF);
+                    s >>= 8;
+                }
+                sequenceId++;
+            }
+
+            return packet.writeTo(dst);
         }
     }
 
@@ -183,14 +223,13 @@ public class NetworkTest {
 
         private final int workerId;
         private final RequestFuture responseFuture;
-        private long workerSequence;
 
         public Worker() {
             workerId = workerIdGenerator.getAndIncrement();
             responseFuture = packetHandler.futures[workerId];
         }
 
-        private byte[] makePayload(final long sequenceId) {
+        private byte[] makePayload() {
             byte[] payload = null;
             if (payloadSize > 0) {
                 payload = new byte[payloadSize];
@@ -201,20 +240,6 @@ public class NetworkTest {
                     payload[0] = 0xA;
                     payload[1] = 0xB;
                     payload[2] = 0xC;
-
-                    // we also stuff in a sequence id at the beginning
-                    long s = sequenceId;
-                    for (int i = 7; i >= 0; i--) {
-                        payload[i + 3] = (byte) (s & 0xFF);
-                        s >>= 8;
-                    }
-
-                    // and a sequence id at the end.
-                    s = sequenceId;
-                    for (int i = 7; i >= 0; i--) {
-                        payload[i + payload.length - (8 + 3)] = (byte) (s & 0xFF);
-                        s >>= 8;
-                    }
 
                     payload[payload.length - 3] = 0xC;
                     payload[payload.length - 2] = 0xB;
@@ -228,20 +253,9 @@ public class NetworkTest {
         protected void timeStep() {
             Connection connection = nextConnection();
             boolean success;
-            if (trackSequenceId) {
-                AtomicLong sequenceCounter = sequenceCounters.get(connection);
-                synchronized (connection) {
-                    long sequenceId = sequenceCounter.incrementAndGet();
-                    byte[] payload = makePayload(sequenceId);
-                    Packet packet = new Packet(payload, workerId);
-                    success = connection.write(packet);
-                }
-            } else {
-                workerSequence++;
-                byte[] payload = makePayload(workerSequence);
-                Packet packet = new Packet(payload, workerId);
-                success = connection.write(packet);
-            }
+            byte[] payload = makePayload();
+            Packet packet = new Packet(payload, workerId);
+            success = connection.write(packet);
 
             if (!success) {
                 throw new RuntimeException("Failed to write packet to connection:" + connection);
