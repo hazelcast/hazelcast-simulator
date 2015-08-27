@@ -278,20 +278,17 @@ public class NetworkTest {
 
                 AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
                 if (sequenceCounter == null) {
-                    sequenceCounter = new AtomicLong(1);
+                    sequenceCounter = new AtomicLong(0);
                     sequenceMap.put(packet.getConn(), sequenceCounter);
                 }
 
                 long foundSequence = bytesToLong(payload, 3);
-
-                System.out.println(packet.getConn().getEndPoint() + " " + foundSequence);
-
                 long expectedSequence = sequenceCounter.get() + 1;
-//                if (expectedSequence != foundSequence) {
-//                    throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
-//                            + "found:" + foundSequence);
-//                }
-                sequenceCounter.incrementAndGet();
+                if (expectedSequence != foundSequence) {
+                    throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
+                            + "found:" + foundSequence);
+                }
+                sequenceCounter.set(expectedSequence);
 
                 check(payload, payload.length - 3, 0XC);
                 check(payload, payload.length - 2, 0XB);
