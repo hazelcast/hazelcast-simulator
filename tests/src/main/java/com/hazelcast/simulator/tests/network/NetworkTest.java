@@ -10,6 +10,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.nio.Address;
+import com.hazelcast.nio.Connection;
 import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.tcp.IOThreadingModel;
 import com.hazelcast.nio.tcp.TcpIpConnection;
@@ -29,11 +30,13 @@ import com.hazelcast.spi.impl.PacketHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -65,6 +68,8 @@ public class NetworkTest {
     private ILock networkCreateLock;
     private TcpIpConnectionManager connectionManager;
     private DummyPacketHandler packetHandler;
+
+    private ConcurrentHashMap<Connection, AtomicLong> counters = new ConcurrentHashMap<Connection, AtomicLong>();
 
     public enum IOThreadingModelEnum {
         NonBlocking,
@@ -146,6 +151,9 @@ public class NetworkTest {
                     LOGGER.info("Waiting for connection to: " + targetAddress);
                     sleepMillis(100);
                 }
+
+                counters.put(connectionManager.getConnection(targetAddress), new AtomicLong());
+
                 LOGGER.info("Successfully created connection to: " + targetAddress);
             }
 
@@ -169,7 +177,6 @@ public class NetworkTest {
         private final int workerId;
         private final RequestFuture responseFuture;
         private final List<TcpIpConnection> connections;
-        private long seq;
 
         public Worker() {
             workerId = workerIdGenerator.getAndIncrement();
@@ -199,7 +206,7 @@ public class NetworkTest {
                     // and a sequence id at the end.
                     s = sequenceId;
                     for (int i = 7; i >= 0; i--) {
-                        payload[i + payload.length - 11] = (byte) (s & 0xFF);
+                        payload[i + payload.length - (8 + 3)] = (byte) (s & 0xFF);
                         s >>= 8;
                     }
 
@@ -213,13 +220,16 @@ public class NetworkTest {
 
         @Override
         protected void timeStep() {
-            seq++;
-            byte[] payload = makePayload(seq);
-            Packet packet = new Packet(payload, workerId);
             TcpIpConnection connection = nextConnection();
-            boolean success = connection.write(packet);
-            if (!success) {
-                throw new RuntimeException("Failed to write packet to connection:" + connection);
+            AtomicLong counter = counters.get(connection);
+            synchronized (connection) {
+                long count = counter.incrementAndGet();
+                byte[] payload = makePayload(count);
+                Packet packet = new Packet(payload, workerId);
+                boolean success = connection.write(packet);
+                if (!success) {
+                    throw new RuntimeException("Failed to write packet to connection:" + connection);
+                }
             }
 
             try {
