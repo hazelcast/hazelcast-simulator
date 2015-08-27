@@ -327,7 +327,7 @@ public class NetworkTest {
             if (packet.isHeaderSet(Packet.HEADER_RESPONSE)) {
                 futures[packet.getPartitionId()].set();
             } else {
-                Packet response = new Packet(packet.toByteArray(), packet.getPartitionId());
+                Packet response = new Packet(null, packet.getPartitionId());
                 response.setHeader(Packet.HEADER_RESPONSE);
                 packet.getConn().write(response);
             }
