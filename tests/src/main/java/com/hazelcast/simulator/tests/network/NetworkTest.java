@@ -188,7 +188,7 @@ public class NetworkTest {
 
         @Override
         public boolean write(Packet packet, ByteBuffer dst) throws Exception {
-            if (!packet.isHeaderSet()packet.dataSize() > 100) {
+            if (!packet.isHeaderSet(Packet.HEADER_BIND) && packet.dataSize() > 100) {
                 byte[] payload = packet.toByteArray();
                 // we also stuff in a sequence id at the beginning
                 long s = sequenceId;
