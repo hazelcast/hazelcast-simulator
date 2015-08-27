@@ -320,16 +320,21 @@ public class NetworkTest {
             }
 
 
+            if (foundPayloadSize != payloadSize) {
+                throw new IllegalArgumentException("Unexpected payload size; expected:" + payloadSize
+                        + " but found:" + foundPayloadSize);
+            }
 
             if (packet.isHeaderSet(Packet.HEADER_RESPONSE)) {
                 futures[packet.getPartitionId()].set();
             } else {
-                if (foundPayloadSize != payloadSize) {
-                    throw new IllegalArgumentException("Unexpected payload size; expected:" + payloadSize
-                            + " but found:" + foundPayloadSize);
+                byte[] original = packet.toByteArray();
+                byte[] copied = null;
+                if (original != null) {
+                    copied = new byte[original.length];
+                    System.arraycopy(original, 0, copied, 0, original.length);
                 }
-
-                Packet response = new Packet(null, packet.getPartitionId());
+                Packet response = new Packet(copied, packet.getPartitionId());
                 response.setHeader(Packet.HEADER_RESPONSE);
                 packet.getConn().write(response);
             }
