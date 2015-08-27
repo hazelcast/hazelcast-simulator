@@ -169,31 +169,52 @@ public class NetworkTest {
         private final int workerId;
         private final RequestFuture responseFuture;
         private final List<TcpIpConnection> connections;
-        private byte[] payload;
+        private long seq;
 
         public Worker() {
             workerId = workerIdGenerator.getAndIncrement();
+            responseFuture = packetHandler.futures[workerId];
+            connections = new ArrayList<TcpIpConnection>(connectionManager.getActiveConnections());
+        }
+
+        private byte[] makePayload(final long sequenceId) {
+            byte[] payload = null;
             if (payloadSize > 0) {
                 payload = new byte[payloadSize];
                 //getRandom().nextBytes(payload);
 
                 // put a well known head and tail on the payload; for debugging.
-                if (payload.length >= 6) {
+                if (payload.length >= 6 + 8) {
                     payload[0] = 0xA;
                     payload[1] = 0xB;
                     payload[2] = 0xC;
+
+                    // we also stuff in a sequence id at the beginning
+                    long s = sequenceId;
+                    for (int i = 7; i >= 0; i--) {
+                        payload[i + 3] = (byte) (s & 0xFF);
+                        s >>= 8;
+                    }
+
+                    // and a sequence id at the end.
+                    s = sequenceId;
+                    for (int i = 7; i >= 0; i--) {
+                        payload[i + payload.length - 11] = (byte) (s & 0xFF);
+                        s >>= 8;
+                    }
 
                     payload[payload.length - 3] = 0xC;
                     payload[payload.length - 2] = 0xB;
                     payload[payload.length - 1] = 0xA;
                 }
             }
-            responseFuture = packetHandler.futures[workerId];
-            connections = new ArrayList<TcpIpConnection>(connectionManager.getActiveConnections());
+            return payload;
         }
 
         @Override
         protected void timeStep() {
+            seq++;
+            byte[] payload = makePayload(seq);
             Packet packet = new Packet(payload, workerId);
             TcpIpConnection connection = nextConnection();
             boolean success = connection.write(packet);
