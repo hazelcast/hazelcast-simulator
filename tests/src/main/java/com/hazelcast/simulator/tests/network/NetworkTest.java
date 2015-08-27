@@ -13,7 +13,6 @@ import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Connection;
 import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.tcp.IOThreadingModel;
-import com.hazelcast.nio.tcp.TcpIpConnection;
 import com.hazelcast.nio.tcp.TcpIpConnectionManager;
 import com.hazelcast.nio.tcp.nonblocking.NonBlockingIOThreadingModel;
 import com.hazelcast.nio.tcp.spinning.SpinningIOThreadingModel;
@@ -28,7 +27,6 @@ import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.spi.impl.PacketHandler;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,6 +61,7 @@ public class NetworkTest {
     public int socketReceiveBufferSize = 32;
     public int socketSendBufferSize = 32;
     public IOThreadingModelEnum ioThreadingModel = NonBlocking;
+    public boolean trackSequenceId = false;
 
     private final AtomicInteger workerIdGenerator = new AtomicInteger();
     private HazelcastInstance hz;
@@ -184,6 +183,7 @@ public class NetworkTest {
 
         private final int workerId;
         private final RequestFuture responseFuture;
+        private long workerSequence;
 
         public Worker() {
             workerId = workerIdGenerator.getAndIncrement();
@@ -227,15 +227,24 @@ public class NetworkTest {
         @Override
         protected void timeStep() {
             Connection connection = nextConnection();
-            AtomicLong sequenceCounter = sequenceCounters.get(connection);
-            synchronized (connection) {
-                long sequenceId = sequenceCounter.incrementAndGet();
-                byte[] payload = makePayload(sequenceId);
-                Packet packet = new Packet(payload, workerId);
-                boolean success = connection.write(packet);
-                if (!success) {
-                    throw new RuntimeException("Failed to write packet to connection:" + connection);
+            boolean success;
+            if (trackSequenceId) {
+                AtomicLong sequenceCounter = sequenceCounters.get(connection);
+                synchronized (connection) {
+                    long sequenceId = sequenceCounter.incrementAndGet();
+                    byte[] payload = makePayload(sequenceId);
+                    Packet packet = new Packet(payload, workerId);
+                    success = connection.write(packet);
                 }
+            } else {
+                workerSequence++;
+                byte[] payload = makePayload(workerSequence);
+                Packet packet = new Packet(payload, workerId);
+                success = connection.write(packet);
+            }
+
+            if (!success) {
+                throw new RuntimeException("Failed to write packet to connection:" + connection);
             }
 
             try {
@@ -276,20 +285,21 @@ public class NetworkTest {
                 check(payload, 1, 0XB);
                 check(payload, 2, 0XC);
 
-                AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
-                if (sequenceCounter == null) {
-                    sequenceCounter = new AtomicLong(0);
-                    sequenceMap.put(packet.getConn(), sequenceCounter);
-                }
+                if (trackSequenceId) {
+                    AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
+                    if (sequenceCounter == null) {
+                        sequenceCounter = new AtomicLong(0);
+                        sequenceMap.put(packet.getConn(), sequenceCounter);
+                    }
 
-                long foundSequence = bytesToLong(payload, 3);
-                long expectedSequence = sequenceCounter.get() + 1;
-                if (expectedSequence != foundSequence) {
-                    throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
-                            + "found:" + foundSequence);
+                    long foundSequence = bytesToLong(payload, 3);
+                    long expectedSequence = sequenceCounter.get() + 1;
+                    if (expectedSequence != foundSequence) {
+                        throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
+                                + "found:" + foundSequence);
+                    }
+                    sequenceCounter.set(expectedSequence);
                 }
-                sequenceCounter.set(expectedSequence);
-
                 check(payload, payload.length - 3, 0XC);
                 check(payload, payload.length - 2, 0XB);
                 check(payload, payload.length - 1, 0XA);
