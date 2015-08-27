@@ -70,7 +70,6 @@ public class NetworkTest {
     private TcpIpConnectionManager connectionManager;
     private DummyPacketHandler packetHandler;
     private List<Connection> connections = new LinkedList<Connection>();
-
     private ConcurrentHashMap<Connection, AtomicLong> sequenceCounters = new ConcurrentHashMap<Connection, AtomicLong>();
 
     public enum IOThreadingModelEnum {
@@ -280,7 +279,7 @@ public class NetworkTest {
                 AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
                 if (sequenceCounter == null) {
                     sequenceCounter = new AtomicLong(1);
-                    sequenceCounters.put(packet.getConn(), sequenceCounter);
+                    sequenceMap.put(packet.getConn(), sequenceCounter);
                 }
 
                 long foundSequence = bytesToLong(payload, 3);
