@@ -319,14 +319,16 @@ public class NetworkTest {
                 check(payload, payload.length - 1, 0XA);
             }
 
-            if (foundPayloadSize != payloadSize) {
-                throw new IllegalArgumentException("Unexpected payload size; expected:" + payloadSize
-                        + " but found:" + foundPayloadSize);
-            }
+
 
             if (packet.isHeaderSet(Packet.HEADER_RESPONSE)) {
                 futures[packet.getPartitionId()].set();
             } else {
+                if (foundPayloadSize != payloadSize) {
+                    throw new IllegalArgumentException("Unexpected payload size; expected:" + payloadSize
+                            + " but found:" + foundPayloadSize);
+                }
+
                 Packet response = new Packet(null, packet.getPartitionId());
                 response.setHeader(Packet.HEADER_RESPONSE);
                 packet.getConn().write(response);
