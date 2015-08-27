@@ -184,7 +184,7 @@ public class NetworkTest {
 
     class TaggingPacketWriter implements PacketWriter {
 
-        private long sequenceId = 0;
+        private long sequenceId = 1;
 
         @Override
         public boolean write(Packet packet, ByteBuffer dst) throws Exception {
