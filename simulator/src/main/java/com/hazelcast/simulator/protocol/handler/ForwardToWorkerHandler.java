@@ -96,7 +96,7 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
         ctx.writeAndFlush(response);
     }
 
-    private void forwardResponse(ChannelHandlerContext ctx, ByteBuf buffer, int workerAddressIndex) throws Exception {
+    private void forwardResponse(ChannelHandlerContext ctx, ByteBuf buffer, int workerAddressIndex) {
         long messageId = ResponseCodec.getMessageId(buffer);
 
         ClientConnector clientConnector = worker.get(workerAddressIndex);

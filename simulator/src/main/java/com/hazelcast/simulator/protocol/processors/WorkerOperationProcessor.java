@@ -152,7 +152,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         }
     }
 
-    private void processStartTest(StartTestOperation operation) throws Exception {
+    private void processStartTest(StartTestOperation operation) {
         //if (workerPerformanceMonitor.start()) {
         //    LOGGER.info(format("%s Starting performance monitoring %s", DASHES, DASHES));
         //}
@@ -188,7 +188,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         operationThread.start();
     }
 
-    private void processStopTest(StopTestOperation operation) throws Exception {
+    private void processStopTest(StopTestOperation operation) {
         String testId = operation.getTestId();
         String testName = "".equals(testId) ? "test" : testId;
 
