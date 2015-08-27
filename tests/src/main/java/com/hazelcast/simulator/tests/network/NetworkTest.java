@@ -29,6 +29,7 @@ import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.spi.impl.PacketHandler;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -68,8 +69,9 @@ public class NetworkTest {
     private ILock networkCreateLock;
     private TcpIpConnectionManager connectionManager;
     private DummyPacketHandler packetHandler;
+    private List<Connection> connections = new LinkedList<Connection>();
 
-    private ConcurrentHashMap<Connection, AtomicLong> counters = new ConcurrentHashMap<Connection, AtomicLong>();
+    private ConcurrentHashMap<Connection, AtomicLong> sequenceCounters = new ConcurrentHashMap<Connection, AtomicLong>();
 
     public enum IOThreadingModelEnum {
         NonBlocking,
@@ -147,12 +149,19 @@ public class NetworkTest {
 
                 connectionManager.getOrConnect(targetAddress);
 
-                while (connectionManager.getConnection(targetAddress) == null) {
+                Connection connection;
+                for (; ; ) {
+                    connection = connectionManager.getConnection(targetAddress);
+                    if (connection != null) {
+                        break;
+                    }
+
                     LOGGER.info("Waiting for connection to: " + targetAddress);
                     sleepMillis(100);
                 }
 
-                counters.put(connectionManager.getConnection(targetAddress), new AtomicLong());
+                connections.add(connection);
+                sequenceCounters.put(connection, new AtomicLong());
 
                 LOGGER.info("Successfully created connection to: " + targetAddress);
             }
@@ -176,12 +185,10 @@ public class NetworkTest {
 
         private final int workerId;
         private final RequestFuture responseFuture;
-        private final List<TcpIpConnection> connections;
 
         public Worker() {
             workerId = workerIdGenerator.getAndIncrement();
             responseFuture = packetHandler.futures[workerId];
-            connections = new ArrayList<TcpIpConnection>(connectionManager.getActiveConnections());
         }
 
         private byte[] makePayload(final long sequenceId) {
@@ -220,11 +227,11 @@ public class NetworkTest {
 
         @Override
         protected void timeStep() {
-            TcpIpConnection connection = nextConnection();
-            AtomicLong counter = counters.get(connection);
+            Connection connection = nextConnection();
+            AtomicLong sequenceCounter = sequenceCounters.get(connection);
             synchronized (connection) {
-                long count = counter.incrementAndGet();
-                byte[] payload = makePayload(count);
+                long sequenceId = sequenceCounter.incrementAndGet();
+                byte[] payload = makePayload(sequenceId);
                 Packet packet = new Packet(payload, workerId);
                 boolean success = connection.write(packet);
                 if (!success) {
@@ -241,7 +248,7 @@ public class NetworkTest {
             responseFuture.reset();
         }
 
-        private TcpIpConnection nextConnection() {
+        private Connection nextConnection() {
             int index = randomInt(connections.size());
             return connections.get(index);
         }
@@ -273,12 +280,12 @@ public class NetworkTest {
                 AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
                 if (sequenceCounter == null) {
                     sequenceCounter = new AtomicLong(1);
-                    counters.put(packet.getConn(), sequenceCounter);
+                    sequenceCounters.put(packet.getConn(), sequenceCounter);
                 }
 
                 long foundSequence = bytesToLong(payload, 3);
 
-                System.out.println(packet.getConn().getEndPoint()+" "+foundSequence);
+                System.out.println(packet.getConn().getEndPoint() + " " + foundSequence);
 
                 long expectedSequence = sequenceCounter.get() + 1;
 //                if (expectedSequence != foundSequence) {
