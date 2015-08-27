@@ -296,11 +296,11 @@ public class NetworkTest {
             }
         }
 
-        public long bytesToLong(byte[] b, int offset) {
+        public long bytesToLong(byte[] bytes, int offset) {
             long result = 0;
             for (int i = 0; i < 8; i++) {
                 result <<= 8;
-                result |= (b[i] & 0xFF);
+                result |= (bytes[i + offset] & 0xFF);
             }
             return result;
         }
