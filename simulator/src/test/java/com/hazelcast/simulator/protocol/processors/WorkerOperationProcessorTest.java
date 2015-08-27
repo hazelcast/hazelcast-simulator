@@ -190,17 +190,17 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void processStopTest_testNotFound() {
+    public void process_StopTest_testNotFound() {
         stopTest("notFound", 0);
     }
 
     @Test
-    public void processStartTestPhase_testNotFound() {
+    public void process_StartTestPhase_testNotFound() {
         runPhase("notFound", TestPhase.SETUP);
     }
 
     @Test
-    public void processStartTestPhase_failingTest() {
+    public void process_StartTestPhase_failingTest() {
         String testId = "FailingTest";
         TestCase testCase = mock(TestCase.class);
         when(testCase.getId()).thenReturn(testId);
@@ -213,7 +213,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void processStartTestPhase_oldPhaseStillRunning() {
+    public void process_StartTestPhase_oldPhaseStillRunning() {
         createTestCase(defaultTestCase);
         runPhase(DEFAULT_TEST_ID, TestPhase.SETUP);
 
@@ -226,7 +226,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void processStartTestPhase_removeTestAfterLocalTearDown() {
+    public void process_StartTestPhase_removeTestAfterLocalTearDown() {
         createTestCase(defaultTestCase);
         runPhase(DEFAULT_TEST_ID, TestPhase.LOCAL_TEARDOWN);
 
