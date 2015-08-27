@@ -312,7 +312,7 @@ public class NetworkTest {
                         throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
                                 + "found:" + foundSequence);
                     }
-//                    sequenceCounter.set(expectedSequence);
+                    sequenceCounter.set(expectedSequence);
                 }
                 check(payload, payload.length - 3, 0XC);
                 check(payload, payload.length - 2, 0XB);
