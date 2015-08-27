@@ -302,7 +302,7 @@ public class WorkerOperationProcessorTest {
             Throwable throwable = exceptionCaptor.getValue();
 
             if (throwable != null) {
-                throwable.printStackTrace();
+                LOGGER.error(throwable);
                 fail("Wanted no exception, but was: " + throwable.getClass().getSimpleName() + " in test " + testId);
                 throw ExceptionUtil.rethrow(throwable);
             }

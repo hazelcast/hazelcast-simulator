@@ -2,6 +2,7 @@ package com.hazelcast.simulator.probes.probes;
 
 import com.hazelcast.simulator.probes.probes.impl.HistogramPart;
 import com.hazelcast.simulator.probes.probes.impl.LatencyDistributionResult;
+import org.apache.log4j.Logger;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -9,6 +10,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class LinearHistogramTest {
+
+    private static final Logger LOGGER = Logger.getLogger(LinearHistogramTest.class);
 
     @Test(expected = IllegalArgumentException.class)
     public void constructor_IllegalArgument_maxValue() {
@@ -115,7 +118,7 @@ public class LinearHistogramTest {
     public void printLatencyDistributionResult() {
         LinearHistogram linearHistogram = createNewHistogram(50000);
         LatencyDistributionResult latencyDistributionResult = new LatencyDistributionResult(linearHistogram);
-        System.out.println(latencyDistributionResult.toHumanString());
+        LOGGER.info(latencyDistributionResult.toHumanString());
     }
 
     @Test

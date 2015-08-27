@@ -16,6 +16,8 @@
 
 package com.hazelcast.simulator.tests.webContainer;
 
+import com.hazelcast.logging.ILogger;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +27,7 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.logging.Logger.getLogger;
 
 /*
 * A servlet to run inside a web container.  This servlet accepts http Put and Get requests,  and implements a simple
@@ -34,11 +37,13 @@ import java.util.regex.Pattern;
 * */
 public class KeyValueServlet extends HttpServlet {
 
-    private Pattern getKeyPattern = Pattern.compile("key/.*");
-    private Pattern putKeyPattern = Pattern.compile("key/.*/.*");
+    private static final ILogger LOGGER = getLogger(KeyValueServlet.class);
+
+    private final Pattern getKeyPattern = Pattern.compile("key/.*");
+    private final Pattern putKeyPattern = Pattern.compile("key/.*/.*");
 
     public KeyValueServlet() {
-        System.out.println("deployed " + this.getClass());
+        LOGGER.info("deployed " + KeyValueServlet.class.getName());
     }
 
     @Override

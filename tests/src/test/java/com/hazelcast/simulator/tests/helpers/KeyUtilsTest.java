@@ -8,6 +8,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.GroupProperties;
+import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -31,6 +32,8 @@ import static org.junit.Assert.assertTrue;
 public class KeyUtilsTest {
 
     private static final int PARTITION_COUNT = 10;
+
+    private static final Logger LOGGER = Logger.getLogger(KeyUtilsTest.class);
 
     private static HazelcastInstance instance;
     private static HazelcastInstance client;
@@ -243,7 +246,7 @@ public class KeyUtilsTest {
         String localKey = keys[0];
         assertTrue(isLocalKey(instance, localKey));
 
-        System.out.println(countsPerPartition);
+        LOGGER.info(countsPerPartition);
         for (int count : countsPerPartition.values()) {
             assertEquals(keysPerPartition, count);
         }
@@ -271,7 +274,7 @@ public class KeyUtilsTest {
             countsPerPartition.put(partition.getPartitionId(), count + 1);
         }
 
-        System.out.println(countsPerPartition);
+        LOGGER.info(countsPerPartition);
         for (int count : countsPerPartition.values()) {
             assertEquals(keysPerPartition, count);
         }

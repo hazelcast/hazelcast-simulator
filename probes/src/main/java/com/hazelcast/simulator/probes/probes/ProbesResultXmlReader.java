@@ -21,6 +21,7 @@ import com.hazelcast.simulator.probes.probes.impl.MaxLatencyResult;
 import com.hazelcast.simulator.probes.probes.impl.OperationsPerSecResult;
 import org.HdrHistogram.Histogram;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -52,6 +53,8 @@ import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROB
 
 public final class ProbesResultXmlReader {
 
+    private static final Logger LOGGER = Logger.getLogger(ProbesResultXmlReader.class);
+
     private ProbesResultXmlReader() {
     }
 
@@ -70,7 +73,7 @@ public final class ProbesResultXmlReader {
                 }
             }
         } catch (XMLStreamException e) {
-            e.printStackTrace();
+            LOGGER.error("Error while reading XML probe result stream", e);
         }
         return result;
     }
