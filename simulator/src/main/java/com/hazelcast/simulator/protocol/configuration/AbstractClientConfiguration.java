@@ -6,7 +6,7 @@ import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 
 import java.util.concurrent.ConcurrentMap;
 
-public abstract class AbstractClientConfiguration implements ClientConfiguration {
+abstract class AbstractClientConfiguration implements ClientConfiguration {
 
     final OperationProcessor processor;
     final ConcurrentMap<String, ResponseFuture> futureMap;
@@ -18,7 +18,7 @@ public abstract class AbstractClientConfiguration implements ClientConfiguration
     private final String remoteHost;
     private final int remotePort;
 
-    public AbstractClientConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
+    AbstractClientConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
                                        SimulatorAddress localAddress, int remoteIndex, String remoteHost, int remotePort) {
         this.processor = processor;
         this.futureMap = futureMap;

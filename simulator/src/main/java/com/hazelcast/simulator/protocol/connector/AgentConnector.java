@@ -1,12 +1,9 @@
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.protocol.configuration.AgentClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
-import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,16 +12,11 @@ import java.util.concurrent.ConcurrentMap;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 
 /**
- * Connector which listens for incoming Simulator Coordinator connections and connects to remote Simulator Worker instances.
+ * Connector which listens for incoming Simulator Coordinator connections and manages Simulator Worker instances.
  */
-public class AgentConnector {
+public class AgentConnector extends AbstractServerConnector {
 
-    private final AgentOperationProcessor processor = new AgentOperationProcessor();
-    private final ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
-
-    private final SimulatorAddress localAddress;
     private final AgentServerConfiguration serverConfiguration;
-    private final ServerConnector server;
 
     /**
      * Creates an {@link AgentConnector}.
@@ -33,23 +25,16 @@ public class AgentConnector {
      * @param port         the port for incoming connections
      */
     public AgentConnector(int addressIndex, int port) {
-        this.localAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
-        this.serverConfiguration = new AgentServerConfiguration(processor, futureMap, localAddress, port);
-        this.server = new ServerConnector(serverConfiguration);
+        super(addressIndex, 0, port);
+        this.serverConfiguration = (AgentServerConfiguration) getConfiguration();
     }
 
-    /**
-     * Starts to listen on the incoming port.
-     */
-    public void start() {
-        server.start();
-    }
+    protected AgentServerConfiguration createConfiguration(int addressIndex, int parentAddressIndex, int port) {
+        AgentOperationProcessor processor = new AgentOperationProcessor();
+        ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
+        SimulatorAddress localAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
 
-    /**
-     * Stops to listen on the incoming port.
-     */
-    public void shutdown() {
-        server.shutdown();
+        return new AgentServerConfiguration(processor, futureMap, localAddress, port);
     }
 
     /**
@@ -60,10 +45,7 @@ public class AgentConnector {
      * @param workerPort  the port of the Simulator Worker
      */
     public void addWorker(int workerIndex, String workerHost, int workerPort) {
-        // TODO: spawn Simulator Worker instance
-
-        ClientConfiguration clientConfiguration = new AgentClientConfiguration(processor, futureMap, localAddress,
-                workerIndex, workerHost, workerPort, serverConfiguration.getChannelGroup());
+        ClientConfiguration clientConfiguration = serverConfiguration.getClientConfiguration(workerIndex, workerHost, workerPort);
         ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 
@@ -77,13 +59,5 @@ public class AgentConnector {
      */
     public void removeWorker(int workerIndex) {
         serverConfiguration.removeWorker(workerIndex);
-    }
-
-    public SimulatorAddress getAddress() {
-        return serverConfiguration.getLocalAddress();
-    }
-
-    public Response write(SimulatorMessage message) throws Exception {
-        return server.write(message);
     }
 }

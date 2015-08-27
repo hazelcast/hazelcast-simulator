@@ -56,4 +56,8 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     public void removeWorker(int workerIndex) {
         forwardToWorkerHandler.removeWorker(workerIndex);
     }
+
+    public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort) {
+        return new AgentClientConfiguration(processor, futureMap, localAddress, workerIndex, workerHost, workerPort, getChannelGroup());
+    }
 }

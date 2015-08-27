@@ -1,10 +1,8 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.protocol.configuration.WorkerServerConfiguration;
-import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 
@@ -16,10 +14,9 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 /**
  * Connector which listens for incoming Simulator Agent connections and manages Simulator Test instances.
  */
-public class WorkerConnector {
+public class WorkerConnector extends AbstractServerConnector {
 
-    private final WorkerServerConfiguration configuration;
-    private final ServerConnector server;
+    private final WorkerServerConfiguration workerServerConfiguration;
 
     /**
      * Creates an {@link WorkerConnector}.
@@ -29,26 +26,16 @@ public class WorkerConnector {
      * @param port               the port for incoming connections
      */
     public WorkerConnector(int addressIndex, int parentAddressIndex, int port) {
+        super(addressIndex, parentAddressIndex, port);
+        this.workerServerConfiguration = (WorkerServerConfiguration) getConfiguration();
+    }
+
+    protected WorkerServerConfiguration createConfiguration(int addressIndex, int parentAddressIndex, int port) {
         OperationProcessor processor = new WorkerOperationProcessor(null, null);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         SimulatorAddress localAddress = new SimulatorAddress(WORKER, parentAddressIndex, addressIndex, 0);
 
-        this.configuration = new WorkerServerConfiguration(processor, futureMap, localAddress, port);
-        this.server = new ServerConnector(configuration);
-    }
-
-    /**
-     * Starts to listen on the incoming port.
-     */
-    public void start() {
-        server.start();
-    }
-
-    /**
-     * Stops to listen on the incoming port.
-     */
-    public void shutdown() {
-        server.shutdown();
+        return new WorkerServerConfiguration(processor, futureMap, localAddress, port);
     }
 
     /**
@@ -59,9 +46,7 @@ public class WorkerConnector {
      *                  {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation} for this test
      */
     public void addTest(int testIndex, OperationProcessor processor) {
-        // TODO: create a TestContainer instance
-
-        configuration.addTest(testIndex, processor);
+        workerServerConfiguration.addTest(testIndex, processor);
     }
 
     /**
@@ -70,14 +55,6 @@ public class WorkerConnector {
      * @param testIndex the index of the remote Simulator Test
      */
     public void removeTest(int testIndex) {
-        configuration.removeTest(testIndex);
-    }
-
-    public SimulatorAddress getAddress() {
-        return configuration.getLocalAddress();
-    }
-
-    public Response write(SimulatorMessage message) throws Exception {
-        return server.write(message);
+        workerServerConfiguration.removeTest(testIndex);
     }
 }
