@@ -250,6 +250,7 @@ public class NetworkTest {
     private class DummyPacketHandler implements PacketHandler {
 
         private final RequestFuture[] futures;
+        private long previousSequence = 0;
 
         public DummyPacketHandler(int threadCount) {
             futures = new RequestFuture[threadCount];
@@ -269,6 +270,13 @@ public class NetworkTest {
                 check(payload, 1, 0XB);
                 check(payload, 2, 0XC);
 
+                long sequence = bytesToLong(payload, 3);
+                if (previousSequence + 1 != sequence) {
+                    throw new IllegalArgumentException("Unexpected sequence id, expected:" + (previousSequence + 1)
+                            + "found:" + sequence);
+                }
+                previousSequence = sequence;
+
                 check(payload, payload.length - 3, 0XC);
                 check(payload, payload.length - 2, 0XB);
                 check(payload, payload.length - 1, 0XA);
@@ -286,6 +294,15 @@ public class NetworkTest {
                 response.setHeader(Packet.HEADER_RESPONSE);
                 packet.getConn().write(response);
             }
+        }
+
+        public long bytesToLong(byte[] b, int offset) {
+            long result = 0;
+            for (int i = 0; i < 8; i++) {
+                result <<= 8;
+                result |= (b[i] & 0xFF);
+            }
+            return result;
         }
 
         private void check(byte[] payload, int index, int value) {
