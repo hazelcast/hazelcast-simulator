@@ -250,7 +250,7 @@ public class NetworkTest {
     private class DummyPacketHandler implements PacketHandler {
 
         private final RequestFuture[] futures;
-        private long previousSequence = 0;
+        private final ConcurrentHashMap<Connection,AtomicLong> sequenceMap = new ConcurrentHashMap<Connection, AtomicLong>();
 
         public DummyPacketHandler(int threadCount) {
             futures = new RequestFuture[threadCount];
@@ -270,12 +270,18 @@ public class NetworkTest {
                 check(payload, 1, 0XB);
                 check(payload, 2, 0XC);
 
+                AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
+                if(sequenceCounter==null){
+                    sequenceCounter = new AtomicLong();
+                    counters.put(packet.getConn(), sequenceCounter);
+                }
+
                 long sequence = bytesToLong(payload, 3);
-                if (previousSequence + 1 != sequence) {
-                    throw new IllegalArgumentException("Unexpected sequence id, expected:" + (previousSequence + 1)
+                if (sequenceCounter.get() + 1 != sequence) {
+                    throw new IllegalArgumentException("Unexpected sequence id, expected:" + (sequenceCounter.get() + 1)
                             + "found:" + sequence);
                 }
-                previousSequence = sequence;
+                sequenceCounter.incrementAndGet();
 
                 check(payload, payload.length - 3, 0XC);
                 check(payload, payload.length - 2, 0XB);
