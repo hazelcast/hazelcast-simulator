@@ -188,7 +188,7 @@ public class NetworkTest {
 
         @Override
         public boolean write(Packet packet, ByteBuffer dst) throws Exception {
-            if (!packet.isHeaderSet(Packet.HEADER_BIND) && packet.dataSize() > 100) {
+            if (!packet.isHeaderSet()packet.dataSize() > 100) {
                 byte[] payload = packet.toByteArray();
                 // we also stuff in a sequence id at the beginning
                 long s = sequenceId;
@@ -300,21 +300,19 @@ public class NetworkTest {
                 check(payload, 2, 0XC);
 
                 if (trackSequenceId) {
-                    AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
-                    if (sequenceCounter == null) {
-                        sequenceCounter = new AtomicLong(0);
-                        sequenceMap.put(packet.getConn(), sequenceCounter);
-                    }
-
-                    long foundSequence = bytesToLong(payload, 3);
-                    long expectedSequence = sequenceCounter.get() + 1;
-                    if (expectedSequence != foundSequence) {
-                       LOGGER.severe("Unexpected sequence id, expected:" + expectedSequence
-                                + "found:" + foundSequence);
+//                    AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
+//                    if (sequenceCounter == null) {
+//                        sequenceCounter = new AtomicLong(0);
+//                        sequenceMap.put(packet.getConn(), sequenceCounter);
+//                    }
+//
+//                    long foundSequence = bytesToLong(payload, 3);
+//                    long expectedSequence = sequenceCounter.get() + 1;
+//                    if (expectedSequence != foundSequence) {
 //                        throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
 //                                + "found:" + foundSequence);
-                    }
-                    sequenceCounter.set(expectedSequence);
+//                    }
+//                    sequenceCounter.set(expectedSequence);
                 }
                 check(payload, payload.length - 3, 0XC);
                 check(payload, payload.length - 2, 0XB);
