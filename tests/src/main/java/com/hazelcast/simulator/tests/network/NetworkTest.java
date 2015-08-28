@@ -44,7 +44,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static com.hazelcast.simulator.tests.network.NetworkTest.IOThreadingModelEnum.NonBlocking;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
-import static java.lang.System.arraycopy;
 
 
 public class NetworkTest {
@@ -312,9 +311,27 @@ public class NetworkTest {
         payload[1] = 0xB;
         payload[2] = 0xC;
 
-        payload[payload.length - 3] = 0xC;
-        payload[payload.length - 2] = 0xB;
-        payload[payload.length - 1] = 0xA;
+        int length = payload.length;
+        payload[length - 3] = 0xC;
+        payload[length - 2] = 0xB;
+        payload[length - 1] = 0xA;
+    }
+
+    private void checkHeadTailMarkers(byte[] payload) {
+        check(payload, 0, 0XA);
+        check(payload, 1, 0XB);
+        check(payload, 2, 0XC);
+
+        int length = payload.length;
+        check(payload, length - 3, 0XC);
+        check(payload, length - 2, 0XB);
+        check(payload, length - 1, 0XA);
+    }
+
+    private void check(byte[] payload, int index, int value) {
+        if (payload[index] != value) {
+            throw new IllegalStateException();
+        }
     }
 
     private class DummyPacketHandler implements PacketHandler {
@@ -341,10 +358,10 @@ public class NetworkTest {
             }
 
             // it is a request.
-            byte[] originalPayload = packet.toByteArray();
+            byte[] requestPayload = packet.toByteArray();
             byte[] payload = null;
-            if (originalPayload != null && returnPayload) {
-                payload = new byte[originalPayload.length];
+            if (requestPayload != null && returnPayload) {
+                payload = new byte[requestPayload.length];
               //  arraycopy(originalPayload, 0, payload, 0, originalPayload.length);
                 addHeadTailMarkers(payload);
             }
@@ -357,32 +374,30 @@ public class NetworkTest {
             byte[] data = packet.toByteArray();
             int foundPayloadSize = data == null ? 0 : data.length;
 
-            if (foundPayloadSize > 0) {
-                byte[] payload = packet.toByteArray();
-                check(payload, 0, 0XA);
-                check(payload, 1, 0XB);
-                check(payload, 2, 0XC);
-
-                if (trackSequenceId) {
-                    AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
-                    if (sequenceCounter == null) {
-                        sequenceCounter = new AtomicLong(0);
-                        sequenceMap.put(packet.getConn(), sequenceCounter);
-                    }
-
-                    long foundSequence = bytesToLong(payload, 3);
-                    long expectedSequence = sequenceCounter.get() + 1;
-                    if (expectedSequence != foundSequence) {
-                        throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
-                                + "found:" + foundSequence);
-                    }
-                    sequenceCounter.set(expectedSequence);
-                }
-
-                check(payload, payload.length - 3, 0XC);
-                check(payload, payload.length - 2, 0XB);
-                check(payload, payload.length - 1, 0XA);
+            if (foundPayloadSize <= 0) {
+                return;
             }
+
+            byte[] payload = packet.toByteArray();
+            checkHeadTailMarkers(payload);
+
+            if (!trackSequenceId) {
+                return;
+            }
+
+            AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
+            if (sequenceCounter == null) {
+                sequenceCounter = new AtomicLong(0);
+                sequenceMap.put(packet.getConn(), sequenceCounter);
+            }
+
+            long foundSequence = bytesToLong(payload, 3);
+            long expectedSequence = sequenceCounter.get() + 1;
+            if (expectedSequence != foundSequence) {
+                throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
+                        + "found:" + foundSequence);
+            }
+            sequenceCounter.set(expectedSequence);
         }
 
         private void checkPayloadSize(Packet packet) {
@@ -411,11 +426,6 @@ public class NetworkTest {
             return result;
         }
 
-        private void check(byte[] payload, int index, int value) {
-            if (payload[index] != value) {
-                throw new IllegalStateException();
-            }
-        }
     }
 
     public static class RequestFuture implements Future {
