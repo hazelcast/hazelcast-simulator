@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.nio.Packet.*;
 import static com.hazelcast.simulator.tests.network.NetworkTest.IOThreadingModelEnum.NonBlocking;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.addHeadTailMarkers;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.checkHeadTailMarkers;
@@ -178,7 +179,6 @@ public class NetworkTest {
             throw new RuntimeException("Unexpected connections.size:" + connectionManager.getActiveConnectionCount());
         }
 
-
         // temp check.. will be removed.
         if (connectionManager.getConnectionCount() != 8) {
             throw new RuntimeException("Unexpected connections.size:" + connectionManager.getConnectionCount());
@@ -243,21 +243,21 @@ public class NetworkTest {
             checkPayloadContent(packet);
 
             // if it is a response, we signal the future
-            if (packet.isHeaderSet(Packet.HEADER_RESPONSE)) {
+            if (packet.isHeaderSet(HEADER_RESPONSE)) {
                 futures[packet.getPartitionId()].set();
                 return;
             }
 
-            // it is a request.
+            // it is a request, then we send back a response.
             byte[] requestPayload = packet.toByteArray();
-            byte[] payload = null;
+            byte[] responsePayload = null;
             if (requestPayload != null && returnPayload) {
-                payload = new byte[requestPayload.length];
-                //  arraycopy(originalPayload, 0, payload, 0, originalPayload.length);
-                addHeadTailMarkers(payload);
+                responsePayload = new byte[requestPayload.length];
+                //  arraycopy(originalPayload, 0, responsePayload, 0, originalPayload.length);
+                addHeadTailMarkers(responsePayload);
             }
-            Packet response = new Packet(payload, packet.getPartitionId());
-            response.setHeader(Packet.HEADER_RESPONSE);
+            Packet response = new Packet(responsePayload, packet.getPartitionId());
+            response.setHeader(HEADER_RESPONSE);
             packet.getConn().write(response);
         }
 
@@ -281,7 +281,7 @@ public class NetworkTest {
                 sequenceCounterMap.put(packet.getConn(), sequenceCounter);
             }
 
-            long foundSequence = bytesToLong(payload, 3);
+            long foundSequence = PayloadUtils.readLong(payload, 3);
             long expectedSequence = sequenceCounter.get() + 1;
             if (expectedSequence != foundSequence) {
                 throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
@@ -295,7 +295,7 @@ public class NetworkTest {
             int foundPayloadSize = payload == null ? 0 : payload.length;
             int expectedPayloadSize;
 
-            if (packet.isHeaderSet(Packet.HEADER_RESPONSE) && !returnPayload) {
+            if (packet.isHeaderSet(HEADER_RESPONSE) && !returnPayload) {
                 expectedPayloadSize = 0;
             } else {
                 expectedPayloadSize = payloadSize;
@@ -307,14 +307,6 @@ public class NetworkTest {
             }
         }
 
-        public long bytesToLong(byte[] bytes, int offset) {
-            long result = 0;
-            for (int i = 0; i < 8; i++) {
-                result <<= 8;
-                result |= (bytes[i + offset] & 0xFF);
-            }
-            return result;
-        }
     }
 
     public static void main(String[] args) throws Exception {

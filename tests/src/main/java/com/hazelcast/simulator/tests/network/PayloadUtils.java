@@ -1,8 +1,44 @@
 package com.hazelcast.simulator.tests.network;
 
+import static java.lang.String.format;
+
 public class PayloadUtils {
 
     private PayloadUtils() {
+    }
+
+    public static String toHexString(byte[] bytes) {
+        if (bytes.length == 0) {
+            return "";
+        }
+
+        StringBuffer sb = new StringBuffer();
+
+        byte prev = bytes[0];
+        int count = 1;
+        for (int k = 1; k < bytes.length; k++) {
+            byte current = bytes[k];
+            if (false && prev == current) {
+                count++;
+            } else {
+                if (count == 1) {
+                    sb.append(format("%02X", prev));
+                } else {
+                    sb.append(format("%02X(%d)", prev, count));
+                }
+                count = 1;
+            }
+
+            prev = current;
+        }
+
+        if (count == 1) {
+            sb.append(format("%02X", prev));
+        } else {
+            sb.append(format("%02X(%d)", prev, count));
+        }
+
+        return sb.toString();
     }
 
     public static byte[] makePayload(int payloadSize) {
@@ -43,8 +79,27 @@ public class PayloadUtils {
     }
 
     public static void check(byte[] payload, int index, int value) {
-        if (payload[index] != value) {
-            throw new IllegalStateException();
+        byte found = payload[index];
+        if (found != value) {
+            throw new IllegalStateException(format(
+                    "invalid byte at index:%d, found:%02X, expected:%02X payload=", index, found, value)
+                    + toHexString(payload));
+        }
+    }
+
+    public static long readLong(byte[] bytes, int offset) {
+        long result = 0;
+        for (int i = 0; i < 8; i++) {
+            result <<= 8;
+            result |= (bytes[i + offset] & 0xFF);
+        }
+        return result;
+    }
+
+    public static void writeLong(byte[] bytes, int offset, long value) {
+        for (int i = 7; i >= 0; i--) {
+            bytes[i + offset] = (byte) (value & 0xFF);
+            value >>= 8;
         }
     }
 }
