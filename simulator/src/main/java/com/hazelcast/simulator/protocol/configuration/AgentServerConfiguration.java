@@ -58,6 +58,7 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     }
 
     public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort) {
-        return new AgentClientConfiguration(processor, futureMap, localAddress, workerIndex, workerHost, workerPort, getChannelGroup());
+        return new AgentClientConfiguration(processor, futureMap, localAddress,
+                workerIndex, workerHost, workerPort, getChannelGroup());
     }
 }
