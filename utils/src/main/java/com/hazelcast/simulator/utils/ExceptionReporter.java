@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
+import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 
 /**
@@ -62,29 +63,19 @@ public final class ExceptionReporter {
 
         String targetFileName = exceptionCount + ".exception";
 
-        final File tmpFile = new File(targetFileName + ".tmp");
-
+        File tmpFile = new File(targetFileName + ".tmp");
         try {
             if (!tmpFile.createNewFile()) {
-                // Should not happen since IDs are always incrementing (so this is just for safety reasons)
-                throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath() + " file already exists.");
+                throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath());
             }
         } catch (IOException e) {
             LOGGER.fatal("Could not report exception; this means that this exception is not visible to the coordinator", e);
             return;
         }
 
-        writeCauseToFile(testId, cause, tmpFile);
+        writeText(testId + "\n" + throwableToString(cause), tmpFile);
 
-        final File file = new File(targetFileName);
-
-        if (!tmpFile.renameTo(file)) {
-            LOGGER.fatal("Failed to rename tmp file:" + tmpFile + " to " + file);
-        }
-    }
-
-    private static void writeCauseToFile(String testId, Throwable cause, File file) {
-        String text = testId + "\n" + throwableToString(cause);
-        writeText(text, file);
+        File file = new File(targetFileName);
+        rename(tmpFile, file);
     }
 }

@@ -16,13 +16,15 @@ public enum OperationType {
     //CREATE_WORKER(IntegrationTestOperation.class, 2),
     CREATE_TEST(CreateTestOperation.class, 3),
 
-    IS_PHASE_COMPLETED(IsPhaseCompletedOperation.class, 4),
+    EXCEPTION(ExceptionOperation.class, 4),
 
-    START_TEST_PHASE(StartTestPhaseOperation.class, 5),
+    IS_PHASE_COMPLETED(IsPhaseCompletedOperation.class, 5),
 
-    START_TEST(StartTestOperation.class, 6),
+    START_TEST_PHASE(StartTestPhaseOperation.class, 6),
 
-    STOP_TEST(StopTestOperation.class, 7);
+    START_TEST(StartTestOperation.class, 7),
+
+    STOP_TEST(StopTestOperation.class, 8);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;
@@ -55,11 +57,11 @@ public enum OperationType {
      * @return the {@link OperationType}
      */
     public static OperationType fromInt(int classId) {
-        try {
-            return OperationType.values()[classId];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new IllegalArgumentException("Unknown message type: " + classId, e);
+        OperationType operationType = OperationTypeRegistry.CLASS_IDS.get(classId);
+        if (operationType == null) {
+            throw new IllegalArgumentException(format("ClassId %d has not been registered!", classId));
         }
+        return operationType;
     }
 
     /**
@@ -83,7 +85,7 @@ public enum OperationType {
     /**
      * Stores and validates the registered {@link OperationType} entries.
      *
-     * This class prevents double registrations of class types or classIds, which would produce late failures during runtime.
+     * This class prevents double registration of class types or classIds, which would produce late failures during runtime.
      */
     static class OperationTypeRegistry {
 

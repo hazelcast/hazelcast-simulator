@@ -4,6 +4,8 @@ import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.exception.ExceptionType;
+import com.hazelcast.simulator.protocol.exception.RemoteExceptionLogger;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,27 +16,33 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 /**
  * Connector which listens for incoming Simulator Coordinator connections and manages Simulator Worker instances.
  */
-public class AgentConnector extends AbstractServerConnector {
+public final class AgentConnector extends AbstractServerConnector {
 
     private final AgentServerConfiguration serverConfiguration;
 
+    private AgentConnector(AgentServerConfiguration configuration) {
+        super(configuration);
+        this.serverConfiguration = configuration;
+    }
+
     /**
-     * Creates an {@link AgentConnector}.
+     * Creates an {@link AgentConnector} instance.
      *
      * @param addressIndex the index of this Simulator Agent
      * @param port         the port for incoming connections
      */
-    public AgentConnector(int addressIndex, int port) {
-        super(addressIndex, 0, port);
-        this.serverConfiguration = (AgentServerConfiguration) getConfiguration();
-    }
-
-    protected AgentServerConfiguration createConfiguration(int addressIndex, int parentAddressIndex, int port) {
-        AgentOperationProcessor processor = new AgentOperationProcessor();
-        ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
+    public static AgentConnector createInstance(int addressIndex, int port) {
         SimulatorAddress localAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
 
-        return new AgentServerConfiguration(processor, futureMap, localAddress, port);
+        RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, ExceptionType.AGENT_EXCEPTION);
+        AgentOperationProcessor processor = new AgentOperationProcessor(exceptionLogger);
+        ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
+
+        AgentServerConfiguration configuration = new AgentServerConfiguration(processor, futureMap, localAddress, port);
+        AgentConnector connector = new AgentConnector(configuration);
+
+        exceptionLogger.setServerConnector(connector);
+        return connector;
     }
 
     /**

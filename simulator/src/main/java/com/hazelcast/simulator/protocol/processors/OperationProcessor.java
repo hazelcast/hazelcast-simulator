@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.utils.ExceptionReporter;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
@@ -18,6 +18,12 @@ public abstract class OperationProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(OperationProcessor.class);
 
+    private final ExceptionLogger exceptionLogger;
+
+    OperationProcessor(ExceptionLogger exceptionLogger) {
+        this.exceptionLogger = exceptionLogger;
+    }
+
     public final ResponseType process(SimulatorOperation operation) {
         OperationType operationType = getOperationType(operation);
         LOGGER.info(getClass().getSimpleName() + ".process(" + operation.getClass().getSimpleName() + ")");
@@ -25,15 +31,14 @@ public abstract class OperationProcessor {
             switch (operationType) {
                 case INTEGRATION_TEST:
                     if (!IntegrationTestOperation.TEST_DATA.equals(((IntegrationTestOperation) operation).getTestData())) {
-                        throw new IllegalStateException();
+                        throw new IllegalStateException("operationData has not the expected value");
                     }
                     return SUCCESS;
                 default:
                     return processOperation(operationType, operation);
             }
         } catch (Exception e) {
-            LOGGER.error("Error during processing an operation", e);
-            ExceptionReporter.report(null, e);
+            exceptionLogger.log(e);
             return EXCEPTION_DURING_OPERATION_EXECUTION;
         }
     }

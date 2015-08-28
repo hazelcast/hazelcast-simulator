@@ -5,8 +5,8 @@ import com.hazelcast.simulator.protocol.configuration.CoordinatorClientConfigura
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
-import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,8 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
  */
 public class CoordinatorConnector {
 
-    private final OperationProcessor processor = new CoordinatorOperationProcessor();
+    private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
+    private final CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(exceptionLogger);
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
 
     /**
@@ -41,8 +42,6 @@ public class CoordinatorConnector {
      * @param agentPort  the port of the Simulator Agent
      */
     public void addAgent(int agentIndex, String agentHost, int agentPort) {
-        // TODO: spawn Simulator Agent instance
-
         ClientConfiguration clientConfiguration = new CoordinatorClientConfiguration(processor, agentIndex, agentHost, agentPort);
         ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
@@ -89,5 +88,14 @@ public class CoordinatorConnector {
             }
         }
         return response;
+    }
+
+    /**
+     * Returns the number of collected exceptions.
+     *
+     * @return the number of exceptions.
+     */
+    public int getExceptionCount() {
+        return exceptionLogger.getExceptionCount();
     }
 }

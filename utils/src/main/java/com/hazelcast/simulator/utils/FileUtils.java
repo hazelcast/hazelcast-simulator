@@ -105,10 +105,7 @@ public final class FileUtils {
             closeQuietly(stream);
         }
 
-        if (!tmpFile.renameTo(file)) {
-            throw new FileUtilsException(format("Could not rename [%s] to [%s]",
-                    tmpFile.getAbsolutePath(), file.getAbsolutePath()));
-        }
+        rename(tmpFile, file);
     }
 
     @SuppressWarnings("unchecked")
@@ -300,6 +297,13 @@ public final class FileUtils {
 
         if (!dir.mkdirs()) {
             throw new FileUtilsException("Could not create directory: " + dir.getAbsolutePath());
+        }
+    }
+
+    public static void rename(File source, File target) {
+        if (!source.renameTo(target)) {
+            throw new FileUtilsException(format("Could not rename [%s] to [%s]",
+                    source.getAbsolutePath(), target.getAbsolutePath()));
         }
     }
 

@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.IsPhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
@@ -13,7 +14,6 @@ import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
-import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.TestContainer;
 import com.hazelcast.simulator.worker.TestContextImpl;
 import org.apache.log4j.Logger;
@@ -48,10 +48,16 @@ public class WorkerOperationProcessor extends OperationProcessor {
 
     private final ConcurrentMap<String, TestPhase> testPhases = new ConcurrentHashMap<String, TestPhase>();
 
+    private final ExceptionLogger exceptionLogger;
+
     private final HazelcastInstance serverInstance;
     private final HazelcastInstance clientInstance;
 
-    public WorkerOperationProcessor(HazelcastInstance serverInstance, HazelcastInstance clientInstance) {
+    public WorkerOperationProcessor(ExceptionLogger exceptionLogger,
+                                    HazelcastInstance serverInstance, HazelcastInstance clientInstance) {
+        super(exceptionLogger);
+        this.exceptionLogger = exceptionLogger;
+
         this.serverInstance = serverInstance;
         this.clientInstance = clientInstance;
     }
@@ -229,7 +235,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
                 doRun();
             } catch (Throwable t) {
                 LOGGER.error("Error while executing test phase", t);
-                ExceptionReporter.report(testId, t);
+                exceptionLogger.log(t, testId);
             } finally {
                 testPhases.remove(testId);
             }

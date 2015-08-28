@@ -38,7 +38,7 @@ public class ProtocolSmokeTest {
 
     private static final int MAX_ADDRESS_INDEX = 5;
 
-    private static final int DEFAULT_TEST_TIMEOUT = NUMBER_OF_MESSAGES * 5;
+    private static final int DEFAULT_TEST_TIMEOUT_MILLIS = NUMBER_OF_MESSAGES * 5;
 
     private static final Logger LOGGER = Logger.getLogger(ProtocolSmokeTest.class);
 
@@ -57,7 +57,7 @@ public class ProtocolSmokeTest {
         resetMessageId();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void smokeTest() throws Exception {
         for (int i = 0; i < NUMBER_OF_MESSAGES; i++) {
             SimulatorMessage message = buildRandomMessage(MAX_ADDRESS_INDEX);

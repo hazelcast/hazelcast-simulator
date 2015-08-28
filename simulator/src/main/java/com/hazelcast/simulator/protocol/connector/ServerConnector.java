@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.connector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
 /**
  * Connector which listens for incoming Simulator component connections.
@@ -27,7 +28,18 @@ public interface ServerConnector {
     SimulatorAddress getAddress();
 
     /**
+     * Submits a {@link SimulatorOperation} to a {@link SimulatorAddress}.
+     *
+     * The {@link SimulatorOperation} is put on a queue. The {@link Response} is not returned.
+     *
+     * @param operation the {@link SimulatorOperation} to send.
+     */
+    void submit(SimulatorOperation operation, SimulatorAddress destination);
+
+    /**
      * Writes a {@link SimulatorMessage} to the {@link ClientConnector} of connected Simulator components.
+     *
+     * Blocks until the {@link Response} is received.
      *
      * @param message the {@link SimulatorMessage} to send.
      * @return a {@link Response} with the result of the call

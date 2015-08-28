@@ -3,8 +3,12 @@ package com.hazelcast.simulator.protocol.connector;
 import com.hazelcast.simulator.protocol.configuration.ServerConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
+import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.operation.OperationType;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.util.EmptyStatement;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -16,11 +20,18 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
 import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
+import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
+import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 
 /**
@@ -32,22 +43,24 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private final EventLoopGroup group = new NioEventLoopGroup();
 
+    private final AtomicLong messageIds = new AtomicLong();
+    private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
+    private final MessageQueueThread messageQueueThread = new MessageQueueThread();
+
     private final ServerConfiguration configuration;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
+    private final SimulatorAddress localAddress;
 
-    AbstractServerConnector(int addressIndex, int parentAddressIndex, int port) {
-        this.configuration = createConfiguration(addressIndex, parentAddressIndex, port);
+    AbstractServerConnector(ServerConfiguration configuration) {
+        this.configuration = configuration;
         this.futureMap = configuration.getFutureMap();
-    }
-
-    protected abstract ServerConfiguration createConfiguration(int addressIndex, int parentAddressIndex, int port);
-
-    ServerConfiguration getConfiguration() {
-        return configuration;
+        this.localAddress = configuration.getLocalAddress();
     }
 
     @Override
     public void start() {
+        messageQueueThread.start();
+
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(group)
                 .channel(NioServerSocketChannel.class)
@@ -67,12 +80,21 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public void shutdown() {
+        messageQueueThread.shutdown();
+
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
     }
 
     @Override
     public SimulatorAddress getAddress() {
         return configuration.getLocalAddress();
+    }
+
+    @Override
+    public void submit(SimulatorOperation operation, SimulatorAddress destination) {
+        long messageId = messageIds.incrementAndGet();
+        OperationType operationType = getOperationType(operation);
+        messageQueue.add(new SimulatorMessage(destination, localAddress, messageId, operationType, encodeOperation(operation)));
     }
 
     @Override
@@ -96,5 +118,49 @@ abstract class AbstractServerConnector implements ServerConnector {
         configuration.getChannelGroup().writeAndFlush(msg);
 
         return future;
+    }
+
+    private final class MessageQueueThread extends Thread {
+
+        private static final int WAIT_FOR_EMPTY_QUEUE_MILLIS = 100;
+
+        private volatile boolean running = true;
+
+        private MessageQueueThread() {
+            super("ServerConnectorMessageQueueThread");
+        }
+
+        @Override
+        public void run() {
+            while (running) {
+                try {
+                    SimulatorMessage message = messageQueue.take();
+                    Response response = write(message);
+                    for (Map.Entry<SimulatorAddress, ResponseType> entry : response.entrySet()) {
+                        if (!entry.getValue().equals(ResponseType.SUCCESS)) {
+                            LOGGER.error("Got " + entry.getValue() + " on " + entry.getKey() + " for " + message);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    EmptyStatement.ignore(e);
+                } catch (Throwable e) {
+                    LOGGER.error("Error while sending message from messageQueue", e);
+                }
+            }
+        }
+
+        public void shutdown() {
+            try {
+                while (messageQueue.size() > 0) {
+                    sleepMillis(WAIT_FOR_EMPTY_QUEUE_MILLIS);
+                }
+                running = false;
+
+                messageQueueThread.interrupt();
+                messageQueueThread.join();
+            } catch (InterruptedException e) {
+                EmptyStatement.ignore(e);
+            }
+        }
     }
 }

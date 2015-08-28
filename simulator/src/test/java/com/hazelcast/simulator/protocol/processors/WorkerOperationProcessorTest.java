@@ -13,22 +13,13 @@ import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
-import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.util.ExceptionUtil;
 import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.exceptions.verification.WantedButNotInvoked;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
@@ -37,23 +28,11 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
-import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.doNothing;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.verifyNoMoreInteractions;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(ExceptionReporter.class)
 public class WorkerOperationProcessorTest {
 
     private static final Logger LOGGER = Logger.getLogger(WorkerOperationProcessorTest.class);
@@ -61,22 +40,19 @@ public class WorkerOperationProcessorTest {
     private static final Class DEFAULT_TEST = SuccessTest.class;
     private static final String DEFAULT_TEST_ID = DEFAULT_TEST.getSimpleName();
 
-    private final ArgumentCaptor<String> testIdCaptor = ArgumentCaptor.forClass(String.class);
-    private final ArgumentCaptor<Throwable> exceptionCaptor = ArgumentCaptor.forClass(Throwable.class);
-
-    private final Map<String, String> properties = new HashMap<String, String>();
     private final TestCase defaultTestCase = mock(TestCase.class);
+
+    private final TestExceptionLogger exceptionLogger = new TestExceptionLogger();
 
     private final HazelcastInstance serverInstance = mock(HazelcastInstance.class);
     private final HazelcastInstance clientInstance = mock(HazelcastInstance.class);
 
+    private Map<String, String> properties;
     private WorkerOperationProcessor processor;
 
     @Before
     public void setUp() throws Exception {
-        mockStatic(ExceptionReporter.class);
-        doNothing().when(ExceptionReporter.class, "report", anyString(), any(Throwable.class));
-
+        properties = new HashMap<String, String>();
         setTestCaseClass(DEFAULT_TEST.getName());
 
         when(defaultTestCase.getId()).thenReturn(DEFAULT_TEST_ID);
@@ -85,7 +61,7 @@ public class WorkerOperationProcessorTest {
         when(serverInstance.getUserContext()).thenReturn(new ConcurrentHashMap<String, Object>());
         when(clientInstance.getUserContext()).thenReturn(new ConcurrentHashMap<String, Object>());
 
-        processor = new WorkerOperationProcessor(serverInstance, clientInstance);
+        processor = new WorkerOperationProcessor(exceptionLogger, serverInstance, clientInstance);
     }
 
     @Test
@@ -94,7 +70,7 @@ public class WorkerOperationProcessorTest {
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
-        assertNoException();
+        exceptionLogger.assertNoException();
     }
 
     @Test
@@ -102,7 +78,7 @@ public class WorkerOperationProcessorTest {
         ResponseType responseType = createTestCase(defaultTestCase);
 
         assertEquals(SUCCESS, responseType);
-        assertNoException();
+        exceptionLogger.assertNoException();
     }
 
     @Test
@@ -112,27 +88,24 @@ public class WorkerOperationProcessorTest {
 
         responseType = createTestCase(defaultTestCase);
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-        assertException(IllegalStateException.class);
+        exceptionLogger.assertException(IllegalStateException.class);
     }
 
     @Test
     public void process_CreateTest_invalidTestId() {
-        TestCase testCase = mock(TestCase.class);
-        when(testCase.getId()).thenReturn("%&/?!");
-        when(testCase.getProperties()).thenReturn(properties);
+        ResponseType responseType = createTestCase(SuccessTest.class, "%&/?!");
 
-        ResponseType responseType = createTestCase(testCase);
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-        assertException(IllegalArgumentException.class);
+        exceptionLogger.assertException(IllegalArgumentException.class);
     }
 
     @Test
     public void process_CreateTest_invalidClassPath() {
         setTestCaseClass("not.found.SuccessTest");
-
         ResponseType responseType = createTestCase(defaultTestCase);
+
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-        assertException(ClassNotFoundException.class);
+        exceptionLogger.assertException(ClassNotFoundException.class);
     }
 
     @Test
@@ -142,21 +115,19 @@ public class WorkerOperationProcessorTest {
         stopTest(DEFAULT_TEST_ID, 500);
         runTest(DEFAULT_TEST_ID);
 
-        assertNoException();
+        exceptionLogger.assertNoException();
     }
 
     @Test
     public void process_StartTest_failingTest() {
-        String testId = "FailingTest";
-        TestCase testCase = mock(TestCase.class);
-        when(testCase.getId()).thenReturn(testId);
-        when(testCase.getClassname()).thenReturn(FailingTest.class.getName());
+        Class testClass = FailingTest.class;
+        String testId = testClass.getSimpleName();
 
-        createTestCase(testCase);
+        createTestCase(testClass, testId);
         runPhase(testId, TestPhase.SETUP);
         runTest(testId);
 
-        assertException(RuntimeException.class);
+        exceptionLogger.assertException(RuntimeException.class);
     }
 
     @Test
@@ -165,19 +136,19 @@ public class WorkerOperationProcessorTest {
         runTest(DEFAULT_TEST_ID);
 
         // no setup was executed, so TestContext is null
-        assertException(NullPointerException.class);
+        exceptionLogger.assertException(NullPointerException.class);
     }
 
     @Test
     public void process_StartTest_testNotFound() {
         runTest("notFound");
 
-        assertNoException();
+        exceptionLogger.assertNoException();
     }
 
     @Test
     public void process_StartTest_passiveMember() {
-        processor = new WorkerOperationProcessor(serverInstance, null);
+        processor = new WorkerOperationProcessor(exceptionLogger, serverInstance, null);
 
         createTestCase(defaultTestCase);
         StartTestOperation operation = new StartTestOperation(DEFAULT_TEST_ID, true);
@@ -186,7 +157,7 @@ public class WorkerOperationProcessorTest {
 
         waitForPhaseCompletion(DEFAULT_TEST_ID, TestPhase.RUN);
 
-        assertNoException();
+        exceptionLogger.assertNoException();
     }
 
     @Test
@@ -202,14 +173,10 @@ public class WorkerOperationProcessorTest {
     @Test
     public void process_StartTestPhase_failingTest() {
         String testId = "FailingTest";
-        TestCase testCase = mock(TestCase.class);
-        when(testCase.getId()).thenReturn(testId);
-        when(testCase.getClassname()).thenReturn(FailingTest.class.getName());
-
-        createTestCase(testCase);
+        createTestCase(FailingTest.class, testId);
         runPhase(testId, TestPhase.GLOBAL_VERIFY);
 
-        assertException(RuntimeException.class);
+        exceptionLogger.assertException(RuntimeException.class);
     }
 
     @Test
@@ -222,7 +189,7 @@ public class WorkerOperationProcessorTest {
 
         runPhase(DEFAULT_TEST_ID, TestPhase.LOCAL_VERIFY, EXCEPTION_DURING_OPERATION_EXECUTION);
 
-        assertException(IllegalStateException.class, IllegalStateException.class);
+        exceptionLogger.assertException(IllegalStateException.class, IllegalStateException.class);
     }
 
     @Test
@@ -233,11 +200,20 @@ public class WorkerOperationProcessorTest {
         // we should be able to init the test again, after it has been removed
         createTestCase(defaultTestCase);
 
-        assertNoException();
+        exceptionLogger.assertNoException();
     }
 
     private void setTestCaseClass(String className) {
         properties.put("class", className);
+    }
+
+    private ResponseType createTestCase(Class testClass, String testId) {
+        setTestCaseClass(testClass.getName());
+        TestCase testCase = mock(TestCase.class);
+        when(testCase.getId()).thenReturn(testId);
+        when(testCase.getProperties()).thenReturn(properties);
+
+        return createTestCase(testCase);
     }
 
     private ResponseType createTestCase(TestCase testCase) {
@@ -290,52 +266,5 @@ public class WorkerOperationProcessorTest {
             }
         };
         stopThread.start();
-    }
-
-    private void assertNoException() {
-        verifyStatic();
-        try {
-            verifyNoMoreInteractions(ExceptionReporter.class);
-        } catch (Throwable t) {
-            ExceptionReporter.report(testIdCaptor.capture(), exceptionCaptor.capture());
-            String testId = testIdCaptor.getValue();
-            Throwable throwable = exceptionCaptor.getValue();
-
-            if (throwable != null) {
-                LOGGER.error(throwable);
-                fail("Wanted no exception, but was: " + throwable.getClass().getSimpleName() + " in test " + testId);
-                throw ExceptionUtil.rethrow(throwable);
-            }
-            throw ExceptionUtil.rethrow(t);
-        }
-    }
-
-    private void assertException(Class<?>... exceptionTypes) {
-        boolean invoked;
-        long timeoutNanoTime = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
-        do {
-            try {
-                verifyStatic(times(exceptionTypes.length));
-                ExceptionReporter.report(testIdCaptor.capture(), exceptionCaptor.capture());
-                invoked = true;
-            } catch (WantedButNotInvoked e) {
-                invoked = false;
-            }
-        } while (!invoked && System.nanoTime() < timeoutNanoTime);
-        List<String> testIdList = testIdCaptor.getAllValues();
-        List<Throwable> throwableList = exceptionCaptor.getAllValues();
-
-        assertEquals(format("Expected %d exceptions, but found %d", exceptionTypes.length, testIdList.size()),
-                exceptionTypes.length, testIdList.size());
-
-        for (Class<?> exceptionType : exceptionTypes) {
-            String testId = testIdList.remove(0);
-            Throwable throwable = throwableList.remove(0);
-            assertNotNull(throwable);
-            String throwableClassName = throwable.getClass().getSimpleName();
-            assertTrue(format("Expected %s, but was %s for test %s: %s", exceptionType.getSimpleName(), throwableClassName,
-                            testId, throwable.getMessage()),
-                    exceptionType.isInstance(throwable));
-        }
     }
 }

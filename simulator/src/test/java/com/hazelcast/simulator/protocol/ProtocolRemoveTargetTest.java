@@ -8,6 +8,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_TEST_TIMEOUT_MILLIS;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertSingleTarget;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.buildMessage;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getAgentConnector;
@@ -29,8 +30,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 
 public class ProtocolRemoveTargetTest {
 
-    private static final int DEFAULT_TEST_TIMEOUT = 5000;
-
     @BeforeClass
     public static void setUp() {
         setLogLevel(Level.TRACE);
@@ -46,7 +45,7 @@ public class ProtocolRemoveTargetTest {
         resetMessageId();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test() throws Exception {
         SimulatorAddress testDestination = new SimulatorAddress(TEST, 1, 1, 1);
 

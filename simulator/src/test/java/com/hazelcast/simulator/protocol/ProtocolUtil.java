@@ -8,6 +8,7 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -27,8 +28,14 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
 import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 public class ProtocolUtil {
+
+    public static final long DEFAULT_TEST_TIMEOUT_MILLIS = 5000;
+
+    private static final int AGENT_START_PORT = 10000;
+    private static final int WORKER_START_PORT = 10100;
 
     private static final Logger LOGGER = Logger.getLogger(ProtocolUtil.class);
     private static final Logger ROOT_LOGGER = Logger.getRootLogger();
@@ -44,8 +51,7 @@ public class ProtocolUtil {
     private static final Random RANDOM = new Random();
     private static final AtomicLong MESSAGE_ID = new AtomicLong();
 
-    private static final int AGENT_START_PORT = 10000;
-    private static final int WORKER_START_PORT = 10100;
+    private static final ExceptionLogger EXCEPTION_LOGGER = mock(ExceptionLogger.class);
 
     private static CoordinatorConnector coordinatorConnector;
     private static List<AgentConnector> agentConnectors = new ArrayList<AgentConnector>();
@@ -101,9 +107,9 @@ public class ProtocolUtil {
     }
 
     static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
-        WorkerConnector workerConnector = new WorkerConnector(addressIndex, parentAddressIndex, port);
+        WorkerConnector workerConnector = WorkerConnector.createInstance(addressIndex, parentAddressIndex, port, true);
 
-        OperationProcessor processor = new TestOperationProcessor();
+        OperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER);
         for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
             workerConnector.addTest(testIndex, processor);
         }
@@ -113,7 +119,7 @@ public class ProtocolUtil {
     }
 
     static AgentConnector startAgent(int addressIndex, int port, String workerHost, int workerStartPort, int numberOfWorkers) {
-        AgentConnector agentConnector = new AgentConnector(addressIndex, port);
+        AgentConnector agentConnector = AgentConnector.createInstance(addressIndex, port);
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
             agentConnector.addWorker(workerIndex, workerHost, workerStartPort + workerIndex);
         }
