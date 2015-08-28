@@ -33,14 +33,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.nio.Packet.*;
+import static com.hazelcast.nio.Packet.HEADER_RESPONSE;
 import static com.hazelcast.simulator.tests.network.NetworkTest.IOThreadingModelEnum.NonBlocking;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.addHeadTailMarkers;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.checkHeadTailMarkers;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.makePayload;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
-
+@SuppressWarnings("checkstyle:npathcomplexity")
 public class NetworkTest {
 
     private static final int PORT_OFFSET = 1000;
@@ -228,7 +228,8 @@ public class NetworkTest {
     private class DummyPacketHandler implements PacketHandler {
 
         private final RequestFuture[] futures;
-        private final ConcurrentHashMap<Connection, AtomicLong> sequenceCounterMap = new ConcurrentHashMap<Connection, AtomicLong>();
+        private final ConcurrentHashMap<Connection, AtomicLong> sequenceCounterMap
+                = new ConcurrentHashMap<Connection, AtomicLong>();
 
         public DummyPacketHandler(int threadCount) {
             futures = new RequestFuture[threadCount];

@@ -2,7 +2,7 @@ package com.hazelcast.simulator.tests.network;
 
 import static java.lang.String.format;
 
-public class PayloadUtils {
+public final class PayloadUtils {
 
     public static final boolean COMPRESS_HEX_OUTPUT = true;
 
@@ -14,7 +14,7 @@ public class PayloadUtils {
             return "";
         }
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         byte prev = bytes[0];
         int count = 1;

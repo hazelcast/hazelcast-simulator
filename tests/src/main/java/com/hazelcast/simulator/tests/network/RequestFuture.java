@@ -12,7 +12,7 @@ public class RequestFuture implements Future {
 
     private final Lock lock = new ReentrantLock(false);
     private final Condition condition = lock.newCondition();
-    private volatile Object result = null;
+    private volatile Object result;
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
