@@ -10,6 +10,8 @@ public final class PayloadUtils {
     public static final boolean COMPRESS_HEX_OUTPUT = true;
     private static final ILogger LOGGER = Logger.getLogger(PayloadUtils.class);
 
+    private static final ILogger LOGGER = Logger.getLogger(PayloadUtils.class);
+
     private PayloadUtils() {
     }
 
