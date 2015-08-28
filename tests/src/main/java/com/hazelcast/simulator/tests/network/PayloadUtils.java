@@ -1,8 +1,13 @@
 package com.hazelcast.simulator.tests.network;
 
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
+
 import static java.lang.String.format;
 
 public final class PayloadUtils {
+
+    private static final ILogger LOGGER = Logger.getLogger(PayloadUtils.class);
 
     public static final boolean COMPRESS_HEX_OUTPUT = true;
 
@@ -113,7 +118,7 @@ public final class PayloadUtils {
         addHeadTailMarkers(bytes);
         writeLong(bytes, 3, sequenceId);
         writeLong(bytes, bytes.length - (8 + 3), sequenceId);
-        System.out.println(toHexString(bytes));
+        LOGGER.info(toHexString(bytes));
 
         checkHeadTailMarkers(bytes);
 
