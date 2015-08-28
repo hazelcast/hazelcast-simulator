@@ -7,9 +7,8 @@ import static java.lang.String.format;
 
 public final class PayloadUtils {
 
-    private static final ILogger LOGGER = Logger.getLogger(PayloadUtils.class);
-
     public static final boolean COMPRESS_HEX_OUTPUT = true;
+    private static final ILogger LOGGER = Logger.getLogger(PayloadUtils.class);
 
     private PayloadUtils() {
     }
