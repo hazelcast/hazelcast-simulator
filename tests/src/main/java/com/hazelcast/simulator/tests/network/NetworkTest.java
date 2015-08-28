@@ -207,11 +207,14 @@ public class NetworkTest {
      */
     class TaggingPacketWriter implements PacketWriter {
 
+        private Packet currentPacket;
         private long sequenceId = 1;
 
         @Override
         public boolean write(Packet packet, ByteBuffer dst) throws Exception {
-            if (!packet.isHeaderSet(Packet.HEADER_BIND) && packet.dataSize() > 100) {
+            if (currentPacket == null && !packet.isHeaderSet(Packet.HEADER_BIND) && packet.dataSize() > 100) {
+                currentPacket = packet;
+
                 byte[] payload = packet.toByteArray();
                 // we also stuff in a sequence id at the beginning
                 long s = sequenceId;
@@ -229,7 +232,11 @@ public class NetworkTest {
                 sequenceId++;
             }
 
-            return packet.writeTo(dst);
+            boolean completed = packet.writeTo(dst);
+            if (completed) {
+                currentPacket = null;
+            }
+            return true;
         }
     }
 
