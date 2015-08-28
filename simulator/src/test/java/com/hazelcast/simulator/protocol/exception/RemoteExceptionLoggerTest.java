@@ -41,17 +41,17 @@ public class RemoteExceptionLoggerTest {
 
     @Test
     public void testLog_exceptionCountExceeded() {
-        final int expectedLogInvocations = MAX_EXCEPTION_COUNT * 2;
+        final int expectedLogInvocationCount = MAX_EXCEPTION_COUNT * 2;
         Exception exception = new IllegalArgumentException("test");
 
-        for (int i = 0; i < expectedLogInvocations; i++) {
+        for (int i = 0; i < expectedLogInvocationCount; i++) {
             exceptionLogger.log(exception);
         }
 
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                assertEquals(expectedLogInvocations, exceptionLogger.getLogInvocations());
+                assertEquals(expectedLogInvocationCount, exceptionLogger.getLogInvocationCount());
             }
         }, ASSERT_EVENTUALLY_TIMEOUT_SECONDS);
 

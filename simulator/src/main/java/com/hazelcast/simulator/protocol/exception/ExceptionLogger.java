@@ -15,9 +15,9 @@ public interface ExceptionLogger {
      *
      * This value can be higher than {@value #MAX_EXCEPTION_COUNT}.
      *
-     * @return the number of logged exceptions.
+     * @return the log invocation count.
      */
-    long getLogInvocations();
+    long getLogInvocationCount();
 
     /**
      * Logs an exception.

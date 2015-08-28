@@ -17,7 +17,7 @@ public class TestExceptionLogger implements ExceptionLogger {
     private final List<ExceptionEntry> exceptionEntries = new ArrayList<ExceptionEntry>();
 
     @Override
-    public long getLogInvocations() {
+    public long getLogInvocationCount() {
         return exceptionEntries.size();
     }
 

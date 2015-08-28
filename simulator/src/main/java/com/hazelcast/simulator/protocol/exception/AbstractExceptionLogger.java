@@ -23,7 +23,7 @@ abstract class AbstractExceptionLogger implements ExceptionLogger {
     }
 
     @Override
-    public long getLogInvocations() {
+    public long getLogInvocationCount() {
         return exceptionCount.get();
     }
 
