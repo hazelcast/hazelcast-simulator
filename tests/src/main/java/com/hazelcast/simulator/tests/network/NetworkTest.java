@@ -173,6 +173,11 @@ public class NetworkTest {
         } finally {
             networkCreateLock.unlock();
         }
+
+        // temp check.. will be removed.
+        if (connections.size() != 9) {
+            throw new RuntimeException("Unexpected connections.size:" + connections.size() + " connection:" + connections);
+        }
     }
 
     class TaggingPacketWriterFactory implements PacketWriterFactory {
@@ -183,6 +188,12 @@ public class NetworkTest {
         }
     }
 
+    /**
+     * a PacketWriter that at the beginning and end of the payload inserts a sequence-id.
+     *
+     * This sequence-id is unique per connection and is totally ordered. So the receiver of these packets should
+     * get an incremental stream of sequence-id's.
+     */
     class TaggingPacketWriter implements PacketWriter {
 
         private long sequenceId = 1;
@@ -230,35 +241,13 @@ public class NetworkTest {
             responseFuture = packetHandler.futures[workerId];
         }
 
-        private byte[] makePayload() {
-            byte[] payload = null;
-            if (payloadSize > 0) {
-                payload = new byte[payloadSize];
-                //getRandom().nextBytes(payload);
-
-                // put a well known head and tail on the payload; for debugging.
-                if (payload.length >= 6 + 8) {
-                    payload[0] = 0xA;
-                    payload[1] = 0xB;
-                    payload[2] = 0xC;
-
-                    payload[payload.length - 3] = 0xC;
-                    payload[payload.length - 2] = 0xB;
-                    payload[payload.length - 1] = 0xA;
-                }
-            }
-            return payload;
-        }
-
         @Override
         protected void timeStep() {
             Connection connection = nextConnection();
-            boolean success;
             byte[] payload = makePayload();
             Packet packet = new Packet(payload, workerId);
-            success = connection.write(packet);
 
-            if (!success) {
+            if (!connection.write(packet)) {
                 throw new RuntimeException("Failed to write packet to connection:" + connection);
             }
 
@@ -269,6 +258,27 @@ public class NetworkTest {
                         + connection + " within timeout:" + requestTimeout + " " + requestTimeUnit);
             }
             responseFuture.reset();
+        }
+
+        private byte[] makePayload() {
+            if (payloadSize <= 0) {
+                return null;
+            }
+
+            byte[] payload = new byte[payloadSize];
+
+            // put a well known head and tail on the payload; for debugging.
+            if (payload.length >= 6 + 8) {
+                payload[0] = 0xA;
+                payload[1] = 0xB;
+                payload[2] = 0xC;
+
+                payload[payload.length - 3] = 0xC;
+                payload[payload.length - 2] = 0xB;
+                payload[payload.length - 1] = 0xA;
+            }
+
+            return payload;
         }
 
         private Connection nextConnection() {
@@ -291,6 +301,25 @@ public class NetworkTest {
 
         @Override
         public void handle(Packet packet) throws Exception {
+            checkPayloadSize(packet);
+            checkPayloadContent(packet);
+
+            if (packet.isHeaderSet(Packet.HEADER_RESPONSE)) {
+                futures[packet.getPartitionId()].set();
+            } else {
+                byte[] original = packet.toByteArray();
+                byte[] copied = null;
+                if (original != null && returnPayload) {
+                    copied = new byte[original.length];
+                    System.arraycopy(original, 0, copied, 0, original.length);
+                }
+                Packet response = new Packet(copied, packet.getPartitionId());
+                response.setHeader(Packet.HEADER_RESPONSE);
+                packet.getConn().write(response);
+            }
+        }
+
+        private void checkPayloadContent(Packet packet) {
             byte[] data = packet.toByteArray();
             int foundPayloadSize = data == null ? 0 : data.length;
 
@@ -319,31 +348,21 @@ public class NetworkTest {
                 check(payload, payload.length - 2, 0XB);
                 check(payload, payload.length - 1, 0XA);
             }
-
-            if (packet.isHeaderSet(Packet.HEADER_RESPONSE)) {
-                if(returnPayload){
-                    checkPayloadSize(foundPayloadSize);
-                }
-
-                futures[packet.getPartitionId()].set();
-            } else {
-                checkPayloadSize(foundPayloadSize);
-
-                byte[] original = packet.toByteArray();
-                byte[] copied = null;
-                if (original != null && returnPayload) {
-                    copied = new byte[original.length];
-                    System.arraycopy(original, 0, copied, 0, original.length);
-                }
-                Packet response = new Packet(copied, packet.getPartitionId());
-                response.setHeader(Packet.HEADER_RESPONSE);
-                packet.getConn().write(response);
-            }
         }
 
-        private void checkPayloadSize(int foundPayloadSize) {
-            if (foundPayloadSize != payloadSize) {
-                throw new IllegalArgumentException("Unexpected payload size; expected:" + payloadSize
+        private void checkPayloadSize(Packet packet) {
+            byte[] payload = packet.toByteArray();
+            int foundPayloadSize = payload == null ? 0 : payload.length;
+            int expectedPayloadSize;
+
+            if (packet.isHeaderSet(Packet.HEADER_RESPONSE) && !returnPayload) {
+                expectedPayloadSize = 0;
+            } else {
+                expectedPayloadSize = payloadSize;
+            }
+
+            if (foundPayloadSize != expectedPayloadSize) {
+                throw new IllegalArgumentException("Unexpected payload size; expected:" + expectedPayloadSize
                         + " but found:" + foundPayloadSize);
             }
         }
