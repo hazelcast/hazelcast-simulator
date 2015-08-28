@@ -6,6 +6,7 @@ import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 
 import java.util.concurrent.ConcurrentMap;
 
+@SuppressWarnings("checkstyle:visibilitymodifier")
 abstract class AbstractServerConfiguration implements ServerConfiguration {
 
     final OperationProcessor processor;

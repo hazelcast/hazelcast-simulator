@@ -24,6 +24,7 @@ package com.hazelcast.simulator.protocol.core;
  *        +------------+   +------------+   +------------+   +------------+   +------------+   +------------+
  * </pre>
  */
+@SuppressWarnings("checkstyle:magicnumber")
 public enum AddressLevel {
 
     COORDINATOR(0),

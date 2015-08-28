@@ -27,6 +27,7 @@ package com.hazelcast.simulator.protocol.core;
  *        +------------+   +------------+   +------------+   +------------+   +------------+   +------------+
  * </pre>
  */
+@SuppressWarnings("checkstyle:magicnumber")
 public class SimulatorAddress {
 
     public static final SimulatorAddress COORDINATOR = new SimulatorAddress(AddressLevel.COORDINATOR, 0, 0, 0);
