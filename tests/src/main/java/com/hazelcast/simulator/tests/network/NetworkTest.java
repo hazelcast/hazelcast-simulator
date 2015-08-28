@@ -64,6 +64,7 @@ public class NetworkTest {
     public int socketSendBufferSize = 32;
     public IOThreadingModelEnum ioThreadingModel = NonBlocking;
     public boolean trackSequenceId = false;
+    public boolean returnPayload = true;
 
     private final AtomicInteger workerIdGenerator = new AtomicInteger();
     private HazelcastInstance hz;
@@ -319,24 +320,31 @@ public class NetworkTest {
                 check(payload, payload.length - 1, 0XA);
             }
 
-
-            if (foundPayloadSize != payloadSize) {
-                throw new IllegalArgumentException("Unexpected payload size; expected:" + payloadSize
-                        + " but found:" + foundPayloadSize);
-            }
-
             if (packet.isHeaderSet(Packet.HEADER_RESPONSE)) {
+                if(returnPayload){
+                    checkPayloadSize(foundPayloadSize);
+                }
+
                 futures[packet.getPartitionId()].set();
             } else {
+                checkPayloadSize(foundPayloadSize);
+
                 byte[] original = packet.toByteArray();
                 byte[] copied = null;
-                if (original != null) {
+                if (original != null && returnPayload) {
                     copied = new byte[original.length];
                     System.arraycopy(original, 0, copied, 0, original.length);
                 }
                 Packet response = new Packet(copied, packet.getPartitionId());
                 response.setHeader(Packet.HEADER_RESPONSE);
                 packet.getConn().write(response);
+            }
+        }
+
+        private void checkPayloadSize(int foundPayloadSize) {
+            if (foundPayloadSize != payloadSize) {
+                throw new IllegalArgumentException("Unexpected payload size; expected:" + payloadSize
+                        + " but found:" + foundPayloadSize);
             }
         }
 
