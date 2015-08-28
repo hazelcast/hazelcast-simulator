@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.apache.log4j.Logger;
@@ -30,10 +31,11 @@ public abstract class OperationProcessor {
         try {
             switch (operationType) {
                 case INTEGRATION_TEST:
-                    if (!IntegrationTestOperation.TEST_DATA.equals(((IntegrationTestOperation) operation).getTestData())) {
-                        throw new IllegalStateException("operationData has not the expected value");
-                    }
-                    return SUCCESS;
+                    processIntegrationTest((IntegrationTestOperation) operation);
+                    break;
+                case LOG:
+                    processLog((LogOperation) operation);
+                    break;
                 default:
                     return processOperation(operationType, operation);
             }
@@ -41,6 +43,17 @@ public abstract class OperationProcessor {
             exceptionLogger.log(e);
             return EXCEPTION_DURING_OPERATION_EXECUTION;
         }
+        return SUCCESS;
+    }
+
+    private void processIntegrationTest(IntegrationTestOperation operation) {
+        if (!IntegrationTestOperation.TEST_DATA.equals(operation.getTestData())) {
+            throw new IllegalStateException("operationData has not the expected value");
+        }
+    }
+
+    private void processLog(LogOperation operation) {
+        LOGGER.log(operation.getLevel(), operation.getMessage());
     }
 
     protected abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception;

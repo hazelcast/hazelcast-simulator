@@ -17,14 +17,15 @@ public enum OperationType {
     CREATE_TEST(CreateTestOperation.class, 3),
 
     EXCEPTION(ExceptionOperation.class, 4),
+    LOG(LogOperation.class, 5),
 
-    IS_PHASE_COMPLETED(IsPhaseCompletedOperation.class, 5),
+    IS_PHASE_COMPLETED(IsPhaseCompletedOperation.class, 6),
 
-    START_TEST_PHASE(StartTestPhaseOperation.class, 6),
+    START_TEST_PHASE(StartTestPhaseOperation.class, 7),
 
-    START_TEST(StartTestOperation.class, 7),
+    START_TEST(StartTestOperation.class, 8),
 
-    STOP_TEST(StopTestOperation.class, 8);
+    STOP_TEST(StopTestOperation.class, 9);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;

@@ -7,6 +7,7 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.utils.AssertTask;
 import org.apache.log4j.Level;
@@ -197,7 +198,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_singleTest_withExceptionDuringOperationProcessing() throws Exception {
+    public void test_SingleWorker_withExceptionDuringOperationProcessing() throws Exception {
         SimulatorAddress source = SimulatorAddress.COORDINATOR;
         SimulatorAddress destination = getWorkerConnector(0).getAddress();
         SimulatorOperation operation = new IntegrationTestOperation("foobar");
@@ -214,6 +215,60 @@ public class ProtocolIntegrationTest {
                 assertEquals(1, getCoordinatorConnector().getExceptionCount());
             }
         }, ASSERT_EVENTUALLY_TIMEOUT_SECONDS);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void test_LogOperation_SingleAgent() throws Exception {
+        SimulatorAddress source = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = new SimulatorAddress(AGENT, 1, 0, 0);
+        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!");
+
+        SimulatorMessage message = buildMessage(destination, source, getOperationType(operation), encodeOperation(operation));
+        Response response = sendFromCoordinator(message);
+
+        assertEquals(message.getMessageId(), response.getMessageId());
+        assertSingleTarget(response, destination, ResponseType.SUCCESS);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void test_LogOperation_SingleWorker() throws Exception {
+        SimulatorAddress source = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = new SimulatorAddress(WORKER, 1, 1, 0);
+        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.WARN);
+
+        SimulatorMessage message = buildMessage(destination, source, getOperationType(operation), encodeOperation(operation));
+        Response response = sendFromCoordinator(message);
+
+        assertEquals(message.getMessageId(), response.getMessageId());
+        assertSingleTarget(response, destination, ResponseType.SUCCESS);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void test_LogOperation_SingleTest() throws Exception {
+        SimulatorAddress source = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = new SimulatorAddress(TEST, 1, 1, 1);
+        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.ERROR);
+
+        SimulatorMessage message = buildMessage(destination, source, getOperationType(operation), encodeOperation(operation));
+        Response response = sendFromCoordinator(message);
+
+        assertEquals(message.getMessageId(), response.getMessageId());
+        assertSingleTarget(response, destination, ResponseType.SUCCESS);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void test_LogOperation_Coordinator_fromTest() throws Exception {
+        WorkerConnector worker = getWorkerConnector(0);
+        SimulatorAddress source = worker.getAddress().getChild(1);
+        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+
+        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.FATAL);
+
+        SimulatorMessage message = buildMessage(destination, source, getOperationType(operation), encodeOperation(operation));
+        Response response = worker.write(message);
+
+        assertEquals(message.getMessageId(), response.getMessageId());
+        assertSingleTarget(response, source, destination, ResponseType.SUCCESS);
     }
 
     private static Response sendMessageAndAssertMessageId(SimulatorAddress destination) throws Exception {
