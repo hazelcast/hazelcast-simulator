@@ -50,7 +50,6 @@ public class MockIOService implements IOService {
     public int socketSendBufferSize = 32;
     public PacketWriterFactory packetWriterFactory = new MemberPacketWriterFactory();
 
-
     public MockIOService(Address thisAddress, LoggingService loggingService) throws Exception {
         this.thisAddress = thisAddress;
         this.loggingService = loggingService;

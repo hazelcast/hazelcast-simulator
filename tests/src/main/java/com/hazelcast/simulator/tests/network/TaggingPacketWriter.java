@@ -6,7 +6,7 @@ import com.hazelcast.nio.tcp.PacketWriter;
 import java.nio.ByteBuffer;
 
 import static com.hazelcast.nio.Packet.HEADER_BIND;
-import static com.hazelcast.simulator.tests.network.PayloadUtils.writeLong;
+import static com.hazelcast.simulator.tests.network.PayloadUtils.addSequenceId;
 
 /**
  * a PacketWriter that at the beginning and end of the payload inserts a sequence-id.
@@ -27,25 +27,14 @@ class TaggingPacketWriter implements PacketWriter {
     public boolean write(Packet packet, ByteBuffer dst) throws Exception {
         if (currentPacket == null && !packet.isHeaderSet(HEADER_BIND) && packet.dataSize() > 100) {
             currentPacket = packet;
-            addSequenceId(packet);
+            addSequenceId(packet.toByteArray(), sequenceId);
+            sequenceId++;
         }
 
         boolean completed = packet.writeTo(dst);
         if (completed) {
             currentPacket = null;
         }
-
-        return true;
-    }
-
-    private void addSequenceId(Packet packet) {
-        byte[] payload = packet.toByteArray();
-
-        // we write the sequence at the beginning
-        writeLong(payload, 3, sequenceId);
-        // we write the sequence at the end.
-        writeLong(payload, payload.length - (8 + 3), sequenceId);
-
-        sequenceId++;
+        return completed;
     }
 }

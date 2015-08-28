@@ -65,7 +65,7 @@ public class NetworkTest {
     private HazelcastInstance hz;
     private ILock networkCreateLock;
     private TcpIpConnectionManager connectionManager;
-    private DummyPacketHandler packetHandler;
+    private RequestPacketHandler packetHandler;
     private List<Connection> connections = new LinkedList<Connection>();
 
     public enum IOThreadingModelEnum {
@@ -86,7 +86,7 @@ public class NetworkTest {
         HazelcastThreadGroup threadGroup = node.getHazelcastThreadGroup();
 
         // we don't know the number of worker threads (damn hidden property), so lets assume 1000.. that should be enough
-        packetHandler = new DummyPacketHandler(1000);
+        packetHandler = new RequestPacketHandler(1000);
 
         Address thisAddress = node.getThisAddress();
         Address newThisAddress = new Address(thisAddress.getHost(), thisAddress.getPort() + PORT_OFFSET);
@@ -145,9 +145,7 @@ public class NetworkTest {
                 Address targetAddress = new Address(memberAddress.getHost(), memberAddress.getPort() + PORT_OFFSET);
 
                 LOGGER.info("Connecting to: " + targetAddress);
-
                 connectionManager.getOrConnect(targetAddress);
-
                 Connection connection;
                 for (; ; ) {
                     connection = connectionManager.getConnection(targetAddress);
@@ -225,13 +223,13 @@ public class NetworkTest {
         }
     }
 
-    private class DummyPacketHandler implements PacketHandler {
+    private class RequestPacketHandler implements PacketHandler {
 
         private final RequestFuture[] futures;
         private final ConcurrentHashMap<Connection, AtomicLong> sequenceCounterMap
                 = new ConcurrentHashMap<Connection, AtomicLong>();
 
-        public DummyPacketHandler(int threadCount) {
+        public RequestPacketHandler(int threadCount) {
             futures = new RequestFuture[threadCount];
             for (int k = 0; k < futures.length; k++) {
                 futures[k] = new RequestFuture();
@@ -243,12 +241,14 @@ public class NetworkTest {
             checkPayloadSize(packet);
             checkPayloadContent(packet);
 
-            // if it is a response, we signal the future
             if (packet.isHeaderSet(HEADER_RESPONSE)) {
-                futures[packet.getPartitionId()].set();
-                return;
+                handleResponse(packet);
+            } else {
+                handleRequest(packet);
             }
+        }
 
+        private void handleRequest(Packet packet) {
             // it is a request, then we send back a response.
             byte[] requestPayload = packet.toByteArray();
             byte[] responsePayload = null;
@@ -260,6 +260,11 @@ public class NetworkTest {
             Packet response = new Packet(responsePayload, packet.getPartitionId());
             response.setHeader(HEADER_RESPONSE);
             packet.getConn().write(response);
+        }
+
+        private void handleResponse(Packet packet) {
+            RequestFuture future = futures[packet.getPartitionId()];
+            future.set();
         }
 
         private void checkPayloadContent(Packet packet) {
@@ -307,11 +312,5 @@ public class NetworkTest {
                         + " but found:" + foundPayloadSize);
             }
         }
-
-    }
-
-    public static void main(String[] args) throws Exception {
-        NetworkTest test = new NetworkTest();
-        new TestRunner<NetworkTest>(test).withDuration(10).run();
     }
 }

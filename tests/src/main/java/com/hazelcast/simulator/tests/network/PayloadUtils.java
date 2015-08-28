@@ -69,6 +69,13 @@ public final class PayloadUtils {
         payload[length - 1] = 0xA;
     }
 
+
+    public static void addSequenceId(byte[] payload, long sequenceId) {
+        writeLong(payload, 3, sequenceId);
+        // we write the sequence at the end.
+        writeLong(payload, payload.length - (8 + 3), sequenceId);
+    }
+
     public static void checkHeadTailMarkers(byte[] payload) {
         check(payload, 0, 0XA);
         check(payload, 1, 0XB);
@@ -111,11 +118,8 @@ public final class PayloadUtils {
         long sequenceId = Long.MAX_VALUE;
 
         addHeadTailMarkers(bytes);
-        writeLong(bytes, 3, sequenceId);
-        writeLong(bytes, bytes.length - (8 + 3), sequenceId);
+        addSequenceId(bytes, sequenceId);
         System.out.println(toHexString(bytes));
-
         checkHeadTailMarkers(bytes);
-
     }
 }
