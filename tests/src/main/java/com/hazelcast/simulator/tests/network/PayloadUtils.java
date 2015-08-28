@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 public class PayloadUtils {
 
+    public static final boolean COMPRESS_HEX_OUTPUT = true;
+
     private PayloadUtils() {
     }
 
@@ -18,7 +20,7 @@ public class PayloadUtils {
         int count = 1;
         for (int k = 1; k < bytes.length; k++) {
             byte current = bytes[k];
-            if (false && prev == current) {
+            if (COMPRESS_HEX_OUTPUT && prev == current) {
                 count++;
             } else {
                 if (count == 1) {
@@ -101,5 +103,19 @@ public class PayloadUtils {
             bytes[i + offset] = (byte) (value & 0xFF);
             value >>= 8;
         }
+    }
+
+    public static void main(String[] args) {
+        byte[] bytes = new byte[50];
+
+        long sequenceId = Long.MAX_VALUE;
+
+        addHeadTailMarkers(bytes);
+        writeLong(bytes, 3, sequenceId);
+        writeLong(bytes, bytes.length - (8 + 3), sequenceId);
+        System.out.println(toHexString(bytes));
+
+        checkHeadTailMarkers(bytes);
+
     }
 }
