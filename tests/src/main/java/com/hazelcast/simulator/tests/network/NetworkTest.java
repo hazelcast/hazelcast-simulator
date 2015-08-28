@@ -175,8 +175,19 @@ public class NetworkTest {
         }
 
         // temp check.. will be removed.
-        if (connections.size() != 9) {
+        if (connections.size() != 8) {
             throw new RuntimeException("Unexpected connections.size:" + connections.size() + " connection:" + connections);
+        }
+
+        // temp check.. will be removed.
+        if (connectionManager.getActiveConnectionCount() != 8) {
+            throw new RuntimeException("Unexpected connections.size:" + connectionManager.getActiveConnectionCount());
+        }
+
+
+        // temp check.. will be removed.
+        if (connectionManager.getConnectionCount() != 8) {
+            throw new RuntimeException("Unexpected connections.size:" + connectionManager.getConnectionCount());
         }
     }
 
