@@ -207,6 +207,10 @@ public class NetworkTest {
      */
     class TaggingPacketWriter implements PacketWriter {
 
+        // we keep track of the current packet because we need to know if the packet was already tagged before.
+        // it can be that a packet is offered to the packetwriter more than once if it can't be fully written
+        // to the bb. If we would not protect ourselves against that, things get funny because the sequenceId is
+        // incremented multiple times and the sequence in the packets could be a mixture of sequence-id.
         private Packet currentPacket;
         private long sequenceId = 1;
 
@@ -290,13 +294,7 @@ public class NetworkTest {
 
             // put a well known head and tail on the payload; for debugging.
             if (payload.length >= 6 + 8) {
-                payload[0] = 0xA;
-                payload[1] = 0xB;
-                payload[2] = 0xC;
-
-                payload[payload.length - 3] = 0xC;
-                payload[payload.length - 2] = 0xB;
-                payload[payload.length - 1] = 0xA;
+                addHeadTail(payload);
             }
 
             return payload;
@@ -306,6 +304,16 @@ public class NetworkTest {
             int index = randomInt(connections.size());
             return connections.get(index);
         }
+    }
+
+    private void addHeadTail(byte[] payload) {
+        payload[0] = 0xA;
+        payload[1] = 0xB;
+        payload[2] = 0xC;
+
+        payload[payload.length - 3] = 0xC;
+        payload[payload.length - 2] = 0xB;
+        payload[payload.length - 1] = 0xA;
     }
 
     private class DummyPacketHandler implements PacketHandler {
@@ -333,6 +341,7 @@ public class NetworkTest {
                 if (original != null && returnPayload) {
                     copied = new byte[original.length];
                     System.arraycopy(original, 0, copied, 0, original.length);
+                    addHeadTail(copied);
                 }
                 Packet response = new Packet(copied, packet.getPartitionId());
                 response.setHeader(Packet.HEADER_RESPONSE);
@@ -365,6 +374,7 @@ public class NetworkTest {
                     }
                     sequenceCounter.set(expectedSequence);
                 }
+
                 check(payload, payload.length - 3, 0XC);
                 check(payload, payload.length - 2, 0XB);
                 check(payload, payload.length - 1, 0XA);
