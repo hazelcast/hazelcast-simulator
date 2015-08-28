@@ -214,22 +214,7 @@ public class NetworkTest {
         public boolean write(Packet packet, ByteBuffer dst) throws Exception {
             if (currentPacket == null && !packet.isHeaderSet(Packet.HEADER_BIND) && packet.dataSize() > 100) {
                 currentPacket = packet;
-
-                byte[] payload = packet.toByteArray();
-                // we also stuff in a sequence id at the beginning
-                long s = sequenceId;
-                for (int i = 7; i >= 0; i--) {
-                    payload[i + 3] = (byte) (s & 0xFF);
-                    s >>= 8;
-                }
-
-                // and a sequence id at the end.
-                s = sequenceId;
-                for (int i = 7; i >= 0; i--) {
-                    payload[i + payload.length - (8 + 3)] = (byte) (s & 0xFF);
-                    s >>= 8;
-                }
-                sequenceId++;
+                addSequenceId(packet);
             }
 
             boolean completed = packet.writeTo(dst);
@@ -237,6 +222,24 @@ public class NetworkTest {
                 currentPacket = null;
             }
             return true;
+        }
+
+        private void addSequenceId(Packet packet) {
+            byte[] payload = packet.toByteArray();
+            // we also stuff in a sequence id at the beginning
+            long s = sequenceId;
+            for (int i = 7; i >= 0; i--) {
+                payload[i + 3] = (byte) (s & 0xFF);
+                s >>= 8;
+            }
+
+            // and a sequence id at the end.
+            s = sequenceId;
+            for (int i = 7; i >= 0; i--) {
+                payload[i + payload.length - (8 + 3)] = (byte) (s & 0xFF);
+                s >>= 8;
+            }
+            sequenceId++;
         }
     }
 
