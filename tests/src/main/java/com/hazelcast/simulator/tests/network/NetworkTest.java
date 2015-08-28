@@ -13,7 +13,6 @@ import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Connection;
 import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.tcp.IOThreadingModel;
-import com.hazelcast.nio.tcp.PacketWriter;
 import com.hazelcast.nio.tcp.TcpIpConnectionManager;
 import com.hazelcast.nio.tcp.nonblocking.NonBlockingIOThreadingModel;
 import com.hazelcast.nio.tcp.spinning.SpinningIOThreadingModel;
@@ -22,27 +21,22 @@ import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
-import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.spi.impl.PacketHandler;
 
-import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static com.hazelcast.simulator.tests.network.NetworkTest.IOThreadingModelEnum.NonBlocking;
+import static com.hazelcast.simulator.tests.network.PayloadUtils.addHeadTailMarkers;
+import static com.hazelcast.simulator.tests.network.PayloadUtils.checkHeadTailMarkers;
+import static com.hazelcast.simulator.tests.network.PayloadUtils.makePayload;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
 
@@ -191,66 +185,6 @@ public class NetworkTest {
         }
     }
 
-    class TaggingPacketWriterFactory implements PacketWriterFactory {
-
-        @Override
-        public PacketWriter create() {
-            return new TaggingPacketWriter();
-        }
-    }
-
-    /**
-     * a PacketWriter that at the beginning and end of the payload inserts a sequence-id.
-     *
-     * This sequence-id is unique per connection and is totally ordered. So the receiver of these packets should
-     * get an incremental stream of sequence-id's.
-     */
-    class TaggingPacketWriter implements PacketWriter {
-
-        // we keep track of the current packet because we need to know if the packet was already tagged before.
-        // it can be that a packet is offered to the packetwriter more than once if it can't be fully written
-        // to the bb. If we would not protect ourselves against that, things get funny because the sequenceId is
-        // incremented multiple times and the sequence in the packets could be a mixture of sequence-id.
-        private Packet currentPacket;
-        private long sequenceId = 1;
-
-        @Override
-        public boolean write(Packet packet, ByteBuffer dst) throws Exception {
-            if (currentPacket == null && !packet.isHeaderSet(Packet.HEADER_BIND) && packet.dataSize() > 100) {
-                currentPacket = packet;
-                addSequenceId(packet);
-            }
-
-            boolean completed = packet.writeTo(dst);
-            if (completed) {
-                currentPacket = null;
-            }
-            return true;
-        }
-
-        private void addSequenceId(Packet packet) {
-            byte[] payload = packet.toByteArray();
-            // we also stuff in a sequence id at the beginning
-            long s = sequenceId;
-            for (int i = 7; i >= 0; i--) {
-                payload[i + 3] = (byte) (s & 0xFF);
-                s >>= 8;
-            }
-
-            // and a sequence id at the end.
-            s = sequenceId;
-            for (int i = 7; i >= 0; i--) {
-                payload[i + payload.length - (8 + 3)] = (byte) (s & 0xFF);
-                s >>= 8;
-            }
-            sequenceId++;
-        }
-    }
-
-    @Verify
-    public void verify() {
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -269,10 +203,10 @@ public class NetworkTest {
         @Override
         protected void timeStep() {
             Connection connection = nextConnection();
-            byte[] payload = makePayload();
-            Packet packet = new Packet(payload, workerId);
+            byte[] payload = makePayload(payloadSize);
+            Packet requestPacket = new Packet(payload, workerId);
 
-            if (!connection.write(packet)) {
+            if (!connection.write(requestPacket)) {
                 throw new RuntimeException("Failed to write packet to connection:" + connection);
             }
 
@@ -285,59 +219,16 @@ public class NetworkTest {
             responseFuture.reset();
         }
 
-        private byte[] makePayload() {
-            if (payloadSize <= 0) {
-                return null;
-            }
-
-            byte[] payload = new byte[payloadSize];
-
-            // put a well known head and tail on the payload; for debugging.
-            if (payload.length >= 6 + 8) {
-                addHeadTailMarkers(payload);
-            }
-
-            return payload;
-        }
-
         private Connection nextConnection() {
             int index = randomInt(connections.size());
             return connections.get(index);
         }
     }
 
-    private void addHeadTailMarkers(byte[] payload) {
-        payload[0] = 0xA;
-        payload[1] = 0xB;
-        payload[2] = 0xC;
-
-        int length = payload.length;
-        payload[length - 3] = 0xC;
-        payload[length - 2] = 0xB;
-        payload[length - 1] = 0xA;
-    }
-
-    private void checkHeadTailMarkers(byte[] payload) {
-        check(payload, 0, 0XA);
-        check(payload, 1, 0XB);
-        check(payload, 2, 0XC);
-
-        int length = payload.length;
-        check(payload, length - 3, 0XC);
-        check(payload, length - 2, 0XB);
-        check(payload, length - 1, 0XA);
-    }
-
-    private void check(byte[] payload, int index, int value) {
-        if (payload[index] != value) {
-            throw new IllegalStateException();
-        }
-    }
-
     private class DummyPacketHandler implements PacketHandler {
 
         private final RequestFuture[] futures;
-        private final ConcurrentHashMap<Connection, AtomicLong> sequenceMap = new ConcurrentHashMap<Connection, AtomicLong>();
+        private final ConcurrentHashMap<Connection, AtomicLong> sequenceCounterMap = new ConcurrentHashMap<Connection, AtomicLong>();
 
         public DummyPacketHandler(int threadCount) {
             futures = new RequestFuture[threadCount];
@@ -362,7 +253,7 @@ public class NetworkTest {
             byte[] payload = null;
             if (requestPayload != null && returnPayload) {
                 payload = new byte[requestPayload.length];
-              //  arraycopy(originalPayload, 0, payload, 0, originalPayload.length);
+                //  arraycopy(originalPayload, 0, payload, 0, originalPayload.length);
                 addHeadTailMarkers(payload);
             }
             Packet response = new Packet(payload, packet.getPartitionId());
@@ -371,24 +262,23 @@ public class NetworkTest {
         }
 
         private void checkPayloadContent(Packet packet) {
-            byte[] data = packet.toByteArray();
-            int foundPayloadSize = data == null ? 0 : data.length;
+            byte[] payload = packet.toByteArray();
+            int foundPayloadSize = payload == null ? 0 : payload.length;
 
             if (foundPayloadSize <= 0) {
                 return;
             }
 
-            byte[] payload = packet.toByteArray();
             checkHeadTailMarkers(payload);
 
             if (!trackSequenceId) {
                 return;
             }
 
-            AtomicLong sequenceCounter = sequenceMap.get(packet.getConn());
+            AtomicLong sequenceCounter = sequenceCounterMap.get(packet.getConn());
             if (sequenceCounter == null) {
                 sequenceCounter = new AtomicLong(0);
-                sequenceMap.put(packet.getConn(), sequenceCounter);
+                sequenceCounterMap.put(packet.getConn(), sequenceCounter);
             }
 
             long foundSequence = bytesToLong(payload, 3);
@@ -424,77 +314,6 @@ public class NetworkTest {
                 result |= (bytes[i + offset] & 0xFF);
             }
             return result;
-        }
-
-    }
-
-    public static class RequestFuture implements Future {
-
-        private final Lock lock = new ReentrantLock(false);
-        private final Condition condition = lock.newCondition();
-        private volatile Object result = null;
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isCancelled() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isDone() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Object get() throws InterruptedException, ExecutionException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-            if (result != null) {
-                return result;
-            }
-
-            long timeoutNs = unit.toNanos(timeout);
-            lock.lock();
-            try {
-                while (result == null) {
-                    if (timeoutNs <= 0) {
-                        throw new TimeoutException();
-                    }
-
-                    timeoutNs = condition.awaitNanos(timeoutNs);
-                }
-
-                return result;
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        public void set() {
-            lock.lock();
-            try {
-                if (result != null) {
-                    throw new RuntimeException("Result should be null");
-                }
-                result = Boolean.TRUE;
-                condition.signal();
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        public void reset() {
-            if (result == null) {
-                throw new RuntimeException("result can't be null");
-            }
-            result = null;
         }
     }
 
