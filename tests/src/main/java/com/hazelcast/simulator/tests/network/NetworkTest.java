@@ -44,6 +44,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static com.hazelcast.simulator.tests.network.NetworkTest.IOThreadingModelEnum.NonBlocking;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static java.lang.System.arraycopy;
 
 
 public class NetworkTest {
@@ -294,7 +295,7 @@ public class NetworkTest {
 
             // put a well known head and tail on the payload; for debugging.
             if (payload.length >= 6 + 8) {
-                addHeadTail(payload);
+                addHeadTailMarkers(payload);
             }
 
             return payload;
@@ -306,7 +307,7 @@ public class NetworkTest {
         }
     }
 
-    private void addHeadTail(byte[] payload) {
+    private void addHeadTailMarkers(byte[] payload) {
         payload[0] = 0xA;
         payload[1] = 0xB;
         payload[2] = 0xC;
@@ -333,20 +334,23 @@ public class NetworkTest {
             checkPayloadSize(packet);
             checkPayloadContent(packet);
 
+            // if it is a response, we signal the future
             if (packet.isHeaderSet(Packet.HEADER_RESPONSE)) {
                 futures[packet.getPartitionId()].set();
-            } else {
-                byte[] original = packet.toByteArray();
-                byte[] copied = null;
-                if (original != null && returnPayload) {
-                    copied = new byte[original.length];
-                    System.arraycopy(original, 0, copied, 0, original.length);
-                    addHeadTail(copied);
-                }
-                Packet response = new Packet(copied, packet.getPartitionId());
-                response.setHeader(Packet.HEADER_RESPONSE);
-                packet.getConn().write(response);
+                return;
             }
+
+            // it is a request.
+            byte[] originalPayload = packet.toByteArray();
+            byte[] payload = null;
+            if (originalPayload != null && returnPayload) {
+                payload = new byte[originalPayload.length];
+              //  arraycopy(originalPayload, 0, payload, 0, originalPayload.length);
+                addHeadTailMarkers(payload);
+            }
+            Packet response = new Packet(payload, packet.getPartitionId());
+            response.setHeader(Packet.HEADER_RESPONSE);
+            packet.getConn().write(response);
         }
 
         private void checkPayloadContent(Packet packet) {
