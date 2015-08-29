@@ -166,6 +166,9 @@ public class NetworkTest {
         } finally {
             networkCreateLock.unlock();
         }
+
+        // temporary delay
+        Thread.sleep(30);
     }
 
     @RunWithWorker
