@@ -37,6 +37,7 @@ import static com.hazelcast.simulator.tests.network.NetworkTest.IOThreadingModel
 import static com.hazelcast.simulator.tests.network.PayloadUtils.addHeadTailMarkers;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.checkHeadTailMarkers;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.makePayload;
+import static com.hazelcast.simulator.tests.network.PayloadUtils.readLong;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
 @SuppressWarnings("checkstyle:npathcomplexity")
@@ -165,21 +166,6 @@ public class NetworkTest {
         } finally {
             networkCreateLock.unlock();
         }
-
-        // temp check.. will be removed.
-        if (connections.size() != 8) {
-            throw new RuntimeException("Unexpected connections.size:" + connections.size() + " connection:" + connections);
-        }
-
-        // temp check.. will be removed.
-        if (connectionManager.getActiveConnectionCount() != 8) {
-            throw new RuntimeException("Unexpected connections.size:" + connectionManager.getActiveConnectionCount());
-        }
-
-        // temp check.. will be removed.
-        if (connectionManager.getConnectionCount() != 8) {
-            throw new RuntimeException("Unexpected connections.size:" + connectionManager.getConnectionCount());
-        }
     }
 
     @RunWithWorker
@@ -286,7 +272,7 @@ public class NetworkTest {
                 sequenceCounterMap.put(packet.getConn(), sequenceCounter);
             }
 
-            long foundSequence = PayloadUtils.readLong(payload, 3);
+            long foundSequence = readLong(payload, 3);
             long expectedSequence = sequenceCounter.get() + 1;
             if (expectedSequence != foundSequence) {
                 throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
