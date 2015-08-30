@@ -19,6 +19,8 @@ public final class MapStreamerFactory {
             if (isMinVersion("3.5", buildInfo.getVersion())) {
                 createAsync = true;
             }
+        } catch (NoClassDefFoundError e) {
+            //it's Hazelcast 3.2 or older -> we have to use sync API
         } finally {
             CREATE_ASYNC = new AtomicBoolean(createAsync);
         }
