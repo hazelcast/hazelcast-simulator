@@ -7,6 +7,7 @@ import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
+import com.hazelcast.util.EmptyStatement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +30,27 @@ public class CoordinatorConnector {
      * Disconnects from all Simulator Agent instances.
      */
     public void shutdown() {
-        for (ClientConnector agent : agents.values()) {
-            agent.shutdown();
+        List<Thread> shutdownThreads = new ArrayList<Thread>();
+        for (final ClientConnector agent : agents.values()) {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    agent.shutdown();
+                }
+            };
+            thread.start();
+            shutdownThreads.add(thread);
+        }
+        joinThreads(shutdownThreads);
+    }
+
+    private static void joinThreads(List<Thread> threadList) {
+        for (Thread thread : threadList) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                EmptyStatement.ignore(e);
+            }
         }
     }
 
