@@ -103,19 +103,13 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     private ResponseFuture writeAsync(SimulatorMessage message) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("[%d] ServerConnector.writeAsync() %s", message.getMessageId(), message));
-        }
-        return writeAsync(message.getMessageId(), message);
-    }
-
-    private ResponseFuture writeAsync(long messageId, Object msg) {
+        long messageId = message.getMessageId();
         String futureKey = configuration.createFutureKey(messageId);
         ResponseFuture future = ResponseFuture.createInstance(futureMap, futureKey);
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, configuration.getLocalAddress(), futureKey));
         }
-        configuration.getChannelGroup().writeAndFlush(msg);
+        configuration.getChannelGroup().writeAndFlush(message);
 
         return future;
     }
