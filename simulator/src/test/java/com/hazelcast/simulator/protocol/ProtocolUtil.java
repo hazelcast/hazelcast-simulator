@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -14,6 +15,7 @@ import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
+import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -85,6 +87,8 @@ public class ProtocolUtil {
     }
 
     static void stopSimulatorComponents() {
+        List<Thread> shutdownThreads = new ArrayList<Thread>();
+
         LOGGER.info("Shutdown of Coordinator...");
         if (coordinatorConnector != null) {
             coordinatorConnector.shutdown();
@@ -92,18 +96,39 @@ public class ProtocolUtil {
         }
 
         LOGGER.info("Shutdown of Agents...");
-        for (AgentConnector agentConnector : agentConnectors) {
-            agentConnector.shutdown();
-        }
-        agentConnectors.clear();
+        shutdownServerConnectors(agentConnectors, shutdownThreads);
 
         LOGGER.info("Shutdown of Workers...");
-        for (WorkerConnector workerConnector : workerConnectors) {
-            workerConnector.shutdown();
-        }
-        workerConnectors.clear();
+        shutdownServerConnectors(workerConnectors, shutdownThreads);
+
+        LOGGER.info("Waiting for shutdown threads...");
+        joinThreads(shutdownThreads);
 
         LOGGER.info("Shutdown complete!");
+    }
+
+    private static <C extends ServerConnector> void shutdownServerConnectors(List<C> connectors, List<Thread> shutdownThreads) {
+        for (final C connector : connectors) {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    connector.shutdown();
+                }
+            };
+            thread.start();
+            shutdownThreads.add(thread);
+        }
+        connectors.clear();
+    }
+
+    private static void joinThreads(List<Thread> threadList) {
+        for (Thread thread : threadList) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                EmptyStatement.ignore(e);
+            }
+        }
     }
 
     static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
