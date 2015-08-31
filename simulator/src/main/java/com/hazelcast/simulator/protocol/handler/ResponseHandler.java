@@ -41,19 +41,19 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
     @Override
     public void channelRead0(ChannelHandlerContext ctx, Response response) {
         long messageId = response.getMessageId();
+        String key = messageId + "_" + futureKeyIndex;
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("[%d] ResponseHandler.channelRead0() %s <- %s %s", messageId, localAddress, remoteAddress,
-                    response));
+            LOGGER.trace(format("[%d] ResponseHandler.channelRead0() %s <- %s %s with key %s", messageId, localAddress,
+                    remoteAddress, response, key));
         }
 
-        String key = messageId + "_" + futureKeyIndex;
         ResponseFuture future = futureMap.get(key);
         if (future != null) {
             future.set(response);
             return;
         }
 
-        String msg = format("[%d] %s <- %s Future %s not found for %s", messageId, localAddress, remoteAddress, key, response);
+        String msg = format("[%d] %s <- %s futureKey %s not found for %s", messageId, localAddress, remoteAddress, key, response);
         LOGGER.error(msg);
         throw new IllegalArgumentException(msg);
     }

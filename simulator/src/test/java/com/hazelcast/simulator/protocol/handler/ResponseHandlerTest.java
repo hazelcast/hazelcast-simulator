@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.handler;
 
+import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -14,9 +15,8 @@ import static org.junit.Assert.assertEquals;
 
 public class ResponseHandlerTest {
 
-    private static final int FUTURE_KEY = 1;
-
-    private final SimulatorAddress address = SimulatorAddress.COORDINATOR;
+    private final SimulatorAddress localAddress = SimulatorAddress.COORDINATOR;
+    private final SimulatorAddress remoteAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
 
     private ConcurrentMap<String, ResponseFuture> futureMap;
 
@@ -26,13 +26,13 @@ public class ResponseHandlerTest {
     public void setUp() {
         futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
-        responseHandler = new ResponseHandler(address, address, futureMap, FUTURE_KEY);
+        responseHandler = new ResponseHandler(localAddress, remoteAddress, futureMap);
     }
 
     @Test
     public void testChannelRead0() throws Exception {
-        Response response = new Response(2948, address);
-        String futureKey = "2948_" + FUTURE_KEY;
+        Response response = new Response(2948, remoteAddress);
+        String futureKey = "2948_" + remoteAddress.getAddressIndex();
 
         ResponseFuture responseFuture = ResponseFuture.createInstance(futureMap, futureKey);
 
@@ -43,7 +43,7 @@ public class ResponseHandlerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testChannelRead0_futureNotFound() throws Exception {
-        Response response = new Response(1234, address);
+        Response response = new Response(1234, remoteAddress);
 
         responseHandler.channelRead0(null, response);
     }
