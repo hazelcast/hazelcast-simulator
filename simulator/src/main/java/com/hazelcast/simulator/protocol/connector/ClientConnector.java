@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.connector;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -21,7 +22,10 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
 import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getMessageId;
+import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getSourceAddress;
 import static java.lang.String.format;
 
 /**
@@ -79,16 +83,16 @@ public class ClientConnector {
     }
 
     public ResponseFuture writeAsync(SimulatorMessage message) {
-        return writeAsync(message.getMessageId(), message);
+        return writeAsync(message.getSource(), message.getMessageId(), message);
     }
 
     public ResponseFuture writeAsync(ByteBuf buffer) {
-        return writeAsync(getMessageId(buffer), buffer);
+        return writeAsync(getSourceAddress(buffer), getMessageId(buffer), buffer);
     }
 
-    private ResponseFuture writeAsync(long messageId, Object msg) {
-        String futureKey = configuration.createFutureKey(messageId);
-        ResponseFuture future = ResponseFuture.createInstance(futureMap, futureKey);
+    private ResponseFuture writeAsync(SimulatorAddress source, long messageId, Object msg) {
+        String futureKey = createFutureKey(source, messageId, configuration.getRemoteIndex());
+        ResponseFuture future = createInstance(futureMap, futureKey);
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, configuration.getLocalAddress(), futureKey));
         }

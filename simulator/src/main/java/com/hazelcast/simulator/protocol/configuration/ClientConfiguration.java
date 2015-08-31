@@ -26,6 +26,13 @@ public interface ClientConfiguration {
     SimulatorAddress getRemoteAddress();
 
     /**
+     * Returns the address index of the remote Simulator component.
+     *
+     * @return the remote address index
+     */
+    int getRemoteIndex();
+
+    /**
      * Returns the host of the remote Simulator component.
      *
      * @return the remote host
@@ -46,13 +53,10 @@ public interface ClientConfiguration {
      */
     void configurePipeline(ChannelPipeline pipeline);
 
-    ConcurrentMap<String, ResponseFuture> getFutureMap();
-
     /**
-     * Created a map key for a {@link ResponseFuture}.
+     * Returns the map for {@link ResponseFuture} instances.
      *
-     * @param messageId the messageId of a {@link com.hazelcast.simulator.protocol.core.SimulatorMessage}
-     * @return the key for the {@link ResponseFuture} map
+     * @return the {@link ResponseFuture} map
      */
-    String createFutureKey(long messageId);
+    ConcurrentMap<String, ResponseFuture> getFutureMap();
 }

@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -20,7 +21,7 @@ public class ResponseFutureTest {
     private static final Response DEFAULT_RESULT = new Response(1L, COORDINATOR, COORDINATOR, SUCCESS);
     private static final int DEFAULT_TIMEOUT_MS = 500;
 
-    private final ResponseFuture future = ResponseFuture.createInstance(new ConcurrentHashMap<String, ResponseFuture>(), "key");
+    private final ResponseFuture future = createInstance(new ConcurrentHashMap<String, ResponseFuture>(), "key");
     private final FutureSetter futureSetter = new FutureSetter(DEFAULT_RESULT, DEFAULT_TIMEOUT_MS);
 
     @Test(expected = UnsupportedOperationException.class)

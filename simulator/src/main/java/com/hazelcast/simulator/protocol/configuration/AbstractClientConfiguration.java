@@ -3,16 +3,11 @@ package com.hazelcast.simulator.protocol.configuration;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
-import org.apache.log4j.Logger;
 
 import java.util.concurrent.ConcurrentMap;
 
-import static java.lang.String.format;
-
 @SuppressWarnings("checkstyle:visibilitymodifier")
 abstract class AbstractClientConfiguration implements ClientConfiguration {
-
-    private static final Logger LOGGER = Logger.getLogger(AbstractClientConfiguration.class);
 
     final OperationProcessor processor;
     final ConcurrentMap<String, ResponseFuture> futureMap;
@@ -47,6 +42,11 @@ abstract class AbstractClientConfiguration implements ClientConfiguration {
     }
 
     @Override
+    public int getRemoteIndex() {
+        return remoteIndex;
+    }
+
+    @Override
     public String getRemoteHost() {
         return remoteHost;
     }
@@ -59,15 +59,5 @@ abstract class AbstractClientConfiguration implements ClientConfiguration {
     @Override
     public ConcurrentMap<String, ResponseFuture> getFutureMap() {
         return futureMap;
-    }
-
-    @Override
-    public String createFutureKey(long messageId) {
-        String futureKey = messageId + "_" + remoteIndex;
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("[%d] Created futureKey %s on client %s -> %s", messageId, futureKey, localAddress,
-                    remoteAddress));
-        }
-        return futureKey;
     }
 }

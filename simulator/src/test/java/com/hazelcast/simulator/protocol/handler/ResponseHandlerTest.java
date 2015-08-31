@@ -11,6 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static org.junit.Assert.assertEquals;
 
 public class ResponseHandlerTest {
@@ -31,10 +33,11 @@ public class ResponseHandlerTest {
 
     @Test
     public void testChannelRead0() throws Exception {
-        Response response = new Response(2948, remoteAddress);
-        String futureKey = "2948_" + remoteAddress.getAddressIndex();
+        long messageId = 2948;
+        Response response = new Response(messageId, remoteAddress);
 
-        ResponseFuture responseFuture = ResponseFuture.createInstance(futureMap, futureKey);
+        String futureKey = createFutureKey(response.getDestination(), messageId, remoteAddress.getAddressIndex());
+        ResponseFuture responseFuture = createInstance(futureMap, futureKey);
 
         responseHandler.channelRead0(null, response);
 

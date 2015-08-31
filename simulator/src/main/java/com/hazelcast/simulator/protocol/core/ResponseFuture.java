@@ -24,11 +24,30 @@ public final class ResponseFuture implements Future<Response> {
         this.key = key;
     }
 
+    /**
+     * Creates a {@link ResponseFuture} instance.
+     *
+     * @param futureMap the map of {@link ResponseFuture} where we add this one to
+     * @param key       the key for this {@link ResponseFuture} in the map
+     * @return the {@link ResponseFuture} instance
+     */
     public static ResponseFuture createInstance(ConcurrentMap<String, ResponseFuture> futureMap, String key) {
         ResponseFuture future = new ResponseFuture(futureMap, key);
         futureMap.put(key, future);
 
         return future;
+    }
+
+    /**
+     * Creates a map key for a {@link ResponseFuture}.
+     *
+     * @param source             the source {@link SimulatorAddress} of a {@link SimulatorMessage}
+     * @param messageId          the messageId of a {@link SimulatorMessage}
+     * @param remoteAddressIndex the address index of a remote Simulator component
+     * @return the key for the {@link ResponseFuture} map
+     */
+    public static String createFutureKey(SimulatorAddress source, long messageId, int remoteAddressIndex) {
+        return source + "-" + messageId + "-" + remoteAddressIndex;
     }
 
     @Override

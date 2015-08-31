@@ -29,6 +29,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
 import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -104,8 +106,8 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private ResponseFuture writeAsync(SimulatorMessage message) {
         long messageId = message.getMessageId();
-        String futureKey = configuration.createFutureKey(messageId);
-        ResponseFuture future = ResponseFuture.createInstance(futureMap, futureKey);
+        String futureKey = createFutureKey(message.getSource(), messageId, configuration.getLocalAddressIndex());
+        ResponseFuture future = createInstance(futureMap, futureKey);
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, configuration.getLocalAddress(), futureKey));
         }

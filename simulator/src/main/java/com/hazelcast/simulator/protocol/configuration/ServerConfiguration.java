@@ -23,6 +23,13 @@ public interface ServerConfiguration {
     SimulatorAddress getLocalAddress();
 
     /**
+     * Returns the address index of the local Simulator component.
+     *
+     * @return the local address index
+     */
+    int getLocalAddressIndex();
+
+    /**
      * Returns the port on which the local Simulator component listens.
      *
      * @return the local port
@@ -45,13 +52,10 @@ public interface ServerConfiguration {
      */
     void configurePipeline(ChannelPipeline pipeline);
 
-    ConcurrentMap<String, ResponseFuture> getFutureMap();
-
     /**
-     * Created a map key for a {@link ResponseFuture}.
+     * Returns the map for {@link ResponseFuture} instances.
      *
-     * @param messageId the messageId of a {@link com.hazelcast.simulator.protocol.core.SimulatorMessage}
-     * @return the key for the {@link ResponseFuture} map
+     * @return the {@link ResponseFuture} map
      */
-    String createFutureKey(long messageId);
+    ConcurrentMap<String, ResponseFuture> getFutureMap();
 }
