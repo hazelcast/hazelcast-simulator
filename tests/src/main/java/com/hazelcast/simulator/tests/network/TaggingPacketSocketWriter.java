@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.tests.network;
 
 import com.hazelcast.nio.Packet;
-import com.hazelcast.nio.tcp.PacketWriter;
+import com.hazelcast.nio.tcp.SocketWriter;
 
 import java.nio.ByteBuffer;
 
@@ -14,7 +14,7 @@ import static com.hazelcast.simulator.tests.network.PayloadUtils.addSequenceId;
  * This sequence-id is unique per connection and is totally ordered. So the receiver of these packets should
  * get an incremental stream of sequence-id's.
  */
-class TaggingPacketWriter implements PacketWriter {
+class TaggingPacketSocketWriter implements SocketWriter<Packet> {
 
     // we keep track of the current packet because we need to know if the packet was already tagged before.
     // it can be that a packet is offered to the packetwriter more than once if it can't be fully written

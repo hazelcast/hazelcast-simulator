@@ -3,6 +3,7 @@ package com.hazelcast.simulator.worker.loadsupport;
 import com.hazelcast.core.IMap;
 import com.hazelcast.instance.BuildInfo;
 import com.hazelcast.instance.BuildInfoProvider;
+import com.hazelcast.simulator.utils.EmptyStatement;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -21,6 +22,7 @@ public final class MapStreamerFactory {
             }
         } catch (NoClassDefFoundError e) {
             //it's Hazelcast 3.2 or older -> we have to use sync API
+            EmptyStatement.ignore(e);
         } finally {
             CREATE_ASYNC = new AtomicBoolean(createAsync);
         }

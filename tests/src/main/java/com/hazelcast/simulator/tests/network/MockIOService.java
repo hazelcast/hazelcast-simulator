@@ -17,10 +17,10 @@ import com.hazelcast.nio.MemberSocketInterceptor;
 import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.tcp.DefaultSocketChannelWrapperFactory;
-import com.hazelcast.nio.tcp.MemberPacketReader;
-import com.hazelcast.nio.tcp.PacketReader;
-import com.hazelcast.nio.tcp.PacketWriter;
+import com.hazelcast.nio.tcp.MemberSocketReader;
 import com.hazelcast.nio.tcp.SocketChannelWrapperFactory;
+import com.hazelcast.nio.tcp.SocketReader;
+import com.hazelcast.nio.tcp.SocketWriter;
 import com.hazelcast.nio.tcp.TcpIpConnection;
 import com.hazelcast.spi.EventFilter;
 import com.hazelcast.spi.EventRegistration;
@@ -48,7 +48,7 @@ public class MockIOService implements IOService {
     public boolean socketNoDelay = true;
     public int socketReceiveBufferSize = 32;
     public int socketSendBufferSize = 32;
-    public PacketWriterFactory packetWriterFactory = new MemberPacketWriterFactory();
+    public SocketWriterFactory socketWriterFactory = new MemberSocketWriterFactory();
 
     public MockIOService(Address thisAddress, LoggingService loggingService) throws Exception {
         this.thisAddress = thisAddress;
@@ -291,8 +291,8 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public PacketReader createPacketReader(final TcpIpConnection connection) {
-        return new MemberPacketReader(connection, new PacketDispatcher() {
+    public SocketReader createSocketReader(final TcpIpConnection connection) {
+        return new MemberSocketReader(connection, new PacketDispatcher() {
             private ILogger logger = getLogger("MockIOService");
 
             @Override
@@ -314,8 +314,8 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public PacketWriter createPacketWriter(TcpIpConnection connection) {
-        return packetWriterFactory.create();
+    public SocketWriter createSocketWriter(TcpIpConnection connection) {
+        return socketWriterFactory.create();
     }
 
     private static class MockEventService implements EventService {
