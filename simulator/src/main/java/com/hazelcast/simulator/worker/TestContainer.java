@@ -22,6 +22,8 @@ import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.commands.PerformanceState;
+import com.hazelcast.simulator.worker.performance.PerformanceTracker;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import com.hazelcast.util.Clock;
@@ -96,6 +98,10 @@ public class TestContainer<T extends TestContext> {
     private final ProbesConfiguration probesConfiguration;
     private final TestCase testCase;
 
+    private PerformanceState lastPerformanceState;
+    private final PerformanceTracker performanceTracker;
+    private volatile boolean finished;
+
     private final Map<String, SimpleProbe<?, ?>> probeMap = new ConcurrentHashMap<String, SimpleProbe<?, ?>>();
 
     private Method runMethod;
@@ -132,6 +138,7 @@ public class TestContainer<T extends TestContext> {
         this.testContext = testContext;
         this.probesConfiguration = probesConfiguration;
         this.testCase = testCase;
+        this.performanceTracker = new PerformanceTracker();
 
         initMethods();
     }
@@ -162,6 +169,13 @@ public class TestContainer<T extends TestContext> {
             LOGGER.debug("Exception while retrieving operation count from " + testCase.getId() + ": " + e.getMessage());
             return -1;
         }
+    }
+
+    public PerformanceState getPerformance() {
+        if (!finished) {
+            lastPerformanceState = performanceTracker.update(getOperationCount());
+        }
+        return lastPerformanceState;
     }
 
     public List<String> getStackTraces() throws Exception {
@@ -208,6 +222,7 @@ public class TestContainer<T extends TestContext> {
 
     private void run() throws Exception {
         long now = Clock.currentTimeMillis();
+        performanceTracker.start();
         for (SimpleProbe probe : probeMap.values()) {
             probe.startProbing(now);
         }
@@ -216,6 +231,7 @@ public class TestContainer<T extends TestContext> {
         } else {
             invokeMethod(testClassInstance, runMethod);
         }
+        finished = true;
         now = Clock.currentTimeMillis();
         for (SimpleProbe probe : probeMap.values()) {
             probe.stopProbing(now);

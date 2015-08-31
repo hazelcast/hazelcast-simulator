@@ -11,7 +11,6 @@ import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
 import com.hazelcast.simulator.worker.commands.GenericCommand;
 import com.hazelcast.simulator.worker.commands.GetBenchmarkResultsCommand;
-import com.hazelcast.simulator.worker.commands.GetOperationCountCommand;
 import com.hazelcast.simulator.worker.commands.GetStackTraceCommand;
 import com.hazelcast.simulator.worker.commands.InitCommand;
 import com.hazelcast.simulator.worker.commands.IsPhaseCompletedCommand;
@@ -252,18 +251,6 @@ public class WorkerCommandRequestProcessorTest {
     public void processMessageCommand() {
         MessageCommand command = new MessageCommand(null);
         addRequest(command);
-
-        assertNoException();
-    }
-
-    @Test
-    public void processGetOperationCountCommand() {
-        initTestCase(defaultTestCase);
-
-        GetOperationCountCommand command = new GetOperationCountCommand();
-        CommandResponse response = handleRequestAndAssertId(command);
-        assertNotNull(response);
-        assertEquals(0L, response.result);
 
         assertNoException();
     }

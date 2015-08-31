@@ -2,7 +2,8 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.coordinator.remoting.AgentClient;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
-import com.hazelcast.simulator.worker.commands.GetOperationCountCommand;
+import com.hazelcast.simulator.worker.commands.GetPerformanceStateCommand;
+import com.hazelcast.simulator.worker.commands.PerformanceState;
 import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 
@@ -55,9 +56,9 @@ class PerformanceMonitor {
         }
     }
 
-    void logDetailedPerformanceInfo(int duration) {
+    void logDetailedPerformanceInfo() {
         if (started.get()) {
-            thread.logDetailedPerformanceInfo(duration);
+            thread.logDetailedPerformanceInfo();
         }
     }
 
@@ -73,15 +74,18 @@ class PerformanceMonitor {
         private static final AtomicBoolean PERFORMANCE_WRITTEN = new AtomicBoolean();
         private static final Logger LOGGER = Logger.getLogger(PerformanceMonitor.class);
 
-        private final ConcurrentMap<AgentClient, Long> operationCountPerAgent = new ConcurrentHashMap<AgentClient, Long>();
+        private final ConcurrentMap<AgentClient, PerformanceState> performancePerAgent =
+                new ConcurrentHashMap<AgentClient, PerformanceState>();
 
         private final AgentsClient agentsClient;
 
-        private long previousTime = System.currentTimeMillis();
-        private long previousCount;
+        //throughput in last measurement interval
+        private double intervalThroughput;
+        //overall throughput since test started
+        private double totalThroughput;
+        //total operation count since test started
+        private long totalOperationCount;
 
-        private volatile double performance;
-        private volatile long operationCount;
         private volatile boolean isRunning = true;
 
         public PerformanceThread(AgentsClient agentsClient) {
@@ -106,77 +110,73 @@ class PerformanceMonitor {
             }
         }
 
-        private void checkPerformance() throws TimeoutException {
-            GetOperationCountCommand command = new GetOperationCountCommand();
-            Map<AgentClient, List<Long>> result = agentsClient.executeOnAllWorkersDetailed(command);
-            long totalCount = 0;
-            for (Map.Entry<AgentClient, List<Long>> entry : result.entrySet()) {
+        private synchronized void checkPerformance() throws TimeoutException {
+            GetPerformanceStateCommand command = new GetPerformanceStateCommand();
+            Map<AgentClient, List<PerformanceState>> result = agentsClient.executeOnAllWorkersDetailed(command);
+            double intervalThroughput = 0;
+            double totalThroughput = 0;
+            long totalOperationCount = 0;
+            for (Map.Entry<AgentClient, List<PerformanceState>> entry : result.entrySet()) {
                 AgentClient agentClient = entry.getKey();
-
-                long countPerAgent = 0;
-                for (Long value : entry.getValue()) {
-                    if (value != null) {
-                        totalCount += value;
-                        countPerAgent += value;
+                long operationCountPerAgent = 0;
+                PerformanceState agentPerformance = new PerformanceState();
+                for (PerformanceState value : entry.getValue()) {
+                    if (value != null && !value.isEmpty()) {
+                        intervalThroughput += value.getIntervalThroughput();
+                        totalThroughput += value.getTotalThroughput();
+                        operationCountPerAgent += value.getOperationCount();
+                        agentPerformance.add(value);
                     }
                 }
-
-                operationCountPerAgent.put(agentClient, countPerAgent);
+                totalOperationCount += operationCountPerAgent;
+                this.performancePerAgent.put(agentClient, agentPerformance);
             }
 
-            long delta = totalCount - previousCount;
-            long currentMs = System.currentTimeMillis();
-            long durationMs = currentMs - previousTime;
-
-            performance = (delta * 1000d) / durationMs;
-            operationCount = totalCount;
-            previousTime = currentMs;
-            previousCount = totalCount;
+            this.totalOperationCount = totalOperationCount;
+            this.intervalThroughput = intervalThroughput;
+            this.totalThroughput = totalThroughput;
         }
 
-        private void logDetailedPerformanceInfo(int duration) {
+        private synchronized void logDetailedPerformanceInfo() {
             if (!PERFORMANCE_WRITTEN.compareAndSet(false, true)) {
                 return;
             }
 
-            long totalOperationCount = operationCount;
             if (totalOperationCount < 0) {
                 LOGGER.info("Performance information is not available!");
                 return;
             }
 
-            appendText(performance + "\n", new File("performance.txt"));
+            appendText(totalThroughput + "\n", new File("performance.txt"));
             if (totalOperationCount > 0) {
-                double performance = (totalOperationCount * 1.0d) / duration;
                 LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
                         formatDouble(100, 7),
                         formatLong(totalOperationCount, 15),
-                        formatDouble(performance, 15)));
+                        formatDouble(totalThroughput, 15)));
             }
 
-            for (Map.Entry<AgentClient, Long> entry : operationCountPerAgent.entrySet()) {
+            for (Map.Entry<AgentClient, PerformanceState> entry : performancePerAgent.entrySet()) {
                 AgentClient client = entry.getKey();
-                long operationCountPerAgent = entry.getValue();
+                PerformanceState performancePerAgent = entry.getValue();
                 double percentage = 0;
                 if (totalOperationCount > 0) {
-                    percentage = 100 * (operationCountPerAgent * 1.0d) / totalOperationCount;
+                    percentage = 100 * (performancePerAgent.getOperationCount() * 1.0d) / totalOperationCount;
                 }
-                performance = (operationCountPerAgent * 1.0d) / duration;
                 LOGGER.info(format("  Agent %-15s %s%% %s ops %s ops/s",
                         client.getPublicAddress(),
                         formatDouble(percentage, 7),
-                        formatLong(operationCountPerAgent, 15),
-                        formatDouble(performance, 15)));
+                        formatLong(performancePerAgent.getOperationCount(), 15),
+                        formatDouble(performancePerAgent.getTotalThroughput(), 15)));
             }
         }
 
-        private String getPerformanceNumbers() {
-            if (operationCount < 0) {
+        private synchronized String getPerformanceNumbers() {
+            if (intervalThroughput < 0) {
                 return " (performance not available)";
             }
             return String.format("%s ops %s ops/s",
-                    formatLong(operationCount, 15),
-                    formatDouble(performance, 15)
+                    formatLong(totalOperationCount, 15),
+                    formatDouble(intervalThroughput, 15)
             );
         }
     }

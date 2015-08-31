@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.worker.commands;
 
-public class GetOperationCountCommand extends Command {
+public class GetPerformanceStateCommand extends Command {
 
     @Override
     public boolean ignoreTimeout() {
@@ -9,6 +9,6 @@ public class GetOperationCountCommand extends Command {
 
     @Override
     public String toString() {
-        return "GetOperationCountCommand{}";
+        return "GetPerformanceStateCommand{}";
     }
 }

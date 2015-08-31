@@ -193,8 +193,7 @@ final class TestCaseRunner {
     }
 
     private void logPerformance() {
-        int duration = testSuite.durationSeconds > 0 ? testSuite.durationSeconds : runPhaseDuration;
-        performanceMonitor.logDetailedPerformanceInfo(duration);
+        performanceMonitor.logDetailedPerformanceInfo();
     }
 
     private void processProbeResults() {
