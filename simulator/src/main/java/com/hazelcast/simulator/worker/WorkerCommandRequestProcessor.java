@@ -8,13 +8,14 @@ import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.worker.commands.PerformanceState;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
 import com.hazelcast.simulator.worker.commands.GenericCommand;
 import com.hazelcast.simulator.worker.commands.GetBenchmarkResultsCommand;
-import com.hazelcast.simulator.worker.commands.GetOperationCountCommand;
 import com.hazelcast.simulator.worker.commands.GetStackTraceCommand;
+import com.hazelcast.simulator.worker.commands.GetPerformanceStateCommand;
 import com.hazelcast.simulator.worker.commands.InitCommand;
 import com.hazelcast.simulator.worker.commands.IsPhaseCompletedCommand;
 import com.hazelcast.simulator.worker.commands.MessageCommand;
@@ -124,8 +125,8 @@ class WorkerCommandRequestProcessor {
                     process((GenericCommand) command);
                 } else if (command instanceof MessageCommand) {
                     process((MessageCommand) command);
-                } else if (command instanceof GetOperationCountCommand) {
-                    result = process((GetOperationCountCommand) command);
+                } else if (command instanceof GetPerformanceStateCommand) {
+                    result = process((GetPerformanceStateCommand) command);
                 } else if (command instanceof GetBenchmarkResultsCommand) {
                     result = process((GetBenchmarkResultsCommand) command);
                 } else if (command instanceof GetStackTraceCommand) {
@@ -309,15 +310,13 @@ class WorkerCommandRequestProcessor {
         }
 
         @SuppressWarnings("unused")
-        private Long process(GetOperationCountCommand command) throws Exception {
-            long result = 0;
+        private PerformanceState process(GetPerformanceStateCommand command) throws Exception {
+            PerformanceState response = new PerformanceState();
             for (TestContainer testContainer : tests.values()) {
-                long operationCount = testContainer.getOperationCount();
-                if (operationCount > 0) {
-                    result += operationCount;
-                }
+                PerformanceState currentContainer = testContainer.getPerformance();
+                response.add(currentContainer);
             }
-            return result;
+            return response;
         }
 
         private Map<String, Result<?>> process(GetBenchmarkResultsCommand command) {
