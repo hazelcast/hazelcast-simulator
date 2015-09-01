@@ -122,7 +122,7 @@ public class SerializationStrategyTest {
 
         @Override
         protected void beforeRun() {
-            localUniqueStrings = uniqueStrings.toArray(new String[0]);
+            localUniqueStrings = uniqueStrings.toArray(new String[uniqueStrings.size()]);
             super.beforeRun();
         }
 
