@@ -47,6 +47,7 @@ public class SerializationStrategyTest {
     private static final ILogger LOGGER = Logger.getLogger(SerializationStrategyTest.class);
     private static final ThrottlingLogger THROTTLING_LOGGER = ThrottlingLogger.newLogger(LOGGER, 5000);
 
+    // properties
     public String basename = SerializationStrategyTest.class.getSimpleName();
     public Strategy strategy = Strategy.PORTABLE;
 
@@ -69,7 +70,6 @@ public class SerializationStrategyTest {
         operationSelectorBuilder.addOperation(Operation.GET_BY_STRING_INDEX, getByStringIndexProb)
                 .addOperation(Operation.GET_BY_INT_INDEX, getByIntIndexProb)
                 .addDefaultOperation(Operation.GET_BY_KEY);
-
     }
 
     @Warmup(global = true)
