@@ -17,11 +17,11 @@ import com.hazelcast.nio.MemberSocketInterceptor;
 import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.tcp.DefaultSocketChannelWrapperFactory;
-import com.hazelcast.nio.tcp.MemberSocketReader;
+import com.hazelcast.nio.tcp.MemberReadHandler;
+import com.hazelcast.nio.tcp.ReadHandler;
 import com.hazelcast.nio.tcp.SocketChannelWrapperFactory;
-import com.hazelcast.nio.tcp.SocketReader;
-import com.hazelcast.nio.tcp.SocketWriter;
 import com.hazelcast.nio.tcp.TcpIpConnection;
+import com.hazelcast.nio.tcp.WriteHandler;
 import com.hazelcast.spi.EventFilter;
 import com.hazelcast.spi.EventRegistration;
 import com.hazelcast.spi.EventService;
@@ -48,7 +48,7 @@ public class MockIOService implements IOService {
     public boolean socketNoDelay = true;
     public int socketReceiveBufferSize = 32;
     public int socketSendBufferSize = 32;
-    public SocketWriterFactory socketWriterFactory = new MemberSocketWriterFactory();
+    public WriteHandlerFactory writeHandlerFactory = new MemberWriteHandlerFactory();
 
     public MockIOService(Address thisAddress, LoggingService loggingService) throws Exception {
         this.thisAddress = thisAddress;
@@ -291,8 +291,8 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public SocketReader createSocketReader(final TcpIpConnection connection) {
-        return new MemberSocketReader(connection, new PacketDispatcher() {
+    public ReadHandler createReadHandler(final TcpIpConnection connection) {
+        return new MemberReadHandler(connection, new PacketDispatcher() {
             private ILogger logger = getLogger("MockIOService");
 
             @Override
@@ -314,8 +314,8 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public SocketWriter createSocketWriter(TcpIpConnection connection) {
-        return socketWriterFactory.create();
+    public WriteHandler createWriteHandler(TcpIpConnection connection) {
+        return writeHandlerFactory.create();
     }
 
     private static class MockEventService implements EventService {

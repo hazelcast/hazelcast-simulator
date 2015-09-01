@@ -100,7 +100,7 @@ public class NetworkTest {
         ioService.socketReceiveBufferSize = socketReceiveBufferSize;
 
         if (trackSequenceId) {
-            ioService.socketWriterFactory = new TaggingSocketWriterFactory();
+            ioService.writeHandlerFactory = new TaggingWriteHandlerFactory();
         }
 
         IOThreadingModel threadingModel;
