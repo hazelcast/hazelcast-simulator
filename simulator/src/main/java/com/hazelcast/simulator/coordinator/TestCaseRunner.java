@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
@@ -57,7 +56,6 @@ final class TestCaseRunner {
     private final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap;
 
     private StopThread stopThread;
-    private int runPhaseDuration;
 
     TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int paddingLength,
                    ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap) {
@@ -168,8 +166,6 @@ final class TestCaseRunner {
     }
 
     private void waitForTestCase() throws TimeoutException, InterruptedException {
-        long started = System.nanoTime();
-
         if (testSuite.durationSeconds > 0) {
             stopThread = new StopThread();
             stopThread.start();
@@ -188,7 +184,6 @@ final class TestCaseRunner {
             waitForStopThread.await();
         }
 
-        runPhaseDuration = (int) TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
         waitForTestPhaseCompletion(TestPhase.RUN);
     }
 

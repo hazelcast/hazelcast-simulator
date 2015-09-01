@@ -79,11 +79,11 @@ class PerformanceMonitor {
 
         private final AgentsClient agentsClient;
 
-        //throughput in last measurement interval
+        // throughput in last measurement interval
         private double intervalThroughput;
-        //overall throughput since test started
+        // overall throughput since test started
         private double totalThroughput;
-        //total operation count since test started
+        // total operation count since test started
         private long totalOperationCount;
 
         private volatile boolean isRunning = true;
@@ -104,8 +104,8 @@ class PerformanceMonitor {
                     checkPerformance();
                 } catch (TimeoutException e) {
                     LOGGER.warn("There was a timeout retrieving performance information from the members.");
-                } catch (Throwable e) {
-                    LOGGER.fatal("Exception in PerformanceThread.run()", e);
+                } catch (Exception e) {
+                    LOGGER.fatal("Exception in PerformanceThread.run() of PerformanceMonitor", e);
                 }
             }
         }
@@ -113,28 +113,28 @@ class PerformanceMonitor {
         private synchronized void checkPerformance() throws TimeoutException {
             GetPerformanceStateCommand command = new GetPerformanceStateCommand();
             Map<AgentClient, List<PerformanceState>> result = agentsClient.executeOnAllWorkersDetailed(command);
-            double intervalThroughput = 0;
-            double totalThroughput = 0;
-            long totalOperationCount = 0;
+            long tmpTotalOperationCount = 0;
+            double tmpIntervalThroughput = 0;
+            double tmpTotalThroughput = 0;
             for (Map.Entry<AgentClient, List<PerformanceState>> entry : result.entrySet()) {
                 AgentClient agentClient = entry.getKey();
                 long operationCountPerAgent = 0;
                 PerformanceState agentPerformance = new PerformanceState();
                 for (PerformanceState value : entry.getValue()) {
                     if (value != null && !value.isEmpty()) {
-                        intervalThroughput += value.getIntervalThroughput();
-                        totalThroughput += value.getTotalThroughput();
+                        tmpIntervalThroughput += value.getIntervalThroughput();
+                        tmpTotalThroughput += value.getTotalThroughput();
                         operationCountPerAgent += value.getOperationCount();
                         agentPerformance.add(value);
                     }
                 }
-                totalOperationCount += operationCountPerAgent;
-                this.performancePerAgent.put(agentClient, agentPerformance);
+                tmpTotalOperationCount += operationCountPerAgent;
+                performancePerAgent.put(agentClient, agentPerformance);
             }
 
-            this.totalOperationCount = totalOperationCount;
-            this.intervalThroughput = intervalThroughput;
-            this.totalThroughput = totalThroughput;
+            totalOperationCount = tmpTotalOperationCount;
+            intervalThroughput = tmpIntervalThroughput;
+            totalThroughput = tmpTotalThroughput;
         }
 
         private synchronized void logDetailedPerformanceInfo() {
