@@ -88,6 +88,7 @@ public enum OperationType {
      *
      * This class prevents double registration of class types or classIds, which would produce late failures during runtime.
      */
+    @SuppressWarnings("PMD.UnusedModifier")
     static class OperationTypeRegistry {
 
         private static final ConcurrentMap<Integer, OperationType> CLASS_IDS = new ConcurrentHashMap<Integer, OperationType>();
