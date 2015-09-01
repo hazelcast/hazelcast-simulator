@@ -8,7 +8,7 @@ import com.hazelcast.core.IMap;
  * @param <K> key type
  * @param <V> value type
  */
-final class SyncMapStreamer<K, V> implements MapStreamer<K, V> {
+final class SyncMapStreamer<K, V> implements Streamer<K, V> {
 
     private final IMap<K, V> map;
 

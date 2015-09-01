@@ -27,8 +27,8 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -101,7 +101,7 @@ public class StringStringMapTest {
 
     private void loadInitialData() throws InterruptedException {
         Random random = new Random();
-        MapStreamer<String, String> streamer = MapStreamerFactory.getInstance(map);
+        Streamer<String, String> streamer = StreamerFactory.getInstance(map);
         for (String key : keys) {
             String value = values[random.nextInt(valueCount)];
             streamer.pushEntry(key, value);

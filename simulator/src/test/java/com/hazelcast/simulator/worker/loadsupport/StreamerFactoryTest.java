@@ -8,33 +8,33 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class MapStreamerFactoryTest {
+public class StreamerFactoryTest {
 
     private final IMap map = mock(IMap.class);
 
     @Test
     public void testConstructor() throws Exception {
-        invokePrivateConstructor(MapStreamerFactory.class);
+        invokePrivateConstructor(StreamerFactory.class);
     }
 
     @Test
     public void testGetInstance() {
-        MapStreamer streamer = MapStreamerFactory.getInstance(map);
+        Streamer streamer = StreamerFactory.getInstance(map);
         assertNotNull(streamer);
     }
 
     @Test
     public void testGetInstance_forceAsync() {
-        MapStreamerFactory.enforceAsync(true);
-        MapStreamer streamer = MapStreamerFactory.getInstance(map);
+        StreamerFactory.enforceAsync(true);
+        Streamer streamer = StreamerFactory.getInstance(map);
         assertNotNull(streamer);
         assertTrue(streamer instanceof AsyncMapStreamer);
     }
 
     @Test
     public void testGetInstance_forceSync() {
-        MapStreamerFactory.enforceAsync(false);
-        MapStreamer streamer = MapStreamerFactory.getInstance(map);
+        StreamerFactory.enforceAsync(false);
+        Streamer streamer = StreamerFactory.getInstance(map);
         assertNotNull(streamer);
         assertTrue(streamer instanceof SyncMapStreamer);
     }

@@ -25,8 +25,8 @@ import com.hazelcast.map.impl.QueryResultSizeLimiter;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
@@ -115,7 +115,7 @@ abstract class AbstractMapTest {
         }
 
         int value = 0;
-        MapStreamer<Object, Integer> streamer = MapStreamerFactory.getInstance(map);
+        Streamer<Object, Integer> streamer = StreamerFactory.getInstance(map);
         if ("String".equals(keyType)) {
             for (String key : generateStringKeys(localKeyCount, 10, KeyLocality.LOCAL, hazelcastInstance)) {
                 streamer.pushEntry(key, value++);

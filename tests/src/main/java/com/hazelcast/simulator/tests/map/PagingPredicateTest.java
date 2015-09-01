@@ -9,8 +9,8 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
@@ -56,7 +56,7 @@ public class PagingPredicateTest {
         if (useIndex) {
             map.addIndex("salary", true);
         }
-        MapStreamer<Integer, Employee> streamer = MapStreamerFactory.getInstance(map);
+        Streamer<Integer, Employee> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {
             Employee employee = new Employee(i);
             streamer.pushEntry(employee.getId(), employee);
