@@ -29,6 +29,7 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,11 +45,13 @@ import static com.hazelcast.simulator.coordinator.CoordinatorHelper.createAddres
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.findNextAgentLayout;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.getMaxTestCaseIdLength;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.initAgentMemberLayouts;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
@@ -86,6 +89,7 @@ public final class Coordinator {
     FailureMonitor failureMonitor;
     PerformanceMonitor performanceMonitor;
 
+    private final List<AgentAddress> addresses = Collections.synchronizedList(new LinkedList<AgentAddress>());
     private final Bash bash = new Bash(props);
 
     private ExecutorService parallelExecutor;
@@ -122,16 +126,21 @@ public final class Coordinator {
                 agentsClient.terminateWorkers();
                 agentsClient.stop();
             }
+
+            killAgents();
         }
     }
 
     private void initAgents() {
-        List<AgentAddress> agentAddresses = AgentsFile.load(agentsFile);
-        if (agentAddresses.isEmpty()) {
+        ensureExistingFile(agentsFile);
+        addresses.addAll(AgentsFile.load(agentsFile));
+        if (addresses.isEmpty()) {
             throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
         }
 
-        agentsClient = new AgentsClient(agentAddresses);
+        startAgents();
+
+        agentsClient = new AgentsClient(addresses);
         agentsClient.start();
 
         initMemberWorkerCount(workerJvmSettings);
@@ -153,7 +162,46 @@ public final class Coordinator {
         uploadUploadDirectory();
         uploadWorkerClassPath();
         uploadYourKitIfNeeded();
-        // TODO: copy the hazelcast jars
+        // TODO: copy the Hazelcast JARs
+    }
+
+    private void startAgents() {
+        echoLocal("Starting %s Agents", addresses.size());
+
+        for (AgentAddress address : addresses) {
+            startAgent(address.publicAddress);
+        }
+
+        echoLocal("Successfully started agents on %s boxes", addresses.size());
+    }
+
+    private void startAgent(String ip) {
+        echoLocal("Killing Java processes on %s", ip);
+        bash.ssh(ip, "killall -9 java || true");
+
+        echoLocal("Starting Agent on %s", ip);
+        String additionalParameters = "";
+        if (isEC2(props.get("CLOUD_PROVIDER"))) {
+            additionalParameters = format("--cloudProvider %s --cloudIdentity %s --cloudCredential %s",
+                    props.get("CLOUD_PROVIDER"),
+                    props.get("CLOUD_IDENTITY"),
+                    props.get("CLOUD_CREDENTIAL"));
+        }
+        bash.ssh(ip, format(
+                "nohup hazelcast-simulator-%s/bin/agent %s > agent.out 2> agent.err < /dev/null &",
+                getSimulatorVersion(),
+                additionalParameters));
+    }
+
+    private void killAgents() {
+        echoLocal("Killing %s Agents", addresses.size());
+
+        for (AgentAddress address : addresses) {
+            echoLocal("Killing Agent, %s", address.publicAddress);
+            bash.ssh(address.publicAddress, "killall -9 java || true");
+        }
+
+        echoLocal("Successfully killed %s Agents", addresses.size());
     }
 
     private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {
@@ -439,6 +487,14 @@ public final class Coordinator {
         LOGGER.info("-----------------------------------------------------------------------------");
         LOGGER.info("No failures have been detected!");
         LOGGER.info("-----------------------------------------------------------------------------");
+    }
+
+    private void echoLocal(String msg, Object... args) {
+        echoLocal(format(msg, args));
+    }
+
+    private void echoLocal(String msg) {
+        LOGGER.info(msg);
     }
 
     private void echo(String msg, Object... args) {
