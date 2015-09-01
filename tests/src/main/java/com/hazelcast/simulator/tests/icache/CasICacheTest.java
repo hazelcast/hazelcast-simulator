@@ -14,6 +14,8 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
@@ -75,9 +77,11 @@ public class CasICacheTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
+        Streamer<Integer, Long> streamer = StreamerFactory.getInstance(cache);
         for (int k = 0; k < keyCount; k++) {
-            cache.put(k, 0L);
+            streamer.pushEntry(k, 0L);
         }
+        streamer.await();
     }
 
     @Run
