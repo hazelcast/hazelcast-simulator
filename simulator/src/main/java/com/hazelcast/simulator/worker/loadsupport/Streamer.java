@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker.loadsupport;
 
 /**
- * MapStreamer is used for storage initialization during a warm-up phase.
+ * Streamer is used for storage initialization during a warm-up phase.
  *
  * With Hazelcast version 3.5 or newer it does use asynchronous operations so it's extremely fast,
  * but it has own back-pressure and doesn't rely on back-pressure provided by Hazelcast.

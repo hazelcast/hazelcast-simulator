@@ -2,11 +2,8 @@ package com.hazelcast.simulator.worker.loadsupport;
 
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.core.IMap;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.cache.Cache;
 
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
@@ -16,11 +13,12 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class AsyncCacheStreamerTest {
+
     @SuppressWarnings("unchecked")
     private final ICache<Integer, String> cache = mock(ICache.class);
 
     @SuppressWarnings("unchecked")
-    private final ICompletableFuture future = mock(ICompletableFuture.class);
+    private final ICompletableFuture<Void> future = mock(ICompletableFuture.class);
 
     private Streamer<Integer, String> streamer;
 

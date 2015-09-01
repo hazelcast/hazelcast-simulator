@@ -53,4 +53,3 @@ public class SyncCacheStreamerTest {
         verifyNoMoreInteractions(cache);
     }
 }
-

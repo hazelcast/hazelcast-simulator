@@ -9,23 +9,26 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
+
     public static final int DEFAULT_CONCURRENCY_LEVEL = 1000;
     public static final long DEFAULT_TIMEOUT_MINUTES = 2;
 
-    private final Semaphore semaphore;
     private final int concurrencyLevel;
-    private final ExecutionCallback<V> callback;
+    private final Semaphore semaphore;
+    private final ExecutionCallback callback;
+
     private Throwable storedException;
 
     AbstractAsyncStreamer() {
         this.concurrencyLevel = DEFAULT_CONCURRENCY_LEVEL;
-        this.semaphore = new Semaphore(concurrencyLevel);
-        this.callback = new MyExecutionCallback();
+        this.semaphore = new Semaphore(DEFAULT_CONCURRENCY_LEVEL);
+        this.callback = new StreamerExecutionCallback();
     }
 
     abstract ICompletableFuture storeAsync(K key, V value);
 
     @Override
+    @SuppressWarnings("unchecked")
     public void pushEntry(K key, V value) {
         acquirePermit(1);
         ICompletableFuture future = storeAsync(key, value);
@@ -63,8 +66,8 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
         }
     }
 
+    private final class StreamerExecutionCallback implements ExecutionCallback {
 
-    private final class MyExecutionCallback implements ExecutionCallback {
         @Override
         public void onResponse(Object response) {
             releasePermit(1);

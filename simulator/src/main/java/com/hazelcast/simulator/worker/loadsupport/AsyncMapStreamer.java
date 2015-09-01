@@ -4,7 +4,7 @@ import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
 
 /**
- * Asynchronous implementation of Streamer.
+ * Asynchronous implementation of {@link Streamer} for {@link IMap}.
  *
  * @param <K> key type
  * @param <V> value type
@@ -16,7 +16,6 @@ final class AsyncMapStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
     AsyncMapStreamer(IMap<K, V> map) {
         this.map = map;
     }
-
 
     @Override
     ICompletableFuture storeAsync(K key, V value) {

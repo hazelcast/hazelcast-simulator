@@ -3,7 +3,7 @@ package com.hazelcast.simulator.worker.loadsupport;
 import com.hazelcast.core.IMap;
 
 /**
- * Synchronous implementation of MapStreamer.
+ * Synchronous implementation of {@link Streamer} for {@link IMap}.
  *
  * @param <K> key type
  * @param <V> value type

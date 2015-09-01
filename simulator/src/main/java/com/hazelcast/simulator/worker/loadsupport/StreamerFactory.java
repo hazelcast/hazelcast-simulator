@@ -11,7 +11,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
 
+/**
+ * Creates {@link Streamer} instances for {@link IMap} and {@link Cache}.
+ *
+ * If possible an asynchronous variant is created, otherwise it will be synchronous.
+ */
 public final class StreamerFactory {
+
     private static final AtomicBoolean CREATE_ASYNC;
 
     static {
@@ -22,7 +28,7 @@ public final class StreamerFactory {
                 createAsync = true;
             }
         } catch (NoClassDefFoundError e) {
-            //it's Hazelcast 3.2 or older -> we have to use sync API
+            // it's Hazelcast 3.2 or older -> we have to use sync API
             EmptyStatement.ignore(e);
         } finally {
             CREATE_ASYNC = new AtomicBoolean(createAsync);
