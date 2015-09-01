@@ -1,11 +1,13 @@
 package com.hazelcast.simulator.protocol;
 
+import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
@@ -15,7 +17,6 @@ import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
-import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -23,13 +24,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.utils.CommonUtils.joinThreads;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 public class ProtocolUtil {
@@ -119,16 +124,6 @@ public class ProtocolUtil {
             shutdownThreads.add(thread);
         }
         connectors.clear();
-    }
-
-    private static void joinThreads(List<Thread> threadList) {
-        for (Thread thread : threadList) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                EmptyStatement.ignore(e);
-            }
-        }
     }
 
     static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
@@ -237,6 +232,34 @@ public class ProtocolUtil {
         for (Map.Entry<SimulatorAddress, ResponseType> entry : response.entrySet()) {
             assertEquals(responseType, entry.getValue());
             assertEquals(destination.getAddressLevel(), entry.getKey().getAddressLevel());
+        }
+    }
+
+    static void assertEmptyFutureMaps() {
+        LOGGER.info("Asserting that all future maps are empty...");
+
+        for (ClientConfiguration configuration : coordinatorConnector.getConfigurationList()) {
+            ConcurrentMap<String, ResponseFuture> futureMap = configuration.getFutureMap();
+            int futureMapSize = futureMap.size();
+            if (futureMapSize > 0) {
+                LOGGER.error("Future entries: " + futureMap.toString());
+                fail(format("FutureMap of ClientConnector %s is not empty", configuration.getRemoteAddress()));
+            }
+        }
+        assertEmptyFutureMaps(agentConnectors, "AgentConnector");
+        assertEmptyFutureMaps(workerConnectors, "WorkerConnector");
+
+        LOGGER.info("Done!");
+    }
+
+    private static <C extends ServerConnector> void assertEmptyFutureMaps(List<C> connectorList, String connectorName) {
+        for (C connector : connectorList) {
+            ConcurrentMap<String, ResponseFuture> futureMap = connector.getConfiguration().getFutureMap();
+            int futureMapSize = futureMap.size();
+            if (futureMapSize > 0) {
+                LOGGER.error("Future entries: " + futureMap.toString());
+                fail(format("FutureMap of %s %s is not empty", connectorName, connector.getAddress()));
+            }
         }
     }
 }

@@ -4,11 +4,13 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import org.apache.log4j.Level;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_TEST_TIMEOUT_MILLIS;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.assertEmptyFutureMaps;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertSingleTarget;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.buildMessage;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getAgentConnector;
@@ -43,6 +45,11 @@ public class ProtocolRemoveTargetTest {
 
         resetLogLevel();
         resetMessageId();
+    }
+
+    @After
+    public void commonAsserts() {
+        assertEmptyFutureMaps();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)

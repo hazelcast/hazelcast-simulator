@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.protocol.configuration.ServerConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
@@ -26,6 +27,13 @@ public interface ServerConnector {
      * @return the local {@link SimulatorAddress}
      */
     SimulatorAddress getAddress();
+
+    /**
+     * Returns the {@link ServerConfiguration} of this connector.
+     *
+     * @return the {@link ServerConfiguration}
+     */
+    ServerConfiguration getConfiguration();
 
     /**
      * Submits a {@link SimulatorOperation} to a {@link SimulatorAddress}.

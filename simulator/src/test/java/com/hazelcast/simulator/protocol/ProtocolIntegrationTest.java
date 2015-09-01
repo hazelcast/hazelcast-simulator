@@ -11,12 +11,14 @@ import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.utils.AssertTask;
 import org.apache.log4j.Level;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_TEST_TIMEOUT_MILLIS;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertAllTargets;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.assertEmptyFutureMaps;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertSingleTarget;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.buildMessage;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getAgentConnector;
@@ -57,6 +59,11 @@ public class ProtocolIntegrationTest {
 
         resetLogLevel();
         resetMessageId();
+    }
+
+    @After
+    public void commonAsserts() {
+        assertEmptyFutureMaps();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)

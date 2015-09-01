@@ -93,6 +93,11 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     @Override
+    public ServerConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    @Override
     public void submit(SimulatorOperation operation, SimulatorAddress destination) {
         long messageId = messageIds.incrementAndGet();
         OperationType operationType = getOperationType(operation);

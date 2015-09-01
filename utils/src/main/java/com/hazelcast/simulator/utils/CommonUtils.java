@@ -27,6 +27,7 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.Formatter;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -178,6 +179,16 @@ public final class CommonUtils {
         StringWriter stringWriter = new StringWriter();
         throwable.printStackTrace(new PrintWriter(stringWriter));
         return stringWriter.toString();
+    }
+
+    public static void joinThreads(List<Thread> threadList) {
+        for (Thread thread : threadList) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                EmptyStatement.ignore(e);
+            }
+        }
     }
 
     public static void closeQuietly(Socket socket) {

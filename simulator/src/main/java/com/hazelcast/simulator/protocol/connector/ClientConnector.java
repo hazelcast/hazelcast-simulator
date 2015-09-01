@@ -70,6 +70,10 @@ public class ClientConnector {
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
     }
 
+    public ClientConfiguration getConfiguration() {
+        return configuration;
+    }
+
     public void forwardToChannel(ByteBuf buffer) {
         channel.writeAndFlush(buffer);
     }

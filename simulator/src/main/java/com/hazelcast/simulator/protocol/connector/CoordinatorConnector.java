@@ -7,7 +7,6 @@ import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
-import com.hazelcast.util.EmptyStatement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +15,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.utils.CommonUtils.joinThreads;
 
 /**
  * Connector which connects to remote Simulator Agent instances.
@@ -42,16 +42,6 @@ public class CoordinatorConnector {
             shutdownThreads.add(thread);
         }
         joinThreads(shutdownThreads);
-    }
-
-    private static void joinThreads(List<Thread> threadList) {
-        for (Thread thread : threadList) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                EmptyStatement.ignore(e);
-            }
-        }
     }
 
     /**
@@ -117,5 +107,18 @@ public class CoordinatorConnector {
      */
     public int getExceptionCount() {
         return exceptionLogger.getExceptionCount();
+    }
+
+    /**
+     * Returns a list of {@link ClientConfiguration} from all connected {@link ClientConnector} instances.
+     *
+     * @return a list of {@link ClientConfiguration}
+     */
+    public List<ClientConfiguration> getConfigurationList() {
+        List<ClientConfiguration> configurations = new ArrayList<ClientConfiguration>(agents.size());
+        for (ClientConnector clientConnector : agents.values()) {
+            configurations.add(clientConnector.getConfiguration());
+        }
+        return configurations;
     }
 }
