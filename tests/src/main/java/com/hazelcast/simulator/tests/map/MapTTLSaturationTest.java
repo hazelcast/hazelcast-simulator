@@ -46,7 +46,6 @@ public class MapTTLSaturationTest {
 
     private TestContext testContext;
     private IMap map;
-    private long baseLineUsed;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -74,7 +73,7 @@ public class MapTTLSaturationTest {
         public void run() {
             long free = Runtime.getRuntime().freeMemory();
             long total = Runtime.getRuntime().totalMemory();
-            baseLineUsed = total - free;
+            long baseLineUsed = total - free;
             long maxBytes = Runtime.getRuntime().maxMemory();
             double usedOfMax = 100.0 * ((double) baseLineUsed / (double) maxBytes);
 

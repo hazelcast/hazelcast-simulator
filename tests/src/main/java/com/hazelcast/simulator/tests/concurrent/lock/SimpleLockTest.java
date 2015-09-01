@@ -20,13 +20,14 @@ import static org.junit.Assert.assertTrue;
 
 public class SimpleLockTest {
 
+    private static final int INITIAL_VALUE = 1000;
+
     private static final ILogger LOGGER = Logger.getLogger(SimpleLockTest.class);
 
     public String basename = SimpleLockTest.class.getSimpleName();
     public int maxAccounts = 7;
     public int threadCount = 10;
 
-    private int initialValue = 1000;
     private int totalValue = 0;
     private TestContext testContext;
     private HazelcastInstance targetInstance;
@@ -41,9 +42,9 @@ public class SimpleLockTest {
     public void warmup() throws Exception {
         for (int k = 0; k < maxAccounts; k++) {
             IAtomicLong account = targetInstance.getAtomicLong(basename + k);
-            account.set(initialValue);
+            account.set(INITIAL_VALUE);
         }
-        totalValue = initialValue * maxAccounts;
+        totalValue = INITIAL_VALUE * maxAccounts;
     }
 
     private class Worker implements Runnable {
