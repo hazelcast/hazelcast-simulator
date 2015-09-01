@@ -212,9 +212,9 @@ public class ConcurrentProbeTest {
         assertEquals(1, invocations2.longValue());
         assertEquals(2, combinedInvocations.longValue());
 
-        assertEquals(1.0, operationsPerSecond1.doubleValue(), 0.0001);
-        assertEquals(1.0, operationsPerSecond2.doubleValue(), 0.0001);
-        assertEquals(2.0, combinedOperationsPerSecond.doubleValue(), 0.0001);
+        assertEquals(1.0, operationsPerSecond1, 0.0001);
+        assertEquals(1.0, operationsPerSecond2, 0.0001);
+        assertEquals(2.0, combinedOperationsPerSecond, 0.0001);
     }
 
     private static class ProbeTester extends Thread {
