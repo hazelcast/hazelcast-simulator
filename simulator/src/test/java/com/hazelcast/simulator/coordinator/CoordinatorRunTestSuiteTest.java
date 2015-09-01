@@ -244,10 +244,16 @@ public class CoordinatorRunTestSuiteTest {
             verify(agentsClient, times(executeOnAllWorkersTimes * numberOfTests)).executeOnAllWorkers(any(Command.class));
         }
         verify(agentsClient, times(executeOnFirstWorkerTimes * numberOfTests)).executeOnFirstWorker(any(Command.class));
-        verify(agentsClient, times(waitForPhaseCompletionTimes))
-                .waitForPhaseCompletion(anyString(), eq("CoordinatorTest1"), any(TestPhase.class));
-        verify(agentsClient, times(waitForPhaseCompletionTimes))
-                .waitForPhaseCompletion(anyString(), eq("CoordinatorTest2"), any(TestPhase.class));
+        if (verifyExecuteOnAllWorkersWithRange) {
+            verify(agentsClient, atLeast(waitForPhaseCompletionTimes - 1))
+                    .waitForPhaseCompletion(anyString(), eq("CoordinatorTest1"), any(TestPhase.class));
+            verify(agentsClient, atMost(waitForPhaseCompletionTimes))
+                    .waitForPhaseCompletion(anyString(), eq("CoordinatorTest1"), any(TestPhase.class));
+            verify(agentsClient, atLeast(waitForPhaseCompletionTimes - 1))
+                    .waitForPhaseCompletion(anyString(), eq("CoordinatorTest2"), any(TestPhase.class));
+            verify(agentsClient, atMost(waitForPhaseCompletionTimes))
+                    .waitForPhaseCompletion(anyString(), eq("CoordinatorTest2"), any(TestPhase.class));
+        }
         verify(agentsClient, times(1)).terminateWorkers();
     }
 }
