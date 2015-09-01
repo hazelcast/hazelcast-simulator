@@ -12,8 +12,8 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.map.domain.DomainObject;
 import com.hazelcast.simulator.tests.map.domain.DomainObjectFactory;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -77,7 +77,7 @@ public class SerializationStrategyTest {
         int uniqueStringsCount = itemCount / recordsPerUnique;
         String[] strings = generateUniqueStrings(uniqueStringsCount);
 
-        MapStreamer<String, DomainObject> streamer = MapStreamerFactory.getInstance(map);
+        Streamer<String, DomainObject> streamer = StreamerFactory.getInstance(map);
         DomainObjectFactory objectFactory = DomainObjectFactory.newFactory(strategy);
         for (int i = 0; i < itemCount; i++) {
             String indexedField = strings[RandomUtils.nextInt(0, uniqueStringsCount)];

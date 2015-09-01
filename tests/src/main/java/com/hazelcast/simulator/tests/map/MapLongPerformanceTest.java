@@ -11,8 +11,8 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -60,7 +60,7 @@ public class MapLongPerformanceTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        MapStreamer<Integer, Long> streamer = MapStreamerFactory.getInstance(map);
+        Streamer<Integer, Long> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {
             streamer.pushEntry(i, 0L);
         }

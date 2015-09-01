@@ -13,8 +13,8 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
-import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.SimpleMetronome;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
@@ -57,7 +57,7 @@ public class SqlPredicateTest {
     @Warmup(global = true)
     public void warmup() throws InterruptedException {
         Random random = new Random();
-        MapStreamer<String, DataSerializableEmployee> streamer = MapStreamerFactory.getInstance(map);
+        Streamer<String, DataSerializableEmployee> streamer = StreamerFactory.getInstance(map);
         for (int k = 0; k < keyCount; k++) {
             String key = generateString(keyLength);
             DataSerializableEmployee value = generateRandomEmployee(random);

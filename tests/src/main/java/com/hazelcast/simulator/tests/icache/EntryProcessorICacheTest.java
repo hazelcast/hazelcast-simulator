@@ -14,6 +14,8 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
@@ -78,9 +80,11 @@ public class EntryProcessorICacheTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
+        Streamer<Integer, Long> streamer = StreamerFactory.getInstance(cache);
         for (int i = 0; i < keyCount; i++) {
-            cache.put(i, 0L);
+            streamer.pushEntry(i, 0L);
         }
+        streamer.await();
     }
 
     @Verify

@@ -29,6 +29,8 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
@@ -109,12 +111,13 @@ public class StringICacheTest {
         values = generateStrings(valueCount, valueLength);
 
         Random random = new Random();
-
+        Streamer<String, String> streamer = StreamerFactory.getInstance(cache);
         for (int k = 0; k < keys.length; k++) {
             String key = keys[random.nextInt(keyCount)];
             String value = values[random.nextInt(valueCount)];
-            cache.put(key, value);
+            streamer.pushEntry(key, value);
         }
+        streamer.await();
     }
 
     @Run
