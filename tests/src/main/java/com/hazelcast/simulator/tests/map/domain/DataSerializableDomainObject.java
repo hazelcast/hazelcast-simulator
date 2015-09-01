@@ -5,7 +5,6 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class DataSerializableDomainObject implements DomainObject, DataSerializable {
     private String key;
@@ -93,12 +92,15 @@ public class DataSerializableDomainObject implements DomainObject, DataSerializa
             return false;
         }
 
-        DataSerializableDomainObject data = (DataSerializableDomainObject) o;
-        return Objects.equals(key, data.key);
+        DataSerializableDomainObject that = (DataSerializableDomainObject) o;
+        if (key != null ? !key.equals(that.key) : that.key != null) {
+            return false;
+        }
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key);
+        return (key != null ? key.hashCode() : 0);
     }
 }

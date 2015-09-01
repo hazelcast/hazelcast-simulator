@@ -5,7 +5,6 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class IdentifiedDataSerializableDomainObject implements DomainObject, IdentifiedDataSerializable {
     public static final int CLASS_ID = 1;
@@ -106,12 +105,15 @@ public class IdentifiedDataSerializableDomainObject implements DomainObject, Ide
             return false;
         }
 
-        IdentifiedDataSerializableDomainObject data = (IdentifiedDataSerializableDomainObject) o;
-        return Objects.equals(key, data.key);
+        IdentifiedDataSerializableDomainObject that = (IdentifiedDataSerializableDomainObject) o;
+        if (key != null ? !key.equals(that.key) : that.key != null) {
+            return false;
+        }
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key);
+        return (key != null ? key.hashCode() : 0);
     }
 }

@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.tests.map.domain;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 public class SerializableDomainObject implements DomainObject, Serializable {
     private String key;
@@ -70,12 +69,15 @@ public class SerializableDomainObject implements DomainObject, Serializable {
             return false;
         }
 
-        SerializableDomainObject data = (SerializableDomainObject) o;
-        return Objects.equals(key, data.key);
+        SerializableDomainObject that = (SerializableDomainObject) o;
+        if (key != null ? !key.equals(that.key) : that.key != null) {
+            return false;
+        }
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key);
+        return (key != null ? key.hashCode() : 0);
     }
 }
