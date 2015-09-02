@@ -21,9 +21,10 @@ import com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRe
 import com.amazonaws.services.elasticloadbalancing.model.Listener;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerRequest;
-import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
@@ -60,6 +61,7 @@ public class AwsProvisioner {
     private AmazonElasticLoadBalancingClient elb;
     private SimulatorProperties props = new SimulatorProperties();
 
+    private final ComponentRegistry registry = new ComponentRegistry();
     private final File agentsFile = new File(AgentsFile.NAME);
     private final File elbFile = new File(AWS_ELB_FILE_NAME);
 
@@ -76,6 +78,7 @@ public class AwsProvisioner {
 
     AwsProvisioner() {
         setProperties(null);
+        AgentsFile.load(agentsFile, registry);
     }
 
     void setProperties(File file) {
@@ -135,15 +138,12 @@ public class AwsProvisioner {
             createLoadBalancer(elbName);
         }
 
-        List<Instance> instances = getInstancesFromAgentsFile();
-
+        List<Instance> instances = getInstancesByPublicIp(registry.getAgents());
         addInstancesToElb(elbName, instances);
     }
 
     void scaleInstanceCountTo(int totalInstancesWanted) {
-        List agents = AgentsFile.load(agentsFile);
-        int agentsSize = agents.size();
-
+        int agentsSize = registry.agentCount();
         if (totalInstancesWanted > agentsSize) {
             createInstances(totalInstancesWanted - agentsSize);
         } else {
@@ -182,13 +182,12 @@ public class AwsProvisioner {
     }
 
     private void terminateInstances(int count) {
-        List<AgentAddress> agents = AgentsFile.load(agentsFile);
-
-        List<AgentAddress> deadList = agents.subList(0, count);
-        agents.removeAll(deadList);
-        AgentsFile.save(agentsFile, agents);
-
+        List<AgentData> deadList = registry.getAgents(count);
         List<Instance> deadInstances = getInstancesByPublicIp(deadList);
+
+        LOGGER.info("Updating " + agentsFile.getAbsolutePath());
+        AgentsFile.save(agentsFile, registry);
+
         terminateInstances(deadInstances);
     }
 
@@ -203,15 +202,11 @@ public class AwsProvisioner {
         ec2.terminateInstances(terminateInstancesRequest);
     }
 
-    private List<Instance> getInstancesFromAgentsFile() {
-        List<AgentAddress> currentAgents = AgentsFile.load(agentsFile);
-        return getInstancesByPublicIp(currentAgents);
-    }
-
-    private List<Instance> getInstancesByPublicIp(List<AgentAddress> agents) {
+    private List<Instance> getInstancesByPublicIp(List<AgentData> agentDataList) {
         List<String> ips = new ArrayList<String>();
-        for (AgentAddress agent : agents) {
-            ips.add(agent.publicAddress);
+        for (AgentData agentData : agentDataList) {
+            registry.removeAgent(agentData);
+            ips.add(agentData.getPublicAddress());
         }
 
         DescribeInstancesRequest request = new DescribeInstancesRequest();

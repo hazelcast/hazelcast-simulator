@@ -1,10 +1,11 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.google.common.base.Predicate;
-import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.provisioner.git.BuildSupport;
 import com.hazelcast.simulator.provisioner.git.GitSupport;
 import com.hazelcast.simulator.provisioner.git.HazelcastJARFinder;
@@ -16,7 +17,6 @@ import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -52,8 +52,8 @@ public final class Provisioner {
 
     final SimulatorProperties props = new SimulatorProperties();
 
+    private final ComponentRegistry registry = new ComponentRegistry();
     private final File agentsFile = new File(AgentsFile.NAME);
-    private final List<AgentAddress> addresses = Collections.synchronizedList(new LinkedList<AgentAddress>());
     // big number of threads, but they are used to offload SSH tasks, so there is no load on this machine
     private final ExecutorService executor = createFixedThreadPool(10, Provisioner.class);
 
@@ -64,7 +64,7 @@ public final class Provisioner {
 
     void init() {
         ensureExistingFile(agentsFile);
-        addresses.addAll(AgentsFile.load(agentsFile));
+        AgentsFile.load(agentsFile, registry);
         bash = new Bash(props);
 
         GitSupport gitSupport = createGitSupport();
@@ -87,10 +87,11 @@ public final class Provisioner {
     void scale(int size, boolean enterpriseEnabled) {
         ensureNotStaticCloudProvider("scale");
 
-        int delta = size - addresses.size();
+        int agentSize = registry.agentCount();
+        int delta = size - agentSize;
         if (delta == 0) {
-            echo("Current number of machines: " + addresses.size());
-            echo("Desired number of machines: " + (addresses.size() + delta));
+            echo("Current number of machines: " + agentSize);
+            echo("Desired number of machines: " + (agentSize + delta));
             echo("Ignoring spawn machines, desired number of machines already exists.");
         } else if (delta > 0) {
             scaleUp(delta, enterpriseEnabled);
@@ -100,15 +101,15 @@ public final class Provisioner {
     }
 
     void installSimulator(boolean enableEnterprise) {
-        echoImportant("Installing Simulator on %s machines", addresses.size());
+        echoImportant("Installing Simulator on %s machines", registry.agentCount());
 
         hazelcastJars.prepare(enableEnterprise);
-        for (AgentAddress address : addresses) {
-            echo("Installing Simulator on " + address.publicAddress);
-            installSimulator(address.publicAddress);
+        for (AgentData agentData : registry.getAgents()) {
+            echo("Installing Simulator on " + agentData.getPublicAddress());
+            installSimulator(agentData.getPublicAddress());
         }
 
-        echoImportant("Installing Simulator on %s machines", addresses.size());
+        echoImportant("Installing Simulator on %s machines", registry.agentCount());
     }
 
     void listMachines() {
@@ -118,42 +119,42 @@ public final class Provisioner {
     }
 
     void download(String dir) {
-        echoImportant("Download artifacts of %s machines", addresses.size());
+        echoImportant("Download artifacts of %s machines", registry.agentCount());
 
         bash.execute("mkdir -p " + dir);
 
-        for (AgentAddress address : addresses) {
-            echo("Downloading from %s", address.publicAddress);
+        for (AgentData agentData : registry.getAgents()) {
+            echo("Downloading from %s", agentData.getPublicAddress());
 
             String syncCommand = format("rsync --copy-links  -avv -e \"ssh %s\" %s@%s:hazelcast-simulator-%s/workers/* " + dir,
-                    props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getSimulatorVersion());
+                    props.get("SSH_OPTIONS", ""), props.getUser(), agentData.getPublicAddress(), getSimulatorVersion());
 
             bash.executeQuiet(syncCommand);
         }
 
-        echoImportant("Finished downloading artifacts of %s machines", addresses.size());
+        echoImportant("Finished downloading artifacts of %s machines", registry.agentCount());
     }
 
     void clean() {
-        echoImportant("Cleaning worker homes of %s machines", addresses.size());
+        echoImportant("Cleaning worker homes of %s machines", registry.agentCount());
 
-        for (AgentAddress address : addresses) {
-            echo("Cleaning %s", address.publicAddress);
-            bash.ssh(address.publicAddress, format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion()));
+        for (AgentData agentData : registry.getAgents()) {
+            echo("Cleaning %s", agentData.getPublicAddress());
+            bash.ssh(agentData.getPublicAddress(), format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion()));
         }
 
-        echoImportant("Finished cleaning worker homes of %s machines", addresses.size());
+        echoImportant("Finished cleaning worker homes of %s machines", registry.agentCount());
     }
 
     void killJavaProcessed() {
-        echoImportant("Killing %s Java processes", addresses.size());
+        echoImportant("Killing %s Java processes", registry.agentCount());
 
-        for (AgentAddress address : addresses) {
-            echo("Killing Java processes on %s", address.publicAddress);
-            bash.killAllJavaProcesses(address.publicAddress);
+        for (AgentData agentData : registry.getAgents()) {
+            echo("Killing Java processes on %s", agentData.getPublicAddress());
+            bash.killAllJavaProcesses(agentData.getPublicAddress());
         }
 
-        echoImportant("Successfully killed %s Java processes", addresses.size());
+        echoImportant("Successfully killed %s Java processes", registry.agentCount());
     }
 
     void terminate() {
@@ -189,8 +190,8 @@ public final class Provisioner {
 
     private void scaleUp(int delta, boolean enterpriseEnabled) {
         echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
-        echo("Current number of machines: " + addresses.size());
-        echo("Desired number of machines: " + (addresses.size() + delta));
+        echo("Current number of machines: " + registry.agentCount());
+        echo("Desired number of machines: " + (registry.agentCount() + delta));
         String groupName = props.get("GROUP_NAME", "simulator-agent");
         echo("GroupName: " + groupName);
         echo("Username: " + props.getUser());
@@ -226,8 +227,7 @@ public final class Provisioner {
                     echo("    " + publicIpAddress + " LAUNCHED");
                     appendText(publicIpAddress + "," + privateIpAddress + "\n", agentsFile);
 
-                    AgentAddress address = new AgentAddress(publicIpAddress, privateIpAddress);
-                    addresses.add(address);
+                    registry.addAgent(publicIpAddress, privateIpAddress);
                 }
 
                 for (NodeMetadata node : nodes) {
@@ -252,13 +252,13 @@ public final class Provisioner {
     }
 
     private void scaleDown(int count) {
-        if (count > addresses.size()) {
-            count = addresses.size();
+        if (count > registry.agentCount()) {
+            count = registry.agentCount();
         }
 
         echoImportant(format("Terminating %s %s machines (can take some time)", count, props.get("CLOUD_PROVIDER")));
-        echo("Current number of machines: " + addresses.size());
-        echo("Desired number of machines: " + (addresses.size() - count));
+        echo("Current number of machines: " + registry.agentCount());
+        echo("Desired number of machines: " + (registry.agentCount() - count));
 
         long started = System.nanoTime();
 
@@ -266,19 +266,18 @@ public final class Provisioner {
 
         int destroyedCount = 0;
         for (int batchSize : calcBatches(count)) {
-            Map<String, AgentAddress> terminateMap = new HashMap<String, AgentAddress>();
-            for (AgentAddress address : addresses.subList(0, batchSize)) {
-                terminateMap.put(address.publicAddress, address);
+            Map<String, AgentData> terminateMap = new HashMap<String, AgentData>();
+            for (AgentData agentData : registry.getAgents(batchSize)) {
+                terminateMap.put(agentData.getPublicAddress(), agentData);
             }
             destroyedCount += destroyNodes(compute, terminateMap);
         }
 
         LOGGER.info("Updating " + agentsFile.getAbsolutePath());
-
-        AgentsFile.save(agentsFile, addresses);
+        AgentsFile.save(agentsFile, registry);
 
         echo("Duration: " + secondsToHuman(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started)));
-        echoImportant("Terminated %s of %s, remaining=%s", destroyedCount, count, addresses.size());
+        echoImportant("Terminated %s of %s, remaining=%s", destroyedCount, count, registry.agentCount());
 
         if (destroyedCount != count) {
             throw new IllegalStateException("Terminated " + destroyedCount + " of " + count
@@ -366,15 +365,15 @@ public final class Provisioner {
         return script;
     }
 
-    private int destroyNodes(ComputeService compute, final Map<String, AgentAddress> terminateMap) {
+    private int destroyNodes(ComputeService compute, final Map<String, AgentData> terminateMap) {
         Set destroyedSet = compute.destroyNodesMatching(new Predicate<NodeMetadata>() {
             @Override
             public boolean apply(NodeMetadata nodeMetadata) {
                 for (String publicAddress : nodeMetadata.getPublicAddresses()) {
-                    AgentAddress address = terminateMap.remove(publicAddress);
-                    if (address != null) {
-                        echo(format("    %s Terminating", publicAddress));
-                        addresses.remove(address);
+                    AgentData agentData = terminateMap.remove(publicAddress);
+                    if (agentData != null) {
+                        echo(format("    Terminating instance %s", publicAddress));
+                        registry.removeAgent(agentData);
                         return true;
                     }
                 }

@@ -16,11 +16,12 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.provisioner.Bash;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
@@ -29,7 +30,6 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,7 +90,7 @@ public final class Coordinator {
     FailureMonitor failureMonitor;
     PerformanceMonitor performanceMonitor;
 
-    private final List<AgentAddress> addresses = Collections.synchronizedList(new LinkedList<AgentAddress>());
+    private final ComponentRegistry registry = new ComponentRegistry();
 
     private Bash bash;
     private ExecutorService parallelExecutor;
@@ -135,15 +135,11 @@ public final class Coordinator {
     }
 
     private void initAgents() {
-        ensureExistingFile(agentsFile);
-        addresses.addAll(AgentsFile.load(agentsFile));
-        if (addresses.isEmpty()) {
-            throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
-        }
+        populateComponentRegister();
 
         startAgents();
 
-        agentsClient = new AgentsClient(addresses);
+        agentsClient = new AgentsClient(registry.getAgents());
         agentsClient.start();
 
         initMemberWorkerCount(workerJvmSettings);
@@ -168,14 +164,22 @@ public final class Coordinator {
         // TODO: copy the Hazelcast JARs
     }
 
-    private void startAgents() {
-        echoLocal("Starting %s Agents", addresses.size());
+    private void populateComponentRegister() {
+        ensureExistingFile(agentsFile);
+        AgentsFile.load(agentsFile, registry);
+        if (registry.agentCount() == 0) {
+            throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
+        }
+    }
 
-        for (AgentAddress address : addresses) {
-            startAgent(address.publicAddress);
+    private void startAgents() {
+        echoLocal("Starting %s Agents", registry.agentCount());
+
+        for (AgentData agentData : registry.getAgents()) {
+            startAgent(agentData.getPublicAddress());
         }
 
-        echoLocal("Successfully started agents on %s boxes", addresses.size());
+        echoLocal("Successfully started agents on %s boxes", registry.agentCount());
     }
 
     private void startAgent(String ip) {
@@ -199,15 +203,15 @@ public final class Coordinator {
     private void killAgents() {
         String startHarakiriMonitorCommand = getStartHarakiriMonitorCommand(props);
 
-        echoLocal("Killing %s Agents", addresses.size());
-        for (AgentAddress address : addresses) {
-            echoLocal("Killing Agent, %s", address.publicAddress);
-            bash.killAllJavaProcesses(address.publicAddress);
+        echoLocal("Killing %s Agents", registry.agentCount());
+        for (AgentData agentData : registry.getAgents()) {
+            echoLocal("Killing Agent, %s", agentData.getPublicAddress());
+            bash.killAllJavaProcesses(agentData.getPublicAddress());
             if (startHarakiriMonitorCommand != null) {
-                bash.ssh(address.publicAddress, startHarakiriMonitorCommand);
+                bash.ssh(agentData.getPublicAddress(), startHarakiriMonitorCommand);
             }
         }
-        echoLocal("Successfully killed %s Agents", addresses.size());
+        echoLocal("Successfully killed %s Agents", registry.agentCount());
     }
 
     private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {

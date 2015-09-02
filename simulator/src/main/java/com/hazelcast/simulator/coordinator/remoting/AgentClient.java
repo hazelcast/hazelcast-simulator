@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.coordinator.remoting;
 
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
-import com.hazelcast.simulator.common.AgentAddress;
+import com.hazelcast.simulator.protocol.registry.AgentData;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -27,9 +27,9 @@ public class AgentClient {
     private final String publicAddress;
     private final String privateIp;
 
-    public AgentClient(AgentAddress address) {
-        this.publicAddress = address.publicAddress;
-        this.privateIp = address.privateAddress;
+    public AgentClient(AgentData agentData) {
+        this.publicAddress = agentData.getPublicAddress();
+        this.privateIp = agentData.getPrivateAddress();
     }
 
     public String getPublicAddress() {

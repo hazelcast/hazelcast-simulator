@@ -1,14 +1,13 @@
 package com.hazelcast.simulator.communicator;
 
-import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.List;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
@@ -21,6 +20,8 @@ public final class Communicator {
 
     File agentsFile;
     Message message;
+
+    private final ComponentRegistry registry = new ComponentRegistry();
 
     private AgentsClient agentsClient;
 
@@ -38,11 +39,11 @@ public final class Communicator {
     }
 
     private void initAgents() {
-        List<AgentAddress> agentAddresses = AgentsFile.load(agentsFile);
-        if (agentAddresses.isEmpty()) {
+        AgentsFile.load(agentsFile, registry);
+        if (registry.agentCount() == 0) {
             throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
         }
-        agentsClient = new AgentsClient(agentAddresses);
+        agentsClient = new AgentsClient(registry.getAgents());
         agentsClient.start();
     }
 
