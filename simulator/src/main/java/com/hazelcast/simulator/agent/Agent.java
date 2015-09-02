@@ -49,7 +49,6 @@ public class Agent {
 
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
-    private final HarakiriMonitor harakiriMonitor = new HarakiriMonitor(this);
 
     private AgentRemoteService agentRemoteService;
 
@@ -99,7 +98,6 @@ public class Agent {
         startRestServer();
         workerJvmFailureMonitor.start();
         workerJvmManager.start();
-        harakiriMonitor.start();
 
         LOGGER.info("Simulator Agent is ready for action");
     }

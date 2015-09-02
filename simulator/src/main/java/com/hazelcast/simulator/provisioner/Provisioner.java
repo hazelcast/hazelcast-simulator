@@ -413,7 +413,7 @@ public final class Provisioner {
             }
 
             installSimulator(ip);
-            echo("    " + ip + " SIMULATOR AGENT INSTALLED");
+            echo("    " + ip + " SIMULATOR INSTALLED");
         }
 
         private File getJavaInstallScript() {

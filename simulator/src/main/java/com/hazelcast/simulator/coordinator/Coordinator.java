@@ -44,6 +44,7 @@ import static com.hazelcast.simulator.coordinator.CoordinatorHelper.assignDedica
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.createAddressConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.findNextAgentLayout;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.getMaxTestCaseIdLength;
+import static com.hazelcast.simulator.coordinator.CoordinatorHelper.getStartHarakiriMonitorCommand;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.initAgentMemberLayouts;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -194,13 +195,16 @@ public final class Coordinator {
     }
 
     private void killAgents() {
-        echoLocal("Killing %s Agents", addresses.size());
+        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommand(props);
 
+        echoLocal("Killing %s Agents", addresses.size());
         for (AgentAddress address : addresses) {
             echoLocal("Killing Agent, %s", address.publicAddress);
             bash.ssh(address.publicAddress, "killall -9 java || true");
+            if (startHarakiriMonitorCommand != null) {
+                bash.ssh(address.publicAddress, startHarakiriMonitorCommand);
+            }
         }
-
         echoLocal("Successfully killed %s Agents", addresses.size());
     }
 
