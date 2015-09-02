@@ -53,7 +53,7 @@ public class AgentAddress {
 
     @Override
     public String toString() {
-        return "AddressPair{"
+        return "AgentAddress{"
                 + "publicAddress='" + publicAddress + '\''
                 + ", privateAddress='" + privateAddress + '\''
                 + '}';
