@@ -191,7 +191,7 @@ public class MapPredicateTest {
 
         private void sqlString() {
             boolean active = getRandom().nextBoolean();
-            int age = randomInt(Employee.MAX_AGE);
+            int age = 100; //randomInt(Employee.MAX_AGE);
 
             SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age =" + age);
             Collection<Employee> employees = map.values(predicate);
