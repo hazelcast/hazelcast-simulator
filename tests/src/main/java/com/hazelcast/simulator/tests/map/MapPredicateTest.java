@@ -18,8 +18,8 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.tests.map.helpers.PredicateOperationCounter;
-import com.hazelcast.simulator.worker.loadsupport.Streamer;
-import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
+import com.hazelcast.simulator.worker.loadsupport.MapStreamer;
+import com.hazelcast.simulator.worker.loadsupport.MapStreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -83,7 +83,7 @@ public class MapPredicateTest {
     }
 
     private void initMap() {
-        Streamer<Integer, Employee> streamer = StreamerFactory.getInstance(map);
+        MapStreamer<Integer, Employee> streamer = MapStreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {
             Employee employee = new Employee(i);
             streamer.pushEntry(employee.getId(), employee);
@@ -177,12 +177,12 @@ public class MapPredicateTest {
 
             // TODO: Still broken because it relies on reflection which is dog slow, so we need an explicit AgeNamePredicate
             EntryObject entryObject = new PredicateBuilder().getEntryObject();
-            Predicate agePredicate = entryObject.get("age").lessThan(age);
+            Predicate agePredicate = entryObject.get("age").equal(age);
             Predicate ageNamePredicate = entryObject.get("name").equal(name).and(agePredicate);
 
             Collection<Employee> employees = map.values(ageNamePredicate);
             for (Employee emp : employees) {
-                assertTrue(basename + ": " + emp + " not matching " + ageNamePredicate, emp.getAge() < age);
+                assertTrue(basename + ": " + emp + " not matching " + ageNamePredicate, emp.getAge() == age);
                 assertTrue(basename + ": " + emp + " not matching " + ageNamePredicate, emp.getName().equals(name));
             }
             operationCounter.predicateBuilderCount++;
@@ -192,7 +192,7 @@ public class MapPredicateTest {
             boolean active = getRandom().nextBoolean();
             int age = randomInt(Employee.MAX_AGE);
 
-            SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age >" + age);
+            SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age =" + age);
             Collection<Employee> employees = map.values(predicate);
 
             for (Employee emp : employees) {
