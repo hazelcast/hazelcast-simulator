@@ -19,7 +19,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
 import com.hazelcast.instance.GroupProperties;
-import com.hazelcast.instance.GroupProperty;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.map.impl.QueryResultSizeLimiter;
@@ -63,7 +62,7 @@ abstract class AbstractMapTest {
     void failIfFeatureDisabled() {
         boolean featureDisabled = false;
         try {
-            if (groupProperties != null && groupProperties.getInteger(GroupProperty.QUERY_RESULT_SIZE_LIMIT) <= 0) {
+            if (groupProperties != null && groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger() <= 0) {
                 featureDisabled = true;
             }
         } catch (Exception e) {
@@ -88,6 +87,14 @@ abstract class AbstractMapTest {
         try {
             minResultSizeLimit = QueryResultSizeLimiter.MINIMUM_MAX_RESULT_LIMIT;
             resultLimitFactor = QueryResultSizeLimiter.MAX_RESULT_LIMIT_FACTOR;
+
+            if (groupProperties != null) {
+                LOGGER.info(format(
+                        "%s: QueryResultSizeLimiter is configured with result size limit %d and pre-check partition limit %d",
+                        basename,
+                        groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger(),
+                        groupProperties.QUERY_MAX_LOCAL_PARTITION_LIMIT_FOR_PRE_CHECK.getInteger()));
+            }
         } catch (Exception e) {
             LOGGER.info(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
         }
