@@ -18,7 +18,6 @@ package com.hazelcast.simulator.tests.map.queryresultsize;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
-import com.hazelcast.instance.GroupProperties;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.map.impl.QueryResultSizeLimiter;
@@ -30,7 +29,6 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getGroupProperties;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.logPartitionStatistics;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
@@ -39,14 +37,12 @@ import static com.hazelcast.util.ExceptionUtil.rethrow;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 abstract class AbstractMapTest {
 
     protected static final ILogger LOGGER = Logger.getLogger(AbstractMapTest.class);
 
     HazelcastInstance hazelcastInstance;
-    GroupProperties groupProperties;
     IMap<Object, Integer> map;
     IAtomicLong operationCounter;
     IAtomicLong exceptionCounter;
@@ -59,24 +55,9 @@ abstract class AbstractMapTest {
         HazelcastTestUtils.failOnVersionMismatch("3.5", basename + ": This tests needs Hazelcast %s or newer");
     }
 
-    void failIfFeatureDisabled() {
-        boolean featureDisabled = false;
-        try {
-            if (groupProperties != null && groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger() <= 0) {
-                featureDisabled = true;
-            }
-        } catch (Exception e) {
-            fail(basename + ": This tests needs Hazelcast 3.5 or newer");
-        }
-        if (featureDisabled) {
-            fail(basename + ": QueryResultSizeLimiter is disabled");
-        }
-    }
-
     void baseSetup(TestContext testContext, String basename) {
         this.hazelcastInstance = testContext.getTargetInstance();
 
-        this.groupProperties = getGroupProperties(hazelcastInstance);
         this.map = hazelcastInstance.getMap(basename);
         this.operationCounter = hazelcastInstance.getAtomicLong(basename + "Ops");
         this.exceptionCounter = hazelcastInstance.getAtomicLong(basename + "Exceptions");
@@ -87,14 +68,6 @@ abstract class AbstractMapTest {
         try {
             minResultSizeLimit = QueryResultSizeLimiter.MINIMUM_MAX_RESULT_LIMIT;
             resultLimitFactor = QueryResultSizeLimiter.MAX_RESULT_LIMIT_FACTOR;
-
-            if (groupProperties != null) {
-                LOGGER.info(format(
-                        "%s: QueryResultSizeLimiter is configured with result size limit %d and pre-check partition limit %d",
-                        basename,
-                        groupProperties.QUERY_RESULT_SIZE_LIMIT.getInteger(),
-                        groupProperties.QUERY_MAX_LOCAL_PARTITION_LIMIT_FOR_PRE_CHECK.getInteger()));
-            }
         } catch (Exception e) {
             LOGGER.info(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
         }

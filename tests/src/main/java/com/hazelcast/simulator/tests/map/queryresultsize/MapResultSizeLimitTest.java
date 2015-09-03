@@ -57,7 +57,6 @@ public class MapResultSizeLimitTest extends AbstractMapTest {
         baseSetup(testContext, basename);
 
         failOnVersionMismatch();
-        failIfFeatureDisabled();
     }
 
     @Override

@@ -7,7 +7,6 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
-import com.hazelcast.instance.GroupProperties;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -41,14 +40,14 @@ public class KeyUtilsTest {
     @BeforeClass
     public static void setUp() {
         Config config = new Config();
-        config.setProperty(GroupProperties.PROP_PARTITION_COUNT, "" + PARTITION_COUNT);
+        config.setProperty("hazelcast.partition.count", "" + PARTITION_COUNT);
 
         instance = Hazelcast.newHazelcastInstance(config);
         HazelcastInstance remoteInstance = Hazelcast.newHazelcastInstance(config);
         warmUpPartitions(instance, remoteInstance);
 
         ClientConfig clientconfig = new ClientConfig();
-        clientconfig.setProperty(GroupProperties.PROP_PARTITION_COUNT, "" + PARTITION_COUNT);
+        clientconfig.setProperty("hazelcast.partition.count", "" + PARTITION_COUNT);
 
         client = HazelcastClient.newHazelcastClient(clientconfig);
     }

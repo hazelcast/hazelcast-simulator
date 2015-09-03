@@ -24,7 +24,6 @@ import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.instance.BuildInfo;
 import com.hazelcast.instance.BuildInfoProvider;
-import com.hazelcast.instance.GroupProperties;
 import com.hazelcast.instance.HazelcastInstanceImpl;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
@@ -209,17 +208,6 @@ public final class HazelcastTestUtils {
         } catch (IllegalAccessException e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    public static GroupProperties getGroupProperties(HazelcastInstance hz) {
-        if (isClient(hz)) {
-            return null;
-        }
-        Node node = getNode(hz);
-        if (node == null) {
-            return null;
-        }
-        return node.getGroupProperties();
     }
 
     public static Node getNode(HazelcastInstance hz) {
