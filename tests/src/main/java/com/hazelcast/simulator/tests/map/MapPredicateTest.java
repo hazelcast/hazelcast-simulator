@@ -126,25 +126,25 @@ public class MapPredicateTest {
         public void timeStep(Operation operation) {
             long startMs = System.currentTimeMillis();
 
-            switch (operation) {
-                case PREDICATE_BUILDER:
-                    predicateBuilder();
-                    break;
-                case SQL_STRING:
-                    sqlString();
-                    break;
-                case PAGING_PREDICATE:
-                    pagingPredicate();
-                    break;
-                case UPDATE_EMPLOYEE:
-                    updateEmployee();
-                    break;
-                case DESTROY_MAP:
-                    destroyMap();
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
+//            switch (operation) {
+//                case PREDICATE_BUILDER:
+//                    predicateBuilder();
+//                    break;
+//                case SQL_STRING:
+                   sqlString();
+//                    break;
+//                case PAGING_PREDICATE:
+//                    pagingPredicate();
+//                    break;
+//                case UPDATE_EMPLOYEE:
+//                    updateEmployee();
+//                    break;
+//                case DESTROY_MAP:
+//                    destroyMap();
+//                    break;
+//                default:
+//                    throw new UnsupportedOperationException();
+//            }
 
             long nowMs = System.currentTimeMillis();
             long durationMs = nowMs - startMs;
