@@ -6,7 +6,7 @@ import java.util.Random;
 
 public class Employee implements Serializable, Comparable<Employee> {
 
-    public static final int MAX_AGE = 75;
+    public static final int MAX_AGE = 150;
     public static final double MAX_SALARY = 1000.0;
 
     private static final String[] NAMES = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
