@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
 public final class TestUtils {
@@ -54,7 +55,7 @@ public final class TestUtils {
      * @param actual   actual value which is used for assert
      */
     public static void assertEqualsStringFormat(String message, Object expected, Object actual) {
-        assertEquals(String.format(message, expected, actual), expected, actual);
+        assertEquals(format(message, expected, actual), expected, actual);
     }
 
     /**
@@ -67,7 +68,7 @@ public final class TestUtils {
      * @param delta    delta value for double comparison
      */
     public static void assertEqualsStringFormat(String message, Double expected, Double actual, Double delta) {
-        assertEquals(String.format(message, expected, actual), expected, actual, delta);
+        assertEquals(format(message, expected, actual), expected, actual, delta);
     }
 
     /**
@@ -116,6 +117,17 @@ public final class TestUtils {
         }
     }
 
+    /**
+     * Assert that a certain task is going to assert to true eventually.
+     *
+     * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
+     * more times it fails the less frequent the task is going to be retried.
+     *
+     * Uses the default timeout of {@link #ASSERT_TRUE_EVENTUALLY_TIMEOUT} milliseconds.
+     *
+     * @param task           AssertTask to execute
+     * @throws NullPointerException if task is null.
+     */
     public static void assertTrueEventually(AssertTask task) {
         assertTrueEventually(task, ASSERT_TRUE_EVENTUALLY_TIMEOUT);
     }
