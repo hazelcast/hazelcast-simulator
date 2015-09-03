@@ -18,7 +18,6 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.tests.map.helpers.PredicateOperationCounter;
-
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -191,7 +190,8 @@ public class MapPredicateTest {
 
         private void sqlString() {
             boolean active = getRandom().nextBoolean();
-            int age = 100; //randomInt(Employee.MAX_AGE);
+            //randomInt(Employee.MAX_AGE);
+            int age = 100;
 
             SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age =" + age);
             Collection<Employee> employees = map.values(predicate);
