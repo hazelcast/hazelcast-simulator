@@ -126,25 +126,25 @@ public class MapPredicateTest {
         public void timeStep(Operation operation) {
             long startMs = System.currentTimeMillis();
 
-//            switch (operation) {
-//                case PREDICATE_BUILDER:
-//                    predicateBuilder();
-//                    break;
-//                case SQL_STRING:
+            switch (operation) {
+                case PREDICATE_BUILDER:
+                    predicateBuilder();
+                    break;
+                case SQL_STRING:
                    sqlString();
-//                    break;
-//                case PAGING_PREDICATE:
-//                    pagingPredicate();
-//                    break;
-//                case UPDATE_EMPLOYEE:
-//                    updateEmployee();
-//                    break;
-//                case DESTROY_MAP:
-//                    destroyMap();
-//                    break;
-//                default:
-//                    throw new UnsupportedOperationException();
-//            }
+                   break;
+                case PAGING_PREDICATE:
+                    pagingPredicate();
+                    break;
+                case UPDATE_EMPLOYEE:
+                    updateEmployee();
+                    break;
+                case DESTROY_MAP:
+                    destroyMap();
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
 
             long nowMs = System.currentTimeMillis();
             long durationMs = nowMs - startMs;
@@ -191,10 +191,10 @@ public class MapPredicateTest {
 
         private void sqlString() {
             boolean active = getRandom().nextBoolean();
-            int age = -1;//randomInt(Employee.MAX_AGE);
+            int age = randomInt(Employee.MAX_AGE);
 
            // SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age =" + age);
-            SqlPredicate predicate = new SqlPredicate("age = 100000");
+            SqlPredicate predicate = new SqlPredicate("age = "+age);
             Collection<Employee> employees = map.values(predicate);
 
             for (Employee emp : employees) {
