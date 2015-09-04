@@ -27,6 +27,7 @@ import java.util.Collection;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -46,12 +47,35 @@ public class MapPredicateTest {
         DESTROY_MAP
     }
 
+    /**
+     * Used to construct an SQL predicate and to compare the returned values.
+     */
+    private enum Comparison {
+        EQUALS("="),
+        LESS_THAN("<"),
+        GREATER_THAN(">");
+
+        private final String sqlOperator;
+
+        Comparison(String sqlOperator) {
+            this.sqlOperator = sqlOperator;
+        }
+
+        public String getSqlOperator() {
+            return sqlOperator;
+        }
+    }
+
     private static final ILogger LOGGER = Logger.getLogger(MapPredicateTest.class);
 
     public String basename = MapPredicateTest.class.getSimpleName();
     public int threadCount = 3;
     public int keyCount = 100;
     public int pageSize = 5;
+
+    public boolean useFixedAge = false;
+    public int fixedAge = 100;
+    public Comparison ageComparison = Comparison.GREATER_THAN;
 
     public double predicateBuilderProb = 0.2;
     public double sqlStringProb = 0.2;
@@ -110,10 +134,10 @@ public class MapPredicateTest {
         private final PredicateOperationCounter operationCounter = new PredicateOperationCounter();
 
         private long lastUpdateMs = System.currentTimeMillis();
-        private long iterationsLastMinute = 0;
+        private long spentTimeMs = 0;
         private long maxLastMinute = Long.MIN_VALUE;
         private long minLastMinute = Long.MAX_VALUE;
-        private long spendTimeMs = 0;
+        private long iterationsLastMinute = 0;
 
         public Worker() {
             super(operationSelectorBuilder);
@@ -125,36 +149,36 @@ public class MapPredicateTest {
         public void timeStep(Operation operation) {
             long startMs = System.currentTimeMillis();
 
-//            switch (operation) {
-//                case PREDICATE_BUILDER:
-//                    predicateBuilder();
-//                    break;
-//                case SQL_STRING:
-                   sqlString();
-//                    break;
-//                case PAGING_PREDICATE:
-//                    pagingPredicate();
-//                    break;
-//                case UPDATE_EMPLOYEE:
-//                    updateEmployee();
-//                    break;
-//                case DESTROY_MAP:
-//                    destroyMap();
-//                    break;
-//                default:
-//                    throw new UnsupportedOperationException();
-//            }
+            switch (operation) {
+                case PREDICATE_BUILDER:
+                    predicateBuilder();
+                    break;
+                case SQL_STRING:
+                    sqlString();
+                    break;
+                case PAGING_PREDICATE:
+                    pagingPredicate();
+                    break;
+                case UPDATE_EMPLOYEE:
+                    updateEmployee();
+                    break;
+                case DESTROY_MAP:
+                    destroyMap();
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
 
             long nowMs = System.currentTimeMillis();
             long durationMs = nowMs - startMs;
+            spentTimeMs += durationMs;
             maxLastMinute = Math.max(durationMs, maxLastMinute);
             minLastMinute = Math.min(durationMs, minLastMinute);
             iterationsLastMinute++;
-            spendTimeMs += durationMs;
 
             if (lastUpdateMs + SECONDS.toMillis(60) < nowMs) {
-                double avg = spendTimeMs / (double) iterationsLastMinute;
-                double perf = (iterationsLastMinute * 1000d) / (double) spendTimeMs;
+                double avg = spentTimeMs / (double) iterationsLastMinute;
+                double perf = (iterationsLastMinute * 1000d) / (double) spentTimeMs;
 
                 LOGGER.info(format("last minute: iterations=%d, min=%d ms, max=%d ms, avg=%.2f ms, perf=%.2f predicates/second",
                         iterationsLastMinute, minLastMinute, maxLastMinute, avg, perf));
@@ -172,10 +196,10 @@ public class MapPredicateTest {
         }
 
         private void predicateBuilder() {
-            int age = randomInt(Employee.MAX_AGE);
+            int age = (useFixedAge ? fixedAge : randomInt(Employee.MAX_AGE));
             String name = Employee.getRandomName();
 
-            // TODO: Still broken because it relies on reflection which is dog slow, so we need an explicit AgeNamePredicate
+            // TODO: still broken because it relies on reflection which is dog slow, so we need an explicit AgeNamePredicate
             EntryObject entryObject = new PredicateBuilder().getEntryObject();
             Predicate agePredicate = entryObject.get("age").equal(age);
             Predicate ageNamePredicate = entryObject.get("name").equal(name).and(agePredicate);
@@ -190,15 +214,14 @@ public class MapPredicateTest {
 
         private void sqlString() {
             boolean active = getRandom().nextBoolean();
-            //randomInt(Employee.MAX_AGE);
-            int age = 100;
+            int age = (useFixedAge ? fixedAge : randomInt(Employee.MAX_AGE));
 
-            SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age =" + age);
+            SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age" + ageComparison.getSqlOperator() + age);
+
             Collection<Employee> employees = map.values(predicate);
-
             for (Employee emp : employees) {
-                assertTrue(basename + ": " + emp + " not matching " + predicate, emp.isActive() == active);
-                assertTrue(basename + ": " + emp + " not matching " + predicate, emp.getAge() > age);
+                assertEquals(basename + ": " + emp + " not matching " + predicate, active, emp.isActive());
+                assertEmployeeAge(ageComparison, basename + ": " + emp + " not matching " + predicate, age, emp.getAge());
             }
             operationCounter.sqlStringCount++;
         }
@@ -235,6 +258,22 @@ public class MapPredicateTest {
             map.destroy();
             initMap();
             operationCounter.destroyCount++;
+        }
+    }
+
+    private static void assertEmployeeAge(Comparison comparison, String message, int expectedAge, int actualAge) {
+        switch (comparison) {
+            case EQUALS:
+                assertEquals(message, expectedAge, actualAge);
+                break;
+            case LESS_THAN:
+                assertTrue(message, actualAge < expectedAge);
+                break;
+            case GREATER_THAN:
+                assertTrue(message, actualAge > expectedAge);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported comparison: " + comparison);
         }
     }
 }
