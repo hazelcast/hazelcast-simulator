@@ -259,14 +259,14 @@ public class MapPredicateTest {
         }
     }
 
-    private static Predicate getPredicate(EntryObject entryObject, String fieldName, int age, Comparison comparison) {
+    private static Predicate getPredicate(EntryObject entryObject, String fieldName, int value, Comparison comparison) {
         switch (comparison) {
             case EQUALS:
-                return entryObject.get(fieldName).equal(age);
+                return entryObject.get(fieldName).equal(value);
             case LESS_THAN:
-                return entryObject.get(fieldName).lessThan(age);
+                return entryObject.get(fieldName).lessThan(value);
             case GREATER_THAN:
-                return entryObject.get(fieldName).greaterThan(age);
+                return entryObject.get(fieldName).greaterThan(value);
             default:
                 throw new UnsupportedOperationException("Unsupported comparison: " + comparison);
         }
