@@ -60,10 +60,6 @@ public class MapPredicateTest {
         Comparison(String sqlOperator) {
             this.sqlOperator = sqlOperator;
         }
-
-        public String getSqlOperator() {
-            return sqlOperator;
-        }
     }
 
     private static final ILogger LOGGER = Logger.getLogger(MapPredicateTest.class);
@@ -201,13 +197,14 @@ public class MapPredicateTest {
 
             // TODO: still broken because it relies on reflection which is dog slow, so we need an explicit AgeNamePredicate
             EntryObject entryObject = new PredicateBuilder().getEntryObject();
-            Predicate agePredicate = entryObject.get("age").equal(age);
+            Predicate agePredicate = getPredicate(entryObject, "age", age, ageComparison);
             Predicate ageNamePredicate = entryObject.get("name").equal(name).and(agePredicate);
 
             Collection<Employee> employees = map.values(ageNamePredicate);
             for (Employee emp : employees) {
-                assertTrue(basename + ": " + emp + " not matching " + ageNamePredicate, emp.getAge() == age);
-                assertTrue(basename + ": " + emp + " not matching " + ageNamePredicate, emp.getName().equals(name));
+                String assertMessage = basename + ": " + emp + " not matching " + ageNamePredicate;
+                assertInteger(assertMessage, age, emp.getAge(), ageComparison);
+                assertEquals(assertMessage, name, emp.getName());
             }
             operationCounter.predicateBuilderCount++;
         }
@@ -216,12 +213,13 @@ public class MapPredicateTest {
             boolean active = getRandom().nextBoolean();
             int age = (useFixedAge ? fixedAge : randomInt(Employee.MAX_AGE));
 
-            SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age" + ageComparison.getSqlOperator() + age);
+            SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age" + ageComparison.sqlOperator + age);
 
             Collection<Employee> employees = map.values(predicate);
             for (Employee emp : employees) {
-                assertEquals(basename + ": " + emp + " not matching " + predicate, active, emp.isActive());
-                assertEmployeeAge(ageComparison, basename + ": " + emp + " not matching " + predicate, age, emp.getAge());
+                String assertMessage = basename + ": " + emp + " not matching " + predicate;
+                assertEquals(assertMessage, active, emp.isActive());
+                assertInteger(assertMessage, age, emp.getAge(), ageComparison);
             }
             operationCounter.sqlStringCount++;
         }
@@ -261,16 +259,29 @@ public class MapPredicateTest {
         }
     }
 
-    private static void assertEmployeeAge(Comparison comparison, String message, int expectedAge, int actualAge) {
+    private static Predicate getPredicate(EntryObject entryObject, String fieldName, int age, Comparison comparison) {
         switch (comparison) {
             case EQUALS:
-                assertEquals(message, expectedAge, actualAge);
+                return entryObject.get(fieldName).equal(age);
+            case LESS_THAN:
+                return entryObject.get(fieldName).lessThan(age);
+            case GREATER_THAN:
+                return entryObject.get(fieldName).greaterThan(age);
+            default:
+                throw new UnsupportedOperationException("Unsupported comparison: " + comparison);
+        }
+    }
+
+    private static void assertInteger(String message, int expected, int actual, Comparison comparison) {
+        switch (comparison) {
+            case EQUALS:
+                assertEquals(message, expected, actual);
                 break;
             case LESS_THAN:
-                assertTrue(message, actualAge < expectedAge);
+                assertTrue(message, actual < expected);
                 break;
             case GREATER_THAN:
-                assertTrue(message, actualAge > expectedAge);
+                assertTrue(message, actual > expected);
                 break;
             default:
                 throw new UnsupportedOperationException("Unsupported comparison: " + comparison);
