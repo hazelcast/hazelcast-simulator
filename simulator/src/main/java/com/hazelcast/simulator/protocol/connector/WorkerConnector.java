@@ -67,7 +67,6 @@ public final class WorkerConnector extends AbstractServerConnector {
         return connector;
     }
 
-
     /**
      * Adds a Simulator Test.
      *

@@ -42,16 +42,30 @@ public interface ServerConnector {
      *
      * @param operation the {@link SimulatorOperation} to send.
      */
-    void submit(SimulatorOperation operation, SimulatorAddress destination);
+    void submit(SimulatorAddress destination, SimulatorOperation operation);
 
     /**
      * Writes a {@link SimulatorMessage} to the {@link ClientConnector} of connected Simulator components.
      *
      * Blocks until the {@link Response} is received.
      *
-     * @param message the {@link SimulatorMessage} to send.
+     * @param destination the {@link SimulatorAddress} of the destination
+     * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the result of the call
      * @throws Exception if the {@link SimulatorMessage} could not be send
      */
-    Response write(SimulatorMessage message) throws Exception;
+    Response write(SimulatorAddress destination, SimulatorOperation operation) throws Exception;
+
+    /**
+     * Writes a {@link SimulatorMessage} to the {@link ClientConnector} of connected Simulator components.
+     *
+     * Blocks until the {@link Response} is received.
+     *
+     * @param source      the {@link SimulatorAddress} of the source
+     * @param destination the {@link SimulatorAddress} of the destination
+     * @param operation   the {@link SimulatorOperation} to send
+     * @return a {@link Response} with the result of the call
+     * @throws Exception if the {@link SimulatorMessage} could not be send
+     */
+    Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) throws Exception;
 }

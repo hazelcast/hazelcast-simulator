@@ -4,7 +4,6 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.After;
@@ -15,9 +14,8 @@ import org.junit.Test;
 import java.util.Map;
 
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertEmptyFutureMaps;
-import static com.hazelcast.simulator.protocol.ProtocolUtil.buildRandomMessage;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.getRandomDestination;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.resetLogLevel;
-import static com.hazelcast.simulator.protocol.ProtocolUtil.resetMessageId;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.sendFromCoordinator;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.setLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startSimulatorComponents;
@@ -56,7 +54,6 @@ public class ProtocolSmokeTest {
         stopSimulatorComponents();
 
         resetLogLevel();
-        resetMessageId();
     }
 
     @After
@@ -67,12 +64,11 @@ public class ProtocolSmokeTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void smokeTest() throws Exception {
         for (int i = 0; i < NUMBER_OF_MESSAGES; i++) {
-            SimulatorMessage message = buildRandomMessage(MAX_ADDRESS_INDEX);
-            long messageId = message.getMessageId();
-            SimulatorAddress destination = message.getDestination();
+            SimulatorAddress destination = getRandomDestination(MAX_ADDRESS_INDEX);
 
-            LOGGER.info(format("[%d] C sending message to %s", messageId, destination));
-            Response response = sendFromCoordinator(message);
+            LOGGER.info(format("C sending message to %s", destination));
+            Response response = sendFromCoordinator(destination);
+            long messageId = response.getMessageId();
 
             // log response
             boolean responseSuccess = true;
@@ -91,13 +87,12 @@ public class ProtocolSmokeTest {
                         break;
                     default:
                         LOGGER.error(format("[%d] %s %s (unexpected)", messageId, responseSource, responseType));
-                        fail(format("Unexpected responseType %s for %s", response, message));
+                        fail(format("Unexpected responseType %s for %s", response, destination));
                 }
             }
 
             // assert response
-            assertEquals(message.getMessageId(), response.getMessageId());
-            assertEquals(message.getSource(), response.getDestination());
+            assertEquals(SimulatorAddress.COORDINATOR, response.getDestination());
             assertEquals(expectResponseSuccess(destination), responseSuccess);
             if (responseSuccess) {
                 assertEquals(getNumberOfTargets(destination), response.entrySet().size());

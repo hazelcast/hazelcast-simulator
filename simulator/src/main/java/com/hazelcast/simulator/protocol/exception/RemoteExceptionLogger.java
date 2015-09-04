@@ -21,6 +21,6 @@ public class RemoteExceptionLogger extends AbstractExceptionLogger {
 
     @Override
     protected void handleOperation(long exceptionId, ExceptionOperation operation) {
-        serverConnector.submit(operation, SimulatorAddress.COORDINATOR);
+        serverConnector.submit(SimulatorAddress.COORDINATOR, operation);
     }
 }
