@@ -28,7 +28,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
@@ -85,39 +84,6 @@ public final class Provisioner {
         return new GitSupport(buildSupport, customGitRepositories, gitBuildDirectory);
     }
 
-    void startAgents() {
-        echoImportant("Starting %s Agents", addresses.size());
-
-        for (AgentAddress address : addresses) {
-            startAgent(address.publicAddress);
-        }
-
-        echoImportant("Successfully started agents on %s boxes", addresses.size());
-    }
-
-    void killAgents() {
-        echoImportant("Killing %s Agents", addresses.size());
-
-        for (AgentAddress address : addresses) {
-            echo("Killing Agent, %s", address.publicAddress);
-            bash.ssh(address.publicAddress, "killall -9 java || true");
-        }
-
-        echoImportant("Successfully killed %s Agents", addresses.size());
-    }
-
-    void restart(boolean enableEnterprise) {
-        echoImportant("Restarting %s Agents", addresses.size());
-
-        hazelcastJars.prepare(enableEnterprise);
-        for (AgentAddress address : addresses) {
-            echo("Installing agent: " + address.publicAddress);
-            installAgent(address.publicAddress);
-        }
-
-        echoImportant("Restarting %s Agents", addresses.size());
-    }
-
     void scale(int size, boolean enterpriseEnabled) {
         ensureNotStaticCloudProvider("scale");
 
@@ -133,22 +99,67 @@ public final class Provisioner {
         }
     }
 
+    void installSimulator(boolean enableEnterprise) {
+        echoImportant("Installing Simulator on %s machines", addresses.size());
+
+        hazelcastJars.prepare(enableEnterprise);
+        for (AgentAddress address : addresses) {
+            echo("Installing Simulator on " + address.publicAddress);
+            installSimulator(address.publicAddress);
+        }
+
+        echoImportant("Installing Simulator on %s machines", addresses.size());
+    }
+
+    void listMachines() {
+        echo("Provisioned machines (from " + AgentsFile.NAME + "):");
+        String machines = fileAsText(agentsFile);
+        echo("    " + machines);
+    }
+
+    void download(String dir) {
+        echoImportant("Download artifacts of %s machines", addresses.size());
+
+        bash.execute("mkdir -p " + dir);
+
+        for (AgentAddress address : addresses) {
+            echo("Downloading from %s", address.publicAddress);
+
+            String syncCommand = format("rsync --copy-links  -avv -e \"ssh %s\" %s@%s:hazelcast-simulator-%s/workers/* " + dir,
+                    props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getSimulatorVersion());
+
+            bash.executeQuiet(syncCommand);
+        }
+
+        echoImportant("Finished downloading artifacts of %s machines", addresses.size());
+    }
+
+    void clean() {
+        echoImportant("Cleaning worker homes of %s machines", addresses.size());
+
+        for (AgentAddress address : addresses) {
+            echo("Cleaning %s", address.publicAddress);
+            bash.ssh(address.publicAddress, format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion()));
+        }
+
+        echoImportant("Finished cleaning worker homes of %s machines", addresses.size());
+    }
+
+    void killJavaProcessed() {
+        echoImportant("Killing %s Java processes", addresses.size());
+
+        for (AgentAddress address : addresses) {
+            echo("Killing Java processes on %s", address.publicAddress);
+            bash.ssh(address.publicAddress, "killall -9 java || true");
+        }
+
+        echoImportant("Successfully killed %s Java processes", addresses.size());
+    }
+
     void terminate() {
         ensureNotStaticCloudProvider("terminate");
 
         scaleDown(Integer.MAX_VALUE);
-    }
-
-    void ensureNotStaticCloudProvider(String action) {
-        if (isStatic(props.get("CLOUD_PROVIDER"))) {
-            throw new CommandLineExitException(format("Cannot execute '%s' in static setup", action));
-        }
-    }
-
-    void listAgents() {
-        echo("Running Agents (from " + AgentsFile.NAME + "):");
-        String agents = fileAsText(agentsFile);
-        echo("    " + agents);
     }
 
     void shutdown() {
@@ -170,32 +181,10 @@ public final class Provisioner {
         echo("Done!");
     }
 
-    void download(String dir) {
-        echoImportant("Download artifacts of %s machines", addresses.size());
-
-        bash.execute("mkdir -p " + dir);
-
-        for (AgentAddress address : addresses) {
-            echo("Downloading from %s", address.publicAddress);
-
-            String syncCommand = format("rsync --copy-links  -avv -e \"ssh %s\" %s@%s:hazelcast-simulator-%s/workers/* " + dir,
-                    props.get("SSH_OPTIONS", ""), props.getUser(), address.publicAddress, getSimulatorVersion());
-
-            bash.executeQuiet(syncCommand);
+    private void ensureNotStaticCloudProvider(String action) {
+        if (isStatic(props.get("CLOUD_PROVIDER"))) {
+            throw new CommandLineExitException(format("Cannot execute '%s' in static setup", action));
         }
-
-        echoImportant("Finished Downloading Artifacts of %s machines", addresses.size());
-    }
-
-    void clean() {
-        echoImportant("Cleaning worker homes of %s machines", addresses.size());
-
-        for (AgentAddress address : addresses) {
-            echo("Cleaning %s", address.publicAddress);
-            bash.ssh(address.publicAddress, format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion()));
-        }
-
-        echoImportant("Finished cleaning worker homes of %s machines", addresses.size());
     }
 
     private void scaleUp(int delta, boolean enterpriseEnabled) {
@@ -277,7 +266,7 @@ public final class Provisioner {
 
         int destroyedCount = 0;
         for (int batchSize : calcBatches(count)) {
-            final Map<String, AgentAddress> terminateMap = new HashMap<String, AgentAddress>();
+            Map<String, AgentAddress> terminateMap = new HashMap<String, AgentAddress>();
             for (AgentAddress address : addresses.subList(0, batchSize)) {
                 terminateMap.put(address.publicAddress, address);
             }
@@ -318,7 +307,7 @@ public final class Provisioner {
         return result;
     }
 
-    private void installAgent(String ip) {
+    private void installSimulator(String ip) {
         bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/lib/", getSimulatorVersion()));
 
         // first we delete the old lib files to prevent different versions of the same JAR to bite us
@@ -377,26 +366,6 @@ public final class Provisioner {
         return script;
     }
 
-    private void startAgent(String ip) {
-        echo("Killing Agent on: %s", ip);
-        bash.ssh(ip, "killall -9 java || true");
-
-        echo("Starting Agent on: %s", ip);
-        if (isEC2(props.get("CLOUD_PROVIDER"))) {
-            bash.ssh(ip, format(
-                    "nohup hazelcast-simulator-%s/bin/agent --cloudProvider %s --cloudIdentity %s --cloudCredential %s "
-                            + "> agent.out 2> agent.err < /dev/null &",
-                    getSimulatorVersion(),
-                    props.get("CLOUD_PROVIDER"),
-                    props.get("CLOUD_IDENTITY"),
-                    props.get("CLOUD_CREDENTIAL")));
-        } else {
-            bash.ssh(ip, format(
-                    "nohup hazelcast-simulator-%s/bin/agent > agent.out 2> agent.err < /dev/null &",
-                    getSimulatorVersion()));
-        }
-    }
-
     private int destroyNodes(ComputeService compute, final Map<String, AgentAddress> terminateMap) {
         Set destroyedSet = compute.destroyNodesMatching(new Predicate<NodeMetadata>() {
             @Override
@@ -443,11 +412,8 @@ public final class Provisioner {
                 echo("    " + ip + " JAVA INSTALLED");
             }
 
-            installAgent(ip);
-            echo("    " + ip + " SIMULATOR AGENT INSTALLED");
-
-            startAgent(ip);
-            echo("    " + ip + " SIMULATOR AGENT STARTED");
+            installSimulator(ip);
+            echo("    " + ip + " SIMULATOR INSTALLED");
         }
 
         private File getJavaInstallScript() {

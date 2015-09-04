@@ -33,7 +33,7 @@ public final class CliUtils {
 
     public static OptionSet initOptionsWithHelp(OptionParser parser, String[] args) {
         try {
-            OptionSpec helpSpec = parser.accepts("help", "Show help").forHelp();
+            OptionSpec helpSpec = parser.accepts("help", "Shows the help.").forHelp();
             OptionSet options = parser.parse(args);
 
             if (options.has(helpSpec)) {

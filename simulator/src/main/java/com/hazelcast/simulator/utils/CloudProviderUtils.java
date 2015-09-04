@@ -2,6 +2,8 @@ package com.hazelcast.simulator.utils;
 
 public final class CloudProviderUtils {
 
+    public static final String AWS_EC2 = "aws-ec2";
+
     private CloudProviderUtils() {
     }
 
@@ -10,6 +12,6 @@ public final class CloudProviderUtils {
     }
 
     public static boolean isEC2(String cloudProvider) {
-        return "aws-ec2".equals(cloudProvider);
+        return AWS_EC2.equals(cloudProvider);
     }
 }
