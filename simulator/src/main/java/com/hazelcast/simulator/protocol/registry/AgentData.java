@@ -17,12 +17,16 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
  */
 public class AgentData {
 
+    private final int addressIndex;
     private final SimulatorAddress address;
 
     private final String publicAddress;
     private final String privateAddress;
 
     public AgentData(int addressIndex, String publicAddress, String privateAddress) {
+        if (addressIndex <= 0) {
+            throw new IllegalArgumentException("addressIndex must be a positive number");
+        }
         if (publicAddress == null) {
             throw new NullPointerException("publicAddress can't be null");
         }
@@ -30,9 +34,14 @@ public class AgentData {
             throw new NullPointerException("privateAddress can't be null");
         }
 
+        this.addressIndex = addressIndex;
         this.address = new SimulatorAddress(AddressLevel.AGENT, addressIndex, 0, 0);
         this.publicAddress = publicAddress;
         this.privateAddress = privateAddress;
+    }
+
+    public int getAddressIndex() {
+        return addressIndex;
     }
 
     public SimulatorAddress getAddress() {

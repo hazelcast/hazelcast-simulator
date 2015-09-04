@@ -20,6 +20,7 @@ import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.provisioner.Bash;
@@ -87,10 +88,11 @@ public final class Coordinator {
     final SimulatorProperties props = new SimulatorProperties();
 
     AgentsClient agentsClient;
+    CoordinatorConnector coordinatorConnector;
     FailureMonitor failureMonitor;
     PerformanceMonitor performanceMonitor;
 
-    private final ComponentRegistry registry = new ComponentRegistry();
+    private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private Bash bash;
     private ExecutorService parallelExecutor;
@@ -130,6 +132,10 @@ public final class Coordinator {
                 agentsClient.stop();
             }
 
+            if (coordinatorConnector != null) {
+                coordinatorConnector.shutdown();
+            }
+
             killAgents();
         }
     }
@@ -139,7 +145,9 @@ public final class Coordinator {
 
         startAgents();
 
-        agentsClient = new AgentsClient(registry.getAgents());
+        coordinatorConnector = new CoordinatorConnector(componentRegistry);
+
+        agentsClient = new AgentsClient(componentRegistry.getAgents());
         agentsClient.start();
 
         initMemberWorkerCount(workerJvmSettings);
@@ -166,23 +174,23 @@ public final class Coordinator {
 
     private void populateComponentRegister() {
         ensureExistingFile(agentsFile);
-        AgentsFile.load(agentsFile, registry);
-        if (registry.agentCount() == 0) {
+        AgentsFile.load(agentsFile, componentRegistry);
+        if (componentRegistry.agentCount() == 0) {
             throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
         }
     }
 
     private void startAgents() {
-        echoLocal("Starting %s Agents", registry.agentCount());
+        echoLocal("Starting %s Agents", componentRegistry.agentCount());
 
-        for (AgentData agentData : registry.getAgents()) {
-            startAgent(agentData.getPublicAddress());
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            startAgent(agentData.getAddressIndex(), agentData.getPublicAddress());
         }
 
-        echoLocal("Successfully started agents on %s boxes", registry.agentCount());
+        echoLocal("Successfully started agents on %s boxes", componentRegistry.agentCount());
     }
 
-    private void startAgent(String ip) {
+    private void startAgent(int addressIndex, String ip) {
         echoLocal("Killing Java processes on %s", ip);
         bash.killAllJavaProcesses(ip);
 
@@ -195,23 +203,24 @@ public final class Coordinator {
                     props.get("CLOUD_CREDENTIAL"));
         }
         bash.ssh(ip, format(
-                "nohup hazelcast-simulator-%s/bin/agent %s > agent.out 2> agent.err < /dev/null &",
+                "nohup hazelcast-simulator-%s/bin/agent --addressIndex %d %s > agent.out 2> agent.err < /dev/null &",
                 getSimulatorVersion(),
+                addressIndex,
                 additionalParameters));
     }
 
     private void killAgents() {
         String startHarakiriMonitorCommand = getStartHarakiriMonitorCommand(props);
 
-        echoLocal("Killing %s Agents", registry.agentCount());
-        for (AgentData agentData : registry.getAgents()) {
+        echoLocal("Killing %s Agents", componentRegistry.agentCount());
+        for (AgentData agentData : componentRegistry.getAgents()) {
             echoLocal("Killing Agent, %s", agentData.getPublicAddress());
             bash.killAllJavaProcesses(agentData.getPublicAddress());
             if (startHarakiriMonitorCommand != null) {
                 bash.ssh(agentData.getPublicAddress(), startHarakiriMonitorCommand);
             }
         }
-        echoLocal("Successfully killed %s Agents", registry.agentCount());
+        echoLocal("Successfully killed %s Agents", componentRegistry.agentCount());
     }
 
     private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {

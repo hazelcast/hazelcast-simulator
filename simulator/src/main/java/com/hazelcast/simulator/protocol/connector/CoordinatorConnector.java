@@ -7,12 +7,15 @@ import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThreads;
@@ -25,6 +28,15 @@ public class CoordinatorConnector {
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
     private final CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(exceptionLogger);
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
+
+    public CoordinatorConnector() {
+    }
+
+    public CoordinatorConnector(ComponentRegistry registry) {
+        for (AgentData agentData : registry.getAgents()) {
+            addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), AGENT_PORT);
+        }
+    }
 
     /**
      * Disconnects from all Simulator Agent instances.

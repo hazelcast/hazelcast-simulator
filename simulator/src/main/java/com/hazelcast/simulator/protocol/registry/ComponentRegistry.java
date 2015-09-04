@@ -9,9 +9,6 @@ import static java.util.Collections.unmodifiableList;
 
 /**
  * Keeps track of all Simulator components which are running.
- *
- * Will be used by the Simulator Coordinator to translate all kind of selection queries to
- * {@link com.hazelcast.simulator.protocol.core.SimulatorAddress} to send messages to them.
  */
 public class ComponentRegistry {
 

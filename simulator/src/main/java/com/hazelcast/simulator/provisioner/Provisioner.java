@@ -330,6 +330,7 @@ public final class Provisioner {
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/junit*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/HdrHistogram-*", "lib");
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/log4j*", "lib");
+        bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/lib/netty-*", "lib");
 
         // upload remaining files
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/bin/", "bin");

@@ -197,7 +197,7 @@ public class AgentSmokeTest {
 
             @Override
             public void run() {
-                agent = Agent.createAgent(new String[]{});
+                agent = Agent.createAgent(new String[]{"--addressIndex", "1"});
                 agent.start();
                 latch.countDown();
             }

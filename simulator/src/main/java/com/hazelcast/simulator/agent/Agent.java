@@ -20,6 +20,8 @@ import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.coordinator.Coordinator;
+import com.hazelcast.simulator.protocol.configuration.Ports;
+import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.util.EmptyStatement;
@@ -40,6 +42,8 @@ public class Agent {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
+    int addressIndex;
+
     String cloudProvider;
     String cloudIdentity;
     String cloudCredential;
@@ -50,6 +54,7 @@ public class Agent {
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
 
+    private AgentConnector agentConnector;
     private AgentRemoteService agentRemoteService;
 
     private volatile TestSuite testSuite;
@@ -95,6 +100,9 @@ public class Agent {
     void start() {
         ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
 
+        agentConnector = AgentConnector.createInstance(addressIndex, Ports.AGENT_PORT);
+        agentConnector.start();
+
         startRestServer();
         workerJvmFailureMonitor.start();
         workerJvmManager.start();
@@ -103,6 +111,7 @@ public class Agent {
     }
 
     void stop() {
+        agentConnector.shutdown();
         try {
             agentRemoteService.stop();
         } catch (IOException e) {

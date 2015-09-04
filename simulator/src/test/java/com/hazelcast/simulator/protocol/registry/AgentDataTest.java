@@ -8,9 +8,19 @@ import static org.junit.Assert.assertEquals;
 
 public class AgentDataTest {
 
-    private static final int DEFAULT_ADDRESS_INDEX = 23;
+    private static final int DEFAULT_ADDRESS_INDEX = 1;
     private static final String DEFAULT_PUBLIC_ADDRESS = "172.16.16.1";
     private static final String DEFAULT_PRIVATE_ADDRESS = "127.0.0.1";
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConstructor_addressIndexNegative() {
+        new AgentData(-1, DEFAULT_PUBLIC_ADDRESS, DEFAULT_PRIVATE_ADDRESS);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConstructor_addressIndexZero() {
+        new AgentData(0, DEFAULT_PUBLIC_ADDRESS, DEFAULT_PRIVATE_ADDRESS);
+    }
 
     @Test(expected = NullPointerException.class)
     public void testConstructor_publicAddressNull() {
