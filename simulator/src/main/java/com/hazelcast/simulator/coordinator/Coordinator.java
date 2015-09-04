@@ -47,6 +47,7 @@ import static com.hazelcast.simulator.coordinator.CoordinatorHelper.findNextAgen
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.getMaxTestCaseIdLength;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.getStartHarakiriMonitorCommand;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.initAgentMemberLayouts;
+import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
@@ -144,8 +145,7 @@ public final class Coordinator {
         populateComponentRegister();
 
         startAgents();
-
-        coordinatorConnector = new CoordinatorConnector(componentRegistry);
+        startCoordinatorConnector();
 
         agentsClient = new AgentsClient(componentRegistry.getAgents());
         agentsClient.start();
@@ -209,18 +209,11 @@ public final class Coordinator {
                 additionalParameters));
     }
 
-    private void killAgents() {
-        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommand(props);
-
-        echoLocal("Killing %s Agents", componentRegistry.agentCount());
+    private void startCoordinatorConnector() {
+        coordinatorConnector = new CoordinatorConnector();
         for (AgentData agentData : componentRegistry.getAgents()) {
-            echoLocal("Killing Agent, %s", agentData.getPublicAddress());
-            bash.killAllJavaProcesses(agentData.getPublicAddress());
-            if (startHarakiriMonitorCommand != null) {
-                bash.ssh(agentData.getPublicAddress(), startHarakiriMonitorCommand);
-            }
+            coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), AGENT_PORT);
         }
-        echoLocal("Successfully killed %s Agents", componentRegistry.agentCount());
     }
 
     private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {
@@ -506,6 +499,20 @@ public final class Coordinator {
         LOGGER.info("-----------------------------------------------------------------------------");
         LOGGER.info("No failures have been detected!");
         LOGGER.info("-----------------------------------------------------------------------------");
+    }
+
+    private void killAgents() {
+        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommand(props);
+
+        echoLocal("Killing %s Agents", componentRegistry.agentCount());
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            echoLocal("Killing Agent, %s", agentData.getPublicAddress());
+            bash.killAllJavaProcesses(agentData.getPublicAddress());
+            if (startHarakiriMonitorCommand != null) {
+                bash.ssh(agentData.getPublicAddress(), startHarakiriMonitorCommand);
+            }
+        }
+        echoLocal("Successfully killed %s Agents", componentRegistry.agentCount());
     }
 
     private void echoLocal(String msg, Object... args) {
