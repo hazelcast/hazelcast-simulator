@@ -147,14 +147,15 @@ public final class Coordinator {
         populateComponentRegister();
 
         startAgents();
+
+        agentsClient = new AgentsClient(componentRegistry.getAgents());
+        agentsClient.start();
+
         try {
             startCoordinatorConnector();
         } catch (Exception e) {
             throw new CommandLineExitException("Could not start CoordinatorConnector", e);
         }
-
-        agentsClient = new AgentsClient(componentRegistry.getAgents());
-        agentsClient.start();
 
         initMemberWorkerCount(workerJvmSettings);
         initHzConfig(workerJvmSettings);
