@@ -1,17 +1,32 @@
 package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.utils.helper.CallerInterrupter;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class ThreadSpawnerTest {
+
+    private Runnable sleepInfiniteRunnable;
+
+    @Before
+    public void setUp() {
+        sleepInfiniteRunnable = new Runnable() {
+            @Override
+            public void run() {
+                sleepSeconds(Integer.MAX_VALUE);
+            }
+        };
+    }
 
     @Test(expected = NullPointerException.class)
     public void testThreadSpawnerNullRunnable() {
@@ -66,7 +81,28 @@ public class ThreadSpawnerTest {
     }
 
     @Test
-    public void testThreadSpawnerException() {
+    public void testInterrupt() {
+        ThreadSpawner spawner = new ThreadSpawner("AnyTestCaseId", true);
+        spawner.spawn(sleepInfiniteRunnable);
+        spawner.interrupt();
+        spawner.awaitCompletion();
+    }
+
+    @Test
+    public void testGetStackTraces() {
+        ThreadSpawner spawner = new ThreadSpawner("AnyTestCaseId");
+        spawner.spawn(sleepInfiniteRunnable);
+        spawner.spawn(sleepInfiniteRunnable);
+
+        List<String> stackTraces = spawner.getStackTraces();
+        assertEquals(2, stackTraces.size());
+
+        spawner.interrupt();
+        spawner.awaitCompletion();
+    }
+
+    @Test
+    public void testThreadSpawnerException_reportException() {
         File exceptionFile = new File("1.exception");
 
         ThreadSpawner spawner = new ThreadSpawner("AnyTestCaseId");
@@ -83,16 +119,23 @@ public class ThreadSpawnerTest {
     }
 
     @Test(expected = RuntimeException.class)
+    public void testThreadSpawnerException_throwException() {
+        ThreadSpawner spawner = new ThreadSpawner("AnyTestCaseId", true);
+        spawner.spawn(new Runnable() {
+            @Override
+            public void run() {
+                throw new UnsupportedOperationException("Expected exception");
+            }
+        });
+        spawner.awaitCompletion();
+    }
+
+    @Test(expected = RuntimeException.class)
     public void testThreadSpawnerInterrupted() {
         new CallerInterrupter(Thread.currentThread(), TimeUnit.SECONDS.toNanos(1)).start();
 
         ThreadSpawner spawner = new ThreadSpawner("AnyTestCaseId");
-        spawner.spawn(new Runnable() {
-            @Override
-            public void run() {
-                sleepSeconds(Integer.MAX_VALUE);
-            }
-        });
+        spawner.spawn(sleepInfiniteRunnable);
         spawner.awaitCompletion();
     }
 }

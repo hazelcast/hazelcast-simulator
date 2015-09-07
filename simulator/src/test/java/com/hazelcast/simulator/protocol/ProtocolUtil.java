@@ -84,7 +84,7 @@ public class ProtocolUtil {
     }
 
     static void stopSimulatorComponents() {
-        ThreadSpawner spawner = new ThreadSpawner("shutdownSimulatorComponents");
+        ThreadSpawner spawner = new ThreadSpawner("shutdownSimulatorComponents", true);
 
         LOGGER.info("Shutdown of Coordinator...");
         if (coordinatorConnector != null) {

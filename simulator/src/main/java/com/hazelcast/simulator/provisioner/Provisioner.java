@@ -107,7 +107,7 @@ public final class Provisioner {
         echoImportant("Installing Simulator on %s machines", registry.agentCount());
         hazelcastJars.prepare(enableEnterprise);
 
-        ThreadSpawner spawner = new ThreadSpawner("installSimulator");
+        ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
         for (final AgentData agentData : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
@@ -134,7 +134,7 @@ public final class Provisioner {
                 props.get("SSH_OPTIONS", ""), props.getUser(), getSimulatorVersion(), dir);
         bash.execute("mkdir -p " + dir);
 
-        ThreadSpawner spawner = new ThreadSpawner("download");
+        ThreadSpawner spawner = new ThreadSpawner("download", true);
         for (final AgentData agentData : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
@@ -153,7 +153,7 @@ public final class Provisioner {
         echoImportant("Cleaning worker homes of %s machines", registry.agentCount());
         final String cleanCommand = format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion());
 
-        ThreadSpawner spawner = new ThreadSpawner("clean");
+        ThreadSpawner spawner = new ThreadSpawner("clean", true);
         for (final AgentData agentData : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
@@ -171,7 +171,7 @@ public final class Provisioner {
     void killJavaProcesses() {
         echoImportant("Killing %s Java processes", registry.agentCount());
 
-        ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses");
+        ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses", true);
         for (final AgentData agentData : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override

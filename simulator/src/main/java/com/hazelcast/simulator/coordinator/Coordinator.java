@@ -189,7 +189,7 @@ public final class Coordinator {
     private void startAgents() {
         echoLocal("Starting %s Agents", componentRegistry.agentCount());
 
-        ThreadSpawner spawner = new ThreadSpawner("startAgents");
+        ThreadSpawner spawner = new ThreadSpawner("startAgents", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
@@ -224,7 +224,7 @@ public final class Coordinator {
 
     private void startCoordinatorConnector() {
         coordinatorConnector = new CoordinatorConnector();
-        ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector");
+        ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
@@ -522,7 +522,7 @@ public final class Coordinator {
     }
 
     private void killAgents() {
-        ThreadSpawner spawner = new ThreadSpawner("killAgents");
+        ThreadSpawner spawner = new ThreadSpawner("killAgents", true);
         final String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(props);
 
         echoLocal("Killing %s Agents", componentRegistry.agentCount());

@@ -36,7 +36,7 @@ public class CoordinatorConnector {
      * Disconnects from all Simulator Agent instances.
      */
     public void shutdown() {
-        ThreadSpawner spawner = new ThreadSpawner("shutdownClientConnectors");
+        ThreadSpawner spawner = new ThreadSpawner("shutdownClientConnectors", true);
         for (final ClientConnector agent : agents.values()) {
             spawner.spawn(new Runnable() {
                 @Override
