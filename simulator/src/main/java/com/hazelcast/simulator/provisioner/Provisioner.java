@@ -39,6 +39,7 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static java.lang.String.format;
 
@@ -128,23 +129,45 @@ public final class Provisioner {
         echo("    " + machines);
     }
 
-    void download(String dir) {
+    void download(String target) {
         echoImportant("Download artifacts of %s machines", registry.agentCount());
-        final String syncCommand = format("rsync --copy-links -avv -e \"ssh %s\" %s@%%s:hazelcast-simulator-%s/workers/* %s",
-                props.get("SSH_OPTIONS", ""), props.getUser(), getSimulatorVersion(), dir);
-        bash.execute("mkdir -p " + dir);
+        bash.execute("mkdir -p " + target);
+
+        String baseCommand = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
+        String sshOptions = props.get("SSH_OPTIONS", "");
+        String sshUser = props.getUser();
+
+        // download Worker logs
+        final String rsyncCommand = format(baseCommand, "", sshOptions, sshUser, target);
+        final String workersPath = format("hazelcast-simulator-%s/workers/*", getSimulatorVersion());
 
         ThreadSpawner spawner = new ThreadSpawner("download", true);
         for (final AgentData agentData : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echo("Downloading from %s", agentData.getPublicAddress());
-                    bash.executeQuiet(format(syncCommand, agentData.getPublicAddress()));
+                    echo("Downloading Worker logs from %s", agentData.getPublicAddress());
+                    bash.executeQuiet(format(rsyncCommand, agentData.getPublicAddress(), workersPath));
                 }
             });
         }
         spawner.awaitCompletion();
+
+        // download Agent logs
+        File agentOut = new File(target + "/agent.out");
+        File agentErr = new File(target + "/agent.err");
+        String rsyncCommandSuffix = format(baseCommand, "--backup --suffix=-%s ", sshOptions, sshUser, target);
+
+        for (AgentData agentData : registry.getAgents()) {
+            String agentAddress = agentData.getPublicAddress();
+            echo("Downloading Agent logs from %s", agentAddress);
+
+            bash.executeQuiet(format(rsyncCommandSuffix, agentAddress, agentAddress, "agent.out"));
+            bash.executeQuiet(format(rsyncCommandSuffix, agentAddress, agentAddress, "agent.err"));
+
+            rename(agentOut, new File(target + "/" + agentAddress + "-agent.out"));
+            rename(agentErr, new File(target + "/" + agentAddress + "-agent.err"));
+        }
 
         echoImportant("Finished downloading artifacts of %s machines", registry.agentCount());
     }
