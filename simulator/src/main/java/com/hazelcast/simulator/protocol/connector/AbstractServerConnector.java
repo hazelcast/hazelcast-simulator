@@ -155,7 +155,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                     }
                 } catch (InterruptedException e) {
                     EmptyStatement.ignore(e);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     LOGGER.error("Error while sending message from messageQueue", e);
                 }
             }
