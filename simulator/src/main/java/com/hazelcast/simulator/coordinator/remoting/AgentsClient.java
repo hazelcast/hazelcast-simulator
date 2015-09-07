@@ -184,8 +184,8 @@ public class AgentsClient {
             try {
                 List<Failure> list = future.get(GET_FAILURES_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                 result.addAll(list);
-            } catch (InterruptedException e) {
-                LOGGER.fatal("Exception in getFailures()", e);
+            } catch (InterruptedException ignored) {
+                EmptyStatement.ignore(ignored);
             } catch (ExecutionException e) {
                 LOGGER.fatal("Exception in getFailures()", e);
             } catch (TimeoutException e) {
