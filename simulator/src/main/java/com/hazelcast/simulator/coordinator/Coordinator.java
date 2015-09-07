@@ -60,6 +60,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static java.lang.String.format;
 
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public final class Coordinator {
 
     static final File SIMULATOR_HOME = getSimulatorHome();
