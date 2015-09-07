@@ -30,7 +30,7 @@ public class CoordinatorConnector {
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
     private final CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(exceptionLogger);
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
-    private final AtomicLong messageId = new AtomicLong();
+    private final AtomicLong messageIds = new AtomicLong();
 
     /**
      * Disconnects from all Simulator Agent instances.
@@ -84,7 +84,7 @@ public class CoordinatorConnector {
      * @throws Exception if the send method was interrupted or an exception occurred
      */
     public Response write(SimulatorAddress destination, SimulatorOperation operation) throws Exception {
-        SimulatorMessage message = new SimulatorMessage(destination, COORDINATOR, messageId.incrementAndGet(),
+        SimulatorMessage message = new SimulatorMessage(destination, COORDINATOR, messageIds.incrementAndGet(),
                 getOperationType(operation), encodeOperation(operation));
 
         int agentAddressIndex = destination.getAgentIndex();

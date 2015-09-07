@@ -3,7 +3,6 @@ package com.hazelcast.simulator.protocol.connector;
 import com.hazelcast.simulator.protocol.configuration.ServerConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
 /**
@@ -45,19 +44,19 @@ public interface ServerConnector {
     void submit(SimulatorAddress destination, SimulatorOperation operation);
 
     /**
-     * Writes a {@link SimulatorMessage} to the {@link ClientConnector} of connected Simulator components.
+     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress} via the connected {@link ClientConnector}.
      *
      * Blocks until the {@link Response} is received.
      *
      * @param destination the {@link SimulatorAddress} of the destination
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the result of the call
-     * @throws Exception if the {@link SimulatorMessage} could not be send
+     * @throws Exception if the {@link SimulatorOperation} could not be send
      */
     Response write(SimulatorAddress destination, SimulatorOperation operation) throws Exception;
 
     /**
-     * Writes a {@link SimulatorMessage} to the {@link ClientConnector} of connected Simulator components.
+     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress} via the connected {@link ClientConnector}.
      *
      * Blocks until the {@link Response} is received.
      *
@@ -65,7 +64,7 @@ public interface ServerConnector {
      * @param destination the {@link SimulatorAddress} of the destination
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the result of the call
-     * @throws Exception if the {@link SimulatorMessage} could not be send
+     * @throws Exception if the {@link SimulatorOperation} could not be send
      */
     Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) throws Exception;
 }

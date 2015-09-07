@@ -44,7 +44,7 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private final EventLoopGroup group = new NioEventLoopGroup();
 
-    private final AtomicLong messageId = new AtomicLong();
+    private final AtomicLong messageIds = new AtomicLong();
     private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
     private final MessageQueueThread messageQueueThread = new MessageQueueThread();
 
@@ -116,7 +116,7 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private SimulatorMessage createSimulatorMessage(SimulatorAddress source, SimulatorAddress destination,
                                                     SimulatorOperation operation) {
-        return new SimulatorMessage(destination, source, messageId.incrementAndGet(),
+        return new SimulatorMessage(destination, source, messageIds.incrementAndGet(),
                 getOperationType(operation), encodeOperation(operation));
     }
 
