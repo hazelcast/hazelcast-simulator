@@ -10,13 +10,12 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
-import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -25,19 +24,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
-import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
-import static com.hazelcast.simulator.utils.CommonUtils.joinThreads;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 public class ProtocolUtil {
+
+    public static final SimulatorOperation DEFAULT_OPERATION = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
 
     public static final long DEFAULT_TEST_TIMEOUT_MILLIS = 5000;
 
@@ -51,12 +48,7 @@ public class ProtocolUtil {
     private static final AddressLevel MIN_ADDRESS_LEVEL = AddressLevel.AGENT;
     private static final int MIN_ADDRESS_LEVEL_VALUE = MIN_ADDRESS_LEVEL.toInt();
 
-    private static final SimulatorOperation OPERATION = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
-    private static final OperationType OPERATION_TYPE = getOperationType(OPERATION);
-    private static final String OPERATION_JSON = encodeOperation(OPERATION);
-
     private static final Random RANDOM = new Random();
-    private static final AtomicLong MESSAGE_ID = new AtomicLong();
 
     private static final ExceptionLogger EXCEPTION_LOGGER = mock(ExceptionLogger.class);
 
@@ -92,7 +84,7 @@ public class ProtocolUtil {
     }
 
     static void stopSimulatorComponents() {
-        List<Thread> shutdownThreads = new ArrayList<Thread>();
+        ThreadSpawner spawner = new ThreadSpawner("shutdownSimulatorComponents");
 
         LOGGER.info("Shutdown of Coordinator...");
         if (coordinatorConnector != null) {
@@ -101,27 +93,25 @@ public class ProtocolUtil {
         }
 
         LOGGER.info("Shutdown of Agents...");
-        shutdownServerConnectors(agentConnectors, shutdownThreads);
+        shutdownServerConnectors(agentConnectors, spawner);
 
         LOGGER.info("Shutdown of Workers...");
-        shutdownServerConnectors(workerConnectors, shutdownThreads);
+        shutdownServerConnectors(workerConnectors, spawner);
 
         LOGGER.info("Waiting for shutdown threads...");
-        joinThreads(shutdownThreads);
+        spawner.awaitCompletion();
 
         LOGGER.info("Shutdown complete!");
     }
 
-    private static <C extends ServerConnector> void shutdownServerConnectors(List<C> connectors, List<Thread> shutdownThreads) {
+    private static <C extends ServerConnector> void shutdownServerConnectors(List<C> connectors, ThreadSpawner spawner) {
         for (final C connector : connectors) {
-            Thread thread = new Thread() {
+            spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     connector.shutdown();
                 }
-            };
-            thread.start();
-            shutdownThreads.add(thread);
+            });
         }
         connectors.clear();
     }
@@ -157,11 +147,7 @@ public class ProtocolUtil {
         return coordinatorConnector;
     }
 
-    static void resetMessageId() {
-        MESSAGE_ID.set(0);
-    }
-
-    static SimulatorMessage buildRandomMessage(int maxAddressIndex) {
+    static SimulatorAddress getRandomDestination(int maxAddressIndex) {
         int addressLevelValue = MIN_ADDRESS_LEVEL_VALUE + RANDOM.nextInt(AddressLevel.values().length - MIN_ADDRESS_LEVEL_VALUE);
         AddressLevel addressLevel = AddressLevel.fromInt(addressLevelValue);
 
@@ -171,33 +157,24 @@ public class ProtocolUtil {
 
         switch (addressLevel) {
             case COORDINATOR:
-                return buildMessage(COORDINATOR);
+                return COORDINATOR;
             case AGENT:
-                return buildMessage(new SimulatorAddress(addressLevel, agentIndex, 0, 0));
+                return new SimulatorAddress(addressLevel, agentIndex, 0, 0);
             case WORKER:
-                return buildMessage(new SimulatorAddress(addressLevel, agentIndex, workerIndex, 0));
+                return new SimulatorAddress(addressLevel, agentIndex, workerIndex, 0);
             case TEST:
-                return buildMessage(new SimulatorAddress(addressLevel, agentIndex, workerIndex, testIndex));
+                return new SimulatorAddress(addressLevel, agentIndex, workerIndex, testIndex);
             default:
                 throw new IllegalArgumentException("Unsupported addressLevel: " + addressLevel);
         }
     }
 
-    static SimulatorMessage buildMessage(SimulatorAddress destination) {
-        return buildMessage(destination, COORDINATOR);
+    static Response sendFromCoordinator(SimulatorAddress destination) throws Exception {
+        return coordinatorConnector.write(destination, DEFAULT_OPERATION);
     }
 
-    static SimulatorMessage buildMessage(SimulatorAddress destination, SimulatorAddress source) {
-        return buildMessage(destination, source, OPERATION_TYPE, OPERATION_JSON);
-    }
-
-    static SimulatorMessage buildMessage(SimulatorAddress destination, SimulatorAddress source,
-                                         OperationType operationType, String operationData) {
-        return new SimulatorMessage(destination, source, MESSAGE_ID.incrementAndGet(), operationType, operationData);
-    }
-
-    static Response sendFromCoordinator(SimulatorMessage message) throws Exception {
-        return coordinatorConnector.send(message);
+    static Response sendFromCoordinator(SimulatorAddress destination, SimulatorOperation operation) throws Exception {
+        return coordinatorConnector.write(destination, operation);
     }
 
     static CoordinatorConnector getCoordinatorConnector() {

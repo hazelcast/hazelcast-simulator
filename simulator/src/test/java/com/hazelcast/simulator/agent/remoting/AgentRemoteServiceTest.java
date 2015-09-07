@@ -2,20 +2,18 @@ package com.hazelcast.simulator.agent.remoting;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.messaging.DummyRunnableMessage;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -42,8 +40,9 @@ public class AgentRemoteServiceTest {
         agentRemoteService = new AgentRemoteService(agent, agentMessageProcessor);
         agentRemoteService.start();
 
-        List<AgentAddress> addresses = singletonList(new AgentAddress(AGENT_ADDRESS, AGENT_ADDRESS));
-        client = new AgentsClient(addresses);
+        ComponentRegistry registry = new ComponentRegistry();
+        registry.addAgent(AGENT_ADDRESS, AGENT_ADDRESS);
+        client = new AgentsClient(registry.getAgents());
     }
 
     @After

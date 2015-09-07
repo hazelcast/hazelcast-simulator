@@ -6,7 +6,6 @@ import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
-import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.util.EmptyStatement;
 import io.netty.bootstrap.ServerBootstrap;
@@ -45,7 +44,7 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private final EventLoopGroup group = new NioEventLoopGroup();
 
-    private final AtomicLong messageIds = new AtomicLong();
+    private final AtomicLong messageId = new AtomicLong();
     private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
     private final MessageQueueThread messageQueueThread = new MessageQueueThread();
 
@@ -98,15 +97,27 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     @Override
-    public void submit(SimulatorOperation operation, SimulatorAddress destination) {
-        long messageId = messageIds.incrementAndGet();
-        OperationType operationType = getOperationType(operation);
-        messageQueue.add(new SimulatorMessage(destination, localAddress, messageId, operationType, encodeOperation(operation)));
+    public void submit(SimulatorAddress destination, SimulatorOperation operation) {
+        SimulatorMessage message = createSimulatorMessage(localAddress, destination, operation);
+        messageQueue.add(message);
     }
 
     @Override
-    public Response write(SimulatorMessage message) throws Exception {
+    public Response write(SimulatorAddress destination, SimulatorOperation operation) throws Exception {
+        SimulatorMessage message = createSimulatorMessage(localAddress, destination, operation);
         return writeAsync(message).get();
+    }
+
+    @Override
+    public Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) throws Exception {
+        SimulatorMessage message = createSimulatorMessage(source, destination, operation);
+        return writeAsync(message).get();
+    }
+
+    private SimulatorMessage createSimulatorMessage(SimulatorAddress source, SimulatorAddress destination,
+                                                    SimulatorOperation operation) {
+        return new SimulatorMessage(destination, source, messageId.incrementAndGet(),
+                getOperationType(operation), encodeOperation(operation));
     }
 
     private ResponseFuture writeAsync(SimulatorMessage message) {
@@ -136,7 +147,7 @@ abstract class AbstractServerConnector implements ServerConnector {
             while (running) {
                 try {
                     SimulatorMessage message = messageQueue.take();
-                    Response response = write(message);
+                    Response response = writeAsync(message).get();
                     for (Map.Entry<SimulatorAddress, ResponseType> entry : response.entrySet()) {
                         if (!entry.getValue().equals(ResponseType.SUCCESS)) {
                             LOGGER.error("Got " + entry.getValue() + " on " + entry.getKey() + " for " + message);

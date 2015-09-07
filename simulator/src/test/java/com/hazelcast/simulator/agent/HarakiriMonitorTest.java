@@ -13,13 +13,13 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.CloudProviderUtils.AWS_EC2;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class HarakiriMonitorTest {
 
-    private static final String CLOUD_PROVIDER = AWS_EC2;
+    private static final String CLOUD_PROVIDER = PROVIDER_EC2;
     private static final String CLOUD_IDENTITY = "someIdentity";
     private static final String CLOUD_CREDENTIALS = "someCredentials";
     private static final int WAIT_SECONDS = 1;
@@ -86,7 +86,7 @@ public class HarakiriMonitorTest {
         Thread thread = new Thread() {
             @Override
             public void run() {
-                harakiriMonitor = new HarakiriMonitor(CloudProviderUtils.AWS_EC2, CLOUD_IDENTITY, CLOUD_PROVIDER, WAIT_SECONDS);
+                harakiriMonitor = new HarakiriMonitor(CloudProviderUtils.PROVIDER_EC2, CLOUD_IDENTITY, CLOUD_PROVIDER, WAIT_SECONDS);
                 harakiriMonitor.start();
                 countDownLatch.countDown();
             }

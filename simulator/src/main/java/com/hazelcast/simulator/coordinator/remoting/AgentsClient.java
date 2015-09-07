@@ -2,11 +2,11 @@ package com.hazelcast.simulator.coordinator.remoting;
 
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.CountdownWatch;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
+import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -70,9 +70,9 @@ public class AgentsClient {
 
     private Thread pokeThread;
 
-    public AgentsClient(List<AgentAddress> agentAddresses) {
-        for (AgentAddress address : agentAddresses) {
-            AgentClient client = new AgentClient(address);
+    public AgentsClient(List<AgentData> agentDataList) {
+        for (AgentData agentData : agentDataList) {
+            AgentClient client = new AgentClient(agentData);
             agents.add(client);
         }
     }
@@ -184,8 +184,8 @@ public class AgentsClient {
             try {
                 List<Failure> list = future.get(GET_FAILURES_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                 result.addAll(list);
-            } catch (InterruptedException e) {
-                LOGGER.fatal("Exception in getFailures()", e);
+            } catch (InterruptedException ignored) {
+                EmptyStatement.ignore(ignored);
             } catch (ExecutionException e) {
                 LOGGER.fatal("Exception in getFailures()", e);
             } catch (TimeoutException e) {

@@ -4,18 +4,23 @@ import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.CoordinatorClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.utils.CommonUtils.joinThreads;
+import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
+import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 
 /**
  * Connector which connects to remote Simulator Agent instances.
@@ -25,23 +30,22 @@ public class CoordinatorConnector {
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
     private final CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(exceptionLogger);
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
+    private final AtomicLong messageId = new AtomicLong();
 
     /**
      * Disconnects from all Simulator Agent instances.
      */
     public void shutdown() {
-        List<Thread> shutdownThreads = new ArrayList<Thread>();
+        ThreadSpawner spawner = new ThreadSpawner("shutdownClientConnectors");
         for (final ClientConnector agent : agents.values()) {
-            Thread thread = new Thread() {
+            spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     agent.shutdown();
                 }
-            };
-            thread.start();
-            shutdownThreads.add(thread);
+            });
         }
-        joinThreads(shutdownThreads);
+        spawner.awaitCompletion();
     }
 
     /**
@@ -74,12 +78,16 @@ public class CoordinatorConnector {
     /**
      * Sends a {@link SimulatorMessage} to the addressed Simulator component.
      *
-     * @param message the {@link SimulatorMessage} to send
+     * @param destination the {@link SimulatorAddress} of the destination
+     * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the response of all addressed Simulator components.
      * @throws Exception if the send method was interrupted or an exception occurred
      */
-    public Response send(SimulatorMessage message) throws Exception {
-        int agentAddressIndex = message.getDestination().getAgentIndex();
+    public Response write(SimulatorAddress destination, SimulatorOperation operation) throws Exception {
+        SimulatorMessage message = new SimulatorMessage(destination, COORDINATOR, messageId.incrementAndGet(),
+                getOperationType(operation), encodeOperation(operation));
+
+        int agentAddressIndex = destination.getAgentIndex();
         Response response = new Response(message);
         if (agentAddressIndex == 0) {
             List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();

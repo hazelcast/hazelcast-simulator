@@ -124,6 +124,10 @@ public class SimulatorProperties {
         return fixValue(name, value);
     }
 
+    public void set(String name, String value) {
+        properties.setProperty(name, value);
+    }
+
     private String loadPropertyFromFile(String property, String path) {
         File file = newFile(path);
         if (!file.exists()) {

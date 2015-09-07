@@ -55,7 +55,7 @@ public class RemoteExceptionLoggerTest {
             }
         }, ASSERT_EVENTUALLY_TIMEOUT_SECONDS);
 
-        verify(serverConnector, times(MAX_EXCEPTION_COUNT)).submit(any(SimulatorOperation.class), any(SimulatorAddress.class));
+        verify(serverConnector, times(MAX_EXCEPTION_COUNT)).submit(any(SimulatorAddress.class), any(SimulatorOperation.class));
         verifyNoMoreInteractions(serverConnector);
     }
 }

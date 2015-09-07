@@ -16,20 +16,22 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.simulator.common.AgentAddress;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.provisioner.Bash;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,8 +46,8 @@ import static com.hazelcast.simulator.coordinator.CoordinatorHelper.assignDedica
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.createAddressConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.findNextAgentLayout;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.getMaxTestCaseIdLength;
-import static com.hazelcast.simulator.coordinator.CoordinatorHelper.getStartHarakiriMonitorCommand;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.initAgentMemberLayouts;
+import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
@@ -55,8 +57,10 @@ import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPoo
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static java.lang.String.format;
 
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public final class Coordinator {
 
     static final File SIMULATOR_HOME = getSimulatorHome();
@@ -87,10 +91,11 @@ public final class Coordinator {
     final SimulatorProperties props = new SimulatorProperties();
 
     AgentsClient agentsClient;
+    CoordinatorConnector coordinatorConnector;
     FailureMonitor failureMonitor;
     PerformanceMonitor performanceMonitor;
 
-    private final List<AgentAddress> addresses = Collections.synchronizedList(new LinkedList<AgentAddress>());
+    private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private Bash bash;
     private ExecutorService parallelExecutor;
@@ -130,20 +135,21 @@ public final class Coordinator {
                 agentsClient.stop();
             }
 
+            if (coordinatorConnector != null) {
+                coordinatorConnector.shutdown();
+            }
+
             killAgents();
         }
     }
 
     private void initAgents() {
-        ensureExistingFile(agentsFile);
-        addresses.addAll(AgentsFile.load(agentsFile));
-        if (addresses.isEmpty()) {
-            throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
-        }
+        populateComponentRegister();
 
         startAgents();
+        startCoordinatorConnector();
 
-        agentsClient = new AgentsClient(addresses);
+        agentsClient = new AgentsClient(componentRegistry.getAgents());
         agentsClient.start();
 
         initMemberWorkerCount(workerJvmSettings);
@@ -168,17 +174,32 @@ public final class Coordinator {
         // TODO: copy the Hazelcast JARs
     }
 
-    private void startAgents() {
-        echoLocal("Starting %s Agents", addresses.size());
-
-        for (AgentAddress address : addresses) {
-            startAgent(address.publicAddress);
+    private void populateComponentRegister() {
+        ensureExistingFile(agentsFile);
+        AgentsFile.load(agentsFile, componentRegistry);
+        if (componentRegistry.agentCount() == 0) {
+            throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
         }
-
-        echoLocal("Successfully started agents on %s boxes", addresses.size());
     }
 
-    private void startAgent(String ip) {
+    private void startAgents() {
+        echoLocal("Starting %s Agents", componentRegistry.agentCount());
+
+        ThreadSpawner spawner = new ThreadSpawner("startAgents");
+        for (final AgentData agentData : componentRegistry.getAgents()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    startAgent(agentData.getAddressIndex(), agentData.getPublicAddress());
+                }
+            });
+        }
+        spawner.awaitCompletion();
+
+        echoLocal("Successfully started agents on %s boxes", componentRegistry.agentCount());
+    }
+
+    private void startAgent(int addressIndex, String ip) {
         echoLocal("Killing Java processes on %s", ip);
         bash.killAllJavaProcesses(ip);
 
@@ -191,23 +212,17 @@ public final class Coordinator {
                     props.get("CLOUD_CREDENTIAL"));
         }
         bash.ssh(ip, format(
-                "nohup hazelcast-simulator-%s/bin/agent %s > agent.out 2> agent.err < /dev/null &",
+                "nohup hazelcast-simulator-%s/bin/agent --addressIndex %d %s > agent.out 2> agent.err < /dev/null &",
                 getSimulatorVersion(),
+                addressIndex,
                 additionalParameters));
     }
 
-    private void killAgents() {
-        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommand(props);
-
-        echoLocal("Killing %s Agents", addresses.size());
-        for (AgentAddress address : addresses) {
-            echoLocal("Killing Agent, %s", address.publicAddress);
-            bash.killAllJavaProcesses(address.publicAddress);
-            if (startHarakiriMonitorCommand != null) {
-                bash.ssh(address.publicAddress, startHarakiriMonitorCommand);
-            }
+    private void startCoordinatorConnector() {
+        coordinatorConnector = new CoordinatorConnector();
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), AGENT_PORT);
         }
-        echoLocal("Successfully killed %s Agents", addresses.size());
     }
 
     private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {
@@ -493,6 +508,29 @@ public final class Coordinator {
         LOGGER.info("-----------------------------------------------------------------------------");
         LOGGER.info("No failures have been detected!");
         LOGGER.info("-----------------------------------------------------------------------------");
+    }
+
+    private void killAgents() {
+        ThreadSpawner spawner = new ThreadSpawner("killAgents");
+        final String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(props);
+
+        echoLocal("Killing %s Agents", componentRegistry.agentCount());
+        for (final AgentData agentData : componentRegistry.getAgents()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    echoLocal("Killing Agent %s", agentData.getPublicAddress());
+                    bash.killAllJavaProcesses(agentData.getPublicAddress());
+
+                    if (startHarakiriMonitorCommand != null) {
+                        LOGGER.info(format("Starting HarakiriMonitor on %s", agentData.getPublicAddress()));
+                        bash.ssh(agentData.getPublicAddress(), startHarakiriMonitorCommand);
+                    }
+                }
+            });
+        }
+        spawner.awaitCompletion();
+        echoLocal("Successfully killed %s Agents", componentRegistry.agentCount());
     }
 
     private void echoLocal(String msg, Object... args) {

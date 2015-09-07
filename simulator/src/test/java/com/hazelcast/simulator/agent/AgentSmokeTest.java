@@ -2,10 +2,9 @@ package com.hazelcast.simulator.agent;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.simulator.common.AgentAddress;
-import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
@@ -31,7 +30,6 @@ import java.util.concurrent.TimeoutException;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -172,11 +170,9 @@ public class AgentSmokeTest {
     }
 
     private static AgentsClient getAgentsClient() throws IOException {
-        File agentFile = File.createTempFile("agents", "txt");
-        agentFile.deleteOnExit();
-        writeText(AGENT_IP_ADDRESS, agentFile);
-        List<AgentAddress> agentAddresses = AgentsFile.load(agentFile);
-        return new AgentsClient(agentAddresses);
+        ComponentRegistry registry = new ComponentRegistry();
+        registry.addAgent(AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
+        return new AgentsClient(registry.getAgents());
     }
 
     private static class AgentStarter {
@@ -201,7 +197,7 @@ public class AgentSmokeTest {
 
             @Override
             public void run() {
-                agent = Agent.createAgent(new String[]{});
+                agent = Agent.createAgent(new String[]{"--addressIndex", "1"});
                 agent.start();
                 latch.countDown();
             }
