@@ -10,6 +10,7 @@ import com.hazelcast.simulator.provisioner.git.BuildSupport;
 import com.hazelcast.simulator.provisioner.git.GitSupport;
 import com.hazelcast.simulator.provisioner.git.HazelcastJARFinder;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
@@ -103,12 +104,19 @@ public final class Provisioner {
 
     void installSimulator(boolean enableEnterprise) {
         echoImportant("Installing Simulator on %s machines", registry.agentCount());
-
         hazelcastJars.prepare(enableEnterprise);
-        for (AgentData agentData : registry.getAgents()) {
-            echo("Installing Simulator on " + agentData.getPublicAddress());
-            installSimulator(agentData.getPublicAddress());
+
+        ThreadSpawner spawner = new ThreadSpawner("installSimulator");
+        for (final AgentData agentData : registry.getAgents()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    echo("Installing Simulator on " + agentData.getPublicAddress());
+                    installSimulator(agentData.getPublicAddress());
+                }
+            });
         }
+        spawner.awaitCompletion();
 
         echoImportant("Installing Simulator on %s machines", registry.agentCount());
     }

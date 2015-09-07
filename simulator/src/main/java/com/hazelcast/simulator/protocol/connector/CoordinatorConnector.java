@@ -9,6 +9,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_N
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
-import static com.hazelcast.simulator.utils.CommonUtils.joinThreads;
 
 /**
  * Connector which connects to remote Simulator Agent instances.
@@ -36,18 +36,16 @@ public class CoordinatorConnector {
      * Disconnects from all Simulator Agent instances.
      */
     public void shutdown() {
-        List<Thread> shutdownThreads = new ArrayList<Thread>();
+        ThreadSpawner spawner = new ThreadSpawner("shutdownClientConnectors");
         for (final ClientConnector agent : agents.values()) {
-            Thread thread = new Thread() {
+            spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     agent.shutdown();
                 }
-            };
-            thread.start();
-            shutdownThreads.add(thread);
+            });
         }
-        joinThreads(shutdownThreads);
+        spawner.awaitCompletion();
     }
 
     /**

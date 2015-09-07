@@ -15,6 +15,7 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -26,7 +27,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.utils.CommonUtils.joinThreads;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -84,7 +84,7 @@ public class ProtocolUtil {
     }
 
     static void stopSimulatorComponents() {
-        List<Thread> shutdownThreads = new ArrayList<Thread>();
+        ThreadSpawner spawner = new ThreadSpawner("shutdownSimulatorComponents");
 
         LOGGER.info("Shutdown of Coordinator...");
         if (coordinatorConnector != null) {
@@ -93,27 +93,25 @@ public class ProtocolUtil {
         }
 
         LOGGER.info("Shutdown of Agents...");
-        shutdownServerConnectors(agentConnectors, shutdownThreads);
+        shutdownServerConnectors(agentConnectors, spawner);
 
         LOGGER.info("Shutdown of Workers...");
-        shutdownServerConnectors(workerConnectors, shutdownThreads);
+        shutdownServerConnectors(workerConnectors, spawner);
 
         LOGGER.info("Waiting for shutdown threads...");
-        joinThreads(shutdownThreads);
+        spawner.awaitCompletion();
 
         LOGGER.info("Shutdown complete!");
     }
 
-    private static <C extends ServerConnector> void shutdownServerConnectors(List<C> connectors, List<Thread> shutdownThreads) {
+    private static <C extends ServerConnector> void shutdownServerConnectors(List<C> connectors, ThreadSpawner spawner) {
         for (final C connector : connectors) {
-            Thread thread = new Thread() {
+            spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     connector.shutdown();
                 }
-            };
-            thread.start();
-            shutdownThreads.add(thread);
+            });
         }
         connectors.clear();
     }

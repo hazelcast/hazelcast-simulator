@@ -28,10 +28,10 @@ import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,7 +51,6 @@ import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.CommonUtils.joinThreads;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
@@ -185,9 +184,16 @@ public final class Coordinator {
     private void startAgents() {
         echoLocal("Starting %s Agents", componentRegistry.agentCount());
 
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            startAgent(agentData.getAddressIndex(), agentData.getPublicAddress());
+        ThreadSpawner spawner = new ThreadSpawner("startAgents");
+        for (final AgentData agentData : componentRegistry.getAgents()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    startAgent(agentData.getAddressIndex(), agentData.getPublicAddress());
+                }
+            });
         }
+        spawner.awaitCompletion();
 
         echoLocal("Successfully started agents on %s boxes", componentRegistry.agentCount());
     }
@@ -504,14 +510,12 @@ public final class Coordinator {
     }
 
     private void killAgents() {
-        int agentCount = componentRegistry.agentCount();
-        List<Thread> threads = new ArrayList<Thread>(agentCount);
-
+        ThreadSpawner spawner = new ThreadSpawner("killAgents");
         final String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(props);
 
-        echoLocal("Killing %s Agents", agentCount);
+        echoLocal("Killing %s Agents", componentRegistry.agentCount());
         for (final AgentData agentData : componentRegistry.getAgents()) {
-            Thread thread = new Thread() {
+            spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     echoLocal("Killing Agent %s", agentData.getPublicAddress());
@@ -522,12 +526,10 @@ public final class Coordinator {
                         bash.ssh(agentData.getPublicAddress(), startHarakiriMonitorCommand);
                     }
                 }
-            };
-            thread.start();
-            threads.add(thread);
+            });
         }
-        joinThreads(threads);
-        echoLocal("Successfully killed %s Agents", agentCount);
+        spawner.awaitCompletion();
+        echoLocal("Successfully killed %s Agents", componentRegistry.agentCount());
     }
 
     private void echoLocal(String msg, Object... args) {
