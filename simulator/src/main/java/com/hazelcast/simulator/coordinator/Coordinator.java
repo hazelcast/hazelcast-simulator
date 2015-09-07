@@ -31,6 +31,7 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,18 +46,19 @@ import static com.hazelcast.simulator.coordinator.CoordinatorHelper.assignDedica
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.createAddressConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.findNextAgentLayout;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.getMaxTestCaseIdLength;
-import static com.hazelcast.simulator.coordinator.CoordinatorHelper.getStartHarakiriMonitorCommand;
 import static com.hazelcast.simulator.coordinator.CoordinatorHelper.initAgentMemberLayouts;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.CommonUtils.joinThreads;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static java.lang.String.format;
 
 public final class Coordinator {
@@ -502,17 +504,30 @@ public final class Coordinator {
     }
 
     private void killAgents() {
-        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommand(props);
+        int agentCount = componentRegistry.agentCount();
+        List<Thread> threads = new ArrayList<Thread>(agentCount);
 
-        echoLocal("Killing %s Agents", componentRegistry.agentCount());
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            echoLocal("Killing Agent, %s", agentData.getPublicAddress());
-            bash.killAllJavaProcesses(agentData.getPublicAddress());
-            if (startHarakiriMonitorCommand != null) {
-                bash.ssh(agentData.getPublicAddress(), startHarakiriMonitorCommand);
-            }
+        final String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(props);
+
+        echoLocal("Killing %s Agents", agentCount);
+        for (final AgentData agentData : componentRegistry.getAgents()) {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    echoLocal("Killing Agent %s", agentData.getPublicAddress());
+                    bash.killAllJavaProcesses(agentData.getPublicAddress());
+
+                    if (startHarakiriMonitorCommand != null) {
+                        LOGGER.info(format("Starting HarakiriMonitor on %s", agentData.getPublicAddress()));
+                        bash.ssh(agentData.getPublicAddress(), startHarakiriMonitorCommand);
+                    }
+                }
+            };
+            thread.start();
+            threads.add(thread);
         }
-        echoLocal("Successfully killed %s Agents", componentRegistry.agentCount());
+        joinThreads(threads);
+        echoLocal("Successfully killed %s Agents", agentCount);
     }
 
     private void echoLocal(String msg, Object... args) {

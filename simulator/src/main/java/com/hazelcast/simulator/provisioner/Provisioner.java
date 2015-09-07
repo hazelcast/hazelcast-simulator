@@ -38,6 +38,7 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static java.lang.String.format;
 
 public final class Provisioner {
@@ -215,8 +216,10 @@ public final class Provisioner {
 
         Template template = new TemplateBuilder(compute, props).build();
 
+        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(props);
+
         try {
-            echo("Creating machines... (can take a few minutes)");
+            echo("Creating machines (can take a few minutes)...");
             Set<Future> futures = new HashSet<Future>();
             for (int batch : calcBatches(delta)) {
                 Set<? extends NodeMetadata> nodes = compute.createNodesInGroup(groupName, batch, template);
@@ -232,7 +235,7 @@ public final class Provisioner {
 
                 for (NodeMetadata node : nodes) {
                     String publicIpAddress = node.getPublicAddresses().iterator().next();
-                    Future future = executor.submit(new InstallNodeTask(publicIpAddress));
+                    Future future = executor.submit(new InstallNodeTask(publicIpAddress, startHarakiriMonitorCommand));
                     futures.add(future);
                 }
             }
@@ -397,23 +400,32 @@ public final class Provisioner {
     private final class InstallNodeTask implements Runnable {
 
         private final String ip;
+        private final String startHarakiriMonitorCommand;
 
-        private InstallNodeTask(String ip) {
+        private InstallNodeTask(String ip, String startHarakiriMonitorCommand) {
             this.ip = ip;
+            this.startHarakiriMonitorCommand = startHarakiriMonitorCommand;
         }
 
         @Override
         public void run() {
             // install Java if needed
             if (!"outofthebox".equals(props.get("JDK_FLAVOR"))) {
+                echo("    " + ip + " JAVA INSTALLATION STARTED...");
                 bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
                 bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
                 bash.ssh(ip, "bash install-java.sh");
                 echo("    " + ip + " JAVA INSTALLED");
             }
 
+            echo("    " + ip + " SIMULATOR INSTALLATION STARTED...");
             installSimulator(ip);
             echo("    " + ip + " SIMULATOR INSTALLED");
+
+            if (startHarakiriMonitorCommand != null) {
+                bash.ssh(ip, startHarakiriMonitorCommand);
+                echo("    " + ip + " HARAKIRI MONITOR STARTED");
+            }
         }
 
         private File getJavaInstallScript() {
@@ -434,8 +446,8 @@ public final class Provisioner {
     public static void main(String[] args) {
         try {
             LOGGER.info("Hazelcast Simulator Provisioner");
-            LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), GitInfo.getCommitIdAbbrev(),
-                    GitInfo.getBuildTime()));
+            LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(),
+                    GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
             LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
 
             Provisioner provisioner = new Provisioner();
