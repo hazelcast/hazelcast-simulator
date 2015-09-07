@@ -64,11 +64,15 @@ public class MapPredicateTest {
     private IMap<Integer, Employee> map;
     private IList<PredicateOperationCounter> operationCounterList;
 
+    private String baseAssertMessage;
+
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         operationCounterList = targetInstance.getList(basename + "OperationCounter");
+
+        baseAssertMessage = format("%s: %%s not matching %%s", basename);
 
         operationSelectorBuilder.addOperation(Operation.PREDICATE_BUILDER, predicateBuilderProb)
                 .addOperation(Operation.SQL_STRING, sqlStringProb)
@@ -182,8 +186,9 @@ public class MapPredicateTest {
 
             Collection<Employee> employees = map.values(ageNamePredicate);
             for (Employee emp : employees) {
-                assertTrue(basename + ": " + emp + " not matching " + ageNamePredicate, emp.getAge() < age);
-                assertTrue(basename + ": " + emp + " not matching " + ageNamePredicate, emp.getName().equals(name));
+                String assertMessage = format(baseAssertMessage, emp, ageNamePredicate);
+                assertTrue(assertMessage, emp.getAge() < age);
+                assertTrue(assertMessage, emp.getName().equals(name));
             }
             operationCounter.predicateBuilderCount++;
         }
@@ -196,8 +201,9 @@ public class MapPredicateTest {
             Collection<Employee> employees = map.values(predicate);
 
             for (Employee emp : employees) {
-                assertTrue(basename + ": " + emp + " not matching " + predicate, emp.isActive() == active);
-                assertTrue(basename + ": " + emp + " not matching " + predicate, emp.getAge() > age);
+                String assertMessage = format(baseAssertMessage, emp, predicate);
+                assertTrue(assertMessage, emp.isActive() == active);
+                assertTrue(assertMessage, emp.getAge() > age);
             }
             operationCounter.sqlStringCount++;
         }
@@ -212,7 +218,7 @@ public class MapPredicateTest {
             do {
                 employees = map.values(pagingPredicate);
                 for (Employee emp : employees) {
-                    assertTrue(basename + ": " + emp + " not matching " + predicate, emp.getSalary() < maxSal);
+                    assertTrue(format(baseAssertMessage, emp, predicate), emp.getSalary() < maxSal);
                 }
                 pagingPredicate.nextPage();
             } while (!employees.isEmpty());
