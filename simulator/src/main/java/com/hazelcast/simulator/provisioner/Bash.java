@@ -61,8 +61,17 @@ public class Bash {
         execute(command);
     }
 
+    public void killAllJavaProcesses(String ip) {
+        sshVerbose(ip, "killall -9 java || true");
+    }
+
     public void ssh(String ip, String command) {
         String sshCommand = format("ssh %s %s@%s \"%s\"", sshOptions, user, ip, command);
+        execute(sshCommand);
+    }
+
+    public void sshVerbose(String ip, String command) {
+        String sshCommand = format("ssh -v %s %s@%s \"%s\"", sshOptions, user, ip, command);
         execute(sshCommand);
     }
 

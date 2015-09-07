@@ -150,7 +150,7 @@ public final class Provisioner {
 
         for (AgentAddress address : addresses) {
             echo("Killing Java processes on %s", address.publicAddress);
-            bash.ssh(address.publicAddress, "killall -9 java || true");
+            bash.killAllJavaProcesses(address.publicAddress);
         }
 
         echoImportant("Successfully killed %s Java processes", addresses.size());

@@ -178,7 +178,7 @@ public final class Coordinator {
 
     private void startAgent(String ip) {
         echoLocal("Killing Java processes on %s", ip);
-        bash.ssh(ip, "killall -9 java || true");
+        bash.killAllJavaProcesses(ip);
 
         echoLocal("Starting Agent on %s", ip);
         String additionalParameters = "";
@@ -200,7 +200,7 @@ public final class Coordinator {
         echoLocal("Killing %s Agents", addresses.size());
         for (AgentAddress address : addresses) {
             echoLocal("Killing Agent, %s", address.publicAddress);
-            bash.ssh(address.publicAddress, "killall -9 java || true");
+            bash.killAllJavaProcesses(address.publicAddress);
             if (startHarakiriMonitorCommand != null) {
                 bash.ssh(address.publicAddress, startHarakiriMonitorCommand);
             }
