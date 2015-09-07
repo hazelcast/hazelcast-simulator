@@ -147,7 +147,11 @@ public final class Coordinator {
         populateComponentRegister();
 
         startAgents();
-        startCoordinatorConnector();
+        try {
+            startCoordinatorConnector();
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not start CoordinatorConnector", e);
+        }
 
         agentsClient = new AgentsClient(componentRegistry.getAgents());
         agentsClient.start();
@@ -220,9 +224,16 @@ public final class Coordinator {
 
     private void startCoordinatorConnector() {
         coordinatorConnector = new CoordinatorConnector();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), AGENT_PORT);
+        ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector");
+        for (final AgentData agentData : componentRegistry.getAgents()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), AGENT_PORT);
+                }
+            });
         }
+        spawner.awaitCompletion();
     }
 
     private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {

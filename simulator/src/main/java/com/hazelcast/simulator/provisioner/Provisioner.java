@@ -130,39 +130,58 @@ public final class Provisioner {
 
     void download(String dir) {
         echoImportant("Download artifacts of %s machines", registry.agentCount());
-
+        final String syncCommand = format("rsync --copy-links -avv -e \"ssh %s\" %s@%%s:hazelcast-simulator-%s/workers/* %s",
+                props.get("SSH_OPTIONS", ""), props.getUser(), getSimulatorVersion(), dir);
         bash.execute("mkdir -p " + dir);
 
-        for (AgentData agentData : registry.getAgents()) {
-            echo("Downloading from %s", agentData.getPublicAddress());
-
-            String syncCommand = format("rsync --copy-links  -avv -e \"ssh %s\" %s@%s:hazelcast-simulator-%s/workers/* " + dir,
-                    props.get("SSH_OPTIONS", ""), props.getUser(), agentData.getPublicAddress(), getSimulatorVersion());
-
-            bash.executeQuiet(syncCommand);
+        ThreadSpawner spawner = new ThreadSpawner("download");
+        for (final AgentData agentData : registry.getAgents()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    echo("Downloading from %s", agentData.getPublicAddress());
+                    bash.executeQuiet(format(syncCommand, agentData.getPublicAddress()));
+                }
+            });
         }
+        spawner.awaitCompletion();
 
         echoImportant("Finished downloading artifacts of %s machines", registry.agentCount());
     }
 
     void clean() {
         echoImportant("Cleaning worker homes of %s machines", registry.agentCount());
+        final String cleanCommand = format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion());
 
-        for (AgentData agentData : registry.getAgents()) {
-            echo("Cleaning %s", agentData.getPublicAddress());
-            bash.ssh(agentData.getPublicAddress(), format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion()));
+        ThreadSpawner spawner = new ThreadSpawner("clean");
+        for (final AgentData agentData : registry.getAgents()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    echo("Cleaning %s", agentData.getPublicAddress());
+                    bash.ssh(agentData.getPublicAddress(), cleanCommand);
+                }
+            });
         }
+        spawner.awaitCompletion();
 
         echoImportant("Finished cleaning worker homes of %s machines", registry.agentCount());
     }
 
-    void killJavaProcessed() {
+    void killJavaProcesses() {
         echoImportant("Killing %s Java processes", registry.agentCount());
 
-        for (AgentData agentData : registry.getAgents()) {
-            echo("Killing Java processes on %s", agentData.getPublicAddress());
-            bash.killAllJavaProcesses(agentData.getPublicAddress());
+        ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses");
+        for (final AgentData agentData : registry.getAgents()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    echo("Killing Java processes on %s", agentData.getPublicAddress());
+                    bash.killAllJavaProcesses(agentData.getPublicAddress());
+                }
+            });
         }
+        spawner.awaitCompletion();
 
         echoImportant("Successfully killed %s Java processes", registry.agentCount());
     }

@@ -93,7 +93,7 @@ final class ProvisionerCli {
             } else if (options.has(cleanSpec)) {
                 provisioner.clean();
             } else if (options.has(killSpec)) {
-                provisioner.killJavaProcessed();
+                provisioner.killJavaProcesses();
             } else if (options.has(terminateSpec)) {
                 provisioner.terminate();
             } else {
