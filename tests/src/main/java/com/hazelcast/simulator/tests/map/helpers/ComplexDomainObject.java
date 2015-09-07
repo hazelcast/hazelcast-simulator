@@ -267,7 +267,7 @@ public class ComplexDomainObject implements Portable {
 
     @Override
     public int getClassId() {
-        return 3;
+        return PORTABLE_CLASS_ID;
     }
 
     @Override
@@ -487,76 +487,36 @@ public class ComplexDomainObject implements Portable {
         invoice_account_demand = in.readInt("invoice_account_demand");
     }
 
-    public int getUUID() {
-        return UUID;
-    }
-
-    public long getLocality_id() {
-        return locality_id;
-    }
-
     public void setLocality_id(long locality_id) {
         this.locality_id = locality_id;
-    }
-
-    public String getLocality_name() {
-        return locality_name;
     }
 
     public void setLocality_name(String locality_name) {
         this.locality_name = locality_name;
     }
 
-    public long getDivision_id() {
-        return division_id;
-    }
-
     public void setDivision_id(long division_id) {
         this.division_id = division_id;
-    }
-
-    public String getDivision_name() {
-        return division_name;
     }
 
     public void setDivision_name(String division_name) {
         this.division_name = division_name;
     }
 
-    public long getBrand_id() {
-        return brand_id;
-    }
-
     public void setBrand_id(long brand_id) {
         this.brand_id = brand_id;
-    }
-
-    public String getBrand_name() {
-        return brand_name;
     }
 
     public void setBrand_name(String brand_name) {
         this.brand_name = brand_name;
     }
 
-    public long getMedia_id() {
-        return media_id;
-    }
-
     public void setMedia_id(long media_id) {
         this.media_id = media_id;
     }
 
-    public String getMedia_name() {
-        return media_name;
-    }
-
     public void setMedia_name(String media_name) {
         this.media_name = media_name;
-    }
-
-    public int getMedia_content_approval_instruction() {
-        return media_content_approval_instruction;
     }
 
     public void setMedia_content_approval_instruction(
@@ -564,16 +524,8 @@ public class ComplexDomainObject implements Portable {
         this.media_content_approval_instruction = media_content_approval_instruction;
     }
 
-    public int getMedia_qc_approval_instruction() {
-        return media_qc_approval_instruction;
-    }
-
     public void setMedia_qc_approval_instruction(int media_qc_approval_instruction) {
         this.media_qc_approval_instruction = media_qc_approval_instruction;
-    }
-
-    public int getMedia_clock_approval_instruction() {
-        return media_clock_approval_instruction;
     }
 
     public void setMedia_clock_approval_instruction(
@@ -581,17 +533,9 @@ public class ComplexDomainObject implements Portable {
         this.media_clock_approval_instruction = media_clock_approval_instruction;
     }
 
-    public int getMedia_class_approval_instruction() {
-        return media_class_approval_instruction;
-    }
-
     public void setMedia_class_approval_instruction(
             int media_class_approval_instruction) {
         this.media_class_approval_instruction = media_class_approval_instruction;
-    }
-
-    public int getMedia_instruction_approval_instruction() {
-        return media_instruction_approval_instruction;
     }
 
     public void setMedia_instruction_approval_instruction(
@@ -599,208 +543,105 @@ public class ComplexDomainObject implements Portable {
         this.media_instruction_approval_instruction = media_instruction_approval_instruction;
     }
 
-    public int getMedia_house_nr_instruction() {
-        return media_house_nr_instruction;
-    }
-
     public void setMedia_house_nr_instruction(int media_house_nr_instruction) {
         this.media_house_nr_instruction = media_house_nr_instruction;
-    }
-
-    public boolean isMedia_music_report_required() {
-        return media_music_report_required;
     }
 
     public void setMedia_music_report_required(boolean media_music_report_required) {
         this.media_music_report_required = media_music_report_required;
     }
 
-    public int getMedia_delivery_hours() {
-        return media_delivery_hours;
-    }
-
     public void setMedia_delivery_hours(int media_delivery_hours) {
         this.media_delivery_hours = media_delivery_hours;
-    }
-
-    public long getMedia_destination_id() {
-        return media_destination_id;
     }
 
     public void setMedia_destination_id(long media_destination_id) {
         this.media_destination_id = media_destination_id;
     }
 
-    public long getMedia_slave_destination_id() {
-        return media_slave_destination_id;
-    }
-
     public void setMedia_slave_destination_id(long media_slave_destination_id) {
         this.media_slave_destination_id = media_slave_destination_id;
-    }
-
-    public long getCopy_code_id() {
-        return copy_code_id;
     }
 
     public void setCopy_code_id(long copy_code_id) {
         this.copy_code_id = copy_code_id;
     }
 
-    public long getRegion_id() {
-        return region_id;
-    }
-
     public void setRegion_id(long region_id) {
         this.region_id = region_id;
-    }
-
-    public long getMedia_type_media_extension_id() {
-        return media_type_media_extension_id;
     }
 
     public void setMedia_type_media_extension_id(long media_type_media_extension_id) {
         this.media_type_media_extension_id = media_type_media_extension_id;
     }
 
-    public String getCopy_code() {
-        return copy_code;
-    }
-
     public void setCopy_code(String copy_code) {
         this.copy_code = copy_code;
-    }
-
-    public boolean isAired() {
-        return aired;
     }
 
     public void setAired(boolean aired) {
         this.aired = aired;
     }
 
-    public long getPoster_id() {
-        return poster_id;
-    }
-
     public void setPoster_id(long poster_id) {
         this.poster_id = poster_id;
-    }
-
-    public int getFilm_length() {
-        return film_length;
     }
 
     public void setFilm_length(int film_length) {
         this.film_length = film_length;
     }
 
-    public long getFirst_air_date() {
-        return first_air_date;
-    }
-
     public void setFirst_air_date(long first_air_date) {
         this.first_air_date = first_air_date;
-    }
-
-    public int getContent_type() {
-        return content_type;
     }
 
     public void setContent_type(int content_type) {
         this.content_type = content_type;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public boolean isStopped() {
-        return stopped;
     }
 
     public void setStopped(boolean stopped) {
         this.stopped = stopped;
     }
 
-    public boolean isRequest_upload() {
-        return request_upload;
-    }
-
     public void setRequest_upload(boolean request_upload) {
         this.request_upload = request_upload;
-    }
-
-    public long getUrr_time() {
-        return urr_time;
     }
 
     public void setUrr_time(long urr_time) {
         this.urr_time = urr_time;
     }
 
-    public long getSponsorship_locality_id() {
-        return sponsorship_locality_id;
-    }
 
     public void setSponsorship_locality_id(long sponsorship_locality_id) {
         this.sponsorship_locality_id = sponsorship_locality_id;
-    }
-
-    public long getSponsorship_division_id() {
-        return sponsorship_division_id;
     }
 
     public void setSponsorship_division_id(long sponsorship_division_id) {
         this.sponsorship_division_id = sponsorship_division_id;
     }
 
-    public long getMusic_report_request_time() {
-        return music_report_request_time;
-    }
-
     public void setMusic_report_request_time(long music_report_request_time) {
         this.music_report_request_time = music_report_request_time;
-    }
-
-    public int getMusic_report_request_count() {
-        return music_report_request_count;
     }
 
     public void setMusic_report_request_count(int music_report_request_count) {
         this.music_report_request_count = music_report_request_count;
     }
 
-    public int getMusic_to_report() {
-        return music_to_report;
-    }
-
     public void setMusic_to_report(int music_to_report) {
         this.music_to_report = music_to_report;
-    }
-
-    public boolean isMusic_report_completed() {
-        return music_report_completed;
     }
 
     public void setMusic_report_completed(boolean music_report_completed) {
         this.music_report_completed = music_report_completed;
     }
 
-    public long getMusic_report_completed_time() {
-        return music_report_completed_time;
-    }
-
     public void setMusic_report_completed_time(long music_report_completed_time) {
         this.music_report_completed_time = music_report_completed_time;
-    }
-
-    public boolean isMusic_report_completed_action() {
-        return music_report_completed_action;
     }
 
     public void setMusic_report_completed_action(
@@ -808,280 +649,140 @@ public class ComplexDomainObject implements Portable {
         this.music_report_completed_action = music_report_completed_action;
     }
 
-    public String getMedia_agency_planning() {
-        return media_agency_planning;
-    }
-
     public void setMedia_agency_planning(String media_agency_planning) {
         this.media_agency_planning = media_agency_planning;
-    }
-
-    public String getMedia_agency_buying() {
-        return media_agency_buying;
     }
 
     public void setMedia_agency_buying(String media_agency_buying) {
         this.media_agency_buying = media_agency_buying;
     }
 
-    public String getCreative_agency() {
-        return creative_agency;
-    }
-
     public void setCreative_agency(String creative_agency) {
         this.creative_agency = creative_agency;
-    }
-
-    public String getProduction_agency() {
-        return production_agency;
     }
 
     public void setProduction_agency(String production_agency) {
         this.production_agency = production_agency;
     }
 
-    public String getPost_production_agency() {
-        return post_production_agency;
-    }
-
     public void setPost_production_agency(String post_production_agency) {
         this.post_production_agency = post_production_agency;
-    }
-
-    public String getOther_agency() {
-        return other_agency;
     }
 
     public void setOther_agency(String other_agency) {
         this.other_agency = other_agency;
     }
 
-    public boolean isDisabled_for_upload() {
-        return disabled_for_upload;
-    }
-
     public void setDisabled_for_upload(boolean disabled_for_upload) {
         this.disabled_for_upload = disabled_for_upload;
-    }
-
-    public String getMedia_house_nr() {
-        return media_house_nr;
     }
 
     public void setMedia_house_nr(String media_house_nr) {
         this.media_house_nr = media_house_nr;
     }
 
-    public String getB_p_code() {
-        return b_p_code;
-    }
-
     public void setB_p_code(String b_p_code) {
         this.b_p_code = b_p_code;
-    }
-
-    public boolean isCreaded_from_mismatch() {
-        return creaded_from_mismatch;
     }
 
     public void setCreaded_from_mismatch(boolean creaded_from_mismatch) {
         this.creaded_from_mismatch = creaded_from_mismatch;
     }
 
-    public boolean isDelivered_from_elsewhere() {
-        return delivered_from_elsewhere;
-    }
-
     public void setDelivered_from_elsewhere(boolean delivered_from_elsewhere) {
         this.delivered_from_elsewhere = delivered_from_elsewhere;
-    }
-
-    public long getMedia_first_air_date() {
-        return media_first_air_date;
     }
 
     public void setMedia_first_air_date(long media_first_air_date) {
         this.media_first_air_date = media_first_air_date;
     }
 
-    public long getDelivery_deadline() {
-        return delivery_deadline;
-    }
-
     public void setDelivery_deadline(long delivery_deadline) {
         this.delivery_deadline = delivery_deadline;
-    }
-
-    public long getDelivery_deadline_ms_algo() {
-        return delivery_deadline_ms_algo;
     }
 
     public void setDelivery_deadline_ms_algo(long delivery_deadline_ms_algo) {
         this.delivery_deadline_ms_algo = delivery_deadline_ms_algo;
     }
 
-    public boolean isInactive() {
-        return inactive;
-    }
-
     public void setInactive(boolean inactive) {
         this.inactive = inactive;
-    }
-
-    public long getCopy_envelope_id() {
-        return copy_envelope_id;
     }
 
     public void setCopy_envelope_id(long copy_envelope_id) {
         this.copy_envelope_id = copy_envelope_id;
     }
 
-    public int getCopy_envelope_action_state() {
-        return copy_envelope_action_state;
-    }
-
     public void setCopy_envelope_action_state(int copy_envelope_action_state) {
         this.copy_envelope_action_state = copy_envelope_action_state;
-    }
-
-    public long getExpiration_time() {
-        return expiration_time;
     }
 
     public void setExpiration_time(long expiration_time) {
         this.expiration_time = expiration_time;
     }
 
-    public long getCopy_envelope_sender_id() {
-        return copy_envelope_sender_id;
-    }
-
     public void setCopy_envelope_sender_id(long copy_envelope_sender_id) {
         this.copy_envelope_sender_id = copy_envelope_sender_id;
-    }
-
-    public long getApproval_advert_user_id() {
-        return approval_advert_user_id;
     }
 
     public void setApproval_advert_user_id(long approval_advert_user_id) {
         this.approval_advert_user_id = approval_advert_user_id;
     }
 
-    public long getApproval_advert_time() {
-        return approval_advert_time;
-    }
-
     public void setApproval_advert_time(long approval_advert_time) {
         this.approval_advert_time = approval_advert_time;
-    }
-
-    public int getApproval_advert_state() {
-        return approval_advert_state;
     }
 
     public void setApproval_advert_state(int approval_advert_state) {
         this.approval_advert_state = approval_advert_state;
     }
 
-    public int getQuality_check_state() {
-        return quality_check_state;
-    }
-
     public void setQuality_check_state(int quality_check_state) {
         this.quality_check_state = quality_check_state;
-    }
-
-    public int getProxy_creation_state() {
-        return proxy_creation_state;
     }
 
     public void setProxy_creation_state(int proxy_creation_state) {
         this.proxy_creation_state = proxy_creation_state;
     }
 
-    public long getQc_proxy_approval_time() {
-        return qc_proxy_approval_time;
-    }
-
     public void setQc_proxy_approval_time(long qc_proxy_approval_time) {
         this.qc_proxy_approval_time = qc_proxy_approval_time;
-    }
-
-    public boolean isTranscoding() {
-        return transcoding;
     }
 
     public void setTranscoding(boolean transcoding) {
         this.transcoding = transcoding;
     }
 
-    public long getDelivery_id() {
-        return delivery_id;
-    }
-
     public void setDelivery_id(long delivery_id) {
         this.delivery_id = delivery_id;
-    }
-
-    public int getDelivery_action_state() {
-        return delivery_action_state;
     }
 
     public void setDelivery_action_state(int delivery_action_state) {
         this.delivery_action_state = delivery_action_state;
     }
 
-    public long getTime_delivered() {
-        return time_delivered;
-    }
-
     public void setTime_delivered(long time_delivered) {
         this.time_delivered = time_delivered;
-    }
-
-    public long getSlave_time_delivered() {
-        return slave_time_delivered;
     }
 
     public void setSlave_time_delivered(long slave_time_delivered) {
         this.slave_time_delivered = slave_time_delivered;
     }
 
-    public long getPre_delivered_time() {
-        return pre_delivered_time;
-    }
-
     public void setPre_delivered_time(long pre_delivered_time) {
         this.pre_delivered_time = pre_delivered_time;
-    }
-
-    public long getSlave_pre_delivered_time() {
-        return slave_pre_delivered_time;
     }
 
     public void setSlave_pre_delivered_time(long slave_pre_delivered_time) {
         this.slave_pre_delivered_time = slave_pre_delivered_time;
     }
 
-    public long getPost_delivered_time() {
-        return post_delivered_time;
-    }
-
     public void setPost_delivered_time(long post_delivered_time) {
         this.post_delivered_time = post_delivered_time;
     }
 
-    public long getSlave_post_delivered_time() {
-        return slave_post_delivered_time;
-    }
-
     public void setSlave_post_delivered_time(long slave_post_delivered_time) {
         this.slave_post_delivered_time = slave_post_delivered_time;
-    }
-
-    public long getContent_approval_media_user_id() {
-        return content_approval_media_user_id;
     }
 
     public void setContent_approval_media_user_id(
@@ -1089,112 +790,56 @@ public class ComplexDomainObject implements Portable {
         this.content_approval_media_user_id = content_approval_media_user_id;
     }
 
-    public long getContent_approval_media_time() {
-        return content_approval_media_time;
-    }
-
     public void setContent_approval_media_time(long content_approval_media_time) {
         this.content_approval_media_time = content_approval_media_time;
-    }
-
-    public int getContent_approval_media_state() {
-        return content_approval_media_state;
     }
 
     public void setContent_approval_media_state(int content_approval_media_state) {
         this.content_approval_media_state = content_approval_media_state;
     }
 
-    public long getQc_approval_media_user_id() {
-        return qc_approval_media_user_id;
-    }
-
     public void setQc_approval_media_user_id(long qc_approval_media_user_id) {
         this.qc_approval_media_user_id = qc_approval_media_user_id;
-    }
-
-    public long getQc_approval_media_time() {
-        return qc_approval_media_time;
     }
 
     public void setQc_approval_media_time(long qc_approval_media_time) {
         this.qc_approval_media_time = qc_approval_media_time;
     }
 
-    public int getQc_approval_media_state() {
-        return qc_approval_media_state;
-    }
-
     public void setQc_approval_media_state(int qc_approval_media_state) {
         this.qc_approval_media_state = qc_approval_media_state;
-    }
-
-    public long getClock_approval_media_user_id() {
-        return clock_approval_media_user_id;
     }
 
     public void setClock_approval_media_user_id(long clock_approval_media_user_id) {
         this.clock_approval_media_user_id = clock_approval_media_user_id;
     }
 
-    public long getClock_approval_media_time() {
-        return clock_approval_media_time;
-    }
-
     public void setClock_approval_media_time(long clock_approval_media_time) {
         this.clock_approval_media_time = clock_approval_media_time;
-    }
-
-    public int getClock_approval_media_state() {
-        return clock_approval_media_state;
     }
 
     public void setClock_approval_media_state(int clock_approval_media_state) {
         this.clock_approval_media_state = clock_approval_media_state;
     }
 
-    public long getClass_approval_media_user_id() {
-        return class_approval_media_user_id;
-    }
-
     public void setClass_approval_media_user_id(long class_approval_media_user_id) {
         this.class_approval_media_user_id = class_approval_media_user_id;
-    }
-
-    public long getClass_approval_media_time() {
-        return class_approval_media_time;
     }
 
     public void setClass_approval_media_time(long class_approval_media_time) {
         this.class_approval_media_time = class_approval_media_time;
     }
 
-    public int getClass_approval_media_state() {
-        return class_approval_media_state;
-    }
-
     public void setClass_approval_media_state(int class_approval_media_state) {
         this.class_approval_media_state = class_approval_media_state;
-    }
-
-    public int getNum_instruction_approved() {
-        return num_instruction_approved;
     }
 
     public void setNum_instruction_approved(int num_instruction_approved) {
         this.num_instruction_approved = num_instruction_approved;
     }
 
-    public int getNum_instruction_rejected() {
-        return num_instruction_rejected;
-    }
-
     public void setNum_instruction_rejected(int num_instruction_rejected) {
         this.num_instruction_rejected = num_instruction_rejected;
-    }
-
-    public int getNum_instruction_approval_not_performed() {
-        return num_instruction_approval_not_performed;
     }
 
     public void setNum_instruction_approval_not_performed(
@@ -1202,32 +847,16 @@ public class ComplexDomainObject implements Portable {
         this.num_instruction_approval_not_performed = num_instruction_approval_not_performed;
     }
 
-    public long getDownload_speed() {
-        return download_speed;
-    }
-
     public void setDownload_speed(long download_speed) {
         this.download_speed = download_speed;
-    }
-
-    public int getMismatch() {
-        return mismatch;
     }
 
     public void setMismatch(int mismatch) {
         this.mismatch = mismatch;
     }
 
-    public boolean isMismatch_ignored() {
-        return mismatch_ignored;
-    }
-
     public void setMismatch_ignored(boolean mismatch_ignored) {
         this.mismatch_ignored = mismatch_ignored;
-    }
-
-    public int getInvoice_account_demand() {
-        return invoice_account_demand;
     }
 
     public void setInvoice_account_demand(int invoice_account_demand) {
@@ -1235,7 +864,7 @@ public class ComplexDomainObject implements Portable {
     }
 
     public String getQuickSearchKey() {
-        return this.getCopy_code_id()+"_"+this.getMedia_id()+"_"+this.getBrand_id();
+        return this.copy_code_id+"_"+this.media_id+"_"+this.brand_id;
     }
 
     @Override

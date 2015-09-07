@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import static java.util.logging.Level.INFO;
 
 public class MapComplexPredicateTest {
-    private enum QUERY_TYPE {
+    public enum QUERY_TYPE {
 
         QUERY1(QUERY_TYPE.QUERY1_SQL),
         QUERY2(QUERY_TYPE.QUERY2_SQL),
