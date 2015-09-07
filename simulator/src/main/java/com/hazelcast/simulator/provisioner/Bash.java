@@ -62,21 +62,19 @@ public class Bash {
     }
 
     public void killAllJavaProcesses(String ip) {
-        sshVerbose(ip, "killall -9 java || true");
-    }
-
-    public void ssh(String ip, String command) {
-        String sshCommand = format("ssh %s %s@%s \"%s\"", sshOptions, user, ip, command);
-        execute(sshCommand);
-    }
-
-    public void sshVerbose(String ip, String command) {
-        String sshCommand = format("ssh -v %s %s@%s \"%s\"", sshOptions, user, ip, command);
-        execute(sshCommand);
+        sshQuiet(ip, "killall -9 java");
     }
 
     public void sshQuiet(String ip, String command) {
-        String sshCommand = format("ssh %s %s@%s \"%s\" || true", sshOptions, user, ip, command);
+        ssh(ip, command + " || true", false);
+    }
+
+    public void ssh(String ip, String command) {
+        ssh(ip, command, false);
+    }
+
+    public void ssh(String ip, String command, boolean verbose) {
+        String sshCommand = format("ssh%s %s %s@%s \"%s\"", verbose ? "-vv" : "", sshOptions, user, ip, command);
         execute(sshCommand);
     }
 }

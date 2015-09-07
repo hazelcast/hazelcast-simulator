@@ -91,12 +91,14 @@ public final class Coordinator {
     PerformanceMonitor performanceMonitor;
 
     private final List<AgentAddress> addresses = Collections.synchronizedList(new LinkedList<AgentAddress>());
-    private final Bash bash = new Bash(props);
 
+    private Bash bash;
     private ExecutorService parallelExecutor;
 
     private void run() throws Exception {
         try {
+            bash = new Bash(props);
+
             initAgents();
 
             startWorkers();
