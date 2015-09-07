@@ -57,6 +57,7 @@ public class ClientConnector {
                 .channel(NioSocketChannel.class)
                 .remoteAddress(new InetSocketAddress(configuration.getRemoteHost(), configuration.getRemotePort()))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MILLIS)
+                .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
