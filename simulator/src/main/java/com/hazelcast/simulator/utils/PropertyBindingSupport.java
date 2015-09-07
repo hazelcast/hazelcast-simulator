@@ -112,7 +112,7 @@ public final class PropertyBindingSupport {
             }
         } catch (Exception e) {
             throw new BindException(format("Failed to bind value [%s] to property [%s.%s] of type [%s]",
-                    value, object.getClass().getName(), property, field.getType()));
+                    value, object.getClass().getName(), property, field.getType()), e);
         }
 
         throw new BindException(format("Unhandled type [%s] for field [%s.%s]",
