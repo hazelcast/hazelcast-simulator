@@ -10,6 +10,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -33,6 +34,8 @@ import static java.lang.String.format;
  */
 public class ClientConnector {
 
+    private static final int CONNECT_TIMEOUT_MILLIS = (int) TimeUnit.MINUTES.toMillis(2);
+
     private static final Logger LOGGER = Logger.getLogger(ClientConnector.class);
 
     private final EventLoopGroup group = new NioEventLoopGroup();
@@ -49,9 +52,11 @@ public class ClientConnector {
 
     public void start() {
         Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(group)
+        bootstrap
+                .group(group)
                 .channel(NioSocketChannel.class)
                 .remoteAddress(new InetSocketAddress(configuration.getRemoteHost(), configuration.getRemotePort()))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MILLIS)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
