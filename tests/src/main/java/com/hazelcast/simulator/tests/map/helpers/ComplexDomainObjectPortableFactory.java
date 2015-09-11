@@ -8,10 +8,10 @@ public class ComplexDomainObjectPortableFactory implements PortableFactory {
     @Override
     public Portable create(int classId) {
         switch (classId) {
-            case ComplexDomainObject.PORTABLE_CLASS_ID :
+            case ComplexDomainObject.PORTABLE_CLASS_ID:
                 return new ComplexDomainObject();
+            default:
+                return null;
         }
-        return null;
     }
-
 }

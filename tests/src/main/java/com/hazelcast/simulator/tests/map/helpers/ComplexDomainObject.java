@@ -6,6 +6,8 @@ import com.hazelcast.nio.serialization.PortableWriter;
 
 import java.io.IOException;
 
+@SuppressWarnings({"unused", "checkstyle:explicitinitialization", "checkstyle:methodcount", "checkstyle:methodlength",
+        "checkstyle:methodname", "checkstyle:membername", "checkstyle:parametername"})
 public class ComplexDomainObject implements Portable {
 
     public static final int PORTABLE_FACTORY_ID = 10000002;
@@ -13,13 +15,13 @@ public class ComplexDomainObject implements Portable {
 
     public int UUID = 1;
 
-    public long locality_id =  -1L;
+    public long locality_id = -1L;
     public String locality_name = "";
-    public long division_id =  -1L;
+    public long division_id = -1L;
     public String division_name = "";
-    public long brand_id =  -1L;
+    public long brand_id = -1L;
     public String brand_name = "";
-    public long media_id =  -1L;
+    public long media_id = -1L;
     public String media_name = "";
     public int media_content_approval_instruction = 0;
     public int media_qc_approval_instruction = 0;
@@ -29,15 +31,15 @@ public class ComplexDomainObject implements Portable {
     public int media_house_nr_instruction = 0;
     public boolean media_music_report_required = false;
     public int media_delivery_hours = 0;
-    public long media_destination_id =  -1L;
-    public long media_slave_destination_id =  -1L;
+    public long media_destination_id = -1L;
+    public long media_slave_destination_id = -1L;
 
-    public long copy_code_id =  -1L;
-    public long region_id =  -1L;
-    public long media_type_media_extension_id =  -1L;
+    public long copy_code_id = -1L;
+    public long region_id = -1L;
+    public long media_type_media_extension_id = -1L;
     public String copy_code = "";
     public boolean aired = false;
-    public long poster_id =  -1L;
+    public long poster_id = -1L;
     public int film_length = 0;
     public long first_air_date = -1;
     public int content_type = 0;
@@ -46,8 +48,8 @@ public class ComplexDomainObject implements Portable {
     public boolean request_upload = false;
     public long urr_time = -1;
 
-    public long sponsorship_locality_id =  -1L;
-    public long sponsorship_division_id =  -1L;
+    public long sponsorship_locality_id = -1L;
+    public long sponsorship_division_id = -1L;
     public long music_report_request_time = -1;
     public int music_report_request_count = 0;
     public int music_to_report = 0;
@@ -64,18 +66,18 @@ public class ComplexDomainObject implements Portable {
 
     public String media_house_nr = "";
     public String b_p_code = "";
-    public boolean creaded_from_mismatch = false;
+    public boolean created_from_mismatch = false;
     public boolean delivered_from_elsewhere = false;
     public long media_first_air_date = -1;
     public long delivery_deadline = -1;
     public long delivery_deadline_ms_algo = -1;
     public boolean inactive = false;
 
-    public long copy_envelope_id =  -1L;
+    public long copy_envelope_id = -1L;
     public int copy_envelope_action_state = 0;
     public long expiration_time = -1;
-    public long copy_envelope_sender_id =  -1L;
-    public long approval_advert_user_id =  -1L;
+    public long copy_envelope_sender_id = -1L;
+    public long approval_advert_user_id = -1L;
     public long approval_advert_time = -1;
     public int approval_advert_state = 0;
     public int quality_check_state = 0;
@@ -83,7 +85,7 @@ public class ComplexDomainObject implements Portable {
     public long qc_proxy_approval_time = -1;
     public boolean transcoding = false;
 
-    public long delivery_id =  -1L;
+    public long delivery_id = -1L;
     public int delivery_action_state = 0;
     public long time_delivered = -1;
     public long slave_time_delivered = -1;
@@ -92,19 +94,19 @@ public class ComplexDomainObject implements Portable {
     public long post_delivered_time = -1;
     public long slave_post_delivered_time = -1;
 
-    public long content_approval_media_user_id =  -1L;
+    public long content_approval_media_user_id = -1L;
     public long content_approval_media_time = -1;
     public int content_approval_media_state = 0;
 
-    public long qc_approval_media_user_id =  -1L;
+    public long qc_approval_media_user_id = -1L;
     public long qc_approval_media_time = -1;
     public int qc_approval_media_state = 0;
 
-    public long clock_approval_media_user_id =  -1L;
+    public long clock_approval_media_user_id = -1L;
     public long clock_approval_media_time = -1;
     public int clock_approval_media_state = 0;
 
-    public long class_approval_media_user_id =  -1L;
+    public long class_approval_media_user_id = -1L;
     public long class_approval_media_time = -1;
     public int class_approval_media_state = 0;
     public int num_instruction_approved = 0;
@@ -115,58 +117,60 @@ public class ComplexDomainObject implements Portable {
     public boolean mismatch_ignored = false;
     public int invoice_account_demand = 0;
 
-    public ComplexDomainObject() {}
+    public ComplexDomainObject() {
+    }
 
+    @SuppressWarnings({"checkstyle:executablestatementcount", "checkstyle:parameternumber"})
     public ComplexDomainObject(int UUID, long locality_id, String locality_name,
-                       long division_id, String division_name, long brand_id,
-                       String brand_name, long media_id, String media_name,
-                       int media_content_approval_instruction,
-                       int media_qc_approval_instruction,
-                       int media_clock_approval_instruction,
-                       int media_class_approval_instruction,
-                       int media_instruction_approval_instruction,
-                       int media_house_nr_instruction,
-                       boolean media_music_report_required, int media_delivery_hours,
-                       long media_destination_id, long media_slave_destination_id,
-                       long copy_code_id, long region_id,
-                       long media_type_media_extension_id, String copy_code,
-                       boolean aired, long poster_id, int film_length,
-                       long first_air_date, int content_type, String title,
-                       boolean stopped, boolean request_upload, long urr_time,
-                       long sponsorship_locality_id, long sponsorship_division_id,
-                       long music_report_request_time, int music_report_request_count,
-                       int music_to_report, boolean music_report_completed,
-                       long music_report_completed_time,
-                       boolean music_report_completed_action,
-                       String media_agency_planning, String media_agency_buying,
-                       String creative_agency, String production_agency,
-                       String post_production_agency, String other_agency,
-                       boolean disabled_for_upload, String media_house_nr,
-                       String b_p_code, boolean creaded_from_mismatch,
-                       boolean delivered_from_elsewhere, long media_first_air_date,
-                       long delivery_deadline, long delivery_deadline_ms_algo,
-                       boolean inactive, long copy_envelope_id,
-                       int copy_envelope_action_state, long expiration_time,
-                       long copy_envelope_sender_id, long approval_advert_user_id,
-                       long approval_advert_time, int approval_advert_state,
-                       int quality_check_state, int proxy_creation_state,
-                       long qc_proxy_approval_time, boolean transcoding,
-                       long delivery_id, int delivery_action_state,
-                       long time_delivered, long slave_time_delivered,
-                       long pre_delivered_time, long slave_pre_delivered_time,
-                       long post_delivered_time, long slave_post_delivered_time,
-                       long content_approval_media_user_id,
-                       long content_approval_media_time,
-                       int content_approval_media_state,
-                       long qc_approval_media_user_id, long qc_approval_media_time,
-                       int qc_approval_media_state, long clock_approval_media_user_id,
-                       long clock_approval_media_time, int clock_approval_media_state,
-                       long class_approval_media_user_id,
-                       long class_approval_media_time, int class_approval_media_state,
-                       int num_instruction_approved, int num_instruction_rejected,
-                       int num_instruction_approval_not_performed,
-                       long download_speed, int mismatch, boolean mismatch_ignored,
-                       int invoice_account_demand) {
+                               long division_id, String division_name, long brand_id,
+                               String brand_name, long media_id, String media_name,
+                               int media_content_approval_instruction,
+                               int media_qc_approval_instruction,
+                               int media_clock_approval_instruction,
+                               int media_class_approval_instruction,
+                               int media_instruction_approval_instruction,
+                               int media_house_nr_instruction,
+                               boolean media_music_report_required, int media_delivery_hours,
+                               long media_destination_id, long media_slave_destination_id,
+                               long copy_code_id, long region_id,
+                               long media_type_media_extension_id, String copy_code,
+                               boolean aired, long poster_id, int film_length,
+                               long first_air_date, int content_type, String title,
+                               boolean stopped, boolean request_upload, long urr_time,
+                               long sponsorship_locality_id, long sponsorship_division_id,
+                               long music_report_request_time, int music_report_request_count,
+                               int music_to_report, boolean music_report_completed,
+                               long music_report_completed_time,
+                               boolean music_report_completed_action,
+                               String media_agency_planning, String media_agency_buying,
+                               String creative_agency, String production_agency,
+                               String post_production_agency, String other_agency,
+                               boolean disabled_for_upload, String media_house_nr,
+                               String b_p_code, boolean created_from_mismatch,
+                               boolean delivered_from_elsewhere, long media_first_air_date,
+                               long delivery_deadline, long delivery_deadline_ms_algo,
+                               boolean inactive, long copy_envelope_id,
+                               int copy_envelope_action_state, long expiration_time,
+                               long copy_envelope_sender_id, long approval_advert_user_id,
+                               long approval_advert_time, int approval_advert_state,
+                               int quality_check_state, int proxy_creation_state,
+                               long qc_proxy_approval_time, boolean transcoding,
+                               long delivery_id, int delivery_action_state,
+                               long time_delivered, long slave_time_delivered,
+                               long pre_delivered_time, long slave_pre_delivered_time,
+                               long post_delivered_time, long slave_post_delivered_time,
+                               long content_approval_media_user_id,
+                               long content_approval_media_time,
+                               int content_approval_media_state,
+                               long qc_approval_media_user_id, long qc_approval_media_time,
+                               int qc_approval_media_state, long clock_approval_media_user_id,
+                               long clock_approval_media_time, int clock_approval_media_state,
+                               long class_approval_media_user_id,
+                               long class_approval_media_time, int class_approval_media_state,
+                               int num_instruction_approved, int num_instruction_rejected,
+                               int num_instruction_approval_not_performed,
+                               long download_speed, int mismatch, boolean mismatch_ignored,
+                               int invoice_account_demand) {
         super();
 
         this.UUID = UUID;
@@ -219,7 +223,7 @@ public class ComplexDomainObject implements Portable {
         this.disabled_for_upload = disabled_for_upload;
         this.media_house_nr = media_house_nr;
         this.b_p_code = b_p_code;
-        this.creaded_from_mismatch = creaded_from_mismatch;
+        this.created_from_mismatch = created_from_mismatch;
         this.delivered_from_elsewhere = delivered_from_elsewhere;
         this.media_first_air_date = media_first_air_date;
         this.delivery_deadline = delivery_deadline;
@@ -330,7 +334,7 @@ public class ComplexDomainObject implements Portable {
 
         out.writeUTF("media_house_nr", media_house_nr);
         out.writeUTF("b_p_code", b_p_code);
-        out.writeBoolean("creaded_from_mismatch", creaded_from_mismatch);
+        out.writeBoolean("created_from_mismatch", created_from_mismatch);
         out.writeBoolean("delivered_from_elsewhere", delivered_from_elsewhere);
         out.writeLong("media_first_air_date", media_first_air_date);
         out.writeLong("delivery_deadline", delivery_deadline);
@@ -349,7 +353,7 @@ public class ComplexDomainObject implements Portable {
         out.writeLong("qc_proxy_approval_time", qc_proxy_approval_time);
         out.writeBoolean("transcoding", transcoding);
 
-        out.writeLong("delivery_id",delivery_id);
+        out.writeLong("delivery_id", delivery_id);
         out.writeInt("delivery_action_state", delivery_action_state);
         out.writeLong("time_delivered", time_delivered);
         out.writeLong("slave_time_delivered", slave_time_delivered);
@@ -435,7 +439,7 @@ public class ComplexDomainObject implements Portable {
 
         media_house_nr = in.readUTF("media_house_nr");
         b_p_code = in.readUTF("b_p_code");
-        creaded_from_mismatch = in.readBoolean("creaded_from_mismatch");
+        created_from_mismatch = in.readBoolean("created_from_mismatch");
         delivered_from_elsewhere = in.readBoolean("delivered_from_elsewhere");
         media_first_air_date = in.readLong("media_first_air_date");
         delivery_deadline = in.readLong("delivery_deadline");
@@ -685,8 +689,8 @@ public class ComplexDomainObject implements Portable {
         this.b_p_code = b_p_code;
     }
 
-    public void setCreaded_from_mismatch(boolean creaded_from_mismatch) {
-        this.creaded_from_mismatch = creaded_from_mismatch;
+    public void setCreated_from_mismatch(boolean created_from_mismatch) {
+        this.created_from_mismatch = created_from_mismatch;
     }
 
     public void setDelivered_from_elsewhere(boolean delivered_from_elsewhere) {
@@ -842,8 +846,7 @@ public class ComplexDomainObject implements Portable {
         this.num_instruction_rejected = num_instruction_rejected;
     }
 
-    public void setNum_instruction_approval_not_performed(
-            int num_instruction_approval_not_performed) {
+    public void setNum_instruction_approval_not_performed(int num_instruction_approval_not_performed) {
         this.num_instruction_approval_not_performed = num_instruction_approval_not_performed;
     }
 
@@ -864,189 +867,103 @@ public class ComplexDomainObject implements Portable {
     }
 
     public String getQuickSearchKey() {
-        return this.copy_code_id+"_"+this.media_id+"_"+this.brand_id;
+        return this.copy_code_id + "_" + this.media_id + "_" + this.brand_id;
     }
 
     @Override
+    @SuppressWarnings({"checkstyle:npathcomplexity", "checkstyle:cyclomaticcomplexity"})
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + (aired ? 1231 : 1237);
         result = prime * result + approval_advert_state;
-        result = prime
-                * result
-                + (int) (approval_advert_time ^ (approval_advert_time >>> 32));
-        result = prime
-                * result
-                + (int) (approval_advert_user_id ^ (approval_advert_user_id >>> 32));
-        result = prime * result
-                + ((b_p_code == null) ? 0 : b_p_code.hashCode());
+        result = prime * result + (int) (approval_advert_time ^ (approval_advert_time >>> 32));
+        result = prime * result + (int) (approval_advert_user_id ^ (approval_advert_user_id >>> 32));
+        result = prime * result + ((b_p_code == null) ? 0 : b_p_code.hashCode());
         result = prime * result + (int) (brand_id ^ (brand_id >>> 32));
-        result = prime * result
-                + ((brand_name == null) ? 0 : brand_name.hashCode());
+        result = prime * result + ((brand_name == null) ? 0 : brand_name.hashCode());
         result = prime * result + class_approval_media_state;
-        result = prime
-                * result
-                + (int) (class_approval_media_time ^ (class_approval_media_time >>> 32));
-        result = prime
-                * result
-                + (int) (class_approval_media_user_id ^ (class_approval_media_user_id >>> 32));
+        result = prime * result + (int) (class_approval_media_time ^ (class_approval_media_time >>> 32));
+        result = prime * result + (int) (class_approval_media_user_id ^ (class_approval_media_user_id >>> 32));
         result = prime * result + clock_approval_media_state;
-        result = prime
-                * result
-                + (int) (clock_approval_media_time ^ (clock_approval_media_time >>> 32));
-        result = prime
-                * result
-                + (int) (clock_approval_media_user_id ^ (clock_approval_media_user_id >>> 32));
+        result = prime * result + (int) (clock_approval_media_time ^ (clock_approval_media_time >>> 32));
+        result = prime * result + (int) (clock_approval_media_user_id ^ (clock_approval_media_user_id >>> 32));
         result = prime * result + content_approval_media_state;
-        result = prime
-                * result
-                + (int) (content_approval_media_time ^ (content_approval_media_time >>> 32));
-        result = prime
-                * result
-                + (int) (content_approval_media_user_id ^ (content_approval_media_user_id >>> 32));
+        result = prime * result + (int) (content_approval_media_time ^ (content_approval_media_time >>> 32));
+        result = prime * result + (int) (content_approval_media_user_id ^ (content_approval_media_user_id >>> 32));
         result = prime * result + content_type;
-        result = prime * result
-                + ((copy_code == null) ? 0 : copy_code.hashCode());
-        result = prime * result
-                + (int) (copy_code_id ^ (copy_code_id >>> 32));
+        result = prime * result + ((copy_code == null) ? 0 : copy_code.hashCode());
+        result = prime * result + (int) (copy_code_id ^ (copy_code_id >>> 32));
         result = prime * result + copy_envelope_action_state;
-        result = prime * result
-                + (int) (copy_envelope_id ^ (copy_envelope_id >>> 32));
-        result = prime
-                * result
-                + (int) (copy_envelope_sender_id ^ (copy_envelope_sender_id >>> 32));
-        result = prime * result + (creaded_from_mismatch ? 1231 : 1237);
-        result = prime
-                * result
-                + ((creative_agency == null) ? 0 : creative_agency
-                .hashCode());
+        result = prime * result + (int) (copy_envelope_id ^ (copy_envelope_id >>> 32));
+        result = prime * result + (int) (copy_envelope_sender_id ^ (copy_envelope_sender_id >>> 32));
+        result = prime * result + (created_from_mismatch ? 1231 : 1237);
+        result = prime * result + ((creative_agency == null) ? 0 : creative_agency.hashCode());
         result = prime * result + (delivered_from_elsewhere ? 1231 : 1237);
         result = prime * result + delivery_action_state;
-        result = prime * result
-                + (int) (delivery_deadline ^ (delivery_deadline >>> 32));
-        result = prime
-                * result
-                + (int) (delivery_deadline_ms_algo ^ (delivery_deadline_ms_algo >>> 32));
-        result = prime * result
-                + (int) (delivery_id ^ (delivery_id >>> 32));
+        result = prime * result + (int) (delivery_deadline ^ (delivery_deadline >>> 32));
+        result = prime * result + (int) (delivery_deadline_ms_algo ^ (delivery_deadline_ms_algo >>> 32));
+        result = prime * result + (int) (delivery_id ^ (delivery_id >>> 32));
         result = prime * result + (disabled_for_upload ? 1231 : 1237);
-        result = prime * result
-                + (int) (division_id ^ (division_id >>> 32));
-        result = prime * result
-                + ((division_name == null) ? 0 : division_name.hashCode());
-        result = prime * result
-                + (int) (download_speed ^ (download_speed >>> 32));
-        result = prime * result
-                + (int) (expiration_time ^ (expiration_time >>> 32));
+        result = prime * result + (int) (division_id ^ (division_id >>> 32));
+        result = prime * result + ((division_name == null) ? 0 : division_name.hashCode());
+        result = prime * result + (int) (download_speed ^ (download_speed >>> 32));
+        result = prime * result + (int) (expiration_time ^ (expiration_time >>> 32));
         result = prime * result + film_length;
-        result = prime * result
-                + (int) (first_air_date ^ (first_air_date >>> 32));
+        result = prime * result + (int) (first_air_date ^ (first_air_date >>> 32));
         result = prime * result + (inactive ? 1231 : 1237);
         result = prime * result + invoice_account_demand;
-        result = prime * result
-                + (int) (locality_id ^ (locality_id >>> 32));
-        result = prime * result
-                + ((locality_name == null) ? 0 : locality_name.hashCode());
-        result = prime
-                * result
-                + ((media_agency_buying == null) ? 0 : media_agency_buying
-                .hashCode());
-        result = prime
-                * result
-                + ((media_agency_planning == null) ? 0
-                : media_agency_planning.hashCode());
+        result = prime * result + (int) (locality_id ^ (locality_id >>> 32));
+        result = prime * result + ((locality_name == null) ? 0 : locality_name.hashCode());
+        result = prime * result + ((media_agency_buying == null) ? 0 : media_agency_buying.hashCode());
+        result = prime * result + ((media_agency_planning == null) ? 0 : media_agency_planning.hashCode());
         result = prime * result + media_class_approval_instruction;
         result = prime * result + media_clock_approval_instruction;
         result = prime * result + media_content_approval_instruction;
         result = prime * result + media_delivery_hours;
-        result = prime
-                * result
-                + (int) (media_destination_id ^ (media_destination_id >>> 32));
-        result = prime
-                * result
-                + (int) (media_first_air_date ^ (media_first_air_date >>> 32));
-        result = prime
-                * result
-                + ((media_house_nr == null) ? 0 : media_house_nr.hashCode());
+        result = prime * result + (int) (media_destination_id ^ (media_destination_id >>> 32));
+        result = prime * result + (int) (media_first_air_date ^ (media_first_air_date >>> 32));
+        result = prime * result + ((media_house_nr == null) ? 0 : media_house_nr.hashCode());
         result = prime * result + media_house_nr_instruction;
         result = prime * result + (int) (media_id ^ (media_id >>> 32));
         result = prime * result + media_instruction_approval_instruction;
-        result = prime * result
-                + (media_music_report_required ? 1231 : 1237);
-        result = prime * result
-                + ((media_name == null) ? 0 : media_name.hashCode());
+        result = prime * result + (media_music_report_required ? 1231 : 1237);
+        result = prime * result + ((media_name == null) ? 0 : media_name.hashCode());
         result = prime * result + media_qc_approval_instruction;
-        result = prime
-                * result
-                + (int) (media_slave_destination_id ^ (media_slave_destination_id >>> 32));
-        result = prime
-                * result
-                + (int) (media_type_media_extension_id ^ (media_type_media_extension_id >>> 32));
+        result = prime * result + (int) (media_slave_destination_id ^ (media_slave_destination_id >>> 32));
+        result = prime * result + (int) (media_type_media_extension_id ^ (media_type_media_extension_id >>> 32));
         result = prime * result + mismatch;
         result = prime * result + (mismatch_ignored ? 1231 : 1237);
         result = prime * result + (music_report_completed ? 1231 : 1237);
-        result = prime * result
-                + (music_report_completed_action ? 1231 : 1237);
-        result = prime
-                * result
-                + (int) (music_report_completed_time ^ (music_report_completed_time >>> 32));
+        result = prime * result + (music_report_completed_action ? 1231 : 1237);
+        result = prime * result + (int) (music_report_completed_time ^ (music_report_completed_time >>> 32));
         result = prime * result + music_report_request_count;
-        result = prime
-                * result
-                + (int) (music_report_request_time ^ (music_report_request_time >>> 32));
+        result = prime * result + (int) (music_report_request_time ^ (music_report_request_time >>> 32));
         result = prime * result + music_to_report;
         result = prime * result + num_instruction_approval_not_performed;
         result = prime * result + num_instruction_approved;
         result = prime * result + num_instruction_rejected;
-        result = prime * result
-                + ((other_agency == null) ? 0 : other_agency.hashCode());
-        result = prime
-                * result
-                + (int) (post_delivered_time ^ (post_delivered_time >>> 32));
-        result = prime
-                * result
-                + ((post_production_agency == null) ? 0
-                : post_production_agency.hashCode());
+        result = prime * result + ((other_agency == null) ? 0 : other_agency.hashCode());
+        result = prime * result + (int) (post_delivered_time ^ (post_delivered_time >>> 32));
+        result = prime * result + ((post_production_agency == null) ? 0 : post_production_agency.hashCode());
         result = prime * result + (int) (poster_id ^ (poster_id >>> 32));
-        result = prime * result
-                + (int) (pre_delivered_time ^ (pre_delivered_time >>> 32));
-        result = prime
-                * result
-                + ((production_agency == null) ? 0 : production_agency
-                .hashCode());
+        result = prime * result + (int) (pre_delivered_time ^ (pre_delivered_time >>> 32));
+        result = prime * result + ((production_agency == null) ? 0 : production_agency.hashCode());
         result = prime * result + proxy_creation_state;
         result = prime * result + qc_approval_media_state;
-        result = prime
-                * result
-                + (int) (qc_approval_media_time ^ (qc_approval_media_time >>> 32));
-        result = prime
-                * result
-                + (int) (qc_approval_media_user_id ^ (qc_approval_media_user_id >>> 32));
-        result = prime
-                * result
-                + (int) (qc_proxy_approval_time ^ (qc_proxy_approval_time >>> 32));
+        result = prime * result + (int) (qc_approval_media_time ^ (qc_approval_media_time >>> 32));
+        result = prime * result + (int) (qc_approval_media_user_id ^ (qc_approval_media_user_id >>> 32));
+        result = prime * result + (int) (qc_proxy_approval_time ^ (qc_proxy_approval_time >>> 32));
         result = prime * result + quality_check_state;
         result = prime * result + (int) (region_id ^ (region_id >>> 32));
         result = prime * result + (request_upload ? 1231 : 1237);
-        result = prime
-                * result
-                + (int) (slave_post_delivered_time ^ (slave_post_delivered_time >>> 32));
-        result = prime
-                * result
-                + (int) (slave_pre_delivered_time ^ (slave_pre_delivered_time >>> 32));
-        result = prime
-                * result
-                + (int) (slave_time_delivered ^ (slave_time_delivered >>> 32));
-        result = prime
-                * result
-                + (int) (sponsorship_division_id ^ (sponsorship_division_id >>> 32));
-        result = prime
-                * result
-                + (int) (sponsorship_locality_id ^ (sponsorship_locality_id >>> 32));
+        result = prime * result + (int) (slave_post_delivered_time ^ (slave_post_delivered_time >>> 32));
+        result = prime * result + (int) (slave_pre_delivered_time ^ (slave_pre_delivered_time >>> 32));
+        result = prime * result + (int) (slave_time_delivered ^ (slave_time_delivered >>> 32));
+        result = prime * result + (int) (sponsorship_division_id ^ (sponsorship_division_id >>> 32));
+        result = prime * result + (int) (sponsorship_locality_id ^ (sponsorship_locality_id >>> 32));
         result = prime * result + (stopped ? 1231 : 1237);
-        result = prime * result
-                + (int) (time_delivered ^ (time_delivered >>> 32));
+        result = prime * result + (int) (time_delivered ^ (time_delivered >>> 32));
         result = prime * result + ((title == null) ? 0 : title.hashCode());
         result = prime * result + (transcoding ? 1231 : 1237);
         result = prime * result + (int) (urr_time ^ (urr_time >>> 32));
@@ -1054,247 +971,355 @@ public class ComplexDomainObject implements Portable {
     }
 
     @Override
+    @SuppressWarnings({"checkstyle:npathcomplexity", "checkstyle:cyclomaticcomplexity"})
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         ComplexDomainObject other = (ComplexDomainObject) obj;
 
-        if (UUID != other.UUID)
+        if (UUID != other.UUID) {
             return false;
+        }
 
-        if (aired != other.aired)
+        if (aired != other.aired) {
             return false;
-        if (approval_advert_state != other.approval_advert_state)
+        }
+        if (approval_advert_state != other.approval_advert_state) {
             return false;
-        if (approval_advert_time != other.approval_advert_time)
+        }
+        if (approval_advert_time != other.approval_advert_time) {
             return false;
-        if (approval_advert_user_id != other.approval_advert_user_id)
+        }
+        if (approval_advert_user_id != other.approval_advert_user_id) {
             return false;
+        }
         if (b_p_code == null) {
-            if (other.b_p_code != null)
+            if (other.b_p_code != null) {
                 return false;
-        } else if (!b_p_code.equals(other.b_p_code))
+            }
+        } else if (!b_p_code.equals(other.b_p_code)) {
             return false;
-        if (brand_id != other.brand_id)
+        }
+        if (brand_id != other.brand_id) {
             return false;
+        }
         if (brand_name == null) {
-            if (other.brand_name != null)
+            if (other.brand_name != null) {
                 return false;
-        } else if (!brand_name.equals(other.brand_name))
+            }
+        } else if (!brand_name.equals(other.brand_name)) {
             return false;
-        if (class_approval_media_state != other.class_approval_media_state)
+        }
+        if (class_approval_media_state != other.class_approval_media_state) {
             return false;
-        if (class_approval_media_time != other.class_approval_media_time)
+        }
+        if (class_approval_media_time != other.class_approval_media_time) {
             return false;
-        if (class_approval_media_user_id != other.class_approval_media_user_id)
+        }
+        if (class_approval_media_user_id != other.class_approval_media_user_id) {
             return false;
-        if (clock_approval_media_state != other.clock_approval_media_state)
+        }
+        if (clock_approval_media_state != other.clock_approval_media_state) {
             return false;
-        if (clock_approval_media_time != other.clock_approval_media_time)
+        }
+        if (clock_approval_media_time != other.clock_approval_media_time) {
             return false;
-        if (clock_approval_media_user_id != other.clock_approval_media_user_id)
+        }
+        if (clock_approval_media_user_id != other.clock_approval_media_user_id) {
             return false;
-        if (content_approval_media_state != other.content_approval_media_state)
+        }
+        if (content_approval_media_state != other.content_approval_media_state) {
             return false;
-        if (content_approval_media_time != other.content_approval_media_time)
+        }
+        if (content_approval_media_time != other.content_approval_media_time) {
             return false;
-        if (content_approval_media_user_id != other.content_approval_media_user_id)
+        }
+        if (content_approval_media_user_id != other.content_approval_media_user_id) {
             return false;
-        if (content_type != other.content_type)
+        }
+        if (content_type != other.content_type) {
             return false;
+        }
         if (copy_code == null) {
-            if (other.copy_code != null)
+            if (other.copy_code != null) {
                 return false;
-        } else if (!copy_code.equals(other.copy_code))
+            }
+        } else if (!copy_code.equals(other.copy_code)) {
             return false;
-        if (copy_code_id != other.copy_code_id)
+        }
+        if (copy_code_id != other.copy_code_id) {
             return false;
-        if (copy_envelope_action_state != other.copy_envelope_action_state)
+        }
+        if (copy_envelope_action_state != other.copy_envelope_action_state) {
             return false;
-        if (copy_envelope_id != other.copy_envelope_id)
+        }
+        if (copy_envelope_id != other.copy_envelope_id) {
             return false;
-        if (copy_envelope_sender_id != other.copy_envelope_sender_id)
+        }
+        if (copy_envelope_sender_id != other.copy_envelope_sender_id) {
             return false;
-        if (creaded_from_mismatch != other.creaded_from_mismatch)
+        }
+        if (created_from_mismatch != other.created_from_mismatch) {
             return false;
+        }
         if (creative_agency == null) {
-            if (other.creative_agency != null)
+            if (other.creative_agency != null) {
                 return false;
-        } else if (!creative_agency.equals(other.creative_agency))
+            }
+        } else if (!creative_agency.equals(other.creative_agency)) {
             return false;
-        if (delivered_from_elsewhere != other.delivered_from_elsewhere)
+        }
+        if (delivered_from_elsewhere != other.delivered_from_elsewhere) {
             return false;
-        if (delivery_action_state != other.delivery_action_state)
+        }
+        if (delivery_action_state != other.delivery_action_state) {
             return false;
-        if (delivery_deadline != other.delivery_deadline)
+        }
+        if (delivery_deadline != other.delivery_deadline) {
             return false;
-        if (delivery_deadline_ms_algo != other.delivery_deadline_ms_algo)
+        }
+        if (delivery_deadline_ms_algo != other.delivery_deadline_ms_algo) {
             return false;
-        if (delivery_id != other.delivery_id)
+        }
+        if (delivery_id != other.delivery_id) {
             return false;
-        if (disabled_for_upload != other.disabled_for_upload)
+        }
+        if (disabled_for_upload != other.disabled_for_upload) {
             return false;
-        if (division_id != other.division_id)
+        }
+        if (division_id != other.division_id) {
             return false;
+        }
         if (division_name == null) {
-            if (other.division_name != null)
+            if (other.division_name != null) {
                 return false;
-        } else if (!division_name.equals(other.division_name))
+            }
+        } else if (!division_name.equals(other.division_name)) {
             return false;
-        if (download_speed != other.download_speed)
+        }
+        if (download_speed != other.download_speed) {
             return false;
-        if (expiration_time != other.expiration_time)
+        }
+        if (expiration_time != other.expiration_time) {
             return false;
-        if (film_length != other.film_length)
+        }
+        if (film_length != other.film_length) {
             return false;
-        if (first_air_date != other.first_air_date)
+        }
+        if (first_air_date != other.first_air_date) {
             return false;
-        if (inactive != other.inactive)
+        }
+        if (inactive != other.inactive) {
             return false;
-        if (invoice_account_demand != other.invoice_account_demand)
+        }
+        if (invoice_account_demand != other.invoice_account_demand) {
             return false;
-        if (locality_id != other.locality_id)
+        }
+        if (locality_id != other.locality_id) {
             return false;
+        }
         if (locality_name == null) {
-            if (other.locality_name != null)
+            if (other.locality_name != null) {
                 return false;
-        } else if (!locality_name.equals(other.locality_name))
+            }
+        } else if (!locality_name.equals(other.locality_name)) {
             return false;
+        }
         if (media_agency_buying == null) {
-            if (other.media_agency_buying != null)
+            if (other.media_agency_buying != null) {
                 return false;
-        } else if (!media_agency_buying.equals(other.media_agency_buying))
+            }
+        } else if (!media_agency_buying.equals(other.media_agency_buying)) {
             return false;
+        }
         if (media_agency_planning == null) {
-            if (other.media_agency_planning != null)
+            if (other.media_agency_planning != null) {
                 return false;
+            }
         } else if (!media_agency_planning
-                .equals(other.media_agency_planning))
+                .equals(other.media_agency_planning)) {
             return false;
-        if (media_class_approval_instruction != other.media_class_approval_instruction)
+        }
+        if (media_class_approval_instruction != other.media_class_approval_instruction) {
             return false;
-        if (media_clock_approval_instruction != other.media_clock_approval_instruction)
+        }
+        if (media_clock_approval_instruction != other.media_clock_approval_instruction) {
             return false;
-        if (media_content_approval_instruction != other.media_content_approval_instruction)
+        }
+        if (media_content_approval_instruction != other.media_content_approval_instruction) {
             return false;
-        if (media_delivery_hours != other.media_delivery_hours)
+        }
+        if (media_delivery_hours != other.media_delivery_hours) {
             return false;
-        if (media_destination_id != other.media_destination_id)
+        }
+        if (media_destination_id != other.media_destination_id) {
             return false;
-        if (media_first_air_date != other.media_first_air_date)
+        }
+        if (media_first_air_date != other.media_first_air_date) {
             return false;
+        }
         if (media_house_nr == null) {
-            if (other.media_house_nr != null)
+            if (other.media_house_nr != null) {
                 return false;
-        } else if (!media_house_nr.equals(other.media_house_nr))
+            }
+        } else if (!media_house_nr.equals(other.media_house_nr)) {
             return false;
-        if (media_house_nr_instruction != other.media_house_nr_instruction)
+        }
+        if (media_house_nr_instruction != other.media_house_nr_instruction) {
             return false;
-        if (media_id != other.media_id)
+        }
+        if (media_id != other.media_id) {
             return false;
-        if (media_instruction_approval_instruction != other.media_instruction_approval_instruction)
+        }
+        if (media_instruction_approval_instruction != other.media_instruction_approval_instruction) {
             return false;
-        if (media_music_report_required != other.media_music_report_required)
+        }
+        if (media_music_report_required != other.media_music_report_required) {
             return false;
+        }
         if (media_name == null) {
-            if (other.media_name != null)
+            if (other.media_name != null) {
                 return false;
-        } else if (!media_name.equals(other.media_name))
+            }
+        } else if (!media_name.equals(other.media_name)) {
             return false;
-        if (media_qc_approval_instruction != other.media_qc_approval_instruction)
+        }
+        if (media_qc_approval_instruction != other.media_qc_approval_instruction) {
             return false;
-        if (media_slave_destination_id != other.media_slave_destination_id)
+        }
+        if (media_slave_destination_id != other.media_slave_destination_id) {
             return false;
-        if (media_type_media_extension_id != other.media_type_media_extension_id)
+        }
+        if (media_type_media_extension_id != other.media_type_media_extension_id) {
             return false;
-        if (mismatch != other.mismatch)
+        }
+        if (mismatch != other.mismatch) {
             return false;
-        if (mismatch_ignored != other.mismatch_ignored)
+        }
+        if (mismatch_ignored != other.mismatch_ignored) {
             return false;
-        if (music_report_completed != other.music_report_completed)
+        }
+        if (music_report_completed != other.music_report_completed) {
             return false;
-        if (music_report_completed_action != other.music_report_completed_action)
+        }
+        if (music_report_completed_action != other.music_report_completed_action) {
             return false;
-        if (music_report_completed_time != other.music_report_completed_time)
+        }
+        if (music_report_completed_time != other.music_report_completed_time) {
             return false;
-        if (music_report_request_count != other.music_report_request_count)
+        }
+        if (music_report_request_count != other.music_report_request_count) {
             return false;
-        if (music_report_request_time != other.music_report_request_time)
+        }
+        if (music_report_request_time != other.music_report_request_time) {
             return false;
-        if (music_to_report != other.music_to_report)
+        }
+        if (music_to_report != other.music_to_report) {
             return false;
-        if (num_instruction_approval_not_performed != other.num_instruction_approval_not_performed)
+        }
+        if (num_instruction_approval_not_performed != other.num_instruction_approval_not_performed) {
             return false;
-        if (num_instruction_approved != other.num_instruction_approved)
+        }
+        if (num_instruction_approved != other.num_instruction_approved) {
             return false;
-        if (num_instruction_rejected != other.num_instruction_rejected)
+        }
+        if (num_instruction_rejected != other.num_instruction_rejected) {
             return false;
+        }
         if (other_agency == null) {
-            if (other.other_agency != null)
+            if (other.other_agency != null) {
                 return false;
-        } else if (!other_agency.equals(other.other_agency))
+            }
+        } else if (!other_agency.equals(other.other_agency)) {
             return false;
-        if (post_delivered_time != other.post_delivered_time)
+        }
+        if (post_delivered_time != other.post_delivered_time) {
             return false;
+        }
         if (post_production_agency == null) {
-            if (other.post_production_agency != null)
+            if (other.post_production_agency != null) {
                 return false;
+            }
         } else if (!post_production_agency
-                .equals(other.post_production_agency))
+                .equals(other.post_production_agency)) {
             return false;
-        if (poster_id != other.poster_id)
+        }
+        if (poster_id != other.poster_id) {
             return false;
-        if (pre_delivered_time != other.pre_delivered_time)
+        }
+        if (pre_delivered_time != other.pre_delivered_time) {
             return false;
+        }
         if (production_agency == null) {
-            if (other.production_agency != null)
+            if (other.production_agency != null) {
                 return false;
-        } else if (!production_agency.equals(other.production_agency))
+            }
+        } else if (!production_agency.equals(other.production_agency)) {
             return false;
-        if (proxy_creation_state != other.proxy_creation_state)
+        }
+        if (proxy_creation_state != other.proxy_creation_state) {
             return false;
-        if (qc_approval_media_state != other.qc_approval_media_state)
+        }
+        if (qc_approval_media_state != other.qc_approval_media_state) {
             return false;
-        if (qc_approval_media_time != other.qc_approval_media_time)
+        }
+        if (qc_approval_media_time != other.qc_approval_media_time) {
             return false;
-        if (qc_approval_media_user_id != other.qc_approval_media_user_id)
+        }
+        if (qc_approval_media_user_id != other.qc_approval_media_user_id) {
             return false;
-        if (qc_proxy_approval_time != other.qc_proxy_approval_time)
+        }
+        if (qc_proxy_approval_time != other.qc_proxy_approval_time) {
             return false;
-        if (quality_check_state != other.quality_check_state)
+        }
+        if (quality_check_state != other.quality_check_state) {
             return false;
-        if (region_id != other.region_id)
+        }
+        if (region_id != other.region_id) {
             return false;
-        if (request_upload != other.request_upload)
+        }
+        if (request_upload != other.request_upload) {
             return false;
-        if (slave_post_delivered_time != other.slave_post_delivered_time)
+        }
+        if (slave_post_delivered_time != other.slave_post_delivered_time) {
             return false;
-        if (slave_pre_delivered_time != other.slave_pre_delivered_time)
+        }
+        if (slave_pre_delivered_time != other.slave_pre_delivered_time) {
             return false;
-        if (slave_time_delivered != other.slave_time_delivered)
+        }
+        if (slave_time_delivered != other.slave_time_delivered) {
             return false;
-        if (sponsorship_division_id != other.sponsorship_division_id)
+        }
+        if (sponsorship_division_id != other.sponsorship_division_id) {
             return false;
-        if (sponsorship_locality_id != other.sponsorship_locality_id)
+        }
+        if (sponsorship_locality_id != other.sponsorship_locality_id) {
             return false;
-        if (stopped != other.stopped)
+        }
+        if (stopped != other.stopped) {
             return false;
-        if (time_delivered != other.time_delivered)
+        }
+        if (time_delivered != other.time_delivered) {
             return false;
+        }
         if (title == null) {
-            if (other.title != null)
+            if (other.title != null) {
                 return false;
-        } else if (!title.equals(other.title))
+            }
+        } else if (!title.equals(other.title)) {
             return false;
-        if (transcoding != other.transcoding)
+        }
+        if (transcoding != other.transcoding) {
             return false;
-        if (urr_time != other.urr_time)
-            return false;
-        return true;
+        }
+        return urr_time == other.urr_time;
     }
 
     @Override
@@ -1302,7 +1327,6 @@ public class ComplexDomainObject implements Portable {
         return "QuickSearch [Title=" + title
                 + ", copy_code=" + copy_code
                 + ", copy_code_id=" + copy_code_id
-                + ", film_length=" + film_length +"]";
+                + ", film_length=" + film_length + "]";
     }
-
 }
