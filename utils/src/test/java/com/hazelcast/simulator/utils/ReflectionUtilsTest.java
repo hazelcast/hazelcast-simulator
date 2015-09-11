@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getMethodByName;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getStaticFieldValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.injectObjectToInstance;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
@@ -18,6 +19,16 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ReflectionUtilsTest {
+
+    @Test
+    public void testGetStaticFieldValue() throws Exception {
+        int result = (Integer) getStaticFieldValue(StaticClass.class, "staticField", int.class);
+        assertEquals(StaticClass.staticField, result);
+    }
+
+    static class StaticClass {
+        static int staticField = 10;
+    }
 
     @Test
     public void testConstructor() throws Exception {

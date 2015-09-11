@@ -27,6 +27,28 @@ public final class ReflectionUtils {
     private ReflectionUtils() {
     }
 
+    /**
+     * Gets the value for a static field.
+     *
+     * @param clazz
+     * @param fieldName
+     * @param fieldType
+     * @return
+     */
+    public static Object getStaticFieldValue(Class clazz, String fieldName, Class fieldType) {
+        Field field = getField(clazz, fieldName, fieldType);
+        if (field == null) {
+            throw new RuntimeException(format("Field %s.%s is not found", clazz.getName(), fieldName));
+        }
+
+        field.setAccessible(true);
+        try {
+            return field.get(null);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(format("Failed to access %s.%s", clazz.getName(), fieldName), e);
+        }
+    }
+
     public static <E> void invokePrivateConstructor(Class<E> classType) throws Exception {
         Constructor<E> constructor = classType.getDeclaredConstructor();
         constructor.setAccessible(true);

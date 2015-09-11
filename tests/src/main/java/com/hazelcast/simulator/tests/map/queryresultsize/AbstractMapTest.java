@@ -20,7 +20,6 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.map.impl.QueryResultSizeLimiter;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
@@ -33,6 +32,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberN
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.logPartitionStatistics;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getStaticFieldValue;
 import static com.hazelcast.util.ExceptionUtil.rethrow;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
@@ -66,10 +66,13 @@ abstract class AbstractMapTest {
         Integer minResultSizeLimit = 100000;
         Float resultLimitFactor = 1.15f;
         try {
-            minResultSizeLimit = QueryResultSizeLimiter.MINIMUM_MAX_RESULT_LIMIT;
-            resultLimitFactor = QueryResultSizeLimiter.MAX_RESULT_LIMIT_FACTOR;
+            Class queryResultSizeLimiterClazz = getQueryResultSizeLimiterClass();
+            minResultSizeLimit = (Integer) getStaticFieldValue(
+                    queryResultSizeLimiterClazz, "MINIMUM_MAX_RESULT_LIMIT", int.class);
+            resultLimitFactor = (Float) getStaticFieldValue(
+                    queryResultSizeLimiterClazz, "MAX_RESULT_LIMIT_FACTOR", float.class);
         } catch (Exception e) {
-            LOGGER.info(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
+            LOGGER.warning(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
         }
 
         int clusterSize = hazelcastInstance.getCluster().getMembers().size();
@@ -78,6 +81,15 @@ abstract class AbstractMapTest {
 
         LOGGER.info(format("%s: Filling map with %d items (%d items per member, %d members in cluster)",
                 basename, globalKeyCount, localKeyCount, clusterSize));
+    }
+
+    // due to class movement, the class can be at different locations depending on the hz version.
+    static Class getQueryResultSizeLimiterClass() throws ClassNotFoundException {
+        try {
+            return Class.forName("com.hazelcast.map.impl.QueryResultSizeLimiter");
+        } catch (ClassNotFoundException e) {
+            return Class.forName("com.hazelcast.map.impl.query.QueryResultSizeLimiter");
+        }
     }
 
     abstract long getGlobalKeyCount(Integer minResultSizeLimit, Float resultLimitFactor);
