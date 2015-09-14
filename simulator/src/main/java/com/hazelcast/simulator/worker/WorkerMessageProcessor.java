@@ -28,13 +28,10 @@ class WorkerMessageProcessor {
     private final Random random = new Random();
 
     private final ConcurrentMap<String, TestContainer<TestContext>> tests;
-    private final WorkerType type;
     private final HazelcastInstance hazelcastInstance;
 
-    WorkerMessageProcessor(ConcurrentMap<String, TestContainer<TestContext>> tests, WorkerType type,
-                           HazelcastInstance hazelcastInstance) {
+    WorkerMessageProcessor(ConcurrentMap<String, TestContainer<TestContext>> tests, HazelcastInstance hazelcastInstance) {
         this.tests = tests;
-        this.type = type;
         this.hazelcastInstance = hazelcastInstance;
     }
 

@@ -76,7 +76,7 @@ class WorkerCommandRequestProcessor {
         // will be started lazily on first test run
         workerPerformanceMonitor = new WorkerPerformanceMonitor(tests.values());
 
-        workerMessageProcessor = new WorkerMessageProcessor(tests, type, hazelcastInstance);
+        workerMessageProcessor = new WorkerMessageProcessor(tests, hazelcastInstance);
 
         workerCommandRequestProcessorThread = new WorkerCommandRequestProcessorThread();
         workerCommandRequestProcessorThread.start();
