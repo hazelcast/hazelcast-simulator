@@ -209,18 +209,16 @@ public final class Coordinator {
         bash.killAllJavaProcesses(ip);
 
         echoLocal("Starting Agent on %s", ip);
-        String additionalParameters = "";
+        String mandatoryParameters = format("--addressIndex %d --publicAddress %s", addressIndex, ip);
+        String optionalParameters = "";
         if (isEC2(props.get("CLOUD_PROVIDER"))) {
-            additionalParameters = format("--cloudProvider %s --cloudIdentity %s --cloudCredential %s",
+            optionalParameters = format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s",
                     props.get("CLOUD_PROVIDER"),
                     props.get("CLOUD_IDENTITY"),
                     props.get("CLOUD_CREDENTIAL"));
         }
-        bash.ssh(ip, format(
-                "nohup hazelcast-simulator-%s/bin/agent --addressIndex %d %s > agent.out 2> agent.err < /dev/null &",
-                getSimulatorVersion(),
-                addressIndex,
-                additionalParameters));
+        bash.ssh(ip, format("nohup hazelcast-simulator-%s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
+                getSimulatorVersion(), mandatoryParameters, optionalParameters));
     }
 
     private void startCoordinatorConnector() {

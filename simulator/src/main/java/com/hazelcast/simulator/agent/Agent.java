@@ -43,6 +43,7 @@ public class Agent {
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
     int addressIndex;
+    String publicAddress;
 
     String cloudProvider;
     String cloudIdentity;
