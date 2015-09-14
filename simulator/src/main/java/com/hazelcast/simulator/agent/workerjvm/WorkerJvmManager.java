@@ -23,6 +23,7 @@ import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.TerminateWorkerException;
+import com.hazelcast.simulator.worker.WorkerType;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
@@ -155,7 +156,7 @@ public class WorkerJvmManager {
     }
 
     private void sendMessageToRandomWorkerWithClusterMember(Message message) throws TimeoutException, InterruptedException {
-        WorkerJvm worker = getRandomWorkerWithClusterMemberOrNull();
+        WorkerJvm worker = getRandomWorkerWithMemberOrNull();
         if (worker == null) {
             LOGGER.warn("No worker is known to this agent. Is it a race-condition?");
         } else {
@@ -167,7 +168,7 @@ public class WorkerJvmManager {
     }
 
     private void sendMessageToAllWorkersWithClusterMember(Message message) throws TimeoutException, InterruptedException {
-        List<WorkerJvm> workers = getAllWorkersWithClusterMembers();
+        List<WorkerJvm> workers = getAllWorkersWithMembers();
         preprocessMessage(message, workers);
         executeOnWorkers(new MessageCommand(message), workers);
     }
@@ -310,8 +311,8 @@ public class WorkerJvmManager {
         }
     }
 
-    private WorkerJvm getRandomWorkerWithClusterMemberOrNull() {
-        List<WorkerJvm> jvmCollection = withoutMode(workerJVMs.values(), WorkerJvm.Mode.CLIENT);
+    private WorkerJvm getRandomWorkerWithMemberOrNull() {
+        List<WorkerJvm> jvmCollection = getAllWorkersWithMembers();
         if (jvmCollection.isEmpty()) {
             return null;
         }
@@ -319,14 +320,14 @@ public class WorkerJvmManager {
         return workers[random.nextInt(workers.length)];
     }
 
-    private List<WorkerJvm> getAllWorkersWithClusterMembers() {
-        return withoutMode(workerJVMs.values(), WorkerJvm.Mode.CLIENT);
+    private List<WorkerJvm> getAllWorkersWithMembers() {
+        return getWorkersWithWorkerType(workerJVMs.values(), WorkerType.MEMBER);
     }
 
-    public List<WorkerJvm> withoutMode(Iterable<WorkerJvm> source, WorkerJvm.Mode mode) {
+    private List<WorkerJvm> getWorkersWithWorkerType(Iterable<WorkerJvm> source, WorkerType type) {
         List<WorkerJvm> result = new ArrayList<WorkerJvm>();
         for (WorkerJvm workerJvm : source) {
-            if (!workerJvm.mode.equals(mode)) {
+            if (workerJvm.type == type) {
                 result.add(workerJvm);
             }
         }

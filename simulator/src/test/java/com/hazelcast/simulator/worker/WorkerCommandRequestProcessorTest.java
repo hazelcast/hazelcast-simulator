@@ -27,7 +27,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.exceptions.verification.WantedButNotInvoked;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
 
 import java.io.File;
 import java.util.List;
@@ -75,8 +74,7 @@ public class WorkerCommandRequestProcessorTest {
 
     private final TestCase defaultTestCase = mock(TestCase.class);
 
-    private final HazelcastInstance serverInstance = mock(HazelcastInstance.class);
-    private final HazelcastInstance clientInstance = mock(HazelcastInstance.class);
+    private final HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
 
     private WorkerCommandRequestProcessor requestProcessor;
 
@@ -88,10 +86,9 @@ public class WorkerCommandRequestProcessorTest {
         when(defaultTestCase.getId()).thenReturn(DEFAULT_TEST_ID);
         when(defaultTestCase.getClassname()).thenReturn(SuccessTest.class.getName());
 
-        when(serverInstance.getUserContext()).thenReturn(new ConcurrentHashMap<String, Object>());
-        when(clientInstance.getUserContext()).thenReturn(new ConcurrentHashMap<String, Object>());
+        when(hazelcastInstance.getUserContext()).thenReturn(new ConcurrentHashMap<String, Object>());
 
-        requestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue, serverInstance, clientInstance);
+        requestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue, WorkerType.MEMBER, hazelcastInstance);
     }
 
     @After
@@ -188,8 +185,6 @@ public class WorkerCommandRequestProcessorTest {
 
     @Test
     public void processRunCommand_passive() {
-        Whitebox.setInternalState(requestProcessor, "clientInstance", (Object[]) null);
-
         initTestCase(defaultTestCase);
         RunCommand command = new RunCommand(DEFAULT_TEST_ID);
         command.passiveMembers = true;
@@ -406,7 +401,7 @@ public class WorkerCommandRequestProcessorTest {
             assertNotNull(throwable);
             String throwableClassName = throwable.getClass().getSimpleName();
             assertTrue(format("Expected %s, but was %s for test %s: %s", exceptionType.getSimpleName(), throwableClassName,
-                            testId, throwable.getMessage()),
+                    testId, throwable.getMessage()),
                     exceptionType.isInstance(throwable));
         }
     }

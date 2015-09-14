@@ -24,23 +24,18 @@ class WorkerMessageProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(WorkerMessageProcessor.class);
 
-    private final ConcurrentMap<String, TestContainer<TestContext>> tests;
     private final ScheduledExecutorService executor = createScheduledThreadPool(10, WorkerMessageProcessor.class);
     private final Random random = new Random();
 
-    private HazelcastInstance hazelcastServerInstance;
-    private HazelcastInstance hazelcastClientInstance;
+    private final ConcurrentMap<String, TestContainer<TestContext>> tests;
+    private final WorkerType type;
+    private final HazelcastInstance hazelcastInstance;
 
-    WorkerMessageProcessor(ConcurrentMap<String, TestContainer<TestContext>> tests) {
+    WorkerMessageProcessor(ConcurrentMap<String, TestContainer<TestContext>> tests, WorkerType type,
+                           HazelcastInstance hazelcastInstance) {
         this.tests = tests;
-    }
-
-    void setHazelcastServerInstance(HazelcastInstance hazelcastServerInstance) {
-        this.hazelcastServerInstance = hazelcastServerInstance;
-    }
-
-    void setHazelcastClientInstance(HazelcastInstance hazelcastClientInstance) {
-        this.hazelcastClientInstance = hazelcastClientInstance;
+        this.type = type;
+        this.hazelcastInstance = hazelcastInstance;
     }
 
     void submit(final Message message) {
@@ -57,13 +52,12 @@ class WorkerMessageProcessor {
     private boolean shouldProcess(Message message) {
         String workerAddress = message.getMessageAddress().getWorkerAddress();
         if (workerAddress.equals(MessageAddress.WORKER_WITH_OLDEST_MEMBER)) {
-            return isMaster(hazelcastServerInstance, executor, DELAY_SECONDS);
+            return isMaster(hazelcastInstance, executor, DELAY_SECONDS);
         }
         return true;
     }
 
     private void process(Message message) {
-        HazelcastInstance hazelcastInstance = hazelcastServerInstance != null ? hazelcastServerInstance : hazelcastClientInstance;
         injectHazelcastInstance(hazelcastInstance, message);
 
         if (message.getMessageAddress().getTestAddress() == null) {

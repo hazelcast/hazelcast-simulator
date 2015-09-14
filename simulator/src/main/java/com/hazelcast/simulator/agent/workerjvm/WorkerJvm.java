@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.agent.workerjvm;
 
+import com.hazelcast.simulator.worker.WorkerType;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 
 import java.io.File;
@@ -25,15 +26,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class WorkerJvm {
 
     public final BlockingQueue<CommandRequest> commandQueue = new LinkedBlockingQueue<CommandRequest>();
-    public final String id;
 
+    public final String id;
     public File workerHome;
     public Process process;
-    public Mode mode;
 
+    public WorkerType type;
     public volatile String memberAddress;
     public volatile long lastSeen = System.currentTimeMillis();
     public volatile boolean detectFailure = true;
+
     public volatile boolean oomeDetected;
 
     public WorkerJvm(String id) {
@@ -47,11 +49,5 @@ public class WorkerJvm {
                 + ", memberAddress='" + memberAddress + '\''
                 + ", workerHome=" + workerHome
                 + '}';
-    }
-
-    public enum Mode {
-        SERVER,
-        CLIENT,
-        MIXED
     }
 }

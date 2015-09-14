@@ -8,17 +8,17 @@ import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.worker.commands.PerformanceState;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
 import com.hazelcast.simulator.worker.commands.GenericCommand;
 import com.hazelcast.simulator.worker.commands.GetBenchmarkResultsCommand;
-import com.hazelcast.simulator.worker.commands.GetStackTraceCommand;
 import com.hazelcast.simulator.worker.commands.GetPerformanceStateCommand;
+import com.hazelcast.simulator.worker.commands.GetStackTraceCommand;
 import com.hazelcast.simulator.worker.commands.InitCommand;
 import com.hazelcast.simulator.worker.commands.IsPhaseCompletedCommand;
 import com.hazelcast.simulator.worker.commands.MessageCommand;
+import com.hazelcast.simulator.worker.commands.PerformanceState;
 import com.hazelcast.simulator.worker.commands.RunCommand;
 import com.hazelcast.simulator.worker.commands.StopCommand;
 import org.apache.log4j.Logger;
@@ -58,27 +58,25 @@ class WorkerCommandRequestProcessor {
     private final BlockingQueue<CommandRequest> requestQueue;
     private final BlockingQueue<CommandResponse> responseQueue;
 
-    private final HazelcastInstance serverInstance;
-    private final HazelcastInstance clientInstance;
+    private final WorkerType type;
+    private final HazelcastInstance hazelcastInstance;
 
     private final WorkerPerformanceMonitor workerPerformanceMonitor;
     private final WorkerMessageProcessor workerMessageProcessor;
     private final WorkerCommandRequestProcessorThread workerCommandRequestProcessorThread;
 
     public WorkerCommandRequestProcessor(BlockingQueue<CommandRequest> requestQueue, BlockingQueue<CommandResponse> responseQueue,
-                                         HazelcastInstance serverInstance, HazelcastInstance clientInstance) {
+                                         WorkerType type, HazelcastInstance hazelcastInstance) {
         this.requestQueue = requestQueue;
         this.responseQueue = responseQueue;
 
-        this.serverInstance = serverInstance;
-        this.clientInstance = clientInstance;
+        this.type = type;
+        this.hazelcastInstance = hazelcastInstance;
 
         // will be started lazily on first test run
         workerPerformanceMonitor = new WorkerPerformanceMonitor(tests.values());
 
-        workerMessageProcessor = new WorkerMessageProcessor(tests);
-        workerMessageProcessor.setHazelcastServerInstance(serverInstance);
-        workerMessageProcessor.setHazelcastClientInstance(clientInstance);
+        workerMessageProcessor = new WorkerMessageProcessor(tests, type, hazelcastInstance);
 
         workerCommandRequestProcessorThread = new WorkerCommandRequestProcessorThread();
         workerCommandRequestProcessorThread.start();
@@ -173,14 +171,14 @@ class WorkerCommandRequestProcessor {
 
                 Object testInstance = InitCommand.class.getClassLoader().loadClass(testCase.getClassname()).newInstance();
                 bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
-                TestContextImpl testContext = new TestContextImpl(testId, getHazelcastInstance());
+                TestContextImpl testContext = new TestContextImpl(testId, hazelcastInstance);
                 ProbesConfiguration probesConfiguration = parseProbeConfiguration(testInstance, testCase);
 
                 tests.put(testId, new TestContainer<TestContext>(testInstance, testContext, probesConfiguration, testCase));
                 testsPending.incrementAndGet();
 
-                if (serverInstance != null) {
-                    serverInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testInstance);
+                if (type == WorkerType.MEMBER) {
+                    hazelcastInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testInstance);
                 }
             } catch (Exception e) {
                 throw e;
@@ -205,7 +203,7 @@ class WorkerCommandRequestProcessor {
                     return;
                 }
 
-                if (command.passiveMembers && clientInstance == null) {
+                if (type == WorkerType.MEMBER && command.passiveMembers) {
                     LOGGER.info(format("%s Skipping run of %s (member is passive) %s", DASHES, testName, DASHES));
                     return;
                 }
@@ -336,14 +334,6 @@ class WorkerCommandRequestProcessor {
 
             LOGGER.info(String.format("%s %s.getStackTraces() %s", DASHES, testName, DASHES));
             return test.getStackTraces();
-        }
-
-        private HazelcastInstance getHazelcastInstance() {
-            if (clientInstance != null) {
-                return clientInstance;
-            } else {
-                return serverInstance;
-            }
         }
     }
 

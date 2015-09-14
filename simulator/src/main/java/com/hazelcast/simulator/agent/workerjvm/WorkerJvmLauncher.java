@@ -2,8 +2,7 @@ package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.SpawnWorkerFailedException;
-import com.hazelcast.simulator.worker.ClientWorker;
-import com.hazelcast.simulator.worker.MemberWorker;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -67,8 +66,8 @@ public class WorkerJvmLauncher {
         }
 
         LOGGER.info("Spawning Worker JVM using settings: " + settings);
-        spawn(settings.memberWorkerCount, "server");
-        spawn(settings.clientWorkerCount, "client");
+        spawn(settings.memberWorkerCount, WorkerType.MEMBER);
+        spawn(settings.clientWorkerCount, WorkerType.CLIENT);
     }
 
     private File createTmpXmlFile(String name, String content) throws IOException {
@@ -79,22 +78,22 @@ public class WorkerJvmLauncher {
         return tmpXmlFile;
     }
 
-    private void spawn(int count, String mode) throws Exception {
-        LOGGER.info(format("Starting %s %s worker Java Virtual Machines", count, mode));
+    private void spawn(int count, WorkerType type) throws Exception {
+        LOGGER.info(format("Starting %s %s worker Java Virtual Machines", count, type));
 
         for (int i = 0; i < count; i++) {
-            WorkerJvm worker = startWorkerJvm(mode);
+            WorkerJvm worker = startWorkerJvm(type);
             workersInProgress.add(worker);
         }
 
-        LOGGER.info(format("Finished starting %s %s worker Java Virtual Machines", count, mode));
+        LOGGER.info(format("Finished starting %s %s worker Java Virtual Machines", count, type));
 
         waitForWorkersStartup(workersInProgress, settings.workerStartupTimeout);
         workersInProgress.clear();
     }
 
-    private WorkerJvm startWorkerJvm(String mode) throws IOException {
-        String workerId = "worker-" + agent.getPublicAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet() + "-" + mode;
+    private WorkerJvm startWorkerJvm(WorkerType type) throws IOException {
+        String workerId = "worker-" + agent.getPublicAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet() + "-" + type;
         File workerHome = new File(testSuiteDir, workerId);
         ensureExistingDirectory(workerHome);
 
@@ -103,7 +102,7 @@ public class WorkerJvmLauncher {
         WorkerJvm workerJvm = new WorkerJvm(workerId);
         workerJvm.workerHome = workerHome;
 
-        generateWorkerStartScript(mode, workerJvm);
+        generateWorkerStartScript(type, workerJvm);
 
         ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"bash", "worker.sh"})
                 .directory(workerHome)
@@ -118,7 +117,7 @@ public class WorkerJvmLauncher {
         File logFile = new File(workerHome, "out.log");
         new WorkerJvmProcessOutputGobbler(process.getInputStream(), new FileOutputStream(logFile)).start();
         workerJvm.process = process;
-        workerJvm.mode = WorkerJvm.Mode.valueOf(mode.toUpperCase());
+        workerJvm.type = type;
         copyResourcesToWorkerId(workerId);
         workerJVMs.put(workerId, workerJvm);
         return workerJvm;
@@ -164,8 +163,8 @@ public class WorkerJvmLauncher {
         return javaHome;
     }
 
-    private void generateWorkerStartScript(String mode, WorkerJvm workerJvm) {
-        String[] args = buildArgs(workerJvm, mode);
+    private void generateWorkerStartScript(WorkerType type, WorkerJvm workerJvm) {
+        String[] args = buildArgs(workerJvm, type);
         File startScript = new File(workerJvm.workerHome, "worker.sh");
 
         StringBuilder sb = new StringBuilder("#!/bin/bash\n");
@@ -231,7 +230,7 @@ public class WorkerJvmLauncher {
                 workerTimeoutSec));
     }
 
-    private String[] buildArgs(WorkerJvm workerJvm, String mode) {
+    private String[] buildArgs(WorkerJvm workerJvm, WorkerType type) {
         List<String> args = new LinkedList<String>();
 
         addNumaCtlSettings(args);
@@ -239,25 +238,21 @@ public class WorkerJvmLauncher {
 
         args.add("-classpath");
         args.add(getClasspath());
-        args.addAll(getJvmOptions(settings, mode));
+        args.addAll(getJvmOptions(settings, type));
         args.add("-XX:OnOutOfMemoryError=\"touch worker.oome\"");
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-Dlog4j.configuration=file:" + log4jFile.getAbsolutePath());
 
         args.add("-DSIMULATOR_HOME=" + SIMULATOR_HOME);
         args.add("-DworkerId=" + workerJvm.id);
-        args.add("-DworkerMode=" + mode);
+        args.add("-DworkerType=" + type);
         args.add("-DpublicAddress=" + agent.getPublicAddress());
         args.add("-DautoCreateHZInstances=" + settings.autoCreateHZInstances);
         args.add("-DmemberHzConfigFile=" + memberHzConfigFile.getAbsolutePath());
         args.add("-DclientHzConfigFile=" + clientHzConfigFile.getAbsolutePath());
 
-        // start ClientWorker or MemberWorker, depending on mode
-        if ("client".equals(mode)) {
-            args.add(ClientWorker.class.getName());
-        } else {
-            args.add(MemberWorker.class.getName());
-        }
+        // add class name to start correct worker type
+        args.add(type.getClassName());
 
         return args.toArray(new String[args.size()]);
     }
@@ -303,12 +298,12 @@ public class WorkerJvmLauncher {
                 + new File(libDir, "*").getAbsolutePath();
     }
 
-    private List<String> getJvmOptions(WorkerJvmSettings settings, String mode) {
+    private List<String> getJvmOptions(WorkerJvmSettings settings, WorkerType type) {
         String workerVmOptions;
-        if ("client".equals(mode)) {
-            workerVmOptions = settings.clientVmOptions;
-        } else {
+        if (type == WorkerType.MEMBER) {
             workerVmOptions = settings.vmOptions;
+        } else {
+            workerVmOptions = settings.clientVmOptions;
         }
 
         String[] vmOptionsArray = new String[]{};

@@ -55,7 +55,7 @@ public final class MemberWorker {
     private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
 
     private final String workerId;
-    private final String workerMode;
+    private final WorkerType type;
     private final String publicAddress;
 
     private final boolean autoCreateHazelcastInstance;
@@ -66,10 +66,10 @@ public final class MemberWorker {
     private WorkerSocketProcessor workerSocketProcessor;
     private WorkerCommandRequestProcessor workerCommandRequestProcessor;
 
-    private MemberWorker(String workerId, String workerMode, String publicAddress, boolean autoCreateHZInstances,
+    private MemberWorker(String workerId, WorkerType type, String publicAddress, boolean autoCreateHZInstances,
                          String memberHzConfigFile, String clientHzConfigFile) {
         this.workerId = workerId;
-        this.workerMode = workerMode;
+        this.type = type;
         this.publicAddress = publicAddress;
 
         this.autoCreateHazelcastInstance = autoCreateHZInstances;
@@ -79,31 +79,32 @@ public final class MemberWorker {
     }
 
     private void start() throws Exception {
-        HazelcastInstance serverInstance = null;
-        HazelcastInstance clientInstance = null;
+        HazelcastInstance hazelcastInstance = null;
 
-        if (autoCreateHazelcastInstance && "server".equals(workerMode)) {
+        if (autoCreateHazelcastInstance) {
             LOGGER.info("------------------------------------------------------------------------");
-            LOGGER.info("             member mode");
+            LOGGER.info("             worker type: " + type);
             LOGGER.info("------------------------------------------------------------------------");
-            serverInstance = createServerHazelcastInstance();
-            warmupPartitions(LOGGER, serverInstance);
-        } else if (autoCreateHazelcastInstance && "client".equals(workerMode)) {
-            LOGGER.info("------------------------------------------------------------------------");
-            LOGGER.info("             client mode");
-            LOGGER.info("------------------------------------------------------------------------");
-            clientInstance = createClientHazelcastInstance();
-            warmupPartitions(LOGGER, clientInstance);
-        } else {
-            throw new IllegalStateException("Unknown worker mode: " + workerMode);
+            switch (type) {
+                case MEMBER:
+                    hazelcastInstance = createServerHazelcastInstance();
+                    break;
+
+                case CLIENT:
+                    hazelcastInstance = createClientHazelcastInstance();
+                    break;
+
+                default:
+                    throw new IllegalStateException("Unknown WorkerType: " + type);
+            }
         }
+        warmupPartitions(LOGGER, hazelcastInstance);
 
         workerSocketProcessor = new WorkerSocketProcessor(requestQueue, responseQueue, workerId);
-        workerCommandRequestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue,
-                serverInstance, clientInstance);
+        workerCommandRequestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue, type, hazelcastInstance);
 
         // the last thing we do is to signal to the agent we have started
-        signalStartToAgent(serverInstance);
+        signalStartToAgent(hazelcastInstance);
     }
 
     private void stop() {
@@ -155,7 +156,7 @@ public final class MemberWorker {
 
     private void signalStartToAgent(HazelcastInstance serverInstance) {
         String address;
-        if (serverInstance != null) {
+        if (type == WorkerType.MEMBER) {
             InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getInetSocketAddress();
             address = socketAddress.getAddress().getHostAddress() + ":" + socketAddress.getPort();
         } else {
@@ -175,8 +176,8 @@ public final class MemberWorker {
             String workerId = System.getProperty("workerId");
             LOGGER.info("Worker id: " + workerId);
 
-            String workerMode = System.getProperty("workerMode");
-            LOGGER.info("Worker mode: " + workerMode);
+            WorkerType type = WorkerType.valueOf(System.getProperty("workerType"));
+            LOGGER.info("Worker type: " + type);
 
             String publicAddress = System.getProperty("publicAddress");
             LOGGER.info("Public address: " + publicAddress);
@@ -192,7 +193,7 @@ public final class MemberWorker {
             LOGGER.info("Hazelcast client config file: " + clientHzConfigFile);
             LOGGER.info(fileAsText(new File(clientHzConfigFile)));
 
-            MemberWorker worker = new MemberWorker(workerId, workerMode, publicAddress, autoCreateHZInstances,
+            MemberWorker worker = new MemberWorker(workerId, type, publicAddress, autoCreateHZInstances,
                     memberHzConfigFile, clientHzConfigFile);
             worker.start();
 

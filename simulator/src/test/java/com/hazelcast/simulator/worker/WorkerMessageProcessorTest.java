@@ -31,7 +31,9 @@ import static org.mockito.Mockito.when;
 
 public class WorkerMessageProcessorTest {
 
-    private WorkerMessageProcessor workerMessageProcessor;
+    private WorkerMessageProcessor workerMessageProcessorMember;
+    private WorkerMessageProcessor workerMessageProcessorClient;
+
     private TestContainer<TestContext> testContainerMock1;
     private TestContainer<TestContext> testContainerMock2;
 
@@ -45,7 +47,8 @@ public class WorkerMessageProcessorTest {
         tests.put("mockTest1", testContainerMock1);
         tests.put("mockTest2", testContainerMock2);
 
-        workerMessageProcessor = new WorkerMessageProcessor(tests);
+        workerMessageProcessorMember = new WorkerMessageProcessor(tests, WorkerType.MEMBER, createMockHazelcastInstance());
+        workerMessageProcessorClient = new WorkerMessageProcessor(tests, WorkerType.CLIENT, createMockHazelcastInstance());
     }
 
     @Test
@@ -53,7 +56,7 @@ public class WorkerMessageProcessorTest {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().build();
         final DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.submit(message);
+        workerMessageProcessorMember.submit(message);
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
@@ -67,7 +70,7 @@ public class WorkerMessageProcessorTest {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toAllTests().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.submit(message);
+        workerMessageProcessorMember.submit(message);
 
         assertFalse(message.isExecuted());
         verify(testContainerMock1, timeout(VERIFY_TIMEOUT_MILLIS)).sendMessage(message);
@@ -79,7 +82,7 @@ public class WorkerMessageProcessorTest {
         MessageAddress messageAddress = MessageAddress.builder().toRandomAgent().toAllWorkers().toAllTests().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.submit(message);
+        workerMessageProcessorMember.submit(message);
         verifyMessageSentToEitherOr(testContainerMock1, testContainerMock2, message);
     }
 
@@ -88,7 +91,7 @@ public class WorkerMessageProcessorTest {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toRandomWorker().toAllTests().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.submit(message);
+        workerMessageProcessorMember.submit(message);
         verifyMessageSentToEitherOr(testContainerMock1, testContainerMock2, message);
     }
 
@@ -97,18 +100,16 @@ public class WorkerMessageProcessorTest {
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toRandomTest().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.submit(message);
+        workerMessageProcessorMember.submit(message);
         verifyMessageSentToEitherOr(testContainerMock1, testContainerMock2, message);
     }
 
     @Test
     public void testSubmit_toOldestMember() throws Exception {
-        workerMessageProcessor.setHazelcastServerInstance(createMockHazelcastInstance(true));
-
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toOldestMember().toAllTests().build();
         final DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.submit(message);
+        workerMessageProcessorMember.submit(message);
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
@@ -119,23 +120,22 @@ public class WorkerMessageProcessorTest {
 
     @Test
     public void testSubmit_toRandomTest_withHazelcastClient() throws Exception {
-        workerMessageProcessor.setHazelcastClientInstance(createMockHazelcastInstance(true));
-
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toRandomTest().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.submit(message);
+        workerMessageProcessorClient.submit(message);
         verifyMessageSentToEitherOr(testContainerMock1, testContainerMock2, message);
     }
 
     @Test
     public void testSubmit_noTestContainers() {
-        workerMessageProcessor = new WorkerMessageProcessor(new ConcurrentHashMap<String, TestContainer<TestContext>>());
+        workerMessageProcessorMember = new WorkerMessageProcessor(new ConcurrentHashMap<String, TestContainer<TestContext>>(),
+                WorkerType.MEMBER, createMockHazelcastInstance());
 
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toRandomTest().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.submit(message);
+        workerMessageProcessorMember.submit(message);
         verifyZeroInteractions(testContainerMock1);
         verifyZeroInteractions(testContainerMock2);
         assertFalse(message.isExecuted());
@@ -147,7 +147,7 @@ public class WorkerMessageProcessorTest {
         Message noRunnableMessage = mock(Message.class);
         when(noRunnableMessage.getMessageAddress()).thenReturn(messageAddress);
 
-        workerMessageProcessor.submit(noRunnableMessage);
+        workerMessageProcessorMember.submit(noRunnableMessage);
     }
 
     @Test
@@ -157,12 +157,12 @@ public class WorkerMessageProcessorTest {
         ConcurrentMap<String, TestContainer<TestContext>> tests = new ConcurrentHashMap<String, TestContainer<TestContext>>();
         tests.put("mockTest", testContainerMock1);
 
-        workerMessageProcessor = new WorkerMessageProcessor(tests);
+        workerMessageProcessorMember = new WorkerMessageProcessor(tests, WorkerType.MEMBER, createMockHazelcastInstance());
 
         MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toRandomTest().build();
         DummyRunnableMessage message = new DummyRunnableMessage(messageAddress);
 
-        workerMessageProcessor.submit(message);
+        workerMessageProcessorMember.submit(message);
     }
 
     private void verifyMessageSentToEitherOr(TestContainer<?> container1, TestContainer<?> container2, Message message)
@@ -175,7 +175,7 @@ public class WorkerMessageProcessorTest {
         }
     }
 
-    private HazelcastInstance createMockHazelcastInstance(boolean returnMember) {
+    private HazelcastInstance createMockHazelcastInstance() {
         Member member = mock(Member.class);
 
         Set<Member> memberSet = new HashSet<Member>();
@@ -185,7 +185,7 @@ public class WorkerMessageProcessorTest {
         when(cluster.getMembers()).thenReturn(memberSet);
 
         HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
-        when(hazelcastInstance.getLocalEndpoint()).thenReturn(returnMember ? member : null);
+        when(hazelcastInstance.getLocalEndpoint()).thenReturn(member);
         when(hazelcastInstance.getCluster()).thenReturn(cluster);
 
         return hazelcastInstance;
