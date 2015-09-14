@@ -42,8 +42,8 @@ public class WorkerJvmLauncher {
     private final WorkerJvmSettings settings;
     private final Agent agent;
     private final ConcurrentMap<String, WorkerJvm> workerJVMs;
-    private File hzFile;
-    private File clientHzFile;
+    private File memberHzConfigFile;
+    private File clientHzConfigFile;
     private File log4jFile;
     private final List<WorkerJvm> workersInProgress = new LinkedList<WorkerJvm>();
     private File testSuiteDir;
@@ -55,8 +55,8 @@ public class WorkerJvmLauncher {
     }
 
     public void launch() throws Exception {
-        hzFile = createTmpXmlFile("hazelcast", settings.hzConfig);
-        clientHzFile = createTmpXmlFile("client-hazelcast", settings.clientHzConfig);
+        memberHzConfigFile = createTmpXmlFile("hazelcast", settings.hzConfig);
+        clientHzConfigFile = createTmpXmlFile("client-hazelcast", settings.clientHzConfig);
         log4jFile = createTmpXmlFile("worker-log4j", settings.log4jConfig);
 
         testSuiteDir = agent.getTestSuiteDir();
@@ -234,34 +234,39 @@ public class WorkerJvmLauncher {
     private String[] buildArgs(WorkerJvm workerJvm, String mode) {
         List<String> args = new LinkedList<String>();
 
-        String numaCtl = settings.numaCtl;
-        if (!"none".equals(numaCtl)) {
-            args.add(numaCtl);
-        }
-
+        addNumaCtlSettings(args);
         addProfilerSettings(workerJvm, args);
 
-        args.add("-XX:OnOutOfMemoryError=\"touch worker.oome\"");
-        args.add("-DSIMULATOR_HOME=" + SIMULATOR_HOME);
-        args.add("-Dhazelcast.logging.type=log4j");
-        args.add("-DworkerId=" + workerJvm.id);
-        args.add("-DworkerMode=" + mode);
-        args.add("-DautoCreateHZInstances=" + settings.autoCreateHZInstances);
-        args.add("-Dlog4j.configuration=file:" + log4jFile.getAbsolutePath());
         args.add("-classpath");
         args.add(getClasspath());
         args.addAll(getJvmOptions(settings, mode));
+        args.add("-XX:OnOutOfMemoryError=\"touch worker.oome\"");
+        args.add("-Dhazelcast.logging.type=log4j");
+        args.add("-Dlog4j.configuration=file:" + log4jFile.getAbsolutePath());
 
-        // if it is a client, we start the ClientWorker.
+        args.add("-DSIMULATOR_HOME=" + SIMULATOR_HOME);
+        args.add("-DworkerId=" + workerJvm.id);
+        args.add("-DworkerMode=" + mode);
+        args.add("-DpublicAddress=" + agent.getPublicAddress());
+        args.add("-DautoCreateHZInstances=" + settings.autoCreateHZInstances);
+        args.add("-DmemberHzConfigFile=" + memberHzConfigFile.getAbsolutePath());
+        args.add("-DclientHzConfigFile=" + clientHzConfigFile.getAbsolutePath());
+
+        // start ClientWorker or MemberWorker, depending on mode
         if ("client".equals(mode)) {
             args.add(ClientWorker.class.getName());
         } else {
             args.add(MemberWorker.class.getName());
         }
-        args.add(hzFile.getAbsolutePath());
-        args.add(clientHzFile.getAbsolutePath());
 
         return args.toArray(new String[args.size()]);
+    }
+
+    private void addNumaCtlSettings(List<String> args) {
+        String numaCtl = settings.numaCtl;
+        if (!"none".equals(numaCtl)) {
+            args.add(numaCtl);
+        }
     }
 
     private void addProfilerSettings(WorkerJvm workerJvm, List<String> args) {

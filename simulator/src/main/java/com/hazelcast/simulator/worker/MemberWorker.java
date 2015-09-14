@@ -39,7 +39,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeObject;
@@ -55,17 +54,28 @@ public final class MemberWorker {
     private final BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
     private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
 
+    private final String workerId;
+    private final String workerMode;
+    private final String publicAddress;
+
+    private final boolean autoCreateHazelcastInstance;
+
+    private final String memberHzConfigFile;
+    private final String clientHzConfigFile;
+
     private WorkerSocketProcessor workerSocketProcessor;
     private WorkerCommandRequestProcessor workerCommandRequestProcessor;
 
-    private String hzFile;
-    private String clientHzFile;
+    private MemberWorker(String workerId, String workerMode, String publicAddress, boolean autoCreateHZInstances,
+                         String memberHzConfigFile, String clientHzConfigFile) {
+        this.workerId = workerId;
+        this.workerMode = workerMode;
+        this.publicAddress = publicAddress;
 
-    private String workerMode;
-    private String workerId;
-    private boolean autoCreateHazelcastInstance = true;
+        this.autoCreateHazelcastInstance = autoCreateHZInstances;
 
-    private MemberWorker() {
+        this.memberHzConfigFile = memberHzConfigFile;
+        this.clientHzConfigFile = clientHzConfigFile;
     }
 
     private void start() throws Exception {
@@ -105,7 +115,7 @@ public final class MemberWorker {
     private HazelcastInstance createServerHazelcastInstance() throws Exception {
         LOGGER.info("Creating Server HazelcastInstance");
 
-        XmlConfigBuilder configBuilder = new XmlConfigBuilder(hzFile);
+        XmlConfigBuilder configBuilder = new XmlConfigBuilder(memberHzConfigFile);
         Config config = configBuilder.build();
 
         HazelcastInstance server = Hazelcast.newHazelcastInstance(config);
@@ -116,7 +126,7 @@ public final class MemberWorker {
     private HazelcastInstance createClientHazelcastInstance() throws Exception {
         LOGGER.info("Creating Client HazelcastInstance");
 
-        XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(clientHzFile);
+        XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(clientHzConfigFile);
         ClientConfig clientConfig = configBuilder.build();
 
         HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
@@ -149,7 +159,7 @@ public final class MemberWorker {
             InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getInetSocketAddress();
             address = socketAddress.getAddress().getHostAddress() + ":" + socketAddress.getPort();
         } else {
-            address = "client:" + getHostAddress();
+            address = "client:" + publicAddress;
         }
         File file = new File("worker.address");
         writeObject(address, file);
@@ -165,33 +175,31 @@ public final class MemberWorker {
             String workerId = System.getProperty("workerId");
             LOGGER.info("Worker id: " + workerId);
 
-            String workerHzFile = args[0];
-            LOGGER.info("Worker hz config file: " + workerHzFile);
-            LOGGER.info(fileAsText(new File(workerHzFile)));
-
-            String clientHzFile = args[1];
-            LOGGER.info("Client hz config file: " + clientHzFile);
-            LOGGER.info(fileAsText(new File(clientHzFile)));
-
             String workerMode = System.getProperty("workerMode");
             LOGGER.info("Worker mode: " + workerMode);
 
-            String autoCreateHZInstances = System.getProperty("autoCreateHZInstances", "true");
+            String publicAddress = System.getProperty("publicAddress");
+            LOGGER.info("Public address: " + publicAddress);
+
+            boolean autoCreateHZInstances = Boolean.parseBoolean(System.getProperty("autoCreateHZInstances", "true"));
             LOGGER.info("autoCreateHZInstances :" + autoCreateHZInstances);
 
+            String memberHzConfigFile = System.getProperty("memberHzConfigFile");
+            LOGGER.info("Hazelcast member config file: " + memberHzConfigFile);
+            LOGGER.info(fileAsText(new File(memberHzConfigFile)));
 
-            MemberWorker worker = new MemberWorker();
-            worker.workerId = workerId;
-            worker.hzFile = workerHzFile;
-            worker.clientHzFile = clientHzFile;
-            worker.workerMode = workerMode;
-            worker.autoCreateHazelcastInstance = Boolean.parseBoolean(autoCreateHZInstances);
+            String clientHzConfigFile = System.getProperty("clientHzConfigFile");
+            LOGGER.info("Hazelcast client config file: " + clientHzConfigFile);
+            LOGGER.info(fileAsText(new File(clientHzConfigFile)));
+
+            MemberWorker worker = new MemberWorker(workerId, workerMode, publicAddress, autoCreateHZInstances,
+                    memberHzConfigFile, clientHzConfigFile);
             worker.start();
 
             registerLog4jShutdownHandler(worker);
 
             LOGGER.info("Successfully started Hazelcast Simulator Worker: " + workerId);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             ExceptionReporter.report(null, e);
             exitWithError(LOGGER, "Could not start Hazelcast Simulator Worker!", e);
         }
