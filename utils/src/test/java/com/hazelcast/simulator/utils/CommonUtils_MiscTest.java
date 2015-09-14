@@ -8,6 +8,7 @@ import java.util.Collections;
 import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.join;
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static java.lang.String.format;
@@ -56,7 +57,7 @@ public class CommonUtils_MiscTest {
         Throwable throwable = new RuntimeException();
 
         try {
-            throw CommonUtils.rethrow(throwable);
+            throw rethrow(throwable);
         } catch (RuntimeException e) {
             assertEquals(throwable, e);
         }
@@ -67,7 +68,7 @@ public class CommonUtils_MiscTest {
         Throwable throwable = new Throwable();
 
         try {
-            throw CommonUtils.rethrow(throwable);
+            throw rethrow(throwable);
         } catch (RuntimeException e) {
             assertEquals(throwable, e.getCause());
         }
