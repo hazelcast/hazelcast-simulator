@@ -81,7 +81,6 @@ public class AgentRemoteService {
                         if (LOGGER.isDebugEnabled()) {
                             LOGGER.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
                         }
-                        agent.signalUsed();
                         executor.execute(new ClientSocketTask(clientSocket, agent, agentMessageProcessor));
                     }
                 } catch (IOException e) {

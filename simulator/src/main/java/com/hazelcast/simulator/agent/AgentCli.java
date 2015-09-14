@@ -33,28 +33,24 @@ final class AgentCli {
     private AgentCli() {
     }
 
-    static void init(Agent agent, String[] args) {
+    static Agent init(String[] args) {
         AgentCli agentCli = new AgentCli();
         OptionSet options = CliUtils.initOptionsWithHelp(agentCli.parser, args);
 
         if (!options.has(agentCli.addressIndexSpec)) {
             throw new CommandLineExitException("Missing parameter: --addressIndex");
         }
-        agent.addressIndex = options.valueOf(agentCli.addressIndexSpec);
+        int addressIndex = options.valueOf(agentCli.addressIndexSpec);
 
         if (!options.has(agentCli.publicAddressSpec)) {
             throw new CommandLineExitException("Missing parameter: --publicAddress");
         }
-        agent.publicAddress = options.valueOf(agentCli.publicAddressSpec);
+        String publicAddress = options.valueOf(agentCli.publicAddressSpec);
 
-        if (options.has(agentCli.cloudProviderSpec)) {
-            agent.cloudProvider = options.valueOf(agentCli.cloudProviderSpec);
-        }
-        if (options.has(agentCli.cloudIdentitySpec)) {
-            agent.cloudIdentity = options.valueOf(agentCli.cloudIdentitySpec);
-        }
-        if (options.has(agentCli.cloudCredentialSpec)) {
-            agent.cloudCredential = options.valueOf(agentCli.cloudCredentialSpec);
-        }
+        String cloudProvider = options.valueOf(agentCli.cloudProviderSpec);
+        String cloudIdentity = options.valueOf(agentCli.cloudIdentitySpec);
+        String cloudCredential = options.valueOf(agentCli.cloudCredentialSpec);
+
+        return new Agent(addressIndex, publicAddress, cloudProvider, cloudIdentity, cloudCredential);
     }
 }

@@ -42,23 +42,32 @@ public class Agent {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
-    int addressIndex;
-    String publicAddress;
-
-    String cloudProvider;
-    String cloudIdentity;
-    String cloudCredential;
-
-    // internal state
-    volatile long lastUsed = System.currentTimeMillis();
-
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
+
+    private final int addressIndex;
+    private final String publicAddress;
+
+    private final String cloudProvider;
+    private final String cloudIdentity;
+    private final String cloudCredential;
 
     private AgentConnector agentConnector;
     private AgentRemoteService agentRemoteService;
 
     private volatile TestSuite testSuite;
+
+    public Agent(int addressIndex, String publicAddress, String cloudProvider, String cloudIdentity, String cloudCredential) {
+        this.addressIndex = addressIndex;
+        this.publicAddress = publicAddress;
+        this.cloudProvider = cloudProvider;
+        this.cloudIdentity = cloudIdentity;
+        this.cloudCredential = cloudCredential;
+    }
+
+    public String getPublicAddress() {
+        return publicAddress;
+    }
 
     public void initTestSuite(TestSuite testSuite) {
         this.testSuite = testSuite;
@@ -72,10 +81,6 @@ public class Agent {
 
     public void echo(String msg) {
         LOGGER.info(msg);
-    }
-
-    public void signalUsed() {
-        lastUsed = System.currentTimeMillis();
     }
 
     public TestSuite getTestSuite() {
@@ -149,8 +154,7 @@ public class Agent {
         LOGGER.info(format("SIMULATOR_HOME: %s%n", getSimulatorHome()));
         logInterestingSystemProperties();
 
-        Agent agent = new Agent();
-        AgentCli.init(agent, args);
+        Agent agent = AgentCli.init(args);
 
         LOGGER.info("CloudIdentity: " + agent.cloudIdentity);
         LOGGER.info("CloudCredential: " + agent.cloudCredential);
