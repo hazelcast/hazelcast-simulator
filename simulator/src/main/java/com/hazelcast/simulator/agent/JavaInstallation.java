@@ -15,12 +15,11 @@
  */
 package com.hazelcast.simulator.agent;
 
-@SuppressWarnings("checkstyle:visibilitymodifier")
 public class JavaInstallation {
 
-    public String vendor;
-    public String version;
-    public String javaHome;
+    private String vendor;
+    private String version;
+    private String javaHome;
 
     public String getJavaHome() {
         return javaHome;
