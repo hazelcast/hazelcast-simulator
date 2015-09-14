@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
-import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.join;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
@@ -37,13 +36,6 @@ public class CommonUtils_MiscTest {
     }
 
     @Test
-    public void testGetHostAddress() {
-        String hostAddress = getHostAddress();
-        String cachedHostAddress = getHostAddress();
-        assertEquals(hostAddress, cachedHostAddress);
-    }
-
-    @Test
     public void testGetSimulatorVersion() {
         assertNull(getSimulatorVersion());
     }
@@ -64,7 +56,7 @@ public class CommonUtils_MiscTest {
         Throwable throwable = new RuntimeException();
 
         try {
-            CommonUtils.rethrow(throwable);
+            throw CommonUtils.rethrow(throwable);
         } catch (RuntimeException e) {
             assertEquals(throwable, e);
         }
@@ -75,7 +67,7 @@ public class CommonUtils_MiscTest {
         Throwable throwable = new Throwable();
 
         try {
-            CommonUtils.rethrow(throwable);
+            throw CommonUtils.rethrow(throwable);
         } catch (RuntimeException e) {
             assertEquals(throwable, e.getCause());
         }

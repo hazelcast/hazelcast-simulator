@@ -41,8 +41,6 @@ public final class CommonUtils {
     private static final String DEFAULT_DELIMITER = ", ";
     private static final String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
 
-    private static volatile String hostAddress;
-
     private CommonUtils() {
     }
 
@@ -137,20 +135,6 @@ public final class CommonUtils {
             }
         }
         return builder.toString();
-    }
-
-    public static String getHostAddress() {
-        if (hostAddress != null) {
-            return hostAddress;
-        }
-
-        synchronized (CommonUtils.class) {
-            if (hostAddress != null) {
-                return hostAddress;
-            }
-            hostAddress = HostAddressPicker.pickHostAddress();
-            return hostAddress;
-        }
     }
 
     public static String getSimulatorVersion() {
