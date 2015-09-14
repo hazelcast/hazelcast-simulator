@@ -52,6 +52,8 @@ abstract class AbstractServerConnector implements ServerConnector {
     private final ConcurrentMap<String, ResponseFuture> futureMap;
     private final SimulatorAddress localAddress;
 
+    private Channel channel;
+
     AbstractServerConnector(ServerConfiguration configuration) {
         this.configuration = configuration;
         this.futureMap = configuration.getFutureMap();
@@ -74,7 +76,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                 });
 
         ChannelFuture future = bootstrap.bind().syncUninterruptibly();
-        Channel channel = future.channel();
+        channel = future.channel();
 
         LOGGER.info(format("ServerConnector %s listens on %s", configuration.getLocalAddress(), channel.localAddress()));
     }
@@ -82,6 +84,7 @@ abstract class AbstractServerConnector implements ServerConnector {
     @Override
     public void shutdown() {
         messageQueueThread.shutdown();
+        channel.close().syncUninterruptibly();
 
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
     }

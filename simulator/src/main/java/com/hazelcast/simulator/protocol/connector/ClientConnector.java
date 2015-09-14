@@ -73,6 +73,7 @@ public class ClientConnector {
     }
 
     public void shutdown() {
+        channel.close().syncUninterruptibly();
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
     }
 
