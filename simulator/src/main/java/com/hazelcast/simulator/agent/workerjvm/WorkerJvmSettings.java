@@ -28,7 +28,7 @@ public class WorkerJvmSettings implements Serializable {
 
     public int memberWorkerCount;
     public int clientWorkerCount;
-    public boolean autoCreateHZInstances = true;
+    public boolean autoCreateHZInstance = true;
     public boolean passiveMembers = true;
 
     public int workerStartupTimeout;
@@ -55,7 +55,7 @@ public class WorkerJvmSettings implements Serializable {
 
         this.memberWorkerCount = settings.memberWorkerCount;
         this.clientWorkerCount = settings.clientWorkerCount;
-        this.autoCreateHZInstances = settings.autoCreateHZInstances;
+        this.autoCreateHZInstance = settings.autoCreateHZInstance;
         this.passiveMembers = settings.passiveMembers;
 
         this.workerStartupTimeout = settings.workerStartupTimeout;

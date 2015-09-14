@@ -53,7 +53,7 @@ final class CoordinatorCli {
             "Number of Cluster Client Worker JVMs.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
-    private final OptionSpec<Boolean> autoCreateHZInstancesSpec = parser.accepts("autoCreateHzInstances",
+    private final OptionSpec<Boolean> autoCreateHZInstanceSpec = parser.accepts("autoCreateHzInstances",
             "Auto create Hazelcast instances.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
@@ -192,7 +192,7 @@ final class CoordinatorCli {
         workerJvmSettings.clientVmOptions = options.valueOf(clientWorkerVmOptionsSpec);
         workerJvmSettings.memberWorkerCount = options.valueOf(memberWorkerCountSpec);
         workerJvmSettings.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
-        workerJvmSettings.autoCreateHZInstances = options.valueOf(autoCreateHZInstancesSpec);
+        workerJvmSettings.autoCreateHZInstance = options.valueOf(autoCreateHZInstanceSpec);
         workerJvmSettings.passiveMembers = parseBoolean(coordinator.props.get("PASSIVE_MEMBERS", "true"));
 
         workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);

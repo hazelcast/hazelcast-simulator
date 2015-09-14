@@ -3,7 +3,6 @@ package com.hazelcast.simulator.agent.remoting;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
-import com.hazelcast.simulator.common.messaging.NewMemberMessage;
 import com.hazelcast.simulator.common.messaging.TerminateRandomWorkerMessage;
 import org.apache.log4j.Logger;
 
@@ -57,8 +56,6 @@ public class AgentMessageProcessor {
             processLocalRunnableMessage((Runnable) message);
         } else if (message instanceof TerminateRandomWorkerMessage) {
             workerJvmManager.terminateRandomWorker();
-        } else if (message instanceof NewMemberMessage) {
-            workerJvmManager.newMember();
         } else {
             throw new UnsupportedOperationException("Unknown message type received: " + message.getClass().getName());
         }

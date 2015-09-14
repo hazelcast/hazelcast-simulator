@@ -38,12 +38,10 @@ final class CoordinatorHelper {
         }
     }
 
-    static List<AgentMemberLayout> initAgentMemberLayouts(AgentsClient agentsClient, WorkerJvmSettings workerJvmSettings) {
+    static List<AgentMemberLayout> initAgentMemberLayouts(AgentsClient agentsClient) {
         List<AgentMemberLayout> agentMemberLayouts = new LinkedList<AgentMemberLayout>();
         for (String agentIp : agentsClient.getPublicAddresses()) {
-            AgentMemberLayout layout = new AgentMemberLayout(workerJvmSettings);
-            layout.publicIp = agentIp;
-            layout.agentMemberMode = AgentMemberMode.MIXED;
+            AgentMemberLayout layout = new AgentMemberLayout(agentIp, AgentMemberMode.MIXED);
             agentMemberLayouts.add(layout);
         }
         return agentMemberLayouts;
@@ -60,7 +58,7 @@ final class CoordinatorHelper {
     private static void assignAgentMemberMode(List<AgentMemberLayout> agentMemberLayouts, int startIndex, int endIndex,
                                               AgentMemberMode agentMemberMode) {
         for (int i = startIndex; i < endIndex; i++) {
-            agentMemberLayouts.get(i).agentMemberMode = agentMemberMode;
+            agentMemberLayouts.get(i).setAgentMemberMode(agentMemberMode);
         }
     }
 
@@ -69,7 +67,7 @@ final class CoordinatorHelper {
         int size = agentMemberLayouts.size();
         while (true) {
             AgentMemberLayout agentLayout = agentMemberLayouts.get(currentIndex.getAndIncrement() % size);
-            if (agentLayout.agentMemberMode != excludedAgentMemberMode) {
+            if (agentLayout.getAgentMemberMode() != excludedAgentMemberMode) {
                 return agentLayout;
             }
         }

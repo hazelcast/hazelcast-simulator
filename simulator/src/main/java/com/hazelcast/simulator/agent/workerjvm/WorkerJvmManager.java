@@ -20,6 +20,7 @@ import com.hazelcast.simulator.agent.CommandFuture;
 import com.hazelcast.simulator.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
+import com.hazelcast.simulator.coordinator.WorkerSettings;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.TerminateWorkerException;
@@ -82,8 +83,6 @@ public class WorkerJvmManager {
     private final Random random = new Random();
 
     private ServerSocket serverSocket;
-
-    private volatile WorkerJvmSettings lastUsedWorkerJvmSettings;
 
     public WorkerJvmManager(Agent agent) {
         this.agent = agent;
@@ -260,9 +259,8 @@ public class WorkerJvmManager {
         agent.getWorkerJvmFailureMonitor().publish(failure);
     }
 
-    public void spawn(WorkerJvmSettings settings) throws Exception {
-        this.lastUsedWorkerJvmSettings = settings;
-        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, settings);
+    public void spawn(WorkerSettings workerSettings) throws Exception {
+        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerSettings);
         launcher.launch();
     }
 
@@ -341,23 +339,6 @@ public class WorkerJvmManager {
         }
         WorkerJvm[] workers = jvmCollection.toArray(new WorkerJvm[jvmCollection.size()]);
         return workers[random.nextInt(workers.length)];
-    }
-
-    public void newMember() throws Exception {
-        LOGGER.info("Adding a newMember");
-
-        WorkerJvmSettings lastUsedWorkerJvmSettings = this.lastUsedWorkerJvmSettings;
-        if (lastUsedWorkerJvmSettings == null) {
-            LOGGER.warn("No lastUsedWorkerJvmSettings available");
-            return;
-        }
-
-        WorkerJvmSettings settings = new WorkerJvmSettings(lastUsedWorkerJvmSettings);
-        settings.memberWorkerCount = 1;
-        settings.clientWorkerCount = 0;
-
-        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, settings);
-        launcher.launch();
     }
 
     private final class ClientSocketTask implements Runnable {

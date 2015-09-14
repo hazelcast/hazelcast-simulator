@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
-enum AgentMemberMode {
+public enum AgentMemberMode {
+
     MEMBER,
     CLIENT,
     MIXED

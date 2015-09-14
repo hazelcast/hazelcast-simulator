@@ -29,7 +29,6 @@ public class WorkerJvm {
 
     private final String id;
     private final int index;
-    private final int port;
 
     private final File workerHome;
     private final WorkerType type;
@@ -42,10 +41,9 @@ public class WorkerJvm {
     private volatile Process process;
     private volatile String memberAddress;
 
-    public WorkerJvm(String id, int index, int port, File workerHome, WorkerType type) {
+    public WorkerJvm(String id, int index, File workerHome, WorkerType type) {
         this.id = id;
         this.index = index;
-        this.port = port;
         this.workerHome = workerHome;
         this.type = type;
     }
@@ -56,10 +54,6 @@ public class WorkerJvm {
 
     public int getIndex() {
         return index;
-    }
-
-    public int getPort() {
-        return port;
     }
 
     public File getWorkerHome() {

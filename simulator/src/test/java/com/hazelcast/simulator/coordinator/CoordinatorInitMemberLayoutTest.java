@@ -3,6 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -157,15 +158,13 @@ public class CoordinatorInitMemberLayoutTest {
         assertNotNull("Could not find AgentMemberLayout at index " + index, layout);
 
         String prefix = String.format("Agent %s members: %d clients: %d mode: %s",
-                layout.publicIp,
-                layout.memberSettings.memberWorkerCount,
-                layout.clientSettings.clientWorkerCount,
-                layout.agentMemberMode);
+                layout.getPublicAddress(),
+                layout.getCount(WorkerType.MEMBER),
+                layout.getCount(WorkerType.CLIENT),
+                layout.getAgentMemberMode());
 
-        assertEquals(prefix + " (agentMemberMode)", mode, layout.agentMemberMode);
-        assertEquals(prefix + " (memberSettings.memberWorkerCount)", memberCount, layout.memberSettings.memberWorkerCount);
-        assertEquals(prefix + " (memberSettings.clientWorkerCount)", 0, layout.memberSettings.clientWorkerCount);
-        assertEquals(prefix + " (clientSettings.memberWorkerCount)", 0, layout.clientSettings.memberWorkerCount);
-        assertEquals(prefix + " (clientSettings.clientWorkerCount)", clientCount, layout.clientSettings.clientWorkerCount);
+        assertEquals(prefix + " (agentMemberMode)", mode, layout.getAgentMemberMode());
+        assertEquals(prefix + " (memberWorkerCount)", memberCount, layout.getCount(WorkerType.MEMBER));
+        assertEquals(prefix + " (clientWorkerCount)", clientCount, layout.getCount(WorkerType.CLIENT));
     }
 }

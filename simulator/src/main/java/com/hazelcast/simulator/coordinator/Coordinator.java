@@ -29,6 +29,7 @@ import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -344,17 +345,9 @@ public final class Coordinator {
             agentsClient.terminateWorkers();
             echo("Successfully killed all remaining workers");
 
-            echo("Starting %d member workers", workerJvmSettings.memberWorkerCount);
-            agentsClient.spawnWorkers(agentMemberLayouts, true);
-            echo("Successfully started member workers");
-
-            if (workerJvmSettings.clientWorkerCount > 0) {
-                echo("Starting %d client workers", workerJvmSettings.clientWorkerCount);
-                agentsClient.spawnWorkers(agentMemberLayouts, false);
-                echo("Successfully started client workers");
-            } else {
-                echo("Skipping client startup, since no clients are configured");
-            }
+            echo("Starting %d workers", workerJvmSettings.memberWorkerCount + workerJvmSettings.clientWorkerCount);
+            agentsClient.spawnWorkers(agentMemberLayouts);
+            echo("Successfully started workers");
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to start workers", e);
         }
@@ -375,7 +368,7 @@ public final class Coordinator {
             throw new CommandLineExitException("dedicatedMemberMachineCount is too big, there are no machines left for clients!");
         }
 
-        List<AgentMemberLayout> agentMemberLayouts = initAgentMemberLayouts(agentsClient, workerJvmSettings);
+        List<AgentMemberLayout> agentMemberLayouts = initAgentMemberLayouts(agentsClient);
 
         assignDedicatedMemberMachines(agentCount, agentMemberLayouts, dedicatedMemberMachineCount);
 
@@ -383,21 +376,21 @@ public final class Coordinator {
         for (int i = 0; i < workerJvmSettings.memberWorkerCount; i++) {
             // assign server nodes
             AgentMemberLayout agentLayout = findNextAgentLayout(currentIndex, agentMemberLayouts, AgentMemberMode.CLIENT);
-            agentLayout.memberSettings.memberWorkerCount++;
+            agentLayout.addWorker(WorkerType.MEMBER, workerJvmSettings);
         }
         for (int i = 0; i < workerJvmSettings.clientWorkerCount; i++) {
             // assign the clients
             AgentMemberLayout agentLayout = findNextAgentLayout(currentIndex, agentMemberLayouts, AgentMemberMode.MEMBER);
-            agentLayout.clientSettings.clientWorkerCount++;
+            agentLayout.addWorker(WorkerType.CLIENT, workerJvmSettings);
         }
 
         // log the layout
-        for (AgentMemberLayout spawnPlan : agentMemberLayouts) {
+        for (AgentMemberLayout agentMemberLayout : agentMemberLayouts) {
             LOGGER.info(format("    Agent %s members: %d clients: %d mode: %s",
-                    spawnPlan.publicIp,
-                    spawnPlan.memberSettings.memberWorkerCount,
-                    spawnPlan.clientSettings.clientWorkerCount,
-                    spawnPlan.agentMemberMode
+                    agentMemberLayout.getPublicAddress(),
+                    agentMemberLayout.getCount(WorkerType.MEMBER),
+                    agentMemberLayout.getCount(WorkerType.CLIENT),
+                    agentMemberLayout.getAgentMemberMode()
             ));
         }
 

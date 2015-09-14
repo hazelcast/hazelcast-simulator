@@ -67,11 +67,11 @@ public final class MemberWorker {
     private final WorkerConnector workerConnector;
 
     private MemberWorker(String workerId, WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort,
-                         boolean autoCreateHZInstances, String memberHzConfigFile, String clientHzConfigFile) throws Exception {
+                         boolean autoCreateHZInstance, String memberHzConfigFile, String clientHzConfigFile) throws Exception {
         this.type = type;
         this.publicAddress = publicAddress;
 
-        this.autoCreateHazelcastInstance = autoCreateHZInstances;
+        this.autoCreateHazelcastInstance = autoCreateHZInstance;
 
         this.memberHzConfigFile = memberHzConfigFile;
         this.clientHzConfigFile = clientHzConfigFile;
@@ -198,8 +198,8 @@ public final class MemberWorker {
             int workerPort = parseInt(System.getProperty("workerPort"));
             LOGGER.info("Worker port: " + workerPort);
 
-            boolean autoCreateHZInstances = parseBoolean(System.getProperty("autoCreateHZInstances", "true"));
-            LOGGER.info("autoCreateHZInstances: " + autoCreateHZInstances);
+            boolean autoCreateHZInstance = parseBoolean(System.getProperty("autoCreateHZInstances", "true"));
+            LOGGER.info("autoCreateHZInstance: " + autoCreateHZInstance);
 
             String memberHzConfigFile = System.getProperty("memberHzConfigFile");
             LOGGER.info("Hazelcast member config file: " + memberHzConfigFile);
@@ -210,7 +210,7 @@ public final class MemberWorker {
             LOGGER.info(fileAsText(new File(clientHzConfigFile)));
 
             MemberWorker worker = new MemberWorker(workerId, type, publicAddress, agentIndex, workerIndex, workerPort,
-                    autoCreateHZInstances, memberHzConfigFile, clientHzConfigFile);
+                    autoCreateHZInstance, memberHzConfigFile, clientHzConfigFile);
 
             registerLog4jShutdownHandler(worker);
 

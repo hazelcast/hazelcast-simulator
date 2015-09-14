@@ -3,6 +3,7 @@ package com.hazelcast.simulator.agent;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
+import com.hazelcast.simulator.coordinator.AgentMemberMode;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.Failure;
@@ -11,6 +12,7 @@ import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
+import com.hazelcast.simulator.worker.WorkerType;
 import com.hazelcast.simulator.worker.commands.GenericCommand;
 import com.hazelcast.simulator.worker.commands.InitCommand;
 import com.hazelcast.simulator.worker.commands.RunCommand;
@@ -156,11 +158,10 @@ public class AgentSmokeTest {
         workerJvmSettings.memberHzConfig = fileAsText("./simulator/src/test/resources/hazelcast.xml");
         workerJvmSettings.log4jConfig = fileAsText("./simulator/src/test/resources/log4j.xml");
 
-        AgentMemberLayout agentLayout = new AgentMemberLayout(workerJvmSettings);
-        agentLayout.memberSettings.memberWorkerCount = 1;
-        agentLayout.publicIp = AGENT_IP_ADDRESS;
+        AgentMemberLayout agentLayout = new AgentMemberLayout(AGENT_IP_ADDRESS, AgentMemberMode.MEMBER);
+        agentLayout.addWorker(WorkerType.MEMBER, workerJvmSettings);
 
-        client.spawnWorkers(Collections.singletonList(agentLayout), true);
+        client.spawnWorkers(Collections.singletonList(agentLayout));
     }
 
     private void runPhase(TestCase testCase, TestPhase testPhase) throws TimeoutException {
