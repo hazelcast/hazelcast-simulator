@@ -51,10 +51,6 @@ public final class MemberWorker {
 
     private static final Logger LOGGER = Logger.getLogger(MemberWorker.class);
 
-    private final BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
-    private final BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
-
-    private final String workerId;
     private final WorkerType type;
     private final String publicAddress;
 
@@ -63,12 +59,11 @@ public final class MemberWorker {
     private final String memberHzConfigFile;
     private final String clientHzConfigFile;
 
-    private WorkerSocketProcessor workerSocketProcessor;
-    private WorkerCommandRequestProcessor workerCommandRequestProcessor;
+    private final WorkerSocketProcessor workerSocketProcessor;
+    private final WorkerCommandRequestProcessor workerCommandRequestProcessor;
 
     private MemberWorker(String workerId, WorkerType type, String publicAddress, boolean autoCreateHZInstances,
-                         String memberHzConfigFile, String clientHzConfigFile) {
-        this.workerId = workerId;
+                         String memberHzConfigFile, String clientHzConfigFile) throws Exception {
         this.type = type;
         this.publicAddress = publicAddress;
 
@@ -76,11 +71,20 @@ public final class MemberWorker {
 
         this.memberHzConfigFile = memberHzConfigFile;
         this.clientHzConfigFile = clientHzConfigFile;
+
+        BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
+        BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
+        HazelcastInstance hazelcastInstance = getHazelcastInstance();
+
+        this.workerSocketProcessor = new WorkerSocketProcessor(requestQueue, responseQueue, workerId);
+        this.workerCommandRequestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue, type,
+                hazelcastInstance);
+
+        signalStartToAgent(hazelcastInstance);
     }
 
-    private void start() throws Exception {
+    private HazelcastInstance getHazelcastInstance() throws Exception {
         HazelcastInstance hazelcastInstance = null;
-
         if (autoCreateHazelcastInstance) {
             LOGGER.info("------------------------------------------------------------------------");
             LOGGER.info("             worker type: " + type);
@@ -97,14 +101,9 @@ public final class MemberWorker {
                 default:
                     throw new IllegalStateException("Unknown WorkerType: " + type);
             }
+            warmupPartitions(LOGGER, hazelcastInstance);
         }
-        warmupPartitions(LOGGER, hazelcastInstance);
-
-        workerSocketProcessor = new WorkerSocketProcessor(requestQueue, responseQueue, workerId);
-        workerCommandRequestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue, type, hazelcastInstance);
-
-        // the last thing we do is to signal to the agent we have started
-        signalStartToAgent(hazelcastInstance);
+        return hazelcastInstance;
     }
 
     private void stop() {
@@ -195,7 +194,6 @@ public final class MemberWorker {
 
             MemberWorker worker = new MemberWorker(workerId, type, publicAddress, autoCreateHZInstances,
                     memberHzConfigFile, clientHzConfigFile);
-            worker.start();
 
             registerLog4jShutdownHandler(worker);
 
