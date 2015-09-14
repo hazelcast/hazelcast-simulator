@@ -51,6 +51,15 @@ public class ClientConnector {
     }
 
     public void start() {
+        Bootstrap bootstrap = getBootstrap();
+        ChannelFuture future = bootstrap.connect().syncUninterruptibly();
+        channel = future.channel();
+
+        LOGGER.info(format("ClientConnector %s -> %s sends to %s", configuration.getLocalAddress(),
+                configuration.getRemoteAddress(), channel.remoteAddress()));
+    }
+
+    private Bootstrap getBootstrap() {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap
                 .group(group)
@@ -64,12 +73,7 @@ public class ClientConnector {
                         configuration.configurePipeline(channel.pipeline());
                     }
                 });
-
-        ChannelFuture future = bootstrap.connect().syncUninterruptibly();
-        channel = future.channel();
-
-        LOGGER.info(format("ClientConnector %s -> %s sends to %s", configuration.getLocalAddress(),
-                configuration.getRemoteAddress(), channel.remoteAddress()));
+        return bootstrap;
     }
 
     public void shutdown() {

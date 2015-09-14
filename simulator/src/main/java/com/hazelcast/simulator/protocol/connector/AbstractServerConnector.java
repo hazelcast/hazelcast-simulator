@@ -64,6 +64,14 @@ abstract class AbstractServerConnector implements ServerConnector {
     public void start() {
         messageQueueThread.start();
 
+        ServerBootstrap bootstrap = getServerBootstrap();
+        ChannelFuture future = bootstrap.bind().syncUninterruptibly();
+        channel = future.channel();
+
+        LOGGER.info(format("ServerConnector %s listens on %s", configuration.getLocalAddress(), channel.localAddress()));
+    }
+
+    private ServerBootstrap getServerBootstrap() {
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(group)
                 .channel(NioServerSocketChannel.class)
@@ -74,11 +82,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                         configuration.configurePipeline(channel.pipeline());
                     }
                 });
-
-        ChannelFuture future = bootstrap.bind().syncUninterruptibly();
-        channel = future.channel();
-
-        LOGGER.info(format("ServerConnector %s listens on %s", configuration.getLocalAddress(), channel.localAddress()));
+        return bootstrap;
     }
 
     @Override
