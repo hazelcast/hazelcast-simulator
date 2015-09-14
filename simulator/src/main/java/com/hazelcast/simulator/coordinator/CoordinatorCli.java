@@ -115,17 +115,17 @@ final class CoordinatorCli {
                     PROPERTIES_FILE_NAME, PROPERTIES_FILE_NAME))
             .withRequiredArg().ofType(String.class);
 
-    private final OptionSpec<String> hzFileSpec = parser.accepts("hzFile",
+    private final OptionSpec<String> memberHzConfigFileSpec = parser.accepts("hzFile",
             "The Hazelcast XML configuration file for the worker. If no file is explicitly configured,"
                     + " first the 'hazelcast.xml' in the working directory is loaded."
                     + " If that doesn't exist then SIMULATOR_HOME/conf/hazelcast.xml is loaded.")
-            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultHzFile());
+            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultMemberHzConfigFile());
 
-    private final OptionSpec<String> clientHzFileSpec = parser.accepts("clientHzFile",
+    private final OptionSpec<String> clientHzConfigFileSpec = parser.accepts("clientHzFile",
             "The client Hazelcast XML configuration file for the worker. If no file is explicitly configured,"
                     + " first the 'client-hazelcast.xml' in the working directory is loaded."
                     + " If that doesn't exist then SIMULATOR_HOME/conf/client-hazelcast.xml is loaded.")
-            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzFile());
+            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultClientHzConfigFile());
 
     private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
             "The startup timeout in seconds for a worker.")
@@ -143,7 +143,7 @@ final class CoordinatorCli {
         this.options = initOptionsWithHelp(parser, args);
     }
 
-    private static String getDefaultHzFile() {
+    private static String getDefaultMemberHzConfigFile() {
         File file = new File("hazelcast.xml");
         // if something exists in the current working directory, use that
         if (file.exists()) {
@@ -153,7 +153,7 @@ final class CoordinatorCli {
         }
     }
 
-    private static String getDefaultClientHzFile() {
+    private static String getDefaultClientHzConfigFile() {
         File file = new File("client-hazelcast.xml");
         // if something exists in the current working directory, use that
         if (file.exists()) {
@@ -196,7 +196,7 @@ final class CoordinatorCli {
         workerJvmSettings.passiveMembers = parseBoolean(coordinator.props.get("PASSIVE_MEMBERS", "true"));
 
         workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
-        workerJvmSettings.hzConfig = loadHzConfig();
+        workerJvmSettings.memberHzConfig = loadMemberHzConfig();
         workerJvmSettings.clientHzConfig = loadClientHzConfig();
         workerJvmSettings.log4jConfig = getFileAsTextFromWorkingDirOrBaseDir(Coordinator.SIMULATOR_HOME,
                 "worker-log4j.xml", "Log4j configuration for worker"
@@ -221,15 +221,15 @@ final class CoordinatorCli {
         coordinator.workerJvmSettings = workerJvmSettings;
     }
 
-    private String loadClientHzConfig() {
-        File file = getFile(clientHzFileSpec, options, "Worker Client Hazelcast config file");
-        LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
+    private String loadMemberHzConfig() {
+        File file = getFile(memberHzConfigFileSpec, options, "Worker Hazelcast config file");
+        LOGGER.info("Loading Hazelcast configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
-    private String loadHzConfig() {
-        File file = getFile(hzFileSpec, options, "Worker Hazelcast config file");
-        LOGGER.info("Loading Hazelcast configuration: " + file.getAbsolutePath());
+    private String loadClientHzConfig() {
+        File file = getFile(clientHzConfigFileSpec, options, "Worker Client Hazelcast config file");
+        LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 

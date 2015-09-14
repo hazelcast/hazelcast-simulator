@@ -153,7 +153,7 @@ public class AgentSmokeTest {
         workerJvmSettings.vmOptions = "";
         workerJvmSettings.workerStartupTimeout = 60000;
         workerJvmSettings.clientHzConfig = fileAsText("./simulator/src/test/resources/client-hazelcast.xml");
-        workerJvmSettings.hzConfig = fileAsText("./simulator/src/test/resources/hazelcast.xml");
+        workerJvmSettings.memberHzConfig = fileAsText("./simulator/src/test/resources/hazelcast.xml");
         workerJvmSettings.log4jConfig = fileAsText("./simulator/src/test/resources/log4j.xml");
 
         AgentMemberLayout agentLayout = new AgentMemberLayout(workerJvmSettings);

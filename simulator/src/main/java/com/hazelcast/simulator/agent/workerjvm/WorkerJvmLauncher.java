@@ -55,7 +55,7 @@ public class WorkerJvmLauncher {
     }
 
     public void launch() throws Exception {
-        memberHzConfigFile = createTmpXmlFile("hazelcast", settings.hzConfig);
+        memberHzConfigFile = createTmpXmlFile("hazelcast", settings.memberHzConfig);
         clientHzConfigFile = createTmpXmlFile("client-hazelcast", settings.clientHzConfig);
         log4jFile = createTmpXmlFile("worker-log4j", settings.log4jConfig);
 

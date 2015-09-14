@@ -31,7 +31,7 @@ final class CoordinatorHelper {
 
     private static int getPort(WorkerJvmSettings settings) {
         try {
-            Config config = new XmlConfigBuilder(new ByteArrayInputStream(settings.hzConfig.getBytes("UTF-8"))).build();
+            Config config = new XmlConfigBuilder(new ByteArrayInputStream(settings.memberHzConfig.getBytes("UTF-8"))).build();
             return config.getNetworkConfig().getPort();
         } catch (UnsupportedEncodingException e) {
             throw new CommandLineExitException("Could not get port from settings", e);

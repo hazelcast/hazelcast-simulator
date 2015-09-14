@@ -22,7 +22,7 @@ public class WorkerJvmSettings implements Serializable {
 
     public String vmOptions;
     public String clientVmOptions;
-    public String hzConfig;
+    public String memberHzConfig;
     public String clientHzConfig;
     public String log4jConfig;
 
@@ -49,7 +49,7 @@ public class WorkerJvmSettings implements Serializable {
     public WorkerJvmSettings(WorkerJvmSettings settings) {
         this.vmOptions = settings.vmOptions;
         this.clientVmOptions = settings.clientVmOptions;
-        this.hzConfig = settings.hzConfig;
+        this.memberHzConfig = settings.memberHzConfig;
         this.clientHzConfig = settings.clientHzConfig;
         this.log4jConfig = settings.log4jConfig;
 
@@ -88,7 +88,7 @@ public class WorkerJvmSettings implements Serializable {
                 + "\n, yourkitConfig='" + yourkitConfig + '\''
                 + "\n, javaVendor=" + javaVendor
                 + "\n, javaVersion=" + javaVersion
-                + "\n, hzConfig='" + hzConfig + '\''
+                + "\n, memberHzConfig='" + memberHzConfig + '\''
                 + "\n, clientHzConfig='" + clientHzConfig + '\''
                 + "\n, log4jConfig='" + log4jConfig + '\''
                 + "\n, hprofSettings='" + hprofSettings + '\''
