@@ -26,8 +26,6 @@ public class WorkerJvmSettings implements Serializable {
     public String clientHzConfig;
     public String log4jConfig;
 
-    public int memberWorkerCount;
-    public int clientWorkerCount;
     public boolean autoCreateHZInstance = true;
     public boolean passiveMembers = true;
 
@@ -53,8 +51,6 @@ public class WorkerJvmSettings implements Serializable {
         this.clientHzConfig = settings.clientHzConfig;
         this.log4jConfig = settings.log4jConfig;
 
-        this.memberWorkerCount = settings.memberWorkerCount;
-        this.clientWorkerCount = settings.clientWorkerCount;
         this.autoCreateHZInstance = settings.autoCreateHZInstance;
         this.passiveMembers = settings.passiveMembers;
 
@@ -71,17 +67,11 @@ public class WorkerJvmSettings implements Serializable {
         this.numaCtl = settings.numaCtl;
     }
 
-    public int totalWorkerCount() {
-        return memberWorkerCount + clientWorkerCount;
-    }
-
     @Override
     public String toString() {
         return "WorkerSettings{"
                 + "\n  vmOptions='" + vmOptions + '\''
                 + "\n  clientVmOptions='" + clientVmOptions + '\''
-                + "\n, memberWorkerCount=" + memberWorkerCount
-                + "\n, clientWorkerCount=" + clientWorkerCount
                 + "\n, workerStartupTimeout=" + workerStartupTimeout
                 + "\n, refreshJvm=" + refreshJvm
                 + "\n, profiler='" + profiler + '\''

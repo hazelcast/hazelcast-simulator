@@ -156,7 +156,7 @@ final class TestCaseRunner {
 
     private void startTestCase() throws TimeoutException {
         WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
-        boolean isPassiveMembers = (workerJvmSettings.passiveMembers && workerJvmSettings.clientWorkerCount > 0);
+        boolean isPassiveMembers = (workerJvmSettings.passiveMembers && coordinator.clientWorkerCount > 0);
 
         echo(format("Starting Test start (%s members)", (isPassiveMembers) ? "passive" : "active"));
         RunCommand runCommand = new RunCommand(testCaseId);

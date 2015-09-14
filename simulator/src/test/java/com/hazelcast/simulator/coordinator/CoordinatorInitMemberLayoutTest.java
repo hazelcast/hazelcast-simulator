@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -23,9 +22,6 @@ import static org.mockito.Mockito.when;
 public class CoordinatorInitMemberLayoutTest {
 
     private static String userDir;
-
-    @Mock
-    private final WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
 
     @Mock
     private final AgentsClient agentsClient = mock(AgentsClient.class);
@@ -76,7 +72,7 @@ public class CoordinatorInitMemberLayoutTest {
     @Test()
     public void testAgentCountSufficientForDedicatedMembersAndClientWorkers() {
         coordinator.dedicatedMemberMachineCount = 2;
-        workerJvmSettings.clientWorkerCount = 1;
+        coordinator.clientWorkerCount = 1;
 
         coordinator.initMemberLayout();
     }
@@ -84,14 +80,14 @@ public class CoordinatorInitMemberLayoutTest {
     @Test(expected = CommandLineExitException.class)
     public void testAgentCountNotSufficientForDedicatedMembersAndClientWorkers() {
         coordinator.dedicatedMemberMachineCount = 3;
-        workerJvmSettings.clientWorkerCount = 1;
+        coordinator.clientWorkerCount = 1;
 
         coordinator.initMemberLayout();
     }
 
     @Test
     public void testSingleMemberWorker() {
-        workerJvmSettings.memberWorkerCount = 1;
+        coordinator.memberWorkerCount = 1;
 
         agentMemberLayouts = coordinator.initMemberLayout();
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 1, 0);
@@ -101,7 +97,7 @@ public class CoordinatorInitMemberLayoutTest {
 
     @Test
     public void testMemberWorkerOverflow() {
-        workerJvmSettings.memberWorkerCount = 4;
+        coordinator.memberWorkerCount = 4;
 
         agentMemberLayouts = coordinator.initMemberLayout();
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 2, 0);
@@ -111,7 +107,7 @@ public class CoordinatorInitMemberLayoutTest {
 
     @Test
     public void testSingleClientWorker() {
-        workerJvmSettings.clientWorkerCount = 1;
+        coordinator.clientWorkerCount = 1;
 
         agentMemberLayouts = coordinator.initMemberLayout();
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 0, 1);
@@ -121,7 +117,7 @@ public class CoordinatorInitMemberLayoutTest {
 
     @Test
     public void testClientWorkerOverflow() {
-        workerJvmSettings.clientWorkerCount = 5;
+        coordinator.clientWorkerCount = 5;
 
         agentMemberLayouts = coordinator.initMemberLayout();
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 0, 2);
@@ -132,8 +128,8 @@ public class CoordinatorInitMemberLayoutTest {
     @Test
     public void testDedicatedAndMixedWorkers1() {
         coordinator.dedicatedMemberMachineCount = 1;
-        workerJvmSettings.memberWorkerCount = 2;
-        workerJvmSettings.clientWorkerCount = 3;
+        coordinator.memberWorkerCount = 2;
+        coordinator.clientWorkerCount = 3;
 
         agentMemberLayouts = coordinator.initMemberLayout();
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 2, 0);
@@ -144,8 +140,8 @@ public class CoordinatorInitMemberLayoutTest {
     @Test
     public void testDedicatedAndMixedWorkers2() {
         coordinator.dedicatedMemberMachineCount = 2;
-        workerJvmSettings.memberWorkerCount = 2;
-        workerJvmSettings.clientWorkerCount = 3;
+        coordinator.memberWorkerCount = 2;
+        coordinator.clientWorkerCount = 3;
 
         agentMemberLayouts = coordinator.initMemberLayout();
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 1, 0);

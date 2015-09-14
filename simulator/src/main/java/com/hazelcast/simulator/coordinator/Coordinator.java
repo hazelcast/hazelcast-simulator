@@ -85,6 +85,8 @@ public final class Coordinator {
     boolean parallel;
     TestPhase lastTestPhaseToSync;
     WorkerJvmSettings workerJvmSettings;
+    int memberWorkerCount;
+    int clientWorkerCount;
     int cooldownSeconds = COOLDOWN_SECONDS;
     int testCaseRunnerSleepPeriod = TEST_CASE_RUNNER_SLEEP_PERIOD;
 
@@ -158,15 +160,15 @@ public final class Coordinator {
             throw new CommandLineExitException("Could not start CoordinatorConnector", e);
         }
 
-        initMemberWorkerCount(workerJvmSettings);
+        initMemberWorkerCount();
         initMemberHzConfig(workerJvmSettings);
         initClientHzConfig(workerJvmSettings);
 
         int agentCount = agentsClient.getAgentCount();
         LOGGER.info(format("Performance monitor enabled: %s", monitorPerformance));
         LOGGER.info(format("Total number of agents: %s", agentCount));
-        LOGGER.info(format("Total number of Hazelcast member workers: %s", workerJvmSettings.memberWorkerCount));
-        LOGGER.info(format("Total number of Hazelcast client workers: %s", workerJvmSettings.clientWorkerCount));
+        LOGGER.info(format("Total number of Hazelcast member workers: %s", memberWorkerCount));
+        LOGGER.info(format("Total number of Hazelcast client workers: %s", clientWorkerCount));
 
         try {
             agentsClient.initTestSuite(testSuite);
@@ -236,10 +238,10 @@ public final class Coordinator {
         spawner.awaitCompletion();
     }
 
-    private void initMemberWorkerCount(WorkerJvmSettings masterSettings) {
+    private void initMemberWorkerCount() {
         int agentCount = agentsClient.getAgentCount();
-        if (masterSettings.memberWorkerCount == -1) {
-            masterSettings.memberWorkerCount = agentCount;
+        if (memberWorkerCount == -1) {
+            memberWorkerCount = agentCount;
         }
     }
 
@@ -340,12 +342,13 @@ public final class Coordinator {
         List<AgentMemberLayout> agentMemberLayouts = initMemberLayout();
 
         long started = System.nanoTime();
+        int totalWorkerCount = memberWorkerCount + clientWorkerCount;
         try {
             echo("Killing all remaining workers");
             agentsClient.terminateWorkers();
             echo("Successfully killed all remaining workers");
 
-            echo("Starting %d workers", workerJvmSettings.memberWorkerCount + workerJvmSettings.clientWorkerCount);
+            echo("Starting %d workers", totalWorkerCount);
             agentsClient.spawnWorkers(agentMemberLayouts);
             echo("Successfully started workers");
         } catch (Exception e) {
@@ -353,8 +356,7 @@ public final class Coordinator {
         }
 
         long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
-        LOGGER.info((format("Successfully started a grand total of %s Workers JVMs after %s ms",
-                workerJvmSettings.totalWorkerCount(), durationMs)));
+        LOGGER.info((format("Successfully started a grand total of %s Workers JVMs after %s ms", totalWorkerCount, durationMs)));
     }
 
     List<AgentMemberLayout> initMemberLayout() {
@@ -364,7 +366,7 @@ public final class Coordinator {
             throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
                     dedicatedMemberMachineCount, agentCount));
         }
-        if (workerJvmSettings.clientWorkerCount > 0 && agentCount - dedicatedMemberMachineCount < 1) {
+        if (clientWorkerCount > 0 && agentCount - dedicatedMemberMachineCount < 1) {
             throw new CommandLineExitException("dedicatedMemberMachineCount is too big, there are no machines left for clients!");
         }
 
@@ -373,12 +375,12 @@ public final class Coordinator {
         assignDedicatedMemberMachines(agentCount, agentMemberLayouts, dedicatedMemberMachineCount);
 
         AtomicInteger currentIndex = new AtomicInteger(0);
-        for (int i = 0; i < workerJvmSettings.memberWorkerCount; i++) {
+        for (int i = 0; i < memberWorkerCount; i++) {
             // assign server nodes
             AgentMemberLayout agentLayout = findNextAgentLayout(currentIndex, agentMemberLayouts, AgentMemberMode.CLIENT);
             agentLayout.addWorker(WorkerType.MEMBER, workerJvmSettings);
         }
-        for (int i = 0; i < workerJvmSettings.clientWorkerCount; i++) {
+        for (int i = 0; i < clientWorkerCount; i++) {
             // assign the clients
             AgentMemberLayout agentLayout = findNextAgentLayout(currentIndex, agentMemberLayouts, AgentMemberMode.MEMBER);
             agentLayout.addWorker(WorkerType.CLIENT, workerJvmSettings);

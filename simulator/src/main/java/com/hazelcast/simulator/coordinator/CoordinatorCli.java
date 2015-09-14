@@ -190,8 +190,6 @@ final class CoordinatorCli {
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
         workerJvmSettings.vmOptions = options.valueOf(workerVmOptionsSpec);
         workerJvmSettings.clientVmOptions = options.valueOf(clientWorkerVmOptionsSpec);
-        workerJvmSettings.memberWorkerCount = options.valueOf(memberWorkerCountSpec);
-        workerJvmSettings.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
         workerJvmSettings.autoCreateHZInstance = options.valueOf(autoCreateHZInstanceSpec);
         workerJvmSettings.passiveMembers = parseBoolean(coordinator.props.get("PASSIVE_MEMBERS", "true"));
 
@@ -219,6 +217,9 @@ final class CoordinatorCli {
         }
 
         coordinator.workerJvmSettings = workerJvmSettings;
+
+        coordinator.memberWorkerCount = options.valueOf(memberWorkerCountSpec);
+        coordinator.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
     }
 
     private String loadMemberHzConfig() {
