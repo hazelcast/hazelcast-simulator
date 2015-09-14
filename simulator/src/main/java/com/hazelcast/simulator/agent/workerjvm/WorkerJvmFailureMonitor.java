@@ -27,7 +27,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -91,7 +90,7 @@ public class WorkerJvmFailureMonitor {
             Failure failure = new Failure();
             failure.message = "Worker has not contacted agent for a too long period.";
             failure.type = Failure.Type.WORKER_TIMEOUT;
-            failure.agentAddress = getHostAddress();
+            failure.agentAddress = agent.getPublicAddress();
             failure.workerAddress = jvm.memberAddress;
             failure.workerId = jvm.id;
             failure.testSuite = agent.getTestSuite();
@@ -129,7 +128,7 @@ public class WorkerJvmFailureMonitor {
             Failure failure = new Failure();
             failure.message = "Worked ran into an unhandled exception";
             failure.type = Failure.Type.WORKER_EXCEPTION;
-            failure.agentAddress = getHostAddress();
+            failure.agentAddress = agent.getPublicAddress();
             failure.workerAddress = workerJvm.memberAddress;
             failure.workerId = workerJvm.id;
             failure.testId = testId;
@@ -161,7 +160,7 @@ public class WorkerJvmFailureMonitor {
         Failure failure = new Failure();
         failure.message = "Worker ran into an Out Of Memory Error";
         failure.type = Failure.Type.WORKER_OOM;
-        failure.agentAddress = getHostAddress();
+        failure.agentAddress = agent.getPublicAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
         failure.testSuite = agent.getTestSuite();
@@ -208,7 +207,7 @@ public class WorkerJvmFailureMonitor {
         Failure failure = new Failure();
         failure.message = format("Worker terminated with exit code %d instead of 0", exitCode);
         failure.type = Failure.Type.WORKER_EXIT;
-        failure.agentAddress = getHostAddress();
+        failure.agentAddress = agent.getPublicAddress();
         failure.workerAddress = jvm.memberAddress;
         failure.workerId = jvm.id;
         failure.testSuite = agent.getTestSuite();

@@ -18,7 +18,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.utils.CommonUtils.getHostAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
@@ -95,7 +94,7 @@ public class WorkerJvmLauncher {
     }
 
     private WorkerJvm startWorkerJvm(String mode) throws IOException {
-        String workerId = "worker-" + getHostAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet() + "-" + mode;
+        String workerId = "worker-" + agent.getPublicAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet() + "-" + mode;
         File workerHome = new File(testSuiteDir, workerId);
         ensureExistingDirectory(workerHome);
 
@@ -129,15 +128,12 @@ public class WorkerJvmLauncher {
         List<WorkerJvm> todo = new ArrayList<WorkerJvm>(workers);
 
         for (int i = 0; i < workerTimeoutSec; i++) {
-            for (Iterator<WorkerJvm> it = todo.iterator(); it.hasNext();) {
+            for (Iterator<WorkerJvm> it = todo.iterator(); it.hasNext(); ) {
                 WorkerJvm jvm = it.next();
 
                 if (hasExited(jvm)) {
-                    String message = format("Startup failure: worker on host %s failed during startup, "
-                                    + "check '%s/out.log' for more info",
-                            getHostAddress(), jvm.workerHome
-                    );
-                    throw new SpawnWorkerFailedException(message);
+                    throw new SpawnWorkerFailedException(format("Startup failure: worker on host %s failed during startup,"
+                            + " check '%s/out.log' for more information!", agent.getPublicAddress(), jvm.workerHome));
                 }
 
                 String address = readAddress(jvm);
@@ -231,7 +227,7 @@ public class WorkerJvmLauncher {
 
         throw new SpawnWorkerFailedException(format(
                 "Timeout: workers %s of testsuite %s on host %s didn't start within %s seconds",
-                sb, agent.getTestSuite().id, getHostAddress(),
+                sb, agent.getTestSuite().id, agent.getPublicAddress(),
                 workerTimeoutSec));
     }
 
