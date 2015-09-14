@@ -19,27 +19,103 @@ import com.hazelcast.simulator.worker.WorkerType;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-@SuppressWarnings("checkstyle:visibilitymodifier")
 public class WorkerJvm {
 
-    public final BlockingQueue<CommandRequest> commandQueue = new LinkedBlockingQueue<CommandRequest>();
+    private final BlockingQueue<CommandRequest> commandQueue = new LinkedBlockingQueue<CommandRequest>();
 
-    public final String id;
-    public File workerHome;
-    public Process process;
+    private final String id;
+    private final int index;
+    private final int port;
 
-    public WorkerType type;
-    public volatile String memberAddress;
-    public volatile long lastSeen = System.currentTimeMillis();
-    public volatile boolean detectFailure = true;
+    private final File workerHome;
+    private final WorkerType type;
 
-    public volatile boolean oomeDetected;
+    private volatile long lastSeen = System.currentTimeMillis();
+    private volatile boolean detectFailure = true;
 
-    public WorkerJvm(String id) {
+    private volatile boolean oomeDetected;
+
+    private volatile Process process;
+    private volatile String memberAddress;
+
+    public WorkerJvm(String id, int index, int port, File workerHome, WorkerType type) {
         this.id = id;
+        this.index = index;
+        this.port = port;
+        this.workerHome = workerHome;
+        this.type = type;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public File getWorkerHome() {
+        return workerHome;
+    }
+
+    public WorkerType getType() {
+        return type;
+    }
+
+    public long getLastSeen() {
+        return lastSeen;
+    }
+
+    public void updateLastSeen() {
+        this.lastSeen = System.currentTimeMillis();
+    }
+
+    public boolean shouldDetectFailure() {
+        return detectFailure;
+    }
+
+    public void stopDetectFailure() {
+        this.detectFailure = false;
+    }
+
+    public boolean isOomeDetected() {
+        return oomeDetected;
+    }
+
+    public void setOomeDetected() {
+        this.oomeDetected = true;
+    }
+
+    public Process getProcess() {
+        return process;
+    }
+
+    public void setProcess(Process process) {
+        this.process = process;
+    }
+
+    public String getMemberAddress() {
+        return memberAddress;
+    }
+
+    public void setMemberAddress(String memberAddress) {
+        this.memberAddress = memberAddress;
+    }
+
+    public void addCommandRequest(CommandRequest request) {
+        commandQueue.add(request);
+    }
+
+    public void drainCommandRequests(List<CommandRequest> commands) {
+        commandQueue.drainTo(commands);
     }
 
     @Override

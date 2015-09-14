@@ -193,7 +193,7 @@ public class WorkerJvmManager {
                     EmptyStatement.ignore(null);
                 }
             } else if (message.disableMemberFailureDetection()) {
-                workerJvm.detectFailure = false;
+                workerJvm.stopDetectFailure();
             }
         }
     }
@@ -213,7 +213,7 @@ public class WorkerJvmManager {
         Map<WorkerJvm, CommandFuture> futures = new HashMap<WorkerJvm, CommandFuture>();
 
         for (WorkerJvm workerJvm : workers) {
-            if (workerJvm.oomeDetected) {
+            if (workerJvm.isOomeDetected()) {
                 continue;
             }
 
@@ -225,7 +225,7 @@ public class WorkerJvmManager {
                 futureMap.put(request.id, future);
                 futures.put(workerJvm, future);
             }
-            workerJvm.commandQueue.add(request);
+            workerJvm.addCommandRequest(request);
         }
 
         List<Object> results = new LinkedList<Object>();
@@ -253,8 +253,8 @@ public class WorkerJvmManager {
         failure.type = Failure.Type.WORKER_EXCEPTION;
         failure.message = e.getMessage();
         failure.agentAddress = agent.getPublicAddress();
-        failure.workerAddress = workerJvm.memberAddress;
-        failure.workerId = workerJvm.id;
+        failure.workerAddress = workerJvm.getMemberAddress();
+        failure.workerId = workerJvm.getId();
         failure.testSuite = agent.getTestSuite();
         failure.cause = throwableToString(e);
         agent.getWorkerJvmFailureMonitor().publish(failure);
@@ -286,14 +286,14 @@ public class WorkerJvmManager {
     }
 
     public void terminateWorker(final WorkerJvm jvm) {
-        workerJVMs.remove(jvm.id);
+        workerJVMs.remove(jvm.getId());
 
         Thread t = new Thread() {
             public void run() {
                 try {
                     // this sends SIGTERM on *nix
-                    jvm.process.destroy();
-                    jvm.process.waitFor();
+                    jvm.getProcess().destroy();
+                    jvm.getProcess().waitFor();
                 } catch (Throwable e) {
                     LOGGER.fatal("Failed to destroy worker process: " + jvm);
                 }
@@ -327,7 +327,7 @@ public class WorkerJvmManager {
     private List<WorkerJvm> getWorkersWithWorkerType(Iterable<WorkerJvm> source, WorkerType type) {
         List<WorkerJvm> result = new ArrayList<WorkerJvm>();
         for (WorkerJvm workerJvm : source) {
-            if (workerJvm.type == type) {
+            if (workerJvm.getType() == type) {
                 result.add(workerJvm);
             }
         }
@@ -385,10 +385,10 @@ public class WorkerJvmManager {
                         LOGGER.warn("No worker JVM found for id: " + workerId);
                         result = new TerminateWorkerException();
                     } else {
-                        workerJvm.lastSeen = System.currentTimeMillis();
+                        workerJvm.updateLastSeen();
                         if (SERVICE_POLL_WORK.equals(service)) {
                             List<CommandRequest> commands = new LinkedList<CommandRequest>();
-                            workerJvm.commandQueue.drainTo(commands);
+                            workerJvm.drainCommandRequests(commands);
                             result = commands;
                         } else if (COMMAND_PUSH_RESPONSE.equals(service)) {
                             CommandResponse response = (CommandResponse) in.readObject();

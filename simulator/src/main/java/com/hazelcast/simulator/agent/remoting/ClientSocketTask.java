@@ -98,7 +98,7 @@ class ClientSocketTask implements Runnable {
                 List<String> workerJvmIds = new ArrayList<String>();
                 Collection<WorkerJvm> workerJVMs = agent.getWorkerJvmManager().getWorkerJVMs();
                 for (WorkerJvm workerJvm : workerJVMs) {
-                    workerJvmIds.add(workerJvm.id);
+                    workerJvmIds.add(workerJvm.getId());
                 }
                 result = workerJvmIds;
                 break;

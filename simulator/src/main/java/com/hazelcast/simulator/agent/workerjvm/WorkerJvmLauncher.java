@@ -2,6 +2,7 @@ package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.SpawnWorkerFailedException;
+import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -34,23 +35,25 @@ public class WorkerJvmLauncher {
     private static final String CLASSPATH = System.getProperty("java.class.path");
     private static final File SIMULATOR_HOME = getSimulatorHome();
     private static final String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
-    private static final AtomicLong WORKER_ID_GENERATOR = new AtomicLong();
+    private static final AtomicInteger WORKER_INDEX_GENERATOR = new AtomicInteger();
     private static final String WORKERS_PATH = getSimulatorHome().getAbsolutePath() + "/workers";
 
+    private final List<WorkerJvm> workersInProgress = new LinkedList<WorkerJvm>();
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
-    private final WorkerJvmSettings settings;
+
     private final Agent agent;
     private final ConcurrentMap<String, WorkerJvm> workerJVMs;
+    private final WorkerJvmSettings settings;
+
     private File memberHzConfigFile;
     private File clientHzConfigFile;
     private File log4jFile;
-    private final List<WorkerJvm> workersInProgress = new LinkedList<WorkerJvm>();
     private File testSuiteDir;
 
     public WorkerJvmLauncher(Agent agent, ConcurrentMap<String, WorkerJvm> workerJVMs, WorkerJvmSettings settings) {
-        this.settings = settings;
-        this.workerJVMs = workerJVMs;
         this.agent = agent;
+        this.workerJVMs = workerJVMs;
+        this.settings = settings;
     }
 
     public void launch() throws Exception {
@@ -93,16 +96,17 @@ public class WorkerJvmLauncher {
     }
 
     private WorkerJvm startWorkerJvm(WorkerType type) throws IOException {
-        String workerId = "worker-" + agent.getPublicAddress() + "-" + WORKER_ID_GENERATOR.incrementAndGet() + "-" + type;
+        int workerIndex = WORKER_INDEX_GENERATOR.incrementAndGet();
+        int workerPort = Ports.WORKER_START_PORT + workerIndex;
+        String workerId = "worker-" + agent.getPublicAddress() + "-" + workerIndex + "-" + type;
         File workerHome = new File(testSuiteDir, workerId);
         ensureExistingDirectory(workerHome);
 
         String javaHome = getJavaHome(settings.javaVendor, settings.javaVersion);
 
-        WorkerJvm workerJvm = new WorkerJvm(workerId);
-        workerJvm.workerHome = workerHome;
+        WorkerJvm workerJvm = new WorkerJvm(workerId, workerIndex, workerPort, workerHome, type);
 
-        generateWorkerStartScript(type, workerJvm);
+        generateWorkerStartScript(type, workerJvm, workerIndex, workerPort);
 
         ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"bash", "worker.sh"})
                 .directory(workerHome)
@@ -116,10 +120,10 @@ public class WorkerJvmLauncher {
         Process process = processBuilder.start();
         File logFile = new File(workerHome, "out.log");
         new WorkerJvmProcessOutputGobbler(process.getInputStream(), new FileOutputStream(logFile)).start();
-        workerJvm.process = process;
-        workerJvm.type = type;
+        workerJvm.setProcess(process);
         copyResourcesToWorkerId(workerId);
         workerJVMs.put(workerId, workerJvm);
+
         return workerJvm;
     }
 
@@ -132,15 +136,15 @@ public class WorkerJvmLauncher {
 
                 if (hasExited(jvm)) {
                     throw new SpawnWorkerFailedException(format("Startup failure: worker on host %s failed during startup,"
-                            + " check '%s/out.log' for more information!", agent.getPublicAddress(), jvm.workerHome));
+                            + " check '%s/out.log' for more information!", agent.getPublicAddress(), jvm.getWorkerHome()));
                 }
 
                 String address = readAddress(jvm);
                 if (address != null) {
-                    jvm.memberAddress = address;
+                    jvm.setMemberAddress(address);
 
                     iterator.remove();
-                    LOGGER.info(format("Worker: %s Started %s of %s", jvm.id, workers.size() - todo.size(), workers.size()));
+                    LOGGER.info(format("Worker: %s Started %s of %s", jvm.getId(), workers.size() - todo.size(), workers.size()));
                 }
             }
 
@@ -163,9 +167,9 @@ public class WorkerJvmLauncher {
         return javaHome;
     }
 
-    private void generateWorkerStartScript(WorkerType type, WorkerJvm workerJvm) {
-        String[] args = buildArgs(workerJvm, type);
-        File startScript = new File(workerJvm.workerHome, "worker.sh");
+    private void generateWorkerStartScript(WorkerType type, WorkerJvm workerJvm, int workerIndex, int workerPort) {
+        String[] args = buildArgs(workerJvm, type, workerIndex, workerPort);
+        File startScript = new File(workerJvm.getWorkerHome(), "worker.sh");
 
         StringBuilder sb = new StringBuilder("#!/bin/bash\n");
         for (String arg : args) {
@@ -196,7 +200,7 @@ public class WorkerJvmLauncher {
 
     private boolean hasExited(WorkerJvm workerJvm) {
         try {
-            workerJvm.process.exitValue();
+            workerJvm.getProcess().exitValue();
             return true;
         } catch (IllegalThreadStateException e) {
             return false;
@@ -204,7 +208,7 @@ public class WorkerJvmLauncher {
     }
 
     private String readAddress(WorkerJvm jvm) {
-        File file = new File(jvm.workerHome, "worker.address");
+        File file = new File(jvm.getWorkerHome(), "worker.address");
         if (!file.exists()) {
             return null;
         }
@@ -218,9 +222,9 @@ public class WorkerJvmLauncher {
     private void workerTimeout(int workerTimeoutSec, List<WorkerJvm> todo) {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
-        sb.append(todo.get(0).id);
+        sb.append(todo.get(0).getId());
         for (int i = 1; i < todo.size(); i++) {
-            sb.append(",").append(todo.get(i).id);
+            sb.append(",").append(todo.get(i).getId());
         }
         sb.append("]");
 
@@ -230,7 +234,7 @@ public class WorkerJvmLauncher {
                 workerTimeoutSec));
     }
 
-    private String[] buildArgs(WorkerJvm workerJvm, WorkerType type) {
+    private String[] buildArgs(WorkerJvm workerJvm, WorkerType type, int workerIndex, int workerPort) {
         List<String> args = new LinkedList<String>();
 
         addNumaCtlSettings(args);
@@ -244,9 +248,12 @@ public class WorkerJvmLauncher {
         args.add("-Dlog4j.configuration=file:" + log4jFile.getAbsolutePath());
 
         args.add("-DSIMULATOR_HOME=" + SIMULATOR_HOME);
-        args.add("-DworkerId=" + workerJvm.id);
+        args.add("-DworkerId=" + workerJvm.getId());
         args.add("-DworkerType=" + type);
         args.add("-DpublicAddress=" + agent.getPublicAddress());
+        args.add("-DagentIndex=" + agent.getAddressIndex());
+        args.add("-DworkerIndex=" + workerIndex);
+        args.add("-DworkerPort=" + workerPort);
         args.add("-DautoCreateHZInstances=" + settings.autoCreateHZInstances);
         args.add("-DmemberHzConfigFile=" + memberHzConfigFile.getAbsolutePath());
         args.add("-DclientHzConfigFile=" + clientHzConfigFile.getAbsolutePath());
@@ -278,7 +285,7 @@ public class WorkerJvmLauncher {
             args.add("java");
             String agentSetting = settings.yourkitConfig
                     .replace("${SIMULATOR_HOME}", SIMULATOR_HOME.getAbsolutePath())
-                    .replace("${WORKER_HOME}", workerJvm.workerHome.getAbsolutePath());
+                    .replace("${WORKER_HOME}", workerJvm.getWorkerHome().getAbsolutePath());
             args.add(agentSetting);
         } else if ("hprof".equals(profiler)) {
             args.add("java");

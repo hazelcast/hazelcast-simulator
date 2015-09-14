@@ -65,6 +65,10 @@ public class Agent {
         this.cloudCredential = cloudCredential;
     }
 
+    public int getAddressIndex() {
+        return addressIndex;
+    }
+
     public String getPublicAddress() {
         return publicAddress;
     }

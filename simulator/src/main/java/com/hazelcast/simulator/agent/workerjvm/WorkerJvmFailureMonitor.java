@@ -62,7 +62,7 @@ public class WorkerJvmFailureMonitor {
         WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
 
         for (WorkerJvm jvm : workerJvmManager.getWorkerJVMs()) {
-            if (jvm.detectFailure) {
+            if (jvm.shouldDetectFailure()) {
                 detectFailuresInJvm(jvm);
             }
         }
@@ -82,24 +82,24 @@ public class WorkerJvmFailureMonitor {
     private void detectInactivity(WorkerJvm jvm, List<Failure> failures) {
         long now = System.currentTimeMillis();
 
-        if (jvm.oomeDetected) {
+        if (jvm.isOomeDetected()) {
             return;
         }
 
-        if (now - LAST_SEEN_TIMEOUT_MILLIS > jvm.lastSeen) {
+        if (now - LAST_SEEN_TIMEOUT_MILLIS > jvm.getLastSeen()) {
             Failure failure = new Failure();
             failure.message = "Worker has not contacted agent for a too long period.";
             failure.type = Failure.Type.WORKER_TIMEOUT;
             failure.agentAddress = agent.getPublicAddress();
-            failure.workerAddress = jvm.memberAddress;
-            failure.workerId = jvm.id;
+            failure.workerAddress = jvm.getMemberAddress();
+            failure.workerId = jvm.getId();
             failure.testSuite = agent.getTestSuite();
             failures.add(failure);
         }
     }
 
     private void detectExceptions(WorkerJvm workerJvm, List<Failure> failures) {
-        File workerHome = workerJvm.workerHome;
+        File workerHome = workerJvm.getWorkerHome();
         if (!workerHome.exists()) {
             return;
         }
@@ -129,8 +129,8 @@ public class WorkerJvmFailureMonitor {
             failure.message = "Worked ran into an unhandled exception";
             failure.type = Failure.Type.WORKER_EXCEPTION;
             failure.agentAddress = agent.getPublicAddress();
-            failure.workerAddress = workerJvm.memberAddress;
-            failure.workerId = workerJvm.id;
+            failure.workerAddress = workerJvm.getMemberAddress();
+            failure.workerId = workerJvm.getId();
             failure.testId = testId;
             failure.testSuite = agent.getTestSuite();
             failure.cause = cause;
@@ -147,7 +147,7 @@ public class WorkerJvmFailureMonitor {
 
     private void detectOomeFailure(WorkerJvm jvm, List<Failure> failures) {
         // once the failure is detected, we don't need to detect it again.
-        if (jvm.oomeDetected) {
+        if (jvm.isOomeDetected()) {
             return;
         }
 
@@ -155,20 +155,20 @@ public class WorkerJvmFailureMonitor {
             return;
         }
 
-        jvm.oomeDetected = true;
+        jvm.setOomeDetected();
 
         Failure failure = new Failure();
         failure.message = "Worker ran into an Out Of Memory Error";
         failure.type = Failure.Type.WORKER_OOM;
         failure.agentAddress = agent.getPublicAddress();
-        failure.workerAddress = jvm.memberAddress;
-        failure.workerId = jvm.id;
+        failure.workerAddress = jvm.getMemberAddress();
+        failure.workerId = jvm.getId();
         failure.testSuite = agent.getTestSuite();
         failures.add(failure);
     }
 
     private boolean isOomeFound(WorkerJvm jvm) {
-        File oomeFile = new File(jvm.workerHome, "worker.oome");
+        File oomeFile = new File(jvm.getWorkerHome(), "worker.oome");
         if (oomeFile.exists()) {
             return true;
         }
@@ -176,7 +176,7 @@ public class WorkerJvmFailureMonitor {
         // if we find the hprof file, we also know there is an OOME. The problem with the worker.oome file is that it is created
         // after the heap dump is done, and creating the heap dump can take a lot of time. And then the system could think there
         // is another problem (e.g. lack of inactivity; or timeouts). This hides the OOME.
-        String[] hprofFiles = jvm.workerHome.list(new HProfExtFilter());
+        String[] hprofFiles = jvm.getWorkerHome().list(new HProfExtFilter());
         if (hprofFiles == null) {
             return false;
         }
@@ -184,11 +184,11 @@ public class WorkerJvmFailureMonitor {
     }
 
     private void detectUnexpectedExit(WorkerJvm jvm, List<Failure> failures) {
-        if (jvm.oomeDetected) {
+        if (jvm.isOomeDetected()) {
             return;
         }
 
-        Process process = jvm.process;
+        Process process = jvm.getProcess();
         int exitCode;
         try {
             exitCode = process.exitValue();
@@ -208,8 +208,8 @@ public class WorkerJvmFailureMonitor {
         failure.message = format("Worker terminated with exit code %d instead of 0", exitCode);
         failure.type = Failure.Type.WORKER_EXIT;
         failure.agentAddress = agent.getPublicAddress();
-        failure.workerAddress = jvm.memberAddress;
-        failure.workerId = jvm.id;
+        failure.workerAddress = jvm.getMemberAddress();
+        failure.workerId = jvm.getId();
         failure.testSuite = agent.getTestSuite();
         failures.add(failure);
     }

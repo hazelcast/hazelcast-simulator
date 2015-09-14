@@ -24,6 +24,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
@@ -42,6 +43,8 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeObject;
+import static java.lang.Boolean.parseBoolean;
+import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
 public final class MemberWorker {
@@ -61,9 +64,10 @@ public final class MemberWorker {
 
     private final WorkerSocketProcessor workerSocketProcessor;
     private final WorkerCommandRequestProcessor workerCommandRequestProcessor;
+    private final WorkerConnector workerConnector;
 
-    private MemberWorker(String workerId, WorkerType type, String publicAddress, boolean autoCreateHZInstances,
-                         String memberHzConfigFile, String clientHzConfigFile) throws Exception {
+    private MemberWorker(String workerId, WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort,
+                         boolean autoCreateHZInstances, String memberHzConfigFile, String clientHzConfigFile) throws Exception {
         this.type = type;
         this.publicAddress = publicAddress;
 
@@ -79,6 +83,9 @@ public final class MemberWorker {
         this.workerSocketProcessor = new WorkerSocketProcessor(requestQueue, responseQueue, workerId);
         this.workerCommandRequestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue, type,
                 hazelcastInstance);
+
+        workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort);
+        workerConnector.start();
 
         signalStartToAgent(hazelcastInstance);
     }
@@ -108,6 +115,7 @@ public final class MemberWorker {
 
     private void stop() {
         LOGGER.info("Stopping threads...");
+        workerConnector.shutdown();
         workerSocketProcessor.shutdown();
         workerCommandRequestProcessor.shutdown();
     }
@@ -181,8 +189,17 @@ public final class MemberWorker {
             String publicAddress = System.getProperty("publicAddress");
             LOGGER.info("Public address: " + publicAddress);
 
-            boolean autoCreateHZInstances = Boolean.parseBoolean(System.getProperty("autoCreateHZInstances", "true"));
-            LOGGER.info("autoCreateHZInstances :" + autoCreateHZInstances);
+            int agentIndex = parseInt(System.getProperty("agentIndex"));
+            LOGGER.info("Agent index: " + agentIndex);
+
+            int workerIndex = parseInt(System.getProperty("workerIndex"));
+            LOGGER.info("Worker index: " + workerIndex);
+
+            int workerPort = parseInt(System.getProperty("workerPort"));
+            LOGGER.info("Worker port: " + workerPort);
+
+            boolean autoCreateHZInstances = parseBoolean(System.getProperty("autoCreateHZInstances", "true"));
+            LOGGER.info("autoCreateHZInstances: " + autoCreateHZInstances);
 
             String memberHzConfigFile = System.getProperty("memberHzConfigFile");
             LOGGER.info("Hazelcast member config file: " + memberHzConfigFile);
@@ -192,8 +209,8 @@ public final class MemberWorker {
             LOGGER.info("Hazelcast client config file: " + clientHzConfigFile);
             LOGGER.info(fileAsText(new File(clientHzConfigFile)));
 
-            MemberWorker worker = new MemberWorker(workerId, type, publicAddress, autoCreateHZInstances,
-                    memberHzConfigFile, clientHzConfigFile);
+            MemberWorker worker = new MemberWorker(workerId, type, publicAddress, agentIndex, workerIndex, workerPort,
+                    autoCreateHZInstances, memberHzConfigFile, clientHzConfigFile);
 
             registerLog4jShutdownHandler(worker);
 
