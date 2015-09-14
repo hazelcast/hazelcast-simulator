@@ -2,30 +2,27 @@ package com.hazelcast.simulator.protocol.configuration;
 
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 
 import java.util.concurrent.ConcurrentMap;
 
-@SuppressWarnings("checkstyle:visibilitymodifier")
 abstract class AbstractClientConfiguration implements ClientConfiguration {
 
-    final OperationProcessor processor;
-    final ConcurrentMap<String, ResponseFuture> futureMap;
+    private final ConcurrentMap<String, ResponseFuture> futureMap;
 
-    final SimulatorAddress localAddress;
-    final SimulatorAddress remoteAddress;
+    private final SimulatorAddress localAddress;
+    private final SimulatorAddress remoteAddress;
 
     private final int remoteIndex;
     private final String remoteHost;
     private final int remotePort;
 
-    AbstractClientConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
-                                SimulatorAddress localAddress, int remoteIndex, String remoteHost, int remotePort) {
-        this.processor = processor;
+    AbstractClientConfiguration(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress,
+                                int remoteIndex, String remoteHost, int remotePort) {
         this.futureMap = futureMap;
 
         this.localAddress = localAddress;
         this.remoteAddress = localAddress.getChild(remoteIndex);
+
         this.remoteIndex = remoteIndex;
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;

@@ -24,12 +24,20 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
  */
 public class AgentServerConfiguration extends AbstractServerConfiguration {
 
-    private final ChannelCollectorHandler channelCollectorHandler = new ChannelCollectorHandler();
-    private final ForwardToWorkerHandler forwardToWorkerHandler = new ForwardToWorkerHandler(localAddress);
+    private final SimulatorAddress localAddress;
+    private final OperationProcessor processor;
+
+    private final ChannelCollectorHandler channelCollectorHandler;
+    private final ForwardToWorkerHandler forwardToWorkerHandler;
 
     public AgentServerConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
                                     SimulatorAddress localAddress, int port) {
-        super(processor, futureMap, localAddress, port);
+        super(futureMap, localAddress, port);
+        this.localAddress = localAddress;
+        this.processor = processor;
+
+        this.channelCollectorHandler = new ChannelCollectorHandler();
+        this.forwardToWorkerHandler = new ForwardToWorkerHandler(localAddress);
     }
 
     @Override
@@ -46,7 +54,8 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("forwardToWorkerHandler", forwardToWorkerHandler);
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
-        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, COORDINATOR, futureMap, addressIndex));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, COORDINATOR, getFutureMap(),
+                getLocalAddressIndex()));
     }
 
     public void addWorker(int workerIndex, ClientConnector clientConnector) {
@@ -58,7 +67,7 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     }
 
     public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort) {
-        return new AgentClientConfiguration(processor, futureMap, localAddress,
+        return new AgentClientConfiguration(processor, getFutureMap(), localAddress,
                 workerIndex, workerHost, workerPort, getChannelGroup());
     }
 }

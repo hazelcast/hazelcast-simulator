@@ -15,18 +15,24 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CoordinatorClientConfiguration extends AbstractClientConfiguration {
 
+    private final SimulatorAddress localAddress;
+
+    private final MessageConsumeHandler messageConsumeHandler;
+
     public CoordinatorClientConfiguration(OperationProcessor processor, int agentIndex, String agentHost, int agentPort) {
-        super(processor, new ConcurrentHashMap<String, ResponseFuture>(), SimulatorAddress.COORDINATOR,
-                agentIndex, agentHost, agentPort);
+        super(new ConcurrentHashMap<String, ResponseFuture>(), SimulatorAddress.COORDINATOR, agentIndex, agentHost, agentPort);
+        this.localAddress = SimulatorAddress.COORDINATOR;
+
+        this.messageConsumeHandler = new MessageConsumeHandler(localAddress, processor);
     }
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
-        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, remoteAddress));
+        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, getRemoteAddress()));
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, remoteAddress, futureMap));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, getRemoteAddress(), getFutureMap()));
+        pipeline.addLast("messageConsumeHandler", messageConsumeHandler);
     }
 }

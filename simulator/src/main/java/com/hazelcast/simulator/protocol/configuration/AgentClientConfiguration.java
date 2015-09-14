@@ -17,23 +17,29 @@ import java.util.concurrent.ConcurrentMap;
 
 public class AgentClientConfiguration extends AbstractClientConfiguration {
 
+    private final SimulatorAddress localAddress;
     private final ChannelGroup channelGroup;
+
+    private final MessageConsumeHandler messageConsumeHandler;
 
     public AgentClientConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
                                     SimulatorAddress localAddress, int workerIndex, String workerHost, int workerPort,
                                     ChannelGroup channelGroup) {
-        super(processor, futureMap, localAddress, workerIndex, workerHost, workerPort);
+        super(futureMap, localAddress, workerIndex, workerHost, workerPort);
+        this.localAddress = localAddress;
         this.channelGroup = channelGroup;
+
+        this.messageConsumeHandler = new MessageConsumeHandler(localAddress, processor);
     }
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
-        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, remoteAddress));
+        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, getRemoteAddress()));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("forwardToCoordinatorHandler", new ForwardToCoordinatorHandler(localAddress, channelGroup));
-        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, remoteAddress, futureMap));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, getRemoteAddress(), getFutureMap()));
+        pipeline.addLast("messageConsumeHandler", messageConsumeHandler);
     }
 }

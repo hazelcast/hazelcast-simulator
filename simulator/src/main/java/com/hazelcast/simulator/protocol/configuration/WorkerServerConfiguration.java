@@ -21,12 +21,20 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class WorkerServerConfiguration extends AbstractServerConfiguration {
 
-    private final ChannelCollectorHandler channelCollectorHandler = new ChannelCollectorHandler();
-    private final MessageTestConsumeHandler messageTestConsumeHandler = new MessageTestConsumeHandler(localAddress);
+    private final SimulatorAddress localAddress;
+
+    private final ChannelCollectorHandler channelCollectorHandler;
+    private final MessageConsumeHandler messageConsumeHandler;
+    private final MessageTestConsumeHandler messageTestConsumeHandler;
 
     public WorkerServerConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
                                      SimulatorAddress localAddress, int port) {
-        super(processor, futureMap, localAddress, port);
+        super(futureMap, localAddress, port);
+        this.localAddress = localAddress;
+
+        this.channelCollectorHandler = new ChannelCollectorHandler();
+        this.messageConsumeHandler = new MessageConsumeHandler(localAddress, processor);
+        this.messageTestConsumeHandler = new MessageTestConsumeHandler(localAddress);
     }
 
     @Override
@@ -41,10 +49,11 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
         pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("messageConsumeHandler", messageConsumeHandler);
         pipeline.addLast("testProtocolDecoder", new SimulatorProtocolDecoder(localAddress.getChild(0)));
         pipeline.addLast("testMessageConsumeHandler", messageTestConsumeHandler);
-        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, localAddress.getParent(), futureMap, addressIndex));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, localAddress.getParent(), getFutureMap(),
+                getLocalAddressIndex()));
     }
 
     public void addTest(int testIndex, OperationProcessor processor) {
