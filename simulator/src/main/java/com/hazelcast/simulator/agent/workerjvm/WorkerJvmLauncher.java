@@ -126,10 +126,10 @@ public class WorkerJvmLauncher {
 
     private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) {
         List<WorkerJvm> todo = new ArrayList<WorkerJvm>(workers);
-
         for (int i = 0; i < workerTimeoutSec; i++) {
-            for (Iterator<WorkerJvm> it = todo.iterator(); it.hasNext(); ) {
-                WorkerJvm jvm = it.next();
+            Iterator<WorkerJvm> iterator = todo.iterator();
+            while (iterator.hasNext()) {
+                WorkerJvm jvm = iterator.next();
 
                 if (hasExited(jvm)) {
                     throw new SpawnWorkerFailedException(format("Startup failure: worker on host %s failed during startup,"
@@ -140,7 +140,7 @@ public class WorkerJvmLauncher {
                 if (address != null) {
                     jvm.memberAddress = address;
 
-                    it.remove();
+                    iterator.remove();
                     LOGGER.info(format("Worker: %s Started %s of %s", jvm.id, workers.size() - todo.size(), workers.size()));
                 }
             }
