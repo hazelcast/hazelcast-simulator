@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol;
 
+import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
@@ -31,6 +32,7 @@ import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ProtocolUtil {
 
@@ -129,7 +131,10 @@ public class ProtocolUtil {
     }
 
     static AgentConnector startAgent(int addressIndex, int port, String workerHost, int workerStartPort, int numberOfWorkers) {
-        AgentConnector agentConnector = AgentConnector.createInstance(addressIndex, port);
+        Agent agent = mock(Agent.class);
+        when(agent.getAddressIndex()).thenReturn(addressIndex);
+
+        AgentConnector agentConnector = AgentConnector.createInstance(agent, null, port);
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
             agentConnector.addWorker(workerIndex, workerHost, workerStartPort + workerIndex);
         }

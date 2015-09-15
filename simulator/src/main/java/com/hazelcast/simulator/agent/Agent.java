@@ -17,6 +17,7 @@ package com.hazelcast.simulator.agent;
 
 import com.hazelcast.simulator.agent.remoting.AgentMessageProcessor;
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.coordinator.Coordinator;
@@ -29,6 +30,8 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
@@ -42,7 +45,8 @@ public class Agent {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
-    private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this);
+    private final ConcurrentMap<String, WorkerJvm> workerJVMs = new ConcurrentHashMap<String, WorkerJvm>();
+    private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this, workerJVMs);
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
 
     private final int addressIndex;
@@ -110,7 +114,7 @@ public class Agent {
     void start() {
         ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
 
-        agentConnector = AgentConnector.createInstance(addressIndex, Ports.AGENT_PORT);
+        agentConnector = AgentConnector.createInstance(this, workerJVMs, Ports.AGENT_PORT);
         agentConnector.start();
 
         startRestServer();

@@ -73,7 +73,7 @@ public class WorkerJvmManager {
 
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmManager.class);
 
-    private final ConcurrentMap<String, WorkerJvm> workerJVMs = new ConcurrentHashMap<String, WorkerJvm>();
+    private final ConcurrentMap<String, WorkerJvm> workerJVMs;
     private final Agent agent;
 
     private final ConcurrentMap<Long, CommandFuture<Object>> futureMap = new ConcurrentHashMap<Long, CommandFuture<Object>>();
@@ -85,8 +85,9 @@ public class WorkerJvmManager {
 
     private ServerSocket serverSocket;
 
-    public WorkerJvmManager(Agent agent) {
+    public WorkerJvmManager(Agent agent, ConcurrentMap<String, WorkerJvm> workerJVMs) {
         this.agent = agent;
+        this.workerJVMs = workerJVMs;
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {

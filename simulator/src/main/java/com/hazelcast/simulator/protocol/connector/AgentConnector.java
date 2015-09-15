@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.agent.Agent;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
@@ -28,14 +30,15 @@ public final class AgentConnector extends AbstractServerConnector {
     /**
      * Creates an {@link AgentConnector} instance.
      *
-     * @param addressIndex the index of this Simulator Agent
-     * @param port         the port for incoming connections
+     * @param agent      instance of this Simulator Agent
+     * @param workerJVMs map of WorkerJVM instances
+     * @param port       the port for incoming connections
      */
-    public static AgentConnector createInstance(int addressIndex, int port) {
-        SimulatorAddress localAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
+    public static AgentConnector createInstance(Agent agent, ConcurrentMap<String, WorkerJvm> workerJVMs, int port) {
+        SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, ExceptionType.AGENT_EXCEPTION);
-        AgentOperationProcessor processor = new AgentOperationProcessor(exceptionLogger);
+        AgentOperationProcessor processor = new AgentOperationProcessor(exceptionLogger, agent, workerJVMs);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
         AgentServerConfiguration configuration = new AgentServerConfiguration(processor, futureMap, localAddress, port);

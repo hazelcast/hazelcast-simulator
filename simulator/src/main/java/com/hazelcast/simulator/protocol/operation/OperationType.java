@@ -12,20 +12,19 @@ public enum OperationType {
 
     INTEGRATION_TEST(IntegrationTestOperation.class, 0),
 
-    //CREATE_AGENT(IntegrationTestOperation.class, 1),
-    //CREATE_WORKER(IntegrationTestOperation.class, 2),
-    CREATE_TEST(CreateTestOperation.class, 3),
+    CREATE_WORKER(CreateWorkerOperation.class, 1),
+    CREATE_TEST(CreateTestOperation.class, 2),
 
+    LOG(LogOperation.class, 3),
     EXCEPTION(ExceptionOperation.class, 4),
-    LOG(LogOperation.class, 5),
 
-    IS_PHASE_COMPLETED(IsPhaseCompletedOperation.class, 6),
+    IS_PHASE_COMPLETED(IsPhaseCompletedOperation.class, 5),
 
-    START_TEST_PHASE(StartTestPhaseOperation.class, 7),
+    START_TEST_PHASE(StartTestPhaseOperation.class, 6),
 
-    START_TEST(StartTestOperation.class, 8),
+    START_TEST(StartTestOperation.class, 7),
 
-    STOP_TEST(StopTestOperation.class, 9);
+    STOP_TEST(StopTestOperation.class, 8);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;

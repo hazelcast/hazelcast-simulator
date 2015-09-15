@@ -20,7 +20,7 @@ public class AgentOperationProcessorTest {
 
     @Before
     public void setUp() {
-        processor = new AgentOperationProcessor(exceptionLogger);
+        processor = new AgentOperationProcessor(exceptionLogger, null, null);
     }
 
     @Test
