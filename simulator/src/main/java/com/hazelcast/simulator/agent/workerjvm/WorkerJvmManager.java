@@ -54,9 +54,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static java.lang.String.format;
 
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class WorkerJvmManager {
@@ -148,8 +150,8 @@ public class WorkerJvmManager {
         } else if (MessageAddress.RANDOM_WORKER_WITH_MEMBER.equals(workerAddress)) {
             sendMessageToRandomWorkerWithClusterMember(message);
         } else {
-            throw new UnsupportedOperationException("Unsupported addressing mode for worker '" + workerAddress + "'. "
-                    + "Full address: '" + message.getMessageAddress() + "'.");
+            throw new UnsupportedOperationException(format("Unsupported addressing mode for worker '%s' (full address '%s')",
+                    workerAddress, message.getMessageAddress()));
         }
     }
 
@@ -265,11 +267,9 @@ public class WorkerJvmManager {
 
     public void terminateWorkers() {
         LOGGER.info("Terminating workers");
-
         for (WorkerJvm jvm : new LinkedList<WorkerJvm>(workerJVMs.values())) {
             terminateWorker(jvm);
         }
-
         LOGGER.info("Finished terminating workers");
     }
 
@@ -350,11 +350,13 @@ public class WorkerJvmManager {
 
         @Override
         public void run() {
+            ObjectOutputStream out = null;
+            ObjectInputStream in = null;
             try {
-                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                out = new ObjectOutputStream(clientSocket.getOutputStream());
                 out.flush();
 
-                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                in = new ObjectInputStream(clientSocket.getInputStream());
                 String service = (String) in.readObject();
                 String workerId = (String) in.readObject();
                 WorkerJvm workerJvm = workerJVMs.get(workerId);
@@ -397,6 +399,9 @@ public class WorkerJvmManager {
                 LOGGER.fatal("ClassNotFoundException in WorkerJvmManager", e);
             } catch (IOException e) {
                 LOGGER.fatal("IOException in WorkerJvmManager", e);
+            } finally {
+                closeQuietly(in);
+                closeQuietly(out);
             }
         }
     }
