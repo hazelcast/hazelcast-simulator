@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.tests.map.domain;
 
+@SuppressWarnings("unused")
 public interface DomainObject {
 
     String getKey();
