@@ -5,79 +5,73 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.*;
-import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static java.lang.String.format;
+import static org.junit.Assert.fail;
 
 public class LeaseLockTest {
 
     private static final ILogger LOGGER = Logger.getLogger(LeaseLockTest.class);
 
-    public String basename = this.getClass().getSimpleName();
+    public String basename = LeaseLockTest.class.getSimpleName();
     public int lockCount = 500;
-    public int maxleaseTime = 100;
-    public int maxTryTime = 100;
-    public int threadCount = 3;
+    public int maxLeaseTimeMillis = 100;
+    public int maxTryTimeMillis = 100;
 
     private HazelcastInstance targetInstance;
-    private TestContext testContext;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
+    public void setup(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
     }
 
-    @Warmup(global = true)
-    public void warmup() throws Exception {}
-
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
-    private class Worker implements Runnable {
-        private final Random random = new Random();
-
-        public void run() {
-            while (!testContext.isStopped()) {
-                int i = random.nextInt(lockCount);
-                ILock lock = targetInstance.getLock(basename+i);
-
-                int lease = 1 + random.nextInt(maxleaseTime);
-                int tryTime = 1 + random.nextInt(maxTryTime);
-
-                if (random.nextBoolean()) {
-                    lock.lock(lease, TimeUnit.MILLISECONDS);
-                }else {
-                    try {
-                        lock.tryLock(tryTime, TimeUnit.MILLISECONDS, lease, TimeUnit.MILLISECONDS);
-                    } catch (InterruptedException e) {
-                        LOGGER.info("try lock throws"+e);
-                    }
-                }
-            }
-        }
-    }
-
     @Verify
-    public void verify() throws Exception {
-        Thread.sleep( (maxTryTime + maxleaseTime) * 2 );
+    public void verify() {
+        sleepMillis((maxTryTimeMillis + maxLeaseTimeMillis) * 2);
 
-        for(int i=0; i<lockCount; i++){
-            ILock lock = targetInstance.getLock(basename+i);
+        for (int i = 0; i < lockCount; i++) {
+            ILock lock = targetInstance.getLock(basename + i);
 
-            if (lock.isLocked()){
-                throw new Exception(lock+" is locked ! and lease time =" + lock.getRemainingLeaseTime());
+            boolean isLocked = lock.isLocked();
+            long remainingLeaseTime = lock.getRemainingLeaseTime();
+            if (isLocked) {
+                fail(format("%s is locked with remainingLeaseTime: %d ms", lock, remainingLeaseTime));
             }
-            if (lock.getRemainingLeaseTime() > 0){
-                throw new Exception(lock+" has lease time =" + lock.getRemainingLeaseTime() +" and is locked =" + lock.isLocked());
+            if (remainingLeaseTime > 0) {
+                fail(format("%s has remainingLeaseTime: %d ms", lock, remainingLeaseTime));
+            }
+        }
+    }
+
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractMonotonicWorker {
+
+        public void timeStep() {
+            int lockIndex = randomInt(lockCount);
+            ILock lock = targetInstance.getLock(basename + lockIndex);
+
+            int leaseTime = 1 + randomInt(maxLeaseTimeMillis);
+            int tryTime = 1 + randomInt(maxTryTimeMillis);
+
+            if (getRandom().nextBoolean()) {
+                lock.lock(leaseTime, TimeUnit.MILLISECONDS);
+            } else {
+                try {
+                    lock.tryLock(tryTime, TimeUnit.MILLISECONDS, leaseTime, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    LOGGER.info("tryLock() got exception: " + e.getMessage());
+                }
             }
         }
     }
