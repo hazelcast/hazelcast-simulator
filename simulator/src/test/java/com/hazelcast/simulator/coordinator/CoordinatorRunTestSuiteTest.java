@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.impl.OperationsPerSecResult;
@@ -13,14 +13,12 @@ import com.hazelcast.simulator.worker.commands.GetBenchmarkResultsCommand;
 import com.hazelcast.simulator.worker.commands.StopCommand;
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.powermock.reflect.Whitebox;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,7 +47,7 @@ public class CoordinatorRunTestSuiteTest {
     private final TestSuite testSuite = new TestSuite();
 
     @Mock
-    private final WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
+    private final CoordinatorParameters parameters = mock(CoordinatorParameters.class);
 
     @Mock
     private final AgentsClient agentsClient = mock(AgentsClient.class);
@@ -60,8 +58,11 @@ public class CoordinatorRunTestSuiteTest {
     @Mock
     private final PerformanceMonitor performanceMonitor = mock(PerformanceMonitor.class);
 
-    @InjectMocks
     private Coordinator coordinator;
+
+    private boolean parallel = false;
+    private boolean verifyEnabled = true;
+    private boolean monitorPerformance = false;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -74,32 +75,6 @@ public class CoordinatorRunTestSuiteTest {
         System.setProperty("user.dir", userDir);
     }
 
-    @Before
-    public void initMocks() {
-        MockitoAnnotations.initMocks(this);
-
-        List<String> privateAddressList = new ArrayList<String>(1);
-        privateAddressList.add("127.0.0.1");
-
-        TestCase testCase1 = new TestCase("CoordinatorTest1");
-        TestCase testCase2 = new TestCase("CoordinatorTest2");
-
-        testSuite.addTest(testCase1);
-        testSuite.addTest(testCase2);
-
-        coordinator.testSuite = testSuite;
-        coordinator.cooldownSeconds = 0;
-        coordinator.testCaseRunnerSleepPeriod = 3;
-        coordinator.lastTestPhaseToSync = TestPhase.SETUP;
-
-        when(agentsClient.getPublicAddresses()).thenReturn(privateAddressList);
-        when(agentsClient.getAgentCount()).thenReturn(1);
-
-        when(failureMonitor.getFailureCount()).thenReturn(0);
-
-        when(performanceMonitor.getPerformanceNumbers()).thenReturn(" (PerformanceMonitor is mocked)");
-    }
-
     @After
     public void cleanUp() {
         deleteQuiet(new File("probes-" + testSuite.id + "_CoordinatorTest1.xml"));
@@ -108,9 +83,10 @@ public class CoordinatorRunTestSuiteTest {
 
     @Test
     public void runTestSuiteParallel_waitForTestCase_and_duration() throws Exception {
-        coordinator.testSuite.waitForTestCase = true;
-        coordinator.testSuite.durationSeconds = 3;
-        coordinator.parallel = true;
+        testSuite.waitForTestCase = true;
+        testSuite.durationSeconds = 3;
+        parallel = true;
+        initMocks();
 
         coordinator.runTestSuite();
 
@@ -119,10 +95,11 @@ public class CoordinatorRunTestSuiteTest {
 
     @Test
     public void runTestSuiteParallel_waitForTestCase_noVerify() throws Exception {
-        coordinator.testSuite.waitForTestCase = true;
-        coordinator.testSuite.durationSeconds = 0;
-        coordinator.parallel = true;
-        coordinator.verifyEnabled = false;
+        testSuite.waitForTestCase = true;
+        testSuite.durationSeconds = 0;
+        parallel = true;
+        verifyEnabled = false;
+        initMocks();
 
         coordinator.runTestSuite();
 
@@ -131,9 +108,10 @@ public class CoordinatorRunTestSuiteTest {
 
     @Test
     public void runTestSuiteParallel_performanceMonitorEnabled() throws Exception {
-        coordinator.testSuite.durationSeconds = 4;
-        coordinator.parallel = true;
-        coordinator.monitorPerformance = true;
+        testSuite.durationSeconds = 4;
+        parallel = true;
+        monitorPerformance = true;
+        initMocks();
 
         coordinator.runTestSuite();
 
@@ -144,8 +122,9 @@ public class CoordinatorRunTestSuiteTest {
     public void runTestSuiteSequential_hasCriticalFailures() throws Exception {
         when(failureMonitor.hasCriticalFailure(anySetOf(Failure.Type.class))).thenReturn(true);
 
-        coordinator.testSuite.durationSeconds = 4;
-        coordinator.parallel = false;
+        testSuite.durationSeconds = 4;
+        parallel = false;
+        initMocks();
 
         coordinator.runTestSuite();
 
@@ -173,8 +152,9 @@ public class CoordinatorRunTestSuiteTest {
         };
         when(agentsClient.executeOnAllWorkers(isA(GetBenchmarkResultsCommand.class))).thenAnswer(probeResultsAnswer);
 
-        coordinator.testSuite.durationSeconds = 1;
-        coordinator.parallel = false;
+        testSuite.durationSeconds = 1;
+        parallel = false;
+        initMocks();
 
         coordinator.runTestSuite();
 
@@ -185,8 +165,9 @@ public class CoordinatorRunTestSuiteTest {
     public void runTestSuite_getProbeResultsTimeoutException() throws Exception {
         when(agentsClient.executeOnAllWorkers(isA(GetBenchmarkResultsCommand.class))).thenThrow(new TimeoutException());
 
-        coordinator.testSuite.durationSeconds = 1;
-        coordinator.parallel = true;
+        testSuite.durationSeconds = 1;
+        parallel = true;
+        initMocks();
 
         coordinator.runTestSuite();
     }
@@ -195,8 +176,9 @@ public class CoordinatorRunTestSuiteTest {
     public void runTestSuite_stopThreadTimeoutException() throws Exception {
         when(agentsClient.executeOnAllWorkers(isA(StopCommand.class))).thenThrow(new TimeoutException());
 
-        coordinator.testSuite.durationSeconds = 1;
-        coordinator.parallel = true;
+        testSuite.durationSeconds = 1;
+        parallel = true;
+        initMocks();
 
         coordinator.runTestSuite();
     }
@@ -205,12 +187,54 @@ public class CoordinatorRunTestSuiteTest {
     public void runTestSuite_withException() throws Exception {
         when(agentsClient.executeOnAllWorkers(any(Command.class))).thenThrow(new RuntimeException("expected"));
 
+        testSuite.durationSeconds = 1;
+        initMocks();
+
         coordinator.runTestSuite();
+    }
+
+    private void initMocks() {
+        // CoordinatorParameters
+        SimulatorProperties simulatorProperties = new SimulatorProperties();
+
+        when(parameters.getSimulatorProperties()).thenReturn(simulatorProperties);
+        when(parameters.isParallel()).thenReturn(parallel);
+        when(parameters.isVerifyEnabled()).thenReturn(verifyEnabled);
+        when(parameters.isMonitorPerformance()).thenReturn(monitorPerformance);
+
+        // TestSuite
+        TestCase testCase1 = new TestCase("CoordinatorTest1");
+        TestCase testCase2 = new TestCase("CoordinatorTest2");
+
+        testSuite.addTest(testCase1);
+        testSuite.addTest(testCase2);
+
+        // AgentsClient
+        List<String> privateAddressList = new ArrayList<String>(1);
+        privateAddressList.add("127.0.0.1");
+
+        when(agentsClient.getPublicAddresses()).thenReturn(privateAddressList);
+        when(agentsClient.getAgentCount()).thenReturn(1);
+
+        // FailureMonitor
+        when(failureMonitor.getFailureCount()).thenReturn(0);
+
+        // PerformanceMonitor
+        when(performanceMonitor.getPerformanceNumbers()).thenReturn(" (PerformanceMonitor is mocked)");
+
+        // Coordinator
+        coordinator = new Coordinator(parameters, testSuite);
+        coordinator.cooldownSeconds = 0;
+        coordinator.testCaseRunnerSleepPeriod = 3;
+
+        Whitebox.setInternalState(coordinator, "agentsClient", agentsClient);
+        Whitebox.setInternalState(coordinator, "failureMonitor", failureMonitor);
+        Whitebox.setInternalState(coordinator, "performanceMonitor", performanceMonitor);
     }
 
     private void verifyAgentsClient(Coordinator coordinator) throws Exception {
         boolean verifyExecuteOnAllWorkersWithRange = false;
-        int numberOfTests = coordinator.testSuite.size();
+        int numberOfTests = testSuite.size();
         int phaseNumber = TestPhase.values().length;
         int executeOnFirstWorkerTimes = 0;
         int executeOnAllWorkersTimes = 3; // InitCommand, StopCommand and GetBenchmarkResultsCommand
@@ -222,15 +246,15 @@ public class CoordinatorRunTestSuiteTest {
             }
         }
         int waitForPhaseCompletionTimes = phaseNumber;
-        if (coordinator.testSuite.durationSeconds == 0) {
+        if (testSuite.durationSeconds == 0) {
             // no StopCommand is sent
             executeOnAllWorkersTimes--;
-        } else if (coordinator.testSuite.waitForTestCase) {
+        } else if (testSuite.waitForTestCase) {
             // has duration and waitForTestCase
             waitForPhaseCompletionTimes++;
             verifyExecuteOnAllWorkersWithRange = true;
         }
-        if (!coordinator.verifyEnabled) {
+        if (!coordinator.getParameters().isVerifyEnabled()) {
             // no GenericCommand for global and local verify phase are sent
             executeOnFirstWorkerTimes--;
             executeOnAllWorkersTimes--;

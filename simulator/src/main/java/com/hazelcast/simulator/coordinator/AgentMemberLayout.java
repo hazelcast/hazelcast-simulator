@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class AgentMemberLayout {
 
-    private List<WorkerSettings> workerSettings = new ArrayList<WorkerSettings>();
+    private List<WorkerJvmSettings> workerJvmSettings = new ArrayList<WorkerJvmSettings>();
     private final AtomicInteger currentWorkerIndex = new AtomicInteger();
 
     private final String publicAddress;
@@ -35,18 +35,18 @@ public final class AgentMemberLayout {
         return agentMemberMode;
     }
 
-    public void addWorker(WorkerType type, WorkerJvmSettings settings) {
-        workerSettings.add(new WorkerSettings(currentWorkerIndex.incrementAndGet(), type, settings));
+    public void addWorker(WorkerType type, CoordinatorParameters parameters) {
+        workerJvmSettings.add(new WorkerJvmSettings(currentWorkerIndex.incrementAndGet(), type, parameters));
     }
 
-    public List<WorkerSettings> getWorkerSettings() {
-        return workerSettings;
+    public List<WorkerJvmSettings> getWorkerJvmSettings() {
+        return workerJvmSettings;
     }
 
     public int getCount(WorkerType type) {
         int count = 0;
-        for (WorkerSettings workerSettings : this.workerSettings) {
-            if (workerSettings.getType() == type) {
+        for (WorkerJvmSettings workerJvmSettings : this.workerJvmSettings) {
+            if (workerJvmSettings.getType() == type) {
                 count++;
             }
         }

@@ -1,11 +1,11 @@
 package com.hazelcast.simulator.coordinator.remoting;
 
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.CountdownWatch;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
-import com.hazelcast.simulator.coordinator.WorkerSettings;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestPhase;
@@ -233,11 +233,11 @@ public class AgentsClient {
                 throw new CommandLineExitException("agentClient is null");
             }
 
-            for (final WorkerSettings workerSettings : agentMemberLayout.getWorkerSettings()) {
+            for (final WorkerJvmSettings workerJvmSettings : agentMemberLayout.getWorkerJvmSettings()) {
                 Future<Object> future = agentExecutor.submit(new Callable<Object>() {
                     @Override
                     public Object call() throws Exception {
-                        agentClient.execute(SERVICE_SPAWN_WORKERS, workerSettings);
+                        agentClient.execute(SERVICE_SPAWN_WORKERS, workerJvmSettings);
                         return null;
                     }
                 });

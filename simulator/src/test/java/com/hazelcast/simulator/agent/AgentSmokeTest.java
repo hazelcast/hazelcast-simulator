@@ -1,9 +1,11 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.core.Hazelcast;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.common.JavaProfiler;
+import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.coordinator.AgentMemberMode;
+import com.hazelcast.simulator.coordinator.CoordinatorParameters;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.Failure;
@@ -34,6 +36,8 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class AgentSmokeTest {
 
@@ -150,18 +154,35 @@ public class AgentSmokeTest {
     }
 
     private void spawnWorkers(AgentsClient client) throws TimeoutException {
-        WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
-        workerJvmSettings.profiler = "";
-        workerJvmSettings.vmOptions = "";
-        workerJvmSettings.workerStartupTimeout = 60000;
-        workerJvmSettings.clientHzConfig = fileAsText("./simulator/src/test/resources/client-hazelcast.xml");
-        workerJvmSettings.memberHzConfig = fileAsText("./simulator/src/test/resources/hazelcast.xml");
-        workerJvmSettings.log4jConfig = fileAsText("./simulator/src/test/resources/log4j.xml");
-
         AgentMemberLayout agentLayout = new AgentMemberLayout(AGENT_IP_ADDRESS, AgentMemberMode.MEMBER);
-        agentLayout.addWorker(WorkerType.MEMBER, workerJvmSettings);
+        agentLayout.addWorker(WorkerType.MEMBER, getParameters());
 
         client.spawnWorkers(Collections.singletonList(agentLayout));
+    }
+
+    private CoordinatorParameters getParameters() {
+        SimulatorProperties properties = new SimulatorProperties();
+
+        CoordinatorParameters parameters = mock(CoordinatorParameters.class);
+        when(parameters.getSimulatorProperties()).thenReturn(properties);
+        when(parameters.isAutoCreateHzInstance()).thenReturn(true);
+        when(parameters.isPassiveMembers()).thenReturn(false);
+        when(parameters.isRefreshJvm()).thenReturn(false);
+        when(parameters.isParallel()).thenReturn(true);
+        when(parameters.isMonitorPerformance()).thenReturn(true);
+        when(parameters.getProfiler()).thenReturn(JavaProfiler.NONE);
+        when(parameters.getProfilerSettings()).thenReturn("");
+        when(parameters.getNumaCtl()).thenReturn("none");
+        when(parameters.getLastTestPhaseToSync()).thenReturn(TestPhase.SETUP);
+        when(parameters.getMemberHzConfig()).thenReturn(fileAsText("./simulator/src/test/resources/hazelcast.xml"));
+        when(parameters.getClientHzConfig()).thenReturn(fileAsText("./simulator/src/test/resources/client-hazelcast.xml"));
+        when(parameters.getLog4jConfig()).thenReturn(fileAsText("./simulator/src/test/resources/log4j.xml"));
+        when(parameters.getDedicatedMemberMachineCount()).thenReturn(0);
+        when(parameters.getMemberWorkerCount()).thenReturn(1);
+        when(parameters.getClientWorkerCount()).thenReturn(0);
+        when(parameters.getWorkerStartupTimeout()).thenReturn(60000);
+
+        return parameters;
     }
 
     private void runPhase(TestCase testCase, TestPhase testPhase) throws TimeoutException {

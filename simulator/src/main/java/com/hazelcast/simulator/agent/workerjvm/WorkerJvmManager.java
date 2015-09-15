@@ -20,7 +20,6 @@ import com.hazelcast.simulator.agent.CommandFuture;
 import com.hazelcast.simulator.agent.FailureAlreadyThrownRuntimeException;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
-import com.hazelcast.simulator.coordinator.WorkerSettings;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.TerminateWorkerException;
@@ -259,8 +258,8 @@ public class WorkerJvmManager {
         agent.getWorkerJvmFailureMonitor().publish(failure);
     }
 
-    public void spawn(WorkerSettings workerSettings) throws Exception {
-        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerSettings);
+    public void spawn(WorkerJvmSettings workerJvmSettings) throws Exception {
+        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerJvmSettings);
         launcher.launch();
     }
 
@@ -286,7 +285,7 @@ public class WorkerJvmManager {
     public void terminateWorker(final WorkerJvm jvm) {
         workerJVMs.remove(jvm.getId());
 
-        Thread t = new Thread() {
+        Thread thread = new Thread() {
             public void run() {
                 try {
                     // this sends SIGTERM on *nix
@@ -298,10 +297,10 @@ public class WorkerJvmManager {
             }
         };
 
-        t.start();
+        thread.start();
         try {
-            t.join(WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS);
-            if (t.isAlive()) {
+            thread.join(WAIT_FOR_PROCESS_TERMINATION_TIMEOUT_MILLIS);
+            if (thread.isAlive()) {
                 LOGGER.warn("WorkerJVM is still busy terminating: " + jvm);
             }
         } catch (Exception e) {

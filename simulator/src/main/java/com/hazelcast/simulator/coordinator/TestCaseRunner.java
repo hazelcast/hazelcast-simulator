@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.probes.probes.ProbesResultXmlWriter;
 import com.hazelcast.simulator.probes.probes.Result;
@@ -45,7 +44,7 @@ final class TestCaseRunner {
 
     private final TestCase testCase;
     private final TestSuite testSuite;
-    private final Coordinator coordinator;
+    private final CoordinatorParameters coordinatorParameters;
     private final AgentsClient agentsClient;
     private final FailureMonitor failureMonitor;
     private final PerformanceMonitor performanceMonitor;
@@ -57,14 +56,15 @@ final class TestCaseRunner {
 
     private StopThread stopThread;
 
-    TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, int paddingLength,
+    TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, AgentsClient agentsClient,
+                   FailureMonitor failureMonitor, PerformanceMonitor performanceMonitor, int paddingLength,
                    ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap) {
         this.testCase = testCase;
         this.testSuite = testSuite;
-        this.coordinator = coordinator;
-        this.agentsClient = coordinator.agentsClient;
-        this.failureMonitor = coordinator.failureMonitor;
-        this.performanceMonitor = coordinator.performanceMonitor;
+        this.coordinatorParameters = coordinator.getParameters();
+        this.agentsClient = agentsClient;
+        this.failureMonitor = failureMonitor;
+        this.performanceMonitor = performanceMonitor;
         this.nonCriticalFailures = testSuite.tolerableFailures;
         this.testCaseId = testCase.getId();
         this.prefix = (testCaseId.isEmpty() ? "" : padRight(testCaseId, paddingLength + 1));
@@ -93,7 +93,7 @@ final class TestCaseRunner {
             logPerformance();
             processProbeResults();
 
-            if (coordinator.verifyEnabled) {
+            if (coordinatorParameters.isVerifyEnabled()) {
                 runOnFirstWorker(TestPhase.GLOBAL_VERIFY);
                 runOnAllWorkers(TestPhase.LOCAL_VERIFY);
             } else {
@@ -149,14 +149,13 @@ final class TestCaseRunner {
     }
 
     private void startPerformanceMonitor() {
-        if (coordinator.monitorPerformance) {
+        if (coordinatorParameters.isMonitorPerformance()) {
             performanceMonitor.start();
         }
     }
 
     private void startTestCase() throws TimeoutException {
-        WorkerJvmSettings workerJvmSettings = coordinator.workerJvmSettings;
-        boolean isPassiveMembers = (workerJvmSettings.passiveMembers && coordinator.clientWorkerCount > 0);
+        boolean isPassiveMembers = (coordinatorParameters.isPassiveMembers() && coordinatorParameters.getClientWorkerCount() > 0);
 
         echo(format("Starting Test start (%s members)", (isPassiveMembers) ? "passive" : "active"));
         RunCommand runCommand = new RunCommand(testCaseId);
@@ -194,7 +193,7 @@ final class TestCaseRunner {
     private void processProbeResults() {
         Map<String, ? extends Result> probesResult = getProbesResult();
         if (!probesResult.isEmpty()) {
-            String fileName = "probes-" + coordinator.testSuite.id + "_" + testCaseId + ".xml";
+            String fileName = "probes-" + testSuite.id + "_" + testCaseId + ".xml";
             ProbesResultXmlWriter.write(probesResult, new File(fileName));
             logProbesResultInHumanReadableFormat(probesResult);
         }
@@ -282,7 +281,7 @@ final class TestCaseRunner {
                 float percentage = (100f * elapsed) / seconds;
                 String msg = format("Running %s %s%% complete", secondsToHuman(elapsed), formatDouble(percentage, 7));
 
-                if (coordinator.monitorPerformance) {
+                if (coordinatorParameters.isMonitorPerformance()) {
                     msg += performanceMonitor.getPerformanceNumbers();
                 }
 

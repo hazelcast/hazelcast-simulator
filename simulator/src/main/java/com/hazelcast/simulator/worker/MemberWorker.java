@@ -40,6 +40,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.fillString;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeObject;
@@ -49,6 +50,8 @@ import static java.lang.String.format;
 
 public final class MemberWorker {
 
+    private static final String DASHES = "---------------------------";
+
     private static final long PARTITION_WARMUP_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(5);
     private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
 
@@ -57,24 +60,20 @@ public final class MemberWorker {
     private final WorkerType type;
     private final String publicAddress;
 
-    private final boolean autoCreateHazelcastInstance;
-
-    private final String memberHzConfigFile;
-    private final String clientHzConfigFile;
+    private final boolean autoCreateHzInstance;
+    private final String hzConfigFile;
 
     private final WorkerSocketProcessor workerSocketProcessor;
     private final WorkerCommandRequestProcessor workerCommandRequestProcessor;
     private final WorkerConnector workerConnector;
 
     private MemberWorker(String workerId, WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort,
-                         boolean autoCreateHZInstance, String memberHzConfigFile, String clientHzConfigFile) throws Exception {
+                         boolean autoCreateHzInstance, String hConfigFile) throws Exception {
         this.type = type;
         this.publicAddress = publicAddress;
 
-        this.autoCreateHazelcastInstance = autoCreateHZInstance;
-
-        this.memberHzConfigFile = memberHzConfigFile;
-        this.clientHzConfigFile = clientHzConfigFile;
+        this.autoCreateHzInstance = autoCreateHzInstance;
+        this.hzConfigFile = hConfigFile;
 
         BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
         BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
@@ -92,10 +91,8 @@ public final class MemberWorker {
 
     private HazelcastInstance getHazelcastInstance() throws Exception {
         HazelcastInstance hazelcastInstance = null;
-        if (autoCreateHazelcastInstance) {
-            LOGGER.info("------------------------------------------------------------------------");
-            LOGGER.info("             worker type: " + type);
-            LOGGER.info("------------------------------------------------------------------------");
+        if (autoCreateHzInstance) {
+            logHeader("Creating " + type + " HazelcastInstance");
             switch (type) {
                 case MEMBER:
                     hazelcastInstance = createServerHazelcastInstance();
@@ -108,42 +105,29 @@ public final class MemberWorker {
                 default:
                     throw new IllegalStateException("Unknown WorkerType: " + type);
             }
-            warmupPartitions(LOGGER, hazelcastInstance);
+            logHeader("Successfully created " + type + " HazelcastInstance");
+
+            warmupPartitions(hazelcastInstance);
         }
         return hazelcastInstance;
     }
 
-    private void stop() {
-        LOGGER.info("Stopping threads...");
-        workerConnector.shutdown();
-        workerSocketProcessor.shutdown();
-        workerCommandRequestProcessor.shutdown();
-    }
-
     private HazelcastInstance createServerHazelcastInstance() throws Exception {
-        LOGGER.info("Creating Server HazelcastInstance");
-
-        XmlConfigBuilder configBuilder = new XmlConfigBuilder(memberHzConfigFile);
+        XmlConfigBuilder configBuilder = new XmlConfigBuilder(hzConfigFile);
         Config config = configBuilder.build();
 
-        HazelcastInstance server = Hazelcast.newHazelcastInstance(config);
-        LOGGER.info("Successfully created Server HazelcastInstance");
-        return server;
+        return Hazelcast.newHazelcastInstance(config);
     }
 
     private HazelcastInstance createClientHazelcastInstance() throws Exception {
-        LOGGER.info("Creating Client HazelcastInstance");
-
-        XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(clientHzConfigFile);
+        XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(hzConfigFile);
         ClientConfig clientConfig = configBuilder.build();
 
-        HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
-        LOGGER.info("Successfully created Client HazelcastInstance");
-        return client;
+        return HazelcastClient.newHazelcastClient(clientConfig);
     }
 
-    private void warmupPartitions(Logger logger, HazelcastInstance hz) {
-        logger.info("Waiting for partition warmup");
+    private void warmupPartitions(HazelcastInstance hz) {
+        LOGGER.info("Waiting for partition warmup");
 
         PartitionService partitionService = hz.getPartitionService();
         long started = System.nanoTime();
@@ -153,12 +137,12 @@ public final class MemberWorker {
             }
 
             while (partition.getOwner() == null) {
-                logger.debug("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
+                LOGGER.debug("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
                 sleepMillisThrowException(PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS);
             }
         }
 
-        logger.info("Partitions are warmed up successfully");
+        LOGGER.info("Partitions are warmed up successfully");
     }
 
     private void signalStartToAgent(HazelcastInstance serverInstance) {
@@ -173,48 +157,51 @@ public final class MemberWorker {
         writeObject(address, file);
     }
 
+    private void stop() {
+        LOGGER.info("Stopping threads...");
+        workerConnector.shutdown();
+        workerSocketProcessor.shutdown();
+        workerCommandRequestProcessor.shutdown();
+    }
+
     public static void main(String[] args) {
         LOGGER.info("Starting Hazelcast Simulator Worker");
 
         try {
+            String workerId = System.getProperty("workerId");
+            WorkerType type = WorkerType.valueOf(System.getProperty("workerType"));
+
+            String publicAddress = System.getProperty("publicAddress");
+            int agentIndex = parseInt(System.getProperty("agentIndex"));
+            int workerIndex = parseInt(System.getProperty("workerIndex"));
+            int workerPort = parseInt(System.getProperty("workerPort"));
+            String hzConfigFile = System.getProperty("hzConfigFile");
+
+            boolean autoCreateHzInstance = parseBoolean(System.getProperty("autoCreateHzInstance", "true"));
+
+            logHeader("Hazelcast Worker #" + workerIndex + " (" + type + ")");
             logInputArguments();
             logInterestingSystemProperties();
 
-            String workerId = System.getProperty("workerId");
             LOGGER.info("Worker id: " + workerId);
-
-            WorkerType type = WorkerType.valueOf(System.getProperty("workerType"));
             LOGGER.info("Worker type: " + type);
 
-            String publicAddress = System.getProperty("publicAddress");
             LOGGER.info("Public address: " + publicAddress);
-
-            int agentIndex = parseInt(System.getProperty("agentIndex"));
             LOGGER.info("Agent index: " + agentIndex);
-
-            int workerIndex = parseInt(System.getProperty("workerIndex"));
             LOGGER.info("Worker index: " + workerIndex);
-
-            int workerPort = parseInt(System.getProperty("workerPort"));
             LOGGER.info("Worker port: " + workerPort);
 
-            boolean autoCreateHZInstance = parseBoolean(System.getProperty("autoCreateHZInstances", "true"));
-            LOGGER.info("autoCreateHZInstance: " + autoCreateHZInstance);
+            LOGGER.info("autoCreateHzInstance: " + autoCreateHzInstance);
 
-            String memberHzConfigFile = System.getProperty("memberHzConfigFile");
-            LOGGER.info("Hazelcast member config file: " + memberHzConfigFile);
-            LOGGER.info(fileAsText(new File(memberHzConfigFile)));
-
-            String clientHzConfigFile = System.getProperty("clientHzConfigFile");
-            LOGGER.info("Hazelcast client config file: " + clientHzConfigFile);
-            LOGGER.info(fileAsText(new File(clientHzConfigFile)));
+            LOGGER.info("Hazelcast config file: " + hzConfigFile);
+            LOGGER.info(fileAsText(new File(hzConfigFile)));
 
             MemberWorker worker = new MemberWorker(workerId, type, publicAddress, agentIndex, workerIndex, workerPort,
-                    autoCreateHZInstance, memberHzConfigFile, clientHzConfigFile);
+                    autoCreateHzInstance, hzConfigFile);
 
             registerLog4jShutdownHandler(worker);
 
-            LOGGER.info("Successfully started Hazelcast Simulator Worker: " + workerId);
+            logHeader("Successfully started Hazelcast Worker #" + workerIndex);
         } catch (Exception e) {
             ExceptionReporter.report(null, e);
             exitWithError(LOGGER, "Could not start Hazelcast Simulator Worker!", e);
@@ -248,8 +235,18 @@ public final class MemberWorker {
         LOGGER.info(format("%s=%s", name, System.getProperty(name)));
     }
 
+    private static void logHeader(String header) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(DASHES).append(" ").append(header).append(" ").append(DASHES);
+
+        String dashes = fillString(builder.length(), '-');
+        LOGGER.info(dashes);
+        LOGGER.info(builder.toString());
+        LOGGER.info(dashes);
+    }
+
     private static void registerLog4jShutdownHandler(final MemberWorker worker) {
-        // makes sure that log4j will always flush log-buffers
+        // makes sure that log4j will always flush the log buffers
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {

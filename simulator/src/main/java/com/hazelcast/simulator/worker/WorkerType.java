@@ -17,4 +17,8 @@ public enum WorkerType {
     public String getClassName() {
         return className;
     }
+
+    public String toLowerCase() {
+        return name().toLowerCase();
+    }
 }

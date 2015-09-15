@@ -15,77 +15,107 @@
  */
 package com.hazelcast.simulator.agent.workerjvm;
 
+import com.hazelcast.simulator.common.JavaProfiler;
+import com.hazelcast.simulator.coordinator.CoordinatorParameters;
+import com.hazelcast.simulator.worker.WorkerType;
+
 import java.io.Serializable;
 
-@SuppressWarnings("checkstyle:visibilitymodifier")
+/**
+ * Settings for a (single) Simulator Worker JVM.
+ */
 public class WorkerJvmSettings implements Serializable {
 
-    public String vmOptions;
-    public String clientVmOptions;
-    public String memberHzConfig;
-    public String clientHzConfig;
-    public String log4jConfig;
+    private final int workerIndex;
+    private final WorkerType type;
 
-    public boolean autoCreateHZInstance = true;
-    public boolean passiveMembers = true;
+    private final String jvmOptions;
+    private final String hazelcastConfig;
+    private final String log4jConfig;
 
-    public int workerStartupTimeout;
-    public boolean refreshJvm;
-    public String javaVendor;
-    public String javaVersion;
-    public String profiler = "none";
-    public String yourkitConfig;
-    public String hprofSettings = "";
-    public String perfSettings = "";
-    public String vtuneSettings = "";
-    public String flightrecorderSettings = "";
-    public String numaCtl = "none";
+    private final boolean autoCreateHzInstance;
+    private final int workerStartupTimeout;
 
-    public WorkerJvmSettings() {
+    private final String profiler;
+    private final String profilerSettings;
+    private final String numaCtl;
+
+    public WorkerJvmSettings(int workerIndex, WorkerType type, CoordinatorParameters parameters) {
+        this.workerIndex = workerIndex;
+        this.type = type;
+
+        switch (type) {
+            case MEMBER:
+                this.jvmOptions = parameters.getMemberJvmOptions();
+                this.hazelcastConfig = parameters.getMemberHzConfig();
+                break;
+            default:
+                this.jvmOptions = parameters.getClientJvmOptions();
+                this.hazelcastConfig = parameters.getClientHzConfig();
+        }
+        this.log4jConfig = parameters.getLog4jConfig();
+
+        this.autoCreateHzInstance = parameters.isAutoCreateHzInstance();
+        this.workerStartupTimeout = parameters.getWorkerStartupTimeout();
+
+        this.profiler = parameters.getProfiler().name();
+        this.profilerSettings = parameters.getProfilerSettings();
+        this.numaCtl = parameters.getNumaCtl();
     }
 
-    public WorkerJvmSettings(WorkerJvmSettings settings) {
-        this.vmOptions = settings.vmOptions;
-        this.clientVmOptions = settings.clientVmOptions;
-        this.memberHzConfig = settings.memberHzConfig;
-        this.clientHzConfig = settings.clientHzConfig;
-        this.log4jConfig = settings.log4jConfig;
+    public int getWorkerIndex() {
+        return workerIndex;
+    }
 
-        this.autoCreateHZInstance = settings.autoCreateHZInstance;
-        this.passiveMembers = settings.passiveMembers;
+    public WorkerType getType() {
+        return type;
+    }
 
-        this.workerStartupTimeout = settings.workerStartupTimeout;
-        this.refreshJvm = settings.refreshJvm;
-        this.javaVendor = settings.javaVendor;
-        this.javaVersion = settings.javaVersion;
-        this.yourkitConfig = settings.yourkitConfig;
-        this.profiler = settings.profiler;
-        this.hprofSettings = settings.hprofSettings;
-        this.perfSettings = settings.perfSettings;
-        this.vtuneSettings = settings.vtuneSettings;
-        this.flightrecorderSettings = settings.flightrecorderSettings;
-        this.numaCtl = settings.numaCtl;
+    public String getJvmOptions() {
+        return jvmOptions;
+    }
+
+    public String getHazelcastConfig() {
+        return hazelcastConfig;
+    }
+
+    public String getLog4jConfig() {
+        return log4jConfig;
+    }
+
+    public boolean isAutoCreateHzInstance() {
+        return autoCreateHzInstance;
+    }
+
+    public int getWorkerStartupTimeout() {
+        return workerStartupTimeout;
+    }
+
+    public JavaProfiler getProfiler() {
+        return JavaProfiler.valueOf(profiler);
+    }
+
+    public String getProfilerSettings() {
+        return profilerSettings;
+    }
+
+    public String getNumaCtl() {
+        return numaCtl;
     }
 
     @Override
     public String toString() {
-        return "WorkerSettings{"
-                + "\n  vmOptions='" + vmOptions + '\''
-                + "\n  clientVmOptions='" + clientVmOptions + '\''
-                + "\n, workerStartupTimeout=" + workerStartupTimeout
-                + "\n, refreshJvm=" + refreshJvm
-                + "\n, profiler='" + profiler + '\''
-                + "\n, yourkitConfig='" + yourkitConfig + '\''
-                + "\n, javaVendor=" + javaVendor
-                + "\n, javaVersion=" + javaVersion
-                + "\n, memberHzConfig='" + memberHzConfig + '\''
-                + "\n, clientHzConfig='" + clientHzConfig + '\''
-                + "\n, log4jConfig='" + log4jConfig + '\''
-                + "\n, hprofSettings='" + hprofSettings + '\''
-                + "\n, perfSettings='" + perfSettings + '\''
-                + "\n, vtuneSettings='" + vtuneSettings + '\''
-                + "\n, flightrecorderSettings='" + flightrecorderSettings + '\''
-                + "\n, numaCtl='" + numaCtl + '\''
-                + "\n}";
+        return "WorkerJvmSettings{"
+                + "workerIndex=" + workerIndex
+                + ", type=" + type
+                + ", jvmOptions='" + jvmOptions + '\''
+                + ", hazelcastConfig='" + hazelcastConfig + '\''
+                + ", log4jConfig='" + log4jConfig + '\''
+                + ", autoCreateHzInstance=" + autoCreateHzInstance
+                + ", workerStartupTimeout=" + workerStartupTimeout
+                + ", profiler='" + profiler + '\''
+                + ", profilerSettings='" + profilerSettings + '\''
+                + ", numaCtl='" + numaCtl + '\''
+                + '}';
     }
 }

@@ -2,7 +2,6 @@ package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.SpawnWorkerFailedException;
-import com.hazelcast.simulator.coordinator.WorkerSettings;
 import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
@@ -42,19 +41,16 @@ public class WorkerJvmLauncher {
 
     private final Agent agent;
     private final ConcurrentMap<String, WorkerJvm> workerJVMs;
-    private final WorkerSettings workerSettings;
     private final WorkerJvmSettings workerJvmSettings;
 
-    private File memberHzConfigFile;
-    private File clientHzConfigFile;
+    private File hzConfigFile;
     private File log4jFile;
     private File testSuiteDir;
 
-    public WorkerJvmLauncher(Agent agent, ConcurrentMap<String, WorkerJvm> workerJVMs, WorkerSettings workerSettings) {
+    public WorkerJvmLauncher(Agent agent, ConcurrentMap<String, WorkerJvm> workerJVMs, WorkerJvmSettings workerJvmSettings) {
         this.agent = agent;
         this.workerJVMs = workerJVMs;
-        this.workerSettings = workerSettings;
-        this.workerJvmSettings = workerSettings.getWorkerJvmSettings();
+        this.workerJvmSettings = workerJvmSettings;
     }
 
     public void launch() throws Exception {
@@ -65,12 +61,12 @@ public class WorkerJvmLauncher {
             }
         }
 
-        WorkerType type = workerSettings.getType();
+        WorkerType type = workerJvmSettings.getType();
         LOGGER.info(format("Starting a Java Virtual Machine for %s worker", type));
 
-        memberHzConfigFile = createTmpXmlFile("hazelcast", workerJvmSettings.memberHzConfig);
-        clientHzConfigFile = createTmpXmlFile("client-hazelcast", workerJvmSettings.clientHzConfig);
-        log4jFile = createTmpXmlFile("worker-log4j", workerJvmSettings.log4jConfig);
+        String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
+        hzConfigFile = createTmpXmlFile(hzConfigFileName, workerJvmSettings.getHazelcastConfig());
+        log4jFile = createTmpXmlFile("worker-log4j", workerJvmSettings.getLog4jConfig());
         LOGGER.info("Spawning Worker JVM using settings: " + workerJvmSettings);
 
         WorkerJvm worker = startWorkerJvm(type);
@@ -78,7 +74,7 @@ public class WorkerJvmLauncher {
 
         LOGGER.info(format("Finished starting a Java Virtual Machine for %s worker", type));
 
-        waitForWorkersStartup(workersInProgress, workerJvmSettings.workerStartupTimeout);
+        waitForWorkersStartup(workersInProgress, workerJvmSettings.getWorkerStartupTimeout());
         workersInProgress.clear();
     }
 
@@ -91,12 +87,12 @@ public class WorkerJvmLauncher {
     }
 
     private WorkerJvm startWorkerJvm(WorkerType type) throws IOException {
-        int workerIndex = workerSettings.getWorkerIndex();
-        String workerId = "worker-" + agent.getPublicAddress() + "-" + workerIndex + "-" + type;
+        int workerIndex = workerJvmSettings.getWorkerIndex();
+        String workerId = "worker-" + agent.getPublicAddress() + "-" + workerIndex + "-" + type.toLowerCase();
         File workerHome = new File(testSuiteDir, workerId);
         ensureExistingDirectory(workerHome);
 
-        String javaHome = getJavaHome(workerJvmSettings.javaVendor, workerJvmSettings.javaVersion);
+        String javaHome = getJavaHome();
 
         WorkerJvm workerJvm = new WorkerJvm(workerId, workerIndex, workerHome, type);
 
@@ -152,8 +148,7 @@ public class WorkerJvmLauncher {
         workerTimeout(workerTimeoutSec, todo);
     }
 
-    @SuppressWarnings("unused")
-    private String getJavaHome(String javaVendor, String javaVersion) {
+    private String getJavaHome() {
         String javaHome = System.getProperty("java.home");
         if (javaHomePrinted.compareAndSet(false, true)) {
             LOGGER.info("java.home=" + javaHome);
@@ -231,15 +226,15 @@ public class WorkerJvmLauncher {
     private String[] buildArgs(WorkerJvm workerJvm, WorkerType type) {
         List<String> args = new LinkedList<String>();
 
-        int workerIndex = workerSettings.getWorkerIndex();
+        int workerIndex = workerJvmSettings.getWorkerIndex();
         int workerPort = Ports.WORKER_START_PORT + workerIndex;
 
-        addNumaCtlSettings(args, workerJvmSettings);
+        addNumaCtlSettings(args);
         addProfilerSettings(workerJvm, args);
 
         args.add("-classpath");
         args.add(getClasspath());
-        args.addAll(getJvmOptions(workerJvmSettings, type));
+        args.addAll(getJvmOptions());
         args.add("-XX:OnOutOfMemoryError=\"touch worker.oome\"");
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-Dlog4j.configuration=file:" + log4jFile.getAbsolutePath());
@@ -251,9 +246,8 @@ public class WorkerJvmLauncher {
         args.add("-DagentIndex=" + agent.getAddressIndex());
         args.add("-DworkerIndex=" + workerIndex);
         args.add("-DworkerPort=" + workerPort);
-        args.add("-DautoCreateHZInstance=" + workerJvmSettings.autoCreateHZInstance);
-        args.add("-DmemberHzConfigFile=" + memberHzConfigFile.getAbsolutePath());
-        args.add("-DclientHzConfigFile=" + clientHzConfigFile.getAbsolutePath());
+        args.add("-DautoCreateHzInstance=" + workerJvmSettings.isAutoCreateHzInstance());
+        args.add("-DhzConfigFile=" + hzConfigFile.getAbsolutePath());
 
         // add class name to start correct worker type
         args.add(type.getClassName());
@@ -261,37 +255,35 @@ public class WorkerJvmLauncher {
         return args.toArray(new String[args.size()]);
     }
 
-    private void addNumaCtlSettings(List<String> args, WorkerJvmSettings workerJvmSettings) {
-        String numaCtl = workerJvmSettings.numaCtl;
+    private void addNumaCtlSettings(List<String> args) {
+        String numaCtl = workerJvmSettings.getNumaCtl();
         if (!"none".equals(numaCtl)) {
             args.add(numaCtl);
         }
     }
 
     private void addProfilerSettings(WorkerJvm workerJvm, List<String> args) {
-        String profiler = workerJvmSettings.profiler;
-        if ("perf".equals(profiler)) {
-            // perf command always need to be in front of the java command.
-            args.add(workerJvmSettings.perfSettings);
-            args.add("java");
-        } else if ("vtune".equals(profiler)) {
-            // vtune command always need to be in front of the java command.
-            args.add(workerJvmSettings.vtuneSettings);
-            args.add("java");
-        } else if ("yourkit".equals(profiler)) {
-            args.add("java");
-            String agentSetting = workerJvmSettings.yourkitConfig
-                    .replace("${SIMULATOR_HOME}", SIMULATOR_HOME.getAbsolutePath())
-                    .replace("${WORKER_HOME}", workerJvm.getWorkerHome().getAbsolutePath());
-            args.add(agentSetting);
-        } else if ("hprof".equals(profiler)) {
-            args.add("java");
-            args.add(workerJvmSettings.hprofSettings);
-        } else if ("flightrecorder".equals(profiler)) {
-            args.add("java");
-            args.add(workerJvmSettings.flightrecorderSettings);
-        } else {
-            args.add("java");
+        switch (workerJvmSettings.getProfiler()) {
+            case YOURKIT:
+                args.add("java");
+                String agentSetting = workerJvmSettings.getProfilerSettings()
+                        .replace("${SIMULATOR_HOME}", SIMULATOR_HOME.getAbsolutePath())
+                        .replace("${WORKER_HOME}", workerJvm.getWorkerHome().getAbsolutePath());
+                args.add(agentSetting);
+                break;
+            case FLIGHTRECORDER:
+            case HPROF:
+                args.add("java");
+                args.add(workerJvmSettings.getProfilerSettings());
+                break;
+            case PERF:
+            case VTUNE:
+                // perf and vtune command always need to be in front of the java command
+                args.add(workerJvmSettings.getProfilerSettings());
+                args.add("java");
+                break;
+            default:
+                args.add("java");
         }
     }
 
@@ -302,13 +294,8 @@ public class WorkerJvmLauncher {
                 + new File(libDir, "*").getAbsolutePath();
     }
 
-    private List<String> getJvmOptions(WorkerJvmSettings settings, WorkerType type) {
-        String workerVmOptions;
-        if (type == WorkerType.MEMBER) {
-            workerVmOptions = settings.vmOptions;
-        } else {
-            workerVmOptions = settings.clientVmOptions;
-        }
+    private List<String> getJvmOptions() {
+        String workerVmOptions = workerJvmSettings.getJvmOptions();
 
         String[] vmOptionsArray = new String[]{};
         if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {

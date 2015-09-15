@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentsFile;
+import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
+import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_HOME;
 import static com.hazelcast.simulator.test.Failure.Type.fromPropertyValue;
 import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
@@ -23,7 +24,6 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
-import static java.lang.Boolean.parseBoolean;
 import static java.lang.String.format;
 
 final class CoordinatorCli {
@@ -53,7 +53,7 @@ final class CoordinatorCli {
             "Number of Cluster Client Worker JVMs.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
-    private final OptionSpec<Boolean> autoCreateHZInstanceSpec = parser.accepts("autoCreateHzInstances",
+    private final OptionSpec<Boolean> autoCreateHzInstanceSpec = parser.accepts("autoCreateHzInstances",
             "Auto create Hazelcast instances.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
@@ -61,7 +61,7 @@ final class CoordinatorCli {
             "Controls the number of dedicated member machines. For example when there are 4 machines,"
                     + " 2 members and 9 clients with 1 dedicated member machine defined, then"
                     + " 1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
-            .withRequiredArg().ofType(Integer.class);
+            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     private final OptionSpec<String> workerClassPathSpec = parser.accepts("workerClassPath",
             "A file/directory containing the classes/jars/resources that are going to be uploaded to the agents."
@@ -131,16 +131,7 @@ final class CoordinatorCli {
             "The startup timeout in seconds for a worker.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
-    private final OptionSpec<Integer> testStopTimeoutMsSpec = parser.accepts("testStopTimeoutMs",
-            "Maximum amount of time in milliseconds waiting for the test to stop.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(60000);
-
-    private final Coordinator coordinator;
-    private final OptionSet options;
-
-    CoordinatorCli(Coordinator coordinator, String[] args) {
-        this.coordinator = coordinator;
-        this.options = initOptionsWithHelp(parser, args);
+    private CoordinatorCli() {
     }
 
     private static String getDefaultMemberHzConfigFile() {
@@ -149,7 +140,7 @@ final class CoordinatorCli {
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
-            return Coordinator.SIMULATOR_HOME + File.separator + "conf" + File.separator + "hazelcast.xml";
+            return SIMULATOR_HOME + File.separator + "conf" + File.separator + "hazelcast.xml";
         }
     }
 
@@ -159,91 +150,80 @@ final class CoordinatorCli {
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
-            return Coordinator.SIMULATOR_HOME + File.separator + "conf" + File.separator + "client-hazelcast.xml";
+            return SIMULATOR_HOME + File.separator + "conf" + File.separator + "client-hazelcast.xml";
         }
     }
 
-    void init() {
-        if (options.has(workerClassPathSpec)) {
-            coordinator.workerClassPath = options.valueOf(workerClassPathSpec);
-        }
+    static Coordinator init(String[] args) {
+        CoordinatorCli cli = new CoordinatorCli();
+        OptionSet options = initOptionsWithHelp(cli.parser, args);
 
-        coordinator.props.init(getPropertiesFile());
-        coordinator.verifyEnabled = options.valueOf(verifyEnabledSpec);
-        coordinator.monitorPerformance = options.has(monitorPerformanceSpec);
-        coordinator.testStopTimeoutMs = options.valueOf(testStopTimeoutMsSpec);
-        coordinator.agentsFile = getFile(agentsFileSpec, options, "Agents file");
-        coordinator.parallel = options.has(parallelSpec);
-        coordinator.lastTestPhaseToSync = options.valueOf(syncToTestPhaseSpec);
+        CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
+                loadSimulatorProperties(options, cli),
+                loadAgentsFile(cli, options),
+                options.valueOf(cli.workerClassPathSpec),
+                options.has(cli.monitorPerformanceSpec),
+                options.valueOf(cli.verifyEnabledSpec),
+                options.has(cli.parallelSpec),
+                options.valueOf(cli.syncToTestPhaseSpec),
+                loadLog4jConfig(),
+                options.valueOf(cli.workerVmOptionsSpec),
+                options.valueOf(cli.clientWorkerVmOptionsSpec),
+                options.valueOf(cli.workerStartupTimeoutSpec),
+                options.valueOf(cli.autoCreateHzInstanceSpec),
+                options.valueOf(cli.workerRefreshSpec),
+                options.valueOf(cli.dedicatedMemberMachinesSpec),
+                options.valueOf(cli.memberWorkerCountSpec),
+                options.valueOf(cli.clientWorkerCountSpec),
+                loadMemberHzConfig(options, cli),
+                loadClientHzConfig(options, cli)
+        );
 
-        TestSuite testSuite = loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec));
-        testSuite.durationSeconds = getDurationSeconds();
-        testSuite.waitForTestCase = options.has(waitForTestCaseSpec);
-        testSuite.failFast = options.valueOf(failFastSpec);
-        testSuite.tolerableFailures = fromPropertyValue(options.valueOf(tolerableFailureSpec));
-        coordinator.testSuite = testSuite;
-
+        TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec));
+        testSuite.durationSeconds = getDurationSeconds(options, cli);
+        testSuite.waitForTestCase = options.has(cli.waitForTestCaseSpec);
+        testSuite.failFast = options.valueOf(cli.failFastSpec);
+        testSuite.tolerableFailures = fromPropertyValue(options.valueOf(cli.tolerableFailureSpec));
         if (testSuite.durationSeconds == 0 && !testSuite.waitForTestCase) {
             throw new CommandLineExitException("You need to define --duration or --waitForTestCase or both!");
         }
 
-        WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings();
-        workerJvmSettings.vmOptions = options.valueOf(workerVmOptionsSpec);
-        workerJvmSettings.clientVmOptions = options.valueOf(clientWorkerVmOptionsSpec);
-        workerJvmSettings.autoCreateHZInstance = options.valueOf(autoCreateHZInstanceSpec);
-        workerJvmSettings.passiveMembers = parseBoolean(coordinator.props.get("PASSIVE_MEMBERS", "true"));
-
-        workerJvmSettings.workerStartupTimeout = options.valueOf(workerStartupTimeoutSpec);
-        workerJvmSettings.memberHzConfig = loadMemberHzConfig();
-        workerJvmSettings.clientHzConfig = loadClientHzConfig();
-        workerJvmSettings.log4jConfig = getFileAsTextFromWorkingDirOrBaseDir(Coordinator.SIMULATOR_HOME,
-                "worker-log4j.xml", "Log4j configuration for worker"
-        );
-        workerJvmSettings.refreshJvm = options.valueOf(workerRefreshSpec);
-        workerJvmSettings.profiler = coordinator.props.get("PROFILER", "none");
-        workerJvmSettings.yourkitConfig = coordinator.props.get("YOURKIT_SETTINGS");
-        workerJvmSettings.flightrecorderSettings = coordinator.props.get("FLIGHTRECORDER_SETTINGS");
-        workerJvmSettings.hprofSettings = coordinator.props.get("HPROF_SETTINGS", "");
-        workerJvmSettings.perfSettings = coordinator.props.get("PERF_SETTINGS", "");
-        workerJvmSettings.vtuneSettings = coordinator.props.get("VTUNE_SETTINGS", "");
-        workerJvmSettings.numaCtl = coordinator.props.get("NUMA_CONTROL", "none");
-
-        if (options.has(dedicatedMemberMachinesSpec)) {
-            int dedicatedMemberCount = dedicatedMemberMachinesSpec.value(options);
-            if (dedicatedMemberCount < 0) {
-                throw new CommandLineExitException("dedicatedMemberCount can't be smaller than 0");
-            }
-            coordinator.dedicatedMemberMachineCount = dedicatedMemberCount;
-        }
-
-        coordinator.workerJvmSettings = workerJvmSettings;
-
-        coordinator.memberWorkerCount = options.valueOf(memberWorkerCountSpec);
-        coordinator.clientWorkerCount = options.valueOf(clientWorkerCountSpec);
+        return new Coordinator(coordinatorParameters, testSuite);
     }
 
-    private String loadMemberHzConfig() {
-        File file = getFile(memberHzConfigFileSpec, options, "Worker Hazelcast config file");
+    private static SimulatorProperties loadSimulatorProperties(OptionSet options, CoordinatorCli cli) {
+        File propertiesFile = null;
+        if (options.has(cli.propertiesFileSpec)) {
+            propertiesFile = newFile(options.valueOf(cli.propertiesFileSpec));
+        }
+
+        SimulatorProperties simulatorProperties = new SimulatorProperties();
+        simulatorProperties.init(propertiesFile);
+
+        return simulatorProperties;
+    }
+
+    private static File loadAgentsFile(CoordinatorCli cli, OptionSet options) {
+        return getFile(cli.agentsFileSpec, options, "Agents file");
+    }
+
+    private static String loadLog4jConfig() {
+        return getFileAsTextFromWorkingDirOrBaseDir(SIMULATOR_HOME, "worker-log4j.xml", "Log4j configuration for worker");
+    }
+
+    private static String loadMemberHzConfig(OptionSet options, CoordinatorCli cli) {
+        File file = getFile(cli.memberHzConfigFileSpec, options, "Worker Hazelcast config file");
         LOGGER.info("Loading Hazelcast configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
-    private String loadClientHzConfig() {
-        File file = getFile(clientHzConfigFileSpec, options, "Worker Client Hazelcast config file");
+    private static String loadClientHzConfig(OptionSet options, CoordinatorCli cli) {
+        File file = getFile(cli.clientHzConfigFileSpec, options, "Worker Client Hazelcast config file");
         LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
-    private File getPropertiesFile() {
-        if (options.has(propertiesFileSpec)) {
-            // a file was explicitly configured
-            return newFile(options.valueOf(propertiesFileSpec));
-        } else {
-            return null;
-        }
-    }
-
-    private File getTestSuiteFile() {
+    private static File getTestSuiteFile(OptionSet options) {
         File testSuiteFile;
 
         List testsuiteFiles = options.nonOptionArguments();
@@ -262,13 +242,13 @@ final class CoordinatorCli {
         return testSuiteFile;
     }
 
-    private int getDurationSeconds() {
-        if (!options.has(durationSpec)) {
+    private static int getDurationSeconds(OptionSet options, CoordinatorCli cli) {
+        if (!options.has(cli.durationSpec)) {
             return 0;
         }
 
         int duration;
-        String value = options.valueOf(durationSpec);
+        String value = options.valueOf(cli.durationSpec);
         try {
             if (value.endsWith("s")) {
                 String sub = value.substring(0, value.length() - 1);
