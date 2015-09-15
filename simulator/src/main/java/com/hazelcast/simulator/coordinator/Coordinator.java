@@ -344,7 +344,7 @@ public final class Coordinator {
     }
 
     private void startWorkers() {
-        List<AgentMemberLayout> agentMemberLayouts = initMemberLayout(agentsClient, parameters);
+        List<AgentMemberLayout> agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
 
         long started = System.nanoTime();
         int totalWorkerCount = parameters.getMemberWorkerCount() + parameters.getClientWorkerCount();

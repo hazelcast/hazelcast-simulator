@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.worker.WorkerType;
 
 import java.util.ArrayList;
@@ -15,16 +16,16 @@ public final class AgentMemberLayout {
     private List<WorkerJvmSettings> workerJvmSettingsList = new ArrayList<WorkerJvmSettings>();
     private final AtomicInteger currentWorkerIndex = new AtomicInteger();
 
-    private final String publicAddress;
+    private final AgentData agentData;
     private AgentMemberMode agentMemberMode;
 
-    public AgentMemberLayout(String publicAddress, AgentMemberMode agentMemberMode) {
-        this.publicAddress = publicAddress;
+    public AgentMemberLayout(AgentData agentData, AgentMemberMode agentMemberMode) {
+        this.agentData = agentData;
         this.agentMemberMode = agentMemberMode;
     }
 
     public String getPublicAddress() {
-        return publicAddress;
+        return agentData.getPublicAddress();
     }
 
     public void setAgentMemberMode(AgentMemberMode agentMemberMode) {

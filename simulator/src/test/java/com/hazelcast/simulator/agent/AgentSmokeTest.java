@@ -7,6 +7,7 @@ import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.coordinator.AgentMemberMode;
 import com.hazelcast.simulator.coordinator.CoordinatorParameters;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestCase;
@@ -154,7 +155,8 @@ public class AgentSmokeTest {
     }
 
     private void spawnWorkers(AgentsClient client) throws TimeoutException {
-        AgentMemberLayout agentLayout = new AgentMemberLayout(AGENT_IP_ADDRESS, AgentMemberMode.MEMBER);
+        AgentData agentData = new AgentData(1, AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
+        AgentMemberLayout agentLayout = new AgentMemberLayout(agentData, AgentMemberMode.MEMBER);
         agentLayout.addWorker(WorkerType.MEMBER, getParameters());
 
         client.spawnWorkers(Collections.singletonList(agentLayout));

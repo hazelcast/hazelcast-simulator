@@ -2,7 +2,8 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -55,8 +56,8 @@ final class CoordinatorUtils {
         return (maxLength > 0) ? maxLength : 0;
     }
 
-    static List<AgentMemberLayout> initMemberLayout(AgentsClient agentsClient, CoordinatorParameters parameters) {
-        int agentCount = agentsClient.getAgentCount();
+    static List<AgentMemberLayout> initMemberLayout(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
+        int agentCount = componentRegistry.agentCount();
         int dedicatedMemberMachineCount = parameters.getDedicatedMemberMachineCount();
         int memberWorkerCount = parameters.getMemberWorkerCount();
         int clientWorkerCount = parameters.getClientWorkerCount();
@@ -69,7 +70,7 @@ final class CoordinatorUtils {
             throw new CommandLineExitException("dedicatedMemberMachineCount is too big, there are no machines left for clients!");
         }
 
-        List<AgentMemberLayout> agentMemberLayouts = initAgentMemberLayouts(agentsClient);
+        List<AgentMemberLayout> agentMemberLayouts = initAgentMemberLayouts(componentRegistry);
 
         assignDedicatedMemberMachines(agentCount, agentMemberLayouts, dedicatedMemberMachineCount);
 
@@ -98,17 +99,17 @@ final class CoordinatorUtils {
         return agentMemberLayouts;
     }
 
-    private static List<AgentMemberLayout> initAgentMemberLayouts(AgentsClient agentsClient) {
+    private static List<AgentMemberLayout> initAgentMemberLayouts(ComponentRegistry componentRegistry) {
         List<AgentMemberLayout> agentMemberLayouts = new LinkedList<AgentMemberLayout>();
-        for (String agentIp : agentsClient.getPublicAddresses()) {
-            AgentMemberLayout layout = new AgentMemberLayout(agentIp, AgentMemberMode.MIXED);
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            AgentMemberLayout layout = new AgentMemberLayout(agentData, AgentMemberMode.MIXED);
             agentMemberLayouts.add(layout);
         }
         return agentMemberLayouts;
     }
 
-    private  static void assignDedicatedMemberMachines(int agentCount, List<AgentMemberLayout> agentMemberLayouts,
-                                              int dedicatedMemberMachineCount) {
+    private static void assignDedicatedMemberMachines(int agentCount, List<AgentMemberLayout> agentMemberLayouts,
+                                                      int dedicatedMemberMachineCount) {
         if (dedicatedMemberMachineCount > 0) {
             assignAgentMemberMode(agentMemberLayouts, 0, dedicatedMemberMachineCount, AgentMemberMode.MEMBER);
             assignAgentMemberMode(agentMemberLayouts, dedicatedMemberMachineCount, agentCount, AgentMemberMode.CLIENT);

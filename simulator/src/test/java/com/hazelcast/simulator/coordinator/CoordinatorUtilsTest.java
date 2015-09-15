@@ -2,7 +2,8 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -22,7 +23,7 @@ import static org.mockito.Mockito.when;
 public class CoordinatorUtilsTest {
 
     private final CoordinatorParameters parameters = mock(CoordinatorParameters.class);
-    private final AgentsClient agentsClient = mock(AgentsClient.class);
+    private final ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
 
     private int dedicatedMemberMachineCount = 0;
     private int memberWorkerCount = 0;
@@ -53,7 +54,7 @@ public class CoordinatorUtilsTest {
         dedicatedMemberMachineCount = 3;
         initMocks();
 
-        agentMemberLayouts = initMemberLayout(agentsClient, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MEMBER, 0, 0);
@@ -64,7 +65,7 @@ public class CoordinatorUtilsTest {
         dedicatedMemberMachineCount = 5;
         initMocks();
 
-        initMemberLayout(agentsClient, parameters);
+        initMemberLayout(componentRegistry, parameters);
     }
 
     @Test
@@ -73,7 +74,7 @@ public class CoordinatorUtilsTest {
         clientWorkerCount = 1;
         initMocks();
 
-        agentMemberLayouts = initMemberLayout(agentsClient, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.CLIENT, 0, 1);
@@ -85,7 +86,7 @@ public class CoordinatorUtilsTest {
         clientWorkerCount = 1;
         initMocks();
 
-        initMemberLayout(agentsClient, parameters);
+        initMemberLayout(componentRegistry, parameters);
     }
 
     @Test
@@ -93,7 +94,7 @@ public class CoordinatorUtilsTest {
         memberWorkerCount = 1;
         initMocks();
 
-        agentMemberLayouts = initMemberLayout(agentsClient, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 1, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 0, 0);
@@ -104,7 +105,7 @@ public class CoordinatorUtilsTest {
         memberWorkerCount = 4;
         initMocks();
 
-        agentMemberLayouts = initMemberLayout(agentsClient, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 2, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 1, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 1, 0);
@@ -115,7 +116,7 @@ public class CoordinatorUtilsTest {
         clientWorkerCount = 1;
         initMocks();
 
-        agentMemberLayouts = initMemberLayout(agentsClient, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 0, 1);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 0, 0);
@@ -126,7 +127,7 @@ public class CoordinatorUtilsTest {
         clientWorkerCount = 5;
         initMocks();
 
-        agentMemberLayouts = initMemberLayout(agentsClient, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 0, 2);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 0, 2);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 0, 1);
@@ -139,7 +140,7 @@ public class CoordinatorUtilsTest {
         clientWorkerCount = 3;
         initMocks();
 
-        agentMemberLayouts = initMemberLayout(agentsClient, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 2, 0);
         assertAgentMemberLayout(1, AgentMemberMode.CLIENT, 0, 2);
         assertAgentMemberLayout(2, AgentMemberMode.CLIENT, 0, 1);
@@ -152,21 +153,21 @@ public class CoordinatorUtilsTest {
         clientWorkerCount = 3;
         initMocks();
 
-        agentMemberLayouts = initMemberLayout(agentsClient, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 1, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MEMBER, 1, 0);
         assertAgentMemberLayout(2, AgentMemberMode.CLIENT, 0, 3);
     }
 
     private void initMocks() {
-        // AgentsClient
-        List<String> publicAddressList = new ArrayList<String>(3);
-        publicAddressList.add("192.168.0.1");
-        publicAddressList.add("192.168.0.2");
-        publicAddressList.add("192.168.0.3");
+        // ComponentRegistry
+        List<AgentData> agents = new ArrayList<AgentData>(3);
+        agents.add(new AgentData(1, "192.168.0.1", "192.168.0.1"));
+        agents.add(new AgentData(2, "192.168.0.2", "192.168.0.2"));
+        agents.add(new AgentData(3, "192.168.0.3", "192.168.0.3"));
 
-        when(agentsClient.getPublicAddresses()).thenReturn(publicAddressList);
-        when(agentsClient.getAgentCount()).thenReturn(3);
+        when(componentRegistry.getAgents()).thenReturn(agents);
+        when(componentRegistry.agentCount()).thenReturn(3);
 
         // CoordinatorParameters
         SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
