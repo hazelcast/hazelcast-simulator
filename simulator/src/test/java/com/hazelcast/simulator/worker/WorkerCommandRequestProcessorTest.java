@@ -5,6 +5,7 @@ import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
+import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.commands.Command;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
@@ -39,6 +40,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -389,12 +391,19 @@ public class WorkerCommandRequestProcessorTest {
                 invoked = false;
             }
         } while (!invoked && System.nanoTime() < timeoutNanoTime);
+
+        final int expectedExceptionCount = exceptionTypes.length;
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                int exceptionCount = testIdCaptor.getAllValues().size();
+                assertEquals(format("Expected %d exceptions, but found %d", expectedExceptionCount, exceptionCount),
+                        expectedExceptionCount, exceptionCount);
+            }
+        });
+
         List<String> testIdList = testIdCaptor.getAllValues();
         List<Throwable> throwableList = exceptionCaptor.getAllValues();
-
-        assertEquals(format("Expected %d exceptions, but found %d", exceptionTypes.length, testIdList.size()),
-                exceptionTypes.length, testIdList.size());
-
         for (Class<?> exceptionType : exceptionTypes) {
             String testId = testIdList.remove(0);
             Throwable throwable = throwableList.remove(0);
