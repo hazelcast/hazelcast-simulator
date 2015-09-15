@@ -9,15 +9,13 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
@@ -29,6 +27,8 @@ import static java.util.Arrays.asList;
 
 public class WorkerJvmLauncher {
 
+    private static final int WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS = 500;
+
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmLauncher.class);
 
     private static final String CLASSPATH = System.getProperty("java.class.path");
@@ -36,7 +36,6 @@ public class WorkerJvmLauncher {
     private static final String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
     private static final String WORKERS_PATH = getSimulatorHome().getAbsolutePath() + "/workers";
 
-    private final List<WorkerJvm> workersInProgress = new LinkedList<WorkerJvm>();
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
     private final Agent agent;
@@ -53,7 +52,7 @@ public class WorkerJvmLauncher {
         this.workerJvmSettings = workerJvmSettings;
     }
 
-    public void launch() throws Exception {
+    public void launch() {
         testSuiteDir = agent.getTestSuiteDir();
         if (!testSuiteDir.exists()) {
             if (!testSuiteDir.mkdirs()) {
@@ -62,20 +61,22 @@ public class WorkerJvmLauncher {
         }
 
         WorkerType type = workerJvmSettings.getWorkerType();
-        LOGGER.info(format("Starting a Java Virtual Machine for %s worker", type));
+        int workerIndex = workerJvmSettings.getWorkerIndex();
+        LOGGER.info(format("Starting a Java Virtual Machine for %s worker #%d", type, workerIndex));
 
-        String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
-        hzConfigFile = createTmpXmlFile(hzConfigFileName, workerJvmSettings.getHazelcastConfig());
-        log4jFile = createTmpXmlFile("worker-log4j", workerJvmSettings.getLog4jConfig());
-        LOGGER.info("Spawning Worker JVM using settings: " + workerJvmSettings);
+        try {
+            String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
+            hzConfigFile = createTmpXmlFile(hzConfigFileName, workerJvmSettings.getHazelcastConfig());
+            log4jFile = createTmpXmlFile("worker-log4j", workerJvmSettings.getLog4jConfig());
+            LOGGER.info("Spawning Worker JVM using settings: " + workerJvmSettings);
 
-        WorkerJvm worker = startWorkerJvm(type);
-        workersInProgress.add(worker);
+            WorkerJvm worker = startWorkerJvm(type);
+            LOGGER.info(format("Finished starting a Java Virtual Machine for %s worker #%d", type, workerIndex));
 
-        LOGGER.info(format("Finished starting a Java Virtual Machine for %s worker", type));
-
-        waitForWorkersStartup(workersInProgress, workerJvmSettings.getWorkerStartupTimeout());
-        workersInProgress.clear();
+            waitForWorkersStartup(worker, workerJvmSettings.getWorkerStartupTimeout());
+        } catch (IOException e) {
+            throw new SpawnWorkerFailedException("Failed to start worker", e);
+        }
     }
 
     private File createTmpXmlFile(String name, String content) throws IOException {
@@ -92,8 +93,6 @@ public class WorkerJvmLauncher {
         File workerHome = new File(testSuiteDir, workerId);
         ensureExistingDirectory(workerHome);
 
-        String javaHome = getJavaHome();
-
         WorkerJvm workerJvm = new WorkerJvm(workerId, workerIndex, workerHome, type);
 
         generateWorkerStartScript(type, workerJvm);
@@ -103,6 +102,7 @@ public class WorkerJvmLauncher {
                 .redirectErrorStream(true);
 
         Map<String, String> environment = processBuilder.environment();
+        String javaHome = getJavaHome();
         String path = javaHome + File.pathSeparator + "bin:" + environment.get("PATH");
         environment.put("PATH", path);
         environment.put("JAVA_HOME", javaHome);
@@ -117,35 +117,25 @@ public class WorkerJvmLauncher {
         return workerJvm;
     }
 
-    private void waitForWorkersStartup(List<WorkerJvm> workers, int workerTimeoutSec) {
-        List<WorkerJvm> todo = new ArrayList<WorkerJvm>(workers);
+    private void waitForWorkersStartup(WorkerJvm worker, int workerTimeoutSec) {
         for (int i = 0; i < workerTimeoutSec; i++) {
-            Iterator<WorkerJvm> iterator = todo.iterator();
-            while (iterator.hasNext()) {
-                WorkerJvm jvm = iterator.next();
-
-                if (hasExited(jvm)) {
-                    throw new SpawnWorkerFailedException(format("Startup failure: worker on host %s failed during startup,"
-                            + " check '%s/out.log' for more information!", agent.getPublicAddress(), jvm.getWorkerHome()));
-                }
-
-                String address = readAddress(jvm);
-                if (address != null) {
-                    jvm.setMemberAddress(address);
-
-                    iterator.remove();
-                    LOGGER.info(format("Worker: %s Started %s of %s", jvm.getId(), workers.size() - todo.size(), workers.size()));
-                }
+            if (hasExited(worker)) {
+                throw new SpawnWorkerFailedException(format("Startup failure: worker on host %s failed during startup,"
+                        + " check '%s/out.log' for more information!", agent.getPublicAddress(), worker.getWorkerHome()));
             }
 
-            if (todo.isEmpty()) {
+            String address = readAddress(worker);
+            if (address != null) {
+                worker.setMemberAddress(address);
+                LOGGER.info(format("Worker %s started", worker.getId()));
                 return;
             }
 
-            sleepSeconds(1);
+            sleepMillis(WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS);
         }
 
-        workerTimeout(workerTimeoutSec, todo);
+        throw new SpawnWorkerFailedException(format("Worker %s of Testsuite %s on Agent %s didn't start within %s seconds",
+                worker.getId(), agent.getTestSuite().id, agent.getPublicAddress(), workerTimeoutSec));
     }
 
     private String getJavaHome() {
@@ -206,21 +196,6 @@ public class WorkerJvmLauncher {
         deleteQuiet(file);
 
         return address;
-    }
-
-    private void workerTimeout(int workerTimeoutSec, List<WorkerJvm> todo) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        sb.append(todo.get(0).getId());
-        for (int i = 1; i < todo.size(); i++) {
-            sb.append(",").append(todo.get(i).getId());
-        }
-        sb.append("]");
-
-        throw new SpawnWorkerFailedException(format(
-                "Timeout: workers %s of testsuite %s on host %s didn't start within %s seconds",
-                sb, agent.getTestSuite().id, agent.getPublicAddress(),
-                workerTimeoutSec));
     }
 
     private String[] buildArgs(WorkerJvm workerJvm, WorkerType type) {

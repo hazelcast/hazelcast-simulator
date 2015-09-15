@@ -20,6 +20,7 @@ import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.coordinator.remoting.NewProtocolAgentsClient;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -81,6 +82,7 @@ public final class Coordinator {
     private final Bash bash;
 
     private AgentsClient agentsClient;
+    private NewProtocolAgentsClient newProtocolAgentsClient;
     private CoordinatorConnector coordinatorConnector;
 
     private FailureMonitor failureMonitor;
@@ -158,6 +160,8 @@ public final class Coordinator {
         } catch (Exception e) {
             throw new CommandLineExitException("Could not start CoordinatorConnector", e);
         }
+
+        newProtocolAgentsClient = new NewProtocolAgentsClient(coordinatorConnector);
 
         initMemberWorkerCount();
         initMemberHzConfig();
@@ -353,15 +357,16 @@ public final class Coordinator {
             agentsClient.terminateWorkers();
             echo("Successfully killed all remaining workers");
 
-            echo("Starting %d workers", totalWorkerCount);
-            agentsClient.spawnWorkers(agentMemberLayouts);
+            echo("Starting %d workers (%d members, %d clients)", totalWorkerCount, parameters.getMemberWorkerCount(),
+                    parameters.getClientWorkerCount());
+            newProtocolAgentsClient.createWorkers(agentMemberLayouts);
             echo("Successfully started workers");
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to start workers", e);
         }
 
         long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
-        LOGGER.info((format("Successfully started a grand total of %s Workers JVMs after %s ms", totalWorkerCount, durationMs)));
+        LOGGER.info((format("Successfully started a grand total of %s Worker JVMs after %s ms", totalWorkerCount, durationMs)));
     }
 
     void runTestSuite() {

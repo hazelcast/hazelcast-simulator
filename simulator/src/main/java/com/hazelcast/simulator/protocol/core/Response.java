@@ -55,6 +55,15 @@ public class Response {
         return responseTypes.entrySet();
     }
 
+    public ResponseType getFirstErrorResponseType() {
+        for (ResponseType responseType : responseTypes.values()) {
+            if (responseType != ResponseType.SUCCESS) {
+                return responseType;
+            }
+        }
+        return ResponseType.SUCCESS;
+    }
+
     @Override
     public String toString() {
         return "Response{"

@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
 
-final class CoordinatorUtils {
+public final class CoordinatorUtils {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorUtils.class);
 
@@ -56,7 +56,7 @@ final class CoordinatorUtils {
         return (maxLength > 0) ? maxLength : 0;
     }
 
-    static List<AgentMemberLayout> initMemberLayout(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
+    public static List<AgentMemberLayout> initMemberLayout(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
         int agentCount = componentRegistry.agentCount();
         int dedicatedMemberMachineCount = parameters.getDedicatedMemberMachineCount();
         int memberWorkerCount = parameters.getMemberWorkerCount();

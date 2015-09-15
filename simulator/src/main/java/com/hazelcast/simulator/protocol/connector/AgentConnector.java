@@ -27,6 +27,11 @@ public final class AgentConnector extends AbstractServerConnector {
         this.serverConfiguration = configuration;
     }
 
+    @Override
+    protected void beforeShutdown() {
+        serverConfiguration.getProcessor().shutdown();
+    }
+
     /**
      * Creates an {@link AgentConnector} instance.
      *

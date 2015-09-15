@@ -11,7 +11,7 @@ import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
-import com.hazelcast.simulator.protocol.processors.OperationProcessor;
+import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
@@ -25,12 +25,12 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
 public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     private final SimulatorAddress localAddress;
-    private final OperationProcessor processor;
+    private final AgentOperationProcessor processor;
 
     private final ChannelCollectorHandler channelCollectorHandler;
     private final ForwardToWorkerHandler forwardToWorkerHandler;
 
-    public AgentServerConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
+    public AgentServerConfiguration(AgentOperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
                                     SimulatorAddress localAddress, int port) {
         super(futureMap, localAddress, port);
         this.localAddress = localAddress;
@@ -69,5 +69,9 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort) {
         return new AgentClientConfiguration(processor, getFutureMap(), localAddress,
                 workerIndex, workerHost, workerPort, getChannelGroup());
+    }
+
+    public AgentOperationProcessor getProcessor() {
+        return processor;
     }
 }

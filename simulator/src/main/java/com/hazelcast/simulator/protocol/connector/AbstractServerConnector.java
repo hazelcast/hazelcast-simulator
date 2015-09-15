@@ -87,11 +87,15 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public void shutdown() {
+        beforeShutdown();
+
         messageQueueThread.shutdown();
         channel.close().syncUninterruptibly();
 
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
     }
+
+    protected abstract void beforeShutdown();
 
     @Override
     public SimulatorAddress getAddress() {

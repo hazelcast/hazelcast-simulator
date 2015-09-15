@@ -2,6 +2,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.coordinator.remoting.NewProtocolAgentsClient;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.impl.OperationsPerSecResult;
 import com.hazelcast.simulator.test.Failure;
@@ -51,6 +52,9 @@ public class CoordinatorRunTestSuiteTest {
 
     @Mock
     private final AgentsClient agentsClient = mock(AgentsClient.class);
+
+    @Mock
+    private final NewProtocolAgentsClient newProtocolAgentsClient = mock(NewProtocolAgentsClient.class);
 
     @Mock
     private final FailureMonitor failureMonitor = mock(FailureMonitor.class);
@@ -228,6 +232,7 @@ public class CoordinatorRunTestSuiteTest {
         coordinator.testCaseRunnerSleepPeriod = 3;
 
         Whitebox.setInternalState(coordinator, "agentsClient", agentsClient);
+        Whitebox.setInternalState(coordinator, "newProtocolAgentsClient", newProtocolAgentsClient);
         Whitebox.setInternalState(coordinator, "failureMonitor", failureMonitor);
         Whitebox.setInternalState(coordinator, "performanceMonitor", performanceMonitor);
     }

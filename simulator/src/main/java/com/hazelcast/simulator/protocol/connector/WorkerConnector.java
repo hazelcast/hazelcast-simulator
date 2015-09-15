@@ -27,6 +27,10 @@ public final class WorkerConnector extends AbstractServerConnector {
         this.workerServerConfiguration = configuration;
     }
 
+    @Override
+    protected void beforeShutdown() {
+    }
+
     /**
      * Creates a {@link WorkerConnector} instance.
      *

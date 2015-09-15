@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.worker.WorkerType;
 
@@ -26,6 +27,10 @@ public final class AgentMemberLayout {
 
     public String getPublicAddress() {
         return agentData.getPublicAddress();
+    }
+
+    public SimulatorAddress getSimulatorAddress() {
+        return agentData.getAddress();
     }
 
     public void setAgentMemberMode(AgentMemberMode agentMemberMode) {

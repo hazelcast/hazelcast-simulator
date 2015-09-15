@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
@@ -10,6 +11,7 @@ import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -40,8 +42,18 @@ public class AgentOperationProcessor extends OperationProcessor {
         return SUCCESS;
     }
 
-    private void processCreateWorker(CreateWorkerOperation operation) throws Exception {
-        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, operation.getWorkerJvmSettings());
-        launcher.launch();
+    private void processCreateWorker(final CreateWorkerOperation operation) throws Exception {
+        final CountDownLatch createdWorkerLatch = new CountDownLatch(operation.getWorkerJvmSettings().size());
+        for (final WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
+            getExecutorService().submit(new Runnable() {
+                @Override
+                public void run() {
+                    WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerJvmSettings);
+                    launcher.launch();
+                    createdWorkerLatch.countDown();
+                }
+            });
+        }
+        createdWorkerLatch.await();
     }
 }

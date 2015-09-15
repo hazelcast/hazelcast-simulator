@@ -6,7 +6,12 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.utils.EmptyStatement;
 import org.apache.log4j.Logger;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
@@ -17,12 +22,28 @@ import static com.hazelcast.simulator.protocol.operation.OperationType.getOperat
  */
 public abstract class OperationProcessor {
 
+    private static final int EXECUTOR_SERVICE_THREAD_POOL_SIZE = 5;
+    private static final int EXECUTOR_SERVICE_TERMINATION_TIMEOUT_SECONDS = 10;
+
     private static final Logger LOGGER = Logger.getLogger(OperationProcessor.class);
 
     private final ExceptionLogger exceptionLogger;
+    private final ExecutorService executorService;
 
     OperationProcessor(ExceptionLogger exceptionLogger) {
         this.exceptionLogger = exceptionLogger;
+        this.executorService = Executors.newFixedThreadPool(EXECUTOR_SERVICE_THREAD_POOL_SIZE);
+    }
+
+    public void shutdown() {
+        try {
+            LOGGER.info("Shutdown of ExecutorService in OperationProcessor...");
+            executorService.shutdown();
+            executorService.awaitTermination(EXECUTOR_SERVICE_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            LOGGER.info("Shutdown of ExecutorService in OperationProcessor completed!");
+        } catch (InterruptedException e) {
+            EmptyStatement.ignore(e);
+        }
     }
 
     public final ResponseType process(SimulatorOperation operation) {
@@ -57,4 +78,8 @@ public abstract class OperationProcessor {
     }
 
     protected abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception;
+
+    protected ExecutorService getExecutorService() {
+        return executorService;
+    }
 }

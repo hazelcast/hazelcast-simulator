@@ -8,6 +8,8 @@ import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
+import java.util.Collections;
+
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
@@ -59,13 +61,13 @@ public class OperationCodecTest {
 
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings(1, WorkerType.MEMBER, parameters);
 
-        CreateWorkerOperation operation = new CreateWorkerOperation(workerJvmSettings);
+        CreateWorkerOperation operation = new CreateWorkerOperation(Collections.singletonList(workerJvmSettings));
         String json = OperationCodec.toJson(operation);
         assertNotNull(json);
         LOGGER.info(json);
 
         CreateWorkerOperation decoded = (CreateWorkerOperation) OperationCodec.fromJson(json, CreateWorkerOperation.class);
-        WorkerJvmSettings decodedSettings = decoded.getWorkerJvmSettings();
+        WorkerJvmSettings decodedSettings = decoded.getWorkerJvmSettings().get(0);
         assertEquals(workerJvmSettings.getWorkerIndex(), decodedSettings.getWorkerIndex());
         assertEquals(workerJvmSettings.getWorkerType(), decodedSettings.getWorkerType());
         assertEquals(workerJvmSettings.getHazelcastConfig(), decodedSettings.getHazelcastConfig());
