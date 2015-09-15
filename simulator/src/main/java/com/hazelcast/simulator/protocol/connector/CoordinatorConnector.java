@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
+import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 
 /**
@@ -85,7 +85,7 @@ public class CoordinatorConnector {
      */
     public Response write(SimulatorAddress destination, SimulatorOperation operation) throws Exception {
         SimulatorMessage message = new SimulatorMessage(destination, COORDINATOR, messageIds.incrementAndGet(),
-                getOperationType(operation), encodeOperation(operation));
+                getOperationType(operation), toJson(operation));
 
         int agentAddressIndex = destination.getAgentIndex();
         Response response = new Response(message);

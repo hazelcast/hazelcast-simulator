@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol.handler;
 
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
@@ -9,7 +10,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.log4j.Logger;
 
-import static com.hazelcast.simulator.protocol.operation.OperationHandler.processMessage;
+import static com.hazelcast.simulator.protocol.operation.OperationCodec.fromSimulatorMessage;
 import static java.lang.String.format;
 
 /**
@@ -37,6 +38,7 @@ public class MessageConsumeHandler extends SimpleChannelInboundHandler<Simulator
         long messageId = msg.getMessageId();
         LOGGER.debug(format("[%d] %s %s MessageConsumeHandler is consuming message...", messageId, addressLevel, localAddress));
 
-        ctx.writeAndFlush(new Response(messageId, msg.getSource(), localAddress, processMessage(msg, processor)));
+        ResponseType responseType = processor.process(fromSimulatorMessage(msg));
+        ctx.writeAndFlush(new Response(messageId, msg.getSource(), localAddress, responseType));
     }
 }

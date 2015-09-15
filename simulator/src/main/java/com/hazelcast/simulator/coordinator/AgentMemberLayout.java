@@ -46,7 +46,7 @@ public final class AgentMemberLayout {
     public int getCount(WorkerType type) {
         int count = 0;
         for (WorkerJvmSettings workerJvmSettings : workerJvmSettingsList) {
-            if (workerJvmSettings.getType() == type) {
+            if (workerJvmSettings.getWorkerType() == type) {
                 count++;
             }
         }

@@ -27,7 +27,7 @@ import java.io.Serializable;
 public class WorkerJvmSettings implements Serializable {
 
     private final int workerIndex;
-    private final WorkerType type;
+    private final String workerType;
 
     private final String jvmOptions;
     private final String hazelcastConfig;
@@ -40,11 +40,11 @@ public class WorkerJvmSettings implements Serializable {
     private final String profilerSettings;
     private final String numaCtl;
 
-    public WorkerJvmSettings(int workerIndex, WorkerType type, CoordinatorParameters parameters) {
+    public WorkerJvmSettings(int workerIndex, WorkerType workerType, CoordinatorParameters parameters) {
         this.workerIndex = workerIndex;
-        this.type = type;
+        this.workerType = workerType.name();
 
-        switch (type) {
+        switch (workerType) {
             case MEMBER:
                 this.jvmOptions = parameters.getMemberJvmOptions();
                 this.hazelcastConfig = parameters.getMemberHzConfig();
@@ -67,8 +67,8 @@ public class WorkerJvmSettings implements Serializable {
         return workerIndex;
     }
 
-    public WorkerType getType() {
-        return type;
+    public WorkerType getWorkerType() {
+        return WorkerType.valueOf(workerType);
     }
 
     public String getJvmOptions() {
@@ -107,7 +107,7 @@ public class WorkerJvmSettings implements Serializable {
     public String toString() {
         return "WorkerJvmSettings{"
                 + "workerIndex=" + workerIndex
-                + ", type=" + type
+                + ", type=" + workerType
                 + ", jvmOptions='" + jvmOptions + '\''
                 + ", hazelcastConfig='" + hazelcastConfig + '\''
                 + ", log4jConfig='" + log4jConfig + '\''

@@ -25,7 +25,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURIN
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.TEST_PHASE_IS_RUNNING;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
-import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
+import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
@@ -218,7 +218,7 @@ public class WorkerOperationProcessorTest {
 
     private ResponseType createTestCase(TestCase testCase) {
         SimulatorOperation operation = new CreateTestOperation(testCase);
-        LOGGER.debug("Serialized operation: " + encodeOperation(operation));
+        LOGGER.debug("Serialized operation: " + toJson(operation));
 
         return processor.process(operation);
     }

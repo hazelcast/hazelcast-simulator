@@ -30,7 +30,7 @@ import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration
 import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
-import static com.hazelcast.simulator.protocol.operation.OperationHandler.encodeOperation;
+import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
@@ -124,7 +124,7 @@ abstract class AbstractServerConnector implements ServerConnector {
     private SimulatorMessage createSimulatorMessage(SimulatorAddress source, SimulatorAddress destination,
                                                     SimulatorOperation operation) {
         return new SimulatorMessage(destination, source, messageIds.incrementAndGet(),
-                getOperationType(operation), encodeOperation(operation));
+                getOperationType(operation), toJson(operation));
     }
 
     private ResponseFuture writeAsync(SimulatorMessage message) {

@@ -61,7 +61,7 @@ public class WorkerJvmLauncher {
             }
         }
 
-        WorkerType type = workerJvmSettings.getType();
+        WorkerType type = workerJvmSettings.getWorkerType();
         LOGGER.info(format("Starting a Java Virtual Machine for %s worker", type));
 
         String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";

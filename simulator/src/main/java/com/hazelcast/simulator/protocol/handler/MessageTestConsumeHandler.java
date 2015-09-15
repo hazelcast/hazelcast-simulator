@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.handler;
 
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
@@ -15,7 +16,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NOT_FOUND;
-import static com.hazelcast.simulator.protocol.operation.OperationHandler.processMessage;
+import static com.hazelcast.simulator.protocol.operation.OperationCodec.fromSimulatorMessage;
 import static java.lang.String.format;
 
 /**
@@ -61,7 +62,8 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
         if (testAddressIndex == 0) {
             LOGGER.debug(format("[%d] forwarding message to all tests", msg.getMessageId()));
             for (Map.Entry<Integer, OperationProcessor> entry : testProcessors.entrySet()) {
-                response.addResponse(testAddresses.get(entry.getKey()), processMessage(msg, entry.getValue()));
+                ResponseType responseType = entry.getValue().process(fromSimulatorMessage(msg));
+                response.addResponse(testAddresses.get(entry.getKey()), responseType);
             }
         } else {
             LOGGER.debug(format("[%d] forwarding message to test %d", msg.getMessageId(), testAddressIndex));
@@ -69,7 +71,8 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
             if (processor == null) {
                 response.addResponse(localAddress, FAILURE_TEST_NOT_FOUND);
             } else {
-                response.addResponse(testAddresses.get(testAddressIndex), processMessage(msg, processor));
+                ResponseType responseType = processor.process(fromSimulatorMessage(msg));
+                response.addResponse(testAddresses.get(testAddressIndex), responseType);
             }
         }
         ctx.writeAndFlush(response);
