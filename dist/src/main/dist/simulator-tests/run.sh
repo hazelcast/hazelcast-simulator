@@ -1,26 +1,28 @@
 #!/bin/sh
 
 boxCount=$1
-members=$2
-clients=$3
-duration=$4
+dedicatedMemberBoxes=$2
+memberCount=$3
+clientCount=$4
+duration=$5
 output=output
 
 gcArgs="-verbose:gc -Xloggc:verbosegc.log"
-gcArgs="$gcArgs -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime"
+gcArgs="${gcArgs} -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime"
 
 memberHeapSize=2G
 partitions=271
 monitorSec=30
 
-memberJvmArgs="-Dhazelcast.partition.count=$partitions"
-memberJvmArgs="$memberJvmArgs -Dhazelcast.health.monitoring.level=NOISY -Dhazelcast.health.monitoring.delay.seconds=$monitorSec"
-memberJvmArgs="$memberJvmArgs -Xmx$memberHeapSize -XX:+HeapDumpOnOutOfMemoryError"
-memberJvmArgs="$memberJvmArgs $gcArgs"
+memberJvmArgs="-Dhazelcast.partition.count=${partitions}"
+memberJvmArgs="${memberJvmArgs} -Dhazelcast.health.monitoring.level=NOISY -Dhazelcast.health.monitoring.delay.seconds=${monitorSec}"
+memberJvmArgs="${memberJvmArgs} -Xmx${memberHeapSize} -XX:+HeapDumpOnOutOfMemoryError"
+memberJvmArgs="${memberJvmArgs} ${gcArgs}"
 
-clientHeapSize=1G
-clientJvmArgs="-Xmx$clientHeapSize -XX:+HeapDumpOnOutOfMemoryError"
-clientJvmArgs="$clientJvmArgs $gcArgs"
+clientHeapSize=350M
+
+clientJvmArgs="-Xmx${clientHeapSize} -XX:+HeapDumpOnOutOfMemoryError"
+clientJvmArgs="${clientJvmArgs} ${gcArgs}"
 
 if ! provisioner --scale ${boxCount}; then
   exit 1
@@ -29,13 +31,15 @@ fi
 provisioner --clean
 provisioner --install
 
-coordinator --memberWorkerCount ${members} \
-            --clientWorkerCount ${clients} \
+coordinator --dedicatedMemberMachines ${dedicatedMemberBoxes} \
+            --memberWorkerCount ${memberCount} \
+            --clientWorkerCount ${clientCount} \
             --duration ${duration} \
-            --workerVmOptions "$memberJvmArgs" \
-            --clientWorkerVmOptions "$clientJvmArgs" \
+            --workerVmOptions "${memberJvmArgs}" \
+            --clientWorkerVmOptions "${clientJvmArgs}" \
             --parallel \
             test.properties
+exitCode=$?
 
 provisioner --download ${output}
 
@@ -51,3 +55,5 @@ if [ -f ${output}/failures* ]; then
   echo "FAIL! ${output}"
   exit 1
 fi
+
+exit ${exitCode}
