@@ -1,11 +1,9 @@
 package com.hazelcast.simulator.coordinator.remoting;
 
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.CountdownWatch;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.common.messaging.MessageAddress;
-import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestPhase;
@@ -38,7 +36,6 @@ import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.
 import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.SERVICE_INIT_TESTSUITE;
 import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.SERVICE_POKE;
 import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.SERVICE_PROCESS_MESSAGE;
-import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.SERVICE_SPAWN_WORKERS;
 import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.SERVICE_TERMINATE_WORKERS;
 import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
@@ -223,37 +220,6 @@ public class AgentsClient {
             LOGGER.info(prefix + "Waiting " + secondsToHuman(duration) + " for " + testPhase.desc() + " completion");
             sleepSeconds(WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS);
         }
-    }
-
-    public void spawnWorkers(List<AgentMemberLayout> agentLayouts) throws TimeoutException {
-        List<Future<Object>> futures = new LinkedList<Future<Object>>();
-        for (AgentMemberLayout agentMemberLayout : agentLayouts) {
-            final AgentClient agentClient = getAgent(agentMemberLayout.getPublicAddress());
-            if (agentClient == null) {
-                throw new CommandLineExitException("agentClient is null");
-            }
-
-            for (final WorkerJvmSettings workerJvmSettings : agentMemberLayout.getWorkerJvmSettings()) {
-                Future<Object> future = agentExecutor.submit(new Callable<Object>() {
-                    @Override
-                    public Object call() throws Exception {
-                        agentClient.execute(SERVICE_SPAWN_WORKERS, workerJvmSettings);
-                        return null;
-                    }
-                });
-                futures.add(future);
-            }
-        }
-        getAllFutures(futures);
-    }
-
-    private AgentClient getAgent(String publicAddress) {
-        for (AgentClient client : agents) {
-            if (publicAddress.equals(client.getPublicAddress())) {
-                return client;
-            }
-        }
-        return null;
     }
 
     public void terminateWorkers() throws TimeoutException {

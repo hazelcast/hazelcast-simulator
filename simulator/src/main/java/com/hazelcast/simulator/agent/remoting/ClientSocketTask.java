@@ -4,7 +4,6 @@ import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestSuite;
@@ -66,10 +65,6 @@ class ClientSocketTask implements Runnable {
             case SERVICE_POKE:
                 poke();
                 break;
-            case SERVICE_SPAWN_WORKERS:
-                WorkerJvmSettings workerJvmSettings = (WorkerJvmSettings) in.readObject();
-                spawnWorkers(workerJvmSettings);
-                break;
             case SERVICE_INIT_TESTSUITE:
                 TestSuite testSuite = (TestSuite) in.readObject();
                 initTestSuite(testSuite);
@@ -121,15 +116,6 @@ class ClientSocketTask implements Runnable {
         WorkerJvmFailureMonitor failureMonitor = agent.getWorkerJvmFailureMonitor();
         failureMonitor.drainFailures(failures);
         return failures;
-    }
-
-    private void spawnWorkers(WorkerJvmSettings workerJvmSettings) throws Exception {
-        try {
-            agent.getWorkerJvmManager().spawn(workerJvmSettings);
-        } catch (Exception e) {
-            LOGGER.fatal("Failed to spawn workers from workerSettings: " + workerJvmSettings, e);
-            throw e;
-        }
     }
 
     private void initTestSuite(TestSuite testSuite) throws Exception {

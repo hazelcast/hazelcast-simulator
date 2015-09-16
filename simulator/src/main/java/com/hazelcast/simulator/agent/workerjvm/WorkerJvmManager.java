@@ -261,11 +261,6 @@ public class WorkerJvmManager {
         agent.getWorkerJvmFailureMonitor().publish(failure);
     }
 
-    public void spawn(WorkerJvmSettings workerJvmSettings) throws Exception {
-        WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerJvmSettings);
-        launcher.launch();
-    }
-
     public void terminateWorkers() {
         LOGGER.info("Terminating workers");
         for (WorkerJvm jvm : new LinkedList<WorkerJvm>(workerJVMs.values())) {

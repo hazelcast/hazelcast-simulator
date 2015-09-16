@@ -17,7 +17,6 @@ public class AgentRemoteService {
     public static final int PORT = 9000;
 
     public enum Service {
-        SERVICE_SPAWN_WORKERS,
         SERVICE_INIT_TESTSUITE,
         SERVICE_TERMINATE_WORKERS,
         SERVICE_EXECUTE_ALL_WORKERS,
