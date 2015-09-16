@@ -56,8 +56,8 @@ public final class CoordinatorUtils {
         return (maxLength > 0) ? maxLength : 0;
     }
 
-    public static List<AgentMemberLayout> initMemberLayout(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
-        int agentCount = componentRegistry.agentCount();
+    public static List<AgentMemberLayout> initMemberLayout(ComponentRegistry registry, CoordinatorParameters parameters) {
+        int agentCount = registry.agentCount();
         int dedicatedMemberMachineCount = parameters.getDedicatedMemberMachineCount();
         int memberWorkerCount = parameters.getMemberWorkerCount();
         int clientWorkerCount = parameters.getClientWorkerCount();
@@ -70,7 +70,7 @@ public final class CoordinatorUtils {
             throw new CommandLineExitException("dedicatedMemberMachineCount is too big, there are no machines left for clients!");
         }
 
-        List<AgentMemberLayout> agentMemberLayouts = initAgentMemberLayouts(componentRegistry);
+        List<AgentMemberLayout> agentMemberLayouts = initAgentMemberLayouts(registry);
 
         assignDedicatedMemberMachines(agentCount, agentMemberLayouts, dedicatedMemberMachineCount);
 
