@@ -44,11 +44,11 @@ public class AgentOperationProcessor extends OperationProcessor {
 
     private void processCreateWorker(final CreateWorkerOperation operation) throws Exception {
         final CountDownLatch createdWorkerLatch = new CountDownLatch(operation.getWorkerJvmSettings().size());
-        for (final WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
+        for (WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
+            final WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerJvmSettings);
             getExecutorService().submit(new Runnable() {
                 @Override
                 public void run() {
-                    WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerJvmSettings);
                     launcher.launch();
                     createdWorkerLatch.countDown();
                 }
