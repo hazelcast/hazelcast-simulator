@@ -159,7 +159,7 @@ public final class MemberWorker {
 
     private void stop() {
         LOGGER.info("Stopping threads...");
-        //workerConnector.shutdown();
+        workerConnector.shutdown();
         workerSocketProcessor.shutdown();
         workerCommandRequestProcessor.shutdown();
     }
