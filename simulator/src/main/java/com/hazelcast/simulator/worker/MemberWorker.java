@@ -24,6 +24,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.commands.CommandRequest;
 import com.hazelcast.simulator.worker.commands.CommandResponse;
@@ -64,7 +65,7 @@ public final class MemberWorker {
 
     private final WorkerSocketProcessor workerSocketProcessor;
     private final WorkerCommandRequestProcessor workerCommandRequestProcessor;
-    //private final WorkerConnector workerConnector;
+    private final WorkerConnector workerConnector;
 
     private MemberWorker(String workerId, WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort,
                          boolean autoCreateHzInstance, String hConfigFile) throws Exception {
@@ -82,8 +83,8 @@ public final class MemberWorker {
         this.workerCommandRequestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue, type,
                 hazelcastInstance);
 
-        //workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort);
-        //workerConnector.start();
+        workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort);
+        workerConnector.start();
 
         signalStartToAgent(hazelcastInstance);
     }
