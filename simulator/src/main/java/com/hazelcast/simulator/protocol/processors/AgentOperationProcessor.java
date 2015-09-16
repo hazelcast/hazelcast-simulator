@@ -4,6 +4,7 @@ import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
@@ -44,12 +45,16 @@ public class AgentOperationProcessor extends OperationProcessor {
 
     private void processCreateWorker(final CreateWorkerOperation operation) throws Exception {
         final CountDownLatch createdWorkerLatch = new CountDownLatch(operation.getWorkerJvmSettings().size());
-        for (WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
+        for (final WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
             final WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerJvmSettings);
             getExecutorService().submit(new Runnable() {
                 @Override
                 public void run() {
                     launcher.launch();
+
+                    int workerIndex = workerJvmSettings.getWorkerIndex();
+                    agent.getAgentConnector().addWorker(workerIndex, "127.0.0.1", Ports.WORKER_START_PORT + workerIndex);
+
                     createdWorkerLatch.countDown();
                 }
             });

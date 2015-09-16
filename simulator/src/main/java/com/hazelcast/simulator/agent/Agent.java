@@ -77,6 +77,10 @@ public class Agent {
         return publicAddress;
     }
 
+    public AgentConnector getAgentConnector() {
+        return agentConnector;
+    }
+
     public void initTestSuite(TestSuite testSuite) {
         this.testSuite = testSuite;
 

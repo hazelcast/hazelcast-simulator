@@ -1,7 +1,9 @@
 package com.hazelcast.simulator.protocol.processors;
 
+import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
@@ -21,10 +23,11 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(AgentOperationProcessor.class)
+@PrepareForTest({AgentOperationProcessor.class, AgentConnector.class})
 public class AgentOperationProcessorTest {
 
     private final ExceptionLogger exceptionLogger = mock(ExceptionLogger.class);
@@ -33,7 +36,12 @@ public class AgentOperationProcessorTest {
 
     @Before
     public void setUp() {
-        processor = new AgentOperationProcessor(exceptionLogger, null, null);
+        AgentConnector agentConnector = mock(AgentConnector.class);
+
+        Agent agent = mock(Agent.class);
+        when(agent.getAgentConnector()).thenReturn(agentConnector);
+
+        processor = new AgentOperationProcessor(exceptionLogger, agent, null);
     }
 
     @Test
