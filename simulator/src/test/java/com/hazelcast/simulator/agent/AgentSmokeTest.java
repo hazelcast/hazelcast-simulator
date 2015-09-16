@@ -7,6 +7,8 @@ import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.coordinator.AgentMemberMode;
 import com.hazelcast.simulator.coordinator.CoordinatorParameters;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
+import com.hazelcast.simulator.coordinator.remoting.NewProtocolAgentsClient;
+import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.Failure;
@@ -26,12 +28,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -51,6 +53,9 @@ public class AgentSmokeTest {
     private static AgentStarter agentStarter;
     private static AgentsClient agentsClient;
 
+    private static CoordinatorConnector coordinatorConnector;
+    private static NewProtocolAgentsClient newProtocolAgentsClient;
+
     @BeforeClass
     public static void setUp() throws Exception {
         userDir = System.getProperty("user.dir");
@@ -60,16 +65,25 @@ public class AgentSmokeTest {
         LOGGER.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
         LOGGER.info("Test runtime for smoke test: " + TEST_RUNTIME_SECONDS + " seconds");
 
+        ComponentRegistry registry = new ComponentRegistry();
+        registry.addAgent(AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
+
         agentStarter = new AgentStarter();
         agentStarter.start();
 
-        agentsClient = getAgentsClient();
+        agentsClient = new AgentsClient(registry.getAgents());
         agentsClient.start();
+
+        coordinatorConnector = new CoordinatorConnector();
+        coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
+
+        newProtocolAgentsClient = new NewProtocolAgentsClient(coordinatorConnector);
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
         try {
+            coordinatorConnector.shutdown();
             try {
                 agentsClient.stop();
             } finally {
@@ -118,7 +132,7 @@ public class AgentSmokeTest {
         agentsClient.initTestSuite(testSuite);
 
         LOGGER.info("Spawning workers...");
-        spawnWorkers(agentsClient);
+        createWorkers();
 
         InitCommand initTestCommand = new InitCommand(testCase);
         LOGGER.info("InitTest phase...");
@@ -154,12 +168,12 @@ public class AgentSmokeTest {
         LOGGER.info("Testcase done!");
     }
 
-    private void spawnWorkers(AgentsClient client) throws TimeoutException {
+    private void createWorkers() {
         AgentData agentData = new AgentData(1, AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
         AgentMemberLayout agentLayout = new AgentMemberLayout(agentData, AgentMemberMode.MEMBER);
         agentLayout.addWorker(WorkerType.MEMBER, getParameters());
 
-        client.spawnWorkers(Collections.singletonList(agentLayout));
+        newProtocolAgentsClient.createWorkers(Collections.singletonList(agentLayout));
     }
 
     private CoordinatorParameters getParameters() {
@@ -191,12 +205,6 @@ public class AgentSmokeTest {
         LOGGER.info("Starting " + testPhase.desc() + " phase...");
         agentsClient.executeOnAllWorkers(new GenericCommand(testCase.getId(), testPhase));
         agentsClient.waitForPhaseCompletion("", testCase.getId(), testPhase);
-    }
-
-    private static AgentsClient getAgentsClient() throws IOException {
-        ComponentRegistry registry = new ComponentRegistry();
-        registry.addAgent(AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
-        return new AgentsClient(registry.getAgents());
     }
 
     private static class AgentStarter {
