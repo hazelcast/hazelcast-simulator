@@ -116,28 +116,31 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public Response write(SimulatorAddress destination, SimulatorOperation operation) {
-        SimulatorMessage message = createSimulatorMessage(localAddress, destination, operation);
-        return write(message);
+        return write(localAddress, destination, operation);
     }
 
     @Override
     public Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
-        SimulatorMessage message = createSimulatorMessage(source, destination, operation);
-        return write(message);
-    }
-
-    private SimulatorMessage createSimulatorMessage(SimulatorAddress source, SimulatorAddress destination,
-                                                    SimulatorOperation operation) {
-        return new SimulatorMessage(destination, source, messageIds.incrementAndGet(),
-                getOperationType(operation), toJson(operation));
-    }
-
-    private Response write(SimulatorMessage message) {
         try {
-            return writeAsync(message).get();
+            return writeAsync(source, destination, operation).get();
         } catch (InterruptedException e) {
             throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
         }
+    }
+
+    @Override
+    public ResponseFuture writeAsync(SimulatorAddress destination, SimulatorOperation operation) {
+        return writeAsync(localAddress, destination, operation);
+    }
+
+    @Override
+    public ResponseFuture writeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
+        SimulatorMessage message = createSimulatorMessage(source, destination, operation);
+        return writeAsync(message);
+    }
+
+    private SimulatorMessage createSimulatorMessage(SimulatorAddress src, SimulatorAddress dst, SimulatorOperation op) {
+        return new SimulatorMessage(dst, src, messageIds.incrementAndGet(), getOperationType(op), toJson(op));
     }
 
     private ResponseFuture writeAsync(SimulatorMessage message) {
@@ -177,6 +180,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                     EmptyStatement.ignore(e);
                 } catch (Exception e) {
                     LOGGER.error("Error while sending message from messageQueue", e);
+                    throw new SimulatorProtocolException("Error while sending message from messageQueue", e);
                 }
             }
         }

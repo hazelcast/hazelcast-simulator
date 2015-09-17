@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
@@ -160,6 +161,16 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void test_Coordinator_fromAgent_async() throws Exception {
+        AgentConnector agent = getAgentConnector(0);
+        SimulatorAddress source = agent.getAddress();
+        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        ResponseFuture future = agent.writeAsync(destination, DEFAULT_OPERATION);
+
+        assertSingleTarget(future.get(), source, destination, SUCCESS);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_Coordinator_fromWorker() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress();
@@ -167,6 +178,16 @@ public class ProtocolIntegrationTest {
         Response response = worker.write(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(response, source, destination, SUCCESS);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void test_Coordinator_fromWorker_async() throws Exception {
+        WorkerConnector worker = getWorkerConnector(0);
+        SimulatorAddress source = worker.getAddress();
+        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        ResponseFuture future = worker.writeAsync(destination, DEFAULT_OPERATION);
+
+        assertSingleTarget(future.get(), source, destination, SUCCESS);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
@@ -180,6 +201,16 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void test_Coordinator_fromTest_async() throws Exception {
+        WorkerConnector worker = getWorkerConnector(0);
+        SimulatorAddress source = worker.getAddress().getChild(1);
+        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        ResponseFuture future = worker.writeAsync(source, destination, DEFAULT_OPERATION);
+
+        assertSingleTarget(future.get(), source, destination, SUCCESS);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_ParentAgent_fromWorker() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress();
@@ -190,6 +221,16 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void test_ParentAgent_fromWorker_async() throws Exception {
+        WorkerConnector worker = getWorkerConnector(0);
+        SimulatorAddress source = worker.getAddress();
+        SimulatorAddress destination = source.getParent();
+        ResponseFuture future = worker.writeAsync(destination, DEFAULT_OPERATION);
+
+        assertSingleTarget(future.get(), source, destination, SUCCESS);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_ParentAgent_fromTest() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
@@ -197,6 +238,16 @@ public class ProtocolIntegrationTest {
         Response response = worker.write(source, destination, DEFAULT_OPERATION);
 
         assertSingleTarget(response, source, destination, SUCCESS);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void test_ParentAgent_fromTest_async() throws Exception {
+        WorkerConnector worker = getWorkerConnector(0);
+        SimulatorAddress source = worker.getAddress().getChild(1);
+        SimulatorAddress destination = worker.getAddress().getParent();
+        ResponseFuture future = worker.writeAsync(source, destination, DEFAULT_OPERATION);
+
+        assertSingleTarget(future.get(), source, destination, SUCCESS);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
