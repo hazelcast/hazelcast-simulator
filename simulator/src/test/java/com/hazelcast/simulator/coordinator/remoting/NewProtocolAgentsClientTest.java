@@ -24,15 +24,15 @@ public class NewProtocolAgentsClientTest {
     private CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
 
     private CoordinatorParameters parameters = mock(CoordinatorParameters.class);
-    private ComponentRegistry registry = new ComponentRegistry();
+    private ComponentRegistry componentRegistry = new ComponentRegistry();
 
     @Test
     public void testCreateWorkers_withClients() throws Exception {
         initMocks(ResponseType.SUCCESS, 6, 3);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(registry, parameters);
+        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
 
-        NewProtocolAgentsClient agentsClient = new NewProtocolAgentsClient(coordinatorConnector);
+        NewProtocolAgentsClient agentsClient = new NewProtocolAgentsClient(coordinatorConnector, componentRegistry);
         agentsClient.createWorkers(memberLayouts);
     }
 
@@ -40,9 +40,9 @@ public class NewProtocolAgentsClientTest {
     public void testCreateWorkers_noClients() throws Exception {
         initMocks(ResponseType.SUCCESS, 6, 0);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(registry, parameters);
+        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
 
-        NewProtocolAgentsClient agentsClient = new NewProtocolAgentsClient(coordinatorConnector);
+        NewProtocolAgentsClient agentsClient = new NewProtocolAgentsClient(coordinatorConnector, componentRegistry);
         agentsClient.createWorkers(memberLayouts);
     }
 
@@ -50,9 +50,9 @@ public class NewProtocolAgentsClientTest {
     public void testCreateWorkers_withErrorResponse() throws Exception {
         initMocks(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, 6, 0);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(registry, parameters);
+        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
 
-        NewProtocolAgentsClient agentsClient = new NewProtocolAgentsClient(coordinatorConnector);
+        NewProtocolAgentsClient agentsClient = new NewProtocolAgentsClient(coordinatorConnector, componentRegistry);
         agentsClient.createWorkers(memberLayouts);
     }
 
@@ -60,9 +60,9 @@ public class NewProtocolAgentsClientTest {
     public void testCreateWorkers_withExceptionOnWrite() throws Exception {
         initMocks(null, 6, 0);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(registry, parameters);
+        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
 
-        NewProtocolAgentsClient agentsClient = new NewProtocolAgentsClient(coordinatorConnector);
+        NewProtocolAgentsClient agentsClient = new NewProtocolAgentsClient(coordinatorConnector, componentRegistry);
         agentsClient.createWorkers(memberLayouts);
     }
 
@@ -77,9 +77,9 @@ public class NewProtocolAgentsClientTest {
             when(coordinatorConnector.write(any(SimulatorAddress.class), any(CreateWorkerOperation.class))).thenReturn(response);
         }
 
-        registry.addAgent("192.168.0.1", "192.168.0.1");
-        registry.addAgent("192.168.0.2", "192.168.0.2");
-        registry.addAgent("192.168.0.3", "192.168.0.3");
+        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
+        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
+        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
 
         when(parameters.getDedicatedMemberMachineCount()).thenReturn(0);
         when(parameters.getMemberWorkerCount()).thenReturn(memberCount);

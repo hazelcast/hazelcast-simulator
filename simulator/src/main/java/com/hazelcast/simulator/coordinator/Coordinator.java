@@ -161,7 +161,7 @@ public final class Coordinator {
             throw new CommandLineExitException("Could not start CoordinatorConnector", e);
         }
 
-        newProtocolAgentsClient = new NewProtocolAgentsClient(coordinatorConnector);
+        newProtocolAgentsClient = new NewProtocolAgentsClient(coordinatorConnector, componentRegistry);
 
         initMemberWorkerCount();
         initMemberHzConfig();

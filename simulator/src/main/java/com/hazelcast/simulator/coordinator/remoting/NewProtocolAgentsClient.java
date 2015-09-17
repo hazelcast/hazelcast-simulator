@@ -7,6 +7,7 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -25,9 +26,11 @@ public class NewProtocolAgentsClient {
     private static final Logger LOGGER = Logger.getLogger(NewProtocolAgentsClient.class);
 
     private final CoordinatorConnector coordinatorConnector;
+    private final ComponentRegistry componentRegistry;
 
-    public NewProtocolAgentsClient(CoordinatorConnector coordinatorConnector) {
+    public NewProtocolAgentsClient(CoordinatorConnector coordinatorConnector, ComponentRegistry componentRegistry) {
         this.coordinatorConnector = coordinatorConnector;
+        this.componentRegistry = componentRegistry;
     }
 
     public void createWorkers(List<AgentMemberLayout> agentLayouts) {
@@ -63,12 +66,15 @@ public class NewProtocolAgentsClient {
                         throw new CommandLineExitException(format(
                                 "Could not create %d %s worker on %s", workerCount, workerType, destination), e);
                     }
+
                     ResponseType responseType = response.getFirstErrorResponseType();
                     if (responseType != ResponseType.SUCCESS) {
                         throw new CommandLineExitException(format(
                                 "Could not create %d %s worker on %s (%s)", workerCount, workerType, destination, responseType));
                     }
+
                     LOGGER.info(format("Created %d %s worker on %s", workerCount, workerType, destination));
+                    componentRegistry.addWorkers(destination, settingsList);
                 }
             });
         }

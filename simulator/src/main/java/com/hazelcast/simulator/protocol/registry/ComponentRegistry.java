@@ -1,5 +1,8 @@
 package com.hazelcast.simulator.protocol.registry;
 
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,6 +17,7 @@ public class ComponentRegistry {
 
     private final AtomicInteger agentIndex = new AtomicInteger();
     private final List<AgentData> agents = synchronizedList(new ArrayList<AgentData>());
+    private final List<WorkerData> workers = synchronizedList(new ArrayList<WorkerData>());
 
     public void addAgent(String publicAddress, String privateAddress) {
         AgentData agentData = new AgentData(agentIndex.incrementAndGet(), publicAddress, privateAddress);
@@ -39,5 +43,24 @@ public class ComponentRegistry {
 
     public AgentData getFirstAgent() {
         return agents.get(0);
+    }
+
+    public void addWorkers(SimulatorAddress parentAddress, List<WorkerJvmSettings> settingsList) {
+        for (WorkerJvmSettings settings : settingsList) {
+            WorkerData workerData = new WorkerData(parentAddress, settings);
+            workers.add(workerData);
+        }
+    }
+
+    public void removeWorker(WorkerData workerData) {
+        workers.remove(workerData);
+    }
+
+    public int workerCount() {
+        return workers.size();
+    }
+
+    public List<WorkerData> getWorkers() {
+        return unmodifiableList(workers);
     }
 }

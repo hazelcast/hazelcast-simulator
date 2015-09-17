@@ -65,19 +65,19 @@ public class AgentSmokeTest {
         LOGGER.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
         LOGGER.info("Test runtime for smoke test: " + TEST_RUNTIME_SECONDS + " seconds");
 
-        ComponentRegistry registry = new ComponentRegistry();
-        registry.addAgent(AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
+        ComponentRegistry componentRegistry = new ComponentRegistry();
+        componentRegistry.addAgent(AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
 
         agentStarter = new AgentStarter();
         agentStarter.start();
 
-        agentsClient = new AgentsClient(registry.getAgents());
+        agentsClient = new AgentsClient(componentRegistry.getAgents());
         agentsClient.start();
 
         coordinatorConnector = new CoordinatorConnector();
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
 
-        newProtocolAgentsClient = new NewProtocolAgentsClient(coordinatorConnector);
+        newProtocolAgentsClient = new NewProtocolAgentsClient(coordinatorConnector, componentRegistry);
     }
 
     @AfterClass
