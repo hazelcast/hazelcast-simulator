@@ -91,19 +91,13 @@ public class ClientConnector {
     }
 
     public Response write(SimulatorMessage message) {
-        try {
-            return writeAsync(message).get();
-        } catch (InterruptedException e) {
-            throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
-        }
+        ResponseFuture future = writeAsync(message);
+        return getResponse(future);
     }
 
     public Response write(ByteBuf buffer) {
-        try {
-            return writeAsync(buffer).get();
-        } catch (InterruptedException e) {
-            throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
-        }
+        ResponseFuture future = writeAsync(buffer);
+        return getResponse(future);
     }
 
     public ResponseFuture writeAsync(SimulatorMessage message) {
@@ -123,5 +117,13 @@ public class ClientConnector {
         channel.writeAndFlush(msg);
 
         return future;
+    }
+
+    private Response getResponse(ResponseFuture future) {
+        try {
+            return future.get();
+        } catch (InterruptedException e) {
+            throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
+        }
     }
 }
