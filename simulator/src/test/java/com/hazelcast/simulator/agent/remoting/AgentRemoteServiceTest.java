@@ -51,7 +51,7 @@ public class AgentRemoteServiceTest {
             client.stop();
         }
         if (agentRemoteService != null) {
-            agentRemoteService.stop();
+            agentRemoteService.shutdown();
         }
     }
 

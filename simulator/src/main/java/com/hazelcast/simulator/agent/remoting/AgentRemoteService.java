@@ -50,7 +50,7 @@ public class AgentRemoteService {
         acceptorThread.start();
     }
 
-    public void stop() throws IOException {
+    public void shutdown() throws IOException {
         LOGGER.info("Stopping AgentRemoteService...");
         if (acceptorThread != null) {
             acceptorThread.shutdown();

@@ -56,17 +56,29 @@ public class Agent {
     private final String cloudIdentity;
     private final String cloudCredential;
 
-    private AgentConnector agentConnector;
-    private AgentRemoteService agentRemoteService;
+    private final AgentConnector agentConnector;
+    private final AgentRemoteService agentRemoteService;
 
     private volatile TestSuite testSuite;
 
     public Agent(int addressIndex, String publicAddress, String cloudProvider, String cloudIdentity, String cloudCredential) {
+        ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
+
         this.addressIndex = addressIndex;
         this.publicAddress = publicAddress;
         this.cloudProvider = cloudProvider;
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
+
+        this.agentConnector = AgentConnector.createInstance(this, workerJVMs, Ports.AGENT_PORT);
+        this.agentConnector.start();
+
+        this.agentRemoteService = getAgentRemoteService();
+
+        workerJvmFailureMonitor.start();
+        workerJvmManager.start();
+
+        LOGGER.info("Simulator Agent is ready for action!");
     }
 
     public int getAddressIndex() {
@@ -115,34 +127,22 @@ public class Agent {
         return workerJvmManager;
     }
 
-    void start() {
-        ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
-
-        agentConnector = AgentConnector.createInstance(this, workerJVMs, Ports.AGENT_PORT);
-        agentConnector.start();
-
-        startRestServer();
-        workerJvmFailureMonitor.start();
-        workerJvmManager.start();
-
-        LOGGER.info("Simulator Agent is ready for action");
-    }
-
-    void stop() {
+    void shutdown() {
         agentConnector.shutdown();
         try {
-            agentRemoteService.stop();
+            agentRemoteService.shutdown();
         } catch (IOException e) {
             EmptyStatement.ignore(e);
         }
-        workerJvmManager.stop();
+        workerJvmManager.shutdown();
     }
 
-    private void startRestServer() {
+    private AgentRemoteService getAgentRemoteService() {
         try {
             AgentMessageProcessor agentMessageProcessor = new AgentMessageProcessor(workerJvmManager);
-            agentRemoteService = new AgentRemoteService(this, agentMessageProcessor);
+            AgentRemoteService agentRemoteService = new AgentRemoteService(this, agentMessageProcessor);
             agentRemoteService.start();
+            return agentRemoteService;
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to start REST server", e);
         }
@@ -150,8 +150,7 @@ public class Agent {
 
     public static void main(String[] args) {
         try {
-            Agent agent = createAgent(args);
-            agent.start();
+            createAgent(args);
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not start agent!", e);
         }

@@ -108,7 +108,7 @@ public class WorkerJvmManager {
         }
     }
 
-    public void stop() {
+    public void shutdown() {
         acceptorThread.isRunning = false;
         acceptorThread.interrupt();
 

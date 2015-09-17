@@ -233,12 +233,11 @@ public class AgentSmokeTest {
                         "--addressIndex", "1",
                         "--publicAddress", "127.0.0.1"
                 });
-                agent.start();
                 latch.countDown();
             }
 
             private void shutdown() {
-                agent.stop();
+                agent.shutdown();
             }
         }
     }
