@@ -4,26 +4,29 @@ import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.worker.WorkerType;
 
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
+import static com.hazelcast.simulator.protocol.configuration.Ports.WORKER_START_PORT;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+import static java.lang.String.format;
 
 /**
  * An {@link OperationProcessor} implementation to process {@link SimulatorOperation} instances on a Simulator Agent.
  */
 public class AgentOperationProcessor extends OperationProcessor {
 
-    private final ConcurrentMap<String, WorkerJvm> workerJVMs;
     private final Agent agent;
+    private final ConcurrentMap<String, WorkerJvm> workerJVMs;
 
     public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, ConcurrentMap<String, WorkerJvm> workerJVMs) {
         super(exceptionLogger);
@@ -53,7 +56,11 @@ public class AgentOperationProcessor extends OperationProcessor {
                     launcher.launch();
 
                     int workerIndex = workerJvmSettings.getWorkerIndex();
-                    agent.getAgentConnector().addWorker(workerIndex, "127.0.0.1", Ports.WORKER_START_PORT + workerIndex);
+                    int workerPort = WORKER_START_PORT + workerIndex;
+                    SimulatorAddress workerAddress = agent.getAgentConnector().addWorker(workerIndex, "127.0.0.1", workerPort);
+
+                    WorkerType workerType = workerJvmSettings.getWorkerType();
+                    agent.getCoordinatorLogger().debug(format("Created %s worker %s", workerType, workerAddress));
 
                     createdWorkerLatch.countDown();
                 }

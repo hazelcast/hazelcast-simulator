@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
@@ -37,9 +38,11 @@ public class AgentOperationProcessorTest {
     @Before
     public void setUp() {
         AgentConnector agentConnector = mock(AgentConnector.class);
+        CoordinatorLogger coordinatorLogger = mock(CoordinatorLogger.class);
 
         Agent agent = mock(Agent.class);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
+        when(agent.getCoordinatorLogger()).thenReturn(coordinatorLogger);
 
         processor = new AgentOperationProcessor(exceptionLogger, agent, null);
     }

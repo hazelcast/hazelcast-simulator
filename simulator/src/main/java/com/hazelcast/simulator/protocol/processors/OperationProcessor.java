@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static java.lang.String.format;
 
 /**
  * Processes {@link SimulatorOperation} instances on a Simulator component.
@@ -48,7 +49,9 @@ public abstract class OperationProcessor {
 
     public final ResponseType process(SimulatorOperation operation) {
         OperationType operationType = getOperationType(operation);
-        LOGGER.info(getClass().getSimpleName() + ".process(" + operation.getClass().getSimpleName() + ")");
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(getClass().getSimpleName() + ".process(" + operation.getClass().getSimpleName() + ")");
+        }
         try {
             switch (operationType) {
                 case INTEGRATION_TEST:
@@ -74,7 +77,7 @@ public abstract class OperationProcessor {
     }
 
     private void processLog(LogOperation operation) {
-        LOGGER.log(operation.getLevel(), operation.getMessage());
+        LOGGER.log(operation.getLevel(), format("[%s] %s", operation.getSource(), operation.getMessage()));
     }
 
     protected abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception;

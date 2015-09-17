@@ -36,6 +36,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_N
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_WORKER_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
@@ -154,7 +155,7 @@ public class ProtocolIntegrationTest {
     public void test_Coordinator_fromAgent() {
         AgentConnector agent = getAgentConnector(0);
         SimulatorAddress source = agent.getAddress();
-        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = COORDINATOR;
         Response response = agent.write(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(response, source, destination, SUCCESS);
@@ -164,7 +165,7 @@ public class ProtocolIntegrationTest {
     public void test_Coordinator_fromAgent_async() throws Exception {
         AgentConnector agent = getAgentConnector(0);
         SimulatorAddress source = agent.getAddress();
-        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = COORDINATOR;
         ResponseFuture future = agent.writeAsync(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(future.get(), source, destination, SUCCESS);
@@ -174,7 +175,7 @@ public class ProtocolIntegrationTest {
     public void test_Coordinator_fromWorker() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress();
-        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = COORDINATOR;
         Response response = worker.write(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(response, source, destination, SUCCESS);
@@ -184,7 +185,7 @@ public class ProtocolIntegrationTest {
     public void test_Coordinator_fromWorker_async() throws Exception {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress();
-        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = COORDINATOR;
         ResponseFuture future = worker.writeAsync(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(future.get(), source, destination, SUCCESS);
@@ -194,7 +195,7 @@ public class ProtocolIntegrationTest {
     public void test_Coordinator_fromTest() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
-        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = COORDINATOR;
         Response response = worker.write(source, destination, DEFAULT_OPERATION);
 
         assertSingleTarget(response, source, destination, SUCCESS);
@@ -204,7 +205,7 @@ public class ProtocolIntegrationTest {
     public void test_Coordinator_fromTest_async() throws Exception {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
-        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = COORDINATOR;
         ResponseFuture future = worker.writeAsync(source, destination, DEFAULT_OPERATION);
 
         assertSingleTarget(future.get(), source, destination, SUCCESS);
@@ -271,7 +272,7 @@ public class ProtocolIntegrationTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_LogOperation_SingleAgent() {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 1, 0, 0);
-        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!");
+        SimulatorOperation operation = new LogOperation(COORDINATOR, "Please log me on " + destination + "!");
 
         Response response = sendFromCoordinator(destination, operation);
 
@@ -281,7 +282,7 @@ public class ProtocolIntegrationTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_LogOperation_SingleWorker() {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 1, 1, 0);
-        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.WARN);
+        SimulatorOperation operation = new LogOperation(COORDINATOR, "Please log me on " + destination + "!", Level.WARN);
 
         Response response = sendFromCoordinator(destination, operation);
 
@@ -291,7 +292,7 @@ public class ProtocolIntegrationTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_LogOperation_SingleTest() {
         SimulatorAddress destination = new SimulatorAddress(TEST, 1, 1, 1);
-        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.ERROR);
+        SimulatorOperation operation = new LogOperation(COORDINATOR, "Please log me on " + destination + "!", Level.ERROR);
 
         Response response = sendFromCoordinator(destination, operation);
 
@@ -302,9 +303,9 @@ public class ProtocolIntegrationTest {
     public void test_LogOperation_Coordinator_fromTest() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
-        SimulatorAddress destination = SimulatorAddress.COORDINATOR;
+        SimulatorAddress destination = COORDINATOR;
 
-        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.FATAL);
+        SimulatorOperation operation = new LogOperation(COORDINATOR, "Please log me on " + destination + "!", Level.FATAL);
 
         Response response = worker.write(source, destination, operation);
 

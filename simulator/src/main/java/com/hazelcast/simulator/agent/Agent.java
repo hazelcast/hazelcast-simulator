@@ -20,6 +20,7 @@ import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.coordinator.Coordinator;
 import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
@@ -56,8 +57,10 @@ public class Agent {
     private final String cloudIdentity;
     private final String cloudCredential;
 
-    private final AgentConnector agentConnector;
     private final AgentRemoteService agentRemoteService;
+    private final AgentConnector agentConnector;
+
+    private final CoordinatorLogger coordinatorLogger;
 
     private volatile TestSuite testSuite;
 
@@ -70,10 +73,11 @@ public class Agent {
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
 
+        this.agentRemoteService = getAgentRemoteService();
         this.agentConnector = AgentConnector.createInstance(this, workerJVMs, Ports.AGENT_PORT);
         this.agentConnector.start();
 
-        this.agentRemoteService = getAgentRemoteService();
+        this.coordinatorLogger = new CoordinatorLogger(agentConnector);
 
         workerJvmFailureMonitor.start();
         workerJvmManager.start();
@@ -91,6 +95,10 @@ public class Agent {
 
     public AgentConnector getAgentConnector() {
         return agentConnector;
+    }
+
+    public CoordinatorLogger getCoordinatorLogger() {
+        return coordinatorLogger;
     }
 
     public void initTestSuite(TestSuite testSuite) {

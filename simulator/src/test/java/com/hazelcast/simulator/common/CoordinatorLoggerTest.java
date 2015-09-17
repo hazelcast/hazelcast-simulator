@@ -27,47 +27,47 @@ public class CoordinatorLoggerTest {
     public void testTrace() {
         coordinatorLogger.trace("trace message");
 
-        verify(serverConnector).submit(eq(SimulatorAddress.COORDINATOR), any(LogOperation.class));
-        verifyNoMoreInteractions(serverConnector);
+        verifyServerConnector();
     }
 
     @Test
     public void testDebug() {
         coordinatorLogger.debug("debug message");
 
-        verify(serverConnector).submit(eq(SimulatorAddress.COORDINATOR), any(LogOperation.class));
-        verifyNoMoreInteractions(serverConnector);
+        verifyServerConnector();
     }
 
     @Test
     public void testInfo() {
         coordinatorLogger.info("info message");
 
-        verify(serverConnector).submit(eq(SimulatorAddress.COORDINATOR), any(LogOperation.class));
-        verifyNoMoreInteractions(serverConnector);
+        verifyServerConnector();
     }
 
     @Test
     public void testWarn() {
         coordinatorLogger.warn("warn message");
 
-        verify(serverConnector).submit(eq(SimulatorAddress.COORDINATOR), any(LogOperation.class));
-        verifyNoMoreInteractions(serverConnector);
+        verifyServerConnector();
     }
 
     @Test
     public void testError() {
         coordinatorLogger.error("error message");
 
-        verify(serverConnector).submit(eq(SimulatorAddress.COORDINATOR), any(LogOperation.class));
-        verifyNoMoreInteractions(serverConnector);
+        verifyServerConnector();
     }
 
     @Test
     public void testFatal() {
         coordinatorLogger.fatal("fatal message");
 
+        verifyServerConnector();
+    }
+
+    private void verifyServerConnector() {
         verify(serverConnector).submit(eq(SimulatorAddress.COORDINATOR), any(LogOperation.class));
+        verify(serverConnector).getAddress();
         verifyNoMoreInteractions(serverConnector);
     }
 }
