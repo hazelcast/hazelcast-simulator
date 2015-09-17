@@ -59,13 +59,7 @@ public class NewProtocolAgentsClient {
                 @Override
                 public void run() {
                     CreateWorkerOperation operation = new CreateWorkerOperation(settingsList);
-                    Response response;
-                    try {
-                        response = coordinatorConnector.write(destination, operation);
-                    } catch (Exception e) {
-                        throw new CommandLineExitException(format(
-                                "Could not create %d %s worker on %s", workerCount, workerType, destination), e);
-                    }
+                    Response response = coordinatorConnector.write(destination, operation);
 
                     ResponseType responseType = response.getFirstErrorResponseType();
                     if (responseType != ResponseType.SUCCESS) {

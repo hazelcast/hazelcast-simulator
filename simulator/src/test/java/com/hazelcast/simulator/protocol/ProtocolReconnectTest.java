@@ -43,7 +43,7 @@ public class ProtocolReconnectTest {
 
     @Ignore
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void connectTwice() throws Exception {
+    public void connectTwice() {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 1, 0, 0);
 
         Response response = sendFromCoordinator(destination);

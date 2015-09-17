@@ -9,17 +9,17 @@ public class WorkerConnectorTest {
     private static final int PORT = 11111;
 
     @Test
-    public void testCreateInstance_withFileExceptionLogger_implicit() throws Exception {
+    public void testCreateInstance_withFileExceptionLogger_implicit() {
         WorkerConnector.createInstance(WORKER_INDEX, AGENT_INDEX, PORT);
     }
 
     @Test
-    public void testCreateInstance_withRemoteExceptionLogger_explicit() throws Exception {
+    public void testCreateInstance_withRemoteExceptionLogger_explicit() {
         WorkerConnector.createInstance(WORKER_INDEX, AGENT_INDEX, PORT, false);
     }
 
     @Test
-    public void testCreateInstance_withRemoteExceptionLogger() throws Exception {
+    public void testCreateInstance_withRemoteExceptionLogger() {
         WorkerConnector.createInstance(WORKER_INDEX, AGENT_INDEX, PORT, true);
     }
 }

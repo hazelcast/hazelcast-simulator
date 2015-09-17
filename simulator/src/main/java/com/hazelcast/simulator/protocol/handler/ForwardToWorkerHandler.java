@@ -7,6 +7,7 @@ import com.hazelcast.simulator.protocol.core.ResponseCodec;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessageCodec;
+import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -67,7 +68,7 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
         }
     }
 
-    private void forwardSimulatorMessage(ChannelHandlerContext ctx, ByteBuf buffer, int workerAddressIndex) throws Exception {
+    private void forwardSimulatorMessage(ChannelHandlerContext ctx, ByteBuf buffer, int workerAddressIndex) {
         long messageId = SimulatorMessageCodec.getMessageId(buffer);
 
         Response response = new Response(messageId, getSourceAddress(buffer));
@@ -78,8 +79,12 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
                 buffer.retain();
                 futureList.add(clientConnector.writeAsync(buffer));
             }
-            for (ResponseFuture future : futureList) {
-                response.addResponse(future.get());
+            try {
+                for (ResponseFuture future : futureList) {
+                    response.addResponse(future.get());
+                }
+            } catch (InterruptedException e) {
+                throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
             }
         } else {
             ClientConnector clientConnector = worker.get(workerAddressIndex);

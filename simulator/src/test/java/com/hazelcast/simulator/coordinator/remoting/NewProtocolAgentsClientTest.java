@@ -7,6 +7,7 @@ import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -27,7 +28,7 @@ public class NewProtocolAgentsClientTest {
     private ComponentRegistry componentRegistry = new ComponentRegistry();
 
     @Test
-    public void testCreateWorkers_withClients() throws Exception {
+    public void testCreateWorkers_withClients() {
         initMocks(ResponseType.SUCCESS, 6, 3);
 
         List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
@@ -37,7 +38,7 @@ public class NewProtocolAgentsClientTest {
     }
 
     @Test
-    public void testCreateWorkers_noClients() throws Exception {
+    public void testCreateWorkers_noClients() {
         initMocks(ResponseType.SUCCESS, 6, 0);
 
         List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
@@ -47,7 +48,7 @@ public class NewProtocolAgentsClientTest {
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void testCreateWorkers_withErrorResponse() throws Exception {
+    public void testCreateWorkers_withErrorResponse() {
         initMocks(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, 6, 0);
 
         List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
@@ -56,8 +57,8 @@ public class NewProtocolAgentsClientTest {
         agentsClient.createWorkers(memberLayouts);
     }
 
-    @Test(expected = CommandLineExitException.class)
-    public void testCreateWorkers_withExceptionOnWrite() throws Exception {
+    @Test(expected = SimulatorProtocolException.class)
+    public void testCreateWorkers_withExceptionOnWrite() {
         initMocks(null, 6, 0);
 
         List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
@@ -66,10 +67,10 @@ public class NewProtocolAgentsClientTest {
         agentsClient.createWorkers(memberLayouts);
     }
 
-    private void initMocks(ResponseType responseType, int memberCount, int clientCount) throws Exception {
+    private void initMocks(ResponseType responseType, int memberCount, int clientCount) {
         if (responseType == null) {
             when(coordinatorConnector.write(any(SimulatorAddress.class), any(CreateWorkerOperation.class))).thenThrow(
-                    new RuntimeException("expected exception"));
+                    new SimulatorProtocolException("expected exception"));
         } else {
             Response response = mock(Response.class);
             when(response.getFirstErrorResponseType()).thenReturn(responseType);

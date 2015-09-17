@@ -51,9 +51,8 @@ public interface ServerConnector {
      * @param destination the {@link SimulatorAddress} of the destination
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the result of the call
-     * @throws Exception if the {@link SimulatorOperation} could not be send
      */
-    Response write(SimulatorAddress destination, SimulatorOperation operation) throws Exception;
+    Response write(SimulatorAddress destination, SimulatorOperation operation);
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress} via the connected {@link ClientConnector}.
@@ -64,7 +63,6 @@ public interface ServerConnector {
      * @param destination the {@link SimulatorAddress} of the destination
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the result of the call
-     * @throws Exception if the {@link SimulatorOperation} could not be send
      */
-    Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) throws Exception;
+    Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation);
 }

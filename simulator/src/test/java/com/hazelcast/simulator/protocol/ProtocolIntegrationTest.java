@@ -62,7 +62,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_SingleAgent() throws Exception {
+    public void test_SingleAgent() {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 1, 0, 0);
         Response response = sendFromCoordinator(destination);
 
@@ -70,7 +70,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_AllAgents() throws Exception {
+    public void test_AllAgents() {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 0, 0, 0);
         Response response = sendFromCoordinator(destination);
 
@@ -78,7 +78,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_AgentNotFound() throws Exception {
+    public void test_AgentNotFound() {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 3, 0, 0);
         Response response = sendFromCoordinator(destination);
 
@@ -86,7 +86,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_SingleWorker() throws Exception {
+    public void test_SingleWorker() {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 1, 1, 0);
         Response response = sendFromCoordinator(destination);
 
@@ -94,7 +94,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_AllWorker() throws Exception {
+    public void test_AllWorker() {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 0, 0, 0);
         Response response = sendFromCoordinator(destination);
 
@@ -102,7 +102,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_WorkerNotFound() throws Exception {
+    public void test_WorkerNotFound() {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 1, 3, 0);
         Response response = sendFromCoordinator(destination);
 
@@ -110,7 +110,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_AllAgents_WorkerNotFound() throws Exception {
+    public void test_AllAgents_WorkerNotFound() {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 0, 3, 0);
         Response response = sendFromCoordinator(destination);
 
@@ -118,7 +118,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_SingleTest() throws Exception {
+    public void test_SingleTest() {
         SimulatorAddress destination = new SimulatorAddress(TEST, 1, 1, 1);
         Response response = sendFromCoordinator(destination);
 
@@ -126,7 +126,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_AllTests() throws Exception {
+    public void test_AllTests() {
         SimulatorAddress destination = new SimulatorAddress(TEST, 0, 0, 0);
         Response response = sendFromCoordinator(destination);
 
@@ -134,7 +134,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_TestNotFound() throws Exception {
+    public void test_TestNotFound() {
         SimulatorAddress destination = new SimulatorAddress(TEST, 1, 1, 3);
         Response response = sendFromCoordinator(destination);
 
@@ -142,7 +142,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_AllAgents_AllWorkers_TestNotFound() throws Exception {
+    public void test_AllAgents_AllWorkers_TestNotFound() {
         SimulatorAddress destination = new SimulatorAddress(TEST, 0, 0, 3);
         Response response = sendFromCoordinator(destination);
 
@@ -150,7 +150,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_Coordinator_fromAgent() throws Exception {
+    public void test_Coordinator_fromAgent() {
         AgentConnector agent = getAgentConnector(0);
         SimulatorAddress source = agent.getAddress();
         SimulatorAddress destination = SimulatorAddress.COORDINATOR;
@@ -160,7 +160,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_Coordinator_fromWorker() throws Exception {
+    public void test_Coordinator_fromWorker() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress();
         SimulatorAddress destination = SimulatorAddress.COORDINATOR;
@@ -170,7 +170,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_Coordinator_fromTest() throws Exception {
+    public void test_Coordinator_fromTest() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
         SimulatorAddress destination = SimulatorAddress.COORDINATOR;
@@ -180,7 +180,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_ParentAgent_fromWorker() throws Exception {
+    public void test_ParentAgent_fromWorker() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress();
         SimulatorAddress destination = source.getParent();
@@ -190,7 +190,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_ParentAgent_fromTest() throws Exception {
+    public void test_ParentAgent_fromTest() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
         SimulatorAddress destination = worker.getAddress().getParent();
@@ -200,7 +200,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_SingleWorker_withExceptionDuringOperationProcessing() throws Exception {
+    public void test_SingleWorker_withExceptionDuringOperationProcessing() {
         SimulatorAddress destination = getWorkerConnector(0).getAddress();
         SimulatorOperation operation = new IntegrationTestOperation("foobar");
 
@@ -210,7 +210,7 @@ public class ProtocolIntegrationTest {
 
         assertTrueEventually(new AssertTask() {
             @Override
-            public void run() throws Exception {
+            public void run() {
                 assertEquals(1, getCoordinatorConnector().getExceptionCount());
                 assertEmptyFutureMaps();
             }
@@ -218,7 +218,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_LogOperation_SingleAgent() throws Exception {
+    public void test_LogOperation_SingleAgent() {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 1, 0, 0);
         SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!");
 
@@ -228,7 +228,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_LogOperation_SingleWorker() throws Exception {
+    public void test_LogOperation_SingleWorker() {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 1, 1, 0);
         SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.WARN);
 
@@ -238,7 +238,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_LogOperation_SingleTest() throws Exception {
+    public void test_LogOperation_SingleTest() {
         SimulatorAddress destination = new SimulatorAddress(TEST, 1, 1, 1);
         SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.ERROR);
 
@@ -248,7 +248,7 @@ public class ProtocolIntegrationTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test_LogOperation_Coordinator_fromTest() throws Exception {
+    public void test_LogOperation_Coordinator_fromTest() {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
         SimulatorAddress destination = SimulatorAddress.COORDINATOR;

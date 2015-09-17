@@ -49,7 +49,7 @@ public class ProtocolRemoveTargetTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void test() throws Exception {
+    public void test() {
         SimulatorAddress testDestination = new SimulatorAddress(TEST, 1, 1, 1);
 
         Response response = sendFromCoordinator(testDestination);

@@ -5,6 +5,7 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -89,12 +90,20 @@ public class ClientConnector {
         channel.writeAndFlush(buffer);
     }
 
-    public Response write(SimulatorMessage message) throws Exception {
-        return writeAsync(message).get();
+    public Response write(SimulatorMessage message) {
+        try {
+            return writeAsync(message).get();
+        } catch (InterruptedException e) {
+            throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
+        }
     }
 
-    public Response write(ByteBuf buffer) throws Exception {
-        return writeAsync(buffer).get();
+    public Response write(ByteBuf buffer) {
+        try {
+            return writeAsync(buffer).get();
+        } catch (InterruptedException e) {
+            throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
+        }
     }
 
     public ResponseFuture writeAsync(SimulatorMessage message) {

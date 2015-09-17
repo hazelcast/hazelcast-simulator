@@ -45,7 +45,7 @@ public class ResponseHandlerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testChannelRead0_futureNotFound() throws Exception {
+    public void testChannelRead0_futureNotFound() {
         Response response = new Response(1234, remoteAddress);
 
         responseHandler.channelRead0(null, response);

@@ -25,12 +25,12 @@ public class ResponseFutureTest {
     private final FutureSetter futureSetter = new FutureSetter(DEFAULT_RESULT, DEFAULT_TIMEOUT_MS);
 
     @Test(expected = UnsupportedOperationException.class)
-    public void testCancel() throws Exception {
+    public void testCancel() {
         future.cancel(true);
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void testIsCancelled() throws Exception {
+    public void testIsCancelled() {
         future.isCancelled();
     }
 

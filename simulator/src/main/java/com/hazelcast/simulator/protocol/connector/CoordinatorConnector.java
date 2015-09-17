@@ -6,6 +6,7 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
@@ -81,9 +82,8 @@ public class CoordinatorConnector {
      * @param destination the {@link SimulatorAddress} of the destination
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the response of all addressed Simulator components.
-     * @throws Exception if the send method was interrupted or an exception occurred
      */
-    public Response write(SimulatorAddress destination, SimulatorOperation operation) throws Exception {
+    public Response write(SimulatorAddress destination, SimulatorOperation operation) {
         SimulatorMessage message = new SimulatorMessage(destination, COORDINATOR, messageIds.incrementAndGet(),
                 getOperationType(operation), toJson(operation));
 
@@ -94,8 +94,12 @@ public class CoordinatorConnector {
             for (ClientConnector agent : agents.values()) {
                 futureList.add(agent.writeAsync(message));
             }
-            for (ResponseFuture future : futureList) {
-                response.addResponse(future.get());
+            try {
+                for (ResponseFuture future : futureList) {
+                    response.addResponse(future.get());
+                }
+            } catch (InterruptedException e) {
+                throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
             }
         } else {
             ClientConnector agent = agents.get(agentAddressIndex);

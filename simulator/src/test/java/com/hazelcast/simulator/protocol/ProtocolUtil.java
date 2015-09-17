@@ -174,11 +174,11 @@ public class ProtocolUtil {
         }
     }
 
-    static Response sendFromCoordinator(SimulatorAddress destination) throws Exception {
+    static Response sendFromCoordinator(SimulatorAddress destination) {
         return coordinatorConnector.write(destination, DEFAULT_OPERATION);
     }
 
-    static Response sendFromCoordinator(SimulatorAddress destination, SimulatorOperation operation) throws Exception {
+    static Response sendFromCoordinator(SimulatorAddress destination, SimulatorOperation operation) {
         return coordinatorConnector.write(destination, operation);
     }
 

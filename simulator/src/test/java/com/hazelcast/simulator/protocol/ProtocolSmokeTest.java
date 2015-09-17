@@ -62,7 +62,7 @@ public class ProtocolSmokeTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
-    public void smokeTest() throws Exception {
+    public void smokeTest() {
         for (int i = 0; i < NUMBER_OF_MESSAGES; i++) {
             SimulatorAddress destination = getRandomDestination(MAX_ADDRESS_INDEX);
 

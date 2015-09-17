@@ -6,6 +6,7 @@ import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.util.EmptyStatement;
 import io.netty.bootstrap.ServerBootstrap;
@@ -114,21 +115,29 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     @Override
-    public Response write(SimulatorAddress destination, SimulatorOperation operation) throws Exception {
+    public Response write(SimulatorAddress destination, SimulatorOperation operation) {
         SimulatorMessage message = createSimulatorMessage(localAddress, destination, operation);
-        return writeAsync(message).get();
+        return write(message);
     }
 
     @Override
-    public Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) throws Exception {
+    public Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
         SimulatorMessage message = createSimulatorMessage(source, destination, operation);
-        return writeAsync(message).get();
+        return write(message);
     }
 
     private SimulatorMessage createSimulatorMessage(SimulatorAddress source, SimulatorAddress destination,
                                                     SimulatorOperation operation) {
         return new SimulatorMessage(destination, source, messageIds.incrementAndGet(),
                 getOperationType(operation), toJson(operation));
+    }
+
+    private Response write(SimulatorMessage message) {
+        try {
+            return writeAsync(message).get();
+        } catch (InterruptedException e) {
+            throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
+        }
     }
 
     private ResponseFuture writeAsync(SimulatorMessage message) {
