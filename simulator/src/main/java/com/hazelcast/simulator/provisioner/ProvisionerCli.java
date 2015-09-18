@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.AgentsFile;
+import com.hazelcast.simulator.common.SimulatorProperties;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -58,53 +59,55 @@ final class ProvisionerCli {
             "Use JARs of Hazelcast Enterprise Edition.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
-    private final Provisioner provisioner;
-    private final OptionSet options;
-
-    ProvisionerCli(Provisioner provisioner, String[] args) {
-        this.provisioner = provisioner;
-        this.options = initOptionsWithHelp(parser, args);
+    private ProvisionerCli() {
     }
 
-    void init() {
-        provisioner.props.init(getPropertiesFile());
+    static Provisioner init(String[] args) {
+        ProvisionerCli cli = new ProvisionerCli();
+        OptionSet options = initOptionsWithHelp(cli.parser, args);
 
-        if (options.has(gitSpec)) {
-            String git = options.valueOf(gitSpec);
-            provisioner.props.forceGit(git);
+        SimulatorProperties properties = new SimulatorProperties();
+        properties.init(getPropertiesFile(options, cli.propertiesFileSpec));
+        if (options.has(cli.gitSpec)) {
+            String git = options.valueOf(cli.gitSpec);
+            properties.forceGit(git);
         }
+
+        return new Provisioner(properties);
     }
 
-    void run() {
+    static void run(String[] args, Provisioner provisioner) {
+        ProvisionerCli cli = new ProvisionerCli();
+        OptionSet options = initOptionsWithHelp(cli.parser, args);
+
         try {
-            provisioner.init();
-            if (options.has(scaleSpec)) {
-                int size = options.valueOf(scaleSpec);
-                boolean enterpriseEnabled = options.valueOf(enterpriseEnabledSpec);
+            if (options.has(cli.scaleSpec)) {
+                int size = options.valueOf(cli.scaleSpec);
+                boolean enterpriseEnabled = options.valueOf(cli.enterpriseEnabledSpec);
                 provisioner.scale(size, enterpriseEnabled);
-            } else if (options.has(installSpec)) {
-                boolean enterpriseEnabled = options.valueOf(enterpriseEnabledSpec);
+            } else if (options.has(cli.installSpec)) {
+                boolean enterpriseEnabled = options.valueOf(cli.enterpriseEnabledSpec);
                 provisioner.installSimulator(enterpriseEnabled);
-            } else if (options.has(listAgentsSpec)) {
+            } else if (options.has(cli.listAgentsSpec)) {
                 provisioner.listMachines();
-            } else if (options.has(downloadSpec)) {
-                String dir = options.valueOf(downloadSpec);
+            } else if (options.has(cli.downloadSpec)) {
+                String dir = options.valueOf(cli.downloadSpec);
                 provisioner.download(dir);
-            } else if (options.has(cleanSpec)) {
+            } else if (options.has(cli.cleanSpec)) {
                 provisioner.clean();
-            } else if (options.has(killSpec)) {
+            } else if (options.has(cli.killSpec)) {
                 provisioner.killJavaProcesses();
-            } else if (options.has(terminateSpec)) {
+            } else if (options.has(cli.terminateSpec)) {
                 provisioner.terminate();
             } else {
-                printHelpAndExit(parser);
+                printHelpAndExit(cli.parser);
             }
         } finally {
             provisioner.shutdown();
         }
     }
 
-    private File getPropertiesFile() {
+    private static File getPropertiesFile(OptionSet options, OptionSpec<String> propertiesFileSpec) {
         if (options.has(propertiesFileSpec)) {
             // a file was explicitly configured
             return newFile(options.valueOf(propertiesFileSpec));
