@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -45,17 +46,16 @@ import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class AwsProvisioner {
 
-    // the file which will holds the public domain name of the created load balancer
+    // the file which will hold the public domain name of the created load balancer
     private static final String AWS_ELB_FILE_NAME = "aws-elb.txt";
 
     // AWS specific magic strings
     private static final String AWS_RUNNING_STATE = "running";
-    private static final String AWS_SYSTEM_STATUS_OK = "ok";
     private static final String AWS_PUBLIC_IP_FILTER = "ip-address";
-    private static final String AWS_KET_NAME_FILTER = "key-name";
 
-    private static final int SLEEPING_MS = 1000 * 30;
+    private static final int SLEEPING_MILLIS = (int) TimeUnit.SECONDS.toMillis(30);
     private static final int MAX_SLEEPING_ITERATIONS = 12;
+
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
     private final File agentsFile = new File(AgentsFile.NAME);
@@ -63,60 +63,52 @@ public class AwsProvisioner {
 
     private final ComponentRegistry componentRegistry;
 
-    private AmazonEC2 ec2;
-    private AmazonElasticLoadBalancingClient elb;
+    private final String elbProtocol;
+    private final int elbPortIn;
+    private final int elbPortOut;
+    private final String elbAvailabilityZones;
 
-    private String securityGroup;
-    private String awsKeyName;
-    private String awsAmi;
-    private String awsBoxId;
-    private String subNetId;
+    private final String securityGroup;
+    private final String awsKeyName;
+    private final String awsAmi;
+    private final String awsBoxId;
+    private final String subNetId;
 
-    private String elbProtocol;
-    private int elbPortIn;
-    private int elbPortOut;
-    private String elbAvailabilityZones;
+    private final AmazonEC2 ec2;
+    private final AmazonElasticLoadBalancingClient elb;
 
-    AwsProvisioner() {
-        componentRegistry = loadComponentRegister(agentsFile, false);
-        setProperties(null);
-    }
+    AwsProvisioner(SimulatorProperties properties) {
+        this.componentRegistry = loadComponentRegister(agentsFile, false);
 
-    void setProperties(File file) {
-        SimulatorProperties simulatorProperties = new SimulatorProperties();
-        simulatorProperties.init(file);
-
-        String awsCredentialsPath = simulatorProperties.get("AWS_CREDENTIALS", "awscredentials.properties");
+        String awsCredentialsPath = properties.get("AWS_CREDENTIALS", "awscredentials.properties");
         File credentialsFile = new File(awsCredentialsPath);
 
-        elbProtocol = simulatorProperties.get("ELB_PROTOCOL");
+        this.elbProtocol = properties.get("ELB_PROTOCOL");
+        this.elbPortIn = Integer.parseInt(properties.get("ELB_PORT_IN", "0"));
+        this.elbPortOut = Integer.parseInt(properties.get("ELB_PORT_OUT", "0"));
+        this.elbAvailabilityZones = properties.get("ELB_ZONES");
 
-        elbPortIn = Integer.parseInt(simulatorProperties.get("ELB_PORT_IN", "0"));
-        elbPortOut = Integer.parseInt(simulatorProperties.get("ELB_PORT_OUT", "0"));
-        elbAvailabilityZones = simulatorProperties.get("ELB_ZONES");
-
-        awsKeyName = simulatorProperties.get("AWS_KEY_NAME");
-        awsAmi = simulatorProperties.get("AWS_AMI");
-        awsBoxId = simulatorProperties.get("AWS_BOXID");
-        securityGroup = simulatorProperties.get("SECURITY_GROUP");
-        subNetId = simulatorProperties.get("SUBNET_ID", "");
+        this.securityGroup = properties.get("SECURITY_GROUP");
+        this.awsKeyName = properties.get("AWS_KEY_NAME");
+        this.awsAmi = properties.get("AWS_AMI");
+        this.awsBoxId = properties.get("AWS_BOXID");
+        this.subNetId = properties.get("SUBNET_ID", "");
 
         try {
             AWSCredentials credentials = new PropertiesCredentials(credentialsFile);
-
-            ec2 = new AmazonEC2Client(credentials);
-            elb = new AmazonElasticLoadBalancingClient(credentials);
+            this.ec2 = new AmazonEC2Client(credentials);
+            this.elb = new AmazonElasticLoadBalancingClient(credentials);
         } catch (Exception e) {
             throw new CommandLineExitException("Credentials file could not be loaded", e);
         }
     }
 
-    void shutdown() {
-        if (ec2 != null) {
-            ec2.shutdown();
-        }
-        if (elb != null) {
-            elb.shutdown();
+    void scaleInstanceCountTo(int totalInstancesWanted) {
+        int agentsSize = componentRegistry.agentCount();
+        if (totalInstancesWanted > agentsSize) {
+            createInstances(totalInstancesWanted - agentsSize);
+        } else {
+            terminateInstances(agentsSize - totalInstancesWanted);
         }
     }
 
@@ -144,12 +136,12 @@ public class AwsProvisioner {
         addInstancesToElb(elbName, instances);
     }
 
-    void scaleInstanceCountTo(int totalInstancesWanted) {
-        int agentsSize = componentRegistry.agentCount();
-        if (totalInstancesWanted > agentsSize) {
-            createInstances(totalInstancesWanted - agentsSize);
-        } else {
-            terminateInstances(agentsSize - totalInstancesWanted);
+    void shutdown() {
+        if (ec2 != null) {
+            ec2.shutdown();
+        }
+        if (elb != null) {
+            elb.shutdown();
         }
     }
 
@@ -230,7 +222,7 @@ public class AwsProvisioner {
         DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instanceId);
         int counter = 0;
         while (counter++ < MAX_SLEEPING_ITERATIONS) {
-            sleepSeconds(SLEEPING_MS);
+            sleepSeconds(SLEEPING_MILLIS);
 
             DescribeInstancesResult result = ec2.describeInstances(describeInstancesRequest);
             for (Reservation reservation : result.getReservations()) {
@@ -302,10 +294,8 @@ public class AwsProvisioner {
         try {
             LOGGER.info("AWS specific provisioner");
 
-            AwsProvisioner provisioner = new AwsProvisioner();
-            AwsProvisionerCli cli = new AwsProvisionerCli(provisioner, args);
-
-            cli.run();
+            AwsProvisioner provisioner = AwsProvisionerCli.init(args);
+            AwsProvisionerCli.run(args, provisioner);
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not provision machines", e);
         }

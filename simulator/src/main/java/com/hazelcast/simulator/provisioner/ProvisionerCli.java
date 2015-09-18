@@ -6,12 +6,10 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-import java.io.File;
-
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
-import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 
 final class ProvisionerCli {
 
@@ -66,8 +64,7 @@ final class ProvisionerCli {
         ProvisionerCli cli = new ProvisionerCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
-        SimulatorProperties properties = new SimulatorProperties();
-        properties.init(getPropertiesFile(options, cli.propertiesFileSpec));
+        SimulatorProperties properties = loadSimulatorProperties(options, cli.propertiesFileSpec);
         if (options.has(cli.gitSpec)) {
             String git = options.valueOf(cli.gitSpec);
             properties.forceGit(git);
@@ -104,15 +101,6 @@ final class ProvisionerCli {
             }
         } finally {
             provisioner.shutdown();
-        }
-    }
-
-    private static File getPropertiesFile(OptionSet options, OptionSpec<String> propertiesFileSpec) {
-        if (options.has(propertiesFileSpec)) {
-            // a file was explicitly configured
-            return newFile(options.valueOf(propertiesFileSpec));
-        } else {
-            return null;
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.AgentsFile;
-import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -23,7 +22,7 @@ import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
-import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
 
 final class CoordinatorCli {
@@ -159,7 +158,7 @@ final class CoordinatorCli {
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
-                loadSimulatorProperties(options, cli),
+                loadSimulatorProperties(options, cli.propertiesFileSpec),
                 loadAgentsFile(cli, options),
                 options.valueOf(cli.workerClassPathSpec),
                 options.has(cli.monitorPerformanceSpec),
@@ -189,18 +188,6 @@ final class CoordinatorCli {
         }
 
         return new Coordinator(coordinatorParameters, testSuite);
-    }
-
-    private static SimulatorProperties loadSimulatorProperties(OptionSet options, CoordinatorCli cli) {
-        File propertiesFile = null;
-        if (options.has(cli.propertiesFileSpec)) {
-            propertiesFile = newFile(options.valueOf(cli.propertiesFileSpec));
-        }
-
-        SimulatorProperties simulatorProperties = new SimulatorProperties();
-        simulatorProperties.init(propertiesFile);
-
-        return simulatorProperties;
     }
 
     private static File loadAgentsFile(CoordinatorCli cli, OptionSet options) {
