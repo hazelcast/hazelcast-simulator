@@ -10,11 +10,11 @@ import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static java.lang.String.format;
 
 public final class CoordinatorUtils {
@@ -24,25 +24,31 @@ public final class CoordinatorUtils {
     private CoordinatorUtils() {
     }
 
-    static String createAddressConfig(String tagName, List<String> addresses, CoordinatorParameters parameters) {
+    static int getPort(CoordinatorParameters parameters) {
+        ByteArrayInputStream bis = null;
+        try {
+            byte[] configString = parameters.getMemberHzConfig().getBytes("UTF-8");
+            bis = new ByteArrayInputStream(configString);
+            Config config = new XmlConfigBuilder(bis).build();
+
+            return config.getNetworkConfig().getPort();
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not get port from settings", e);
+        } finally {
+            closeQuietly(bis);
+        }
+    }
+
+    static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
         StringBuilder members = new StringBuilder();
-        for (String hostAddress : addresses) {
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            String hostAddress = agentData.getPrivateAddress();
             members.append("<").append(tagName).append(">")
                     .append(hostAddress)
-                    .append(":").append(getPort(parameters))
+                    .append(":").append(port)
                     .append("</").append(tagName).append(">\n");
         }
         return members.toString();
-    }
-
-    private static int getPort(CoordinatorParameters parameters) {
-        try {
-            byte[] configString = parameters.getMemberHzConfig().getBytes("UTF-8");
-            Config config = new XmlConfigBuilder(new ByteArrayInputStream(configString)).build();
-            return config.getNetworkConfig().getPort();
-        } catch (UnsupportedEncodingException e) {
-            throw new CommandLineExitException("Could not get port from settings", e);
-        }
     }
 
     static int getMaxTestCaseIdLength(List<TestCase> testCaseList) {

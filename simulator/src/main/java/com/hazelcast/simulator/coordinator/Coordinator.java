@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getMaxTestCaseIdLength;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
@@ -166,7 +167,7 @@ public final class Coordinator {
         initMemberHzConfig();
         initClientHzConfig();
 
-        int agentCount = agentsClient.getAgentCount();
+        int agentCount = componentRegistry.agentCount();
         LOGGER.info(format("Performance monitor enabled: %s", parameters.isMonitorPerformance()));
         LOGGER.info(format("Total number of agents: %s", agentCount));
         LOGGER.info(format("Total number of Hazelcast member workers: %s", parameters.getMemberWorkerCount()));
@@ -234,12 +235,12 @@ public final class Coordinator {
 
     private void initMemberWorkerCount() {
         if (parameters.getMemberWorkerCount() == -1) {
-            parameters.setMemberWorkerCount(agentsClient.getAgentCount());
+            parameters.setMemberWorkerCount(componentRegistry.agentCount());
         }
     }
 
     private void initMemberHzConfig() {
-        String addressConfig = createAddressConfig("member", agentsClient.getPrivateAddresses(), parameters);
+        String addressConfig = createAddressConfig("member", componentRegistry, getPort(parameters));
 
         String memberHzConfig = parameters.getMemberHzConfig();
         memberHzConfig = memberHzConfig.replace("<!--MEMBERS-->", addressConfig);
@@ -256,7 +257,7 @@ public final class Coordinator {
     }
 
     private void initClientHzConfig() {
-        String addressConfig = createAddressConfig("address", agentsClient.getPrivateAddresses(), parameters);
+        String addressConfig = createAddressConfig("address", componentRegistry, getPort(parameters));
 
         String clientHzConfig = parameters.getClientHzConfig().replace("<!--MEMBERS-->", addressConfig);
         parameters.setClientHzConfig(clientHzConfig);
@@ -271,7 +272,8 @@ public final class Coordinator {
 
             LOGGER.info(format("Starting uploading '%s' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
             List<File> files = getFilesFromClassPath(UPLOAD_DIRECTORY.getAbsolutePath());
-            for (String ip : agentsClient.getPublicAddresses()) {
+            for (AgentData agentData : componentRegistry.getAgents()) {
+                String ip = agentData.getPublicAddress();
                 LOGGER.info(format("Uploading '%s' to agent %s", UPLOAD_DIRECTORY.getAbsolutePath(), ip));
                 for (File file : files) {
                     bash.execute(format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/workers/%s/",
@@ -299,7 +301,8 @@ public final class Coordinator {
         try {
             List<File> upload = getFilesFromClassPath(workerClassPath);
             LOGGER.info(format("Copying %d files from workerClasspath '%s' to agents", upload.size(), workerClassPath));
-            for (String ip : agentsClient.getPublicAddresses()) {
+            for (AgentData agentData : componentRegistry.getAgents()) {
+                String ip = agentData.getPublicAddress();
                 for (File file : upload) {
                     bash.execute(
                             format("rsync --ignore-existing -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/workers/%s/lib",
@@ -325,7 +328,8 @@ public final class Coordinator {
 
         // TODO: in the future we'll only upload the requested YourKit library (32 or 64 bit)
         LOGGER.info("Uploading YourKit dependencies to agents");
-        for (String ip : agentsClient.getPublicAddresses()) {
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            String ip = agentData.getPublicAddress();
             bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/yourkit", getSimulatorVersion()));
 
             bash.execute(format("rsync --ignore-existing -avv -e \"ssh %s\" %s/yourkit %s@%s:hazelcast-simulator-%s/",

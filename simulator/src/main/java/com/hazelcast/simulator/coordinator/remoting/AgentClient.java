@@ -25,19 +25,13 @@ public class AgentClient {
     private static final Logger LOGGER = Logger.getLogger(AgentClient.class);
 
     private final String publicAddress;
-    private final String privateIp;
 
     public AgentClient(AgentData agentData) {
         this.publicAddress = agentData.getPublicAddress();
-        this.privateIp = agentData.getPrivateAddress();
     }
 
     public String getPublicAddress() {
         return publicAddress;
-    }
-
-    public String getPrivateIp() {
-        return privateIp;
     }
 
     @SuppressWarnings("unchecked")
@@ -90,13 +84,5 @@ public class AgentClient {
             }
         }
         throw new IOException(format("Couldn't connect to publicAddress %s:%s", publicAddress, PORT), connectException);
-    }
-
-    @Override
-    public String toString() {
-        return "AgentClient{"
-                + "publicAddress='" + publicAddress + '\''
-                + ", privateIp='" + privateIp + '\''
-                + '}';
     }
 }

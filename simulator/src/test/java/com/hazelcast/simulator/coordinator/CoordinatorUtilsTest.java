@@ -6,17 +6,21 @@ import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getMaxTestCaseIdLength;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +38,43 @@ public class CoordinatorUtilsTest {
     @Test
     public void testConstructor() throws Exception {
         invokePrivateConstructor(CoordinatorUtils.class);
+    }
+
+    @Test
+    public void testGetPort() {
+        String memberConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/hazelcast.xml");
+
+        CoordinatorParameters parameters = mock(CoordinatorParameters.class);
+        when(parameters.getMemberHzConfig()).thenReturn(memberConfig);
+
+        int port = getPort(parameters);
+        assertEquals(5701, port);
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testGetPort_withException() {
+        CoordinatorParameters parameters = mock(CoordinatorParameters.class);
+        when(parameters.getMemberHzConfig()).thenReturn("");
+
+        getPort(parameters);
+    }
+
+    @Test
+    public void testCreateAddressConfig() {
+        List<AgentData> agents = new ArrayList<AgentData>();
+        for (int i = 1; i <= 5; i++) {
+            AgentData agentData = mock(AgentData.class);
+            when(agentData.getPrivateAddress()).thenReturn("192.168.0." + i);
+            agents.add(agentData);
+        }
+
+        ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
+        when(componentRegistry.getAgents()).thenReturn(agents);
+
+        String addressConfig = createAddressConfig("members", componentRegistry, 6666);
+        for (int i = 1; i <= 5; i++) {
+            assertTrue(addressConfig.contains("192.168.0." + i + ":6666"));
+        }
     }
 
     @Test

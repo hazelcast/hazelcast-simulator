@@ -215,13 +215,6 @@ public class CoordinatorRunTestSuiteTest {
         testSuite.addTest(testCase1);
         testSuite.addTest(testCase2);
 
-        // AgentsClient
-        List<String> privateAddressList = new ArrayList<String>(1);
-        privateAddressList.add("127.0.0.1");
-
-        when(agentsClient.getPublicAddresses()).thenReturn(privateAddressList);
-        when(agentsClient.getAgentCount()).thenReturn(1);
-
         // FailureMonitor
         when(failureMonitor.getFailureCount()).thenReturn(0);
 

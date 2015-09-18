@@ -154,26 +154,6 @@ public class AgentsClient {
         agentExecutor.awaitTermination(EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    public int getAgentCount() {
-        return agents.size();
-    }
-
-    public List<String> getPublicAddresses() {
-        List<String> result = new LinkedList<String>();
-        for (AgentClient client : agents) {
-            result.add(client.getPublicAddress());
-        }
-        return result;
-    }
-
-    public List<String> getPrivateAddresses() {
-        List<String> result = new LinkedList<String>();
-        for (AgentClient client : agents) {
-            result.add(client.getPrivateIp());
-        }
-        return result;
-    }
-
     public List<Failure> getFailures() {
         List<Future<List<Failure>>> futures = asyncExecuteOnAllWorkers(SERVICE_GET_FAILURES);
         List<Failure> result = new LinkedList<Failure>();
