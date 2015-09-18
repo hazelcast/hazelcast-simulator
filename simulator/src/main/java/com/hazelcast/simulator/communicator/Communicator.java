@@ -18,14 +18,19 @@ public final class Communicator {
 
     private static final Logger LOGGER = Logger.getLogger(Communicator.class);
 
-    File agentsFile;
-    Message message;
-
+    private final Message message;
     private final AgentsClient agentsClient;
 
-    public Communicator() {
+    private Communicator(File agentsFile, Message message) {
+        LOGGER.info(format("Loading agents file: %s", agentsFile.getAbsolutePath()));
         ComponentRegistry componentRegistry = loadComponentRegister(agentsFile);
-        agentsClient = new AgentsClient(componentRegistry.getAgents());
+
+        this.message = message;
+        this.agentsClient = new AgentsClient(componentRegistry.getAgents());
+    }
+
+    static Communicator createInstance(File agentsFile, Message message) {
+        return new Communicator(agentsFile, message);
     }
 
     private void run() {
@@ -33,6 +38,7 @@ public final class Communicator {
         try {
             agentsClient.sendMessage(message);
             agentsClient.stop();
+
         } catch (Exception e) {
             throw new CommandLineExitException("Could not send message to agents", e);
         }
@@ -46,12 +52,7 @@ public final class Communicator {
             LOGGER.info(String.format("Version: %s", getSimulatorVersion()));
             LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath()));
 
-            Communicator communicator = new Communicator();
-            CommunicatorCli cli = new CommunicatorCli(communicator, args);
-            cli.init();
-
-            LOGGER.info(format("Loading agents file: %s", communicator.agentsFile.getAbsolutePath()));
-
+            Communicator communicator = CommunicatorCli.init(args);
             communicator.run();
         } catch (Exception e) {
             exitWithError(LOGGER, "Failed to communicate", e);
