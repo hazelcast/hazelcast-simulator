@@ -21,17 +21,17 @@ import static org.junit.Assert.assertEquals;
 
 public class AgentsFileTest {
 
-    private File file;
-    private ComponentRegistry registry = new ComponentRegistry();
+    private File agentsFile;
+    private ComponentRegistry componentRegistry;
 
     @Before
     public void setUp() throws IOException {
-        file = createTempFile("AgentsFileTest", "txt");
+        agentsFile = createTempFile("AgentsFileTest", "txt");
     }
 
     @After
     public void tearDown() {
-        deleteQuiet(file);
+        deleteQuiet(agentsFile);
     }
 
     @Test
@@ -41,69 +41,70 @@ public class AgentsFileTest {
 
     @Test
     public void testLoad_publicAndPrivateAddress() {
-        writeText("192.168.1.1,10.10.10.10", file);
+        writeText("192.168.1.1,10.10.10.10", agentsFile);
 
-        load(file, registry);
-        assertEquals(1, registry.agentCount());
+        componentRegistry = load(agentsFile);
+        assertEquals(1, componentRegistry.agentCount());
 
-        AgentData agentData = registry.getFirstAgent();
+        AgentData agentData = componentRegistry.getFirstAgent();
         assertEquals("192.168.1.1", agentData.getPublicAddress());
         assertEquals("10.10.10.10", agentData.getPrivateAddress());
     }
 
     @Test
     public void testLoad_onlyPublicAddress() {
-        writeText("192.168.1.1", file);
+        writeText("192.168.1.1", agentsFile);
 
-        load(file, registry);
-        assertEquals(1, registry.agentCount());
+        componentRegistry = load(agentsFile);
+        assertEquals(1, componentRegistry.agentCount());
 
-        AgentData agentData = registry.getFirstAgent();
+        AgentData agentData = componentRegistry.getFirstAgent();
         assertEquals("192.168.1.1", agentData.getPublicAddress());
         assertEquals("192.168.1.1", agentData.getPrivateAddress());
     }
 
     @Test
     public void testLoad_fileContainsEmptyLines() {
-        writeText("\n192.168.1.1\n\n", file);
+        writeText("\n192.168.1.1\n\n", agentsFile);
 
-        load(file, registry);
-        assertEquals(1, registry.agentCount());
+        componentRegistry = load(agentsFile);
+        assertEquals(1, componentRegistry.agentCount());
 
-        AgentData agentData = registry.getFirstAgent();
+        AgentData agentData = componentRegistry.getFirstAgent();
         assertEquals("192.168.1.1", agentData.getPublicAddress());
         assertEquals("192.168.1.1", agentData.getPrivateAddress());
     }
 
     @Test
     public void testLoad_fileContainsComments() {
-        writeText("192.168.1.1#foo\n#bar", file);
+        writeText("192.168.1.1#foo\n#bar", agentsFile);
 
-        load(file, registry);
-        assertEquals(1, registry.agentCount());
+        componentRegistry = load(agentsFile);
+        assertEquals(1, componentRegistry.agentCount());
 
-        AgentData agentData = registry.getFirstAgent();
+        AgentData agentData = componentRegistry.getFirstAgent();
         assertEquals("192.168.1.1", agentData.getPublicAddress());
         assertEquals("192.168.1.1", agentData.getPrivateAddress());
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testLoad_fileContainsInvalidAddressLine() {
-        writeText("192.168.1.1,192.168.1.1,192.168.1.1", file);
+        writeText("192.168.1.1,192.168.1.1,192.168.1.1", agentsFile);
 
-        load(file, registry);
+        componentRegistry = load(agentsFile);
     }
 
     @Test
     public void testSave() {
-        registry.addAgent("192.168.1.1", "192.168.1.1");
-        registry.addAgent("192.168.1.1", "10.10.10.10");
-        assertEquals(2, registry.agentCount());
+        componentRegistry = load(agentsFile);
 
-        save(file, registry);
+        componentRegistry.addAgent("192.168.1.1", "192.168.1.1");
+        componentRegistry.addAgent("192.168.1.1", "10.10.10.10");
+        assertEquals(2, componentRegistry.agentCount());
 
-        ComponentRegistry actualRegistry = new ComponentRegistry();
-        load(file, actualRegistry);
+        save(agentsFile, componentRegistry);
+
+        ComponentRegistry actualRegistry = load(agentsFile);
         assertEquals(2, actualRegistry.agentCount());
 
         List<AgentData> agents = actualRegistry.getAgents();

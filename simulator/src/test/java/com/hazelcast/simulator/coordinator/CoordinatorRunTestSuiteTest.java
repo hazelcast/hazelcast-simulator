@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.coordinator.remoting.NewProtocolAgentsClient;
@@ -202,6 +203,7 @@ public class CoordinatorRunTestSuiteTest {
         SimulatorProperties simulatorProperties = new SimulatorProperties();
 
         when(parameters.getSimulatorProperties()).thenReturn(simulatorProperties);
+        when(parameters.getAgentsFile()).thenReturn(new File(AgentsFile.NAME));
         when(parameters.isParallel()).thenReturn(parallel);
         when(parameters.isVerifyEnabled()).thenReturn(verifyEnabled);
         when(parameters.isMonitorPerformance()).thenReturn(monitorPerformance);

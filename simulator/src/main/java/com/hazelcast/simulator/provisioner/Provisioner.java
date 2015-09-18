@@ -36,11 +36,11 @@ import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
+import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static java.lang.String.format;
 
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
@@ -56,19 +56,22 @@ public final class Provisioner {
 
     final SimulatorProperties props = new SimulatorProperties();
 
-    private final ComponentRegistry registry = new ComponentRegistry();
     private final File agentsFile = new File(AgentsFile.NAME);
     // big number of threads, but they are used to offload SSH tasks, so there is no load on this machine
     private final ExecutorService executor = createFixedThreadPool(10, Provisioner.class);
+
+    private final ComponentRegistry componentRegistry;
 
     private Bash bash;
     private HazelcastJars hazelcastJars;
     private File initScript;
     private ComputeService compute;
 
+    public Provisioner() {
+        componentRegistry = loadComponentRegister(agentsFile, false);
+    }
+
     void init() {
-        ensureExistingFile(agentsFile);
-        AgentsFile.load(agentsFile, registry);
         bash = new Bash(props);
 
         GitSupport gitSupport = createGitSupport();
@@ -91,7 +94,7 @@ public final class Provisioner {
     void scale(int size, boolean enterpriseEnabled) {
         ensureNotStaticCloudProvider("scale");
 
-        int agentSize = registry.agentCount();
+        int agentSize = componentRegistry.agentCount();
         int delta = size - agentSize;
         if (delta == 0) {
             echo("Current number of machines: " + agentSize);
@@ -105,11 +108,11 @@ public final class Provisioner {
     }
 
     void installSimulator(boolean enableEnterprise) {
-        echoImportant("Installing Simulator on %s machines", registry.agentCount());
+        echoImportant("Installing Simulator on %s machines", componentRegistry.agentCount());
         hazelcastJars.prepare(enableEnterprise);
 
         ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
-        for (final AgentData agentData : registry.getAgents()) {
+        for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
@@ -120,7 +123,7 @@ public final class Provisioner {
         }
         spawner.awaitCompletion();
 
-        echoImportant("Installing Simulator on %s machines", registry.agentCount());
+        echoImportant("Installing Simulator on %s machines", componentRegistry.agentCount());
     }
 
     void listMachines() {
@@ -130,7 +133,7 @@ public final class Provisioner {
     }
 
     void download(final String target) {
-        echoImportant("Download artifacts of %s machines", registry.agentCount());
+        echoImportant("Download artifacts of %s machines", componentRegistry.agentCount());
         bash.execute("mkdir -p " + target);
 
         ThreadSpawner spawner = new ThreadSpawner("download", true);
@@ -143,7 +146,7 @@ public final class Provisioner {
         final String rsyncCommand = format(baseCommand, "", sshOptions, sshUser, target);
         final String workersPath = format("hazelcast-simulator-%s/workers/*", getSimulatorVersion());
 
-        for (final AgentData agentData : registry.getAgents()) {
+        for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
@@ -161,7 +164,7 @@ public final class Provisioner {
                 File agentOut = new File(target + "/agent.out");
                 File agentErr = new File(target + "/agent.err");
 
-                for (AgentData agentData : registry.getAgents()) {
+                for (AgentData agentData : componentRegistry.getAgents()) {
                     String agentAddress = agentData.getPublicAddress();
                     echo("Downloading Agent logs from %s", agentAddress);
 
@@ -176,15 +179,15 @@ public final class Provisioner {
         });
 
         spawner.awaitCompletion();
-        echoImportant("Finished downloading artifacts of %s machines", registry.agentCount());
+        echoImportant("Finished downloading artifacts of %s machines", componentRegistry.agentCount());
     }
 
     void clean() {
-        echoImportant("Cleaning worker homes of %s machines", registry.agentCount());
+        echoImportant("Cleaning worker homes of %s machines", componentRegistry.agentCount());
         final String cleanCommand = format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion());
 
         ThreadSpawner spawner = new ThreadSpawner("clean", true);
-        for (final AgentData agentData : registry.getAgents()) {
+        for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
@@ -195,14 +198,14 @@ public final class Provisioner {
         }
         spawner.awaitCompletion();
 
-        echoImportant("Finished cleaning worker homes of %s machines", registry.agentCount());
+        echoImportant("Finished cleaning worker homes of %s machines", componentRegistry.agentCount());
     }
 
     void killJavaProcesses() {
-        echoImportant("Killing %s Java processes", registry.agentCount());
+        echoImportant("Killing %s Java processes", componentRegistry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses", true);
-        for (final AgentData agentData : registry.getAgents()) {
+        for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
@@ -213,7 +216,7 @@ public final class Provisioner {
         }
         spawner.awaitCompletion();
 
-        echoImportant("Successfully killed %s Java processes", registry.agentCount());
+        echoImportant("Successfully killed %s Java processes", componentRegistry.agentCount());
     }
 
     void terminate() {
@@ -249,8 +252,8 @@ public final class Provisioner {
 
     private void scaleUp(int delta, boolean enterpriseEnabled) {
         echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
-        echo("Current number of machines: " + registry.agentCount());
-        echo("Desired number of machines: " + (registry.agentCount() + delta));
+        echo("Current number of machines: " + componentRegistry.agentCount());
+        echo("Desired number of machines: " + (componentRegistry.agentCount() + delta));
         String groupName = props.get("GROUP_NAME", "simulator-agent");
         echo("GroupName: " + groupName);
         echo("Username: " + props.getUser());
@@ -288,7 +291,7 @@ public final class Provisioner {
                     echo("    " + publicIpAddress + " LAUNCHED");
                     appendText(publicIpAddress + "," + privateIpAddress + "\n", agentsFile);
 
-                    registry.addAgent(publicIpAddress, privateIpAddress);
+                    componentRegistry.addAgent(publicIpAddress, privateIpAddress);
                 }
 
                 for (NodeMetadata node : nodes) {
@@ -313,13 +316,13 @@ public final class Provisioner {
     }
 
     private void scaleDown(int count) {
-        if (count > registry.agentCount()) {
-            count = registry.agentCount();
+        if (count > componentRegistry.agentCount()) {
+            count = componentRegistry.agentCount();
         }
 
         echoImportant(format("Terminating %s %s machines (can take some time)", count, props.get("CLOUD_PROVIDER")));
-        echo("Current number of machines: " + registry.agentCount());
-        echo("Desired number of machines: " + (registry.agentCount() - count));
+        echo("Current number of machines: " + componentRegistry.agentCount());
+        echo("Desired number of machines: " + (componentRegistry.agentCount() - count));
 
         long started = System.nanoTime();
 
@@ -328,17 +331,17 @@ public final class Provisioner {
         int destroyedCount = 0;
         for (int batchSize : calcBatches(count)) {
             Map<String, AgentData> terminateMap = new HashMap<String, AgentData>();
-            for (AgentData agentData : registry.getAgents(batchSize)) {
+            for (AgentData agentData : componentRegistry.getAgents(batchSize)) {
                 terminateMap.put(agentData.getPublicAddress(), agentData);
             }
             destroyedCount += destroyNodes(compute, terminateMap);
         }
 
         LOGGER.info("Updating " + agentsFile.getAbsolutePath());
-        AgentsFile.save(agentsFile, registry);
+        AgentsFile.save(agentsFile, componentRegistry);
 
         echo("Duration: " + secondsToHuman(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started)));
-        echoImportant("Terminated %s of %s, remaining=%s", destroyedCount, count, registry.agentCount());
+        echoImportant("Terminated %s of %s, remaining=%s", destroyedCount, count, componentRegistry.agentCount());
 
         if (destroyedCount != count) {
             throw new IllegalStateException("Terminated " + destroyedCount + " of " + count
@@ -355,14 +358,14 @@ public final class Provisioner {
         List<Integer> batches = new LinkedList<Integer>();
         int batchSize = Integer.parseInt(props.get("CLOUD_BATCH_SIZE"));
         while (size > 0) {
-            int x = size >= batchSize ? batchSize : size;
-            batches.add(x);
-            size -= x;
+            int currentBatchSize = (size >= batchSize ? batchSize : size);
+            batches.add(currentBatchSize);
+            size -= currentBatchSize;
         }
 
         int[] result = new int[batches.size()];
-        for (int k = 0; k < result.length; k++) {
-            result[k] = batches.get(k);
+        for (int i = 0; i < result.length; i++) {
+            result[i] = batches.get(i);
         }
         return result;
     }
@@ -436,7 +439,7 @@ public final class Provisioner {
                     AgentData agentData = terminateMap.remove(publicAddress);
                     if (agentData != null) {
                         echo(format("    Terminating instance %s", publicAddress));
-                        registry.removeAgent(agentData);
+                        componentRegistry.removeAgent(agentData);
                         return true;
                     }
                 }

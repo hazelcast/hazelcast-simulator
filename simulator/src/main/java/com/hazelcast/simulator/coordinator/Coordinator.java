@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
@@ -52,10 +51,10 @@ import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
+import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static java.lang.String.format;
 
 public final class Coordinator {
@@ -73,10 +72,10 @@ public final class Coordinator {
     int cooldownSeconds = COOLDOWN_SECONDS;
     int testCaseRunnerSleepPeriod = TEST_CASE_RUNNER_SLEEP_PERIOD;
 
-    private final ComponentRegistry componentRegistry = new ComponentRegistry();
-
     private final CoordinatorParameters parameters;
     private final TestSuite testSuite;
+
+    private final ComponentRegistry componentRegistry;
 
     private final SimulatorProperties props;
     private final Bash bash;
@@ -93,6 +92,8 @@ public final class Coordinator {
     public Coordinator(CoordinatorParameters parameters, TestSuite testSuite) {
         this.parameters = parameters;
         this.testSuite = testSuite;
+
+        this.componentRegistry = loadComponentRegister(parameters.getAgentsFile());
 
         this.props = parameters.getSimulatorProperties();
         this.bash = new Bash(props);
@@ -148,8 +149,6 @@ public final class Coordinator {
     }
 
     private void initAgents() {
-        populateComponentRegister();
-
         startAgents();
 
         agentsClient = new AgentsClient(componentRegistry.getAgents());
@@ -183,15 +182,6 @@ public final class Coordinator {
         uploadWorkerClassPath();
         uploadYourKitIfNeeded();
         // TODO: copy the Hazelcast JARs
-    }
-
-    private void populateComponentRegister() {
-        File agentsFile = parameters.getAgentsFile();
-        ensureExistingFile(agentsFile);
-        AgentsFile.load(agentsFile, componentRegistry);
-        if (componentRegistry.agentCount() == 0) {
-            throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
-        }
     }
 
     private void startAgents() {
@@ -350,15 +340,17 @@ public final class Coordinator {
     private void startWorkers() {
         List<AgentMemberLayout> agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
 
+        int memberWorkerCount = parameters.getMemberWorkerCount();
+        int clientWorkerCount = parameters.getClientWorkerCount();
+        int totalWorkerCount = memberWorkerCount + clientWorkerCount;
+
         long started = System.nanoTime();
-        int totalWorkerCount = parameters.getMemberWorkerCount() + parameters.getClientWorkerCount();
         try {
             echo("Killing all remaining workers");
             agentsClient.terminateWorkers();
             echo("Successfully killed all remaining workers");
 
-            echo("Starting %d workers (%d members, %d clients)", totalWorkerCount, parameters.getMemberWorkerCount(),
-                    parameters.getClientWorkerCount());
+            echo("Starting %d workers (%d members, %d clients)", totalWorkerCount, memberWorkerCount, clientWorkerCount);
             newProtocolAgentsClient.createWorkers(agentMemberLayouts);
             echo("Successfully started workers");
         } catch (Exception e) {
@@ -366,7 +358,7 @@ public final class Coordinator {
         }
 
         long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
-        LOGGER.info((format("Successfully started a grand total of %s Worker JVMs after %s ms", totalWorkerCount, durationMs)));
+        LOGGER.info((format("Successfully started a grand total of %s worker JVMs after %s ms", totalWorkerCount, durationMs)));
     }
 
     void runTestSuite() {

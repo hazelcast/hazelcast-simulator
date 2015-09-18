@@ -37,6 +37,7 @@ import java.util.List;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
+import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 
 /**
  * An AWS specific provisioning class which is using the AWS SDK to create AWS instances and AWS elastic load balancer.
@@ -57,13 +58,13 @@ public class AwsProvisioner {
     private static final int MAX_SLEEPING_ITERATIONS = 12;
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
-    private AmazonEC2 ec2;
-    private AmazonElasticLoadBalancingClient elb;
-    private SimulatorProperties props = new SimulatorProperties();
-
-    private final ComponentRegistry registry = new ComponentRegistry();
     private final File agentsFile = new File(AgentsFile.NAME);
     private final File elbFile = new File(AWS_ELB_FILE_NAME);
+
+    private final ComponentRegistry componentRegistry;
+
+    private AmazonEC2 ec2;
+    private AmazonElasticLoadBalancingClient elb;
 
     private String securityGroup;
     private String awsKeyName;
@@ -77,27 +78,28 @@ public class AwsProvisioner {
     private String elbAvailabilityZones;
 
     AwsProvisioner() {
+        componentRegistry = loadComponentRegister(agentsFile, false);
         setProperties(null);
-        AgentsFile.load(agentsFile, registry);
     }
 
     void setProperties(File file) {
-        props.init(file);
+        SimulatorProperties simulatorProperties = new SimulatorProperties();
+        simulatorProperties.init(file);
 
-        String awsCredentialsPath = props.get("AWS_CREDENTIALS", "awscredentials.properties");
+        String awsCredentialsPath = simulatorProperties.get("AWS_CREDENTIALS", "awscredentials.properties");
         File credentialsFile = new File(awsCredentialsPath);
 
-        elbProtocol = props.get("ELB_PROTOCOL");
+        elbProtocol = simulatorProperties.get("ELB_PROTOCOL");
 
-        elbPortIn = Integer.parseInt(props.get("ELB_PORT_IN", "0"));
-        elbPortOut = Integer.parseInt(props.get("ELB_PORT_OUT", "0"));
-        elbAvailabilityZones = props.get("ELB_ZONES");
+        elbPortIn = Integer.parseInt(simulatorProperties.get("ELB_PORT_IN", "0"));
+        elbPortOut = Integer.parseInt(simulatorProperties.get("ELB_PORT_OUT", "0"));
+        elbAvailabilityZones = simulatorProperties.get("ELB_ZONES");
 
-        awsKeyName = props.get("AWS_KEY_NAME");
-        awsAmi = props.get("AWS_AMI");
-        awsBoxId = props.get("AWS_BOXID");
-        securityGroup = props.get("SECURITY_GROUP");
-        subNetId = props.get("SUBNET_ID", "");
+        awsKeyName = simulatorProperties.get("AWS_KEY_NAME");
+        awsAmi = simulatorProperties.get("AWS_AMI");
+        awsBoxId = simulatorProperties.get("AWS_BOXID");
+        securityGroup = simulatorProperties.get("SECURITY_GROUP");
+        subNetId = simulatorProperties.get("SUBNET_ID", "");
 
         try {
             AWSCredentials credentials = new PropertiesCredentials(credentialsFile);
@@ -138,12 +140,12 @@ public class AwsProvisioner {
             createLoadBalancer(elbName);
         }
 
-        List<Instance> instances = getInstancesByPublicIp(registry.getAgents());
+        List<Instance> instances = getInstancesByPublicIp(componentRegistry.getAgents());
         addInstancesToElb(elbName, instances);
     }
 
     void scaleInstanceCountTo(int totalInstancesWanted) {
-        int agentsSize = registry.agentCount();
+        int agentsSize = componentRegistry.agentCount();
         if (totalInstancesWanted > agentsSize) {
             createInstances(totalInstancesWanted - agentsSize);
         } else {
@@ -182,11 +184,11 @@ public class AwsProvisioner {
     }
 
     private void terminateInstances(int count) {
-        List<AgentData> deadList = registry.getAgents(count);
+        List<AgentData> deadList = componentRegistry.getAgents(count);
         List<Instance> deadInstances = getInstancesByPublicIp(deadList);
 
         LOGGER.info("Updating " + agentsFile.getAbsolutePath());
-        AgentsFile.save(agentsFile, registry);
+        AgentsFile.save(agentsFile, componentRegistry);
 
         terminateInstances(deadInstances);
     }
@@ -205,7 +207,7 @@ public class AwsProvisioner {
     private List<Instance> getInstancesByPublicIp(List<AgentData> agentDataList) {
         List<String> ips = new ArrayList<String>();
         for (AgentData agentData : agentDataList) {
-            registry.removeAgent(agentData);
+            componentRegistry.removeAgent(agentData);
             ips.add(agentData.getPublicAddress());
         }
 

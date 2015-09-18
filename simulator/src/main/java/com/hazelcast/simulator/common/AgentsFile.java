@@ -27,7 +27,9 @@ public final class AgentsFile {
     private AgentsFile() {
     }
 
-    public static void load(File agentFile, ComponentRegistry registry) {
+    public static ComponentRegistry load(File agentFile) {
+        ComponentRegistry componentRegistry = new ComponentRegistry();
+
         String content = fileAsText(agentFile);
         String[] addresses = content.split("\n");
         int lineNumber = 1;
@@ -45,10 +47,10 @@ public final class AgentsFile {
             String[] chunks = line.split(",");
             switch (chunks.length) {
                 case 1:
-                    registry.addAgent(chunks[0], chunks[0]);
+                    componentRegistry.addAgent(chunks[0], chunks[0]);
                     break;
                 case 2:
-                    registry.addAgent(chunks[0], chunks[1]);
+                    componentRegistry.addAgent(chunks[0], chunks[1]);
                     break;
                 default:
                     throw new CommandLineExitException(format("Line %s of file %s is invalid!"
@@ -56,6 +58,8 @@ public final class AgentsFile {
                             + " but it contains %s", lineNumber, agentFile, chunks.length));
             }
         }
+
+        return componentRegistry;
     }
 
     public static void save(File agentsFile, ComponentRegistry registry) {

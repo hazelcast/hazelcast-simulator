@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.communicator;
 
-import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -12,6 +11,7 @@ import java.io.File;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static java.lang.String.format;
 
 public final class Communicator {
@@ -21,13 +21,15 @@ public final class Communicator {
     File agentsFile;
     Message message;
 
-    private final ComponentRegistry registry = new ComponentRegistry();
+    private final AgentsClient agentsClient;
 
-    private AgentsClient agentsClient;
+    public Communicator() {
+        ComponentRegistry componentRegistry = loadComponentRegister(agentsFile);
+        agentsClient = new AgentsClient(componentRegistry.getAgents());
+    }
 
     private void run() {
-        initAgents();
-
+        agentsClient.start();
         try {
             agentsClient.sendMessage(message);
             agentsClient.stop();
@@ -36,15 +38,6 @@ public final class Communicator {
         }
 
         LOGGER.info("Message sent!");
-    }
-
-    private void initAgents() {
-        AgentsFile.load(agentsFile, registry);
-        if (registry.agentCount() == 0) {
-            throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
-        }
-        agentsClient = new AgentsClient(registry.getAgents());
-        agentsClient.start();
     }
 
     public static void main(String[] args) {
