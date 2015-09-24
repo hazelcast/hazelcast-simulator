@@ -31,6 +31,8 @@ package com.hazelcast.simulator.protocol.core;
 public class SimulatorAddress {
 
     public static final SimulatorAddress COORDINATOR = new SimulatorAddress(AddressLevel.COORDINATOR, 0, 0, 0);
+    public static final SimulatorAddress ALL_AGENTS = new SimulatorAddress(AddressLevel.AGENT, 0, 0, 0);
+    public static final SimulatorAddress ALL_WORKERS = new SimulatorAddress(AddressLevel.WORKER, 0, 0, 0);
 
     private final AddressLevel addressLevel;
     private final int agentIndex;

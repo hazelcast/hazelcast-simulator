@@ -19,6 +19,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.worker.performance.PerformanceState;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
@@ -552,9 +553,9 @@ public class TestContainerTest {
     public void testPerformance() throws Exception {
         PerformanceTest test = new PerformanceTest();
         testContainer = createTestContainer(test);
-        long count = testContainer.getOperationCount();
+        PerformanceState performanceState = testContainer.getPerformanceState();
 
-        assertEquals(20, count);
+        assertEquals(20, performanceState.getOperationCount());
     }
 
     private static class PerformanceTest {
@@ -573,9 +574,9 @@ public class TestContainerTest {
     public void testPerformanceWithException() throws Exception {
         PerformanceExceptionTest test = new PerformanceExceptionTest();
         testContainer = createTestContainer(test);
-        long count = testContainer.getOperationCount();
+        PerformanceState performanceState = testContainer.getPerformanceState();
 
-        assertEquals(-1, count);
+        assertEquals(PerformanceState.EMPTY_OPERATION_COUNT, performanceState.getOperationCount());
     }
 
     private static class PerformanceExceptionTest {

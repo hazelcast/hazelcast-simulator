@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 import org.jclouds.aws.ec2.AWSEC2Api;
@@ -85,8 +85,8 @@ class TemplateBuilder {
     private int[] inboundPorts() {
         List<Integer> ports = new ArrayList<Integer>();
         ports.add(SSH_PORT);
+        ports.add(Ports.AGENT_PORT);
         ports.add(AgentRemoteService.PORT);
-        ports.add(WorkerJvmManager.PORT);
         for (int port = HAZELCAST_PORT_RANGE_START; port < HAZELCAST_PORT_RANGE_END; port++) {
             ports.add(port);
         }
@@ -125,9 +125,9 @@ class TemplateBuilder {
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
                 SSH_PORT, SSH_PORT, CIDR_RANGE);
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                AgentRemoteService.PORT, AgentRemoteService.PORT, CIDR_RANGE);
+                Ports.AGENT_PORT, Ports.AGENT_PORT, CIDR_RANGE);
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                WorkerJvmManager.PORT, WorkerJvmManager.PORT, CIDR_RANGE);
+                AgentRemoteService.PORT, AgentRemoteService.PORT, CIDR_RANGE);
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
                 HAZELCAST_PORT_RANGE_START, HAZELCAST_PORT_RANGE_END, CIDR_RANGE);
     }

@@ -106,6 +106,22 @@ public class ComponentRegistryTest {
         }
     }
 
+    @Test
+    public void testGetFirstWorker() {
+        SimulatorAddress parentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
+        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(2);
+
+        componentRegistry.addWorkers(parentAddress, settingsList);
+        assertEquals(2, componentRegistry.workerCount());
+
+        WorkerData workerData = componentRegistry.getFirstWorker();
+        assertEquals(1, workerData.getAddress().getWorkerIndex());
+        assertEquals(AddressLevel.WORKER, workerData.getAddress().getAddressLevel());
+
+        assertEquals(1, workerData.getSettings().getWorkerIndex());
+        assertEquals(WorkerType.MEMBER, workerData.getSettings().getWorkerType());
+    }
+
     private List<WorkerJvmSettings> getWorkerJvmSettingsList(int workerCount) {
         List<WorkerJvmSettings> settingsList = new ArrayList<WorkerJvmSettings>();
         for (int i = 1; i <= workerCount; i++) {

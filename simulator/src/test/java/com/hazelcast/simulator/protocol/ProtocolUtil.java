@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.agent.Agent;
+import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
@@ -17,6 +18,7 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -119,7 +121,8 @@ public class ProtocolUtil {
     }
 
     static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
-        WorkerConnector workerConnector = WorkerConnector.createInstance(addressIndex, parentAddressIndex, port, true);
+        WorkerConnector workerConnector = WorkerConnector.createInstance(parentAddressIndex, addressIndex, port,
+                WorkerType.MEMBER, null, null, true);
 
         OperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER);
         for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
@@ -144,7 +147,8 @@ public class ProtocolUtil {
     }
 
     static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort, int numberOfAgents) {
-        CoordinatorConnector coordinatorConnector = new CoordinatorConnector();
+        PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+        CoordinatorConnector coordinatorConnector = new CoordinatorConnector(performanceStateContainer);
         for (int i = 1; i <= numberOfAgents; i++) {
             coordinatorConnector.addAgent(i, agentHost, agentStartPort + i);
         }

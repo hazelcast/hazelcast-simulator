@@ -1,10 +1,9 @@
-package com.hazelcast.simulator.worker.commands;
+package com.hazelcast.simulator.worker.performance;
 
-import java.io.Serializable;
+public class PerformanceState {
 
-public class PerformanceState implements Serializable {
-    private static final long EMPTY_OPERATION_COUNT = -1;
-    private static final double EMPTY_THROUGHPUT = -1;
+    public static final long EMPTY_OPERATION_COUNT = -1;
+    public static final double EMPTY_THROUGHPUT = -1;
 
     private long operationCount;
     private double intervalThroughput;
@@ -24,7 +23,9 @@ public class PerformanceState implements Serializable {
     public void add(PerformanceState other) {
         if (other.isEmpty()) {
             return;
-        } else if (isEmpty()) {
+        }
+
+        if (isEmpty()) {
             operationCount = other.getOperationCount();
             intervalThroughput = other.getIntervalThroughput();
             totalThroughput = other.getTotalThroughput();
@@ -53,9 +54,10 @@ public class PerformanceState implements Serializable {
 
     @Override
     public String toString() {
-        return "PerformanceResponse{"
+        return "PerformanceState{"
                 + "operationCount=" + operationCount
                 + ", intervalThroughput=" + intervalThroughput
+                + ", totalThroughput=" + totalThroughput
                 + '}';
     }
 }

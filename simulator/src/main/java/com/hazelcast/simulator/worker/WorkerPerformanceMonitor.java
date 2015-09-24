@@ -1,6 +1,12 @@
 package com.hazelcast.simulator.worker;
 
+import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.WorkerIsAliveOperation;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -21,7 +27,7 @@ import static java.lang.String.format;
 /**
  * Monitors the performance of all running tests on {@link MemberWorker} and {@link ClientWorker} instances.
  */
-class WorkerPerformanceMonitor {
+public class WorkerPerformanceMonitor {
 
     private static final int DEFAULT_MONITORING_INTERVAL_SECONDS = 5;
 
@@ -29,15 +35,16 @@ class WorkerPerformanceMonitor {
 
     private final MonitorThread thread;
 
-    WorkerPerformanceMonitor(Collection<TestContainer<TestContext>> testContainers) {
-        this(testContainers, DEFAULT_MONITORING_INTERVAL_SECONDS);
+    public WorkerPerformanceMonitor(ServerConnector serverConnector, Collection<TestContainer<TestContext>> testContainers) {
+        this(serverConnector, testContainers, DEFAULT_MONITORING_INTERVAL_SECONDS);
     }
 
-    WorkerPerformanceMonitor(Collection<TestContainer<TestContext>> testContainers, int intervalSeconds) {
-        this.thread = new MonitorThread(testContainers, intervalSeconds);
+    WorkerPerformanceMonitor(ServerConnector serverConnector, Collection<TestContainer<TestContext>> testContainers,
+                             int intervalSeconds) {
+        this.thread = new MonitorThread(serverConnector, testContainers, intervalSeconds);
     }
 
-    boolean start() {
+    public boolean start() {
         if (!started.compareAndSet(false, true)) {
             return false;
         }
@@ -46,8 +53,8 @@ class WorkerPerformanceMonitor {
         return true;
     }
 
-    void stop() {
-        thread.stop = true;
+    public void shutdown() {
+        thread.isRunning = false;
         thread.interrupt();
     }
 
@@ -58,34 +65,84 @@ class WorkerPerformanceMonitor {
         private final File globalPerformanceFile = new File("performance.txt");
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         private final Map<String, TestStats> testStats = new HashMap<String, TestStats>();
+
+        private final ServerConnector serverConnector;
         private final Collection<TestContainer<TestContext>> testContainers;
         private final int intervalSeconds;
+
+        private final SimulatorOperation keepAliveOperation;
+        private final SimulatorAddress agentAddress;
 
         private long globalLastOpsCount;
         private long globalLastTimeMillis = System.currentTimeMillis();
 
-        private volatile boolean stop;
+        private volatile boolean isRunning = true;
 
-        private MonitorThread(Collection<TestContainer<TestContext>> testContainers, int intervalSeconds) {
+        private MonitorThread(ServerConnector serverConnector, Collection<TestContainer<TestContext>> testContainers,
+                              int intervalSeconds) {
             super("WorkerPerformanceMonitorThread");
             setDaemon(true);
 
+            this.serverConnector = serverConnector;
             this.testContainers = testContainers;
             this.intervalSeconds = intervalSeconds;
+
+            SimulatorAddress workerAddress = serverConnector.getAddress();
+            this.keepAliveOperation = new WorkerIsAliveOperation(workerAddress);
+            this.agentAddress = workerAddress.getParent();
 
             writeHeaderToFile(globalPerformanceFile, true);
         }
 
         @Override
         public void run() {
-            while (!stop) {
+            long iteration = 0;
+            while (isRunning) {
                 try {
                     sleepSeconds(intervalSeconds);
-                    writeStatsToFiles();
+                    updatePerformanceStates();
+                    sendPerformanceState();
+                    if (++iteration % intervalSeconds == 0) {
+                        sendKeepAliveToAgent();
+                        writeStatsToFiles();
+                    }
                 } catch (Throwable t) {
                     LOGGER.fatal("Failed to run performance monitor", t);
                 }
             }
+        }
+
+        private void updatePerformanceStates() {
+            for (TestContainer testContainer : testContainers) {
+                String testId = testContainer.getTestContext().getTestId();
+                PerformanceState performanceState = testContainer.getPerformanceState();
+                if (performanceState == null || performanceState.getOperationCount() == PerformanceState.EMPTY_OPERATION_COUNT) {
+                    // skip tests without performance counts
+                    continue;
+                }
+
+                TestStats stats = testStats.get(testId);
+                if (stats == null) {
+                    File testFile = new File("performance-" + (testId.isEmpty() ? "default" : testId) + ".txt");
+                    writeHeaderToFile(testFile, false);
+
+                    stats = new TestStats(testFile);
+                    testStats.put(testId, stats);
+                }
+                stats.performanceState = performanceState;
+            }
+        }
+
+        private void sendPerformanceState() {
+            PerformanceStateOperation operation = new PerformanceStateOperation(serverConnector.getAddress());
+            for (Map.Entry<String, TestStats> statsEntry : testStats.entrySet()) {
+                operation.addPerformanceState(statsEntry.getKey(), statsEntry.getValue().performanceState);
+            }
+            serverConnector.submit(SimulatorAddress.COORDINATOR, operation);
+        }
+
+        private void sendKeepAliveToAgent() {
+            serverConnector.submit(agentAddress, keepAliveOperation);
         }
 
         @SuppressWarnings("checkstyle:magicnumber")
@@ -98,23 +155,8 @@ class WorkerPerformanceMonitor {
             long deltaTimeMillis = currentTimeMillis - globalLastTimeMillis;
 
             // test performance stats
-            for (TestContainer testContainer : testContainers) {
-                String testId = testContainer.getTestContext().getTestId();
-
-                long currentOpsCount = getOpsCount(testContainer);
-
-                TestStats stats = testStats.get(testId);
-                if (stats == null) {
-                    if (currentOpsCount == 0) {
-                        // skip tests without performance counts
-                        continue;
-                    }
-                    File testFile = new File("performance-" + (testId.isEmpty() ? "default" : testId) + ".txt");
-                    writeHeaderToFile(testFile, false);
-
-                    stats = new TestStats(testFile);
-                    testStats.put(testId, stats);
-                }
+            for (TestStats stats : testStats.values()) {
+                long currentOpsCount = stats.performanceState.getOperationCount();
 
                 long deltaOps = currentOpsCount - stats.lastOpsCount;
                 double opsPerSecond = (deltaOps * 1000d) / deltaTimeMillis;
@@ -136,14 +178,6 @@ class WorkerPerformanceMonitor {
                 writeStatsToFile(globalPerformanceFile, timestamp, globalLastOpsCount, globalDeltaOps, globalOpsPerSecond,
                         numberOfTests, testContainers.size());
             }
-        }
-
-        private long getOpsCount(TestContainer container) {
-            long operationCount = container.getOperationCount();
-            if (operationCount > 0) {
-                return operationCount;
-            }
-            return 0;
         }
 
         private void writeHeaderToFile(File file, boolean isGlobal) {
@@ -173,7 +207,9 @@ class WorkerPerformanceMonitor {
         }
 
         private static final class TestStats {
+
             private final File performanceFile;
+            private PerformanceState performanceState;
             private long lastOpsCount;
 
             private TestStats(File performanceFile) {

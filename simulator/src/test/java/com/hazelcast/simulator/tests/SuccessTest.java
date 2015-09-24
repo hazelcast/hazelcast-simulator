@@ -16,9 +16,15 @@
 package com.hazelcast.simulator.tests;
 
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
@@ -26,20 +32,55 @@ public class SuccessTest {
 
     private TestContext context;
 
+    private Set<TestPhase> testPhases = new HashSet<TestPhase>();
+
+    public Set<TestPhase> getTestPhases() {
+        return testPhases;
+    }
+
     @Setup
     public void setUp(TestContext context) {
         this.context = context;
+        testPhases.add(TestPhase.SETUP);
     }
 
-    @Warmup
-    void warmup() {
+    @Teardown(global = false)
+    public void localTearDown() {
+        testPhases.add(TestPhase.LOCAL_TEARDOWN);
+    }
+
+    @Teardown(global = true)
+    public void globalTearDown() {
+        testPhases.add(TestPhase.GLOBAL_TEARDOWN);
+    }
+
+    @Warmup(global = false)
+    public void localWarmup() {
         sleepSeconds(1);
+        testPhases.add(TestPhase.LOCAL_WARMUP);
+    }
+
+    @Warmup(global = true)
+    public void globalWarmup() {
+        sleepSeconds(1);
+        testPhases.add(TestPhase.GLOBAL_WARMUP);
+    }
+
+    @Verify(global = false)
+    public void localVerify() {
+        testPhases.add(TestPhase.LOCAL_VERIFY);
+    }
+
+    @Verify(global = true)
+    public void globalVerify() {
+        testPhases.add(TestPhase.GLOBAL_VERIFY);
     }
 
     @Run
     void run() {
         while (!context.isStopped()) {
             sleepSeconds(1);
+            testPhases.add(TestPhase.RUN);
         }
     }
 }

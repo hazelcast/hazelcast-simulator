@@ -49,9 +49,8 @@ public class JavaInstallationsRepository {
 
     private Properties loadProperties(File propertiesFile) {
         Properties properties = new Properties();
-
         try {
-            final FileInputStream fis = new FileInputStream(propertiesFile);
+            FileInputStream fis = new FileInputStream(propertiesFile);
             try {
                 properties.load(fis);
             } finally {

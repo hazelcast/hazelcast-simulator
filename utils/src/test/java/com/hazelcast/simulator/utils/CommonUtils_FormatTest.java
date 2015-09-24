@@ -5,6 +5,7 @@ import org.junit.Test;
 import static com.hazelcast.simulator.utils.CommonUtils.fillString;
 import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
 import static com.hazelcast.simulator.utils.CommonUtils.formatLong;
+import static com.hazelcast.simulator.utils.CommonUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.CommonUtils.humanReadableByteCount;
 import static com.hazelcast.simulator.utils.CommonUtils.padLeft;
 import static com.hazelcast.simulator.utils.CommonUtils.padRight;
@@ -15,6 +16,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class CommonUtils_FormatTest {
+
+    @Test
+    public void testFormatPercentage() {
+        assertEquals("   0.00", formatPercentage(0, 10));
+        assertEquals("  30.00", formatPercentage(3, 10));
+        assertEquals("  50.00", formatPercentage(5, 10));
+        assertEquals(" 100.00", formatPercentage(10, 10));
+        assertEquals("  49.18", formatPercentage(30, 61));
+    }
 
     @Test
     public void testFormatLong() {

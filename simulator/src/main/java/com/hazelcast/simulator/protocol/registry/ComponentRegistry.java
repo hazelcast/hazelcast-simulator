@@ -63,4 +63,8 @@ public class ComponentRegistry {
     public List<WorkerData> getWorkers() {
         return unmodifiableList(workers);
     }
+
+    public WorkerData getFirstWorker() {
+        return workers.get(0);
+    }
 }

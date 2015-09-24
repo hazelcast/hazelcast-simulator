@@ -88,15 +88,12 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public void shutdown() {
-        beforeShutdown();
-
         messageQueueThread.shutdown();
+        configuration.shutdown();
         channel.close().syncUninterruptibly();
 
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
     }
-
-    protected abstract void beforeShutdown();
 
     @Override
     public SimulatorAddress getAddress() {
@@ -167,7 +164,7 @@ abstract class AbstractServerConnector implements ServerConnector {
 
         @Override
         public void run() {
-            while (running) {
+            while (running || messageQueue.size() > 0) {
                 try {
                     SimulatorMessage message = messageQueue.take();
                     Response response = writeAsync(message).get();
@@ -187,10 +184,15 @@ abstract class AbstractServerConnector implements ServerConnector {
 
         public void shutdown() {
             try {
-                while (messageQueue.size() > 0) {
-                    sleepMillis(WAIT_FOR_EMPTY_QUEUE_MILLIS);
-                }
                 running = false;
+
+                int queueSize = messageQueue.size();
+                while (queueSize > 0) {
+                    SimulatorMessage message = messageQueue.peek();
+                    LOGGER.info(format("%d messages pending on messageQueue, first message: %s",  + queueSize, message));
+                    sleepMillis(WAIT_FOR_EMPTY_QUEUE_MILLIS);
+                    queueSize = messageQueue.size();
+                }
 
                 messageQueueThread.interrupt();
                 messageQueueThread.join();

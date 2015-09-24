@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.worker.performance;
 
-import com.hazelcast.simulator.worker.commands.PerformanceState;
-
+import static com.hazelcast.simulator.worker.performance.PerformanceState.EMPTY_OPERATION_COUNT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class PerformanceTracker {
@@ -19,7 +18,7 @@ public class PerformanceTracker {
     }
 
     public PerformanceState update(long currentOperationalCount) {
-        if (currentOperationalCount == -1) {
+        if (currentOperationalCount == EMPTY_OPERATION_COUNT) {
             return new PerformanceState();
         }
 

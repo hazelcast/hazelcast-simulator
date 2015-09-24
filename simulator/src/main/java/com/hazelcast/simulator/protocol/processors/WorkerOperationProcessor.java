@@ -16,8 +16,11 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.worker.TestContainer;
 import com.hazelcast.simulator.worker.TestContextImpl;
+import com.hazelcast.simulator.worker.Worker;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,21 +53,30 @@ public class WorkerOperationProcessor extends OperationProcessor {
 
     private final ExceptionLogger exceptionLogger;
 
-    private final HazelcastInstance serverInstance;
-    private final HazelcastInstance clientInstance;
+    private final WorkerType type;
+    private final HazelcastInstance hazelcastInstance;
+    private final Worker worker;
 
-    public WorkerOperationProcessor(ExceptionLogger exceptionLogger,
-                                    HazelcastInstance serverInstance, HazelcastInstance clientInstance) {
+    public WorkerOperationProcessor(ExceptionLogger exceptionLogger, WorkerType type, HazelcastInstance hazelcastInstance,
+                                    Worker worker) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
 
-        this.serverInstance = serverInstance;
-        this.clientInstance = clientInstance;
+        this.type = type;
+        this.hazelcastInstance = hazelcastInstance;
+        this.worker = worker;
+    }
+
+    public Collection<TestContainer<TestContext>> getTests() {
+        return tests.values();
     }
 
     @Override
     protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception {
         switch (operationType) {
+            case TERMINATE_WORKERS:
+                processTerminateWorkers();
+                break;
             case CREATE_TEST:
                 processCreateTest((CreateTestOperation) operation);
                 break;
@@ -85,6 +97,10 @@ public class WorkerOperationProcessor extends OperationProcessor {
         return SUCCESS;
     }
 
+    private void processTerminateWorkers() {
+        worker.shutdown();
+    }
+
     private void processCreateTest(CreateTestOperation operation) throws Exception {
         TestCase testCase = operation.getTestCase();
         String testId = testCase.getId();
@@ -101,14 +117,14 @@ public class WorkerOperationProcessor extends OperationProcessor {
 
         Object testInstance = CreateTestOperation.class.getClassLoader().loadClass(testCase.getClassname()).newInstance();
         bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
-        TestContextImpl testContext = new TestContextImpl(testId, getHazelcastInstance());
+        TestContextImpl testContext = new TestContextImpl(testId, hazelcastInstance);
         ProbesConfiguration probesConfiguration = parseProbeConfiguration(testInstance, testCase);
 
         tests.put(testId, new TestContainer<TestContext>(testInstance, testContext, probesConfiguration, testCase));
         testsPending.incrementAndGet();
 
-        if (serverInstance != null) {
-            serverInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testInstance);
+        if (type == WorkerType.MEMBER) {
+            hazelcastInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testInstance);
         }
     }
 
@@ -159,9 +175,9 @@ public class WorkerOperationProcessor extends OperationProcessor {
     }
 
     private void processStartTest(StartTestOperation operation) {
-        //if (workerPerformanceMonitor.start()) {
-        //    LOGGER.info(format("%s Starting performance monitoring %s", DASHES, DASHES));
-        //}
+        if (worker.startPerformanceMonitor()) {
+            LOGGER.info(format("%s Starting performance monitoring %s", DASHES, DASHES));
+        }
 
         final String testId = operation.getTestId();
         final String testName = "".equals(testId) ? "test" : testId;
@@ -172,7 +188,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
             return;
         }
 
-        if (operation.isPassiveMember() && clientInstance == null) {
+        if (operation.isPassiveMember() && type == WorkerType.MEMBER) {
             LOGGER.info(format("%s Skipping run of %s (member is passive) %s", DASHES, testName, DASHES));
             return;
         }
@@ -187,7 +203,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
                 // stop performance monitor if all tests have completed their run phase
                 if (testsCompleted.incrementAndGet() == testsPending.get()) {
                     LOGGER.info(format("%s Stopping performance monitoring %s", DASHES, DASHES));
-                    //workerPerformanceMonitor.stop();
+                    worker.shutdownPerformanceMonitor();
                 }
             }
         };
@@ -206,13 +222,6 @@ public class WorkerOperationProcessor extends OperationProcessor {
 
         LOGGER.info(format("%s Stopping %s %s", DASHES, testName, DASHES));
         test.getTestContext().stop();
-    }
-
-    private HazelcastInstance getHazelcastInstance() {
-        if (clientInstance != null) {
-            return clientInstance;
-        }
-        return serverInstance;
     }
 
     private abstract class OperationThread extends Thread {

@@ -24,6 +24,8 @@ import java.util.Map;
 
 public class TestCase implements Serializable {
 
+    private static final long serialVersionUID = -437106085438420327L;
+
     private final String id;
     private final Map<String, String> properties = new HashMap<String, String>();
 

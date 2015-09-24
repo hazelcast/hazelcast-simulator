@@ -25,9 +25,9 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
+import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.worker.commands.CommandRequest;
-import com.hazelcast.simulator.worker.commands.CommandResponse;
+import com.hazelcast.simulator.utils.NativeUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -35,8 +35,6 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -48,7 +46,7 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
-public final class MemberWorker {
+public final class MemberWorker implements Worker {
 
     private static final String DASHES = "---------------------------";
 
@@ -63,11 +61,12 @@ public final class MemberWorker {
     private final boolean autoCreateHzInstance;
     private final String hzConfigFile;
 
-    private final WorkerSocketProcessor workerSocketProcessor;
-    private final WorkerCommandRequestProcessor workerCommandRequestProcessor;
+    private final HazelcastInstance hazelcastInstance;
     private final WorkerConnector workerConnector;
 
-    private MemberWorker(String workerId, WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort,
+    private final WorkerPerformanceMonitor workerPerformanceMonitor;
+
+    private MemberWorker(WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort,
                          boolean autoCreateHzInstance, String hConfigFile) throws Exception {
         this.type = type;
         this.publicAddress = publicAddress;
@@ -75,18 +74,32 @@ public final class MemberWorker {
         this.autoCreateHzInstance = autoCreateHzInstance;
         this.hzConfigFile = hConfigFile;
 
-        BlockingQueue<CommandRequest> requestQueue = new LinkedBlockingQueue<CommandRequest>();
-        BlockingQueue<CommandResponse> responseQueue = new LinkedBlockingQueue<CommandResponse>();
-        HazelcastInstance hazelcastInstance = getHazelcastInstance();
+        hazelcastInstance = getHazelcastInstance();
 
-        this.workerSocketProcessor = new WorkerSocketProcessor(requestQueue, responseQueue, workerId);
-        this.workerCommandRequestProcessor = new WorkerCommandRequestProcessor(requestQueue, responseQueue, type,
-                hazelcastInstance);
-
-        workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort);
+        workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort, type, hazelcastInstance, this);
         workerConnector.start();
 
+        WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getConfiguration().getProcessor();
+        workerPerformanceMonitor = new WorkerPerformanceMonitor(workerConnector, processor.getTests());
+
+        Runtime.getRuntime().addShutdownHook(new ShutdownThread());
+
         signalStartToAgent(hazelcastInstance);
+    }
+
+    @Override
+    public void shutdown() {
+        new ShutdownThread().start();
+    }
+
+    @Override
+    public boolean startPerformanceMonitor() {
+        return workerPerformanceMonitor.start();
+    }
+
+    @Override
+    public void shutdownPerformanceMonitor() {
+        workerPerformanceMonitor.shutdown();
     }
 
     private HazelcastInstance getHazelcastInstance() throws Exception {
@@ -97,11 +110,9 @@ public final class MemberWorker {
                 case MEMBER:
                     hazelcastInstance = createServerHazelcastInstance();
                     break;
-
                 case CLIENT:
                     hazelcastInstance = createClientHazelcastInstance();
                     break;
-
                 default:
                     throw new IllegalStateException("Unknown WorkerType: " + type);
             }
@@ -157,13 +168,6 @@ public final class MemberWorker {
         writeObject(address, file);
     }
 
-    private void stop() {
-        LOGGER.info("Stopping threads...");
-        workerConnector.shutdown();
-        workerSocketProcessor.shutdown();
-        workerCommandRequestProcessor.shutdown();
-    }
-
     public static void main(String[] args) {
         LOGGER.info("Starting Hazelcast Simulator Worker");
 
@@ -182,6 +186,7 @@ public final class MemberWorker {
             logHeader("Hazelcast Worker #" + workerIndex + " (" + type + ")");
             logInputArguments();
             logInterestingSystemProperties();
+            LOGGER.info("process ID: " + NativeUtils.getPIDorNull());
 
             LOGGER.info("Worker id: " + workerId);
             LOGGER.info("Worker type: " + type);
@@ -196,10 +201,7 @@ public final class MemberWorker {
             LOGGER.info("Hazelcast config file: " + hzConfigFile);
             LOGGER.info(fileAsText(new File(hzConfigFile)));
 
-            MemberWorker worker = new MemberWorker(workerId, type, publicAddress, agentIndex, workerIndex, workerPort,
-                    autoCreateHzInstance, hzConfigFile);
-
-            registerLog4jShutdownHandler(worker);
+            new MemberWorker(type, publicAddress, agentIndex, workerIndex, workerPort, autoCreateHzInstance, hzConfigFile);
 
             logHeader("Successfully started Hazelcast Worker #" + workerIndex);
         } catch (Exception e) {
@@ -245,14 +247,29 @@ public final class MemberWorker {
         LOGGER.info(dashes);
     }
 
-    private static void registerLog4jShutdownHandler(final MemberWorker worker) {
-        // makes sure that log4j will always flush the log buffers
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                worker.stop();
-                LogManager.shutdown();
-            }
-        });
+    private final class ShutdownThread extends Thread {
+
+        public ShutdownThread() {
+            super("WorkerShutdownThread");
+            setDaemon(true);
+
+            LOGGER.info("Shutting down worker!");
+        }
+
+        @Override
+        public void run() {
+            LOGGER.info("Stopping WorkerPerformanceMonitor");
+            workerPerformanceMonitor.shutdown();
+
+            LOGGER.info("Stopping HazelcastInstance...");
+            hazelcastInstance.shutdown();
+
+            LOGGER.info("Stopping WorkerConnector...");
+            workerConnector.shutdown();
+
+            // makes sure that log4j will always flush the log buffers
+            LOGGER.info("Stopping log4j...");
+            LogManager.shutdown();
+        }
     }
 }

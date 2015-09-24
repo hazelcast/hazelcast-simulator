@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.agent.remoting;
 
 import com.hazelcast.simulator.agent.Agent;
+import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -17,29 +18,20 @@ public class AgentRemoteService {
     public static final int PORT = 9000;
 
     public enum Service {
-        SERVICE_INIT_TESTSUITE,
-        SERVICE_TERMINATE_WORKERS,
-        SERVICE_EXECUTE_ALL_WORKERS,
-        SERVICE_EXECUTE_SINGLE_WORKER,
-        SERVICE_ECHO,
         SERVICE_POKE,
         SERVICE_GET_FAILURES,
-        SERVICE_GET_ALL_WORKERS,
-        SERVICE_PROCESS_MESSAGE
     }
 
     private static final Logger LOGGER = Logger.getLogger(AgentRemoteService.class);
 
     private final Agent agent;
-    private final AgentMessageProcessor agentMessageProcessor;
     private final Executor executor = createFixedThreadPool(20, AgentRemoteService.class);
 
     private ServerSocket serverSocket;
     private AcceptorThread acceptorThread;
 
-    public AgentRemoteService(Agent agent, AgentMessageProcessor agentMessageProcessor) {
+    public AgentRemoteService(Agent agent) {
         this.agent = agent;
-        this.agentMessageProcessor = agentMessageProcessor;
     }
 
     public void start() throws IOException {
@@ -50,13 +42,17 @@ public class AgentRemoteService {
         acceptorThread.start();
     }
 
-    public void shutdown() throws IOException {
+    public void shutdown() {
         LOGGER.info("Stopping AgentRemoteService...");
         if (acceptorThread != null) {
             acceptorThread.shutdown();
         }
-        if (serverSocket != null) {
-            serverSocket.close();
+        try {
+            if (serverSocket != null) {
+                serverSocket.close();
+            }
+        } catch (IOException e) {
+            EmptyStatement.ignore(e);
         }
     }
 
@@ -80,7 +76,7 @@ public class AgentRemoteService {
                         if (LOGGER.isDebugEnabled()) {
                             LOGGER.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
                         }
-                        executor.execute(new ClientSocketTask(clientSocket, agent, agentMessageProcessor));
+                        executor.execute(new ClientSocketTask(clientSocket, agent));
                     }
                 } catch (IOException e) {
                     LOGGER.fatal("Exception in AcceptorThread", e);

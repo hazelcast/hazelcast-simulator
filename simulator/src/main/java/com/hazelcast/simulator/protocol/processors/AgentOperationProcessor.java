@@ -8,16 +8,20 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.WorkerIsAliveOperation;
 import com.hazelcast.simulator.worker.WorkerType;
 
+import java.io.File;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
 import static com.hazelcast.simulator.protocol.configuration.Ports.WORKER_START_PORT;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static java.lang.String.format;
 
 /**
@@ -26,9 +30,10 @@ import static java.lang.String.format;
 public class AgentOperationProcessor extends OperationProcessor {
 
     private final Agent agent;
-    private final ConcurrentMap<String, WorkerJvm> workerJVMs;
+    private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs;
 
-    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, ConcurrentMap<String, WorkerJvm> workerJVMs) {
+    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent,
+                                   ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs) {
         super(exceptionLogger);
         this.agent = agent;
         this.workerJVMs = workerJVMs;
@@ -39,6 +44,12 @@ public class AgentOperationProcessor extends OperationProcessor {
         switch (operationType) {
             case CREATE_WORKER:
                 processCreateWorker((CreateWorkerOperation) operation);
+                break;
+            case INIT_TEST_SUITE:
+                processInitTestSuite((InitTestSuiteOperation) operation);
+                break;
+            case WORKER_IS_ALIVE:
+                processWorkerIsAlive((WorkerIsAliveOperation) operation);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -67,5 +78,22 @@ public class AgentOperationProcessor extends OperationProcessor {
             });
         }
         createdWorkerLatch.await();
+    }
+
+    private void processInitTestSuite(InitTestSuiteOperation operation) {
+        agent.setTestSuite(operation.getTestSuite());
+
+        File testSuiteDir = new File(Agent.WORKERS_HOME, operation.getTestSuite().getId());
+        ensureExistingDirectory(testSuiteDir);
+
+        File libDir = new File(testSuiteDir, "lib");
+        ensureExistingDirectory(libDir);
+    }
+
+    private void processWorkerIsAlive(WorkerIsAliveOperation operation) {
+        WorkerJvm jvm = workerJVMs.get(operation.getSource());
+        if (jvm != null) {
+            jvm.updateLastSeen();
+        }
     }
 }

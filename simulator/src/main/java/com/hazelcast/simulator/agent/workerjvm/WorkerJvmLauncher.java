@@ -3,6 +3,8 @@ package com.hazelcast.simulator.agent.workerjvm;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.SpawnWorkerFailedException;
 import com.hazelcast.simulator.protocol.configuration.Ports;
+import com.hazelcast.simulator.protocol.core.AddressLevel;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
@@ -39,14 +41,15 @@ public class WorkerJvmLauncher {
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
     private final Agent agent;
-    private final ConcurrentMap<String, WorkerJvm> workerJVMs;
+    private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs;
     private final WorkerJvmSettings workerJvmSettings;
 
     private File hzConfigFile;
     private File log4jFile;
     private File testSuiteDir;
 
-    public WorkerJvmLauncher(Agent agent, ConcurrentMap<String, WorkerJvm> workerJVMs, WorkerJvmSettings workerJvmSettings) {
+    public WorkerJvmLauncher(Agent agent, ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs,
+                             WorkerJvmSettings workerJvmSettings) {
         this.agent = agent;
         this.workerJVMs = workerJVMs;
         this.workerJvmSettings = workerJvmSettings;
@@ -70,7 +73,7 @@ public class WorkerJvmLauncher {
             log4jFile = createTmpXmlFile("worker-log4j", workerJvmSettings.getLog4jConfig());
             LOGGER.info("Spawning Worker JVM using settings: " + workerJvmSettings);
 
-            WorkerJvm worker = startWorkerJvm(type);
+            WorkerJvm worker = startWorkerJvm();
             LOGGER.info(format("Finished starting a Java Virtual Machine for %s worker #%d", type, workerIndex));
 
             waitForWorkersStartup(worker, workerJvmSettings.getWorkerStartupTimeout());
@@ -87,13 +90,16 @@ public class WorkerJvmLauncher {
         return tmpXmlFile;
     }
 
-    private WorkerJvm startWorkerJvm(WorkerType type) throws IOException {
+    private WorkerJvm startWorkerJvm() throws IOException {
         int workerIndex = workerJvmSettings.getWorkerIndex();
+        WorkerType type = workerJvmSettings.getWorkerType();
+
+        SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, agent.getAddressIndex(), workerIndex, 0);
         String workerId = "worker-" + agent.getPublicAddress() + "-" + workerIndex + "-" + type.toLowerCase();
         File workerHome = new File(testSuiteDir, workerId);
         ensureExistingDirectory(workerHome);
 
-        WorkerJvm workerJvm = new WorkerJvm(workerId, workerIndex, workerHome, type);
+        WorkerJvm workerJvm = new WorkerJvm(workerAddress, workerId, workerHome);
 
         generateWorkerStartScript(type, workerJvm);
 
@@ -110,7 +116,7 @@ public class WorkerJvmLauncher {
         Process process = processBuilder.start();
         workerJvm.setProcess(process);
         copyResourcesToWorkerId(workerId);
-        workerJVMs.put(workerId, workerJvm);
+        workerJVMs.put(workerAddress, workerJvm);
 
         return workerJvm;
     }
@@ -124,7 +130,7 @@ public class WorkerJvmLauncher {
 
             String address = readAddress(worker);
             if (address != null) {
-                worker.setMemberAddress(address);
+                worker.setHzAddress(address);
                 LOGGER.info(format("Worker %s started", worker.getId()));
                 return;
             }
@@ -133,7 +139,7 @@ public class WorkerJvmLauncher {
         }
 
         throw new SpawnWorkerFailedException(format("Worker %s of Testsuite %s on Agent %s didn't start within %s seconds",
-                worker.getId(), agent.getTestSuite().id, agent.getPublicAddress(), workerTimeoutSec));
+                worker.getId(), agent.getTestSuite().getId(), agent.getPublicAddress(), workerTimeoutSec));
     }
 
     private String getJavaHome() {
@@ -159,7 +165,7 @@ public class WorkerJvmLauncher {
     }
 
     private void copyResourcesToWorkerId(String workerId) {
-        final String testSuiteId = agent.getTestSuite().id;
+        final String testSuiteId = agent.getTestSuite().getId();
         File uploadDirectory = new File(WORKERS_PATH + "/" + testSuiteId + "/upload/");
         if (!uploadDirectory.exists()) {
             LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");

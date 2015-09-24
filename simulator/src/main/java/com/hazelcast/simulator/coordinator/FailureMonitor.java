@@ -36,7 +36,7 @@ class FailureMonitor {
         }
     }
 
-    void stop() {
+    void shutdown() {
         if (started.compareAndSet(true, false)) {
             try {
                 thread.isRunning = false;
@@ -85,7 +85,6 @@ class FailureMonitor {
         public void run() {
             while (isRunning) {
                 try {
-                    // TODO: this delay should be configurable
                     sleepSeconds(1);
                     scan();
                 } catch (Throwable e) {
@@ -105,9 +104,9 @@ class FailureMonitor {
         private String buildMessage(Failure failure) {
             StringBuilder sb = new StringBuilder();
             sb.append("Failure #").append(failureList.size()).append(" ");
-            if (failure.workerAddress != null) {
+            if (failure.hzAddress != null) {
                 sb.append(' ');
-                sb.append(failure.workerAddress);
+                sb.append(failure.hzAddress);
                 sb.append(' ');
             } else if (failure.agentAddress != null) {
                 sb.append(' ');

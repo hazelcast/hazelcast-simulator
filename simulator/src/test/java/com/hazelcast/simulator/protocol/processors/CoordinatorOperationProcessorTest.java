@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.processors;
 
+import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
@@ -18,7 +19,8 @@ public class CoordinatorOperationProcessorTest {
     @Before
     public void setUp() {
         LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
-        processor = new CoordinatorOperationProcessor(exceptionLogger);
+        PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+        processor = new CoordinatorOperationProcessor(exceptionLogger, performanceStateContainer);
     }
 
     @Test

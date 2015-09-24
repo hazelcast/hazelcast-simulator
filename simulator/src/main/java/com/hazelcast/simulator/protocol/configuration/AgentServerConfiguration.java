@@ -32,7 +32,7 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     public AgentServerConfiguration(AgentOperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
                                     SimulatorAddress localAddress, int port) {
-        super(futureMap, localAddress, port);
+        super(processor, futureMap, localAddress, port);
         this.localAddress = localAddress;
         this.processor = processor;
 
@@ -69,9 +69,5 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort) {
         return new AgentClientConfiguration(processor, getFutureMap(), localAddress,
                 workerIndex, workerHost, workerPort, getChannelGroup());
-    }
-
-    public AgentOperationProcessor getProcessor() {
-        return processor;
     }
 }

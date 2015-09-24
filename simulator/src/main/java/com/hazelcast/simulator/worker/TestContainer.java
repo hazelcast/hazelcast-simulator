@@ -22,7 +22,7 @@ import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.commands.PerformanceState;
+import com.hazelcast.simulator.worker.performance.PerformanceState;
 import com.hazelcast.simulator.worker.performance.PerformanceTracker;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
@@ -34,7 +34,6 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,6 +46,7 @@ import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalP
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.injectObjectToInstance;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
+import static com.hazelcast.simulator.worker.performance.PerformanceState.EMPTY_OPERATION_COUNT;
 import static java.lang.String.format;
 
 /**
@@ -92,17 +92,15 @@ public class TestContainer<T extends TestContext> {
     @SuppressWarnings("checkstyle:visibilitymodifier")
     public String workerProbeType = ProbesType.WORKER.getName();
 
+    private final Map<String, SimpleProbe<?, ?>> probeMap = new ConcurrentHashMap<String, SimpleProbe<?, ?>>();
+
     private final Object testClassInstance;
     private final Class testClassType;
     private final T testContext;
     private final ProbesConfiguration probesConfiguration;
     private final TestCase testCase;
 
-    private PerformanceState lastPerformanceState;
     private final PerformanceTracker performanceTracker;
-    private volatile boolean finished;
-
-    private final Map<String, SimpleProbe<?, ?>> probeMap = new ConcurrentHashMap<String, SimpleProbe<?, ?>>();
 
     private Method runMethod;
     private Method runWithWorkerMethod;
@@ -123,7 +121,8 @@ public class TestContainer<T extends TestContext> {
     private Method messageConsumerMethod;
 
     private IWorker operationCountWorkerInstance;
-    private ThreadSpawner workerThreadSpawner;
+
+    private volatile boolean isRunning = true;
 
     public TestContainer(Object testObject, T testContext, ProbesConfiguration probesConfiguration, TestCase testCase) {
         if (testObject == null) {
@@ -160,29 +159,11 @@ public class TestContainer<T extends TestContext> {
         return testContext;
     }
 
-    public long getOperationCount() {
-        try {
-            Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
-                    operationCountMethod);
-            return (count == null ? -1 : count);
-        } catch (Exception e) {
-            LOGGER.debug("Exception while retrieving operation count from " + testCase.getId() + ": " + e.getMessage());
-            return -1;
+    public PerformanceState getPerformanceState() {
+        if (isRunning) {
+            return performanceTracker.update(getOperationCount());
         }
-    }
-
-    public PerformanceState getPerformance() {
-        if (!finished) {
-            lastPerformanceState = performanceTracker.update(getOperationCount());
-        }
-        return lastPerformanceState;
-    }
-
-    public List<String> getStackTraces() throws Exception {
-        if (workerThreadSpawner == null) {
-            return Collections.emptyList();
-        }
-        return workerThreadSpawner.getStackTraces();
+        return null;
     }
 
     public void sendMessage(Message message) throws Exception {
@@ -220,6 +201,17 @@ public class TestContainer<T extends TestContext> {
         }
     }
 
+    private long getOperationCount() {
+        try {
+            Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
+                    operationCountMethod);
+            return (count == null ? EMPTY_OPERATION_COUNT : count);
+        } catch (Exception e) {
+            LOGGER.debug("Exception while retrieving operation count from " + testCase.getId() + ": " + e.getMessage());
+            return EMPTY_OPERATION_COUNT;
+        }
+    }
+
     private void run() throws Exception {
         long now = Clock.currentTimeMillis();
         performanceTracker.start();
@@ -231,7 +223,7 @@ public class TestContainer<T extends TestContext> {
         } else {
             invokeMethod(testClassInstance, runMethod);
         }
-        finished = true;
+        isRunning = false;
         now = Clock.currentTimeMillis();
         for (SimpleProbe probe : probeMap.values()) {
             probe.stopProbing(now);
@@ -402,7 +394,7 @@ public class TestContainer<T extends TestContext> {
 
     private void spawnWorkerThreads(Field testContextField, Field intervalProbeField, IntervalProbe intervalProbe)
             throws Exception {
-        workerThreadSpawner = new ThreadSpawner(testContext.getTestId());
+        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
             IWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
 
@@ -417,9 +409,9 @@ public class TestContainer<T extends TestContext> {
 
             operationCountWorkerInstance = worker;
 
-            workerThreadSpawner.spawn(worker);
+            spawner.spawn(worker);
         }
-        workerThreadSpawner.awaitCompletion();
+        spawner.awaitCompletion();
     }
 
     boolean hasProbe(String probeName) {

@@ -1,35 +1,28 @@
 package com.hazelcast.simulator.agent.remoting;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.test.Failure;
-import com.hazelcast.simulator.test.TestSuite;
-import com.hazelcast.simulator.worker.commands.Command;
 import org.apache.log4j.Logger;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 
 class ClientSocketTask implements Runnable {
+
     private static final Logger LOGGER = Logger.getLogger(ClientSocketTask.class);
 
     private final Socket clientSocket;
     private final Agent agent;
-    private final AgentMessageProcessor agentMessageProcessor;
 
-    ClientSocketTask(Socket clientSocket, Agent agent, AgentMessageProcessor agentMessageProcessor) {
+    ClientSocketTask(Socket clientSocket, Agent agent) {
         this.clientSocket = clientSocket;
         this.agent = agent;
-        this.agentMessageProcessor = agentMessageProcessor;
     }
 
     @Override
@@ -65,41 +58,8 @@ class ClientSocketTask implements Runnable {
             case SERVICE_POKE:
                 poke();
                 break;
-            case SERVICE_INIT_TESTSUITE:
-                TestSuite testSuite = (TestSuite) in.readObject();
-                initTestSuite(testSuite);
-                break;
-            case SERVICE_TERMINATE_WORKERS:
-                terminateWorkers();
-                break;
-            case SERVICE_EXECUTE_ALL_WORKERS:
-                Command testCommand = (Command) in.readObject();
-                WorkerJvmManager workerJvmManager = agent.getWorkerJvmManager();
-                result = workerJvmManager.executeOnAllWorkers(testCommand);
-                break;
-            case SERVICE_EXECUTE_SINGLE_WORKER:
-                testCommand = (Command) in.readObject();
-                workerJvmManager = agent.getWorkerJvmManager();
-                result = workerJvmManager.executeOnSingleWorker(testCommand);
-                break;
-            case SERVICE_ECHO:
-                String msg = (String) in.readObject();
-                echo(msg);
-                break;
             case SERVICE_GET_FAILURES:
                 result = getFailures();
-                break;
-            case SERVICE_GET_ALL_WORKERS:
-                List<String> workerJvmIds = new ArrayList<String>();
-                Collection<WorkerJvm> workerJVMs = agent.getWorkerJvmManager().getWorkerJVMs();
-                for (WorkerJvm workerJvm : workerJVMs) {
-                    workerJvmIds.add(workerJvm.getId());
-                }
-                result = workerJvmIds;
-                break;
-            case SERVICE_PROCESS_MESSAGE:
-                Message message = (Message) in.readObject();
-                agentMessageProcessor.submit(message);
                 break;
             default:
                 throw new RuntimeException("Unknown service:" + service);
@@ -116,32 +76,5 @@ class ClientSocketTask implements Runnable {
         WorkerJvmFailureMonitor failureMonitor = agent.getWorkerJvmFailureMonitor();
         failureMonitor.drainFailures(failures);
         return failures;
-    }
-
-    private void initTestSuite(TestSuite testSuite) throws Exception {
-        try {
-            agent.initTestSuite(testSuite);
-        } catch (Exception e) {
-            LOGGER.fatal("Failed to init testsuite: " + testSuite, e);
-            throw e;
-        }
-    }
-
-    private void terminateWorkers() throws Exception {
-        try {
-            agent.getWorkerJvmManager().terminateWorkers();
-        } catch (Exception e) {
-            LOGGER.fatal("Failed to terminateWorker workers", e);
-            throw e;
-        }
-    }
-
-    private void echo(String msg) throws Exception {
-        try {
-            agent.echo(msg);
-        } catch (Exception e) {
-            LOGGER.fatal("Failed to echo", e);
-            throw e;
-        }
     }
 }

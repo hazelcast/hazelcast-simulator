@@ -92,7 +92,7 @@ public final class Failure implements Serializable {
     public String message;
     public Type type;
     public String agentAddress;
-    public String workerAddress;
+    public String hzAddress;
     public String workerId;
     public String testId;
     public TestSuite testSuite;
@@ -106,7 +106,7 @@ public final class Failure implements Serializable {
         sb.append("   type='").append(type).append("'\n");
         sb.append("   agentAddress=").append(agentAddress).append("\n");
         sb.append("   time=").append(time).append("\n");
-        sb.append("   workerAddress=").append(workerAddress).append("\n");
+        sb.append("   hzAddress=").append(hzAddress).append("\n");
         sb.append("   workerId=").append(workerId).append("\n");
 
         TestCase testCase = testSuite.getTestCase(testId);

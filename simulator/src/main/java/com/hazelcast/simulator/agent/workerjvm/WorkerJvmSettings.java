@@ -19,12 +19,10 @@ import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.coordinator.CoordinatorParameters;
 import com.hazelcast.simulator.worker.WorkerType;
 
-import java.io.Serializable;
-
 /**
  * Settings for a (single) Simulator Worker JVM.
  */
-public class WorkerJvmSettings implements Serializable {
+public class WorkerJvmSettings {
 
     private final int workerIndex;
     private final String workerType;

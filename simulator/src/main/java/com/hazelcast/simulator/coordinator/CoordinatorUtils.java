@@ -1,10 +1,24 @@
+/*
+ * Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
@@ -49,17 +63,6 @@ public final class CoordinatorUtils {
                     .append("</").append(tagName).append(">\n");
         }
         return members.toString();
-    }
-
-    static int getMaxTestCaseIdLength(List<TestCase> testCaseList) {
-        int maxLength = Integer.MIN_VALUE;
-        for (TestCase testCase : testCaseList) {
-            String testCaseId = testCase.getId();
-            if (testCaseId != null && !testCaseId.isEmpty() && testCaseId.length() > maxLength) {
-                maxLength = testCaseId.length();
-            }
-        }
-        return (maxLength > 0) ? maxLength : 0;
     }
 
     public static List<AgentMemberLayout> initMemberLayout(ComponentRegistry registry, CoordinatorParameters parameters) {

@@ -29,7 +29,7 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
 
     public WorkerServerConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
                                      SimulatorAddress localAddress, int port) {
-        super(futureMap, localAddress, port);
+        super(processor, futureMap, localAddress, port);
         this.localAddress = localAddress;
 
         this.channelCollectorHandler = new ChannelCollectorHandler();

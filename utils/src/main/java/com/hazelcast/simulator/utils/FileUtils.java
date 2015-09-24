@@ -153,8 +153,8 @@ public final class FileUtils {
         }
     }
 
-    public static void appendText(String text, String file) {
-        appendText(text, new File(file));
+    public static void appendText(String text, String fileName) {
+        appendText(text, new File(fileName));
     }
 
     public static void appendText(String text, File file) {

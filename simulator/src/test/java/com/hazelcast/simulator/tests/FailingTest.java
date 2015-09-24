@@ -22,6 +22,7 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static org.junit.Assert.fail;
 
 public class FailingTest {
 
@@ -39,7 +40,7 @@ public class FailingTest {
 
     @Verify
     void verify() {
-        throw new RuntimeException("This test should fail");
+        fail("Expected exception in verify method");
     }
 
     @Run

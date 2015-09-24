@@ -179,11 +179,11 @@ final class CoordinatorCli {
         );
 
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec));
-        testSuite.durationSeconds = getDurationSeconds(options, cli);
-        testSuite.waitForTestCase = options.has(cli.waitForTestCaseSpec);
-        testSuite.failFast = options.valueOf(cli.failFastSpec);
-        testSuite.tolerableFailures = fromPropertyValue(options.valueOf(cli.tolerableFailureSpec));
-        if (testSuite.durationSeconds == 0 && !testSuite.waitForTestCase) {
+        testSuite.setDurationSeconds(getDurationSeconds(options, cli));
+        testSuite.setWaitForTestCase(options.has(cli.waitForTestCaseSpec));
+        testSuite.setFailFast(options.valueOf(cli.failFastSpec));
+        testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(cli.tolerableFailureSpec)));
+        if (testSuite.getDurationSeconds() == 0 && !testSuite.isWaitForTestCase()) {
             throw new CommandLineExitException("You need to define --duration or --waitForTestCase or both!");
         }
 

@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol.configuration;
 
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
@@ -14,6 +15,11 @@ public interface ServerConfiguration {
 
     int DEFAULT_SHUTDOWN_QUIET_PERIOD = 0;
     int DEFAULT_SHUTDOWN_TIMEOUT = 15;
+
+    /**
+     * Handles the shutdown of internal data structures.
+     */
+    void shutdown();
 
     /**
      * Returns the {@link SimulatorAddress} of the local Simulator component.
@@ -51,6 +57,13 @@ public interface ServerConfiguration {
      * @param pipeline the {@link ChannelPipeline} which should be configured
      */
     void configurePipeline(ChannelPipeline pipeline);
+
+    /**
+     * Returns the {@link OperationProcessor} of the local Simulator component.
+     *
+     * @return the {@link OperationProcessor}
+     */
+    OperationProcessor getProcessor();
 
     /**
      * Returns the map for {@link ResponseFuture} instances.
