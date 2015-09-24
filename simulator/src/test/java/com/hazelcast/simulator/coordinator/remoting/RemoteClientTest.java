@@ -3,7 +3,7 @@ package com.hazelcast.simulator.coordinator.remoting;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
-import com.hazelcast.simulator.coordinator.CoordinatorParameters;
+import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -15,6 +15,7 @@ import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -35,10 +36,25 @@ import static org.mockito.Mockito.when;
 
 public class RemoteClientTest {
 
-    private CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
-
-    private CoordinatorParameters parameters = mock(CoordinatorParameters.class);
     private ComponentRegistry componentRegistry = new ComponentRegistry();
+
+    private CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
+    private WorkerParameters workerParameters = mock(WorkerParameters.class);
+
+    @Before
+    public void setUp() {
+        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
+        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
+        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
+
+        WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
+        when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
+
+        SimulatorAddress agentAddress = componentRegistry.getFirstAgent().getAddress();
+        componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerJvmSettings));
+
+        when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
+    }
 
     @Test
     public void testLogOnAllWorkers() {
@@ -51,9 +67,9 @@ public class RemoteClientTest {
 
     @Test
     public void testCreateWorkers_withClients() {
-        initCreateWorkersMocks(ResponseType.SUCCESS, 6, 3);
+        initMockForCreateWorkerOperation(ResponseType.SUCCESS);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
+        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 3);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.createWorkers(memberLayouts);
@@ -61,9 +77,9 @@ public class RemoteClientTest {
 
     @Test
     public void testCreateWorkers_noClients() {
-        initCreateWorkersMocks(ResponseType.SUCCESS, 6, 0);
+        initMockForCreateWorkerOperation(ResponseType.SUCCESS);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
+        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.createWorkers(memberLayouts);
@@ -71,9 +87,9 @@ public class RemoteClientTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testCreateWorkers_withErrorResponse() {
-        initCreateWorkersMocks(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, 6, 0);
+        initMockForCreateWorkerOperation(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
+        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.createWorkers(memberLayouts);
@@ -81,9 +97,9 @@ public class RemoteClientTest {
 
     @Test(expected = SimulatorProtocolException.class)
     public void testCreateWorkers_withExceptionOnWrite() {
-        initCreateWorkersMocks(null, 6, 0);
+        initMockForCreateWorkerOperation(null);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, parameters);
+        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.createWorkers(memberLayouts);
@@ -91,7 +107,7 @@ public class RemoteClientTest {
 
     @Test
     public void testSendToAllAgents() {
-        iniCoordinatorConnectorMock(ResponseType.SUCCESS);
+        initMock(ResponseType.SUCCESS);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
 
         SimulatorOperation operation = new IntegrationTestOperation("test");
@@ -103,7 +119,7 @@ public class RemoteClientTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testSendToAllAgents_withErrorResponse() {
-        iniCoordinatorConnectorMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
+        initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
 
         SimulatorOperation operation = new IntegrationTestOperation("test");
@@ -117,7 +133,7 @@ public class RemoteClientTest {
 
     @Test
     public void testSendToAllWorkers() {
-        iniCoordinatorConnectorMock(ResponseType.SUCCESS);
+        initMock(ResponseType.SUCCESS);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
 
         SimulatorOperation operation = new IntegrationTestOperation("test");
@@ -129,7 +145,7 @@ public class RemoteClientTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testSendToAllWorkers_withErrorResponse() {
-        iniCoordinatorConnectorMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
+        initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
 
         SimulatorOperation operation = new IntegrationTestOperation("test");
@@ -143,8 +159,7 @@ public class RemoteClientTest {
 
     @Test
     public void testSendToFirstWorker() {
-        iniCoordinatorConnectorMock(ResponseType.SUCCESS);
-        initCommonMocks(1, 0);
+        initMock(ResponseType.SUCCESS);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
@@ -158,8 +173,7 @@ public class RemoteClientTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testSendToFirstWorker_withErrorResponse() {
-        iniCoordinatorConnectorMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-        initCommonMocks(1, 0);
+        initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
@@ -173,7 +187,7 @@ public class RemoteClientTest {
         }
     }
 
-    private void initCreateWorkersMocks(ResponseType responseType, int memberCount, int clientCount) {
+    private void initMockForCreateWorkerOperation(ResponseType responseType) {
         if (responseType != null) {
             Response response = mock(Response.class);
             when(response.getFirstErrorResponseType()).thenReturn(responseType);
@@ -183,11 +197,9 @@ public class RemoteClientTest {
             Exception exception = new SimulatorProtocolException("expected exception");
             when(coordinatorConnector.write(any(SimulatorAddress.class), any(CreateWorkerOperation.class))).thenThrow(exception);
         }
-
-        initCommonMocks(memberCount, clientCount);
     }
 
-    private void iniCoordinatorConnectorMock(ResponseType responseType) {
+    private void initMock(ResponseType responseType) {
         Map<SimulatorAddress, ResponseType> responseTypes = new HashMap<SimulatorAddress, ResponseType>();
         responseTypes.put(COORDINATOR, responseType);
 
@@ -195,22 +207,5 @@ public class RemoteClientTest {
         when(response.entrySet()).thenReturn(responseTypes.entrySet());
 
         when(coordinatorConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
-    }
-
-    private void initCommonMocks(int memberCount, int clientCount) {
-        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
-        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
-        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
-
-        WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
-        when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
-
-        SimulatorAddress agentAddress = componentRegistry.getFirstAgent().getAddress();
-        componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerJvmSettings));
-
-        when(parameters.getDedicatedMemberMachineCount()).thenReturn(0);
-        when(parameters.getMemberWorkerCount()).thenReturn(memberCount);
-        when(parameters.getClientWorkerCount()).thenReturn(clientCount);
-        when(parameters.getProfiler()).thenReturn(JavaProfiler.NONE);
     }
 }

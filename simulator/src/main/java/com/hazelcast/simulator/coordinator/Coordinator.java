@@ -34,7 +34,6 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -43,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
@@ -70,7 +70,8 @@ public final class Coordinator {
 
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
 
-    private final CoordinatorParameters parameters;
+    private final CoordinatorParameters coordinatorParameters;
+    private final WorkerParameters workerParameters;
     private final TestSuite testSuite;
     private final FailureContainer failureContainer;
 
@@ -87,29 +88,41 @@ public final class Coordinator {
 
     private ExecutorService parallelExecutor;
 
-    public Coordinator(CoordinatorParameters parameters, TestSuite testSuite) {
-        this(parameters, testSuite, TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS);
+    public Coordinator(CoordinatorParameters coordinatorParameters, WorkerParameters workerParameters, TestSuite testSuite) {
+        this(coordinatorParameters, workerParameters, testSuite, TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS);
     }
 
-    public Coordinator(CoordinatorParameters parameters, TestSuite testSuite, int testCaseRunnerSleepPeriodSeconds) {
-        this.parameters = parameters;
+    public Coordinator(CoordinatorParameters coordinatorParameters, WorkerParameters workerParameters, TestSuite testSuite,
+                       int testCaseRunnerSleepPeriodSeconds) {
+        this.coordinatorParameters = coordinatorParameters;
+        this.workerParameters = workerParameters;
         this.testSuite = testSuite;
         this.failureContainer = new FailureContainer(testSuite.getId());
 
         this.testCaseRunnerSleepPeriodSeconds = testCaseRunnerSleepPeriodSeconds;
 
-        this.componentRegistry = loadComponentRegister(parameters.getAgentsFile());
+        this.componentRegistry = loadComponentRegister(coordinatorParameters.getAgentsFile());
 
-        this.props = parameters.getSimulatorProperties();
+        this.props = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(props);
     }
 
-    CoordinatorParameters getParameters() {
-        return parameters;
+    CoordinatorParameters getCoordinatorParameters() {
+        return coordinatorParameters;
     }
 
     TestSuite getTestSuite() {
         return testSuite;
+    }
+
+    // just for testing
+    FailureContainer getFailureContainer() {
+        return failureContainer;
+    }
+
+    // just for testing
+    void setRemoteClient(RemoteClient remoteClient) {
+        this.remoteClient = remoteClient;
     }
 
     private void run() throws Exception {
@@ -165,10 +178,10 @@ public final class Coordinator {
         initClientHzConfig();
 
         int agentCount = componentRegistry.agentCount();
-        LOGGER.info(format("Performance monitor enabled: %s", parameters.isMonitorPerformance()));
+        LOGGER.info(format("Performance monitor enabled: %s", coordinatorParameters.isMonitorPerformance()));
         LOGGER.info(format("Total number of agents: %s", agentCount));
-        LOGGER.info(format("Total number of Hazelcast member workers: %s", parameters.getMemberWorkerCount()));
-        LOGGER.info(format("Total number of Hazelcast client workers: %s", parameters.getClientWorkerCount()));
+        LOGGER.info(format("Total number of Hazelcast member workers: %s", coordinatorParameters.getMemberWorkerCount()));
+        LOGGER.info(format("Total number of Hazelcast client workers: %s", coordinatorParameters.getClientWorkerCount()));
 
         remoteClient.initTestSuite(testSuite);
 
@@ -227,15 +240,15 @@ public final class Coordinator {
     }
 
     private void initMemberWorkerCount() {
-        if (parameters.getMemberWorkerCount() == -1) {
-            parameters.setMemberWorkerCount(componentRegistry.agentCount());
+        if (coordinatorParameters.getMemberWorkerCount() == -1) {
+            coordinatorParameters.setMemberWorkerCount(componentRegistry.agentCount());
         }
     }
 
     private void initMemberHzConfig() {
-        String addressConfig = createAddressConfig("member", componentRegistry, getPort(parameters));
+        String addressConfig = createAddressConfig("member", componentRegistry, getPort(workerParameters.getMemberHzConfig()));
 
-        String memberHzConfig = parameters.getMemberHzConfig();
+        String memberHzConfig = workerParameters.getMemberHzConfig();
         memberHzConfig = memberHzConfig.replace("<!--MEMBERS-->", addressConfig);
 
         String manCenterURL = props.get("MANAGEMENT_CENTER_URL").trim();
@@ -246,14 +259,14 @@ public final class Coordinator {
                     format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
                             updateIntervalAttr, manCenterURL));
         }
-        parameters.setMemberHzConfig(memberHzConfig);
+        workerParameters.setMemberHzConfig(memberHzConfig);
     }
 
     private void initClientHzConfig() {
-        String addressConfig = createAddressConfig("address", componentRegistry, getPort(parameters));
+        String addressConfig = createAddressConfig("address", componentRegistry, getPort(workerParameters.getMemberHzConfig()));
 
-        String clientHzConfig = parameters.getClientHzConfig().replace("<!--MEMBERS-->", addressConfig);
-        parameters.setClientHzConfig(clientHzConfig);
+        String clientHzConfig = workerParameters.getClientHzConfig().replace("<!--MEMBERS-->", addressConfig);
+        workerParameters.setClientHzConfig(clientHzConfig);
     }
 
     private void uploadUploadDirectory() {
@@ -286,7 +299,7 @@ public final class Coordinator {
     }
 
     private void uploadWorkerClassPath() {
-        String workerClassPath = parameters.getWorkerClassPath();
+        String workerClassPath = coordinatorParameters.getWorkerClassPath();
         if (workerClassPath == null) {
             return;
         }
@@ -315,7 +328,7 @@ public final class Coordinator {
     }
 
     private void uploadYourKitIfNeeded() {
-        if (parameters.getProfiler() != JavaProfiler.YOURKIT) {
+        if (workerParameters.getProfiler() != JavaProfiler.YOURKIT) {
             return;
         }
 
@@ -335,11 +348,12 @@ public final class Coordinator {
     }
 
     private void startWorkers() {
-        List<AgentMemberLayout> agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
-
-        int memberWorkerCount = parameters.getMemberWorkerCount();
-        int clientWorkerCount = parameters.getClientWorkerCount();
+        int memberWorkerCount = coordinatorParameters.getMemberWorkerCount();
+        int clientWorkerCount = coordinatorParameters.getClientWorkerCount();
         int totalWorkerCount = memberWorkerCount + clientWorkerCount;
+
+        List<AgentMemberLayout> agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters,
+                coordinatorParameters.getDedicatedMemberMachineCount(), memberWorkerCount, clientWorkerCount);
 
         long started = System.nanoTime();
         try {
@@ -366,7 +380,7 @@ public final class Coordinator {
 
         long started = System.nanoTime();
 
-        if (parameters.isParallel()) {
+        if (coordinatorParameters.isParallel()) {
             runParallel();
         } else {
             runSequential();
@@ -383,7 +397,8 @@ public final class Coordinator {
         echo("Running %s tests parallel", testSuite.size());
 
         final int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
-        final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testSuite.size());
+        final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(
+                coordinatorParameters.getLastTestPhaseToSync(), testSuite.size());
 
         parallelExecutor = createFixedThreadPool(testSuite.size(), Coordinator.class);
 
@@ -430,22 +445,10 @@ public final class Coordinator {
                 LOGGER.info("Aborting testsuite due to failure");
                 break;
             }
-            if (!success || parameters.isRefreshJvm()) {
+            if (!success || coordinatorParameters.isRefreshJvm()) {
                 startWorkers();
             }
         }
-    }
-
-    private ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(int testCount) {
-        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
-        boolean useTestCount = true;
-        for (TestPhase testPhase : TestPhase.values()) {
-            testPhaseSyncMap.put(testPhase, new CountDownLatch(useTestCount ? testCount : 0));
-            if (testPhase == parameters.getLastTestPhaseToSync()) {
-                useTestCount = false;
-            }
-        }
-        return testPhaseSyncMap;
     }
 
     private void logFailureInfo() {
@@ -506,7 +509,7 @@ public final class Coordinator {
 
             Coordinator coordinator = CoordinatorCli.init(args);
 
-            LOGGER.info(format("Loading agents file: %s", coordinator.parameters.getAgentsFile().getAbsolutePath()));
+            LOGGER.info(format("Loading agents file: %s", coordinator.coordinatorParameters.getAgentsFile().getAbsolutePath()));
             LOGGER.info(format("HAZELCAST_VERSION_SPEC: %s", coordinator.props.getHazelcastVersionSpec()));
 
             coordinator.run();

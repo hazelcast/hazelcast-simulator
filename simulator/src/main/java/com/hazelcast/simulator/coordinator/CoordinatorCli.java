@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.AgentsFile;
+import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -157,25 +158,31 @@ final class CoordinatorCli {
         CoordinatorCli cli = new CoordinatorCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
+        SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
+
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
-                loadSimulatorProperties(options, cli.propertiesFileSpec),
+                simulatorProperties,
                 loadAgentsFile(cli, options),
                 options.valueOf(cli.workerClassPathSpec),
                 options.has(cli.monitorPerformanceSpec),
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),
                 options.valueOf(cli.syncToTestPhaseSpec),
-                loadLog4jConfig(),
-                options.valueOf(cli.workerVmOptionsSpec),
-                options.valueOf(cli.clientWorkerVmOptionsSpec),
-                options.valueOf(cli.workerStartupTimeoutSpec),
-                options.valueOf(cli.autoCreateHzInstanceSpec),
                 options.valueOf(cli.workerRefreshSpec),
                 options.valueOf(cli.dedicatedMemberMachinesSpec),
                 options.valueOf(cli.memberWorkerCountSpec),
-                options.valueOf(cli.clientWorkerCountSpec),
+                options.valueOf(cli.clientWorkerCountSpec)
+        );
+
+        WorkerParameters workerParameters = new WorkerParameters(
+                simulatorProperties,
+                options.valueOf(cli.workerStartupTimeoutSpec),
+                options.valueOf(cli.autoCreateHzInstanceSpec),
+                options.valueOf(cli.workerVmOptionsSpec),
+                options.valueOf(cli.clientWorkerVmOptionsSpec),
                 loadMemberHzConfig(options, cli),
-                loadClientHzConfig(options, cli)
+                loadClientHzConfig(options, cli),
+                loadLog4jConfig()
         );
 
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec));
@@ -187,15 +194,11 @@ final class CoordinatorCli {
             throw new CommandLineExitException("You need to define --duration or --waitForTestCase or both!");
         }
 
-        return new Coordinator(coordinatorParameters, testSuite);
+        return new Coordinator(coordinatorParameters, workerParameters, testSuite);
     }
 
     private static File loadAgentsFile(CoordinatorCli cli, OptionSet options) {
         return getFile(cli.agentsFileSpec, options, "Agents file");
-    }
-
-    private static String loadLog4jConfig() {
-        return getFileAsTextFromWorkingDirOrBaseDir(SIMULATOR_HOME, "worker-log4j.xml", "Log4j configuration for worker");
     }
 
     private static String loadMemberHzConfig(OptionSet options, CoordinatorCli cli) {
@@ -208,6 +211,10 @@ final class CoordinatorCli {
         File file = getFile(cli.clientHzConfigFileSpec, options, "Worker Client Hazelcast config file");
         LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
+    }
+
+    private static String loadLog4jConfig() {
+        return getFileAsTextFromWorkingDirOrBaseDir(SIMULATOR_HOME, "worker-log4j.xml", "Log4j configuration for worker");
     }
 
     private static File getTestSuiteFile(OptionSet options) {

@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.simulator.common.JavaProfiler;
-import com.hazelcast.simulator.coordinator.CoordinatorParameters;
+import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.worker.WorkerType;
 
 /**
@@ -38,27 +38,27 @@ public class WorkerJvmSettings {
     private final String profilerSettings;
     private final String numaCtl;
 
-    public WorkerJvmSettings(int workerIndex, WorkerType workerType, CoordinatorParameters parameters) {
+    public WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters) {
         this.workerIndex = workerIndex;
         this.workerType = workerType.name();
 
         switch (workerType) {
             case MEMBER:
-                this.jvmOptions = parameters.getMemberJvmOptions();
-                this.hazelcastConfig = parameters.getMemberHzConfig();
+                this.jvmOptions = workerParameters.getMemberJvmOptions();
+                this.hazelcastConfig = workerParameters.getMemberHzConfig();
                 break;
             default:
-                this.jvmOptions = parameters.getClientJvmOptions();
-                this.hazelcastConfig = parameters.getClientHzConfig();
+                this.jvmOptions = workerParameters.getClientJvmOptions();
+                this.hazelcastConfig = workerParameters.getClientHzConfig();
         }
-        this.log4jConfig = parameters.getLog4jConfig();
+        this.log4jConfig = workerParameters.getLog4jConfig();
 
-        this.autoCreateHzInstance = parameters.isAutoCreateHzInstance();
-        this.workerStartupTimeout = parameters.getWorkerStartupTimeout();
+        this.autoCreateHzInstance = workerParameters.isAutoCreateHzInstance();
+        this.workerStartupTimeout = workerParameters.getWorkerStartupTimeout();
 
-        this.profiler = parameters.getProfiler().name();
-        this.profilerSettings = parameters.getProfilerSettings();
-        this.numaCtl = parameters.getNumaCtl();
+        this.profiler = workerParameters.getProfiler().name();
+        this.profilerSettings = workerParameters.getProfilerSettings();
+        this.numaCtl = workerParameters.getNumaCtl();
     }
 
     public int getWorkerIndex() {

@@ -19,6 +19,7 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
@@ -27,6 +28,9 @@ import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -42,10 +46,10 @@ public final class CoordinatorUtils {
     private CoordinatorUtils() {
     }
 
-    static int getPort(CoordinatorParameters parameters) {
+    static int getPort(String memberHzConfig) {
         ByteArrayInputStream bis = null;
         try {
-            byte[] configString = parameters.getMemberHzConfig().getBytes("UTF-8");
+            byte[] configString = memberHzConfig.getBytes("UTF-8");
             bis = new ByteArrayInputStream(configString);
             Config config = new XmlConfigBuilder(bis).build();
 
@@ -69,12 +73,10 @@ public final class CoordinatorUtils {
         return members.toString();
     }
 
-    public static List<AgentMemberLayout> initMemberLayout(ComponentRegistry registry, CoordinatorParameters parameters) {
+    public static List<AgentMemberLayout> initMemberLayout(ComponentRegistry registry, WorkerParameters parameters,
+                                                           int dedicatedMemberMachineCount,
+                                                           int memberWorkerCount, int clientWorkerCount) {
         int agentCount = registry.agentCount();
-        int dedicatedMemberMachineCount = parameters.getDedicatedMemberMachineCount();
-        int memberWorkerCount = parameters.getMemberWorkerCount();
-        int clientWorkerCount = parameters.getClientWorkerCount();
-
         if (dedicatedMemberMachineCount > agentCount) {
             throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
                     dedicatedMemberMachineCount, agentCount));
@@ -145,6 +147,18 @@ public final class CoordinatorUtils {
                 return agentLayout;
             }
         }
+    }
+
+    static ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(TestPhase latestTestPhaseToSync, int testCount) {
+        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
+        boolean useTestCount = true;
+        for (TestPhase testPhase : TestPhase.values()) {
+            testPhaseSyncMap.put(testPhase, new CountDownLatch(useTestCount ? testCount : 0));
+            if (testPhase == latestTestPhaseToSync) {
+                useTestCount = false;
+            }
+        }
+        return testPhaseSyncMap;
     }
 
     static void waitForWorkerShutdown(int expectedFinishedWorkerCount, Set<String> finishedWorkers) {

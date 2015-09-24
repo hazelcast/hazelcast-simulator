@@ -41,7 +41,7 @@ public final class AgentMemberLayout {
         return agentMemberMode;
     }
 
-    public void addWorker(WorkerType type, CoordinatorParameters parameters) {
+    public void addWorker(WorkerType type, WorkerParameters parameters) {
         workerJvmSettingsList.add(new WorkerJvmSettings(currentWorkerIndex.incrementAndGet(), type, parameters));
     }
 

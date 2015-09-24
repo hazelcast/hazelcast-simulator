@@ -1,13 +1,12 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.core.Hazelcast;
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.coordinator.AgentMemberMode;
-import com.hazelcast.simulator.coordinator.CoordinatorParameters;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.coordinator.remoting.RemoteClient;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
@@ -44,8 +43,6 @@ import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class AgentSmokeTest {
 
@@ -186,36 +183,22 @@ public class AgentSmokeTest {
     }
 
     private static void createWorkers() {
+        WorkerParameters workerParameters = new WorkerParameters(
+                new SimulatorProperties(),
+                60000,
+                true,
+                "",
+                "",
+                fileAsText("./simulator/src/test/resources/hazelcast.xml"),
+                "",
+                fileAsText("./dist/src/main/dist/conf/worker-log4j.xml")
+        );
+
         AgentData agentData = new AgentData(1, AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
         AgentMemberLayout agentLayout = new AgentMemberLayout(agentData, AgentMemberMode.MEMBER);
-        agentLayout.addWorker(WorkerType.MEMBER, getParameters());
+        agentLayout.addWorker(WorkerType.MEMBER, workerParameters);
 
         remoteClient.createWorkers(Collections.singletonList(agentLayout));
-    }
-
-    private static CoordinatorParameters getParameters() {
-        SimulatorProperties properties = new SimulatorProperties();
-
-        CoordinatorParameters parameters = mock(CoordinatorParameters.class);
-        when(parameters.getSimulatorProperties()).thenReturn(properties);
-        when(parameters.isAutoCreateHzInstance()).thenReturn(true);
-        when(parameters.isPassiveMembers()).thenReturn(false);
-        when(parameters.isRefreshJvm()).thenReturn(false);
-        when(parameters.isParallel()).thenReturn(true);
-        when(parameters.isMonitorPerformance()).thenReturn(true);
-        when(parameters.getProfiler()).thenReturn(JavaProfiler.NONE);
-        when(parameters.getProfilerSettings()).thenReturn("");
-        when(parameters.getNumaCtl()).thenReturn("none");
-        when(parameters.getLastTestPhaseToSync()).thenReturn(TestPhase.SETUP);
-        when(parameters.getMemberHzConfig()).thenReturn(fileAsText("./simulator/src/test/resources/hazelcast.xml"));
-        when(parameters.getClientHzConfig()).thenReturn(fileAsText("./simulator/src/test/resources/client-hazelcast.xml"));
-        when(parameters.getLog4jConfig()).thenReturn(fileAsText("./dist/src/main/dist/conf/worker-log4j.xml"));
-        when(parameters.getDedicatedMemberMachineCount()).thenReturn(0);
-        when(parameters.getMemberWorkerCount()).thenReturn(1);
-        when(parameters.getClientWorkerCount()).thenReturn(0);
-        when(parameters.getWorkerStartupTimeout()).thenReturn(60000);
-
-        return parameters;
     }
 
     private static void runPhase(TestCase testCase, TestPhase testPhase) throws TimeoutException {

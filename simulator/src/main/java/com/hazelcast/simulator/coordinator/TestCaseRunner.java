@@ -60,7 +60,7 @@ final class TestCaseRunner {
                    ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap, int sleepPeriodSeconds) {
         this.testCase = testCase;
         this.testSuite = testSuite;
-        this.coordinatorParameters = coordinator.getParameters();
+        this.coordinatorParameters = coordinator.getCoordinatorParameters();
         this.remoteClient = remoteClient;
         this.failureContainer = failureContainer;
         this.performanceStateContainer = performanceStateContainer;

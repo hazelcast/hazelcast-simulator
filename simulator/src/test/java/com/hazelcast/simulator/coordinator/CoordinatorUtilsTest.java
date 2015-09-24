@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.JavaProfiler;
-import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -44,12 +43,8 @@ import static org.mockito.Mockito.when;
 
 public class CoordinatorUtilsTest {
 
-    private final CoordinatorParameters parameters = mock(CoordinatorParameters.class);
+    private final WorkerParameters workerParameters = mock(WorkerParameters.class);
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
-
-    private int dedicatedMemberMachineCount = 0;
-    private int memberWorkerCount = 0;
-    private int clientWorkerCount = 0;
 
     private List<AgentMemberLayout> agentMemberLayouts;
 
@@ -58,6 +53,8 @@ public class CoordinatorUtilsTest {
         componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
         componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
+
+        when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
     }
 
     @Test
@@ -69,19 +66,13 @@ public class CoordinatorUtilsTest {
     public void testGetPort() {
         String memberConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/hazelcast.xml");
 
-        CoordinatorParameters parameters = mock(CoordinatorParameters.class);
-        when(parameters.getMemberHzConfig()).thenReturn(memberConfig);
-
-        int port = getPort(parameters);
+        int port = getPort(memberConfig);
         assertEquals(5701, port);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGetPort_withException() {
-        CoordinatorParameters parameters = mock(CoordinatorParameters.class);
-        when(parameters.getMemberHzConfig()).thenReturn("");
-
-        getPort(parameters);
+        getPort("");
     }
 
     @Test
@@ -104,10 +95,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testInitMemberLayout_dedicatedMemberCountEqualsAgentCount() {
-        dedicatedMemberMachineCount = 3;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 3, 0, 0);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MEMBER, 0, 0);
@@ -115,19 +103,12 @@ public class CoordinatorUtilsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInitMemberLayout_dedicatedMemberCountHigherThanAgentCount() {
-        dedicatedMemberMachineCount = 5;
-        initMocks();
-
-        initMemberLayout(componentRegistry, parameters);
+        initMemberLayout(componentRegistry, workerParameters, 5, 0, 0);
     }
 
     @Test
     public void testInitMemberLayout_agentCountSufficientForDedicatedMembersAndClientWorkers() {
-        dedicatedMemberMachineCount = 2;
-        clientWorkerCount = 1;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 2, 0, 1);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.CLIENT, 0, 1);
@@ -135,19 +116,12 @@ public class CoordinatorUtilsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInitMemberLayout_agentCountNotSufficientForDedicatedMembersAndClientWorkers() {
-        dedicatedMemberMachineCount = 3;
-        clientWorkerCount = 1;
-        initMocks();
-
-        initMemberLayout(componentRegistry, parameters);
+        initMemberLayout(componentRegistry, workerParameters, 3, 0, 1);
     }
 
     @Test
     public void testInitMemberLayout_singleMemberWorker() {
-        memberWorkerCount = 1;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 1, 0);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 1, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 0, 0);
@@ -155,10 +129,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testInitMemberLayout_memberWorkerOverflow() {
-        memberWorkerCount = 4;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 4, 0);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 2, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 1, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 1, 0);
@@ -166,10 +137,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testInitMemberLayout_singleClientWorker() {
-        clientWorkerCount = 1;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 0, 1);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 0, 1);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 0, 0);
@@ -177,10 +145,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testClientWorkerOverflow() {
-        clientWorkerCount = 5;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 0, 5);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 0, 2);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 0, 2);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 0, 1);
@@ -188,12 +153,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testInitMemberLayout_dedicatedAndMixedWorkers1() {
-        dedicatedMemberMachineCount = 1;
-        memberWorkerCount = 2;
-        clientWorkerCount = 3;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 1, 2, 3);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 2, 0);
         assertAgentMemberLayout(1, AgentMemberMode.CLIENT, 0, 2);
         assertAgentMemberLayout(2, AgentMemberMode.CLIENT, 0, 1);
@@ -201,12 +161,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testInitMemberLayout_dedicatedAndMixedWorkers2() {
-        dedicatedMemberMachineCount = 2;
-        memberWorkerCount = 2;
-        clientWorkerCount = 3;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 2, 2, 3);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 1, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MEMBER, 1, 0);
         assertAgentMemberLayout(2, AgentMemberMode.CLIENT, 0, 3);
@@ -230,14 +185,6 @@ public class CoordinatorUtilsTest {
 
         waitForWorkerShutdown(3, finishedWorkers.keySet());
         spawner.awaitCompletion();
-    }
-
-    private void initMocks() {
-        when(parameters.getSimulatorProperties()).thenReturn(mock(SimulatorProperties.class));
-        when(parameters.getProfiler()).thenReturn(JavaProfiler.NONE);
-        when(parameters.getDedicatedMemberMachineCount()).thenReturn(dedicatedMemberMachineCount);
-        when(parameters.getMemberWorkerCount()).thenReturn(memberWorkerCount);
-        when(parameters.getClientWorkerCount()).thenReturn(clientWorkerCount);
     }
 
     private void assertAgentMemberLayout(int index, AgentMemberMode mode, int memberCount, int clientCount) {
