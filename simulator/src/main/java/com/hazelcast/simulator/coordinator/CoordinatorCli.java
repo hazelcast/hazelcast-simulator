@@ -245,17 +245,13 @@ final class CoordinatorCli {
         String value = options.valueOf(cli.durationSpec);
         try {
             if (value.endsWith("s")) {
-                String sub = value.substring(0, value.length() - 1);
-                duration = Integer.parseInt(sub);
+                duration = parseDurationWithoutLastChar(TimeUnit.SECONDS, value);
             } else if (value.endsWith("m")) {
-                String sub = value.substring(0, value.length() - 1);
-                duration = (int) TimeUnit.MINUTES.toSeconds(Integer.parseInt(sub));
+                duration = parseDurationWithoutLastChar(TimeUnit.MINUTES, value);
             } else if (value.endsWith("h")) {
-                String sub = value.substring(0, value.length() - 1);
-                duration = (int) TimeUnit.HOURS.toSeconds(Integer.parseInt(sub));
+                duration = parseDurationWithoutLastChar(TimeUnit.HOURS, value);
             } else if (value.endsWith("d")) {
-                String sub = value.substring(0, value.length() - 1);
-                duration = (int) TimeUnit.DAYS.toSeconds(Integer.parseInt(sub));
+                duration = parseDurationWithoutLastChar(TimeUnit.DAYS, value);
             } else {
                 duration = Integer.parseInt(value);
             }
@@ -267,5 +263,10 @@ final class CoordinatorCli {
             throw new CommandLineExitException("duration must be a positive number, but was: " + duration);
         }
         return duration;
+    }
+
+    private static int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {
+        String sub = value.substring(0, value.length() - 1);
+        return (int) timeUnit.toSeconds(Integer.parseInt(sub));
     }
 }
