@@ -21,15 +21,20 @@ import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.WorkerType;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -40,13 +45,20 @@ import static org.mockito.Mockito.when;
 public class CoordinatorUtilsTest {
 
     private final CoordinatorParameters parameters = mock(CoordinatorParameters.class);
-    private final ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
+    private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private int dedicatedMemberMachineCount = 0;
     private int memberWorkerCount = 0;
     private int clientWorkerCount = 0;
 
     private List<AgentMemberLayout> agentMemberLayouts;
+
+    @Before
+    public void setUp() {
+        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
+        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
+        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
+    }
 
     @Test
     public void testConstructor() throws Exception {
@@ -200,20 +212,28 @@ public class CoordinatorUtilsTest {
         assertAgentMemberLayout(2, AgentMemberMode.CLIENT, 0, 3);
     }
 
+    @Test(timeout = 10000)
+    public void testWaitForWorkerShutdown() {
+        final ConcurrentHashMap<String, Boolean> finishedWorkers = new ConcurrentHashMap<String, Boolean>();
+        finishedWorkers.put("A", true);
+
+        ThreadSpawner spawner = new ThreadSpawner("testWaitForFinishedWorker", true);
+        spawner.spawn(new Runnable() {
+            @Override
+            public void run() {
+                sleepSeconds(1);
+                finishedWorkers.put("B", true);
+                sleepSeconds(1);
+                finishedWorkers.put("C", true);
+            }
+        });
+
+        waitForWorkerShutdown(3, finishedWorkers.keySet());
+        spawner.awaitCompletion();
+    }
+
     private void initMocks() {
-        // ComponentRegistry
-        List<AgentData> agents = new ArrayList<AgentData>(3);
-        agents.add(new AgentData(1, "192.168.0.1", "192.168.0.1"));
-        agents.add(new AgentData(2, "192.168.0.2", "192.168.0.2"));
-        agents.add(new AgentData(3, "192.168.0.3", "192.168.0.3"));
-
-        when(componentRegistry.getAgents()).thenReturn(agents);
-        when(componentRegistry.agentCount()).thenReturn(3);
-
-        // CoordinatorParameters
-        SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
-
-        when(parameters.getSimulatorProperties()).thenReturn(simulatorProperties);
+        when(parameters.getSimulatorProperties()).thenReturn(mock(SimulatorProperties.class));
         when(parameters.getProfiler()).thenReturn(JavaProfiler.NONE);
         when(parameters.getDedicatedMemberMachineCount()).thenReturn(dedicatedMemberMachineCount);
         when(parameters.getMemberWorkerCount()).thenReturn(memberWorkerCount);

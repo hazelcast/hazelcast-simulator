@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.AgentsFile;
-import com.hazelcast.simulator.test.Failure;
+import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_HOME;
-import static com.hazelcast.simulator.test.Failure.Type.fromPropertyValue;
+import static com.hazelcast.simulator.test.FailureType.fromPropertyValue;
 import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -84,7 +84,7 @@ final class CoordinatorCli {
 
     private final OptionSpec<String> tolerableFailureSpec = parser.accepts("tolerableFailure",
             String.format("Defines if tests should not fail when given failure is detected. List of known failures: %s",
-                    Failure.Type.getIdsAsString()))
+                    FailureType.getIdsAsString()))
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec parallelSpec = parser.accepts("parallel",

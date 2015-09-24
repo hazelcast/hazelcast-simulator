@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.CoordinatorClientConfiguration;
@@ -35,8 +36,8 @@ public class CoordinatorConnector {
 
     private final CoordinatorOperationProcessor processor;
 
-    public CoordinatorConnector(PerformanceStateContainer performanceStateContainer) {
-        this.processor = new CoordinatorOperationProcessor(exceptionLogger, performanceStateContainer);
+    public CoordinatorConnector(PerformanceStateContainer performanceStateContainer, FailureContainer failureContainer) {
+        this.processor = new CoordinatorOperationProcessor(exceptionLogger, performanceStateContainer, failureContainer);
     }
 
     /**

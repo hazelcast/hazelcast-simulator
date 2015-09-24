@@ -6,17 +6,18 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.coordinator.AgentMemberMode;
 import com.hazelcast.simulator.coordinator.CoordinatorParameters;
+import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.coordinator.remoting.RemoteClient;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
+import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -30,9 +31,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 
@@ -41,6 +41,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -56,6 +57,8 @@ public class AgentSmokeTest {
     private static String userDir;
     private static AgentStarter agentStarter;
     private static AgentsClient agentsClient;
+
+    private static FailureContainer failureContainer;
 
     private static CoordinatorConnector coordinatorConnector;
     private static RemoteClient remoteClient;
@@ -79,7 +82,9 @@ public class AgentSmokeTest {
         agentsClient.start();
 
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-        coordinatorConnector = new CoordinatorConnector(performanceStateContainer);
+        failureContainer = new FailureContainer("agentSmokeTest");
+
+        coordinatorConnector = new CoordinatorConnector(performanceStateContainer, failureContainer);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
@@ -106,6 +111,7 @@ public class AgentSmokeTest {
             System.setProperty("user.dir", userDir);
 
             deleteQuiet(new File("./dist/src/main/dist/workers"));
+            deleteQuiet(new File("./failures-agentSmokeTest.txt"));
         }
     }
 
@@ -113,7 +119,7 @@ public class AgentSmokeTest {
     public void testSuccess() throws Exception {
         TestCase testCase = new TestCase("testSuccess");
         testCase.setProperty("class", SuccessTest.class.getName());
-        executeTestCase(testCase, 0);
+        executeTestCase(testCase);
     }
 
     @Test
@@ -121,14 +127,27 @@ public class AgentSmokeTest {
         TestCase testCase = new TestCase("testThrowingFailures");
         testCase.setProperty("class", FailingTest.class.getName());
 
-        List<Failure> failures = executeTestCase(testCase, 2);
+        executeTestCase(testCase);
 
-        Failure failure = failures.get(0);
-        assertEquals("Expected started test to fail", testCase.getId(), failure.testId);
-        assertTrue("Expected started test to fail", failure.cause.contains("This test should fail"));
+        Queue<FailureOperation> failureOperations = getFailureOperations(2);
+        sleepSeconds(5);
+        System.err.println("################## " + failureContainer.getFailureCount());
+
+        FailureOperation failure = failureOperations.poll();
+        assertEquals("Expected test to fail", testCase.getId(), failure.getTestId());
+        assertExceptionClassInFailure(failure, RuntimeException.class);
+
+        failure = failureOperations.poll();
+        assertEquals("Expected test to fail", testCase.getId(), failure.getTestId());
+        assertExceptionClassInFailure(failure, AssertionError.class);
     }
 
-    public List<Failure> executeTestCase(TestCase testCase, int expectedFailures) throws Exception {
+    private void assertExceptionClassInFailure(FailureOperation failure, Class<? extends Throwable> failureClass) {
+        assertTrue(format("Expected cause to start with %s, but was %s", failureClass.getCanonicalName(), failure.getCause()),
+                failure.getCause().startsWith(failureClass.getCanonicalName()));
+    }
+
+    public void executeTestCase(TestCase testCase) throws Exception {
         TestSuite testSuite = new TestSuite();
         remoteClient.initTestSuite(testSuite);
 
@@ -160,13 +179,10 @@ public class AgentSmokeTest {
         runPhase(testCase, TestPhase.GLOBAL_TEARDOWN);
         runPhase(testCase, TestPhase.LOCAL_TEARDOWN);
 
-        final List<Failure> failures = getFailures(expectedFailures);
-
         LOGGER.info("Terminating workers...");
         remoteClient.terminateWorkers();
 
         LOGGER.info("Testcase done!");
-        return failures;
     }
 
     private static void createWorkers() {
@@ -208,18 +224,17 @@ public class AgentSmokeTest {
         remoteClient.waitForPhaseCompletion("", testCase.getId(), testPhase);
     }
 
-    private static List<Failure> getFailures(final int expectedFailures) {
-        final List<Failure> failures = new ArrayList<Failure>();
+    private static Queue<FailureOperation> getFailureOperations(final int expectedFailures) {
         if (expectedFailures > 0) {
             assertTrueEventually(new AssertTask() {
                 @Override
                 public void run() throws Exception {
-                    failures.addAll(agentsClient.getFailures());
-                    assertEquals("Expected " + expectedFailures + " failures!", expectedFailures, failures.size());
+                    assertEquals("Expected " + expectedFailures + " failures!", expectedFailures,
+                            failureContainer.getFailureCount());
                 }
             });
         }
-        return failures;
+        return failureContainer.getFailureOperations();
     }
 
     private static final class AgentStarter {

@@ -115,10 +115,6 @@ public class Agent {
         return new File(WORKERS_HOME, testSuite.getId());
     }
 
-    public WorkerJvmFailureMonitor getWorkerJvmFailureMonitor() {
-        return workerJvmFailureMonitor;
-    }
-
     public void terminateWorkerJvm(WorkerJvm jvm) {
         try {
             // this sends SIGTERM on *nix
@@ -137,9 +133,7 @@ public class Agent {
 
     private AgentRemoteService getAgentRemoteService() {
         try {
-            AgentRemoteService remoteService = new AgentRemoteService(this);
-            remoteService.start();
-            return remoteService;
+            return new AgentRemoteService();
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to start REST server", e);
         }

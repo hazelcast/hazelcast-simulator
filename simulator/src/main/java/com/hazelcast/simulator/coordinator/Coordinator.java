@@ -44,12 +44,12 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
@@ -63,7 +63,6 @@ public final class Coordinator {
     static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
     static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
-    private static final int COOLDOWN_SECONDS = 10;
     private static final int TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS = 5;
     private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
@@ -73,8 +72,8 @@ public final class Coordinator {
 
     private final CoordinatorParameters parameters;
     private final TestSuite testSuite;
+    private final FailureContainer failureContainer;
 
-    private final int cooldownSeconds;
     private final int testCaseRunnerSleepPeriodSeconds;
 
     private final ComponentRegistry componentRegistry;
@@ -86,20 +85,17 @@ public final class Coordinator {
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
-    private FailureMonitor failureMonitor;
-
     private ExecutorService parallelExecutor;
 
     public Coordinator(CoordinatorParameters parameters, TestSuite testSuite) {
-        this(parameters, testSuite, COOLDOWN_SECONDS, TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS);
+        this(parameters, testSuite, TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS);
     }
 
-    public Coordinator(CoordinatorParameters parameters, TestSuite testSuite,
-                       int cooldownSeconds, int testCaseRunnerSleepPeriodSeconds) {
+    public Coordinator(CoordinatorParameters parameters, TestSuite testSuite, int testCaseRunnerSleepPeriodSeconds) {
         this.parameters = parameters;
         this.testSuite = testSuite;
+        this.failureContainer = new FailureContainer(testSuite.getId());
 
-        this.cooldownSeconds = cooldownSeconds;
         this.testCaseRunnerSleepPeriodSeconds = testCaseRunnerSleepPeriodSeconds;
 
         this.componentRegistry = loadComponentRegister(parameters.getAgentsFile());
@@ -116,16 +112,9 @@ public final class Coordinator {
         return testSuite;
     }
 
-    public int getTestCaseRunnerSleepPeriodSeconds() {
-        return testCaseRunnerSleepPeriodSeconds;
-    }
-
     private void run() throws Exception {
         try {
             initAgents();
-
-            failureMonitor = new FailureMonitor(agentsClient, testSuite.getId());
-            failureMonitor.start();
 
             startWorkers();
 
@@ -138,11 +127,6 @@ public final class Coordinator {
     }
 
     private void shutdown() throws Exception {
-        if (failureMonitor != null) {
-            LOGGER.info("Shutdown of FailureMonitor...");
-            failureMonitor.shutdown();
-        }
-
         if (parallelExecutor != null) {
             LOGGER.info("Shutdown of ExecutorService...");
             parallelExecutor.shutdown();
@@ -229,7 +213,7 @@ public final class Coordinator {
     }
 
     private void startCoordinatorConnector() {
-        coordinatorConnector = new CoordinatorConnector(performanceStateContainer);
+        coordinatorConnector = new CoordinatorConnector(performanceStateContainer, failureContainer);
         ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
@@ -389,11 +373,7 @@ public final class Coordinator {
         }
 
         remoteClient.terminateWorkers();
-
-        // the coordinator needs to sleep some time to make sure that it will get failures if they are there
-        LOGGER.info("Starting cool down (10 sec)");
-        sleepSeconds(cooldownSeconds);
-        LOGGER.info("Finished cool down");
+        waitForWorkerShutdown(componentRegistry.workerCount(), failureContainer.getFinishedWorkers());
 
         long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
         LOGGER.info(format("Total running time: %s seconds", duration));
@@ -414,7 +394,8 @@ public final class Coordinator {
                 public void run() {
                     try {
                         TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this, remoteClient,
-                                failureMonitor, performanceStateContainer, maxTestCaseIdLength, testPhaseSyncMap);
+                                failureContainer, performanceStateContainer, maxTestCaseIdLength, testPhaseSyncMap,
+                                testCaseRunnerSleepPeriodSeconds);
                         boolean success = runner.run();
                         if (!success && testSuite.isFailFast()) {
                             LOGGER.info("Aborting testsuite due to failure (not implemented yet)");
@@ -443,7 +424,7 @@ public final class Coordinator {
 
         for (TestCase testCase : testSuite.getTestCaseList()) {
             TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this, remoteClient,
-                    failureMonitor, performanceStateContainer, maxTestCaseIdLength, null);
+                    failureContainer, performanceStateContainer, maxTestCaseIdLength, null, testCaseRunnerSleepPeriodSeconds);
             boolean success = runner.run();
             if (!success && testSuite.isFailFast()) {
                 LOGGER.info("Aborting testsuite due to failure");
@@ -468,7 +449,7 @@ public final class Coordinator {
     }
 
     private void logFailureInfo() {
-        int failureCount = failureMonitor.getFailureCount();
+        int failureCount = failureContainer.getFailureCount();
         if (failureCount > 0) {
             LOGGER.fatal("-----------------------------------------------------------------------------");
             LOGGER.fatal(failureCount + " failures have been detected!!!");

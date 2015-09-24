@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.coordinator.remoting;
 
-import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import org.apache.log4j.Logger;
 
@@ -35,12 +34,11 @@ public class AgentClient {
     }
 
     @SuppressWarnings("unchecked")
-    <E> E execute(AgentRemoteService.Service service, Object... args) throws Exception {
+    <E> E execute(Object... args) throws Exception {
         Socket socket = newSocket();
 
         try {
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            oos.writeObject(service);
             for (Object arg : args) {
                 oos.writeObject(arg);
             }

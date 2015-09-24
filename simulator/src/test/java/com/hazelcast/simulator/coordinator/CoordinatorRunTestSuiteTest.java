@@ -7,7 +7,7 @@ import com.hazelcast.simulator.coordinator.remoting.RemoteClient;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.impl.ThroughputResult;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.test.Failure;
+import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -56,7 +56,7 @@ public class CoordinatorRunTestSuiteTest {
     private final RemoteClient remoteClient = mock(RemoteClient.class);
 
     @Mock
-    private final FailureMonitor failureMonitor = mock(FailureMonitor.class);
+    private final FailureContainer failureContainer = mock(FailureContainer.class);
 
     @Mock
     private final PerformanceStateContainer performanceStateContainer = mock(PerformanceStateContainer.class);
@@ -123,7 +123,7 @@ public class CoordinatorRunTestSuiteTest {
 
     @Test
     public void runTestSuiteSequential_hasCriticalFailures() throws Exception {
-        when(failureMonitor.hasCriticalFailure(anySetOf(Failure.Type.class))).thenReturn(true);
+        when(failureContainer.hasCriticalFailure(anySetOf(FailureType.class))).thenReturn(true);
 
         testSuite.setDurationSeconds(4);
         parallel = false;
@@ -207,17 +207,17 @@ public class CoordinatorRunTestSuiteTest {
         testSuite.addTest(testCase2);
 
         // FailureMonitor
-        when(failureMonitor.getFailureCount()).thenReturn(0);
+        when(failureContainer.getFailureCount()).thenReturn(0);
 
         // PerformanceStateContainer
         when(performanceStateContainer.getPerformanceNumbers(anyString())).thenReturn(" (PerformanceStateContainer is mocked)");
 
         // Coordinator
-        coordinator = new Coordinator(parameters, testSuite, 0, 3);
+        coordinator = new Coordinator(parameters, testSuite, 3);
 
         Whitebox.setInternalState(coordinator, "agentsClient", agentsClient);
         Whitebox.setInternalState(coordinator, "remoteClient", remoteClient);
-        Whitebox.setInternalState(coordinator, "failureMonitor", failureMonitor);
+        Whitebox.setInternalState(coordinator, "failureContainer", failureContainer);
         Whitebox.setInternalState(coordinator, "performanceStateContainer", performanceStateContainer);
     }
 

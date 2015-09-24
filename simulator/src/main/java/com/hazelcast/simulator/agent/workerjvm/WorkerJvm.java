@@ -27,6 +27,7 @@ public class WorkerJvm {
 
     private volatile long lastSeen = System.currentTimeMillis();
     private volatile boolean oomeDetected;
+    private volatile boolean isFinished;
     private volatile Process process;
     private volatile String hzAddress;
 
@@ -62,6 +63,14 @@ public class WorkerJvm {
 
     public void setOomeDetected() {
         this.oomeDetected = true;
+    }
+
+    public boolean isFinished() {
+        return isFinished;
+    }
+
+    public void setFinished() {
+        isFinished = true;
     }
 
     public Process getProcess() {

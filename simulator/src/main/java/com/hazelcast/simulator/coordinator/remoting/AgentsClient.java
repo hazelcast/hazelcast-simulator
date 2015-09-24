@@ -1,24 +1,17 @@
 package com.hazelcast.simulator.coordinator.remoting;
 
-import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.protocol.registry.AgentData;
-import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.utils.EmptyStatement;
 import org.apache.log4j.Logger;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.SERVICE_GET_FAILURES;
-import static com.hazelcast.simulator.agent.remoting.AgentRemoteService.Service.SERVICE_POKE;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSecondsThrowException;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
@@ -31,8 +24,6 @@ public class AgentsClient {
 
     private static final int WAIT_FOR_AGENT_START_TIMEOUT_SECONDS = 60;
     private static final int WAIT_FOR_AGENT_START_INTERVAL_SECONDS = 5;
-
-    private static final int GET_FAILURES_TIMEOUT_SECONDS = 30;
 
     private static final Logger LOGGER = Logger.getLogger(AgentsClient.class);
 
@@ -60,7 +51,7 @@ public class AgentsClient {
                     } catch (RuntimeException e) {
                         break;
                     }
-                    asyncExecuteOnAllWorkers(SERVICE_POKE);
+                    asyncExecuteOnAllWorkers();
                 }
             }
         };
@@ -79,7 +70,7 @@ public class AgentsClient {
             while (agentIterator.hasNext()) {
                 AgentClient agent = agentIterator.next();
                 try {
-                    agent.execute(SERVICE_POKE);
+                    agent.execute();
                     agentIterator.remove();
                     LOGGER.info("Connect to agent " + agent.getPublicAddress() + " OK");
                 } catch (Exception e) {
@@ -126,31 +117,13 @@ public class AgentsClient {
         agentExecutor.awaitTermination(EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    public List<Failure> getFailures() {
-        List<Future<List<Failure>>> futures = asyncExecuteOnAllWorkers(SERVICE_GET_FAILURES);
-        List<Failure> result = new LinkedList<Failure>();
-        for (Future<List<Failure>> future : futures) {
-            try {
-                List<Failure> list = future.get(GET_FAILURES_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-                result.addAll(list);
-            } catch (InterruptedException ignored) {
-                EmptyStatement.ignore(ignored);
-            } catch (ExecutionException e) {
-                LOGGER.fatal("Exception in getFailures()", e);
-            } catch (TimeoutException e) {
-                LOGGER.fatal("Exception in getFailures()", e);
-            }
-        }
-        return result;
-    }
-
-    private <E> List<Future<E>> asyncExecuteOnAllWorkers(final AgentRemoteService.Service service, final Object... args) {
+    private <E> List<Future<E>> asyncExecuteOnAllWorkers(final Object... args) {
         List<Future<E>> futures = new LinkedList<Future<E>>();
         for (final AgentClient agentClient : agents) {
             Future<E> future = agentExecutor.submit(new Callable<E>() {
                 @Override
                 public E call() throws Exception {
-                    return agentClient.execute(service, args);
+                    return agentClient.execute(args);
                 }
             });
             futures.add(future);

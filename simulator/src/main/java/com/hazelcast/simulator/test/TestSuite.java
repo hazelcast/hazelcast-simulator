@@ -47,7 +47,7 @@ public class TestSuite implements Serializable {
     private boolean waitForTestCase;
     private boolean failFast;
 
-    private Set<Failure.Type> tolerableFailures = Collections.emptySet();
+    private Set<FailureType> tolerableFailures = Collections.emptySet();
 
     public String getId() {
         return id;
@@ -81,11 +81,11 @@ public class TestSuite implements Serializable {
         return failFast;
     }
 
-    public Set<Failure.Type> getTolerableFailures() {
+    public Set<FailureType> getTolerableFailures() {
         return tolerableFailures;
     }
 
-    public void setTolerableFailures(Set<Failure.Type> tolerableFailures) {
+    public void setTolerableFailures(Set<FailureType> tolerableFailures) {
         this.tolerableFailures = tolerableFailures;
     }
 

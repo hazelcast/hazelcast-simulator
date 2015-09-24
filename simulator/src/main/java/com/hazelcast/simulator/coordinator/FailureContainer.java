@@ -1,0 +1,93 @@
+package com.hazelcast.simulator.coordinator;
+
+import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.test.FailureType;
+import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import static com.hazelcast.simulator.utils.FileUtils.appendText;
+
+/**
+ * Responsible for storing and formatting failures from Simulator workers.
+ */
+public class FailureContainer {
+
+    private static final Logger LOGGER = Logger.getLogger(FailureContainer.class);
+
+    private final BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
+    private final ConcurrentMap<String, FailureType> finishedWorkersList = new ConcurrentHashMap<String, FailureType>();
+
+    private final File file;
+
+    public FailureContainer(String testSuiteId) {
+        this.file = new File("failures-" + testSuiteId + ".txt");
+    }
+
+    public int getFailureCount() {
+        return failureOperations.size();
+    }
+
+    public boolean hasCriticalFailure(Set<FailureType> nonCriticalFailures) {
+        for (FailureOperation operation : failureOperations) {
+            if (!nonCriticalFailures.contains(operation.getType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Queue<FailureOperation> getFailureOperations() {
+        return failureOperations;
+    }
+
+    public Set<String> getFinishedWorkers() {
+        return finishedWorkersList.keySet();
+    }
+
+    public void addFailureOperation(FailureOperation operation) {
+        if (operation.getType().isWorkerFinishedFailure()) {
+            finishedWorkersList.put(operation.getWorkerAddress(), operation.getType());
+        }
+        if (operation.getType().isPoisonPill()) {
+            return;
+        }
+        failureOperations.add(operation);
+        LOGGER.warn(buildMessage(operation));
+        appendText(operation.toString() + "\n", file);
+    }
+
+    private String buildMessage(FailureOperation operation) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Failure #").append(failureOperations.size()).append(" ");
+        if (operation.getHzAddress() != null) {
+            sb.append(' ');
+            sb.append(operation.getHzAddress());
+            sb.append(' ');
+        } else if (operation.getAgentAddress() != null) {
+            sb.append(' ');
+            sb.append(operation.getAgentAddress());
+            sb.append(' ');
+        }
+        sb.append(operation.getTestId());
+        sb.append(' ');
+        sb.append(operation.getType());
+
+        if (operation.getCause() != null) {
+            String[] lines = operation.getCause().split("\n");
+            if (lines.length > 0) {
+                sb.append("[");
+                sb.append(lines[0]);
+                sb.append("]");
+            }
+        }
+
+        return sb.toString();
+    }
+}

@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.agent.remoting;
 
-import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 
@@ -17,24 +16,14 @@ public class AgentRemoteService {
     public static final String ANY_ADDRESS = "0.0.0.0";
     public static final int PORT = 9000;
 
-    public enum Service {
-        SERVICE_POKE,
-        SERVICE_GET_FAILURES,
-    }
-
     private static final Logger LOGGER = Logger.getLogger(AgentRemoteService.class);
 
-    private final Agent agent;
-    private final Executor executor = createFixedThreadPool(20, AgentRemoteService.class);
+    private final Executor executor = createFixedThreadPool(1, AgentRemoteService.class);
 
-    private ServerSocket serverSocket;
-    private AcceptorThread acceptorThread;
+    private final ServerSocket serverSocket;
+    private final AcceptorThread acceptorThread;
 
-    public AgentRemoteService(Agent agent) {
-        this.agent = agent;
-    }
-
-    public void start() throws IOException {
+    public AgentRemoteService() throws Exception {
         serverSocket = new ServerSocket(PORT, 0, InetAddress.getByName(ANY_ADDRESS));
         LOGGER.info("Started Agent Remote Service on: " + serverSocket.getInetAddress().getHostAddress() + ":" + PORT);
 
@@ -76,7 +65,7 @@ public class AgentRemoteService {
                         if (LOGGER.isDebugEnabled()) {
                             LOGGER.debug("Accepted coordinator request from: " + clientSocket.getRemoteSocketAddress());
                         }
-                        executor.execute(new ClientSocketTask(clientSocket, agent));
+                        executor.execute(new ClientSocketTask(clientSocket));
                     }
                 } catch (IOException e) {
                     LOGGER.fatal("Exception in AcceptorThread", e);

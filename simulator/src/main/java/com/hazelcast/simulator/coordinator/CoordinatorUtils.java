@@ -26,12 +26,16 @@ import org.apache.log4j.Logger;
 import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 
 public final class CoordinatorUtils {
+
+    private static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorUtils.class);
 
@@ -141,5 +145,13 @@ public final class CoordinatorUtils {
                 return agentLayout;
             }
         }
+    }
+
+    static void waitForWorkerShutdown(int expectedFinishedWorkerCount, Set<String> finishedWorkers) {
+        LOGGER.info(format("Waiting for shutdown of %d workers...", expectedFinishedWorkerCount));
+        while (finishedWorkers.size() < expectedFinishedWorkerCount) {
+            sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
+        }
+        LOGGER.info("Shutdown of all workers completed...");
     }
 }

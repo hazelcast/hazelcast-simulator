@@ -17,18 +17,20 @@ package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.test.Failure;
+import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.test.FailureType;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
+import static com.hazelcast.simulator.test.FailureType.WORKER_EXIT;
+import static com.hazelcast.simulator.test.FailureType.WORKER_FINISHED;
+import static com.hazelcast.simulator.test.FailureType.WORKER_OOM;
+import static com.hazelcast.simulator.test.FailureType.WORKER_TIMEOUT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -40,8 +42,6 @@ public class WorkerJvmFailureMonitor {
 
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmFailureMonitor.class);
 
-    private final BlockingQueue<Failure> failureQueue = new LinkedBlockingQueue<Failure>();
-
     private final MonitorThread monitorThread;
 
     public WorkerJvmFailureMonitor(Agent agent, ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs) {
@@ -52,10 +52,6 @@ public class WorkerJvmFailureMonitor {
     public void shutdown() {
         monitorThread.running = false;
         monitorThread.interrupt();
-    }
-
-    public void drainFailures(List<Failure> failures) {
-        failureQueue.drainTo(failures);
     }
 
     private class MonitorThread extends Thread {
@@ -76,7 +72,9 @@ public class WorkerJvmFailureMonitor {
         public void run() {
             while (running) {
                 try {
-                    detect();
+                    for (WorkerJvm workerJvm : workerJVMs.values()) {
+                        detectFailures(workerJvm);
+                    }
                 } catch (Exception e) {
                     LOGGER.fatal("Failed to scan for failures", e);
                 }
@@ -84,71 +82,24 @@ public class WorkerJvmFailureMonitor {
             }
         }
 
-        private void detect() {
-            for (WorkerJvm jvm : workerJVMs.values()) {
-                detectFailuresInJvm(jvm);
-            }
-        }
-
-        private void detectFailuresInJvm(WorkerJvm jvm) {
-            List<Failure> failures = new LinkedList<Failure>();
-
-            detectOomeFailure(jvm, failures);
-            detectExceptions(jvm, failures);
-            detectInactivity(jvm, failures);
-            detectUnexpectedExit(jvm, failures);
-
-            for (Failure failure : failures) {
-                LOGGER.warn("Failure detected: " + failure);
-                failureQueue.add(failure);
-            }
-        }
-
-        private void detectOomeFailure(WorkerJvm jvm, List<Failure> failures) {
-            // once the failure is detected, we don't need to detect it again
-            if (jvm.isOomeDetected()) {
+        private void detectFailures(WorkerJvm workerJvm) {
+            detectExceptions(workerJvm);
+            if (workerJvm.isOomeDetected()) {
+                // once the failure is detected, we don't need to detect it again
                 return;
             }
-
-            if (!isOomeFound(jvm)) {
-                return;
-            }
-            jvm.setOomeDetected();
-
-            Failure failure = new Failure();
-            failure.message = "Worker ran into an OOME";
-            failure.type = Failure.Type.WORKER_OOM;
-            failure.agentAddress = agent.getPublicAddress();
-            failure.hzAddress = jvm.getHazelcastAddress();
-            failure.workerId = jvm.getId();
-            failure.testSuite = agent.getTestSuite();
-            failures.add(failure);
+            detectOomeFailure(workerJvm);
+            detectInactivity(workerJvm);
+            detectUnexpectedExit(workerJvm);
         }
 
-        private boolean isOomeFound(WorkerJvm jvm) {
-            File oomeFile = new File(jvm.getWorkerHome(), "worker.oome");
-            if (oomeFile.exists()) {
-                return true;
-            }
-
-            // if we find the hprof file, we also know there is an OOME. The problem with the worker.oome file is that it is
-            // created after the heap dump is done, and creating the heap dump can take a lot of time. And then the system could
-            // think there is another problem (e.g. lack of inactivity; or timeouts). This hides the OOME.
-            String[] hprofFiles = jvm.getWorkerHome().list(new HProfExtensionFilter());
-            if (hprofFiles == null) {
-                return false;
-            }
-            return (hprofFiles.length > 0);
-        }
-
-        private void detectExceptions(WorkerJvm workerJvm, List<Failure> failures) {
+        private void detectExceptions(WorkerJvm workerJvm) {
             File workerHome = workerJvm.getWorkerHome();
             if (!workerHome.exists()) {
                 return;
             }
 
             File[] exceptionFiles = workerHome.listFiles(new ExceptionExtensionFilter());
-
             if (exceptionFiles == null) {
                 return;
             }
@@ -160,47 +111,51 @@ public class WorkerJvmFailureMonitor {
                 String testId = content.substring(0, indexOf);
                 String cause = content.substring(indexOf + 1);
 
-                // we rename it so that we don't detect the same exception again
+                // we delete the exception file so that we don't detect the same exception again
                 deleteQuiet(exceptionFile);
 
-                Failure failure = new Failure();
-                failure.message = "Worked ran into an unhandled exception";
-                failure.type = Failure.Type.WORKER_EXCEPTION;
-                failure.agentAddress = agent.getPublicAddress();
-                failure.hzAddress = workerJvm.getHazelcastAddress();
-                failure.workerId = workerJvm.getId();
-                failure.testId = testId;
-                failure.testSuite = agent.getTestSuite();
-                failure.cause = cause;
-                failures.add(failure);
+                sendFailureOperation("Worked ran into an unhandled exception", WORKER_EXCEPTION, workerJvm, testId, cause);
             }
         }
 
-        private void detectInactivity(WorkerJvm jvm, List<Failure> failures) {
+        private void detectOomeFailure(WorkerJvm workerJvm) {
+            if (!isOomeFound(workerJvm)) {
+                return;
+            }
+            workerJvm.setOomeDetected();
+
+            sendFailureOperation("Worker ran into an OOME", WORKER_OOM, workerJvm);
+        }
+
+        private boolean isOomeFound(WorkerJvm workerJvm) {
+            File oomeFile = new File(workerJvm.getWorkerHome(), "worker.oome");
+            if (oomeFile.exists()) {
+                return true;
+            }
+
+            // if we find the hprof file, we also know there is an OOME. The problem with the worker.oome file is that it is
+            // created after the heap dump is done, and creating the heap dump can take a lot of time. And then the system could
+            // think there is another problem (e.g. lack of inactivity; or timeouts). This hides the OOME.
+            String[] hprofFiles = workerJvm.getWorkerHome().list(new HProfExtensionFilter());
+            if (hprofFiles == null) {
+                return false;
+            }
+            return (hprofFiles.length > 0);
+        }
+
+        private void detectInactivity(WorkerJvm workerJvm) {
             long now = System.currentTimeMillis();
-
-            if (jvm.isOomeDetected()) {
-                return;
-            }
-
-            if (now - LAST_SEEN_TIMEOUT_MILLIS > jvm.getLastSeen()) {
-                Failure failure = new Failure();
-                failure.message = "Worker has not contacted agent for a too long period";
-                failure.type = Failure.Type.WORKER_TIMEOUT;
-                failure.agentAddress = agent.getPublicAddress();
-                failure.hzAddress = jvm.getHazelcastAddress();
-                failure.workerId = jvm.getId();
-                failure.testSuite = agent.getTestSuite();
-                failures.add(failure);
+            if (now - LAST_SEEN_TIMEOUT_MILLIS > workerJvm.getLastSeen()) {
+                sendFailureOperation("Worker has not contacted agent for a too long period", WORKER_TIMEOUT, workerJvm);
             }
         }
 
-        private void detectUnexpectedExit(WorkerJvm jvm, List<Failure> failures) {
-            if (jvm.isOomeDetected()) {
+        private void detectUnexpectedExit(WorkerJvm workerJvm) {
+            if (workerJvm.isFinished()) {
                 return;
             }
 
-            Process process = jvm.getProcess();
+            Process process = workerJvm.getProcess();
             int exitCode;
             try {
                 exitCode = process.exitValue();
@@ -210,20 +165,25 @@ public class WorkerJvmFailureMonitor {
             }
 
             if (exitCode == 0) {
+                workerJvm.setFinished();
+                sendFailureOperation("Worker terminated normally", WORKER_FINISHED, workerJvm);
                 return;
             }
 
-            agent.terminateWorkerJvm(jvm);
-            workerJVMs.remove(jvm.getAddress());
+            agent.terminateWorkerJvm(workerJvm);
+            workerJVMs.remove(workerJvm.getAddress());
 
-            Failure failure = new Failure();
-            failure.message = format("Worker terminated with exit code %d instead of 0", exitCode);
-            failure.type = Failure.Type.WORKER_EXIT;
-            failure.agentAddress = agent.getPublicAddress();
-            failure.hzAddress = jvm.getHazelcastAddress();
-            failure.workerId = jvm.getId();
-            failure.testSuite = agent.getTestSuite();
-            failures.add(failure);
+            sendFailureOperation(format("Worker terminated with exit code %d instead of 0", exitCode), WORKER_EXIT, workerJvm);
+        }
+
+        private void sendFailureOperation(String message, FailureType type, WorkerJvm jvm) {
+            sendFailureOperation(message, type, jvm, null, null);
+        }
+
+        private void sendFailureOperation(String message, FailureType type, WorkerJvm jvm, String testId, String cause) {
+            FailureOperation operation = new FailureOperation(message, type, agent.getPublicAddress(), jvm.getAddress(),
+                    jvm.getHazelcastAddress(), jvm.getId(), testId, agent.getTestSuite(), cause);
+            agent.getAgentConnector().submit(SimulatorAddress.COORDINATOR, operation);
         }
     }
 

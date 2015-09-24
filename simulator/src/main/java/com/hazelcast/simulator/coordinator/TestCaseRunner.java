@@ -7,7 +7,7 @@ import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
-import com.hazelcast.simulator.test.Failure;
+import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -45,30 +45,30 @@ final class TestCaseRunner {
     private final TestSuite testSuite;
     private final CoordinatorParameters coordinatorParameters;
     private final RemoteClient remoteClient;
-    private final FailureMonitor failureMonitor;
+    private final FailureContainer failureContainer;
     private final PerformanceStateContainer performanceStateContainer;
-    private final Set<Failure.Type> nonCriticalFailures;
+    private final Set<FailureType> nonCriticalFailures;
     private final String testCaseId;
     private final String prefix;
-    private final int sleepPeriod;
     private final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap;
+    private final int sleepPeriodSeconds;
 
     private StopThread stopThread;
 
     TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, RemoteClient remoteClient,
-                   FailureMonitor failureMonitor, PerformanceStateContainer performanceStateContainer, int paddingLength,
-                   ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap) {
+                   FailureContainer failureContainer, PerformanceStateContainer performanceStateContainer, int paddingLength,
+                   ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap, int sleepPeriodSeconds) {
         this.testCase = testCase;
         this.testSuite = testSuite;
         this.coordinatorParameters = coordinator.getParameters();
         this.remoteClient = remoteClient;
-        this.failureMonitor = failureMonitor;
+        this.failureContainer = failureContainer;
         this.performanceStateContainer = performanceStateContainer;
         this.nonCriticalFailures = testSuite.getTolerableFailures();
         this.testCaseId = testCase.getId();
         this.prefix = (testCaseId.isEmpty() ? "" : padRight(testCaseId, paddingLength + 1));
-        this.sleepPeriod = coordinator.getTestCaseRunnerSleepPeriodSeconds();
         this.testPhaseSyncMap = testPhaseSyncMap;
+        this.sleepPeriodSeconds = sleepPeriodSeconds;
     }
 
     boolean run() {
@@ -76,7 +76,7 @@ final class TestCaseRunner {
                 + format("Running Test: %s%n%s%n", testCaseId, testCase)
                 + "--------------------------------------------------------------");
 
-        int oldFailureCount = failureMonitor.getFailureCount();
+        int oldFailureCount = failureContainer.getFailureCount();
         try {
             initTestCase();
             runOnAllWorkers(TestPhase.SETUP);
@@ -100,7 +100,7 @@ final class TestCaseRunner {
             runOnFirstWorker(TestPhase.GLOBAL_TEARDOWN);
             runOnAllWorkers(TestPhase.LOCAL_TEARDOWN);
 
-            return (failureMonitor.getFailureCount() == oldFailureCount);
+            return (failureContainer.getFailureCount() == oldFailureCount);
         } catch (Exception e) {
             LOGGER.fatal("Exception in TestCaseRunner", e);
             return false;
@@ -251,16 +251,16 @@ final class TestCaseRunner {
         }
 
         private void sleepUntilFailure(int sleepSeconds) {
-            int sleepLoops = sleepSeconds / sleepPeriod;
+            int sleepLoops = sleepSeconds / sleepPeriodSeconds;
             for (int i = 1; i <= sleepLoops; i++) {
-                if (failureMonitor.hasCriticalFailure(nonCriticalFailures)) {
+                if (failureContainer.hasCriticalFailure(nonCriticalFailures)) {
                     echo("Critical Failure detected, aborting execution of test");
                     return;
                 }
 
-                sleepSeconds(sleepPeriod);
+                sleepSeconds(sleepPeriodSeconds);
 
-                logProgress(sleepPeriod * i, sleepSeconds);
+                logProgress(sleepPeriodSeconds * i, sleepSeconds);
 
                 if (!isRunning) {
                     break;
@@ -268,7 +268,7 @@ final class TestCaseRunner {
             }
 
             if (isRunning) {
-                sleepSeconds(sleepSeconds % sleepPeriod);
+                sleepSeconds(sleepSeconds % sleepPeriodSeconds);
                 logProgress(sleepSeconds, sleepSeconds);
             }
         }
