@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -117,17 +116,15 @@ public class AgentsClient {
         agentExecutor.awaitTermination(EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    private <E> List<Future<E>> asyncExecuteOnAllWorkers(final Object... args) {
-        List<Future<E>> futures = new LinkedList<Future<E>>();
+    private void asyncExecuteOnAllWorkers(final Object... args) {
         for (final AgentClient agentClient : agents) {
-            Future<E> future = agentExecutor.submit(new Callable<E>() {
+            agentExecutor.submit(new Callable<Object>() {
+
                 @Override
-                public E call() throws Exception {
+                public Object call() throws Exception {
                     return agentClient.execute(args);
                 }
             });
-            futures.add(future);
         }
-        return futures;
     }
 }

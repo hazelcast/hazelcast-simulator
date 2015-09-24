@@ -16,7 +16,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSecondsThrowException;
 import static java.lang.String.format;
 
-public class AgentClient {
+class AgentClient {
 
     private static final int CREATE_SOCKET_MAX_RETRIES = 30;
     private static final int LOG_FAILURE_AS_WARNING_THRESHOLD = 10;

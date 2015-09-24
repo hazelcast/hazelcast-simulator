@@ -13,7 +13,7 @@ import java.util.List;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static java.lang.String.format;
 
-public final class ProvisionerUtils {
+final class ProvisionerUtils {
 
     static final String INIT_SH_SCRIPT_NAME = "init.sh";
 

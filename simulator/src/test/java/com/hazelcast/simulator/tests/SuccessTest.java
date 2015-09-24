@@ -30,9 +30,9 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
 public class SuccessTest {
 
-    private TestContext context;
+    private final Set<TestPhase> testPhases = new HashSet<TestPhase>();
 
-    private Set<TestPhase> testPhases = new HashSet<TestPhase>();
+    private TestContext context;
 
     public Set<TestPhase> getTestPhases() {
         return testPhases;

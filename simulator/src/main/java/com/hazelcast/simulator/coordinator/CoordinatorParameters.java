@@ -26,7 +26,7 @@ import static java.lang.Boolean.parseBoolean;
 /**
  * Parameters for Simulator Coordinator.
  */
-public class CoordinatorParameters {
+class CoordinatorParameters {
 
     private final SimulatorProperties simulatorProperties;
     private final File agentsFile;

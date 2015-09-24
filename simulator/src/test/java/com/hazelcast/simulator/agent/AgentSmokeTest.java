@@ -6,9 +6,9 @@ import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.coordinator.AgentMemberMode;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
-import com.hazelcast.simulator.coordinator.remoting.RemoteClient;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
@@ -144,7 +144,7 @@ public class AgentSmokeTest {
                 failure.getCause().startsWith(failureClass.getCanonicalName()));
     }
 
-    public void executeTestCase(TestCase testCase) throws Exception {
+    private void executeTestCase(TestCase testCase) throws Exception {
         TestSuite testSuite = new TestSuite();
         remoteClient.initTestSuite(testSuite);
 

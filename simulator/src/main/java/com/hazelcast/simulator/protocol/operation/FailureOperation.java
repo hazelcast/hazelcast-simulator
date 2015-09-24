@@ -32,14 +32,6 @@ public class FailureOperation implements SimulatorOperation {
         this.cause = cause;
     }
 
-    public long getTime() {
-        return time;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
     public FailureType getType() {
         return FailureType.valueOf(type);
     }
@@ -56,16 +48,8 @@ public class FailureOperation implements SimulatorOperation {
         return hzAddress;
     }
 
-    public String getWorkerId() {
-        return workerId;
-    }
-
     public String getTestId() {
         return testId;
-    }
-
-    public TestSuite getTestSuite() {
-        return testSuite;
     }
 
     public String getCause() {
@@ -76,25 +60,25 @@ public class FailureOperation implements SimulatorOperation {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Failure[\n");
-        sb.append("   message='").append(getMessage()).append("'\n");
-        sb.append("   type='").append(getType()).append("'\n");
-        sb.append("   agentAddress=").append(getAgentAddress()).append("\n");
-        sb.append("   time=").append(getTime()).append("\n");
-        sb.append("   hzAddress=").append(getHzAddress()).append("\n");
-        sb.append("   workerId=").append(getWorkerId()).append("\n");
+        sb.append("   message='").append(message).append("'\n");
+        sb.append("   type='").append(type).append("'\n");
+        sb.append("   agentAddress=").append(agentAddress).append("\n");
+        sb.append("   time=").append(time).append("\n");
+        sb.append("   hzAddress=").append(hzAddress).append("\n");
+        sb.append("   workerId=").append(workerId).append("\n");
 
-        TestCase testCase = getTestSuite().getTestCase(getTestId());
+        TestCase testCase = testSuite.getTestCase(testId);
         if (testCase != null) {
             String prefix = "   test=";
-            for (String aTestString : testCase.toString().split("\n")) {
-                sb.append(prefix).append(aTestString).append("\n");
+            for (String testString : testCase.toString().split("\n")) {
+                sb.append(prefix).append(testString).append("\n");
                 prefix = "    ";
             }
         } else {
-            sb.append("   test=").append(getTestId()).append(" unknown").append("\n");
+            sb.append("   test=").append(testId).append(" unknown").append("\n");
         }
 
-        sb.append("   cause=").append(getCause() != null ? getCause() : "null").append("\n");
+        sb.append("   cause=").append(cause != null ? cause : "null").append("\n");
         sb.append("]");
 
         return sb.toString();

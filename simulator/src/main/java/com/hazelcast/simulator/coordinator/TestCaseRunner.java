@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.coordinator.remoting.RemoteClient;
 import com.hazelcast.simulator.probes.probes.ProbesResultXmlWriter;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;

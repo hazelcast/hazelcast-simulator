@@ -10,8 +10,8 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 
 abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
-    public static final int DEFAULT_CONCURRENCY_LEVEL = 1000;
-    public static final long DEFAULT_TIMEOUT_MINUTES = 2;
+    private static final int DEFAULT_CONCURRENCY_LEVEL = 1000;
+    private static final long DEFAULT_TIMEOUT_MINUTES = 2;
 
     private final int concurrencyLevel;
     private final Semaphore semaphore;

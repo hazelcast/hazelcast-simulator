@@ -37,7 +37,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ProtocolUtil {
+class ProtocolUtil {
 
     static final SimulatorOperation DEFAULT_OPERATION = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
 

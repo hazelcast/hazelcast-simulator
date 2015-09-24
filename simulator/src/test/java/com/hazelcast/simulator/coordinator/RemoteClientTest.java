@@ -1,9 +1,7 @@
-package com.hazelcast.simulator.coordinator.remoting;
+package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.JavaProfiler;
-import com.hazelcast.simulator.coordinator.AgentMemberLayout;
-import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -36,10 +34,10 @@ import static org.mockito.Mockito.when;
 
 public class RemoteClientTest {
 
-    private ComponentRegistry componentRegistry = new ComponentRegistry();
+    private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
-    private CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
-    private WorkerParameters workerParameters = mock(WorkerParameters.class);
+    private final CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
+    private final WorkerParameters workerParameters = mock(WorkerParameters.class);
 
     @Before
     public void setUp() {

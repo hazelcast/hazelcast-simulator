@@ -25,7 +25,7 @@ public final class WorkerConnector extends AbstractServerConnector {
 
     private final WorkerServerConfiguration workerServerConfiguration;
 
-    WorkerConnector(WorkerServerConfiguration configuration) {
+    private WorkerConnector(WorkerServerConfiguration configuration) {
         super(configuration);
         this.workerServerConfiguration = configuration;
     }

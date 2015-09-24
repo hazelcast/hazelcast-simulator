@@ -26,7 +26,8 @@ public class HarakiriMonitorTest {
 
     private static SecurityManager oldSecurityManager;
 
-    private List<String> args = new ArrayList<String>();
+    private final List<String> args = new ArrayList<String>();
+
     private HarakiriMonitor harakiriMonitor;
 
     @BeforeClass

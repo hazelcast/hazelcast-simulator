@@ -8,8 +8,9 @@ import static org.junit.Assert.assertNotNull;
 
 public class ResponseTest {
 
-    private SimulatorAddress destination = new SimulatorAddress(AddressLevel.AGENT, 42, 0, 0);
-    private Response response =  new Response(23, destination);
+    private final SimulatorAddress destination = new SimulatorAddress(AddressLevel.AGENT, 42, 0, 0);
+
+    private Response response = new Response(23, destination);
 
     @Test
     public void testConstructor_withSimulatorMessage() {

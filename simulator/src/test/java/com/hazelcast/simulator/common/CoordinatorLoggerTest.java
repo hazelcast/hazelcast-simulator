@@ -14,8 +14,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class CoordinatorLoggerTest {
 
-    ServerConnector serverConnector;
-    CoordinatorLogger coordinatorLogger;
+    private ServerConnector serverConnector;
+    private CoordinatorLogger coordinatorLogger;
 
     @Before
     public void setUp() {

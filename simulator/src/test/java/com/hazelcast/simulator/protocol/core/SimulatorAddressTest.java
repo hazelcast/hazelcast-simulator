@@ -8,15 +8,15 @@ import static org.junit.Assert.assertNotNull;
 
 public class SimulatorAddressTest {
 
-    private SimulatorAddress address = new SimulatorAddress(AddressLevel.TEST, 5, 6, 7);
-    private SimulatorAddress addressSame = new SimulatorAddress(AddressLevel.TEST, 5, 6, 7);
+    private final SimulatorAddress address = new SimulatorAddress(AddressLevel.TEST, 5, 6, 7);
+    private final SimulatorAddress addressSame = new SimulatorAddress(AddressLevel.TEST, 5, 6, 7);
 
-    private SimulatorAddress addressOtherAgent = new SimulatorAddress(AddressLevel.TEST, 9, 6, 7);
-    private SimulatorAddress addressOtherWorker = new SimulatorAddress(AddressLevel.TEST, 5, 9, 7);
-    private SimulatorAddress addressOtherTest = new SimulatorAddress(AddressLevel.TEST, 5, 6, 9);
+    private final SimulatorAddress addressOtherAgent = new SimulatorAddress(AddressLevel.TEST, 9, 6, 7);
+    private final SimulatorAddress addressOtherWorker = new SimulatorAddress(AddressLevel.TEST, 5, 9, 7);
+    private final SimulatorAddress addressOtherTest = new SimulatorAddress(AddressLevel.TEST, 5, 6, 9);
 
-    private SimulatorAddress addressAgentAddressLevel = new SimulatorAddress(AddressLevel.AGENT, 5, 6, 7);
-    private SimulatorAddress addressWorkerAddressLevel = new SimulatorAddress(AddressLevel.WORKER, 5, 6, 7);
+    private final SimulatorAddress addressAgentAddressLevel = new SimulatorAddress(AddressLevel.AGENT, 5, 6, 7);
+    private final SimulatorAddress addressWorkerAddressLevel = new SimulatorAddress(AddressLevel.WORKER, 5, 6, 7);
 
     @Test
     public void testGetAddressLevel() {

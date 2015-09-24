@@ -2,7 +2,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.remoting.RemoteClient;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.impl.ThroughputResult;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;

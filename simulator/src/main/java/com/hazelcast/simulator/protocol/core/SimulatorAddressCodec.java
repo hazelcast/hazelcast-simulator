@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 /**
  * Encodes and decodes a {@link SimulatorAddress}.
  */
-public final class SimulatorAddressCodec {
+final class SimulatorAddressCodec {
 
     private SimulatorAddressCodec() {
     }

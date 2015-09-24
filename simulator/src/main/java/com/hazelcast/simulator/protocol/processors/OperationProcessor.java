@@ -82,7 +82,7 @@ public abstract class OperationProcessor {
 
     protected abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception;
 
-    protected ExecutorService getExecutorService() {
+    ExecutorService getExecutorService() {
         return executorService;
     }
 }

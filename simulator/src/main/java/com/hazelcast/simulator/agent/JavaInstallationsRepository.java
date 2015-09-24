@@ -27,7 +27,7 @@ import java.util.Properties;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static java.lang.String.format;
 
-public class JavaInstallationsRepository {
+class JavaInstallationsRepository {
 
     private final List<JavaInstallation> installationList = new LinkedList<JavaInstallation>();
 

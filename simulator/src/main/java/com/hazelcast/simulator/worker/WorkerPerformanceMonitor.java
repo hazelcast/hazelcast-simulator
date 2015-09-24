@@ -27,7 +27,7 @@ import static java.lang.String.format;
 /**
  * Monitors the performance of all running tests on {@link MemberWorker} and {@link ClientWorker} instances.
  */
-public class WorkerPerformanceMonitor {
+class WorkerPerformanceMonitor {
 
     private static final int DEFAULT_MONITORING_INTERVAL_SECONDS = 5;
 

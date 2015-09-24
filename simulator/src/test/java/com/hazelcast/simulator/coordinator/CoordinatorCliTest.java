@@ -23,7 +23,7 @@ public class CoordinatorCliTest {
     private static File agentsFile;
     private static File testSuiteFile;
 
-    private List<String> args = new ArrayList<String>();
+    private final List<String> args = new ArrayList<String>();
 
     @BeforeClass
     public static void setUp() throws Exception {

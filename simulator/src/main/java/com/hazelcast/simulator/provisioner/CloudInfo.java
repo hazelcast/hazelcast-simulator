@@ -21,7 +21,7 @@ public final class CloudInfo {
 
     private static final Logger LOGGER = Logger.getLogger(CloudInfo.class);
 
-    SimulatorProperties props = new SimulatorProperties();
+    final SimulatorProperties props = new SimulatorProperties();
 
     String locationId;
     boolean verbose;

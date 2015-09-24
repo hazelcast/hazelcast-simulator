@@ -1,7 +1,6 @@
-package com.hazelcast.simulator.coordinator.remoting;
+package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.simulator.coordinator.AgentMemberLayout;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -32,9 +31,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 
-/**
- * This class is an interim solution to handle the parallel existence of the old and new Simulator Communication protocol.
- */
 public class RemoteClient {
 
     private static final int WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS = 5;

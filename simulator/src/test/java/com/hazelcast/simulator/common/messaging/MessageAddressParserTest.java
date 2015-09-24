@@ -7,7 +7,7 @@ import static org.junit.Assert.assertNull;
 
 public class MessageAddressParserTest {
 
-    private MessageAddressParser parser = new MessageAddressParser();
+    private final MessageAddressParser parser = new MessageAddressParser();
 
     @Test(expected = IllegalArgumentException.class)
     public void testParse_nullAsInput() throws Exception {

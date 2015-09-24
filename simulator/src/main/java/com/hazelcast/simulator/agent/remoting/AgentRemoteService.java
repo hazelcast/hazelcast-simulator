@@ -13,8 +13,9 @@ import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPoo
 
 public class AgentRemoteService {
 
-    public static final String ANY_ADDRESS = "0.0.0.0";
     public static final int PORT = 9000;
+
+    private static final String ANY_ADDRESS = "0.0.0.0";
 
     private static final Logger LOGGER = Logger.getLogger(AgentRemoteService.class);
 

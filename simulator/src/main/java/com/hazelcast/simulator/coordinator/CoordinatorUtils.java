@@ -37,7 +37,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 
-public final class CoordinatorUtils {
+final class CoordinatorUtils {
 
     private static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
 
@@ -138,7 +138,7 @@ public final class CoordinatorUtils {
         }
     }
 
-    static AgentMemberLayout findNextAgentLayout(AtomicInteger currentIndex, List<AgentMemberLayout> agentMemberLayouts,
+    private static AgentMemberLayout findNextAgentLayout(AtomicInteger currentIndex, List<AgentMemberLayout> agentMemberLayouts,
                                                  AgentMemberMode excludedAgentMemberMode) {
         int size = agentMemberLayouts.size();
         while (true) {

@@ -3,7 +3,7 @@ package com.hazelcast.simulator.provisioner.git;
 import java.io.File;
 import java.io.FilenameFilter;
 
-public class HazelcastFilenameFilter implements FilenameFilter {
+class HazelcastFilenameFilter implements FilenameFilter {
 
     @Override
     public boolean accept(File dir, String name) {

@@ -5,7 +5,7 @@ import com.hazelcast.simulator.test.TestContext;
 
 class DummyTestContext implements TestContext {
 
-    volatile boolean isStopped;
+    private volatile boolean isStopped;
 
     @Override
     public HazelcastInstance getTargetInstance() {

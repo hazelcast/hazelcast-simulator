@@ -140,7 +140,7 @@ public class TestSuiteTest {
         assertEquals(8, testSuite.getMaxTestCaseIdLength());
     }
 
-    static TestSuite createTestSuite(String txt) throws Exception {
+    private static TestSuite createTestSuite(String txt) throws Exception {
         return createTestSuite(txt, "");
     }
 

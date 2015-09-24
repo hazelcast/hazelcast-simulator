@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 
 public class ComponentRegistryTest {
 
-    private ComponentRegistry componentRegistry = new ComponentRegistry();
+    private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     @Test
     public void testAddAgent() {

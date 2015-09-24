@@ -9,7 +9,7 @@ import com.hazelcast.core.ICompletableFuture;
  * @param <K> key type
  * @param <V> value type
  */
-public class AsyncCacheStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
+final class AsyncCacheStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
 
     private final ICache<K, V> cache;
 

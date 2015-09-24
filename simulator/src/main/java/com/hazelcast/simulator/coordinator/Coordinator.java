@@ -19,7 +19,6 @@ import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
-import com.hazelcast.simulator.coordinator.remoting.RemoteClient;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -60,8 +59,9 @@ import static java.lang.String.format;
 public final class Coordinator {
 
     static final File SIMULATOR_HOME = getSimulatorHome();
-    static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
-    static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
+
+    private static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
+    private static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
     private static final int TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS = 5;
     private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
