@@ -21,15 +21,14 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
@@ -40,6 +39,11 @@ public class AtomicReferenceTest {
 
     private static final ILogger LOGGER = Logger.getLogger(AtomicReferenceTest.class);
 
+    private enum Operation {
+        PUT,
+        GET
+    }
+
     // properties
     public String basename = AtomicReferenceTest.class.getSimpleName();
     public int countersLength = 1000;
@@ -47,48 +51,46 @@ public class AtomicReferenceTest {
     public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
-    public int writePercentage = 100;
     public int valueCount = 1000;
     public int valueLength = 512;
     public boolean useStringValue = true;
+    public double putProb = 1.0;
 
-    private IAtomicReference[] counters;
-    private AtomicLong operations = new AtomicLong();
-    private TestContext context;
-    private Object[] values;
+    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
+
     private HazelcastInstance targetInstance;
+    private IAtomicReference<Object>[] counters;
+    private Object[] values;
 
     @Setup
     public void setup(TestContext context) throws Exception {
-        this.context = context;
-
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
         targetInstance = context.getTargetInstance();
 
         values = new Object[valueCount];
         Random random = new Random();
-        for (int k = 0; k < valueCount; k++) {
+        for (int i = 0; i < valueCount; i++) {
             if (useStringValue) {
-                values[k] = generateString(valueLength);
+                values[i] = generateString(valueLength);
             } else {
-                values[k] = generateByteArray(random, valueLength);
+                values[i] = generateByteArray(random, valueLength);
             }
         }
 
-        counters = new IAtomicReference[countersLength];
+        counters = getCounters();
         String[] names = generateStringKeys(basename + "-" + context.getTestId(), countersLength, keyLocality, targetInstance);
-        for (int k = 0; k < counters.length; k++) {
-            IAtomicReference atomicReference = targetInstance.getAtomicReference(names[k]);
+        for (int i = 0; i < counters.length; i++) {
+            IAtomicReference<Object> atomicReference = targetInstance.getAtomicReference(names[i]);
             atomicReference.set(values[random.nextInt(values.length)]);
-            counters[k] = atomicReference;
+            counters[i] = atomicReference;
         }
+
+        builder.addOperation(Operation.PUT, putProb)
+                .addDefaultOperation(Operation.GET);
+    }
+
+    @SuppressWarnings("unchecked")
+    private IAtomicReference<Object>[] getCounters() {
+        return (IAtomicReference<Object>[]) new IAtomicReference[countersLength];
     }
 
     @Teardown
@@ -99,60 +101,35 @@ public class AtomicReferenceTest {
         LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(context.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractWorker<Operation> {
+
+        public Worker() {
+            super(builder);
         }
-        spawner.awaitCompletion();
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
-    }
-
-    private class Worker implements Runnable {
-        private final Random random = new Random();
 
         @Override
-        public void run() {
-            long iteration = 0;
-
-            while (!context.isStopped()) {
-                IAtomicReference counter = getRandomCounter();
-                if (shouldWrite(iteration)) {
-                    Object value = values[random.nextInt(values.length)];
+        protected void timeStep(Operation operation) {
+            IAtomicReference<Object> counter = getRandomCounter();
+            switch (operation) {
+                case PUT:
+                    Object value = values[randomInt(values.length)];
                     counter.set(value);
-                } else {
+                    break;
+                case GET:
                     counter.get();
-                }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
-            }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
-        }
-
-        private boolean shouldWrite(long iteration) {
-            if (writePercentage == 0) {
-                return false;
-            } else if (writePercentage == 100) {
-                return true;
-            } else {
-                return (iteration % 100) < writePercentage;
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unknown operation: " + operation);
             }
         }
 
-        private IAtomicReference getRandomCounter() {
-            int index = random.nextInt(counters.length);
-            return counters[index];
+        private IAtomicReference<Object> getRandomCounter() {
+            return counters[randomInt(counters.length)];
         }
     }
 
