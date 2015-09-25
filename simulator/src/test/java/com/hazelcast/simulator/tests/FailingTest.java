@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.tests;
 
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -48,7 +49,7 @@ public class FailingTest {
         if (!context.isStopped()) {
             sleepSeconds(1);
 
-            throw new RuntimeException("This test should fail");
+            throw new TestException("This test should fail");
         }
     }
 }

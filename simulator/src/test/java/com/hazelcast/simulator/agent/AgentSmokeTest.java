@@ -18,6 +18,7 @@ import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.tests.FailingTest;
@@ -132,7 +133,7 @@ public class AgentSmokeTest {
 
         FailureOperation failure = failureOperations.poll();
         assertEquals("Expected test to fail", testCase.getId(), failure.getTestId());
-        assertExceptionClassInFailure(failure, RuntimeException.class);
+        assertExceptionClassInFailure(failure, TestException.class);
 
         failure = failureOperations.poll();
         assertEquals("Expected test to fail", testCase.getId(), failure.getTestId());

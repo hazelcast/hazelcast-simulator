@@ -11,6 +11,7 @@ import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkersOperation;
 import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
@@ -146,7 +147,7 @@ public class WorkerOperationProcessorTest {
         runPhase(testId, TestPhase.SETUP);
         runTest(testId);
 
-        exceptionLogger.assertException(RuntimeException.class);
+        exceptionLogger.assertException(TestException.class);
     }
 
     @Test
