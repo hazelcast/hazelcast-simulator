@@ -7,6 +7,7 @@ import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -79,13 +80,13 @@ public class MapTransactionContextConflictTest {
         public void run() {
             while (!testContext.isStopped()) {
 
-                List<KeyIncrementPair> potentialIncrements = new ArrayList();
+                List<KeyIncrementPair> potentialIncrements = new ArrayList<KeyIncrementPair>();
                 for (int i = 0; i < maxKeysPerTxn; i++) {
                     KeyIncrementPair p = new KeyIncrementPair(random, keyCount, MAX_INCREMENT);
                     potentialIncrements.add(p);
                 }
 
-                List<KeyIncrementPair> putIncrements = new ArrayList();
+                List<KeyIncrementPair> putIncrements = new ArrayList<KeyIncrementPair>();
 
                 TransactionContext context = targetInstance.newTransactionContext();
                 try {
@@ -106,10 +107,9 @@ public class MapTransactionContextConflictTest {
                         localIncrements[p.key] += p.increment;
                     }
                 } catch (TransactionException e) {
-
                     LOGGER.warning(basename + ": commit fail. tried key increments=" + putIncrements + " " + e.getMessage());
                     if (throwCommitException) {
-                        throw new RuntimeException(e);
+                        throw new TestException(e);
                     }
 
                     try {
@@ -121,7 +121,7 @@ public class MapTransactionContextConflictTest {
                         count.failedRoles++;
 
                         if (throwRollBackException) {
-                            throw new RuntimeException(rollBack);
+                            throw new TestException(rollBack);
                         }
                     }
                 }

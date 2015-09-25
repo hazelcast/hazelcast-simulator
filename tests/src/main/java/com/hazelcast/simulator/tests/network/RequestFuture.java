@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.tests.network;
 
+import com.hazelcast.simulator.test.TestException;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -61,7 +63,7 @@ public class RequestFuture implements Future {
         lock.lock();
         try {
             if (result != null) {
-                throw new RuntimeException("Result should be null");
+                throw new TestException("result should be null");
             }
             result = Boolean.TRUE;
             condition.signal();
@@ -72,7 +74,7 @@ public class RequestFuture implements Future {
 
     public void reset() {
         if (result == null) {
-            throw new RuntimeException("result can't be null");
+            throw new TestException("result can't be null");
         }
         result = null;
     }

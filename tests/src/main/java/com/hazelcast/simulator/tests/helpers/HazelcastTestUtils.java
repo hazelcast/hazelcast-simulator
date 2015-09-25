@@ -32,6 +32,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.map.impl.proxy.MapProxyImpl;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.spi.OperationService;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 
@@ -123,9 +124,9 @@ public final class HazelcastTestUtils {
                 }
                 result.put(member, value);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                throw new TestException(e);
             } catch (ExecutionException e) {
-                throw new RuntimeException(e);
+                throw new TestException(e);
             }
         }
 
@@ -188,7 +189,11 @@ public final class HazelcastTestUtils {
     }
 
     public static OperationService getOperationService(HazelcastInstance hz) {
-        NodeEngineImpl nodeEngine = getNode(hz).getNodeEngine();
+        Node node = getNode(hz);
+        if (node == null) {
+            throw new NullPointerException("node is null in Hazelcast instance " + hz);
+        }
+        NodeEngineImpl nodeEngine = node.getNodeEngine();
         try {
             return nodeEngine.getOperationService();
         } catch (NoSuchMethodError e) {

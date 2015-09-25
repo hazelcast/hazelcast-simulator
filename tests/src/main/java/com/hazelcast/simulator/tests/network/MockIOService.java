@@ -22,6 +22,7 @@ import com.hazelcast.nio.tcp.ReadHandler;
 import com.hazelcast.nio.tcp.SocketChannelWrapperFactory;
 import com.hazelcast.nio.tcp.TcpIpConnection;
 import com.hazelcast.nio.tcp.WriteHandler;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.spi.EventFilter;
 import com.hazelcast.spi.EventRegistration;
 import com.hazelcast.spi.EventService;
@@ -154,7 +155,7 @@ public class MockIOService implements IOService {
     @Override
     public void shouldConnectTo(Address address) {
         if (thisAddress.equals(address)) {
-            throw new RuntimeException("Connecting to self! " + address);
+            throw new TestException("Connecting to self: %s vs. %s", thisAddress, address);
         }
     }
 

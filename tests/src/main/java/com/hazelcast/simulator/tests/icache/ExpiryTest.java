@@ -22,6 +22,7 @@ import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -142,11 +143,11 @@ public class ExpiryTest {
                             f.get();
                             counter.getAsyncExpiry++;
                         } catch (Exception e) {
-                            throw new RuntimeException(e);
+                            throw new TestException(e);
                         }
                         break;
                     default:
-                        throw new UnsupportedOperationException("Unknown operation" + operation);
+                        throw new UnsupportedOperationException("Unknown operation " + operation);
                 }
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);

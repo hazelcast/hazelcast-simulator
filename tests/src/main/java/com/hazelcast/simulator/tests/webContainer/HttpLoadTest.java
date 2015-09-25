@@ -3,6 +3,7 @@ package com.hazelcast.simulator.tests.webContainer;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -96,7 +97,7 @@ public class HttpLoadTest {
                     putKeyValues.put(key, res);
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new TestException(e);
             }
         }
 
@@ -121,7 +122,7 @@ public class HttpLoadTest {
                             throw new UnsupportedOperationException();
                     }
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new TestException(e);
                 }
             }
         }

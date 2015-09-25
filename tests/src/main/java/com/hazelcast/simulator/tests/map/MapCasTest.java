@@ -3,6 +3,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -85,10 +86,10 @@ public class MapCasTest {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         protected void beforeRun() {
-            if (map.size() != keyCount) {
-                throw new RuntimeException("Warmup has not run since the map is not filled correctly, found size: " + map.size());
+            int size = map.size();
+            if (size != keyCount) {
+                throw new TestException("Warmup has not run since the map is not filled correctly, found size: %s", size);
             }
-
             for (int i = 0; i < keyCount; i++) {
                 result.put(i, 0L);
             }

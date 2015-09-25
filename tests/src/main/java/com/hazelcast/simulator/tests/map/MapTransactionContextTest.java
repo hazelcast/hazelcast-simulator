@@ -5,6 +5,7 @@ import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
@@ -64,7 +65,7 @@ public class MapTransactionContextTest {
                 LOGGER.severe("----------------------tx exception -------------------------", e);
 
                 if (failOnException) {
-                    throw new RuntimeException(e);
+                    throw new TestException(e);
                 }
 
                 transactionContext.rollbackTransaction();

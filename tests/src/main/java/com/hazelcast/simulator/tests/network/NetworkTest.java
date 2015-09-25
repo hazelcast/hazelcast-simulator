@@ -17,6 +17,7 @@ import com.hazelcast.nio.tcp.TcpIpConnectionManager;
 import com.hazelcast.nio.tcp.nonblocking.NonBlockingIOThreadingModel;
 import com.hazelcast.nio.tcp.spinning.SpinningIOThreadingModel;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -193,14 +194,14 @@ public class NetworkTest {
             Packet requestPacket = new Packet(payload, workerId);
 
             if (!connection.write(requestPacket)) {
-                throw new RuntimeException("Failed to write packet to connection:" + connection);
+                throw new TestException("Failed to write packet to connection %s", connection);
             }
 
             try {
                 responseFuture.get(requestTimeout, requestTimeUnit);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to receive request from connection:"
-                        + connection + " within timeout:" + requestTimeout + " " + requestTimeUnit);
+                throw new TestException("Failed to receive request from connection %s within timeout %d %s", connection,
+                        requestTimeout, requestTimeUnit);
             }
             responseFuture.reset();
         }

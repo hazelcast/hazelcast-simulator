@@ -7,6 +7,7 @@ import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -103,7 +104,7 @@ public class MapTransactionGetForUpdateTest {
                             LOGGER.warning(basename + ": commit   fail key=" + key + " inc=" + increment, commitFailedException);
 
                             if (rethrowAllException) {
-                                throw new RuntimeException(commitFailedException);
+                                throw new TestException(commitFailedException);
                             }
 
                             context.rollbackTransaction();
@@ -113,7 +114,7 @@ public class MapTransactionGetForUpdateTest {
                             count.failedRoles++;
 
                             if (rethrowRollBackException) {
-                                throw new RuntimeException(commitFailedException);
+                                throw new TestException(commitFailedException);
                             }
                         }
                     }

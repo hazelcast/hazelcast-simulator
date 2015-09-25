@@ -20,6 +20,7 @@ import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -142,7 +143,7 @@ public class QueueTest {
                 toQueue.put(0L);
                 totalCounter.addAndGet(iteration);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                throw new TestException(e);
             }
         }
     }

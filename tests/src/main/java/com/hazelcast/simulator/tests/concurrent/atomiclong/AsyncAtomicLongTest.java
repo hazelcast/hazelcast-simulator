@@ -23,6 +23,7 @@ import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -176,9 +177,9 @@ public class AsyncAtomicLongTest {
                         try {
                             batchFuture.get();
                         } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
+                            throw new TestException(e);
                         } catch (ExecutionException e) {
-                            throw new RuntimeException(e);
+                            throw new TestException(e);
                         }
                     }
                     batch.clear();

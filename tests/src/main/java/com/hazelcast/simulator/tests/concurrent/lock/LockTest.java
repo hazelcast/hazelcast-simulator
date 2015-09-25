@@ -6,6 +6,7 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -128,7 +129,7 @@ public class LockTest {
 
                     try {
                         if (account1.get() < 0 || account2.get() < 0) {
-                            throw new RuntimeException("Amount on account can't be smaller than 0");
+                            throw new TestException("Amount on account can't be smaller than 0");
                         }
 
                         if (account1.get() < a) {

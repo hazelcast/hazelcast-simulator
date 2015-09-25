@@ -22,6 +22,7 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -123,9 +124,9 @@ public class ExecutorTest {
                     try {
                         future.get();
                     } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+                        throw new TestException(e);
                     } catch (ExecutionException e) {
-                        throw new RuntimeException(e);
+                        throw new TestException(e);
                     }
                 }
 

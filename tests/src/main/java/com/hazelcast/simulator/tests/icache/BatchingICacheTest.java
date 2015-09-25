@@ -7,6 +7,7 @@ import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -147,7 +148,7 @@ public class BatchingICacheTest {
                 case GET:
                     return cache.getAsync(key);
                 default:
-                    throw new RuntimeException("Unknown operation '" + operation + "' selected.");
+                    throw new UnsupportedOperationException("Unknown operation " + operation);
             }
         }
 
@@ -159,7 +160,7 @@ public class BatchingICacheTest {
                     } catch (RuntimeException e) {
                         throw e;
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new TestException(e);
                     }
                 }
                 futureList.clear();

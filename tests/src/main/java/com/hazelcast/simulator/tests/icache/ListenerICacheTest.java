@@ -7,6 +7,7 @@ import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -187,7 +188,7 @@ public class ListenerICacheTest {
                         future.get();
                         counter.getAsyncExpiry++;
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new TestException(e);
                     }
                     break;
 

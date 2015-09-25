@@ -17,6 +17,7 @@ import com.hazelcast.mapreduce.Mapper;
 import com.hazelcast.mapreduce.Reducer;
 import com.hazelcast.mapreduce.ReducerFactory;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -65,8 +66,8 @@ public class MapReduceTest {
         operationCounterList = targetInstance.getList(baseName + "OperationCounter");
 
         operationSelectorBuilder.addOperation(Operation.MAP_REDUCE, mapReduceProb)
-                                .addOperation(Operation.GET_MAP_ENTRY, getMapEntryProb)
-                                .addOperation(Operation.MODIFY_MAP_ENTRY, modifyEntryProb);
+                .addOperation(Operation.GET_MAP_ENTRY, getMapEntryProb)
+                .addOperation(Operation.MODIFY_MAP_ENTRY, modifyEntryProb);
     }
 
     @Warmup(global = true)
@@ -138,7 +139,7 @@ public class MapReduceTest {
                     }
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new TestException(e);
             }
 
             operationCounter.mapReduce++;

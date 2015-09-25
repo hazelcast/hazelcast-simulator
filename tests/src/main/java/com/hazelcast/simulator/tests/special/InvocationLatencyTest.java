@@ -4,6 +4,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -57,18 +58,18 @@ public class InvocationLatencyTest {
 
             interfaceInstance = getInterfaceInstance();
             if (interfaceInstance == null) {
-                throw new RuntimeException("InvocationTestClassRuntime could not be compiled!");
+                throw new TestException("InvocationTestClassRuntime could not be compiled!");
             }
 
             Class classType = Class.forName("com.hazelcast.simulator.tests.special.helpers.InvocationTestClass");
             reflectionInstance = classType.newInstance();
             reflectionMethod = getMethodByName(classType, "shouldBeCalled");
             if (reflectionInstance == null || reflectionMethod == null) {
-                throw new RuntimeException("InvocationTestClass could not be found via reflection!");
+                throw new TestException("InvocationTestClass could not be found via reflection!");
             }
         } catch (Exception e) {
             ExceptionReporter.report(testContext.getTestId(), e);
-            throw new RuntimeException(e);
+            throw new TestException(e);
         }
     }
 

@@ -6,6 +6,7 @@ import com.hazelcast.core.IdGenerator;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -15,7 +16,6 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Random;
 
-import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -118,7 +118,7 @@ public class GrowingMapTest {
 
                 long found = map.get(key);
                 if (found != value) {
-                    throw new RuntimeException("Unexpected value found");
+                    throw new TestException("Unexpected value found");
                 }
 
                 readIteration++;
@@ -137,7 +137,7 @@ public class GrowingMapTest {
                 if (useRemove) {
                     long found = map.remove(key);
                     if (found != value) {
-                        throw new RuntimeException(format("Expected: %d, but was %d", value, found));
+                        throw new TestException("Expected: %d, but was %d", value, found);
                     }
                 } else {
                     map.delete(key);
