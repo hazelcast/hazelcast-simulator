@@ -15,20 +15,31 @@
  */
 package com.hazelcast.simulator.probes.probes.impl;
 
+import org.HdrHistogram.Histogram;
+
 import java.util.concurrent.TimeUnit;
 
-public class MaxLatencyProbe extends AbstractIntervalProbe<MaxLatencyResult, MaxLatencyProbe> {
+/**
+ * Measures the latency distribution of a test.
+ */
+public class HdrProbe extends AbstractIntervalProbe<HdrResult, HdrProbe> {
 
-    private long maxLatency;
+    public static final long MAXIMUM_LATENCY = TimeUnit.SECONDS.toMicros(60);
+
+    private final Histogram histogram = new Histogram(MAXIMUM_LATENCY, 4);
 
     @Override
     public void recordValue(long latencyNanos) {
-        maxLatency = Math.max(maxLatency, latencyNanos);
-        invocations++;
+        histogram.recordValue((int) TimeUnit.NANOSECONDS.toMicros(latencyNanos));
     }
 
     @Override
-    public MaxLatencyResult getResult() {
-        return new MaxLatencyResult(TimeUnit.NANOSECONDS.toMillis(maxLatency));
+    public long getInvocationCount() {
+        return histogram.getTotalCount();
+    }
+
+    @Override
+    public HdrResult getResult() {
+        return new HdrResult(histogram);
     }
 }

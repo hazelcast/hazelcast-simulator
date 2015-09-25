@@ -6,8 +6,8 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionResult;
+import com.hazelcast.simulator.probes.probes.impl.HdrProbe;
+import com.hazelcast.simulator.probes.probes.impl.HdrResult;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -33,7 +33,7 @@ public class ExternalClientTest {
     public int expectedResultSize = 0;
 
     SimpleProbe externalClientThroughput;
-    IntervalProbe<HdrLatencyDistributionResult, HdrLatencyDistributionProbe> externalClientLatency;
+    IntervalProbe<HdrResult, HdrProbe> externalClientLatency;
 
     private HazelcastInstance hazelcastInstance;
     private boolean isExternalResultsCollectorInstance;

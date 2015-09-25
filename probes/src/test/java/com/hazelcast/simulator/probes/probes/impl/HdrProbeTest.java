@@ -15,35 +15,35 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-public class HdrLatencyDistributionProbeTest {
+public class HdrProbeTest {
 
-    private HdrLatencyDistributionProbe hdrLatencyDistributionProbe = new HdrLatencyDistributionProbe();
+    private HdrProbe hdrProbe = new HdrProbe();
 
     @Test
     public void testDisable() {
-        assertDisable(hdrLatencyDistributionProbe);
+        assertDisable(hdrProbe);
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void testSetValues() {
-        hdrLatencyDistributionProbe.setValues(123, 125812);
+        hdrProbe.setValues(123, 125812);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testDoneWithoutStarted() {
-        hdrLatencyDistributionProbe.done();
+        hdrProbe.done();
     }
 
     @Test
     public void testInvocationCount() {
-        hdrLatencyDistributionProbe.started();
-        hdrLatencyDistributionProbe.done();
-        hdrLatencyDistributionProbe.done();
-        hdrLatencyDistributionProbe.done();
-        hdrLatencyDistributionProbe.done();
-        hdrLatencyDistributionProbe.done();
+        hdrProbe.started();
+        hdrProbe.done();
+        hdrProbe.done();
+        hdrProbe.done();
+        hdrProbe.done();
+        hdrProbe.done();
 
-        assertEquals(5, hdrLatencyDistributionProbe.getInvocationCount());
+        assertEquals(5, hdrProbe.getInvocationCount());
     }
 
     @Test
@@ -51,12 +51,12 @@ public class HdrLatencyDistributionProbeTest {
         int expectedCount = 1;
         long expectedLatency = 150;
 
-        hdrLatencyDistributionProbe.started();
+        hdrProbe.started();
         sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
-        hdrLatencyDistributionProbe.done();
+        hdrProbe.done();
 
-        HdrLatencyDistributionResult result = hdrLatencyDistributionProbe.getResult();
-        assertResult(result, new HdrLatencyDistributionProbe().getResult());
+        HdrResult result = hdrProbe.getResult();
+        assertResult(result, new HdrProbe().getResult());
         assertHistogram(result.getHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
     }
 
@@ -68,12 +68,12 @@ public class HdrLatencyDistributionProbeTest {
         long expectedMaxValue = 1000;
         long expectedMeanValue = (long) ((latencyValue + expectedMinValue + expectedMaxValue) / (double) expectedCount);
 
-        hdrLatencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(latencyValue));
-        hdrLatencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
-        hdrLatencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
+        hdrProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(latencyValue));
+        hdrProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
+        hdrProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
 
-        HdrLatencyDistributionResult result = hdrLatencyDistributionProbe.getResult();
-        assertResult(result, new HdrLatencyDistributionProbe().getResult());
+        HdrResult result = hdrProbe.getResult();
+        assertResult(result, new HdrProbe().getResult());
         assertHistogram(result.getHistogram(), expectedCount, expectedMinValue, expectedMaxValue, expectedMeanValue);
     }
 
@@ -84,25 +84,25 @@ public class HdrLatencyDistributionProbeTest {
         long expectedMaxValue = 500;
         long expectedMeanValue = (long) ((expectedMinValue + expectedMaxValue) / (double) expectedCount);
 
-        hdrLatencyDistributionProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
+        hdrProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
 
-        HdrLatencyDistributionResult result1 = hdrLatencyDistributionProbe.getResult();
+        HdrResult result1 = hdrProbe.getResult();
         assertSingleResult(result1);
 
-        HdrLatencyDistributionProbe hdrLatencyDistributionProbe2 = new HdrLatencyDistributionProbe();
-        hdrLatencyDistributionProbe2.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
+        HdrProbe hdrProbe2 = new HdrProbe();
+        hdrProbe2.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
 
-        HdrLatencyDistributionResult result2 = hdrLatencyDistributionProbe2.getResult();
+        HdrResult result2 = hdrProbe2.getResult();
         assertSingleResult(result2);
 
         assertNotEquals(result1.hashCode(), result2.hashCode());
 
-        HdrLatencyDistributionResult combined = result1.combine(result2);
-        assertResult(combined, new HdrLatencyDistributionProbe().getResult());
+        HdrResult combined = result1.combine(result2);
+        assertResult(combined, new HdrProbe().getResult());
         assertHistogram(combined.getHistogram(), expectedCount, expectedMinValue, expectedMaxValue, expectedMeanValue);
     }
 
-    private static void assertSingleResult(HdrLatencyDistributionResult result) {
+    private static void assertSingleResult(HdrResult result) {
         assertTrue(result != null);
         assertEqualsStringFormat("Expected %d records, but was %d", 1L, result.getHistogram().getTotalCount());
     }

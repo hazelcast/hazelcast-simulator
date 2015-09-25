@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.probes.probes;
 
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionResult;
-import com.hazelcast.simulator.probes.probes.impl.LatencyDistributionResult;
-import com.hazelcast.simulator.probes.probes.impl.MaxLatencyResult;
-import com.hazelcast.simulator.probes.probes.impl.OperationsPerSecResult;
+import com.hazelcast.simulator.probes.probes.impl.HdrResult;
+import com.hazelcast.simulator.probes.probes.impl.ThroughputResult;
 import org.HdrHistogram.Histogram;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -38,13 +36,6 @@ import java.util.zip.DataFormatException;
 
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.HDR_LATENCY_DATA;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.INVOCATIONS;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_BUCKET;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_BUCKETS;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_MAX_VALUE;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_STEP;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_UPPER_BOUND;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.LATENCY_DIST_VALUES;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.MAX_LATENCY;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.OPERATIONS_PER_SECOND;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBES_RESULT;
@@ -106,14 +97,10 @@ public final class ProbesResultXmlReader {
         String type = startElement.getAttributeByName(new QName(PROBE_TYPE.getName())).getValue();
 
         Result probeResult = null;
-        if (OperationsPerSecResult.XML_TYPE.equals(type)) {
+        if (ThroughputResult.XML_TYPE.equals(type)) {
             probeResult = parseOperationsPerSecResult(reader);
-        } else if (MaxLatencyResult.XML_TYPE.equals(type)) {
-            probeResult = parseMaxLatencyResult(reader);
-        } else if (HdrLatencyDistributionResult.XML_TYPE.equals(type)) {
+        } else if (HdrResult.XML_TYPE.equals(type)) {
             probeResult = parseHdrLatencyProbeResult(reader);
-        } else if (LatencyDistributionResult.XML_TYPE.equals(type)) {
-            probeResult = parseLatencyDistributionResult(reader);
         }
         result.put(name, probeResult);
     }
@@ -140,28 +127,8 @@ public final class ProbesResultXmlReader {
                     operationsPerSecond = Double.parseDouble(parseCharsAndEndCurrentElement(reader));
                 }
                 if (invocations != null && operationsPerSecond != null) {
-                    return new OperationsPerSecResult(invocations, operationsPerSecond);
+                    return new ThroughputResult(invocations, operationsPerSecond);
                 }
-            }
-        }
-        throw new XMLStreamException("Unexpected end of stream");
-    }
-
-    private static Result parseMaxLatencyResult(XMLEventReader reader) throws XMLStreamException {
-        Long maxLatency = null;
-        while (reader.hasNext()) {
-            XMLEvent xmlEvent = reader.nextEvent();
-            if (xmlEvent.isCharacters()) {
-                maxLatency = Long.parseLong(xmlEvent.asCharacters().getData());
-            } else if (xmlEvent.isEndElement()) {
-                EndElement endElement = xmlEvent.asEndElement();
-                if (!MAX_LATENCY.matches(endElement.getName().getLocalPart())) {
-                    throw new XMLStreamException("Unexpected end element " + endElement.getName());
-                }
-                if (maxLatency == null) {
-                    throw new XMLStreamException("Unexpected end element " + MAX_LATENCY.getName());
-                }
-                return new MaxLatencyResult(maxLatency);
             }
         }
         throw new XMLStreamException("Unexpected end of stream");
@@ -181,80 +148,13 @@ public final class ProbesResultXmlReader {
                 try {
                     byte[] bytes = Base64.decodeBase64(encodedData);
                     Histogram histogram = Histogram.decodeFromCompressedByteBuffer(ByteBuffer.wrap(bytes), 0);
-                    return new HdrLatencyDistributionResult(histogram);
+                    return new HdrResult(histogram);
                 } catch (DataFormatException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
         throw new XMLStreamException("Unexpected end of stream");
-    }
-
-    private static Result parseLatencyDistributionResult(XMLEventReader reader) throws XMLStreamException {
-        Integer step = null;
-        Integer maxValue = null;
-
-        while (reader.hasNext()) {
-            XMLEvent xmlEvent = reader.nextEvent();
-            if (xmlEvent.isStartElement()) {
-                StartElement startElement = xmlEvent.asStartElement();
-                if (LATENCY_DIST_STEP.matches(startElement.getName().getLocalPart())) {
-                    if (step != null) {
-                        throw new XMLStreamException("Unexpected element " + LATENCY_DIST_STEP.getName());
-                    }
-                    step = Integer.parseInt(parseCharsAndEndCurrentElement(reader));
-                } else if (LATENCY_DIST_MAX_VALUE.matches(startElement.getName().getLocalPart())) {
-                    if (maxValue != null) {
-                        throw new XMLStreamException("Unexpected element " + LATENCY_DIST_MAX_VALUE.getName());
-                    }
-                    maxValue = Integer.parseInt(parseCharsAndEndCurrentElement(reader));
-                } else if (LATENCY_DIST_BUCKETS.matches(startElement.getName().getLocalPart())) {
-                    if (step == null || maxValue == null) {
-                        throw new XMLStreamException("Unexpected element " + LATENCY_DIST_BUCKETS.getName());
-                    }
-                    LinearHistogram histogram = new LinearHistogram(maxValue, step);
-                    parseBuckets(reader, histogram);
-                    return new LatencyDistributionResult(histogram);
-                }
-            }
-        }
-        throw new XMLStreamException("Unexpected end of the document");
-    }
-
-    private static void parseBuckets(XMLEventReader reader, LinearHistogram histogram) throws XMLStreamException {
-        while (reader.hasNext()) {
-            XMLEvent xmlEvent = reader.nextEvent();
-            if (xmlEvent.isStartElement()) {
-                StartElement startElement = xmlEvent.asStartElement();
-                if (LATENCY_DIST_BUCKET.matches(startElement.getName().getLocalPart())) {
-                    parseBucket(reader, startElement, histogram);
-                }
-            } else if (xmlEvent.isEndElement()) {
-                EndElement endElement = xmlEvent.asEndElement();
-                if (!LATENCY_DIST_BUCKETS.matches(endElement.getName().getLocalPart())) {
-                    throw new XMLStreamException("Unexpected end element " + endElement.getName());
-                }
-                return;
-            }
-        }
-    }
-
-    private static void parseBucket(XMLEventReader reader, StartElement element, LinearHistogram histogram)
-            throws XMLStreamException {
-        String upperBound = element.getAttributeByName(new QName(LATENCY_DIST_UPPER_BOUND.getName())).getValue();
-        String values = element.getAttributeByName(new QName(LATENCY_DIST_VALUES.getName())).getValue();
-        histogram.addMultipleValues(Integer.parseInt(upperBound) - 1, Integer.parseInt(values));
-
-        while (reader.hasNext()) {
-            XMLEvent xmlEvent = reader.nextEvent();
-            if (xmlEvent.isEndElement()) {
-                EndElement endElement = xmlEvent.asEndElement();
-                if (LATENCY_DIST_BUCKET.getName().equals(endElement.getName().getLocalPart())) {
-                    return;
-                }
-            }
-        }
-        throw new XMLStreamException("Unexpected end of the document");
     }
 
     private static String parseCharsAndEndCurrentElement(XMLEventReader reader) throws XMLStreamException {

@@ -1,10 +1,8 @@
 package com.hazelcast.simulator.probes.probes;
 
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionResult;
-import com.hazelcast.simulator.probes.probes.impl.LatencyDistributionResult;
-import com.hazelcast.simulator.probes.probes.impl.MaxLatencyResult;
-import com.hazelcast.simulator.probes.probes.impl.OperationsPerSecResult;
+import com.hazelcast.simulator.probes.probes.impl.HdrProbe;
+import com.hazelcast.simulator.probes.probes.impl.HdrResult;
+import com.hazelcast.simulator.probes.probes.impl.ThroughputResult;
 import org.HdrHistogram.Histogram;
 import org.junit.Test;
 
@@ -45,7 +43,7 @@ public class ProbesResultXmlTest {
 
     @Test
     public void testHdrLatencyProbeResult() throws Exception {
-        HdrLatencyDistributionResult originalResult = createHdrLatencyDistribution();
+        HdrResult originalResult = createHdrLatencyDistribution();
         resultMap.put("hdrLatency", originalResult);
 
         Map<String, Result> result = serializeAndDeserializeAgain(resultMap);
@@ -54,8 +52,8 @@ public class ProbesResultXmlTest {
 
     @Test
     public void testHdrLatencyProbeResult_combined() throws Exception {
-        HdrLatencyDistributionResult originalResult = createHdrLatencyDistribution();
-        HdrLatencyDistributionResult anotherResult = createHdrLatencyDistribution();
+        HdrResult originalResult = createHdrLatencyDistribution();
+        HdrResult anotherResult = createHdrLatencyDistribution();
         originalResult = originalResult.combine(anotherResult);
         resultMap.put("hdrLatency", originalResult);
 
@@ -64,48 +62,8 @@ public class ProbesResultXmlTest {
     }
 
     @Test
-    public void testMaxLatencyResult() throws Exception {
-        MaxLatencyResult originalResult = new MaxLatencyResult(getRandomLatency());
-        resultMap.put("maxLatency", originalResult);
-
-        Map<String, Result> result = serializeAndDeserializeAgain(resultMap);
-        assertEquals(originalResult, result.get("maxLatency"));
-    }
-
-    @Test
-    public void testMaxLatencyResult_combined() throws Exception {
-        MaxLatencyResult originalResult = new MaxLatencyResult(getRandomLatency());
-        MaxLatencyResult anotherResult = new MaxLatencyResult(getRandomLatency());
-        originalResult = originalResult.combine(anotherResult);
-        resultMap.put("maxLatency", originalResult);
-
-        Map<String, Result> result = serializeAndDeserializeAgain(resultMap);
-        assertEquals(originalResult, result.get("maxLatency"));
-    }
-
-    @Test
-    public void testLatencyDistributionResult() throws Exception {
-        LatencyDistributionResult originalResult = createLatencyDistribution();
-        resultMap.put("latencyDistribution", originalResult);
-
-        Map<String, Result> read = serializeAndDeserializeAgain(resultMap);
-        assertEquals(originalResult, read.get("latencyDistribution"));
-    }
-
-    @Test
-    public void testLatencyDistributionResult_combined() throws Exception {
-        LatencyDistributionResult originalResult = createLatencyDistribution();
-        LatencyDistributionResult anotherResult = createLatencyDistribution();
-        originalResult = originalResult.combine(anotherResult);
-        resultMap.put("latencyDistribution", originalResult);
-
-        Map<String, Result> read = serializeAndDeserializeAgain(resultMap);
-        assertEquals(originalResult, read.get("latencyDistribution"));
-    }
-
-    @Test
     public void testOperationsPerSecResult() throws Exception {
-        OperationsPerSecResult originalResult = new OperationsPerSecResult(100000, 1234.5);
+        ThroughputResult originalResult = new ThroughputResult(100000, 1234.5);
         resultMap.put("operationsPerSec", originalResult);
 
         Map<String, Result> read = serializeAndDeserializeAgain(resultMap);
@@ -114,8 +72,8 @@ public class ProbesResultXmlTest {
 
     @Test
     public void testOperationsPerSecResult_combined() throws Exception {
-        OperationsPerSecResult originalResult = new OperationsPerSecResult(100000, 1234.5);
-        OperationsPerSecResult anotherResult = new OperationsPerSecResult(200000, 5432.1);
+        ThroughputResult originalResult = new ThroughputResult(100000, 1234.5);
+        ThroughputResult anotherResult = new ThroughputResult(200000, 5432.1);
         originalResult = originalResult.combine(anotherResult);
         resultMap.put("operationsPerSec", originalResult);
 
@@ -125,24 +83,20 @@ public class ProbesResultXmlTest {
 
     @Test
     public void multipleProbes() throws Exception {
-        HdrLatencyDistributionResult result1 = createHdrLatencyDistribution();
+        HdrResult result1 = createHdrLatencyDistribution();
         resultMap.put("result1", result1);
 
-        LatencyDistributionResult result2 = createLatencyDistribution();
+        ThroughputResult result2 = new ThroughputResult(100000, 1234.5);
         resultMap.put("result2", result2);
-
-        MaxLatencyResult result3 = new MaxLatencyResult(Integer.MAX_VALUE);
-        resultMap.put("result3", result3);
 
         Map<String, Result> read = serializeAndDeserializeAgain(resultMap);
         assertEquals(result1, read.get("result1"));
         assertEquals(result2, read.get("result2"));
-        assertEquals(result3, read.get("result3"));
     }
 
     @Test
     public void write_toFile() throws FileNotFoundException {
-        HdrLatencyDistributionResult originalResult = createHdrLatencyDistribution();
+        HdrResult originalResult = createHdrLatencyDistribution();
         resultMap.put("hdrLatencyDistribution", originalResult);
 
         File tmpFile = new File("probes.xml");
@@ -161,7 +115,7 @@ public class ProbesResultXmlTest {
 
     @Test(expected = Exception.class)
     public void write_toDirectory() {
-        LatencyDistributionResult original = createLatencyDistribution();
+        ThroughputResult original = new ThroughputResult(100000, 1234.5);
         resultMap.put("latencyDistribution", original);
 
         File tmpDirectory = new File("isDirectory");
@@ -177,20 +131,12 @@ public class ProbesResultXmlTest {
         return random.nextInt(MAX_LATENCY);
     }
 
-    private static HdrLatencyDistributionResult createHdrLatencyDistribution() {
-        Histogram histogram = new Histogram(HdrLatencyDistributionProbe.MAXIMUM_LATENCY, 4);
+    private static HdrResult createHdrLatencyDistribution() {
+        Histogram histogram = new Histogram(HdrProbe.MAXIMUM_LATENCY, 4);
         for (int i = 0; i < LATENCY_RECORD_COUNT; i++) {
             histogram.recordValue(getRandomLatency());
         }
-        return new HdrLatencyDistributionResult(histogram);
-    }
-
-    private static LatencyDistributionResult createLatencyDistribution() {
-        LinearHistogram histogram = new LinearHistogram(100, 1);
-        for (int i = 0; i < LATENCY_RECORD_COUNT; i++) {
-            histogram.addValue(getRandomLatency());
-        }
-        return new LatencyDistributionResult(histogram);
+        return new HdrResult(histogram);
     }
 
     private static Map<String, Result> serializeAndDeserializeAgain(Map<String, Result> resultMap) {

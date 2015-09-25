@@ -15,25 +15,17 @@
  */
 package com.hazelcast.simulator.probes.probes.impl;
 
-import com.hazelcast.simulator.probes.probes.LinearHistogram;
-
 import java.util.concurrent.TimeUnit;
 
-public class LatencyDistributionProbe extends AbstractIntervalProbe<LatencyDistributionResult, LatencyDistributionProbe> {
+/**
+ * Measures the throughput of a test.
+ */
+public class ThroughputProbe extends AbstractSimpleProbe<ThroughputResult, ThroughputProbe> {
 
-    private static final int MAXIMUM_LATENCY = (int) TimeUnit.SECONDS.toMicros(5);
-    private static final int STEP = 10;
-
-    private final LinearHistogram histogram = new LinearHistogram(MAXIMUM_LATENCY, STEP);
-
-    @Override
-    public void recordValue(long latencyNanos) {
-        histogram.addValue((int) TimeUnit.NANOSECONDS.toMicros(latencyNanos));
-        invocations++;
-    }
+    private static final double ONE_SECOND_IN_MS = TimeUnit.SECONDS.toMillis(1);
 
     @Override
-    public LatencyDistributionResult getResult() {
-        return new LatencyDistributionResult(histogram);
+    public ThroughputResult getResult() {
+        return new ThroughputResult(invocations, ((invocations * ONE_SECOND_IN_MS) / durationMs));
     }
 }

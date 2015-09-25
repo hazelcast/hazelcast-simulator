@@ -27,7 +27,7 @@ public class ConcurrentProbeTest {
     @SuppressWarnings("unchecked")
     public void setUp() {
         config.addConfig("throughput", ProbesType.THROUGHPUT.getName());
-        config.addConfig("latency", ProbesType.MAX_LATENCY.getName());
+        config.addConfig("latency", ProbesType.HDR.getName());
         concurrentProbe = (ConcurrentProbe) createConcurrentProbe("throughput", SimpleProbe.class, config);
     }
 
@@ -49,8 +49,8 @@ public class ConcurrentProbeTest {
         assertNotEquals(concurrentProbe, threadLocalProbe2);
         assertNotEquals(threadLocalProbe1, threadLocalProbe2);
 
-        assertTrue(threadLocalProbe1 instanceof OperationsPerSecProbe);
-        assertTrue(threadLocalProbe2 instanceof OperationsPerSecProbe);
+        assertTrue(threadLocalProbe1 instanceof ThroughputProbe);
+        assertTrue(threadLocalProbe2 instanceof ThroughputProbe);
     }
 
     @Test
@@ -196,15 +196,15 @@ public class ConcurrentProbeTest {
 
         concurrentProbe.stopProbing(started + TimeUnit.SECONDS.toMillis(1));
 
-        OperationsPerSecResult result1 = (OperationsPerSecResult) probeTester1.threadLocalProbe.getResult();
+        ThroughputResult result1 = (ThroughputResult) probeTester1.threadLocalProbe.getResult();
         Long invocations1 = getObjectFromField(result1, "invocations");
         Double operationsPerSecond1 = getObjectFromField(result1, "operationsPerSecond");
 
-        OperationsPerSecResult result2 = (OperationsPerSecResult) probeTester2.threadLocalProbe.getResult();
+        ThroughputResult result2 = (ThroughputResult) probeTester2.threadLocalProbe.getResult();
         Long invocations2 = getObjectFromField(result2, "invocations");
         Double operationsPerSecond2 = getObjectFromField(result2, "operationsPerSecond");
 
-        OperationsPerSecResult combinedResult = (OperationsPerSecResult) concurrentProbe.getResult();
+        ThroughputResult combinedResult = (ThroughputResult) concurrentProbe.getResult();
         Long combinedInvocations = getObjectFromField(combinedResult, "invocations");
         Double combinedOperationsPerSecond = getObjectFromField(combinedResult, "operationsPerSecond");
 
