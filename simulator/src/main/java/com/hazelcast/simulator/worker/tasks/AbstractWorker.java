@@ -149,6 +149,15 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         return random;
     }
 
+    /**
+     * Returns the iteration count of the worker.
+     *
+     * @return iteration count
+     */
+    protected long getIteration() {
+        return iteration;
+    }
+
     void increaseIteration() {
         iteration++;
         if (logFrequency > 0 && iteration % logFrequency == 0) {
