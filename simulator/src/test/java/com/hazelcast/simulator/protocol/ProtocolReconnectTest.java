@@ -14,14 +14,17 @@ import static com.hazelcast.simulator.protocol.ProtocolUtil.AGENT_START_PORT;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_OPERATION;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_TEST_TIMEOUT_MILLIS;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertSingleTarget;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.getCoordinatorConnector;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.resetLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.sendFromCoordinator;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.setLogLevel;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.shutdownCoordinatorConnector;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startCoordinator;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startSimulatorComponents;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.stopSimulatorComponents;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
+import static org.junit.Assert.assertNull;
 
 public class ProtocolReconnectTest {
 
@@ -53,15 +56,49 @@ public class ProtocolReconnectTest {
         LOGGER.info("Starting second connection...");
         LOGGER.info("-------------------------------");
 
-        CoordinatorConnector connector = null;
+        CoordinatorConnector secondConnector = null;
         try {
-            connector = startCoordinator("127.0.0.1", AGENT_START_PORT, 1);
+            secondConnector = startCoordinator("127.0.0.1", AGENT_START_PORT, 1);
 
-            response = connector.write(destination, DEFAULT_OPERATION);
+            // assert that first connection is still working
+            response = sendFromCoordinator(destination);
+            assertSingleTarget(response, destination, SUCCESS);
+
+            // assert that second connection is working
+            response = secondConnector.write(destination, DEFAULT_OPERATION);
             assertSingleTarget(response, destination, SUCCESS);
         } finally {
-            if (connector != null) {
-                connector.shutdown();
+            if (secondConnector != null) {
+                secondConnector.shutdown();
+            }
+        }
+    }
+
+    @Ignore
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void reconnect() {
+        SimulatorAddress destination = new SimulatorAddress(AGENT, 1, 0, 0);
+
+        Response response = sendFromCoordinator(destination);
+        assertSingleTarget(response, destination, SUCCESS);
+
+        shutdownCoordinatorConnector();
+        assertNull(getCoordinatorConnector());
+
+        LOGGER.info("--------------------------");
+        LOGGER.info("Starting new connection...");
+        LOGGER.info("--------------------------");
+
+        CoordinatorConnector newConnector = null;
+        try {
+            newConnector = startCoordinator("127.0.0.1", AGENT_START_PORT, 1);
+
+            // assert that new connection is working
+            response = newConnector.write(destination, DEFAULT_OPERATION);
+            assertSingleTarget(response, destination, SUCCESS);
+        } finally {
+            if (newConnector != null) {
+                newConnector.shutdown();
             }
         }
     }

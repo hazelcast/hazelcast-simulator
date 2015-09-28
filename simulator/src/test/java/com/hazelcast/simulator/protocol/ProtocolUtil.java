@@ -91,11 +91,7 @@ class ProtocolUtil {
     static void stopSimulatorComponents() {
         ThreadSpawner spawner = new ThreadSpawner("shutdownSimulatorComponents", true);
 
-        LOGGER.info("Shutdown of Coordinator...");
-        if (coordinatorConnector != null) {
-            coordinatorConnector.shutdown();
-            coordinatorConnector = null;
-        }
+        shutdownCoordinatorConnector();
 
         LOGGER.info("Shutdown of Agents...");
         shutdownServerConnectors(agentConnectors, spawner);
@@ -107,6 +103,14 @@ class ProtocolUtil {
         spawner.awaitCompletion();
 
         LOGGER.info("Shutdown complete!");
+    }
+
+    static void shutdownCoordinatorConnector() {
+        LOGGER.info("Shutdown of Coordinator...");
+        if (coordinatorConnector != null) {
+            coordinatorConnector.shutdown();
+            coordinatorConnector = null;
+        }
     }
 
     private static <C extends ServerConnector> void shutdownServerConnectors(List<C> connectors, ThreadSpawner spawner) {
