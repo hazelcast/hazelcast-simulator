@@ -23,18 +23,9 @@ public enum ProbesResultXmlElements {
     PROBE_TYPE("type"),
 
     INVOCATIONS("invocations"),
-    OPERATIONS_PER_SECOND("operations-per-second"),
+    OPERATIONS_PER_SECOND("throughput"),
 
-    MAX_LATENCY("max-latency"),
-
-    HDR_LATENCY_DATA("data"),
-
-    LATENCY_DIST_STEP("step"),
-    LATENCY_DIST_MAX_VALUE("max-value"),
-    LATENCY_DIST_BUCKETS("buckets"),
-    LATENCY_DIST_BUCKET("bucket"),
-    LATENCY_DIST_UPPER_BOUND("upper-bound"),
-    LATENCY_DIST_VALUES("values");
+    HDR_LATENCY_DATA("data");
 
     private final String string;
 

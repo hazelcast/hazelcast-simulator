@@ -16,10 +16,8 @@
 package com.hazelcast.simulator.probes.probes;
 
 import com.hazelcast.simulator.probes.probes.impl.DisabledProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionProbe;
-import com.hazelcast.simulator.probes.probes.impl.LatencyDistributionProbe;
-import com.hazelcast.simulator.probes.probes.impl.MaxLatencyProbe;
-import com.hazelcast.simulator.probes.probes.impl.OperationsPerSecProbe;
+import com.hazelcast.simulator.probes.probes.impl.HdrProbe;
+import com.hazelcast.simulator.probes.probes.impl.ThroughputProbe;
 import com.hazelcast.simulator.probes.probes.impl.WorkerProbe;
 
 /**
@@ -29,10 +27,8 @@ public enum ProbesType {
 
     DISABLED("disabled", SimpleProbe.class, DisabledProbe.class),
     WORKER("worker", SimpleProbe.class, WorkerProbe.class),
-    THROUGHPUT("throughput", SimpleProbe.class, OperationsPerSecProbe.class),
-    LATENCY("latency", IntervalProbe.class, LatencyDistributionProbe.class),
-    MAX_LATENCY("maxLatency", IntervalProbe.class, MaxLatencyProbe.class),
-    HDR("hdr", IntervalProbe.class, HdrLatencyDistributionProbe.class);
+    THROUGHPUT("throughput", SimpleProbe.class, ThroughputProbe.class),
+    HDR("hdr", IntervalProbe.class, HdrProbe.class);
 
     private final String string;
 

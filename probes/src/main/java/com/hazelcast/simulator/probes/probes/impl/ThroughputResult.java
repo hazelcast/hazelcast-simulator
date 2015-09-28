@@ -25,24 +25,24 @@ import java.util.Locale;
 
 import static java.lang.String.format;
 
-public class OperationsPerSecResult implements Result<OperationsPerSecResult> {
+public class ThroughputResult implements Result<ThroughputResult> {
 
-    public static final String XML_TYPE = OperationsPerSecResult.class.getSimpleName();
+    public static final String XML_TYPE = ThroughputResult.class.getSimpleName();
 
     private final long invocations;
     private final double operationsPerSecond;
 
-    public OperationsPerSecResult(long invocations, double operationsPerSecond) {
+    public ThroughputResult(long invocations, double operationsPerSecond) {
         this.invocations = invocations;
         this.operationsPerSecond = operationsPerSecond;
     }
 
     @Override
-    public OperationsPerSecResult combine(OperationsPerSecResult other) {
+    public ThroughputResult combine(ThroughputResult other) {
         if (other == null) {
             return this;
         }
-        return new OperationsPerSecResult(
+        return new ThroughputResult(
                 invocations + other.invocations,
                 operationsPerSecond + other.operationsPerSecond);
     }
@@ -76,7 +76,7 @@ public class OperationsPerSecResult implements Result<OperationsPerSecResult> {
             return false;
         }
 
-        OperationsPerSecResult that = (OperationsPerSecResult) o;
+        ThroughputResult that = (ThroughputResult) o;
         if (that.invocations != invocations) {
             return false;
         }

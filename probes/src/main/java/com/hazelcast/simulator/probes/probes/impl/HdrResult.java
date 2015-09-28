@@ -28,13 +28,13 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
 @SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
-public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributionResult> {
+public class HdrResult implements Result<HdrResult> {
 
-    public static final String XML_TYPE = HdrLatencyDistributionResult.class.getSimpleName();
+    public static final String XML_TYPE = HdrResult.class.getSimpleName();
 
     private final Histogram histogram;
 
-    public HdrLatencyDistributionResult(Histogram histogram) {
+    public HdrResult(Histogram histogram) {
         this.histogram = histogram.copy();
     }
 
@@ -43,13 +43,13 @@ public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributi
     }
 
     @Override
-    public HdrLatencyDistributionResult combine(HdrLatencyDistributionResult other) {
+    public HdrResult combine(HdrResult other) {
         if (other == null) {
             return this;
         }
         Histogram combinedHistogram = histogram.copy();
         combinedHistogram.add(other.histogram);
-        return new HdrLatencyDistributionResult(combinedHistogram);
+        return new HdrResult(combinedHistogram);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class HdrLatencyDistributionResult implements Result<HdrLatencyDistributi
             return false;
         }
 
-        HdrLatencyDistributionResult that = (HdrLatencyDistributionResult) o;
+        HdrResult that = (HdrResult) o;
         if (histogram != null ? !histogram.equals(that.histogram) : that.histogram != null) {
             return false;
         }

@@ -5,7 +5,7 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.coordinator.remoting.NewProtocolAgentsClient;
 import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.probes.probes.impl.OperationsPerSecResult;
+import com.hazelcast.simulator.probes.probes.impl.ThroughputResult;
 import com.hazelcast.simulator.test.Failure;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
@@ -143,8 +143,8 @@ public class CoordinatorRunTestSuiteTest {
             @SuppressWarnings("unchecked")
             public List<List<Map<String, Result>>> answer(InvocationOnMock invocation) throws Throwable {
                 Map<String, Result> resultMap = new HashMap<String, Result>();
-                resultMap.put("CoordinatorTest1", new OperationsPerSecResult(1000, 23.42f));
-                resultMap.put("CoordinatorTest2", new OperationsPerSecResult(2000, 42.23f));
+                resultMap.put("CoordinatorTest1", new ThroughputResult(1000, 23.42f));
+                resultMap.put("CoordinatorTest2", new ThroughputResult(2000, 42.23f));
 
                 List<Map<String, Result>> resultList = new ArrayList<Map<String, Result>>();
                 resultList.add(resultMap);

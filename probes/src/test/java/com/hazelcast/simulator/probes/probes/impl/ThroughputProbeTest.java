@@ -12,65 +12,65 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-public class OperationsPerSecProbeTest {
+public class ThroughputProbeTest {
 
-    private OperationsPerSecProbe operationsPerSecProbe = new OperationsPerSecProbe();
+    private ThroughputProbe throughputProbe = new ThroughputProbe();
 
     @Test
     public void testDisable() {
-        assertDisable(operationsPerSecProbe);
+        assertDisable(throughputProbe);
     }
 
     @Test
     public void testStarted() {
-        operationsPerSecProbe.started();
+        throughputProbe.started();
     }
 
     @Test
     public void testInvocationCount() {
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.done();
+        throughputProbe.done();
+        throughputProbe.done();
+        throughputProbe.done();
 
-        assertEquals(3, operationsPerSecProbe.getInvocationCount());
+        assertEquals(3, throughputProbe.getInvocationCount());
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void testRecordValue() {
-        operationsPerSecProbe.recordValue(500);
+        throughputProbe.recordValue(500);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testStopProbingWithoutInitialization() {
-        operationsPerSecProbe.stopProbing(0);
+        throughputProbe.stopProbing(0);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testStopProbingNegativeTimeStamp() {
-        operationsPerSecProbe.stopProbing(-1);
+        throughputProbe.stopProbing(-1);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testStopProbingNegativeDuration() {
-        operationsPerSecProbe.startProbing(1000);
-        operationsPerSecProbe.stopProbing(999);
+        throughputProbe.startProbing(1000);
+        throughputProbe.stopProbing(999);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testSetValues_ZeroDuration() {
-        operationsPerSecProbe.setValues(0, 10000);
+        throughputProbe.setValues(0, 10000);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testSetValues_ZeroInvocations() {
-        operationsPerSecProbe.setValues(10000, 0);
+        throughputProbe.setValues(10000, 0);
     }
 
     @Test
     public void testSetValues_10ops() {
-        operationsPerSecProbe.setValues(1000, 10);
+        throughputProbe.setValues(1000, 10);
 
-        OperationsPerSecResult result = operationsPerSecProbe.getResult();
+        ThroughputResult result = throughputProbe.getResult();
         assertTrue(result != null);
 
         Long invocations = getObjectFromField(result, "invocations");
@@ -82,9 +82,9 @@ public class OperationsPerSecProbeTest {
 
     @Test
     public void testSetValues_20ops() {
-        operationsPerSecProbe.setValues(500, 10);
+        throughputProbe.setValues(500, 10);
 
-        OperationsPerSecResult result = operationsPerSecProbe.getResult();
+        ThroughputResult result = throughputProbe.getResult();
         assertTrue(result != null);
 
         Long invocations = getObjectFromField(result, "invocations");
@@ -96,9 +96,9 @@ public class OperationsPerSecProbeTest {
 
     @Test
     public void testSetValues_800ops() {
-        operationsPerSecProbe.setValues(5, 4);
+        throughputProbe.setValues(5, 4);
 
-        OperationsPerSecResult result = operationsPerSecProbe.getResult();
+        ThroughputResult result = throughputProbe.getResult();
         assertTrue(result != null);
 
         Long invocations = getObjectFromField(result, "invocations");
@@ -110,9 +110,9 @@ public class OperationsPerSecProbeTest {
 
     @Test
     public void testSetValues_8ops() {
-        operationsPerSecProbe.setValues(500, 4);
+        throughputProbe.setValues(500, 4);
 
-        OperationsPerSecResult result = operationsPerSecProbe.getResult();
+        ThroughputResult result = throughputProbe.getResult();
         assertTrue(result != null);
 
         Long invocations = getObjectFromField(result, "invocations");
@@ -125,14 +125,14 @@ public class OperationsPerSecProbeTest {
     @Test
     public void testResult() {
         long started = System.currentTimeMillis();
-        operationsPerSecProbe.startProbing(started);
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.stopProbing(started + TimeUnit.SECONDS.toMillis(5));
+        throughputProbe.startProbing(started);
+        throughputProbe.done();
+        throughputProbe.done();
+        throughputProbe.done();
+        throughputProbe.done();
+        throughputProbe.stopProbing(started + TimeUnit.SECONDS.toMillis(5));
 
-        OperationsPerSecResult result = operationsPerSecProbe.getResult();
+        ThroughputResult result = throughputProbe.getResult();
         assertTrue(result != null);
 
         Long invocations = getObjectFromField(result, "invocations");
@@ -141,7 +141,7 @@ public class OperationsPerSecProbeTest {
         Double operationsPerSecond = getObjectFromField(result, "operationsPerSecond");
         assertEqualsStringFormat("Expected %.2f op/s, but was %.2f", 0.8, operationsPerSecond, 0.01);
 
-        OperationsPerSecProbe nonEqualsProbe = new OperationsPerSecProbe();
+        ThroughputProbe nonEqualsProbe = new ThroughputProbe();
         assertResult(result, nonEqualsProbe.getResult());
         nonEqualsProbe.setValues(12345, 4);
         assertResult(result, nonEqualsProbe.getResult());
@@ -150,25 +150,25 @@ public class OperationsPerSecProbeTest {
     @Test
     public void testResultCombine() {
         long started = System.currentTimeMillis();
-        operationsPerSecProbe.startProbing(started);
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.stopProbing(started + TimeUnit.SECONDS.toMillis(5));
+        throughputProbe.startProbing(started);
+        throughputProbe.done();
+        throughputProbe.done();
+        throughputProbe.stopProbing(started + TimeUnit.SECONDS.toMillis(5));
 
-        OperationsPerSecResult result1 = operationsPerSecProbe.getResult();
+        ThroughputResult result1 = throughputProbe.getResult();
         assertTrue(result1 != null);
 
-        operationsPerSecProbe.startProbing(started + TimeUnit.SECONDS.toMillis(10));
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.done();
-        operationsPerSecProbe.stopProbing(started + TimeUnit.SECONDS.toMillis(15));
+        throughputProbe.startProbing(started + TimeUnit.SECONDS.toMillis(10));
+        throughputProbe.done();
+        throughputProbe.done();
+        throughputProbe.stopProbing(started + TimeUnit.SECONDS.toMillis(15));
 
-        OperationsPerSecResult result2 = operationsPerSecProbe.getResult();
+        ThroughputResult result2 = throughputProbe.getResult();
         assertTrue(result2 != null);
 
         assertNotEquals(result1.hashCode(), result2.hashCode());
 
-        OperationsPerSecResult combined = result1.combine(result2);
+        ThroughputResult combined = result1.combine(result2);
         assertTrue(combined != null);
 
         Long invocations = getObjectFromField(combined, "invocations");

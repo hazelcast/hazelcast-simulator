@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.probes.probes.impl;
 
 /**
- * This probe will measure the throughput but won't save its result.
+ * Measures the throughput of a test but doesn't save its result.
  *
  * It can be used to provide the information for performance measuring during a test without polluting the worker
  * directory with a result file.

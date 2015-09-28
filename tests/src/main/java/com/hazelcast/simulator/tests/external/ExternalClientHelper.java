@@ -7,8 +7,8 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.probes.IntervalProbe;
 import com.hazelcast.simulator.probes.probes.SimpleProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrLatencyDistributionResult;
+import com.hazelcast.simulator.probes.probes.impl.HdrProbe;
+import com.hazelcast.simulator.probes.probes.impl.HdrResult;
 
 import java.util.concurrent.TimeUnit;
 
@@ -81,8 +81,8 @@ public final class ExternalClientHelper {
                 totalInvocations, avgDuration, performance));
     }
 
-    public static void getLatencyResults(HazelcastInstance hazelcastInstance, IntervalProbe<HdrLatencyDistributionResult,
-            HdrLatencyDistributionProbe> externalClientLatency, int expectedResultSize) {
+    public static void getLatencyResults(HazelcastInstance hazelcastInstance, IntervalProbe<HdrResult,
+            HdrProbe> externalClientLatency, int expectedResultSize) {
         IList<String> latencyLists = getResultList(hazelcastInstance, "externalClientsLatencyResults", expectedResultSize);
 
         LOGGER.info(format("Collecting %d latency result lists...", latencyLists.size()));

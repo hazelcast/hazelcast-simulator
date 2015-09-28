@@ -367,7 +367,7 @@ public class TestContainerTest {
     @Test
     public void testProbeInjectIntervalProbeToField() throws Exception {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("latencyProbe", ProbesType.LATENCY.getName());
+        probesConfiguration.addConfig("latencyProbe", ProbesType.HDR.getName());
         testContainer = createTestContainer(test);
 
         assertNotNull(test.latencyProbe);
