@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.tests.map;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -23,11 +24,13 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClust
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
 
 public class MapPutAllTest {
+
     private static final ILogger LOGGER = Logger.getLogger(MapPutAllTest.class);
 
     // properties
-    public String basename = getClass().getSimpleName();
-    // number of items in a single map to insert.
+    public String basename = MapPutAllTest.class.getSimpleName();
+    public int minNumberOfMembers = 0;
+    // number of items in a single map to insert
     public int itemCount = 10000;
     // the number of characters in the key
     public int keySize = 10;
@@ -35,49 +38,48 @@ public class MapPutAllTest {
     public int valueSize = 100;
     // controls the key locality. E.g. a batch can be made for local or single partition etc.
     public KeyLocality keyLocality;
-    // the number of maps we insert. We don't want to keep inserting the same map over an over.
+    // the number of maps we insert. We don't want to keep inserting the same map over an over
     public int mapCount = 100;
     // if we want to use putAll or put (this is a nice setting to see what kind of speedup or slowdown to expect)
     public boolean usePutAll = true;
 
-    public int minNumberOfMembers = 0;
     // probes
     public IntervalProbe latency;
     public SimpleProbe throughput;
 
-    private TestContext testContext;
+    private HazelcastInstance instance;
     private IMap<String, String> map;
     private Map<String, String>[] insertMaps;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
-        this.testContext = testContext;
+        instance = testContext.getTargetInstance();
         map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
     }
 
     @Teardown
     public void tearDown() throws Exception {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
+        LOGGER.info(getOperationCountInformation(instance));
     }
 
     @Warmup(global = false)
+    @SuppressWarnings("unchecked")
     public void warmup() throws InterruptedException {
-        waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
-
-        insertMaps = new Map[mapCount];
+        waitClusterSize(LOGGER, instance, minNumberOfMembers);
 
         String[] keys = new String[itemCount];
-        for (int k = 0; k < keys.length; k++) {
-            keys[k] = generateStringKey(keySize, keyLocality, testContext.getTargetInstance());
+        for (int i = 0; i < keys.length; i++) {
+            keys[i] = generateStringKey(keySize, keyLocality, instance);
         }
 
+        insertMaps = new Map[mapCount];
         for (int mapIndex = 0; mapIndex < mapCount; mapIndex++) {
-            Map<String, String> map = new HashMap<String, String>();
-            insertMaps[mapIndex] = map;
+            Map<String, String> insertMap = new HashMap<String, String>();
+            insertMaps[mapIndex] = insertMap;
             for (int itemIndex = 0; itemIndex < itemCount; itemIndex++) {
                 String value = GeneratorUtils.generateString(valueSize);
-                map.put(keys[mapIndex], value);
+                insertMap.put(keys[mapIndex], value);
             }
         }
     }
@@ -92,11 +94,11 @@ public class MapPutAllTest {
         @Override
         protected void timeStep() {
             latency.started();
-            Map<String, String> m = randomMap();
+            Map<String, String> insertMap = randomMap();
             if (usePutAll) {
-                map.putAll(m);
+                map.putAll(insertMap);
             } else {
-                for (Map.Entry<String, String> entry : m.entrySet()) {
+                for (Map.Entry<String, String> entry : insertMap.entrySet()) {
                     map.put(entry.getKey(), entry.getValue());
                 }
             }
