@@ -43,7 +43,8 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractServerConnector.class);
 
-    private final EventLoopGroup group = new NioEventLoopGroup();
+    private final EventLoopGroup bossGroup = new NioEventLoopGroup();
+    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
 
     private final AtomicLong messageIds = new AtomicLong();
     private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
@@ -74,7 +75,7 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private ServerBootstrap getServerBootstrap() {
         ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.group(group)
+        bootstrap.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .localAddress(new InetSocketAddress(configuration.getLocalPort()))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -92,7 +93,12 @@ abstract class AbstractServerConnector implements ServerConnector {
         configuration.shutdown();
         channel.close().syncUninterruptibly();
 
-        group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
+        workerGroup.
+                shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)
+                .syncUninterruptibly();
+        bossGroup
+                .shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)
+                .syncUninterruptibly();
     }
 
     @Override
