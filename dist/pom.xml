@@ -29,7 +29,12 @@
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
             <artifactId>tests</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>visualizer</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
