@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.test.TestCase;
@@ -8,7 +7,6 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.Name;
 import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Receive;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -21,7 +19,6 @@ import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.util.Map;
 
@@ -562,30 +559,6 @@ public class TestContainerTest {
 
         @Run
         void run() {
-        }
-    }
-
-    // ====================================================
-    // =================== receive ========================
-    // ====================================================
-
-    @Test
-    public void testMessageReceiver() throws Exception {
-        ReceiveTest test = new ReceiveTest();
-        testContainer = createTestContainer(test);
-        Message message = Mockito.mock(Message.class);
-        testContainer.sendMessage(message);
-
-        assertEquals(message, test.messagePassed);
-    }
-
-    private static class ReceiveTest extends DummyTest {
-
-        Message messagePassed;
-
-        @Receive
-        public void receive(Message message) {
-            messagePassed = message;
         }
     }
 

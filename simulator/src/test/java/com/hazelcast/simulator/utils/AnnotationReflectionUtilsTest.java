@@ -2,7 +2,6 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.test.annotations.Name;
 import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Receive;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -119,7 +118,7 @@ public class AnnotationReflectionUtilsTest {
 
     @Test(expected = RuntimeException.class)
     public void testGetAtMostOneVoidMethodWithoutArgs_wrongReturnTypeArgsFound() {
-        getAtMostOneMethodWithoutArgs(AnnotationTestClass.class, Receive.class, String.class);
+        getAtMostOneMethodWithoutArgs(AnnotationTestClass.class, Setup.class, String.class);
     }
 
     @Test(expected = RuntimeException.class)
@@ -154,11 +153,6 @@ public class AnnotationReflectionUtilsTest {
 
         @RunWithWorker
         private static void staticMethod() {
-        }
-
-        @Receive
-        private long wrongReturnType() {
-            return 0;
         }
 
         @Performance

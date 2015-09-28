@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.common.messaging.Message;
 import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.impl.ConcurrentProbe;
@@ -8,7 +7,6 @@ import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Receive;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -111,7 +109,6 @@ public class TestContainer<T extends TestContext> {
     private Method globalTeardownMethod;
 
     private Method operationCountMethod;
-    private Method messageConsumerMethod;
 
     private IWorker operationCountWorkerInstance;
 
@@ -152,14 +149,21 @@ public class TestContainer<T extends TestContext> {
     }
 
     public PerformanceState getPerformanceState() {
-        if (isRunning) {
-            return performanceTracker.update(getOperationCount());
+        if (!isRunning) {
+            return null;
         }
-        return null;
-    }
 
-    public void sendMessage(Message message) throws Exception {
-        invokeMethod(testClassInstance, messageConsumerMethod, message);
+        long operationCount = EMPTY_OPERATION_COUNT;
+        try {
+            Object testInstance = (operationCountWorkerInstance != null ? operationCountWorkerInstance : testClassInstance);
+            Long count = invokeMethod(testInstance, operationCountMethod);
+            if (count != null) {
+                operationCount = count;
+            }
+        } catch (Exception e) {
+            LOGGER.debug("Exception while retrieving operation count from " + testCase.getId() + ": " + e.getMessage());
+        }
+        return performanceTracker.update(operationCount);
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
@@ -190,17 +194,6 @@ public class TestContainer<T extends TestContext> {
                 break;
             default:
                 throw new UnsupportedOperationException("Unsupported test phase: " + testPhase);
-        }
-    }
-
-    private long getOperationCount() {
-        try {
-            Long count = invokeMethod((operationCountWorkerInstance != null) ? operationCountWorkerInstance : testClassInstance,
-                    operationCountMethod);
-            return (count == null ? EMPTY_OPERATION_COUNT : count);
-        } catch (Exception e) {
-            LOGGER.debug("Exception while retrieving operation count from " + testCase.getId() + ": " + e.getMessage());
-            return EMPTY_OPERATION_COUNT;
         }
     }
 
@@ -247,10 +240,6 @@ public class TestContainer<T extends TestContext> {
             globalTeardownMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new TeardownFilter(true));
 
             operationCountMethod = getAtMostOneMethodWithoutArgs(testClassType, Performance.class, Long.TYPE);
-            messageConsumerMethod = getAtMostOneVoidMethodSkipArgsCheck(testClassType, Receive.class);
-            if (messageConsumerMethod != null) {
-                assertArguments(messageConsumerMethod, Message.class);
-            }
         } catch (Exception e) {
             throw new IllegalTestException(e.getMessage());
         }
@@ -279,21 +268,6 @@ public class TestContainer<T extends TestContext> {
             throw new IllegalTestException(
                     format("Method %s.%s must have argument of type %s and zero or more arguments of type %s",
                             testClassType, method, TestContext.class, Probe.class));
-        }
-    }
-
-    private void assertArguments(Method method, Class... arguments) {
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        if (parameterTypes.length != arguments.length) {
-            throw new IllegalTestException(format("Method %s must have %s arguments, but %s arguments found",
-                    method, arguments.length, parameterTypes.length));
-        }
-
-        for (int i = 0; i < arguments.length; i++) {
-            if (!parameterTypes[i].isAssignableFrom(arguments[i])) {
-                throw new IllegalTestException(format("Method %s has argument of type %s at index %d where type %s is expected",
-                        method, parameterTypes[i], i + 1, arguments[i]));
-            }
         }
     }
 
@@ -367,8 +341,7 @@ public class TestContainer<T extends TestContext> {
         operationCountWorkerInstance.afterCompletion();
     }
 
-    private void spawnWorkerThreads(Field testContextField, Field workerProbeField, Probe probe)
-            throws Exception {
+    private void spawnWorkerThreads(Field testContextField, Field workerProbeField, Probe probe) throws Exception {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
             IWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
