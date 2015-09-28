@@ -20,12 +20,10 @@ public enum ProbesResultXmlElements {
     PROBES_RESULT("probes-result"),
     PROBE("probe"),
     PROBE_NAME("name"),
-    PROBE_TYPE("type"),
 
+    LATENCY("latency"),
     INVOCATIONS("invocations"),
-    OPERATIONS_PER_SECOND("throughput"),
-
-    HDR_LATENCY_DATA("data");
+    THROUGHPUT("throughput");
 
     private final String string;
 

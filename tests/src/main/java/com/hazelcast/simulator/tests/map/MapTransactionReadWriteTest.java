@@ -5,8 +5,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Performance;
@@ -54,9 +53,8 @@ public class MapTransactionReadWriteTest {
     public boolean useSet = false;
 
     // probes
-    public IntervalProbe putLatency;
-    public IntervalProbe getLatency;
-    public SimpleProbe throughput;
+    public Probe putProbe;
+    public Probe getProbe;
 
     private final AtomicLong operations = new AtomicLong();
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
@@ -121,7 +119,7 @@ public class MapTransactionReadWriteTest {
 
                 switch (selector.select()) {
                     case PUT:
-                        putLatency.started();
+                        putProbe.started();
                         targetInstance.executeTransaction(new TransactionalTask<Object>() {
                             @Override
                             public Object execute(TransactionalTaskContext transactionalTaskContext) throws TransactionException {
@@ -134,10 +132,10 @@ public class MapTransactionReadWriteTest {
                                 return null;
                             }
                         });
-                        putLatency.done();
+                        putProbe.done();
                         break;
                     case GET:
-                        getLatency.started();
+                        getProbe.started();
                         targetInstance.executeTransaction(new TransactionalTask<Object>() {
                             @Override
                             public Object execute(TransactionalTaskContext transactionalTaskContext) throws TransactionException {
@@ -145,8 +143,8 @@ public class MapTransactionReadWriteTest {
                                 txMap.put(key, value);
                                 return null;
                             }
-                        }) ;
-                        getLatency.done();
+                        });
+                        getProbe.done();
                         break;
                     default:
                         throw new UnsupportedOperationException();
@@ -160,8 +158,6 @@ public class MapTransactionReadWriteTest {
                 if (iteration % performanceUpdateFrequency == 0) {
                     operations.addAndGet(performanceUpdateFrequency);
                 }
-
-                throughput.done();
             }
             operations.addAndGet(iteration % performanceUpdateFrequency);
         }

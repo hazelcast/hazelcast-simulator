@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.probes.probes.impl;
 
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.utils.EmptyStatement;
 
 import javax.xml.stream.XMLStreamException;
@@ -24,7 +24,7 @@ public class ProbeTestUtils {
 
     private static final Integer WRONG_CLASS = 42;
 
-    static void assertDisable(SimpleProbe probe) {
+    static void assertDisable(Probe probe) {
         assertFalse(probe.isDisabled());
 
         probe.disable();

@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.probes.probes.impl;
 
+import com.hazelcast.simulator.probes.probes.Result;
 import org.HdrHistogram.Histogram;
 import org.junit.Test;
 
@@ -15,35 +16,40 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-public class HdrProbeTest {
+public class ProbeImplTest {
 
-    private HdrProbe hdrProbe = new HdrProbe();
+    private ProbeImpl probe = new ProbeImpl();
 
     @Test
     public void testDisable() {
-        assertDisable(hdrProbe);
+        assertDisable(probe);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testSetValues() {
-        hdrProbe.setValues(123, 125812);
+        probe.setValues(2000, 125000);
+
+        Result result = probe.getResult();
+
+        assertEquals(125000, result.getInvocationCount());
+        assertEquals(62500d, result.getThroughput(), 0.001);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testDoneWithoutStarted() {
-        hdrProbe.done();
+        probe.done();
     }
 
     @Test
     public void testInvocationCount() {
-        hdrProbe.started();
-        hdrProbe.done();
-        hdrProbe.done();
-        hdrProbe.done();
-        hdrProbe.done();
-        hdrProbe.done();
+        probe.started();
+        probe.done();
+        probe.done();
+        probe.done();
+        probe.done();
+        probe.done();
 
-        assertEquals(5, hdrProbe.getInvocationCount());
+        assertEquals(5, probe.getInvocationCount());
     }
 
     @Test
@@ -51,12 +57,12 @@ public class HdrProbeTest {
         int expectedCount = 1;
         long expectedLatency = 150;
 
-        hdrProbe.started();
+        probe.started();
         sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
-        hdrProbe.done();
+        probe.done();
 
-        HdrResult result = hdrProbe.getResult();
-        assertResult(result, new HdrProbe().getResult());
+        ResultImpl result = probe.getResult();
+        assertResult(result, new ProbeImpl().getResult());
         assertHistogram(result.getHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
     }
 
@@ -68,12 +74,12 @@ public class HdrProbeTest {
         long expectedMaxValue = 1000;
         long expectedMeanValue = (long) ((latencyValue + expectedMinValue + expectedMaxValue) / (double) expectedCount);
 
-        hdrProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(latencyValue));
-        hdrProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
-        hdrProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
+        probe.recordValue(TimeUnit.MILLISECONDS.toNanos(latencyValue));
+        probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
+        probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
 
-        HdrResult result = hdrProbe.getResult();
-        assertResult(result, new HdrProbe().getResult());
+        ResultImpl result = probe.getResult();
+        assertResult(result, new ProbeImpl().getResult());
         assertHistogram(result.getHistogram(), expectedCount, expectedMinValue, expectedMaxValue, expectedMeanValue);
     }
 
@@ -84,25 +90,25 @@ public class HdrProbeTest {
         long expectedMaxValue = 500;
         long expectedMeanValue = (long) ((expectedMinValue + expectedMaxValue) / (double) expectedCount);
 
-        hdrProbe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
+        probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
 
-        HdrResult result1 = hdrProbe.getResult();
+        ResultImpl result1 = probe.getResult();
         assertSingleResult(result1);
 
-        HdrProbe hdrProbe2 = new HdrProbe();
-        hdrProbe2.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
+        ProbeImpl probe2 = new ProbeImpl();
+        probe2.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
 
-        HdrResult result2 = hdrProbe2.getResult();
+        ResultImpl result2 = probe2.getResult();
         assertSingleResult(result2);
 
         assertNotEquals(result1.hashCode(), result2.hashCode());
 
-        HdrResult combined = result1.combine(result2);
-        assertResult(combined, new HdrProbe().getResult());
+        ResultImpl combined = (ResultImpl) result1.combine(result2);
+        assertResult(combined, new ProbeImpl().getResult());
         assertHistogram(combined.getHistogram(), expectedCount, expectedMinValue, expectedMaxValue, expectedMeanValue);
     }
 
-    private static void assertSingleResult(HdrResult result) {
+    private static void assertSingleResult(ResultImpl result) {
         assertTrue(result != null);
         assertEqualsStringFormat("Expected %d records, but was %d", 1L, result.getHistogram().getTotalCount());
     }

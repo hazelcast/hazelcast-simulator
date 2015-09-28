@@ -13,9 +13,9 @@ public abstract class AbstractMonotonicWorker extends AbstractWorker {
         beforeRun();
 
         while (!testContext.isStopped() && !isWorkerStopped) {
-            intervalProbe.started();
+            workerProbe.started();
             timeStep();
-            intervalProbe.done();
+            workerProbe.done();
 
             increaseIteration();
         }

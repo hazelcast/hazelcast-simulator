@@ -175,7 +175,7 @@ final class TestCaseRunner {
     }
 
     private void processProbeResults() {
-        Map<String, ? extends Result> probesResult = getProbesResult();
+        Map<String, Result> probesResult = getProbesResult();
         if (!probesResult.isEmpty()) {
             String fileName = "probes-" + testSuite.getId() + "_" + testCaseId + ".xml";
             ProbesResultXmlWriter.write(probesResult, new File(fileName));
@@ -183,9 +183,9 @@ final class TestCaseRunner {
         }
     }
 
-    private <R extends Result<R>> Map<String, R> getProbesResult() {
-        Map<String, R> combinedResults = new HashMap<String, R>();
-        List<List<Map<String, R>>> agentsProbeResults;
+    private Map<String, Result> getProbesResult() {
+        Map<String, Result> combinedResults = new HashMap<String, Result>();
+        List<List<Map<String, Result>>> agentsProbeResults;
         agentsProbeResults = Collections.emptyList();
         //try {
         //    agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCaseId));
@@ -193,14 +193,14 @@ final class TestCaseRunner {
         //    LOGGER.fatal("A timeout happened while retrieving the benchmark results");
         //    return combinedResults;
         //}
-        for (List<Map<String, R>> agentProbeResults : agentsProbeResults) {
-            for (Map<String, R> workerProbeResult : agentProbeResults) {
+        for (List<Map<String, Result>> agentProbeResults : agentsProbeResults) {
+            for (Map<String, Result> workerProbeResult : agentProbeResults) {
                 if (workerProbeResult != null) {
-                    for (Map.Entry<String, R> probe : workerProbeResult.entrySet()) {
+                    for (Map.Entry<String, Result> probe : workerProbeResult.entrySet()) {
                         String probeName = probe.getKey();
-                        R currentResult = probe.getValue();
+                        Result currentResult = probe.getValue();
                         if (currentResult != null) {
-                            R combinedValue = combinedResults.get(probeName);
+                            Result combinedValue = combinedResults.get(probeName);
                             combinedValue = currentResult.combine(combinedValue);
                             combinedResults.put(probeName, combinedValue);
                         }
@@ -211,8 +211,8 @@ final class TestCaseRunner {
         return combinedResults;
     }
 
-    private <R extends Result<R>> void logProbesResultInHumanReadableFormat(Map<String, R> combinedResults) {
-        for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
+    private void logProbesResultInHumanReadableFormat(Map<String, Result> combinedResults) {
+        for (Map.Entry<String, Result> entry : combinedResults.entrySet()) {
             String probeName = entry.getKey();
             String result = entry.getValue().toHumanString();
             String whitespace = (result.contains("\n") ? "\n" : " ");

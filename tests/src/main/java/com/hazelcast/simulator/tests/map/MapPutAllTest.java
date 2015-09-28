@@ -4,8 +4,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -43,12 +41,8 @@ public class MapPutAllTest {
     // if we want to use putAll or put (this is a nice setting to see what kind of speedup or slowdown to expect)
     public boolean usePutAll = true;
 
-    // probes
-    public IntervalProbe latency;
-    public SimpleProbe throughput;
-
-    private HazelcastInstance instance;
     private IMap<String, String> map;
+    private HazelcastInstance instance;
     private Map<String, String>[] inputMaps;
 
     @Setup
@@ -93,7 +87,6 @@ public class MapPutAllTest {
 
         @Override
         protected void timeStep() {
-            latency.started();
             Map<String, String> insertMap = randomMap();
             if (usePutAll) {
                 map.putAll(insertMap);
@@ -102,8 +95,6 @@ public class MapPutAllTest {
                     map.put(entry.getKey(), entry.getValue());
                 }
             }
-            latency.done();
-            throughput.done();
         }
 
         private Map<String, String> randomMap() {

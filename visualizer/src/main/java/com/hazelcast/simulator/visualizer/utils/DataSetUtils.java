@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.visualizer.utils;
 
 import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.probes.probes.impl.HdrResult;
+import com.hazelcast.simulator.probes.probes.impl.ResultImpl;
 import com.hazelcast.simulator.visualizer.data.SimpleHistogramDataSetContainer;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramIterationValue;
@@ -29,13 +29,13 @@ public final class DataSetUtils {
 
     public static SimpleHistogramDataSetContainer calculateSingleProbeDataSet(Result probeData, int accuracy,
                                                                               double scalingPercentile) {
-        if (probeData instanceof HdrResult) {
-            return calcSingleProbeDataSet((HdrResult) probeData, accuracy, scalingPercentile);
+        if (probeData instanceof ResultImpl) {
+            return calcSingleProbeDataSet((ResultImpl) probeData, accuracy, scalingPercentile);
         }
         return null;
     }
 
-    private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(HdrResult probeData, long accuracy,
+    private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(ResultImpl probeData, long accuracy,
                                                                           double scalingPercentile) {
         SimpleHistogramDataSetContainer histogramDataSet = new SimpleHistogramDataSetContainer("key");
         histogramDataSet.setAdjustForBinSize(false);

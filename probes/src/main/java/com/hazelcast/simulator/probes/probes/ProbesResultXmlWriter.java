@@ -27,7 +27,6 @@ import java.util.Map;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBES_RESULT;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE_NAME;
-import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE_TYPE;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 
 public final class ProbesResultXmlWriter {
@@ -35,7 +34,7 @@ public final class ProbesResultXmlWriter {
     private ProbesResultXmlWriter() {
     }
 
-    public static <R extends Result<R>> void write(Map<String, R> combinedResults, File file) {
+    public static void write(Map<String, Result> combinedResults, File file) {
         FileOutputStream fos = null;
         try {
             fos = new FileOutputStream(file);
@@ -47,19 +46,18 @@ public final class ProbesResultXmlWriter {
         }
     }
 
-    public static <R extends Result<R>> void write(Map<String, R> combinedResults, OutputStream outputStream) {
+    public static void write(Map<String, Result> combinedResults, OutputStream outputStream) {
         XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
         XMLStreamWriter xmlStreamWriter = null;
         try {
             xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(outputStream);
             xmlStreamWriter.writeStartDocument();
             xmlStreamWriter.writeStartElement(PROBES_RESULT.getName());
-            for (Map.Entry<String, R> entry : combinedResults.entrySet()) {
+            for (Map.Entry<String, Result> entry : combinedResults.entrySet()) {
                 String probeName = entry.getKey();
-                R result = entry.getValue();
+                Result result = entry.getValue();
                 xmlStreamWriter.writeStartElement(PROBE.getName());
                 xmlStreamWriter.writeAttribute(PROBE_NAME.getName(), probeName);
-                xmlStreamWriter.writeAttribute(PROBE_TYPE.getName(), result.getClass().getSimpleName());
                 result.writeTo(xmlStreamWriter);
                 xmlStreamWriter.writeEndElement();
             }

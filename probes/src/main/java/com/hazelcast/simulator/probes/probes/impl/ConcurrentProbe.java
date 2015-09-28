@@ -15,25 +15,18 @@
  */
 package com.hazelcast.simulator.probes.probes.impl;
 
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.ProbesType;
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
 
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>> implements IntervalProbe<R, T> {
+public class ConcurrentProbe implements Probe {
 
-    private final ThreadLocal<T> threadLocalProbe = new ThreadLocal<T>();
-    private final ConcurrentHashMap<Long, T> probeMap = new ConcurrentHashMap<Long, T>();
-    private final ProbesType probesType;
+    private final ThreadLocal<Probe> threadLocalProbe = new ThreadLocal<Probe>();
+    private final ConcurrentHashMap<Long, Probe> probeMap = new ConcurrentHashMap<Long, Probe>();
 
     private long startedAt;
-
-    public ConcurrentProbe(ProbesType probesType) {
-        this.probesType = probesType;
-    }
 
     @Override
     public void started() {
@@ -53,7 +46,7 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
     @Override
     public long getInvocationCount() {
         long invocations = 0;
-        for (T probe : probeMap.values()) {
+        for (Probe probe : probeMap.values()) {
             invocations += probe.getInvocationCount();
         }
 
@@ -67,7 +60,7 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
 
     @Override
     public void stopProbing(long timeStamp) {
-        for (SimpleProbe probe : probeMap.values()) {
+        for (Probe probe : probeMap.values()) {
             probe.stopProbing(timeStamp);
         }
     }
@@ -78,30 +71,30 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
     }
 
     @Override
-    public R getResult() {
-        Iterator<T> probeIterator = probeMap.values().iterator();
+    public Result getResult() {
+        Iterator<Probe> probeIterator = probeMap.values().iterator();
 
-        T firstProbe = findNextEnabledProbeOrNull(probeIterator);
+        Probe firstProbe = findNextEnabledProbeOrNull(probeIterator);
         if (firstProbe == null) {
             return null;
         }
 
-        R result = firstProbe.getResult();
+        Result result = firstProbe.getResult();
         while (probeIterator.hasNext()) {
-            T nextProbe = probeIterator.next();
+            Probe nextProbe = probeIterator.next();
             if (nextProbe.isDisabled()) {
                 continue;
             }
-            R nextData = nextProbe.getResult();
+            Result nextData = nextProbe.getResult();
             result = result.combine(nextData);
         }
 
         return result;
     }
 
-    private T findNextEnabledProbeOrNull(Iterator<T> probeIterator) {
+    private Probe findNextEnabledProbeOrNull(Iterator<Probe> probeIterator) {
         while (probeIterator.hasNext()) {
-            T nextProbe = probeIterator.next();
+            Probe nextProbe = probeIterator.next();
             if (!nextProbe.isDisabled()) {
                 return nextProbe;
             }
@@ -116,7 +109,7 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
 
     @Override
     public boolean isDisabled() {
-        for (SimpleProbe probe : probeMap.values()) {
+        for (Probe probe : probeMap.values()) {
             if (!probe.isDisabled()) {
                 return false;
             }
@@ -124,18 +117,14 @@ public class ConcurrentProbe<R extends Result<R>, T extends IntervalProbe<R, T>>
         return true;
     }
 
-    T getProbe() {
-        T probe = threadLocalProbe.get();
+    Probe getProbe() {
+        Probe probe = threadLocalProbe.get();
         if (probe != null) {
             return probe;
         }
 
         long id = Thread.currentThread().getId();
-        try {
-            probe = probesType.createInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        probe = new ProbeImpl();
         probeMap.put(id, probe);
         probe.startProbing(startedAt);
         threadLocalProbe.set(probe);

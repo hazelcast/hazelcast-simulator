@@ -1,12 +1,8 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.common.messaging.Message;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
-import com.hazelcast.simulator.probes.probes.ProbesType;
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
-import com.hazelcast.simulator.probes.probes.impl.DisabledProbe;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
@@ -39,14 +35,12 @@ import static org.junit.Assert.assertTrue;
 public class TestContainerTest {
 
     private DummyTestContext testContext;
-    private ProbesConfiguration probesConfiguration;
     private TestCase testCase;
     private TestContainer<DummyTestContext> testContainer;
 
     @Before
     public void setUp() {
         testContext = new DummyTestContext();
-        probesConfiguration = new ProbesConfiguration();
         testCase = new TestCase("TestContainerTest");
     }
 
@@ -57,7 +51,7 @@ public class TestContainerTest {
 
     @Test(expected = NullPointerException.class)
     public void testConstructor_testContext_isNull() {
-        new TestContainer<DummyTestContext>(new DummyTest(), null, probesConfiguration, null);
+        new TestContainer<DummyTestContext>(new DummyTest(), null, null);
     }
 
     @Test
@@ -291,14 +285,14 @@ public class TestContainerTest {
     }
 
     @Test(expected = IllegalTestException.class)
-    public void testSetupWithSimpleProbeOnly() throws Exception {
-        createTestContainer(new SetupWithSimpleProbeOnly());
+    public void testSetupWithProbe() throws Exception {
+        createTestContainer(new SetupWithProbe());
     }
 
-    private static class SetupWithSimpleProbeOnly extends DummyTest {
+    private static class SetupWithProbe extends DummyTest {
 
         @Setup
-        public void setUp(SimpleProbe simpleProbe) {
+        public void setUp(Probe probe) {
         }
     }
 
@@ -351,31 +345,15 @@ public class TestContainerTest {
     }
 
     @Test
-    public void testProbeInjectSimpleProbeToField() throws Exception {
-        ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("throughputProbe", ProbesType.THROUGHPUT.getName());
-        testContainer = createTestContainer(test);
-
-        assertNotNull(test.throughputProbe);
-        assertTrue(testContainer.hasProbe("throughputProbe"));
-
-        testContainer.invoke(TestPhase.RUN);
-        Map<String, Result<?>> resultMap = testContainer.getProbeResults();
-        assertNotNull(resultMap);
-        assertTrue(resultMap.keySet().contains("throughputProbe"));
-    }
-
-    @Test
     public void testProbeInjectIntervalProbeToField() throws Exception {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("latencyProbe", ProbesType.HDR.getName());
         testContainer = createTestContainer(test);
 
         assertNotNull(test.latencyProbe);
         assertTrue(testContainer.hasProbe("latencyProbe"));
 
         testContainer.invoke(TestPhase.RUN);
-        Map<String, Result<?>> resultMap = testContainer.getProbeResults();
+        Map<String, Result> resultMap = testContainer.getProbeResults();
         assertNotNull(resultMap);
         assertTrue(resultMap.keySet().contains("latencyProbe"));
     }
@@ -383,7 +361,6 @@ public class TestContainerTest {
     @Test
     public void testProbeInjectExplicitlyNamedProbeToField() {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("explicitProbeInjectedToField", ProbesType.THROUGHPUT.getName());
         testContainer = createTestContainer(test);
 
         assertNotNull(test.fooProbe);
@@ -396,21 +373,19 @@ public class TestContainerTest {
         createTestContainer(test);
 
         assertNotNull(test.disabled);
-        assertTrue(test.disabled instanceof DisabledProbe);
     }
 
     @SuppressWarnings("unused")
     private static class ProbeTest extends DummyTest {
 
         TestContext context;
-        SimpleProbe simpleProbe;
+        Probe simpleProbe;
 
-        private SimpleProbe throughputProbe;
-        private IntervalProbe latencyProbe;
+        private Probe latencyProbe;
 
         @Name("explicitProbeInjectedToField")
-        private SimpleProbe fooProbe;
-        private IntervalProbe disabled;
+        private Probe fooProbe;
+        private Probe disabled;
 
         @Setup
         public void setUp(TestContext context) {
@@ -419,7 +394,6 @@ public class TestContainerTest {
 
         @Run
         public void run() {
-            throughputProbe.done();
             latencyProbe.started();
             latencyProbe.done();
         }
@@ -620,7 +594,7 @@ public class TestContainerTest {
     // ==========================================================
 
     private <T> TestContainer<DummyTestContext> createTestContainer(T test) {
-        return new TestContainer<DummyTestContext>(test, testContext, probesConfiguration, testCase);
+        return new TestContainer<DummyTestContext>(test, testContext, testCase);
     }
 
     private static class DummyTest {

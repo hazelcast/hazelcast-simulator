@@ -28,7 +28,7 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
 
     @Override
     public final void onResponse(V response) {
-        intervalProbe.done();
+        workerProbe.done();
         increaseIteration();
         handleResponse(response);
     }

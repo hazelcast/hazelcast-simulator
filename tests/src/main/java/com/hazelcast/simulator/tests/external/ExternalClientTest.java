@@ -4,10 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICountDownLatch;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrResult;
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -32,8 +29,7 @@ public class ExternalClientTest {
     public int waitIntervalSeconds = 60;
     public int expectedResultSize = 0;
 
-    SimpleProbe externalClientThroughput;
-    IntervalProbe<HdrResult, HdrProbe> externalClientLatency;
+    Probe externalClientProbe;
 
     private HazelcastInstance hazelcastInstance;
     private boolean isExternalResultsCollectorInstance;
@@ -85,9 +81,8 @@ public class ExternalClientTest {
 
         // just a single instance will collect the results from all external clients
         if (!isExternalResultsCollectorInstance) {
-            // disable probes
-            externalClientThroughput.disable();
-            externalClientLatency.disable();
+            // disable probe
+            externalClientProbe.disable();
 
             LOGGER.info("Stopping non result collecting ExternalClientTest");
             return;
@@ -95,8 +90,8 @@ public class ExternalClientTest {
 
         // get probe results
         LOGGER.info("Collecting results from external clients...");
-        getThroughputResults(hazelcastInstance, externalClientThroughput, expectedResultSize);
-        getLatencyResults(hazelcastInstance, externalClientLatency, expectedResultSize);
+        getThroughputResults(hazelcastInstance, externalClientProbe, expectedResultSize);
+        getLatencyResults(hazelcastInstance, externalClientProbe, expectedResultSize);
         LOGGER.info("Result collecting ExternalClientTest done!");
     }
 }

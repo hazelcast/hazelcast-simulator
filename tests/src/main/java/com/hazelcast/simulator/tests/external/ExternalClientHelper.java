@@ -5,10 +5,7 @@ import com.hazelcast.core.ICountDownLatch;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrResult;
+import com.hazelcast.simulator.probes.probes.Probe;
 
 import java.util.concurrent.TimeUnit;
 
@@ -43,8 +40,7 @@ public final class ExternalClientHelper {
         }
     }
 
-    public static void getThroughputResults(HazelcastInstance hazelcastInstance, SimpleProbe externalClientThroughput,
-                                             int expectedResultSize) {
+    public static void getThroughputResults(HazelcastInstance hazelcastInstance, Probe probe, int expectedResultSize) {
         IList<String> throughputResults = getResultList(hazelcastInstance, "externalClientsThroughputResults",
                 expectedResultSize);
         int resultSize = throughputResults.size();
@@ -75,14 +71,13 @@ public final class ExternalClientHelper {
         }
 
         long avgDuration = Math.round(totalDuration / resultSize);
-        externalClientThroughput.setValues(avgDuration, totalInvocations);
+        probe.setValues(avgDuration, totalInvocations);
         double performance = ((double) totalInvocations / avgDuration) * 1000;
         LOGGER.info(format("All external clients executed %d operations in %d ms (%.3f ops/s)",
                 totalInvocations, avgDuration, performance));
     }
 
-    public static void getLatencyResults(HazelcastInstance hazelcastInstance, IntervalProbe<HdrResult,
-            HdrProbe> externalClientLatency, int expectedResultSize) {
+    public static void getLatencyResults(HazelcastInstance hazelcastInstance, Probe probe, int expectedResultSize) {
         IList<String> latencyLists = getResultList(hazelcastInstance, "externalClientsLatencyResults", expectedResultSize);
 
         LOGGER.info(format("Collecting %d latency result lists...", latencyLists.size()));
@@ -90,7 +85,7 @@ public final class ExternalClientHelper {
             IList<Long> values = hazelcastInstance.getList(key);
             LOGGER.info(format("Adding %d latency results...", values.size()));
             for (Long latency : values) {
-                externalClientLatency.recordValue(latency);
+                probe.recordValue(latency);
             }
         }
         LOGGER.info("Done!");

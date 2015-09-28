@@ -19,7 +19,7 @@ import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Performance;
@@ -61,8 +61,8 @@ public class StringICacheTest {
     public boolean useGetAndPut = true;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
-    public IntervalProbe putLatency;
-    public IntervalProbe getLatency;
+    public Probe putProbe;
+    public Probe getProbe;
 
     private Cache<String, String> cache;
     private String[] keys;
@@ -144,18 +144,18 @@ public class StringICacheTest {
                 String key = randomKey();
 
                 if (shouldWrite(iteration)) {
-                    putLatency.started();
                     String value = randomValue();
+                    putProbe.started();
                     if (useGetAndPut) {
                         cache.getAndPut(key, value);
                     } else {
                         cache.put(key, value);
                     }
-                    putLatency.done();
+                    putProbe.done();
                 } else {
-                    getLatency.started();
+                    getProbe.started();
                     cache.get(key);
-                    getLatency.done();
+                    getProbe.done();
                 }
 
                 iteration++;

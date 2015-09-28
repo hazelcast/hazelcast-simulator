@@ -11,7 +11,7 @@ import com.hazelcast.core.Partition;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
@@ -99,7 +99,7 @@ public class SyntheticTest {
 
         // these fields will be injected by the TestContainer
         public TestContext testContext;
-        public IntervalProbe intervalProbe;
+        public Probe workerProbe;
 
         private final List<Integer> partitionSequence = new ArrayList<Integer>();
         private final List<ICompletableFuture> futureList = new ArrayList<ICompletableFuture>(syncFrequency);
@@ -148,7 +148,7 @@ public class SyntheticTest {
 
         @Performance
         public long getOperationCount() {
-            return intervalProbe.getInvocationCount();
+            return workerProbe.getInvocationCount();
         }
 
         @Override
@@ -167,7 +167,7 @@ public class SyntheticTest {
         private void timeStep() throws Exception {
             ICompletableFuture<Object> future = invokeOnNextPartition();
             if (syncInvocation) {
-                intervalProbe.started();
+                workerProbe.started();
                 if (syncFrequency == 1) {
                     future.get();
                 } else {
@@ -179,7 +179,7 @@ public class SyntheticTest {
                         futureList.clear();
                     }
                 }
-                intervalProbe.done();
+                workerProbe.done();
             } else {
                 future.andThen(this);
             }
@@ -224,7 +224,7 @@ public class SyntheticTest {
 
         @Override
         public void onResponse(Object response) {
-            intervalProbe.done();
+            workerProbe.done();
         }
 
         @Override

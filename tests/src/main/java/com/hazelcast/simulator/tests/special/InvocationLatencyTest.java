@@ -2,7 +2,7 @@ package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
@@ -37,9 +37,11 @@ public class InvocationLatencyTest {
 
     // properties
     public long resultLimit = Integer.MAX_VALUE;
-    public IntervalProbe classInstanceProbe;
-    public IntervalProbe interfaceInstanceProbe;
-    public IntervalProbe reflectionInstanceProbe;
+
+    // probes
+    public Probe classInstanceProbe;
+    public Probe interfaceInstanceProbe;
+    public Probe reflectionInstanceProbe;
 
     private final AtomicLong expectedCounter = new AtomicLong(0);
 

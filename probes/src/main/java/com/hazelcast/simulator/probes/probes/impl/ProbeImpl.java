@@ -15,39 +15,33 @@
  */
 package com.hazelcast.simulator.probes.probes.impl;
 
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.Result;
+import com.hazelcast.simulator.probes.probes.Probe;
+import org.HdrHistogram.Histogram;
 
-public abstract class AbstractSimpleProbe<R extends Result<R>, T extends IntervalProbe<R, T>> implements IntervalProbe<R, T> {
+import java.util.concurrent.TimeUnit;
 
-    protected long started;
-    protected long durationMs;
-    protected int invocations;
+/**
+ * Measures the latency distribution of a test.
+ */
+public class ProbeImpl implements Probe {
+
+    public static final long MAXIMUM_LATENCY = TimeUnit.SECONDS.toMicros(60);
+
+    private static final double ONE_SECOND_IN_MS = TimeUnit.SECONDS.toMillis(1);
+
+    private final Histogram histogram = new Histogram(MAXIMUM_LATENCY, 4);
+
+    private long invocations;
+
+    private long durationMs;
+    private long startedProbing;
+    private long started;
 
     private boolean disabled;
 
     @Override
-    public void started() {
-    }
-
-    @Override
-    public void recordValue(long latencyNanos) {
-        throw new UnsupportedOperationException("This method is just supported by IntervalProbe implementations");
-    }
-
-    @Override
-    public void done() {
-        invocations++;
-    }
-
-    @Override
-    public long getInvocationCount() {
-        return invocations;
-    }
-
-    @Override
     public void startProbing(long timeStamp) {
-        started = timeStamp;
+        startedProbing = timeStamp;
     }
 
     @Override
@@ -55,15 +49,38 @@ public abstract class AbstractSimpleProbe<R extends Result<R>, T extends Interva
         if (timeStamp < 0) {
             throw new IllegalArgumentException("timeStamp must be zero or positive.");
         }
-        if (started == 0) {
+        if (startedProbing == 0) {
             throw new IllegalStateException("Can't get result as probe has not been started yet.");
         }
 
         long stopOrNow = (timeStamp == 0 ? System.currentTimeMillis() : timeStamp);
-        durationMs = stopOrNow - started;
+        durationMs = stopOrNow - startedProbing;
         if (durationMs < 0) {
             throw new IllegalArgumentException("durationMs must be positive, but was " + durationMs);
         }
+    }
+
+    @Override
+    public void started() {
+        started = System.nanoTime();
+    }
+
+    @Override
+    public void done() {
+        if (started == 0) {
+            throw new IllegalStateException("You have to call started() before done()");
+        }
+        recordValue(System.nanoTime() - started);
+    }
+
+    @Override
+    public void disable() {
+        disabled = true;
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return disabled;
     }
 
     @Override
@@ -80,12 +97,18 @@ public abstract class AbstractSimpleProbe<R extends Result<R>, T extends Interva
     }
 
     @Override
-    public void disable() {
-        disabled = true;
+    public void recordValue(long latencyNanos) {
+        histogram.recordValue((int) TimeUnit.NANOSECONDS.toMicros(latencyNanos));
+        invocations++;
     }
 
     @Override
-    public boolean isDisabled() {
-        return disabled;
+    public long getInvocationCount() {
+        return invocations;
+    }
+
+    @Override
+    public ResultImpl getResult() {
+        return new ResultImpl(histogram, invocations, ((invocations * ONE_SECOND_IN_MS) / durationMs));
     }
 }

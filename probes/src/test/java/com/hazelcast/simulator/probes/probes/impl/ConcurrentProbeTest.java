@@ -1,16 +1,11 @@
 package com.hazelcast.simulator.probes.probes.impl;
 
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
-import com.hazelcast.simulator.probes.probes.ProbesType;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
-import org.junit.Before;
+import com.hazelcast.simulator.probes.probes.Probe;
+import com.hazelcast.simulator.probes.probes.Result;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.probes.probes.Probes.createConcurrentProbe;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -20,16 +15,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ConcurrentProbeTest {
 
-    private ProbesConfiguration config = new ProbesConfiguration();
-    private ConcurrentProbe<?, ?> concurrentProbe;
-
-    @Before
-    @SuppressWarnings("unchecked")
-    public void setUp() {
-        config.addConfig("throughput", ProbesType.THROUGHPUT.getName());
-        config.addConfig("latency", ProbesType.HDR.getName());
-        concurrentProbe = (ConcurrentProbe) createConcurrentProbe("throughput", SimpleProbe.class, config);
-    }
+    private ConcurrentProbe concurrentProbe = new ConcurrentProbe();
 
     @Test
     public void testThreadLocalProbesForUniqueness() throws Exception {
@@ -42,15 +28,15 @@ public class ConcurrentProbeTest {
         probeTester1.join();
         probeTester2.join();
 
-        SimpleProbe threadLocalProbe1 = probeTester1.threadLocalProbe;
-        SimpleProbe threadLocalProbe2 = probeTester2.threadLocalProbe;
+        Probe threadLocalProbe1 = probeTester1.threadLocalProbe;
+        Probe threadLocalProbe2 = probeTester2.threadLocalProbe;
 
         assertNotEquals(concurrentProbe, threadLocalProbe1);
         assertNotEquals(concurrentProbe, threadLocalProbe2);
         assertNotEquals(threadLocalProbe1, threadLocalProbe2);
 
-        assertTrue(threadLocalProbe1 instanceof ThroughputProbe);
-        assertTrue(threadLocalProbe2 instanceof ThroughputProbe);
+        assertTrue(threadLocalProbe1 instanceof ProbeImpl);
+        assertTrue(threadLocalProbe2 instanceof ProbeImpl);
     }
 
     @Test
@@ -122,10 +108,7 @@ public class ConcurrentProbeTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testInvocationCountOnIntervalProbe() throws Exception {
-        concurrentProbe = (ConcurrentProbe) createConcurrentProbe("latency", IntervalProbe.class, config);
-
         ProbeTester probeTester1 = new ProbeTester(concurrentProbe);
         ProbeTester probeTester2 = new ProbeTester(concurrentProbe);
 
@@ -157,10 +140,7 @@ public class ConcurrentProbeTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testInvocationCountOnIntervalProbeWithRecordValue() throws Exception {
-        concurrentProbe = (ConcurrentProbe) createConcurrentProbe("latency", IntervalProbe.class, config);
-
         ProbeRecordValueTester probeTester1 = new ProbeRecordValueTester(concurrentProbe);
         ProbeRecordValueTester probeTester2 = new ProbeRecordValueTester(concurrentProbe);
 
@@ -196,32 +176,32 @@ public class ConcurrentProbeTest {
 
         concurrentProbe.stopProbing(started + TimeUnit.SECONDS.toMillis(1));
 
-        ThroughputResult result1 = (ThroughputResult) probeTester1.threadLocalProbe.getResult();
-        Long invocations1 = getObjectFromField(result1, "invocations");
-        Double operationsPerSecond1 = getObjectFromField(result1, "operationsPerSecond");
+        Result result1 = probeTester1.threadLocalProbe.getResult();
+        Long invocations1 = result1.getInvocationCount();
+        Double throughput1 = result1.getThroughput();
 
-        ThroughputResult result2 = (ThroughputResult) probeTester2.threadLocalProbe.getResult();
-        Long invocations2 = getObjectFromField(result2, "invocations");
-        Double operationsPerSecond2 = getObjectFromField(result2, "operationsPerSecond");
+        Result result2 = probeTester2.threadLocalProbe.getResult();
+        Long invocations2 = result2.getInvocationCount();
+        Double throughput2 = result2.getThroughput();
 
-        ThroughputResult combinedResult = (ThroughputResult) concurrentProbe.getResult();
-        Long combinedInvocations = getObjectFromField(combinedResult, "invocations");
-        Double combinedOperationsPerSecond = getObjectFromField(combinedResult, "operationsPerSecond");
+        Result combinedResult = concurrentProbe.getResult();
+        Long combinedInvocations = combinedResult.getInvocationCount();
+        Double combinedThroughput = combinedResult.getThroughput();
 
         assertEquals(1, invocations1.longValue());
         assertEquals(1, invocations2.longValue());
         assertEquals(2, combinedInvocations.longValue());
 
-        assertEquals(1.0, operationsPerSecond1, 0.0001);
-        assertEquals(1.0, operationsPerSecond2, 0.0001);
-        assertEquals(2.0, combinedOperationsPerSecond, 0.0001);
+        assertEquals(1.0, throughput1, 0.0001);
+        assertEquals(1.0, throughput2, 0.0001);
+        assertEquals(2.0, combinedThroughput, 0.0001);
     }
 
     private static class ProbeTester extends Thread {
 
         private final ConcurrentProbe probe;
 
-        private SimpleProbe threadLocalProbe;
+        private Probe threadLocalProbe;
 
         public ProbeTester(ConcurrentProbe probe) {
             this.probe = probe;
@@ -239,7 +219,7 @@ public class ConcurrentProbeTest {
 
         private final ConcurrentProbe probe;
 
-        private SimpleProbe threadLocalProbe;
+        private Probe threadLocalProbe;
 
         public ProbeDisableTester(ConcurrentProbe probe) {
             this.probe = probe;

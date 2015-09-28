@@ -19,7 +19,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.worker.TestContainer;
 import org.apache.log4j.Logger;
 
@@ -72,7 +71,7 @@ public class TestRunner<E> {
             bindProperties(test, testCase, null);
         }
 
-        this.testInvoker = new TestContainer<TestContext>(test, testContext, new ProbesConfiguration(), testCase);
+        this.testInvoker = new TestContainer<TestContext>(test, testContext, testCase);
         this.test = test;
     }
 

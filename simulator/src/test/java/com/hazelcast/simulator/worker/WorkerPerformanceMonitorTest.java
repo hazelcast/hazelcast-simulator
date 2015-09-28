@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -27,7 +26,6 @@ public class WorkerPerformanceMonitorTest {
     private final ConcurrentMap<String, TestContainer<TestContext>> tests
             = new ConcurrentHashMap<String, TestContainer<TestContext>>();
     private final DummyTestContext testContext = new DummyTestContext();
-    private final ProbesConfiguration probesConfiguration = new ProbesConfiguration();
 
     private WorkerPerformanceMonitor monitor;
 
@@ -81,7 +79,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     private void addTest(Object test) {
-        TestContainer<TestContext> testContainer = new TestContainer<TestContext>(test, testContext, probesConfiguration, null);
+        TestContainer<TestContext> testContainer = new TestContainer<TestContext>(test, testContext, null);
         tests.put("test", testContainer);
     }
 }

@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
@@ -31,7 +30,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.TEST_PHASE_IS_R
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.parseProbeConfiguration;
 import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static java.lang.String.format;
 
@@ -118,9 +116,8 @@ public class WorkerOperationProcessor extends OperationProcessor {
         Object testInstance = CreateTestOperation.class.getClassLoader().loadClass(testCase.getClassname()).newInstance();
         bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
         TestContextImpl testContext = new TestContextImpl(testId, hazelcastInstance);
-        ProbesConfiguration probesConfiguration = parseProbeConfiguration(testInstance, testCase);
 
-        tests.put(testId, new TestContainer<TestContext>(testInstance, testContext, probesConfiguration, testCase));
+        tests.put(testId, new TestContainer<TestContext>(testInstance, testContext, testCase));
         testsPending.incrementAndGet();
 
         if (type == WorkerType.MEMBER) {

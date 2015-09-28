@@ -15,12 +15,19 @@
  */
 package com.hazelcast.simulator.probes.probes;
 
+import org.HdrHistogram.Histogram;
+
 import javax.xml.stream.XMLStreamWriter;
-import java.io.Serializable;
 
-public interface Result<R extends Result> extends Serializable {
+public interface Result {
 
-    R combine(R other);
+    Histogram getHistogram();
+
+    long getInvocationCount();
+
+    double getThroughput();
+
+    Result combine(Result other);
 
     String toHumanString();
 

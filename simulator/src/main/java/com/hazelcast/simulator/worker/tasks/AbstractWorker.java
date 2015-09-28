@@ -2,7 +2,7 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
@@ -30,7 +30,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     // these fields will be injected by the TestContainer
     TestContext testContext;
-    IntervalProbe intervalProbe;
+    Probe workerProbe;
 
     // these fields will be injected by test.properties of the test
     long logFrequency = DEFAULT_LOG_FREQUENCY;
@@ -55,9 +55,9 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         beforeRun();
 
         while (!testContext.isStopped() && !isWorkerStopped) {
-            intervalProbe.started();
+            workerProbe.started();
             timeStep(selector.select());
-            intervalProbe.done();
+            workerProbe.done();
 
             increaseIteration();
         }
@@ -67,7 +67,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     @Performance
     public long getOperationCount() {
-        return intervalProbe.getInvocationCount();
+        return workerProbe.getInvocationCount();
     }
 
     /**

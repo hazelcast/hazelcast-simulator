@@ -15,28 +15,15 @@
  */
 package com.hazelcast.simulator.probes.probes;
 
-public interface SimpleProbe<R extends Result<R>, T extends SimpleProbe<R, T>> {
-
-    void done();
-
-    long getInvocationCount();
+public interface Probe {
 
     void startProbing(long timeStamp);
 
     void stopProbing(long timeStamp);
 
-    /**
-     * Sets the throughput result by passing invocations and duration in milliseconds.
-     *
-     * Can be used if {@link #startProbing(long)} and {@link #stopProbing(long)} are not directly related, e.g. in asynchronous
-     * tests or are collected from an external source like a C++ client.
-     *
-     * @param durationMs  duration of sampling in milliseconds
-     * @param invocations number of invocation during sampling period
-     */
-    void setValues(long durationMs, int invocations);
+    void started();
 
-    R getResult();
+    void done();
 
     /**
      * Disable this probe during runtime, e.g. when just a single test instance should collect the results.
@@ -51,4 +38,29 @@ public interface SimpleProbe<R extends Result<R>, T extends SimpleProbe<R, T>> {
      * @return <tt>true</tt> if probe is disabled, <tt>false</tt> otherwise.
      */
     boolean isDisabled();
+
+    /**
+     * Sets the throughput result by passing invocations and duration in milliseconds.
+     *
+     * Can be used if {@link #startProbing(long)} and {@link #stopProbing(long)} are not directly related, e.g. in asynchronous
+     * tests or are collected from an external source like a C++ client.
+     *
+     * @param durationMs  duration of sampling in milliseconds
+     * @param invocations number of invocation during sampling period
+     */
+    void setValues(long durationMs, int invocations);
+
+    /**
+     * Adds a latency value in nanoseconds to the probe result.
+     *
+     * Can be used if {@link #started()} and {@link #done()} are not directly related, e.g. in asynchronous tests or are collected
+     * from an external source like a C++ client.
+     *
+     * @param latencyNanos latency value in nanoseconds
+     */
+    void recordValue(long latencyNanos);
+
+    long getInvocationCount();
+
+    Result getResult();
 }

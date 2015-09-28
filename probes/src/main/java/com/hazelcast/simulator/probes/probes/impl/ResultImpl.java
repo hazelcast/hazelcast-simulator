@@ -28,28 +28,45 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
 @SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
-public class HdrResult implements Result<HdrResult> {
+public class ResultImpl implements Result {
 
-    public static final String XML_TYPE = HdrResult.class.getSimpleName();
+    public static final String XML_TYPE = ResultImpl.class.getSimpleName();
 
     private final Histogram histogram;
+    private final long invocations;
+    private final double throughput;
 
-    public HdrResult(Histogram histogram) {
+    public ResultImpl(Histogram histogram, long invocations, double throughput) {
         this.histogram = histogram.copy();
+        this.invocations = invocations;
+        this.throughput = throughput;
     }
 
+    @Override
     public Histogram getHistogram() {
         return histogram;
     }
 
     @Override
-    public HdrResult combine(HdrResult other) {
+    public long getInvocationCount() {
+        return invocations;
+    }
+
+    @Override
+    public double getThroughput() {
+        return throughput;
+    }
+
+    @Override
+    public Result combine(Result other) {
         if (other == null) {
             return this;
         }
+
+        ResultImpl otherResult = (ResultImpl) other;
         Histogram combinedHistogram = histogram.copy();
-        combinedHistogram.add(other.histogram);
-        return new HdrResult(combinedHistogram);
+        combinedHistogram.add(otherResult.histogram);
+        return new ResultImpl(combinedHistogram, invocations + otherResult.invocations, throughput + otherResult.throughput);
     }
 
     @Override
@@ -71,7 +88,13 @@ public class HdrResult implements Result<HdrResult> {
         byteBuffer.limit(bytesWritten);
         String encodedData = Base64.encodeBase64String(byteBuffer.array());
         try {
-            writer.writeStartElement(ProbesResultXmlElements.HDR_LATENCY_DATA.getName());
+            writer.writeStartElement(ProbesResultXmlElements.INVOCATIONS.getName());
+            writer.writeCharacters(Long.toString(invocations));
+            writer.writeEndElement();
+            writer.writeStartElement(ProbesResultXmlElements.THROUGHPUT.getName());
+            writer.writeCharacters(Double.toString(throughput));
+            writer.writeEndElement();
+            writer.writeStartElement(ProbesResultXmlElements.LATENCY.getName());
             writer.writeCData(encodedData);
             writer.writeEndElement();
         } catch (XMLStreamException e) {
@@ -88,7 +111,7 @@ public class HdrResult implements Result<HdrResult> {
             return false;
         }
 
-        HdrResult that = (HdrResult) o;
+        ResultImpl that = (ResultImpl) o;
         if (histogram != null ? !histogram.equals(that.histogram) : that.histogram != null) {
             return false;
         }
