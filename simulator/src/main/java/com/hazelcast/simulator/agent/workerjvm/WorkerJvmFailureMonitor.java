@@ -16,6 +16,8 @@
 package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.simulator.agent.Agent;
+import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.test.FailureType;
@@ -183,7 +185,14 @@ public class WorkerJvmFailureMonitor {
         private void sendFailureOperation(String message, FailureType type, WorkerJvm jvm, String testId, String cause) {
             FailureOperation operation = new FailureOperation(message, type, agent.getPublicAddress(), jvm.getAddress(),
                     jvm.getHazelcastAddress(), jvm.getId(), testId, agent.getTestSuite(), cause);
-            agent.getAgentConnector().submit(SimulatorAddress.COORDINATOR, operation);
+            LOGGER.error(format("Detected failure on worker %s: %s", jvm.getId(), operation));
+
+            Response response = agent.getAgentConnector().write(SimulatorAddress.COORDINATOR, operation);
+            if (response.getFirstErrorResponseType() != ResponseType.SUCCESS) {
+                LOGGER.fatal(format("Could not send failure to coordinator! %s", operation));
+            } else {
+                LOGGER.info("Failure successfully sent to Coordinator!");
+            }
         }
     }
 
