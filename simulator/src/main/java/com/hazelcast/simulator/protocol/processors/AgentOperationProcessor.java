@@ -15,8 +15,10 @@ import com.hazelcast.simulator.protocol.operation.WorkerIsAliveOperation;
 import com.hazelcast.simulator.worker.WorkerType;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.protocol.configuration.Ports.WORKER_START_PORT;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
@@ -43,8 +45,7 @@ public class AgentOperationProcessor extends OperationProcessor {
     protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception {
         switch (operationType) {
             case CREATE_WORKER:
-                processCreateWorker((CreateWorkerOperation) operation);
-                break;
+                return processCreateWorker((CreateWorkerOperation) operation);
             case INIT_TEST_SUITE:
                 processInitTestSuite((InitTestSuiteOperation) operation);
                 break;
@@ -57,27 +58,37 @@ public class AgentOperationProcessor extends OperationProcessor {
         return SUCCESS;
     }
 
-    private void processCreateWorker(final CreateWorkerOperation operation) throws Exception {
-        final CountDownLatch createdWorkerLatch = new CountDownLatch(operation.getWorkerJvmSettings().size());
+    private ResponseType processCreateWorker(final CreateWorkerOperation operation) throws Exception {
+        ArrayList<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
         for (final WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
             final WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerJvmSettings);
-            getExecutorService().submit(new Runnable() {
+            Future<Boolean> future = getExecutorService().submit(new Callable<Boolean>() {
                 @Override
-                public void run() {
-                    launcher.launch();
+                public Boolean call() {
+                    try {
+                        launcher.launch();
 
-                    int workerIndex = workerJvmSettings.getWorkerIndex();
-                    int workerPort = WORKER_START_PORT + workerIndex;
-                    SimulatorAddress workerAddress = agent.getAgentConnector().addWorker(workerIndex, "127.0.0.1", workerPort);
+                        int workerIndex = workerJvmSettings.getWorkerIndex();
+                        int workerPort = WORKER_START_PORT + workerIndex;
+                        SimulatorAddress workerAddress = agent.getAgentConnector().addWorker(workerIndex, "127.0.0.1", workerPort);
 
-                    WorkerType workerType = workerJvmSettings.getWorkerType();
-                    agent.getCoordinatorLogger().debug(format("Created %s worker %s", workerType, workerAddress));
+                        WorkerType workerType = workerJvmSettings.getWorkerType();
+                        agent.getCoordinatorLogger().debug(format("Created %s worker %s", workerType, workerAddress));
 
-                    createdWorkerLatch.countDown();
+                        return true;
+                    } catch (Exception e) {
+                        return false;
+                    }
                 }
             });
+            futures.add(future);
         }
-        createdWorkerLatch.await();
+        for (Future<Boolean> future : futures) {
+            if (!future.get()) {
+                return ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
+            }
+        }
+        return SUCCESS;
     }
 
     private void processInitTestSuite(InitTestSuiteOperation operation) {
