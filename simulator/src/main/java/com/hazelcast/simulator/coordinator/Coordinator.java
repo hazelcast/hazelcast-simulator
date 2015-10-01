@@ -49,6 +49,7 @@ import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
@@ -365,6 +366,9 @@ public final class Coordinator {
             remoteClient.createWorkers(agentMemberLayouts);
             echo("Successfully started workers");
         } catch (Exception e) {
+            while (failureContainer.getFailureCount() == 0) {
+                sleepSeconds(1);
+            }
             throw new CommandLineExitException("Failed to start workers", e);
         }
 
