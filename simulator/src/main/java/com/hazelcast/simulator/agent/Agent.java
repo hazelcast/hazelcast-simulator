@@ -147,10 +147,10 @@ public class Agent {
 
     private AgentRemoteService getAgentRemoteService() {
         try {
-            AgentMessageProcessor agentMessageProcessor = new AgentMessageProcessor(workerJvmManager);
-            AgentRemoteService agentRemoteService = new AgentRemoteService(this, agentMessageProcessor);
-            agentRemoteService.start();
-            return agentRemoteService;
+            AgentMessageProcessor messageProcessor = new AgentMessageProcessor(workerJvmManager);
+            AgentRemoteService remoteService = new AgentRemoteService(this, messageProcessor);
+            remoteService.start();
+            return remoteService;
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to start REST server", e);
         }
