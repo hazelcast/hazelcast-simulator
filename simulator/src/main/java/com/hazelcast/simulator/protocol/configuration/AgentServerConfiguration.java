@@ -42,6 +42,7 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     @Override
     public ChannelGroup getChannelGroup() {
+        channelCollectorHandler.waitForAtLeastOneChannel();
         return channelCollectorHandler.getChannels();
     }
 
@@ -68,6 +69,6 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort) {
         return new AgentClientConfiguration(processor, getFutureMap(), localAddress,
-                workerIndex, workerHost, workerPort, getChannelGroup());
+                workerIndex, workerHost, workerPort, channelCollectorHandler.getChannels());
     }
 }

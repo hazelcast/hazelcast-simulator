@@ -22,12 +22,15 @@ public class ChannelCollectorHandler extends ChannelInboundHandlerAdapter {
         countDownLatch.countDown();
     }
 
-    public ChannelGroup getChannels() {
+    public void waitForAtLeastOneChannel() {
         try {
             countDownLatch.await();
         } catch (InterruptedException ignored) {
             EmptyStatement.ignore(ignored);
         }
+    }
+
+    public ChannelGroup getChannels() {
         return channels;
     }
 }

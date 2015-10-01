@@ -39,6 +39,7 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
 
     @Override
     public ChannelGroup getChannelGroup() {
+        channelCollectorHandler.waitForAtLeastOneChannel();
         return channelCollectorHandler.getChannels();
     }
 
