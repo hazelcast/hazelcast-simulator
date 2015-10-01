@@ -112,10 +112,10 @@ public final class Coordinator {
         try {
             initAgents();
 
-            startWorkers();
-
             failureMonitor = new FailureMonitor(agentsClient, testSuite.id);
             failureMonitor.start();
+
+            startWorkers();
 
             performanceMonitor = new PerformanceMonitor(agentsClient);
 
