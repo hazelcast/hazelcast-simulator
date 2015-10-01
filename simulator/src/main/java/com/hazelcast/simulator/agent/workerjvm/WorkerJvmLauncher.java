@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.utils.CommonUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
@@ -150,12 +151,12 @@ public class WorkerJvmLauncher {
         String[] args = buildArgs(workerJvm, type);
         File startScript = new File(workerJvm.getWorkerHome(), "worker.sh");
 
-        StringBuilder sb = new StringBuilder("#!/bin/bash\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("#!/bin/bash").append(NEW_LINE);
         for (String arg : args) {
             sb.append(arg).append(" ");
         }
-        //sb.append(" > sysout.log");
-        sb.append("\n");
+        sb.append("> worker.out 2> worker.err").append(NEW_LINE);
 
         writeText(sb.toString(), startScript);
     }
