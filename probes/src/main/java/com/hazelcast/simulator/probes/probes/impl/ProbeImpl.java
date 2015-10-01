@@ -84,7 +84,7 @@ public class ProbeImpl implements Probe {
     }
 
     @Override
-    public void setValues(long durationMs, int invocations) {
+    public void setValues(long durationMs, long invocations) {
         if (durationMs < 1) {
             throw new IllegalArgumentException("durationMs must be positive, but was " + durationMs);
         }

@@ -66,7 +66,7 @@ public class ConcurrentProbe implements Probe {
     }
 
     @Override
-    public void setValues(long durationMs, int invocations) {
+    public void setValues(long durationMs, long invocations) {
         getProbe().setValues(durationMs, invocations);
     }
 

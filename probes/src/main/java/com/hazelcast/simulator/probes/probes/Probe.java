@@ -48,7 +48,7 @@ public interface Probe {
      * @param durationMs  duration of sampling in milliseconds
      * @param invocations number of invocation during sampling period
      */
-    void setValues(long durationMs, int invocations);
+    void setValues(long durationMs, long invocations);
 
     /**
      * Adds a latency value in nanoseconds to the probe result.

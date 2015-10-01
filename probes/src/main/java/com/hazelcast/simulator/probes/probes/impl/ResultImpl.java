@@ -30,8 +30,6 @@ import java.nio.ByteBuffer;
 @SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
 public class ResultImpl implements Result {
 
-    public static final String XML_TYPE = ResultImpl.class.getSimpleName();
-
     private final Histogram histogram;
     private final long invocations;
     private final double throughput;
