@@ -227,6 +227,8 @@ public class WorkerJvmLauncher {
         // add class name to start correct worker type
         args.add(type.getClassName());
 
+        args.add(" > worker.out 2> worker.err");
+
         return args.toArray(new String[args.size()]);
     }
 
