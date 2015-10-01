@@ -39,7 +39,7 @@ public class MapPutAllTest {
     // controls the key locality. E.g. a batch can be made for local or single partition etc.
     public KeyLocality keyLocality;
     // the number of maps we insert. We don't want to keep inserting the same map over an over
-    public int mapCount = 100;
+    public int mapCount = 2;
     // if we want to use putAll or put (this is a nice setting to see what kind of speedup or slowdown to expect)
     public boolean usePutAll = true;
 
@@ -49,7 +49,7 @@ public class MapPutAllTest {
 
     private HazelcastInstance instance;
     private IMap<String, String> map;
-    private Map<String, String>[] insertMaps;
+    private Map<String, String>[] inputMaps;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
@@ -73,13 +73,13 @@ public class MapPutAllTest {
             keys[i] = generateStringKey(keySize, keyLocality, instance);
         }
 
-        insertMaps = new Map[mapCount];
+        inputMaps = new Map[mapCount];
         for (int mapIndex = 0; mapIndex < mapCount; mapIndex++) {
-            Map<String, String> insertMap = new HashMap<String, String>();
-            insertMaps[mapIndex] = insertMap;
+            Map<String, String> inputMap = new HashMap<String, String>();
+            inputMaps[mapIndex] = inputMap;
             for (int itemIndex = 0; itemIndex < itemCount; itemIndex++) {
                 String value = GeneratorUtils.generateString(valueSize);
-                insertMap.put(keys[mapIndex], value);
+                inputMap.put(keys[mapIndex], value);
             }
         }
     }
@@ -107,7 +107,7 @@ public class MapPutAllTest {
         }
 
         private Map<String, String> randomMap() {
-            return insertMaps[randomInt(insertMaps.length)];
+            return inputMaps[randomInt(inputMaps.length)];
         }
     }
 

@@ -39,7 +39,7 @@ public class AllEntrySetTest {
     // the size of the value (in chars, since value is a string)
     public int valueLength = 1000;
     // a switch between using IMap.keySet() or IMap.keySet(true-predicate)
-    public boolean noPredicate = true;
+    public boolean usePredicate = false;
     public IntervalProbe latency;
 
     private IMap<String, String> map;
@@ -79,10 +79,10 @@ public class AllEntrySetTest {
         protected void timeStep() {
             latency.started();
             Set<Map.Entry<String, String>> result;
-            if (noPredicate) {
-                result = map.entrySet();
-            } else {
+            if (usePredicate) {
                 result = map.entrySet(TruePredicate.INSTANCE);
+            } else {
+                result = map.entrySet();
             }
             latency.done();
 

@@ -38,7 +38,7 @@ public class AllValuesTest {
     // the size of the value (in chars, since value is a string)
     public int valueLength = 1000;
     // a switch between using IMap.keySet() or IMap.keySet(true-predicate)
-    public boolean noPredicate = true;
+    public boolean usePredicate = false;
     public IntervalProbe latency;
 
     private IMap<String, String> map;
@@ -78,10 +78,10 @@ public class AllValuesTest {
         protected void timeStep() {
             latency.started();
             Collection<String> result;
-            if (noPredicate) {
-                result = map.values();
-            } else {
+            if (usePredicate) {
                 result = map.values(TruePredicate.INSTANCE);
+            } else {
+                result = map.values();
             }
             latency.done();
 
