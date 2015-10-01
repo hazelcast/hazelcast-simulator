@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 
+import static com.hazelcast.simulator.utils.CommonUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 
@@ -78,7 +79,7 @@ public final class NativeUtils {
                 exitWithError();
             } else {
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Bash output: \n" + sb);
+                    LOGGER.debug("Bash output:" + NEW_LINE + sb);
                 }
             }
         } catch (IOException e) {
@@ -145,7 +146,7 @@ public final class NativeUtils {
             try {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line).append("\n");
+                    stringBuilder.append(line).append(NEW_LINE);
                 }
             } catch (IOException ignored) {
                 EmptyStatement.ignore(ignored);

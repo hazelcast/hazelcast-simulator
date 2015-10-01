@@ -7,7 +7,6 @@ import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -109,8 +108,6 @@ public class WorkerJvmLauncher {
         environment.put("JAVA_HOME", javaHome);
 
         Process process = processBuilder.start();
-        File logFile = new File(workerHome, "out.log");
-        new WorkerJvmProcessOutputGobbler(process.getInputStream(), new FileOutputStream(logFile)).start();
         workerJvm.setProcess(process);
         copyResourcesToWorkerId(workerId);
         workerJVMs.put(workerId, workerJvm);
