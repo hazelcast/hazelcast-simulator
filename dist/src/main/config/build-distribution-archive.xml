@@ -10,13 +10,13 @@
     <fileSets>
         <fileSet>
             <directory>${project.basedir}/src/main/dist/bin</directory>
-            <outputDirectory>/bin</outputDirectory>
+            <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/dist</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory />
             <excludes>
                 <exclude>bin/*</exclude>
             </excludes>
@@ -24,11 +24,8 @@
     </fileSets>
     <dependencySets>
         <dependencySet>
-            <outputDirectory>/lib</outputDirectory>
+            <outputDirectory>lib</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
-            <excludes>
-                <exclude>com.hazelcast:hazelcast-code-generator</exclude>
-            </excludes>
         </dependencySet>
     </dependencySets>
 </assembly>
