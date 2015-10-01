@@ -5,6 +5,8 @@ import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestSuite;
 
+import static com.hazelcast.simulator.utils.CommonUtils.NEW_LINE;
+
 public class FailureOperation implements SimulatorOperation {
 
     private final long time = System.currentTimeMillis();
@@ -59,26 +61,26 @@ public class FailureOperation implements SimulatorOperation {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Failure[\n");
-        sb.append("   message='").append(message).append("'\n");
-        sb.append("   type='").append(type).append("'\n");
-        sb.append("   agentAddress=").append(agentAddress).append("\n");
-        sb.append("   time=").append(time).append("\n");
-        sb.append("   hzAddress=").append(hzAddress).append("\n");
-        sb.append("   workerId=").append(workerId).append("\n");
+        sb.append("Failure[").append(NEW_LINE);
+        sb.append("   message='").append(message).append("'").append(NEW_LINE);
+        sb.append("   type=").append(type).append(NEW_LINE);
+        sb.append("   time=").append(time).append(NEW_LINE);
+        sb.append("   agentAddress=").append(agentAddress).append(NEW_LINE);
+        sb.append("   hzAddress=").append(hzAddress).append(NEW_LINE);
+        sb.append("   workerId=").append(workerId).append(NEW_LINE);
 
         TestCase testCase = testSuite.getTestCase(testId);
         if (testCase != null) {
             String prefix = "   test=";
-            for (String testString : testCase.toString().split("\n")) {
-                sb.append(prefix).append(testString).append("\n");
+            for (String testString : testCase.toString().split(NEW_LINE)) {
+                sb.append(prefix).append(testString).append(NEW_LINE);
                 prefix = "    ";
             }
         } else {
-            sb.append("   test=").append(testId).append(" unknown").append("\n");
+            sb.append("   test=").append(testId).append(" (unknown)").append(NEW_LINE);
         }
 
-        sb.append("   cause=").append(cause != null ? cause : "null").append("\n");
+        sb.append("   cause=").append(cause != null ? cause.trim() : "null").append(NEW_LINE);
         sb.append("]");
 
         return sb.toString();
