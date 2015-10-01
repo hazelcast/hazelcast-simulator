@@ -69,22 +69,22 @@ public class RemoteClient {
             if (workerCount == 0) {
                 continue;
             }
-            final SimulatorAddress destination = agentMemberLayout.getSimulatorAddress();
+            final SimulatorAddress agentAddress = agentMemberLayout.getSimulatorAddress();
             final String workerType = (isMemberType) ? "member" : "client";
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     CreateWorkerOperation operation = new CreateWorkerOperation(settingsList);
-                    Response response = coordinatorConnector.write(destination, operation);
+                    Response response = coordinatorConnector.write(agentAddress, operation);
 
                     ResponseType responseType = response.getFirstErrorResponseType();
                     if (responseType != ResponseType.SUCCESS) {
                         throw new CommandLineExitException(format("Could not create %d %s worker on %s (%s)",
-                                workerCount, workerType, destination, responseType));
+                                workerCount, workerType, agentAddress, responseType));
                     }
 
-                    LOGGER.info(format("Created %d %s worker on %s", workerCount, workerType, destination));
-                    componentRegistry.addWorkers(destination, settingsList);
+                    LOGGER.info(format("Created %d %s worker on %s", workerCount, workerType, agentAddress));
+                    componentRegistry.addWorkers(agentAddress, settingsList);
                 }
             });
         }
