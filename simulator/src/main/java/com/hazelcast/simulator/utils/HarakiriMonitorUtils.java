@@ -15,12 +15,14 @@ public final class HarakiriMonitorUtils {
     }
 
     public static boolean isHarakiriMonitorEnabled(SimulatorProperties props) {
-        return (isEC2(props.get("CLOUD_PROVIDER")) && "true".equals(props.get("HARAKIRI_MONITOR_ENABLED")));
+        return (isEC2(props.get("CLOUD_PROVIDER")) && "true".equalsIgnoreCase(props.get("HARAKIRI_MONITOR_ENABLED")));
     }
 
     public static String getStartHarakiriMonitorCommandOrNull(SimulatorProperties props) {
         if (!isHarakiriMonitorEnabled(props)) {
-            LOGGER.info("HarakiriMonitor is not enabled or not running on EC2");
+            if (isEC2(props.get("CLOUD_PROVIDER"))) {
+                LOGGER.info("HarakiriMonitor is not enabled");
+            }
             return null;
         }
 

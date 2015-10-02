@@ -65,6 +65,14 @@ public class HarakiriMonitorUtilsTest {
     }
 
     @Test
+    public void testIsEnabled_onEC2_equalsIgnoreCase() {
+        properties.set("CLOUD_PROVIDER", PROVIDER_EC2);
+        properties.set("HARAKIRI_MONITOR_ENABLED", "TruE");
+
+        assertTrue(isHarakiriMonitorEnabled(properties));
+    }
+
+    @Test
     public void testGetStartCommand() {
         properties.set("CLOUD_PROVIDER", PROVIDER_EC2);
         properties.set("CLOUD_IDENTITY", "identity");
@@ -90,8 +98,18 @@ public class HarakiriMonitorUtilsTest {
     }
 
     @Test
-    public void testGetStartCommand_featureDisabled() {
+    public void testGetStartCommand_onStatic() {
         properties.set("CLOUD_PROVIDER", PROVIDER_STATIC);
+        properties.set("HARAKIRI_MONITOR_ENABLED", "true");
+
+        String command = getStartHarakiriMonitorCommandOrNull(properties);
+        assertNull(command);
+    }
+
+    @Test
+    public void testGetStartCommand_featureDisabled() {
+        properties.set("CLOUD_PROVIDER", PROVIDER_EC2);
+        properties.set("HARAKIRI_MONITOR_ENABLED", "false");
 
         String command = getStartHarakiriMonitorCommandOrNull(properties);
         assertNull(command);
