@@ -17,6 +17,7 @@ package com.hazelcast.simulator.probes.probes.impl;
 
 import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.probes.probes.Result;
+import org.HdrHistogram.Histogram;
 
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,6 +69,28 @@ public class ConcurrentProbe implements Probe {
     @Override
     public void setValues(long durationMs, long invocations) {
         getProbe().setValues(durationMs, invocations);
+    }
+
+    @Override
+    public Histogram getIntervalHistogram() {
+        Iterator<Probe> probeIterator = probeMap.values().iterator();
+
+        Probe firstProbe = findNextEnabledProbeOrNull(probeIterator);
+        if (firstProbe == null) {
+            return null;
+        }
+
+        Histogram intervalHistogram = firstProbe.getIntervalHistogram().copy();
+        while (probeIterator.hasNext()) {
+            Probe nextProbe = probeIterator.next();
+            if (nextProbe.isDisabled()) {
+                continue;
+            }
+            Histogram nextHistogram = nextProbe.getIntervalHistogram();
+            intervalHistogram.add(nextHistogram);
+        }
+
+        return intervalHistogram;
     }
 
     @Override

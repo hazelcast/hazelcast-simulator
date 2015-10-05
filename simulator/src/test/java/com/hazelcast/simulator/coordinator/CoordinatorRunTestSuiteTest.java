@@ -2,7 +2,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.test.TestCase;
@@ -12,16 +11,9 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.test.FailureType.WORKER_OOM;
@@ -129,51 +121,6 @@ public class CoordinatorRunTestSuiteTest {
         coordinator.runTestSuite();
 
         verifyRemoteClient(coordinator);
-    }
-
-    // FIXME
-    @Ignore
-    @Test
-    public void runTestSuiteSequential_probeResults() throws Exception {
-        Answer<List<List<Map<String, Result>>>> probeResultsAnswer = new Answer<List<List<Map<String, Result>>>>() {
-            @Override
-            @SuppressWarnings("unchecked")
-            public List<List<Map<String, Result>>> answer(InvocationOnMock invocation) throws Throwable {
-                Map<String, Result> resultMap = new HashMap<String, Result>();
-                //resultMap.put("CoordinatorTest1", new ResultImpl());
-                //resultMap.put("CoordinatorTest2", new ResultImpl());
-
-                List<Map<String, Result>> resultList = new ArrayList<Map<String, Result>>();
-                resultList.add(resultMap);
-
-                List<List<Map<String, Result>>> result = new ArrayList<List<Map<String, Result>>>();
-                result.add(resultList);
-
-                return result;
-            }
-        };
-        //when(agentsClient.executeOnAllWorkers(isA(GetBenchmarkResultsCommand.class))).thenAnswer(probeResultsAnswer);
-
-        testSuite.setDurationSeconds(1);
-        parallel = false;
-
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
-
-        verifyRemoteClient(coordinator);
-    }
-
-    // FIXME
-    @Ignore
-    @Test
-    public void runTestSuite_getProbeResultsTimeoutException() throws Exception {
-        //when(agentsClient.executeOnAllWorkers(isA(GetBenchmarkResultsCommand.class))).thenThrow(new TimeoutException());
-
-        testSuite.setDurationSeconds(1);
-        parallel = true;
-
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
     }
 
     @Test

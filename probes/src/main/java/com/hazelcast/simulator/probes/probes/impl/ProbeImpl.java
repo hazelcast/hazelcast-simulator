@@ -17,6 +17,7 @@ package com.hazelcast.simulator.probes.probes.impl;
 
 import com.hazelcast.simulator.probes.probes.Probe;
 import org.HdrHistogram.Histogram;
+import org.HdrHistogram.Recorder;
 
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +30,7 @@ public class ProbeImpl implements Probe {
 
     private static final double ONE_SECOND_IN_MS = TimeUnit.SECONDS.toMillis(1);
 
-    private final Histogram histogram = new Histogram(MAXIMUM_LATENCY, 4);
+    private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, 4);
 
     private long invocations;
 
@@ -98,7 +99,7 @@ public class ProbeImpl implements Probe {
 
     @Override
     public void recordValue(long latencyNanos) {
-        histogram.recordValue((int) TimeUnit.NANOSECONDS.toMicros(latencyNanos));
+        recorder.recordValue((int) TimeUnit.NANOSECONDS.toMicros(latencyNanos));
         invocations++;
     }
 
@@ -108,7 +109,12 @@ public class ProbeImpl implements Probe {
     }
 
     @Override
+    public Histogram getIntervalHistogram() {
+        return recorder.getIntervalHistogram();
+    }
+
+    @Override
     public ResultImpl getResult() {
-        return new ResultImpl(histogram, invocations, ((invocations * ONE_SECOND_IN_MS) / durationMs));
+        return new ResultImpl(recorder.getIntervalHistogram(), invocations, ((invocations * ONE_SECOND_IN_MS) / durationMs));
     }
 }

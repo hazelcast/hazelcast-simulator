@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.probes.Probe;
-import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
@@ -17,6 +16,7 @@ import com.hazelcast.simulator.worker.performance.PerformanceState;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
+import org.HdrHistogram.Histogram;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ public class TestContainerTest {
 
     private DummyTestContext testContext;
     private TestCase testCase;
-    private TestContainer<DummyTestContext> testContainer;
+    private TestContainer testContainer;
 
     @Before
     public void setUp() {
@@ -48,7 +48,7 @@ public class TestContainerTest {
 
     @Test(expected = NullPointerException.class)
     public void testConstructor_testContext_isNull() {
-        new TestContainer<DummyTestContext>(new DummyTest(), null, null);
+        new TestContainer(new DummyTest(), null, null);
     }
 
     @Test
@@ -350,9 +350,9 @@ public class TestContainerTest {
         assertTrue(testContainer.hasProbe("latencyProbe"));
 
         testContainer.invoke(TestPhase.RUN);
-        Map<String, Result> resultMap = testContainer.getProbeResults();
-        assertNotNull(resultMap);
-        assertTrue(resultMap.keySet().contains("latencyProbe"));
+        Map<String, Histogram> intervalHistograms = testContainer.getIntervalHistograms();
+        assertNotNull(intervalHistograms);
+        assertTrue(intervalHistograms.keySet().contains("latencyProbe"));
     }
 
     @Test
@@ -524,9 +524,9 @@ public class TestContainerTest {
     public void testPerformance() throws Exception {
         PerformanceTest test = new PerformanceTest();
         testContainer = createTestContainer(test);
-        PerformanceState performanceState = testContainer.getPerformanceState();
+        long operationCount = testContainer.getOperationCount();
 
-        assertEquals(20, performanceState.getOperationCount());
+        assertEquals(20, operationCount);
     }
 
     private static class PerformanceTest {
@@ -545,9 +545,9 @@ public class TestContainerTest {
     public void testPerformanceWithException() throws Exception {
         PerformanceExceptionTest test = new PerformanceExceptionTest();
         testContainer = createTestContainer(test);
-        PerformanceState performanceState = testContainer.getPerformanceState();
+        long operationCount = testContainer.getOperationCount();
 
-        assertEquals(PerformanceState.EMPTY_OPERATION_COUNT, performanceState.getOperationCount());
+        assertEquals(PerformanceState.EMPTY_OPERATION_COUNT, operationCount);
     }
 
     private static class PerformanceExceptionTest {
@@ -566,8 +566,8 @@ public class TestContainerTest {
     // =================== dummy classes ========================
     // ==========================================================
 
-    private <T> TestContainer<DummyTestContext> createTestContainer(T test) {
-        return new TestContainer<DummyTestContext>(test, testContext, testCase);
+    private <T> TestContainer createTestContainer(T test) {
+        return new TestContainer(test, testContext, testCase);
     }
 
     private static class DummyTest {

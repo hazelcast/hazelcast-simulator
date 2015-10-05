@@ -15,16 +15,21 @@
  */
 package com.hazelcast.simulator.tests;
 
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.Setup;
 
-public class PerformanceMonitorTest {
+public class PerformanceMonitorExceptionTest {
 
-    private long operations;
+    @Setup
+    public void setUp(TestContext context) {
+    }
 
     @Performance
     public long getOperationCount() {
-        return operations++;
+        throw new TestException("expected failure");
     }
 
     @Run

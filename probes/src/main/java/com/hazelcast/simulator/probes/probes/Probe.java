@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.probes.probes;
 
+import org.HdrHistogram.Histogram;
+
 public interface Probe {
 
     void startProbing(long timeStamp);
@@ -60,7 +62,14 @@ public interface Probe {
      */
     void recordValue(long latencyNanos);
 
+    /**
+     * Returns the number of invocations.
+     *
+     * @return number of invocations
+     */
     long getInvocationCount();
+
+    Histogram getIntervalHistogram();
 
     Result getResult();
 }

@@ -11,7 +11,6 @@ import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.test.TestCase;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.worker.TestContainer;
 import com.hazelcast.simulator.worker.TestContextImpl;
@@ -44,9 +43,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
     private final AtomicInteger testsPending = new AtomicInteger(0);
     private final AtomicInteger testsCompleted = new AtomicInteger(0);
 
-    private final ConcurrentMap<String, TestContainer<TestContext>> tests
-            = new ConcurrentHashMap<String, TestContainer<TestContext>>();
-
+    private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
     private final ConcurrentMap<String, TestPhase> testPhases = new ConcurrentHashMap<String, TestPhase>();
 
     private final ExceptionLogger exceptionLogger;
@@ -65,7 +62,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         this.worker = worker;
     }
 
-    public Collection<TestContainer<TestContext>> getTests() {
+    public Collection<TestContainer> getTests() {
         return tests.values();
     }
 
@@ -117,7 +114,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
         TestContextImpl testContext = new TestContextImpl(testId, hazelcastInstance);
 
-        tests.put(testId, new TestContainer<TestContext>(testInstance, testContext, testCase));
+        tests.put(testId, new TestContainer(testInstance, testContext, testCase));
         testsPending.incrementAndGet();
 
         if (type == WorkerType.MEMBER) {
@@ -143,7 +140,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         final TestPhase testPhase = operation.getTestPhase();
 
         try {
-            final TestContainer<TestContext> test = tests.get(testId);
+            final TestContainer test = tests.get(testId);
             if (test == null) {
                 // we log a warning: it could be that it's a newly created machine from mama-monkey
                 LOGGER.warn(format("Failed to process operation %s, found no test with testId %s", operation, testId));
@@ -179,7 +176,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         final String testId = operation.getTestId();
         final String testName = "".equals(testId) ? "test" : testId;
 
-        final TestContainer<TestContext> test = tests.get(testId);
+        final TestContainer test = tests.get(testId);
         if (test == null) {
             LOGGER.warn(format("Failed to process operation %s (no test with testId %s is found)", operation, testId));
             return;
@@ -211,7 +208,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         String testId = operation.getTestId();
         String testName = "".equals(testId) ? "test" : testId;
 
-        TestContainer<TestContext> test = tests.get(testId);
+        TestContainer test = tests.get(testId);
         if (test == null) {
             LOGGER.warn("Can't stop test, found no test with id " + testId);
             return;

@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.probes.Probe;
-import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.impl.ConcurrentProbe;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
@@ -17,15 +16,15 @@ import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.performance.PerformanceState;
-import com.hazelcast.simulator.worker.performance.PerformanceTracker;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import com.hazelcast.util.Clock;
+import org.HdrHistogram.Histogram;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,10 +46,8 @@ import static java.lang.String.format;
 /**
  * Since the test is based on annotations there is no API we can call easily.
  * That is the task of this test container.
- *
- * @param <T> Class of type {@link com.hazelcast.simulator.test.TestContext}
  */
-public class TestContainer<T extends TestContext> {
+public class TestContainer {
 
     /**
      * List of optional test properties, which are allowed to be defined in the properties file, but not in the test class.
@@ -88,10 +85,8 @@ public class TestContainer<T extends TestContext> {
 
     private final Object testClassInstance;
     private final Class testClassType;
-    private final T testContext;
+    private final TestContext testContext;
     private final TestCase testCase;
-
-    private final PerformanceTracker performanceTracker;
 
     private Method runMethod;
     private Method runWithWorkerMethod;
@@ -114,7 +109,7 @@ public class TestContainer<T extends TestContext> {
 
     private volatile boolean isRunning = true;
 
-    public TestContainer(Object testObject, T testContext, TestCase testCase) {
+    public TestContainer(Object testObject, TestContext testContext, TestCase testCase) {
         if (testObject == null) {
             throw new NullPointerException();
         }
@@ -126,33 +121,23 @@ public class TestContainer<T extends TestContext> {
         this.testClassType = testObject.getClass();
         this.testContext = testContext;
         this.testCase = testCase;
-        this.performanceTracker = new PerformanceTracker();
 
         initMethods();
     }
 
-    public Map<String, Result> getProbeResults() {
-        Map<String, Result> results = new HashMap<String, Result>(probeMap.size());
-        for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
-            String probeName = entry.getKey();
-            Probe probe = entry.getValue();
-            if (!probe.isDisabled()) {
-                Result result = probe.getResult();
-                results.put(probeName, result);
-            }
-        }
-        return results;
-    }
-
-    public T getTestContext() {
+    public TestContext getTestContext() {
         return testContext;
     }
 
-    public PerformanceState getPerformanceState() {
-        if (!isRunning) {
-            return null;
-        }
+    public Collection<String> getProbeNames() {
+        return probeMap.keySet();
+    }
 
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    public long getOperationCount() {
         long operationCount = EMPTY_OPERATION_COUNT;
         try {
             Object testInstance = (operationCountWorkerInstance != null ? operationCountWorkerInstance : testClassInstance);
@@ -163,7 +148,18 @@ public class TestContainer<T extends TestContext> {
         } catch (Exception e) {
             LOGGER.debug("Exception while retrieving operation count from " + testCase.getId() + ": " + e.getMessage());
         }
-        return performanceTracker.update(operationCount);
+        return operationCount;
+    }
+
+    public Map<String, Histogram> getIntervalHistograms() {
+        Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
+        for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
+            Probe probe = entry.getValue();
+            if (!probe.isDisabled()) {
+                intervalHistograms.put(entry.getKey(), probe.getIntervalHistogram());
+            }
+        }
+        return intervalHistograms;
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
@@ -199,7 +195,6 @@ public class TestContainer<T extends TestContext> {
 
     private void run() throws Exception {
         long now = Clock.currentTimeMillis();
-        performanceTracker.start();
         for (Probe probe : probeMap.values()) {
             probe.startProbing(now);
         }
@@ -323,16 +318,14 @@ public class TestContainer<T extends TestContext> {
         Field testContextField = getField(workerClass, "testContext", TestContext.class);
         Field workerProbeField = getField(workerClass, "workerProbe", Probe.class);
 
-        Method optionalMethod = getAtMostOneMethodWithoutArgs(workerClass, Performance.class, Long.TYPE);
-        if (optionalMethod != null) {
-            operationCountMethod = optionalMethod;
+        operationCountMethod = getAtMostOneMethodWithoutArgs(workerClass, Performance.class, Long.TYPE);
+        if (operationCountMethod == null) {
+            operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
         }
 
         // create one concurrent probe per test and inject it in all worker instances of the test
         Probe probe = getOrCreateConcurrentProbe(testId + "WorkerProbe");
         probe.startProbing(now);
-
-        operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
 
         // spawn worker and wait for completion
         spawnWorkerThreads(testContextField, workerProbeField, probe);

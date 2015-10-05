@@ -28,6 +28,7 @@ import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.utils.NativeUtils;
+import com.hazelcast.simulator.worker.performance.WorkerPerformanceMonitor;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 

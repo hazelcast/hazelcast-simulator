@@ -36,6 +36,10 @@ public class PerformanceState {
         }
     }
 
+    public boolean isEmpty() {
+        return operationCount == EMPTY_OPERATION_COUNT && intervalThroughput == EMPTY_THROUGHPUT;
+    }
+
     public double getTotalThroughput() {
         return totalThroughput;
     }
@@ -46,10 +50,6 @@ public class PerformanceState {
 
     public double getIntervalThroughput() {
         return intervalThroughput;
-    }
-
-    public boolean isEmpty() {
-        return operationCount == EMPTY_OPERATION_COUNT && intervalThroughput == EMPTY_THROUGHPUT;
     }
 
     @Override

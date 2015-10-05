@@ -38,6 +38,9 @@ import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROB
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBES_RESULT;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.PROBE_NAME;
 import static com.hazelcast.simulator.probes.probes.ProbesResultXmlElements.THROUGHPUT;
+import static java.lang.Double.parseDouble;
+import static java.lang.Long.parseLong;
+import static org.HdrHistogram.Histogram.decodeFromCompressedByteBuffer;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 
 public final class ProbesResultXmlReader {
@@ -106,28 +109,11 @@ public final class ProbesResultXmlReader {
             if (xmlEvent.isStartElement()) {
                 StartElement startElement = xmlEvent.asStartElement();
                 if (LATENCY.matches(startElement.getName().getLocalPart())) {
-                    if (histogram != null) {
-                        throw new XMLStreamException("Unexpected element " + LATENCY.getName()
-                                + " (has been already defined)");
-                    }
-                    try {
-                        byte[] bytes = decodeBase64(parseCharsAndEndCurrentElement(reader));
-                        histogram = Histogram.decodeFromCompressedByteBuffer(ByteBuffer.wrap(bytes), 0);
-                    } catch (DataFormatException e) {
-                        throw new RuntimeException(e);
-                    }
+                    histogram = parseHistogram(reader, histogram);
                 } else if (INVOCATIONS.matches(startElement.getName().getLocalPart())) {
-                    if (invocations != null) {
-                        throw new XMLStreamException("Unexpected element " + INVOCATIONS.getName()
-                                + " (has been already defined)");
-                    }
-                    invocations = Long.parseLong(parseCharsAndEndCurrentElement(reader));
+                    invocations = parseInvocations(reader, invocations);
                 } else if (THROUGHPUT.matches(startElement.getName().getLocalPart())) {
-                    if (throughput != null) {
-                        throw new XMLStreamException(
-                                "Unexpected element " + THROUGHPUT.getName() + " (has been already defined)");
-                    }
-                    throughput = Double.parseDouble(parseCharsAndEndCurrentElement(reader));
+                    throughput = parseThroughput(reader, throughput);
                 }
                 if (histogram != null && invocations != null && throughput != null) {
                     return new ResultImpl(histogram, invocations, throughput);
@@ -135,6 +121,32 @@ public final class ProbesResultXmlReader {
             }
         }
         throw new XMLStreamException("Unexpected end of stream");
+    }
+
+    private static Histogram parseHistogram(XMLEventReader reader, Histogram histogram) throws XMLStreamException {
+        if (histogram != null) {
+            throw new XMLStreamException("Unexpected element " + LATENCY.getName() + " (has been already defined)");
+        }
+        try {
+            byte[] bytes = decodeBase64(parseCharsAndEndCurrentElement(reader));
+            return decodeFromCompressedByteBuffer(ByteBuffer.wrap(bytes), 0);
+        } catch (DataFormatException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Long parseInvocations(XMLEventReader reader, Long invocations) throws XMLStreamException {
+        if (invocations != null) {
+            throw new XMLStreamException("Unexpected element " + INVOCATIONS.getName() + " (has been already defined)");
+        }
+        return parseLong(parseCharsAndEndCurrentElement(reader));
+    }
+
+    private static Double parseThroughput(XMLEventReader reader, Double throughput) throws XMLStreamException {
+        if (throughput != null) {
+            throw new XMLStreamException("Unexpected element " + THROUGHPUT.getName() + " (has been already defined)");
+        }
+        return parseDouble(parseCharsAndEndCurrentElement(reader));
     }
 
     private static String parseCharsAndEndCurrentElement(XMLEventReader reader) throws XMLStreamException {

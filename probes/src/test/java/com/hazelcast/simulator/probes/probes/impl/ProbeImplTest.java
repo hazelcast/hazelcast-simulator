@@ -20,6 +20,41 @@ public class ProbeImplTest {
 
     private ProbeImpl probe = new ProbeImpl();
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testStopProbing_negativeTimestamp() {
+        probe.stopProbing(-1);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testStopProbing_withoutStartProbing() {
+        probe.stopProbing(12345);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testStopProbing_negativeDuration() {
+        probe.startProbing(500);
+        probe.stopProbing(400);
+    }
+
+    @Test
+    public void testDone_withStarted() {
+        int expectedCount = 1;
+        long expectedLatency = 150;
+
+        probe.started();
+        sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
+        probe.done();
+
+        ResultImpl result = probe.getResult();
+        assertResult(result, new ProbeImpl().getResult());
+        assertHistogram(result.getHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testDone_withoutStarted() {
+        probe.done();
+    }
+
     @Test
     public void testDisable() {
         assertDisable(probe);
@@ -35,35 +70,14 @@ public class ProbeImplTest {
         assertEquals(62500d, result.getThroughput(), 0.001);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testDoneWithoutStarted() {
-        probe.done();
+    @Test(expected = IllegalArgumentException.class)
+    public void testSetValues_negativeDuration() {
+        probe.setValues(-1, 125000);
     }
 
-    @Test
-    public void testInvocationCount() {
-        probe.started();
-        probe.done();
-        probe.done();
-        probe.done();
-        probe.done();
-        probe.done();
-
-        assertEquals(5, probe.getInvocationCount());
-    }
-
-    @Test
-    public void testStartedDone() {
-        int expectedCount = 1;
-        long expectedLatency = 150;
-
-        probe.started();
-        sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
-        probe.done();
-
-        ResultImpl result = probe.getResult();
-        assertResult(result, new ProbeImpl().getResult());
-        assertHistogram(result.getHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
+    @Test(expected = IllegalArgumentException.class)
+    public void testSetValues_negativeInvocationCount() {
+        probe.setValues(2000, -1);
     }
 
     @Test
@@ -84,7 +98,19 @@ public class ProbeImplTest {
     }
 
     @Test
-    public void testResultCombine() {
+    public void testGetInvocationCount() {
+        probe.started();
+        probe.done();
+        probe.done();
+        probe.done();
+        probe.done();
+        probe.done();
+
+        assertEquals(5, probe.getInvocationCount());
+    }
+
+    @Test
+    public void testGetResult() {
         int expectedCount = 2;
         long expectedMinValue = 150;
         long expectedMaxValue = 500;
