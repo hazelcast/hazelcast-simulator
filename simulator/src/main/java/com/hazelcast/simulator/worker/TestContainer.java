@@ -219,7 +219,7 @@ public class TestContainer<T extends TestContext> {
         try {
             runMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Run.class);
             runWithWorkerMethod = getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, IWorker.class);
-            if (!(runMethod == null ^ runWithWorkerMethod == null)) {
+            if ((runMethod == null) == (runWithWorkerMethod == null)) {
                 throw new IllegalTestException(format("Test must contain either %s or %s method",
                         Run.class, RunWithWorker.class));
             }
