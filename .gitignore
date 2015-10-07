@@ -1,11 +1,12 @@
-*.csv
 target/
+*.iml
+.idea/
 .project
 .classpath
 .settings/
-.idea/
 .patch
-*.iml
 .DS_Store
-vtune/
+
 simulator-git.properties
+*.csv
+vtune/
