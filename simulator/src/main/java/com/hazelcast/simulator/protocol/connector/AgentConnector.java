@@ -57,7 +57,8 @@ public final class AgentConnector extends AbstractServerConnector {
      * @return the {@link SimulatorAddress} of the Simulator Worker
      */
     public SimulatorAddress addWorker(int workerIndex, String workerHost, int workerPort) {
-        ClientConfiguration clientConfiguration = serverConfiguration.getClientConfiguration(workerIndex, workerHost, workerPort);
+        ClientConfiguration clientConfiguration = serverConfiguration.getClientConfiguration(workerIndex, workerHost, workerPort,
+                this);
         ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 

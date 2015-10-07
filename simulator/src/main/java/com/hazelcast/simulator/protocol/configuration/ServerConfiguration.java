@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.configuration;
 
+import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
@@ -55,8 +56,9 @@ public interface ServerConfiguration {
      * Configured the {@link ChannelPipeline} of the {@link com.hazelcast.simulator.protocol.connector.ServerConnector}.
      *
      * @param pipeline the {@link ChannelPipeline} which should be configured
+     * @param connector the {@link ServerConnector} of the channel pipeline
      */
-    void configurePipeline(ChannelPipeline pipeline);
+    void configurePipeline(ChannelPipeline pipeline, ServerConnector connector);
 
     /**
      * Returns the {@link OperationProcessor} of the local Simulator component.

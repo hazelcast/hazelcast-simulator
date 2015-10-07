@@ -1,8 +1,10 @@
 package com.hazelcast.simulator.protocol.configuration;
 
+import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.handler.ChannelCollectorHandler;
+import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.MessageTestConsumeHandler;
@@ -44,7 +46,7 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
     }
 
     @Override
-    public void configurePipeline(ChannelPipeline pipeline) {
+    public void configurePipeline(ChannelPipeline pipeline, ServerConnector serverConnector) {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, localAddress.getParent()));
         pipeline.addLast("collector", channelCollectorHandler);
@@ -55,6 +57,7 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
         pipeline.addLast("testMessageConsumeHandler", messageTestConsumeHandler);
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, localAddress.getParent(), getFutureMap(),
                 getLocalAddressIndex()));
+        pipeline.addLast("exceptionHandler", new ExceptionHandler(serverConnector));
     }
 
     public void addTest(int testIndex, OperationProcessor processor) {

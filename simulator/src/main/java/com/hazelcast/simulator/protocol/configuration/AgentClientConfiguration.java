@@ -1,7 +1,9 @@
 package com.hazelcast.simulator.protocol.configuration;
 
+import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.ForwardToCoordinatorHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
@@ -21,15 +23,17 @@ public class AgentClientConfiguration extends AbstractClientConfiguration {
 
     private final ForwardToCoordinatorHandler forwardToCoordinatorHandler;
     private final MessageConsumeHandler messageConsumeHandler;
+    private final ExceptionHandler exceptionHandler;
 
-    public AgentClientConfiguration(AgentOperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
-                                    SimulatorAddress localAddress, int workerIndex, String workerHost, int workerPort,
-                                    ChannelGroup channelGroup) {
+    public AgentClientConfiguration(AgentConnector agentConnector, AgentOperationProcessor processor,
+                                    ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress,
+                                    int workerIndex, String workerHost, int workerPort, ChannelGroup channelGroup) {
         super(futureMap, localAddress, workerIndex, workerHost, workerPort);
         this.localAddress = localAddress;
 
         this.forwardToCoordinatorHandler = new ForwardToCoordinatorHandler(localAddress, channelGroup, processor.getWorkerJVMs());
         this.messageConsumeHandler = new MessageConsumeHandler(localAddress, processor);
+        this.exceptionHandler = new ExceptionHandler(agentConnector);
     }
 
     @Override
@@ -41,5 +45,6 @@ public class AgentClientConfiguration extends AbstractClientConfiguration {
         pipeline.addLast("forwardToCoordinatorHandler", forwardToCoordinatorHandler);
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, getRemoteAddress(), getFutureMap()));
         pipeline.addLast("messageConsumeHandler", messageConsumeHandler);
+        pipeline.addLast("exceptionHandler", exceptionHandler);
     }
 }

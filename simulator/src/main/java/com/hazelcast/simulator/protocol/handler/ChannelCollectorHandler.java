@@ -10,6 +10,9 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * Collects active channels in a {@link ChannelGroup}, so they can be used to send messages to them.
+ */
 public class ChannelCollectorHandler extends ChannelInboundHandlerAdapter {
 
     private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
