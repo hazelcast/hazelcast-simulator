@@ -41,24 +41,24 @@ public class ForwardToCoordinatorHandler extends SimpleChannelInboundHandler<Byt
             long messageId = getMessageId(buffer);
             LOGGER.debug(format("[%d] %s %s forwarding message to parent", messageId, addressLevel, localAddress));
 
-            updateLastSeenTimestamp(buffer);
+            updateWorkerJvmLastSeenTimestamp(buffer);
 
-            channelGroup.writeAndFlush(buffer.duplicate());
             buffer.retain();
+            channelGroup.writeAndFlush(buffer);
         }
     }
 
-    private void updateLastSeenTimestamp(ByteBuf buffer) {
+    private void updateWorkerJvmLastSeenTimestamp(ByteBuf buffer) {
         SimulatorAddress sourceAddress = getSourceAddress(buffer);
         AddressLevel addressLevel = sourceAddress.getAddressLevel();
         if (addressLevel == AddressLevel.WORKER) {
-            updateLastSeenTimestamp(sourceAddress);
+            updateWorkerJvmLastSeenTimestamp(sourceAddress);
         } else if (addressLevel == AddressLevel.TEST) {
-            updateLastSeenTimestamp(sourceAddress.getParent());
+            updateWorkerJvmLastSeenTimestamp(sourceAddress.getParent());
         }
     }
 
-    private void updateLastSeenTimestamp(SimulatorAddress sourceAddress) {
+    private void updateWorkerJvmLastSeenTimestamp(SimulatorAddress sourceAddress) {
         WorkerJvm workerJvm = workerJVMs.get(sourceAddress);
         if (workerJvm != null) {
             workerJvm.updateLastSeen();
