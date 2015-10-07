@@ -4,7 +4,6 @@ import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
-import com.hazelcast.simulator.protocol.operation.WorkerIsAliveOperation;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.tests.PerformanceMonitorExceptionTest;
 import com.hazelcast.simulator.tests.PerformanceMonitorProbeTest;
@@ -44,15 +43,12 @@ public class WorkerPerformanceMonitorTest {
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
     private final DummyTestContext testContext = new DummyTestContext();
 
-    private SimulatorAddress agentAddress;
     private ServerConnector serverConnector;
-
     private WorkerPerformanceMonitor performanceMonitor;
 
     @Before
     public void setUp() {
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
-        agentAddress = workerAddress.getParent();
 
         serverConnector = mock(ServerConnector.class);
         when(serverConnector.getAddress()).thenReturn(workerAddress);
@@ -147,7 +143,6 @@ public class WorkerPerformanceMonitorTest {
         assertTrue(performanceMonitor.start());
         sleepMillis(500);
 
-        verify(serverConnector).getAddress();
         verifyNoMoreInteractions(serverConnector);
     }
 
@@ -158,7 +153,6 @@ public class WorkerPerformanceMonitorTest {
 
     private void verifyServerConnector() {
         verify(serverConnector, VERIFY_TIMEOUT.atLeastOnce()).submit(eq(SimulatorAddress.COORDINATOR), any(LogOperation.class));
-        verify(serverConnector, VERIFY_TIMEOUT.atLeastOnce()).submit(eq(agentAddress), any(WorkerIsAliveOperation.class));
         verify(serverConnector, atLeastOnce()).getAddress();
         verifyNoMoreInteractions(serverConnector);
     }

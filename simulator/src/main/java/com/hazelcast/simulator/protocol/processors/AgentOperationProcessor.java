@@ -11,7 +11,6 @@ import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.operation.WorkerIsAliveOperation;
 import com.hazelcast.simulator.worker.WorkerType;
 
 import java.io.File;
@@ -41,6 +40,10 @@ public class AgentOperationProcessor extends OperationProcessor {
         this.workerJVMs = workerJVMs;
     }
 
+    public ConcurrentMap<SimulatorAddress, WorkerJvm> getWorkerJVMs() {
+        return workerJVMs;
+    }
+
     @Override
     protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception {
         switch (operationType) {
@@ -48,9 +51,6 @@ public class AgentOperationProcessor extends OperationProcessor {
                 return processCreateWorker((CreateWorkerOperation) operation);
             case INIT_TEST_SUITE:
                 processInitTestSuite((InitTestSuiteOperation) operation);
-                break;
-            case WORKER_IS_ALIVE:
-                processWorkerIsAlive((WorkerIsAliveOperation) operation);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -101,12 +101,5 @@ public class AgentOperationProcessor extends OperationProcessor {
 
         File libDir = new File(testSuiteDir, "lib");
         ensureExistingDirectory(libDir);
-    }
-
-    private void processWorkerIsAlive(WorkerIsAliveOperation operation) {
-        WorkerJvm jvm = workerJVMs.get(operation.getSource());
-        if (jvm != null) {
-            jvm.updateLastSeen();
-        }
     }
 }

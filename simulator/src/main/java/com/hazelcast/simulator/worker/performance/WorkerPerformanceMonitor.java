@@ -3,8 +3,6 @@ package com.hazelcast.simulator.worker.performance;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.operation.WorkerIsAliveOperation;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.worker.ClientWorker;
 import com.hazelcast.simulator.worker.MemberWorker;
@@ -32,7 +30,7 @@ import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeT
  */
 public class WorkerPerformanceMonitor {
 
-    private static final int DEFAULT_MONITORING_INTERVAL_SECONDS = 5;
+    private static final int DEFAULT_MONITORING_INTERVAL_SECONDS = 1;
 
     private final AtomicBoolean started = new AtomicBoolean();
 
@@ -73,9 +71,6 @@ public class WorkerPerformanceMonitor {
         private final Collection<TestContainer> testContainers;
         private final long intervalNanos;
 
-        private final SimulatorOperation keepAliveOperation;
-        private final SimulatorAddress agentAddress;
-
         private long globalLastOpsCount;
         private long globalLastTimestamp;
 
@@ -91,10 +86,6 @@ public class WorkerPerformanceMonitor {
             this.serverConnector = serverConnector;
             this.testContainers = testContainers;
             this.intervalNanos = TimeUnit.SECONDS.toNanos(DEFAULT_MONITORING_INTERVAL_SECONDS);
-
-            SimulatorAddress workerAddress = serverConnector.getAddress();
-            this.keepAliveOperation = new WorkerIsAliveOperation(workerAddress);
-            this.agentAddress = workerAddress.getParent();
 
             writeThroughputHeader(globalThroughputFile, true);
         }
@@ -117,7 +108,6 @@ public class WorkerPerformanceMonitor {
                     updatePerformanceStates(currentTimestamp);
                     sendPerformanceState();
                     writeStatsToFiles(currentTimestamp);
-                    sendKeepAliveToAgent();
                 } catch (Exception e) {
                     LOGGER.fatal("Exception in WorkerPerformanceMonitorThread", e);
                 }
@@ -169,10 +159,6 @@ public class WorkerPerformanceMonitor {
                 operation.addPerformanceState(testId, stats.createPerformanceState());
             }
             serverConnector.submit(SimulatorAddress.COORDINATOR, operation);
-        }
-
-        private void sendKeepAliveToAgent() {
-            serverConnector.submit(agentAddress, keepAliveOperation);
         }
 
         private void writeStatsToFiles(long currentTimestamp) {

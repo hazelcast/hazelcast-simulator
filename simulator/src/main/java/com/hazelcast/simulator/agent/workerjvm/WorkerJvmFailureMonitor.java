@@ -40,7 +40,7 @@ import static java.lang.String.format;
 
 public class WorkerJvmFailureMonitor {
 
-    private static final long LAST_SEEN_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(60);
+    private static final long LAST_SEEN_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(30);
 
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmFailureMonitor.class);
 

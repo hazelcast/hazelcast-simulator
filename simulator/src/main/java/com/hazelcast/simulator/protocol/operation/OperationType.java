@@ -28,9 +28,7 @@ public enum OperationType {
     STOP_TEST(StopTestOperation.class, 10),
 
     PERFORMANCE_STATE(PerformanceStateOperation.class, 11),
-    FAILURE(FailureOperation.class, 12),
-
-    WORKER_IS_ALIVE(WorkerIsAliveOperation.class, 13);
+    FAILURE(FailureOperation.class, 12);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;
