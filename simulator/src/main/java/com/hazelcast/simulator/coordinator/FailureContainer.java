@@ -58,36 +58,10 @@ public class FailureContainer {
         if (operation.getType().isPoisonPill()) {
             return;
         }
+
         failureOperations.add(operation);
-        LOGGER.warn(buildMessage(operation));
-        appendText(operation.toString() + "\n", file);
-    }
 
-    private String buildMessage(FailureOperation operation) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Failure #").append(failureOperations.size()).append(" ");
-        if (operation.getHzAddress() != null) {
-            sb.append(' ');
-            sb.append(operation.getHzAddress());
-            sb.append(' ');
-        } else if (operation.getAgentAddress() != null) {
-            sb.append(' ');
-            sb.append(operation.getAgentAddress());
-            sb.append(' ');
-        }
-        sb.append(operation.getTestId());
-        sb.append(' ');
-        sb.append(operation.getType());
-
-        if (operation.getCause() != null) {
-            String[] lines = operation.getCause().split("\n");
-            if (lines.length > 0) {
-                sb.append("[");
-                sb.append(lines[0]);
-                sb.append("]");
-            }
-        }
-
-        return sb.toString();
+        LOGGER.warn(operation.getLogMessage(failureOperations.size()));
+        appendText(operation.getFileMessage(), file);
     }
 }

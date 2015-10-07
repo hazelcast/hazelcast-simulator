@@ -46,6 +46,8 @@ public class WorkerJvmFailureMonitor {
 
     private final MonitorThread monitorThread;
 
+    private int failureCount;
+
     public WorkerJvmFailureMonitor(Agent agent, ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs) {
         monitorThread = new MonitorThread(agent, workerJVMs);
         monitorThread.start();
@@ -148,7 +150,8 @@ public class WorkerJvmFailureMonitor {
         private void detectInactivity(WorkerJvm workerJvm) {
             long now = System.currentTimeMillis();
             if (now - LAST_SEEN_TIMEOUT_MILLIS > workerJvm.getLastSeen()) {
-                sendFailureOperation("Worker has not contacted agent for a too long period", WORKER_TIMEOUT, workerJvm);
+                long elapsed = TimeUnit.MILLISECONDS.toSeconds(now - workerJvm.getLastSeen());
+                sendFailureOperation(format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT, workerJvm);
             }
         }
 
@@ -183,9 +186,9 @@ public class WorkerJvmFailureMonitor {
         }
 
         private void sendFailureOperation(String message, FailureType type, WorkerJvm jvm, String testId, String cause) {
-            FailureOperation operation = new FailureOperation(message, type, agent.getPublicAddress(), jvm.getAddress(),
+            FailureOperation operation = new FailureOperation(message, type, jvm.getAddress(), agent.getPublicAddress(),
                     jvm.getHazelcastAddress(), jvm.getId(), testId, agent.getTestSuite(), cause);
-            LOGGER.error(format("Detected failure on worker %s: %s", jvm.getId(), operation));
+            LOGGER.error(format("Detected failure on worker %s: %s", jvm.getId(), operation.getLogMessage(++failureCount)));
 
             Response response = agent.getAgentConnector().write(SimulatorAddress.COORDINATOR, operation);
             if (response.getFirstErrorResponseType() != ResponseType.SUCCESS) {

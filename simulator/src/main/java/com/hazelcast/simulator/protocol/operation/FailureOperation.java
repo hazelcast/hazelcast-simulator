@@ -9,24 +9,24 @@ import static com.hazelcast.simulator.utils.CommonUtils.NEW_LINE;
 
 public class FailureOperation implements SimulatorOperation {
 
-    private final long time = System.currentTimeMillis();
+    private final long timestamp = System.currentTimeMillis();
 
     private final String message;
     private final String type;
-    private final String agentAddress;
     private final String workerAddress;
+    private final String agentAddress;
     private final String hzAddress;
     private final String workerId;
     private final String testId;
     private final TestSuite testSuite;
     private final String cause;
 
-    public FailureOperation(String message, FailureType type, String agentAddress, SimulatorAddress workerAddress,
+    public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
                             String hzAddress, String workerId, String testId, TestSuite testSuite, String cause) {
         this.message = message;
         this.type = type.name();
-        this.agentAddress = agentAddress;
         this.workerAddress = workerAddress.toString();
+        this.agentAddress = agentAddress;
         this.hzAddress = hzAddress;
         this.workerId = workerId;
         this.testId = testId;
@@ -38,16 +38,8 @@ public class FailureOperation implements SimulatorOperation {
         return FailureType.valueOf(type);
     }
 
-    public String getAgentAddress() {
-        return agentAddress;
-    }
-
     public String getWorkerAddress() {
         return workerAddress;
-    }
-
-    public String getHzAddress() {
-        return hzAddress;
     }
 
     public String getTestId() {
@@ -58,13 +50,47 @@ public class FailureOperation implements SimulatorOperation {
         return cause;
     }
 
-    @Override
-    public String toString() {
+    public String getLogMessage(int failureNumber) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Failure #").append(failureNumber);
+
+        if (workerAddress != null) {
+            sb.append(' ');
+            sb.append(workerAddress);
+        } else if (agentAddress != null) {
+            sb.append(' ');
+            sb.append(agentAddress);
+        }
+
+        if (testId != null) {
+            sb.append(' ');
+            sb.append(testId);
+        }
+
+        sb.append(' ');
+        sb.append(type);
+
+        if (cause != null) {
+            String[] lines = cause.split("\n");
+            if (lines.length > 0) {
+                sb.append("[");
+                sb.append(lines[0]);
+                sb.append("]");
+            }
+        } else {
+            sb.append("[").append(message).append("]");
+        }
+
+        return sb.toString();
+    }
+
+    public String getFileMessage() {
         StringBuilder sb = new StringBuilder();
         sb.append("Failure[").append(NEW_LINE);
         sb.append("   message='").append(message).append("'").append(NEW_LINE);
         sb.append("   type=").append(type).append(NEW_LINE);
-        sb.append("   time=").append(time).append(NEW_LINE);
+        sb.append("   timestamp=").append(timestamp).append(NEW_LINE);
+        sb.append("   workerAddress=").append(workerAddress).append(NEW_LINE);
         sb.append("   agentAddress=").append(agentAddress).append(NEW_LINE);
         sb.append("   hzAddress=").append(hzAddress).append(NEW_LINE);
         sb.append("   workerId=").append(workerId).append(NEW_LINE);
@@ -77,11 +103,15 @@ public class FailureOperation implements SimulatorOperation {
                 prefix = "    ";
             }
         } else {
-            sb.append("   test=").append(testId).append(" (unknown)").append(NEW_LINE);
+            sb.append("   test=").append(testId);
+            if (testId != null) {
+                sb.append(" (unknown)");
+            }
+            sb.append(NEW_LINE);
         }
 
         sb.append("   cause=").append(cause != null ? cause.trim() : "null").append(NEW_LINE);
-        sb.append("]");
+        sb.append("]\n");
 
         return sb.toString();
     }

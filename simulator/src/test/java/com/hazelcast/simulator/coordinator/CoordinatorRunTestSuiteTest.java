@@ -2,6 +2,8 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.core.AddressLevel;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.test.TestCase;
@@ -15,7 +17,6 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.test.FailureType.WORKER_OOM;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.mockito.Matchers.any;
@@ -114,9 +115,12 @@ public class CoordinatorRunTestSuiteTest {
         testSuite.setDurationSeconds(4);
         parallel = false;
 
+        SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
+
         Coordinator coordinator = createCoordinator();
         coordinator.getFailureContainer().addFailureOperation(
-                new FailureOperation("expected critical failure", WORKER_OOM, "", COORDINATOR, "", "", "", testSuite, "")
+                new FailureOperation("expected critical failure", WORKER_OOM, workerAddress, "127.0.0.1", "127.0.0.1:5701",
+                        "workerId", "testId", testSuite, "stacktrace")
         );
         coordinator.runTestSuite();
 
