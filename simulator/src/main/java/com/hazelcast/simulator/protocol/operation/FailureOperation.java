@@ -25,7 +25,7 @@ public class FailureOperation implements SimulatorOperation {
                             String hzAddress, String workerId, String testId, TestSuite testSuite, String cause) {
         this.message = message;
         this.type = type.name();
-        this.workerAddress = workerAddress.toString();
+        this.workerAddress = (workerAddress == null) ? null : workerAddress.toString();
         this.agentAddress = agentAddress;
         this.hzAddress = hzAddress;
         this.workerId = workerId;
@@ -95,7 +95,7 @@ public class FailureOperation implements SimulatorOperation {
         sb.append("   hzAddress=").append(hzAddress).append(NEW_LINE);
         sb.append("   workerId=").append(workerId).append(NEW_LINE);
 
-        TestCase testCase = testSuite.getTestCase(testId);
+        TestCase testCase = (testSuite != null) ? testSuite.getTestCase(testId) : null;
         if (testCase != null) {
             String prefix = "   test=";
             for (String testString : testCase.toString().split(NEW_LINE)) {
