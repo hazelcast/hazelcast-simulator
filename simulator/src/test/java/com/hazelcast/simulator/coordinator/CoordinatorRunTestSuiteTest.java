@@ -68,9 +68,10 @@ public class CoordinatorRunTestSuiteTest {
 
     @After
     public void cleanUp() {
+        deleteQuiet(new File(AgentsFile.NAME));
+        deleteQuiet(new File("failures-" + testSuite.getId() + ".txt"));
         deleteQuiet(new File("probes-" + testSuite.getId() + "_CoordinatorTest1.xml"));
         deleteQuiet(new File("probes-" + testSuite.getId() + "_CoordinatorTest2.xml"));
-        deleteQuiet(new File("failures-" + testSuite.getId() + ".txt"));
     }
 
     @Test

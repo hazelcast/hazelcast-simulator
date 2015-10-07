@@ -110,6 +110,7 @@ public class AgentSmokeTest {
 
             deleteQuiet(new File("./dist/src/main/dist/workers"));
             deleteQuiet(new File("./failures-agentSmokeTest.txt"));
+            deleteQuiet(new File("./logs"));
         }
     }
 

@@ -7,15 +7,5 @@ target/
 .patch
 *.iml
 .DS_Store
-*.log
-*.log.lck
-*.failure
-*.exception
-*.oome
-Foo.java
-agents.txt
 vtune/
-workers/
-simulator/workers/*
-simulator/logs/*
 simulator-git.properties

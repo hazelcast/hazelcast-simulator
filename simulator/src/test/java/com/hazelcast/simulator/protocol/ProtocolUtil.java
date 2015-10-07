@@ -24,6 +24,7 @@ import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -104,6 +106,7 @@ class ProtocolUtil {
         LOGGER.info("Waiting for shutdown threads...");
         spawner.awaitCompletion();
 
+        deleteQuiet(new File("./logs"));
         LOGGER.info("Shutdown complete!");
     }
 
