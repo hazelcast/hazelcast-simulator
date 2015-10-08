@@ -16,6 +16,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.formatLong;
 import static com.hazelcast.simulator.utils.CommonUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.EMPTY_OPERATION_COUNT;
+import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
 import static java.lang.String.format;
 
 /**
@@ -25,7 +26,9 @@ public class PerformanceStateContainer {
 
     public static final String PERFORMANCE_FILE_NAME = "performance.txt";
 
-    private static final int NUMBER_FORMAT_LENGTH = 15;
+    private static final int THROUGHPUT_FORMAT_LENGTH = 15;
+    private static final int LATENCY_FORMAT_LENGTH = 10;
+    private static final int PERCENTILE_FORMAT_FACTOR = 100;
 
     private static final Logger LOGGER = Logger.getLogger(PerformanceStateContainer.class);
 
@@ -43,9 +46,12 @@ public class PerformanceStateContainer {
         if (performanceState.getOperationCount() == EMPTY_OPERATION_COUNT) {
             return " (performance not available)";
         }
-        return String.format("%s ops %s ops/s",
-                formatLong(performanceState.getOperationCount(), NUMBER_FORMAT_LENGTH),
-                formatDouble(performanceState.getIntervalThroughput(), NUMBER_FORMAT_LENGTH)
+        return String.format("%s ops %s ops/s %s µs (%sth) %s µs (max)",
+                formatLong(performanceState.getOperationCount(), THROUGHPUT_FORMAT_LENGTH),
+                formatDouble(performanceState.getIntervalThroughput(), THROUGHPUT_FORMAT_LENGTH),
+                formatLong(performanceState.getIntervalPercentileLatency(), LATENCY_FORMAT_LENGTH),
+                INTERVAL_LATENCY_PERCENTILE * PERCENTILE_FORMAT_FACTOR,
+                formatLong(performanceState.getIntervalMaxLatency(), LATENCY_FORMAT_LENGTH)
         );
     }
 
@@ -80,8 +86,8 @@ public class PerformanceStateContainer {
         if (totalOperationCount > 0) {
             LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
                     formatPercentage(1, 1),
-                    formatLong(totalOperationCount, NUMBER_FORMAT_LENGTH),
-                    formatDouble(totalPerformanceState.getTotalThroughput(), NUMBER_FORMAT_LENGTH)));
+                    formatLong(totalOperationCount, THROUGHPUT_FORMAT_LENGTH),
+                    formatDouble(totalPerformanceState.getTotalThroughput(), THROUGHPUT_FORMAT_LENGTH)));
         }
 
         for (Map.Entry<SimulatorAddress, PerformanceState> entry : performancePerAgent.entrySet()) {
@@ -92,8 +98,8 @@ public class PerformanceStateContainer {
             LOGGER.info(format("  Agent %-15s %s%% %s ops %s ops/s",
                     agentAddress,
                     formatPercentage(operationCount, totalOperationCount),
-                    formatLong(operationCount, NUMBER_FORMAT_LENGTH),
-                    formatDouble(performanceState.getTotalThroughput(), NUMBER_FORMAT_LENGTH)));
+                    formatLong(operationCount, THROUGHPUT_FORMAT_LENGTH),
+                    formatDouble(performanceState.getTotalThroughput(), THROUGHPUT_FORMAT_LENGTH)));
         }
     }
 

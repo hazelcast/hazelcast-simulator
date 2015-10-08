@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.ONE_SECOND_IN_MILLIS;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputHeader;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputStats;
@@ -66,7 +67,21 @@ final class PerformanceTracker {
     }
 
     PerformanceState createPerformanceState() {
-        return new PerformanceState(lastOperationCount, intervalThroughput, totalThroughput);
+        long intervalPercentileLatency = Long.MIN_VALUE;
+        long intervalMaxLatency = Long.MIN_VALUE;
+        for (Histogram histogram : intervalHistogramMap.values()) {
+            long percentileValue = histogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
+            if (percentileValue > intervalPercentileLatency) {
+                intervalPercentileLatency = percentileValue;
+            }
+            long maxValue = histogram.getMaxValue();
+            if (maxValue > intervalMaxLatency) {
+                intervalMaxLatency = maxValue;
+            }
+        }
+
+        return new PerformanceState(lastOperationCount, intervalThroughput, totalThroughput,
+                intervalPercentileLatency, intervalMaxLatency);
     }
 
     private static HistogramLogWriter createHistogramLogWriter(String testName, String probeName, long baseTime) {

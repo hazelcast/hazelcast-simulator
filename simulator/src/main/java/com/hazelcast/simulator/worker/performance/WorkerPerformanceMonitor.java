@@ -106,7 +106,7 @@ public class WorkerPerformanceMonitor {
                 try {
                     long currentTimestamp = System.currentTimeMillis();
                     updatePerformanceStates(currentTimestamp);
-                    sendPerformanceState();
+                    sendPerformanceStates();
                     writeStatsToFiles(currentTimestamp);
                 } catch (Exception e) {
                     LOGGER.fatal("Exception in WorkerPerformanceMonitorThread", e);
@@ -153,7 +153,7 @@ public class WorkerPerformanceMonitor {
             return tracker;
         }
 
-        private void sendPerformanceState() {
+        private void sendPerformanceStates() {
             PerformanceStateOperation operation = new PerformanceStateOperation(serverConnector.getAddress());
             for (Map.Entry<String, PerformanceTracker> statsEntry : trackerMap.entrySet()) {
                 String testId = statsEntry.getKey();

@@ -42,12 +42,12 @@ public class PerformanceStateContainerTest {
         SimulatorAddress worker2 = new SimulatorAddress(AddressLevel.WORKER, 2, 1, 0);
 
         Map<String, PerformanceState> performanceStates1 = new HashMap<String, PerformanceState>();
-        performanceStates1.put(TEST_CASE_ID_1, new PerformanceState(1000, 200, 500));
-        performanceStates1.put(TEST_CASE_ID_2, new PerformanceState(1500, 900, 800));
+        performanceStates1.put(TEST_CASE_ID_1, new PerformanceState(1000, 200, 500, 1800, 2500));
+        performanceStates1.put(TEST_CASE_ID_2, new PerformanceState(1500, 900, 800, 2000, 2700));
 
         Map<String, PerformanceState> performanceStates2 = new HashMap<String, PerformanceState>();
-        performanceStates2.put(TEST_CASE_ID_1, new PerformanceState(800, 100, 300));
-        performanceStates2.put(TEST_CASE_ID_2, new PerformanceState(1200, 700, 600));
+        performanceStates2.put(TEST_CASE_ID_1, new PerformanceState(800, 100, 300, 2400, 2800));
+        performanceStates2.put(TEST_CASE_ID_2, new PerformanceState(1200, 700, 600, 2600, 2900));
 
         performanceStateContainer.updatePerformanceState(worker1, performanceStates1);
         performanceStateContainer.updatePerformanceState(worker2, performanceStates2);
@@ -86,6 +86,8 @@ public class PerformanceStateContainerTest {
         assertEquals(1800, performanceState.getOperationCount());
         assertEquals(300, performanceState.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(800, performanceState.getTotalThroughput(), ASSERT_EQUALS_DELTA);
+        assertEquals(2400, performanceState.getIntervalPercentileLatency());
+        assertEquals(2800, performanceState.getIntervalMaxLatency());
     }
 
     @Test
@@ -136,16 +138,22 @@ public class PerformanceStateContainerTest {
         assertEquals(2500, performanceStateAgent1.getOperationCount());
         assertEquals(1100, performanceStateAgent1.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(1300, performanceStateAgent1.getTotalThroughput(), ASSERT_EQUALS_DELTA);
+        assertEquals(2000, performanceStateAgent1.getIntervalPercentileLatency());
+        assertEquals(2700, performanceStateAgent1.getIntervalMaxLatency());
 
         PerformanceState performanceStateAgent2 = performancePerAgent.get(agentAddress2);
         assertEquals(2000, performanceStateAgent2.getOperationCount());
         assertEquals(800, performanceStateAgent2.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(900, performanceStateAgent2.getTotalThroughput(), ASSERT_EQUALS_DELTA);
+        assertEquals(2600, performanceStateAgent2.getIntervalPercentileLatency());
+        assertEquals(2900, performanceStateAgent2.getIntervalMaxLatency());
 
         assertFalse(totalPerformanceState.isEmpty());
         assertEquals(4500, totalPerformanceState.getOperationCount());
         assertEquals(1900, totalPerformanceState.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(2200, totalPerformanceState.getTotalThroughput(), ASSERT_EQUALS_DELTA);
+        assertEquals(2600, totalPerformanceState.getIntervalPercentileLatency());
+        assertEquals(2900, totalPerformanceState.getIntervalMaxLatency());
     }
 
     @Test
