@@ -110,9 +110,9 @@ public class AgentSmokeTest {
 
             System.setProperty("user.dir", userDir);
 
-            deleteQuiet(new File("./dist/src/main/dist/workers"));
-            deleteQuiet(new File("./failures-agentSmokeTest.txt"));
             deleteQuiet(new File("./logs"));
+            deleteQuiet(new File("./workers"));
+            deleteQuiet(new File("./failures-agentSmokeTest.txt"));
         }
     }
 
@@ -131,8 +131,6 @@ public class AgentSmokeTest {
         executeTestCase(testCase);
 
         Queue<FailureOperation> failureOperations = getFailureOperations(2);
-        sleepSeconds(5);
-        System.err.println("################## " + failureContainer.getFailureCount());
 
         FailureOperation failure = failureOperations.poll();
         assertEquals("Expected test to fail", testCase.getId(), failure.getTestId());
