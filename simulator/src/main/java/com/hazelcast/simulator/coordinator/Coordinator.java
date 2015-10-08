@@ -394,6 +394,7 @@ public final class Coordinator {
         remoteClient.terminateWorkers();
         waitForWorkerShutdown(componentRegistry.workerCount(), failureContainer.getFinishedWorkers());
 
+        performanceStateContainer.logDetailedPerformanceInfo();
         for (TestCase testCase : testSuite.getTestCaseList()) {
             testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
         }

@@ -79,8 +79,6 @@ final class TestCaseRunner {
             startTestCase();
             waitForTestCase();
 
-            performanceStateContainer.logDetailedPerformanceInfo();
-
             if (coordinatorParameters.isVerifyEnabled()) {
                 runOnFirstWorker(TestPhase.GLOBAL_VERIFY);
                 runOnAllWorkers(TestPhase.LOCAL_VERIFY);
@@ -213,8 +211,11 @@ final class TestCaseRunner {
             }
 
             if (isRunning) {
-                sleepSeconds(sleepSeconds % sleepPeriodSeconds);
-                logProgress(sleepSeconds, sleepSeconds);
+                int sleepTime = sleepSeconds % sleepPeriodSeconds;
+                if (sleepTime > 0) {
+                    sleepSeconds(sleepSeconds % sleepPeriodSeconds);
+                    logProgress(sleepSeconds, sleepSeconds);
+                }
             }
         }
 

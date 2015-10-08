@@ -111,15 +111,6 @@ public class PerformanceStateContainerTest {
     }
 
     @Test
-    public void testLogDetailedPerformanceInfo_twice() {
-        performanceStateContainer.logDetailedPerformanceInfo();
-        performanceStateContainer.logDetailedPerformanceInfo();
-
-        String performance = fileAsText(PERFORMANCE_FILE);
-        assertEquals("4500" + CommonUtils.NEW_LINE, performance);
-    }
-
-    @Test
     public void testLogDetailedPerformanceInfo_onEmptyContainer() {
         emptyPerformanceStateContainer.logDetailedPerformanceInfo();
 
@@ -128,10 +119,10 @@ public class PerformanceStateContainerTest {
 
     @Test
     public void testCalculatePerformanceStates() {
-        Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
         PerformanceState totalPerformanceState = new PerformanceState();
+        Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
 
-        performanceStateContainer.calculatePerformanceStates(agentPerformanceStateMap, totalPerformanceState);
+        performanceStateContainer.calculatePerformanceStates(totalPerformanceState, agentPerformanceStateMap);
         assertEquals(2, agentPerformanceStateMap.size());
 
         PerformanceState performanceStateAgent1 = agentPerformanceStateMap.get(agentAddress1);
@@ -158,10 +149,10 @@ public class PerformanceStateContainerTest {
 
     @Test
     public void testCalculatePerformanceStates_onEmptyContainer() {
-        Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
         PerformanceState totalPerformanceState = new PerformanceState();
+        Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
 
-        emptyPerformanceStateContainer.calculatePerformanceStates(agentPerformanceStateMap, totalPerformanceState);
+        emptyPerformanceStateContainer.calculatePerformanceStates(totalPerformanceState, agentPerformanceStateMap);
         assertEquals(0, agentPerformanceStateMap.size());
         assertTrue(totalPerformanceState.isEmpty());
     }

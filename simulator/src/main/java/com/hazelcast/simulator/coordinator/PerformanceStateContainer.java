@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
 import static com.hazelcast.simulator.utils.CommonUtils.formatLong;
@@ -32,7 +31,6 @@ public class PerformanceStateContainer {
 
     private static final Logger LOGGER = Logger.getLogger(PerformanceStateContainer.class);
 
-    private final AtomicBoolean performanceWritten = new AtomicBoolean();
     private final ConcurrentMap<SimulatorAddress, Map<String, PerformanceState>> workerPerformanceStateMap
             = new ConcurrentHashMap<SimulatorAddress, Map<String, PerformanceState>>();
 
@@ -67,14 +65,10 @@ public class PerformanceStateContainer {
     }
 
     void logDetailedPerformanceInfo() {
-        if (!performanceWritten.compareAndSet(false, true)) {
-            return;
-        }
-
-        Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
         PerformanceState totalPerformanceState = new PerformanceState();
+        Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
 
-        calculatePerformanceStates(agentPerformanceStateMap, totalPerformanceState);
+        calculatePerformanceStates(totalPerformanceState, agentPerformanceStateMap);
 
         long totalOperationCount = totalPerformanceState.getOperationCount();
         if (totalOperationCount == EMPTY_OPERATION_COUNT) {
@@ -103,8 +97,8 @@ public class PerformanceStateContainer {
         }
     }
 
-    synchronized void calculatePerformanceStates(Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap,
-                                                 PerformanceState totalPerformanceState) {
+    synchronized void calculatePerformanceStates(PerformanceState totalPerformanceState,
+                                                 Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap) {
         for (Map.Entry<SimulatorAddress, Map<String, PerformanceState>> workerEntry : workerPerformanceStateMap.entrySet()) {
             SimulatorAddress agentAddress = workerEntry.getKey().getParent();
 
@@ -116,8 +110,8 @@ public class PerformanceStateContainer {
 
             for (PerformanceState performanceState : workerEntry.getValue().values()) {
                 if (performanceState != null) {
-                    agentPerformanceState.add(performanceState);
                     totalPerformanceState.add(performanceState);
+                    agentPerformanceState.add(performanceState);
                 }
             }
         }
