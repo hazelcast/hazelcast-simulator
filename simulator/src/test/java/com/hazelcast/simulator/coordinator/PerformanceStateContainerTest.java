@@ -128,20 +128,20 @@ public class PerformanceStateContainerTest {
 
     @Test
     public void testCalculatePerformanceStates() {
-        Map<SimulatorAddress, PerformanceState> performancePerAgent = new HashMap<SimulatorAddress, PerformanceState>();
+        Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
         PerformanceState totalPerformanceState = new PerformanceState();
 
-        performanceStateContainer.calculatePerformanceStates(performancePerAgent, totalPerformanceState);
-        assertEquals(2, performancePerAgent.size());
+        performanceStateContainer.calculatePerformanceStates(agentPerformanceStateMap, totalPerformanceState);
+        assertEquals(2, agentPerformanceStateMap.size());
 
-        PerformanceState performanceStateAgent1 = performancePerAgent.get(agentAddress1);
+        PerformanceState performanceStateAgent1 = agentPerformanceStateMap.get(agentAddress1);
         assertEquals(2500, performanceStateAgent1.getOperationCount());
         assertEquals(1100, performanceStateAgent1.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(1300, performanceStateAgent1.getTotalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(2000, performanceStateAgent1.getIntervalPercentileLatency());
         assertEquals(2700, performanceStateAgent1.getIntervalMaxLatency());
 
-        PerformanceState performanceStateAgent2 = performancePerAgent.get(agentAddress2);
+        PerformanceState performanceStateAgent2 = agentPerformanceStateMap.get(agentAddress2);
         assertEquals(2000, performanceStateAgent2.getOperationCount());
         assertEquals(800, performanceStateAgent2.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(900, performanceStateAgent2.getTotalThroughput(), ASSERT_EQUALS_DELTA);
@@ -158,11 +158,11 @@ public class PerformanceStateContainerTest {
 
     @Test
     public void testCalculatePerformanceStates_onEmptyContainer() {
-        Map<SimulatorAddress, PerformanceState> performancePerAgent = new HashMap<SimulatorAddress, PerformanceState>();
+        Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
         PerformanceState totalPerformanceState = new PerformanceState();
 
-        emptyPerformanceStateContainer.calculatePerformanceStates(performancePerAgent, totalPerformanceState);
-        assertEquals(0, performancePerAgent.size());
+        emptyPerformanceStateContainer.calculatePerformanceStates(agentPerformanceStateMap, totalPerformanceState);
+        assertEquals(0, agentPerformanceStateMap.size());
         assertTrue(totalPerformanceState.isEmpty());
     }
 }

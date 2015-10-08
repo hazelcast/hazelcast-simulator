@@ -33,12 +33,12 @@ public class PerformanceStateContainer {
     private static final Logger LOGGER = Logger.getLogger(PerformanceStateContainer.class);
 
     private final AtomicBoolean performanceWritten = new AtomicBoolean();
-    private final ConcurrentMap<SimulatorAddress, Map<String, PerformanceState>> performanceStatePerWorker
+    private final ConcurrentMap<SimulatorAddress, Map<String, PerformanceState>> workerPerformanceStateMap
             = new ConcurrentHashMap<SimulatorAddress, Map<String, PerformanceState>>();
 
     public synchronized void updatePerformanceState(SimulatorAddress workerAddress,
-                                       Map<String, PerformanceState> performanceStates) {
-        performanceStatePerWorker.put(workerAddress, performanceStates);
+                                                    Map<String, PerformanceState> performanceStates) {
+        workerPerformanceStateMap.put(workerAddress, performanceStates);
     }
 
     String getPerformanceNumbers(String testCaseId) {
@@ -57,7 +57,7 @@ public class PerformanceStateContainer {
 
     synchronized PerformanceState getPerformanceStateForTestCase(String testCaseId) {
         PerformanceState performanceState = new PerformanceState();
-        for (Map<String, PerformanceState> performanceStateMap : performanceStatePerWorker.values()) {
+        for (Map<String, PerformanceState> performanceStateMap : workerPerformanceStateMap.values()) {
             PerformanceState workerPerformanceState = performanceStateMap.get(testCaseId);
             if (workerPerformanceState != null) {
                 performanceState.add(workerPerformanceState);
@@ -71,10 +71,10 @@ public class PerformanceStateContainer {
             return;
         }
 
-        Map<SimulatorAddress, PerformanceState> performancePerAgent = new HashMap<SimulatorAddress, PerformanceState>();
+        Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
         PerformanceState totalPerformanceState = new PerformanceState();
 
-        calculatePerformanceStates(performancePerAgent, totalPerformanceState);
+        calculatePerformanceStates(agentPerformanceStateMap, totalPerformanceState);
 
         long totalOperationCount = totalPerformanceState.getOperationCount();
         if (totalOperationCount == EMPTY_OPERATION_COUNT) {
@@ -90,7 +90,7 @@ public class PerformanceStateContainer {
                     formatDouble(totalPerformanceState.getTotalThroughput(), THROUGHPUT_FORMAT_LENGTH)));
         }
 
-        for (Map.Entry<SimulatorAddress, PerformanceState> entry : performancePerAgent.entrySet()) {
+        for (Map.Entry<SimulatorAddress, PerformanceState> entry : agentPerformanceStateMap.entrySet()) {
             SimulatorAddress agentAddress = entry.getKey();
             PerformanceState performanceState = entry.getValue();
 
@@ -103,15 +103,15 @@ public class PerformanceStateContainer {
         }
     }
 
-    synchronized void calculatePerformanceStates(Map<SimulatorAddress, PerformanceState> performancePerAgent,
-                                    PerformanceState totalPerformanceState) {
-        for (Map.Entry<SimulatorAddress, Map<String, PerformanceState>> workerEntry : performanceStatePerWorker.entrySet()) {
+    synchronized void calculatePerformanceStates(Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap,
+                                                 PerformanceState totalPerformanceState) {
+        for (Map.Entry<SimulatorAddress, Map<String, PerformanceState>> workerEntry : workerPerformanceStateMap.entrySet()) {
             SimulatorAddress agentAddress = workerEntry.getKey().getParent();
 
-            PerformanceState agentPerformanceState = performancePerAgent.get(agentAddress);
+            PerformanceState agentPerformanceState = agentPerformanceStateMap.get(agentAddress);
             if (agentPerformanceState == null) {
                 agentPerformanceState = new PerformanceState();
-                performancePerAgent.put(agentAddress, agentPerformanceState);
+                agentPerformanceStateMap.put(agentAddress, agentPerformanceState);
             }
 
             for (PerformanceState performanceState : workerEntry.getValue().values()) {
