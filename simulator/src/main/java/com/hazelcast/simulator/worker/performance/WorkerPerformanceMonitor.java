@@ -115,6 +115,8 @@ public class WorkerPerformanceMonitor {
                 long elapsedNanos = System.nanoTime() - started;
                 if (intervalNanos > elapsedNanos) {
                     sleepNanos(intervalNanos - elapsedNanos);
+                } else {
+                    LOGGER.warn("WorkerPerformanceMonitorThread ran for " + TimeUnit.NANOSECONDS.toMillis(elapsedNanos) + " ms");
                 }
             }
         }
