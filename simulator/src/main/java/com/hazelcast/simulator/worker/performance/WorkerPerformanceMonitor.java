@@ -3,6 +3,7 @@ package com.hazelcast.simulator.worker.performance;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
+import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.worker.ClientWorker;
 import com.hazelcast.simulator.worker.MemberWorker;
@@ -51,7 +52,7 @@ public class WorkerPerformanceMonitor {
 
     public void shutdown() {
         try {
-            thread.aggregate();
+            thread.sendTestHistograms();
 
             thread.isRunning = false;
             thread.interrupt();
@@ -123,12 +124,17 @@ public class WorkerPerformanceMonitor {
             }
         }
 
-        public void aggregate() {
+        public void sendTestHistograms() {
             for (Map.Entry<String, PerformanceTracker> trackerEntry : trackerMap.entrySet()) {
                 String testId = trackerEntry.getKey();
                 PerformanceTracker tracker = trackerEntry.getValue();
 
-                tracker.aggregateIntervalHistograms(testId);
+                Map<String, String> histograms = tracker.aggregateIntervalHistograms(testId);
+                if (!histograms.isEmpty()) {
+                    TestHistogramOperation operation = new TestHistogramOperation(serverConnector.getAddress(), testId,
+                            histograms);
+                    serverConnector.write(SimulatorAddress.COORDINATOR, operation);
+                }
             }
         }
 

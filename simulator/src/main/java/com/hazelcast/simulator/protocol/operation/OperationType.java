@@ -28,7 +28,8 @@ public enum OperationType {
     STOP_TEST(StopTestOperation.class, 10),
 
     PERFORMANCE_STATE(PerformanceStateOperation.class, 11),
-    FAILURE(FailureOperation.class, 12);
+    TEST_HISTOGRAMS(TestHistogramOperation.class, 12),
+    FAILURE(FailureOperation.class, 13);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;

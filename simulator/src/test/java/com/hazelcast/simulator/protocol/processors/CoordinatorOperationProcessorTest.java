@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
@@ -21,8 +22,10 @@ public class CoordinatorOperationProcessorTest {
     public void setUp() {
         LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+        TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
         FailureContainer failureContainer = new FailureContainer("CoordinatorOperationProcessorTest");
-        processor = new CoordinatorOperationProcessor(exceptionLogger, performanceStateContainer, failureContainer);
+        processor = new CoordinatorOperationProcessor(exceptionLogger, performanceStateContainer, testHistogramContainer,
+                failureContainer);
     }
 
     @Test

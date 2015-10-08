@@ -1,7 +1,5 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.probes.probes.ProbesResultXmlWriter;
-import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
@@ -12,11 +10,6 @@ import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -87,7 +80,6 @@ final class TestCaseRunner {
             waitForTestCase();
 
             performanceStateContainer.logDetailedPerformanceInfo();
-            processProbeResults();
 
             if (coordinatorParameters.isVerifyEnabled()) {
                 runOnFirstWorker(TestPhase.GLOBAL_VERIFY);
@@ -172,52 +164,6 @@ final class TestCaseRunner {
         }
 
         waitForTestPhaseCompletion(TestPhase.RUN);
-    }
-
-    private void processProbeResults() {
-        Map<String, Result> probesResult = getProbesResult();
-        if (!probesResult.isEmpty()) {
-            String fileName = "probes-" + testSuite.getId() + "_" + testCaseId + ".xml";
-            ProbesResultXmlWriter.write(probesResult, new File(fileName));
-            logProbesResultInHumanReadableFormat(probesResult);
-        }
-    }
-
-    private Map<String, Result> getProbesResult() {
-        Map<String, Result> combinedResults = new HashMap<String, Result>();
-        List<List<Map<String, Result>>> agentsProbeResults;
-        agentsProbeResults = Collections.emptyList();
-        //try {
-        //    agentsProbeResults = agentsClient.executeOnAllWorkers(new GetBenchmarkResultsCommand(testCaseId));
-        //} catch (TimeoutException e) {
-        //    LOGGER.fatal("A timeout happened while retrieving the benchmark results");
-        //    return combinedResults;
-        //}
-        for (List<Map<String, Result>> agentProbeResults : agentsProbeResults) {
-            for (Map<String, Result> workerProbeResult : agentProbeResults) {
-                if (workerProbeResult != null) {
-                    for (Map.Entry<String, Result> probe : workerProbeResult.entrySet()) {
-                        String probeName = probe.getKey();
-                        Result currentResult = probe.getValue();
-                        if (currentResult != null) {
-                            Result combinedValue = combinedResults.get(probeName);
-                            combinedValue = currentResult.combine(combinedValue);
-                            combinedResults.put(probeName, combinedValue);
-                        }
-                    }
-                }
-            }
-        }
-        return combinedResults;
-    }
-
-    private void logProbesResultInHumanReadableFormat(Map<String, Result> combinedResults) {
-        for (Map.Entry<String, Result> entry : combinedResults.entrySet()) {
-            String probeName = entry.getKey();
-            String result = entry.getValue().toHumanString();
-            String whitespace = (result.contains("\n") ? "\n" : " ");
-            echo("Results of probe " + probeName + ":" + whitespace + result);
-        }
     }
 
     private void echo(String msg) {

@@ -66,6 +66,7 @@ public class WorkerPerformanceMonitorTest {
         deleteQuiet(new File("throughput.txt"));
         deleteQuiet(new File("throughput-default.txt"));
         deleteQuiet(new File("latency-default-DefaultWorkerProbe.txt"));
+        deleteQuiet(new File("latency-default-aggregated.txt"));
     }
 
     @Test

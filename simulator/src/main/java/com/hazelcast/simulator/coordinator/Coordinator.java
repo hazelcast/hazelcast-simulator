@@ -70,6 +70,7 @@ public final class Coordinator {
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+    private final TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
 
     private final CoordinatorParameters coordinatorParameters;
     private final WorkerParameters workerParameters;
@@ -227,7 +228,7 @@ public final class Coordinator {
     }
 
     private void startCoordinatorConnector() {
-        coordinatorConnector = new CoordinatorConnector(performanceStateContainer, failureContainer);
+        coordinatorConnector = new CoordinatorConnector(performanceStateContainer, testHistogramContainer, failureContainer);
         ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
@@ -392,6 +393,10 @@ public final class Coordinator {
 
         remoteClient.terminateWorkers();
         waitForWorkerShutdown(componentRegistry.workerCount(), failureContainer.getFinishedWorkers());
+
+        for (TestCase testCase : testSuite.getTestCaseList()) {
+            testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
+        }
 
         long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
         LOGGER.info(format("Total running time: %s seconds", duration));

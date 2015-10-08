@@ -4,6 +4,7 @@ import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
@@ -160,8 +161,10 @@ class ProtocolUtil {
 
     static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort, int numberOfAgents) {
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+        TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
         FailureContainer failureContainer = new FailureContainer("ProtocolUtil");
-        CoordinatorConnector coordinatorConnector = new CoordinatorConnector(performanceStateContainer, failureContainer);
+        CoordinatorConnector coordinatorConnector = new CoordinatorConnector(performanceStateContainer, testHistogramContainer,
+                failureContainer);
         for (int i = 1; i <= numberOfAgents; i++) {
             coordinatorConnector.addAgent(i, agentHost, agentStartPort + i);
         }

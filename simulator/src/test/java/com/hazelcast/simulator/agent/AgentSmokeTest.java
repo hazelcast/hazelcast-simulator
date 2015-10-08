@@ -7,6 +7,7 @@ import com.hazelcast.simulator.coordinator.AgentMemberMode;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.RemoteClient;
+import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
@@ -80,9 +81,10 @@ public class AgentSmokeTest {
         agentsClient.start();
 
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+        TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
         failureContainer = new FailureContainer("agentSmokeTest");
 
-        coordinatorConnector = new CoordinatorConnector(performanceStateContainer, failureContainer);
+        coordinatorConnector = new CoordinatorConnector(performanceStateContainer, testHistogramContainer, failureContainer);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
