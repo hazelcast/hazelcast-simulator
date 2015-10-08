@@ -37,6 +37,7 @@ import java.lang.management.ManagementFactory;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.fillString;
@@ -55,6 +56,7 @@ public final class MemberWorker implements Worker {
     private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
 
     private static final Logger LOGGER = Logger.getLogger(MemberWorker.class);
+    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
 
     private final WorkerType type;
     private final String publicAddress;
@@ -259,11 +261,15 @@ public final class MemberWorker implements Worker {
 
         @Override
         public void run() {
-            LOGGER.info("Stopping WorkerPerformanceMonitor");
-            workerPerformanceMonitor.shutdown();
+            if (!SHUTDOWN_STARTED.compareAndSet(false, true)) {
+                return;
+            }
 
             LOGGER.info("Stopping HazelcastInstance...");
             hazelcastInstance.shutdown();
+
+            LOGGER.info("Stopping WorkerPerformanceMonitor");
+            workerPerformanceMonitor.shutdown();
 
             LOGGER.info("Stopping WorkerConnector...");
             workerConnector.shutdown();
