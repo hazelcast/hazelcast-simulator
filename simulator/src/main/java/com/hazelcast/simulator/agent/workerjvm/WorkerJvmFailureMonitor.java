@@ -87,9 +87,11 @@ public class WorkerJvmFailureMonitor {
         }
 
         private void detectFailures(WorkerJvm workerJvm) {
+            if (workerJvm.isFinished()) {
+                return;
+            }
             detectExceptions(workerJvm);
             if (workerJvm.isOomeDetected()) {
-                // once the failure is detected, we don't need to detect it again
                 return;
             }
             detectOomeFailure(workerJvm);
@@ -156,10 +158,6 @@ public class WorkerJvmFailureMonitor {
         }
 
         private void detectUnexpectedExit(WorkerJvm workerJvm) {
-            if (workerJvm.isFinished()) {
-                return;
-            }
-
             Process process = workerJvm.getProcess();
             int exitCode;
             try {
