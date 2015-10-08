@@ -57,11 +57,7 @@ public class WorkerJvmLauncher {
 
     public void launch() {
         testSuiteDir = agent.getTestSuiteDir();
-        if (!testSuiteDir.exists()) {
-            if (!testSuiteDir.mkdirs()) {
-                throw new SpawnWorkerFailedException("Couldn't create testSuiteDir: " + testSuiteDir.getAbsolutePath());
-            }
-        }
+        ensureExistingDirectory(testSuiteDir);
 
         WorkerType type = workerJvmSettings.getWorkerType();
         int workerIndex = workerJvmSettings.getWorkerIndex();
@@ -165,19 +161,19 @@ public class WorkerJvmLauncher {
     }
 
     private void copyResourcesToWorkerId(String workerId) {
-        final String testSuiteId = agent.getTestSuite().getId();
+        String testSuiteId = agent.getTestSuite().getId();
         File uploadDirectory = new File(WORKERS_PATH + "/" + testSuiteId + "/upload/");
         if (!uploadDirectory.exists()) {
             LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
             return;
         }
-        String cpCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
+        String copyCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
                 WORKERS_PATH,
                 testSuiteId,
                 WORKERS_PATH,
                 testSuiteId,
                 workerId);
-        execute(cpCommand);
+        execute(copyCommand);
         LOGGER.info(format("Finished copying '+%s+' to worker", WORKERS_PATH));
     }
 
