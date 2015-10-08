@@ -28,13 +28,14 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 public class ProbeImpl implements Probe {
 
     public static final long MAXIMUM_LATENCY = TimeUnit.SECONDS.toMicros(60);
+    public static final int LATENCY_PRECISION = 4;
 
     private static final double ONE_SECOND_IN_MS = TimeUnit.SECONDS.toMillis(1);
 
     private static final AtomicLongFieldUpdater<ProbeImpl> INVOCATIONS =
             AtomicLongFieldUpdater.newUpdater(ProbeImpl.class, "invocations");
 
-    private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, 4);
+    private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, LATENCY_PRECISION);
     private final ThreadLocal<Long> threadLocalStarted = new ThreadLocal<Long>();
 
     private long startedProbing;

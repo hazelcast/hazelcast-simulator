@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.probes.probes;
 
-import com.hazelcast.simulator.probes.probes.impl.ProbeImpl;
 import com.hazelcast.simulator.probes.probes.impl.ResultImpl;
 import org.HdrHistogram.Histogram;
 import org.junit.Test;
@@ -15,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import static com.hazelcast.simulator.probes.probes.impl.ProbeImpl.LATENCY_PRECISION;
+import static com.hazelcast.simulator.probes.probes.impl.ProbeImpl.MAXIMUM_LATENCY;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -111,7 +112,7 @@ public class ProbesResultXmlTest {
     }
 
     private static ResultImpl createProbeResult() {
-        Histogram histogram = new Histogram(ProbeImpl.MAXIMUM_LATENCY, 4);
+        Histogram histogram = new Histogram(MAXIMUM_LATENCY, LATENCY_PRECISION);
         for (int i = 0; i < LATENCY_RECORD_COUNT; i++) {
             histogram.recordValue(getRandomLatency());
         }

@@ -51,6 +51,8 @@ public class WorkerPerformanceMonitor {
 
     public void shutdown() {
         try {
+            thread.aggregate();
+
             thread.isRunning = false;
             thread.interrupt();
             thread.join();
@@ -121,6 +123,15 @@ public class WorkerPerformanceMonitor {
             }
         }
 
+        public void aggregate() {
+            for (Map.Entry<String, PerformanceTracker> trackerEntry : trackerMap.entrySet()) {
+                String testId = trackerEntry.getKey();
+                PerformanceTracker tracker = trackerEntry.getValue();
+
+                tracker.aggregateIntervalHistograms(testId);
+            }
+        }
+
         private void updatePerformanceStates(long currentTimestamp) {
             long totalTimeDelta = currentTimestamp - startedTimestamp;
             long intervalTimeDelta = currentTimestamp - lastTimestamp;
@@ -155,9 +166,9 @@ public class WorkerPerformanceMonitor {
 
         private void sendPerformanceStates() {
             PerformanceStateOperation operation = new PerformanceStateOperation(serverConnector.getAddress());
-            for (Map.Entry<String, PerformanceTracker> statsEntry : trackerMap.entrySet()) {
-                String testId = statsEntry.getKey();
-                PerformanceTracker stats = statsEntry.getValue();
+            for (Map.Entry<String, PerformanceTracker> trackerEntry : trackerMap.entrySet()) {
+                String testId = trackerEntry.getKey();
+                PerformanceTracker stats = trackerEntry.getValue();
                 operation.addPerformanceState(testId, stats.createPerformanceState());
             }
             serverConnector.submit(SimulatorAddress.COORDINATOR, operation);

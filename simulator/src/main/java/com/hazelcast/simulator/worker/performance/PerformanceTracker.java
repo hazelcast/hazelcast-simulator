@@ -2,14 +2,21 @@ package com.hazelcast.simulator.worker.performance;
 
 import com.hazelcast.simulator.test.TestException;
 import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramLogReader;
 import org.HdrHistogram.HistogramLogWriter;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.Deflater;
 
+import static com.hazelcast.simulator.probes.probes.impl.ProbeImpl.LATENCY_PRECISION;
+import static com.hazelcast.simulator.probes.probes.impl.ProbeImpl.MAXIMUM_LATENCY;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.ONE_SECOND_IN_MILLIS;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputHeader;
@@ -29,7 +36,7 @@ final class PerformanceTracker {
     private long lastOperationCount;
 
     PerformanceTracker(String testId, Collection<String> probeNames, long baseTime) {
-        String testName = (testId.isEmpty() ? "default" : testId);
+        String testName = getTestName(testId);
 
         throughputFile = new File("throughput-" + testName + ".txt");
         writeThroughputHeader(throughputFile, false);
@@ -84,9 +91,43 @@ final class PerformanceTracker {
                 intervalPercentileLatency, intervalMaxLatency);
     }
 
+    public Map<String, String> aggregateIntervalHistograms(String testId) {
+        Map<String, String> probeResults = new HashMap<String, String>();
+
+        String testName = getTestName(testId);
+        HistogramLogWriter histogramLogWriter = createHistogramLogWriter(testName, "aggregated", 0);
+        for (Map.Entry<String, Histogram> histogramEntry : intervalHistogramMap.entrySet()) {
+            String probeName = histogramEntry.getKey();
+            HistogramLogReader histogramLogReader = createHistogramLogReader(testName, probeName);
+            Histogram combined = new Histogram(MAXIMUM_LATENCY, LATENCY_PRECISION);
+
+            Histogram histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
+            while (histogram != null) {
+                combined.add(histogram);
+                histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
+            }
+
+            histogramLogWriter.outputComment("probeName=" + probeName);
+            histogramLogWriter.outputIntervalHistogram(combined);
+
+            String encodedHistogram = getEncodedHistogram(combined);
+            probeResults.put(probeName, encodedHistogram);
+        }
+
+        return probeResults;
+    }
+
+    private static String getTestName(String testId) {
+        return (testId.isEmpty() ? "default" : testId);
+    }
+
+    private static File getLatencyFile(String testName, String probeName) {
+        return new File("latency-" + testName + "-" + probeName + ".txt");
+    }
+
     private static HistogramLogWriter createHistogramLogWriter(String testName, String probeName, long baseTime) {
         try {
-            File latencyFile = new File("latency-" + testName + "-" + probeName + ".txt");
+            File latencyFile = getLatencyFile(testName, probeName);
             HistogramLogWriter histogramLogWriter = new HistogramLogWriter(latencyFile);
             histogramLogWriter.setBaseTime(baseTime);
             histogramLogWriter.outputComment("[Latency histograms for " + testName + "." + probeName + "]");
@@ -96,5 +137,21 @@ final class PerformanceTracker {
         } catch (IOException e) {
             throw new TestException("Could not initialize HistogramLogWriter for test " + testName, e);
         }
+    }
+
+    private HistogramLogReader createHistogramLogReader(String testName, String probeName) {
+        try {
+            File latencyFile = getLatencyFile(testName, probeName);
+            return new HistogramLogReader(latencyFile);
+        } catch (IOException e) {
+            throw new TestException("Could not initialize HistogramLogReader for test " + testName, e);
+        }
+    }
+
+    private static String getEncodedHistogram(Histogram combined) {
+        ByteBuffer targetBuffer = ByteBuffer.allocate(combined.getNeededByteBufferCapacity());
+        int compressedLength = combined.encodeIntoCompressedByteBuffer(targetBuffer, Deflater.BEST_COMPRESSION);
+        byte[] compressedArray = Arrays.copyOf(targetBuffer.array(), compressedLength);
+        return DatatypeConverter.printBase64Binary(compressedArray);
     }
 }
