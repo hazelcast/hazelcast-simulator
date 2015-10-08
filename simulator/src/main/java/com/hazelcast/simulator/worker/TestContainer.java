@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.probes.Probe;
-import com.hazelcast.simulator.probes.probes.impl.ConcurrentProbe;
+import com.hazelcast.simulator.probes.probes.impl.ProbeImpl;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
@@ -287,16 +287,16 @@ public class TestContainer {
         for (Field field : fields) {
             String probeName = getValueFromNameAnnotation(field);
             if (Probe.class.equals(field.getType())) {
-                Probe probe = getOrCreateConcurrentProbe(probeName);
+                Probe probe = getOrCreateProbe(probeName);
                 injectObjectToInstance(testClassInstance, field, probe);
             }
         }
     }
 
-    private Probe getOrCreateConcurrentProbe(String probeName) {
+    private Probe getOrCreateProbe(String probeName) {
         Probe probe = probeMap.get(probeName);
         if (probe == null) {
-            probe = new ConcurrentProbe();
+            probe = new ProbeImpl();
             probeMap.put(probeName, probe);
         }
         return probe;
@@ -323,8 +323,8 @@ public class TestContainer {
             operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
         }
 
-        // create one concurrent probe per test and inject it in all worker instances of the test
-        Probe probe = getOrCreateConcurrentProbe(testId + "WorkerProbe");
+        // create one probe per test and inject it in all worker instances of the test
+        Probe probe = getOrCreateProbe(testId + "WorkerProbe");
         probe.startProbing(now);
 
         // spawn worker and wait for completion

@@ -20,6 +20,7 @@ import org.HdrHistogram.Histogram;
 import org.HdrHistogram.Recorder;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 /**
  * Measures the latency distribution of a test.
@@ -30,15 +31,19 @@ public class ProbeImpl implements Probe {
 
     private static final double ONE_SECOND_IN_MS = TimeUnit.SECONDS.toMillis(1);
 
+    private static final AtomicLongFieldUpdater<ProbeImpl> INVOCATIONS =
+            AtomicLongFieldUpdater.newUpdater(ProbeImpl.class, "invocations");
+
     private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, 4);
+    private final ThreadLocal<Long> threadLocalStarted = new ThreadLocal<Long>();
 
-    private long invocations;
-
-    private long durationMs;
     private long startedProbing;
-    private long started;
 
     private boolean disabled;
+
+    @SuppressWarnings("all")
+    private volatile long invocations;
+    private volatile long durationMs;
 
     @Override
     public void startProbing(long timeStamp) {
@@ -63,15 +68,17 @@ public class ProbeImpl implements Probe {
 
     @Override
     public void started() {
-        started = System.nanoTime();
+        threadLocalStarted.set(System.nanoTime());
     }
 
     @Override
     public void done() {
+        long now = System.nanoTime();
+        long started = threadLocalStarted.get();
         if (started == 0) {
             throw new IllegalStateException("You have to call started() before done()");
         }
-        recordValue(System.nanoTime() - started);
+        recordValue(now - started);
     }
 
     @Override
@@ -94,13 +101,13 @@ public class ProbeImpl implements Probe {
         }
 
         this.durationMs = durationMs;
-        this.invocations = invocations;
+        INVOCATIONS.set(this, invocations);
     }
 
     @Override
     public void recordValue(long latencyNanos) {
         recorder.recordValue((int) TimeUnit.NANOSECONDS.toMicros(latencyNanos));
-        invocations++;
+        INVOCATIONS.incrementAndGet(this);
     }
 
     @Override
