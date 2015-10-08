@@ -2,6 +2,7 @@ package com.hazelcast.simulator.common.messaging;
 
 import com.hazelcast.simulator.common.KeyValuePair;
 
+@SuppressWarnings("unused")
 @MessageSpec(value = "dummyMessage", description = "Dummy Runnable Message")
 public class DummyRunnableMessage extends RunnableMessage {
 
