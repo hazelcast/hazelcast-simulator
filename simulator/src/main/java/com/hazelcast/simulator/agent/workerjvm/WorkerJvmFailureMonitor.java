@@ -150,9 +150,8 @@ public class WorkerJvmFailureMonitor {
         }
 
         private void detectInactivity(WorkerJvm workerJvm) {
-            long now = System.currentTimeMillis();
-            if (now - LAST_SEEN_TIMEOUT_MILLIS > workerJvm.getLastSeen()) {
-                long elapsed = TimeUnit.MILLISECONDS.toSeconds(now - workerJvm.getLastSeen());
+            long elapsed = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - workerJvm.getLastSeen());
+            if (elapsed > LAST_SEEN_TIMEOUT_MILLIS) {
                 sendFailureOperation(format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT, workerJvm);
             }
         }
