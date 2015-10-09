@@ -168,11 +168,17 @@ final class CoordinatorCli {
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),
                 options.valueOf(cli.syncToTestPhaseSpec),
-                options.valueOf(cli.workerRefreshSpec),
+                options.valueOf(cli.workerRefreshSpec)
+        );
+
+        ClusterLayoutParameters clusterLayoutParameters = new ClusterLayoutParameters(
                 options.valueOf(cli.dedicatedMemberMachinesSpec),
                 options.valueOf(cli.memberWorkerCountSpec),
                 options.valueOf(cli.clientWorkerCountSpec)
         );
+        if (clusterLayoutParameters.getDedicatedMemberMachineCount() < 0) {
+            throw new CommandLineExitException("--dedicatedMemberMachines can't be smaller than 0");
+        }
 
         WorkerParameters workerParameters = new WorkerParameters(
                 simulatorProperties,
@@ -194,7 +200,7 @@ final class CoordinatorCli {
             throw new CommandLineExitException("You need to define --duration or --waitForTestCase or both!");
         }
 
-        return new Coordinator(coordinatorParameters, workerParameters, testSuite);
+        return new Coordinator(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite);
     }
 
     private static File loadAgentsFile(CoordinatorCli cli, OptionSet options) {

@@ -146,13 +146,11 @@ public class CoordinatorRunTestSuiteTest {
                 verifyEnabled,
                 parallel,
                 TestPhase.SETUP,
-                false,
-                0,
-                0,
-                0
+                false
         );
+        ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
         WorkerParameters workerParameters = mock(WorkerParameters.class);
-        Coordinator coordinator = new Coordinator(coordinatorParameters, workerParameters, testSuite, 3);
+        Coordinator coordinator = new Coordinator(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite, 3);
         coordinator.setRemoteClient(remoteClient);
 
         return coordinator;

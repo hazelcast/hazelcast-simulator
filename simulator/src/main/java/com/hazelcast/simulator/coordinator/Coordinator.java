@@ -73,6 +73,7 @@ public final class Coordinator {
     private final TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
 
     private final CoordinatorParameters coordinatorParameters;
+    private final ClusterLayoutParameters clusterLayoutParameters;
     private final WorkerParameters workerParameters;
     private final TestSuite testSuite;
     private final FailureContainer failureContainer;
@@ -90,13 +91,15 @@ public final class Coordinator {
 
     private ExecutorService parallelExecutor;
 
-    public Coordinator(CoordinatorParameters coordinatorParameters, WorkerParameters workerParameters, TestSuite testSuite) {
-        this(coordinatorParameters, workerParameters, testSuite, TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS);
+    public Coordinator(CoordinatorParameters coordinatorParameters, ClusterLayoutParameters clusterLayoutParameters,
+                       WorkerParameters workerParameters, TestSuite testSuite) {
+        this(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite, TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS);
     }
 
-    public Coordinator(CoordinatorParameters coordinatorParameters, WorkerParameters workerParameters, TestSuite testSuite,
-                       int testCaseRunnerSleepPeriodSeconds) {
+    public Coordinator(CoordinatorParameters coordinatorParameters, ClusterLayoutParameters clusterLayoutParameters,
+                       WorkerParameters workerParameters, TestSuite testSuite, int testCaseRunnerSleepPeriodSeconds) {
         this.coordinatorParameters = coordinatorParameters;
+        this.clusterLayoutParameters = clusterLayoutParameters;
         this.workerParameters = workerParameters;
         this.testSuite = testSuite;
         this.failureContainer = new FailureContainer(testSuite.getId());
@@ -111,6 +114,10 @@ public final class Coordinator {
 
     CoordinatorParameters getCoordinatorParameters() {
         return coordinatorParameters;
+    }
+
+    public ClusterLayoutParameters getClusterLayoutParameters() {
+        return clusterLayoutParameters;
     }
 
     TestSuite getTestSuite() {
@@ -175,15 +182,15 @@ public final class Coordinator {
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
 
-        initMemberWorkerCount();
+        clusterLayoutParameters.initMemberWorkerCount(componentRegistry.agentCount());
         initMemberHzConfig();
         initClientHzConfig();
 
         int agentCount = componentRegistry.agentCount();
         LOGGER.info(format("Performance monitor enabled: %s", coordinatorParameters.isMonitorPerformance()));
         LOGGER.info(format("Total number of agents: %s", agentCount));
-        LOGGER.info(format("Total number of Hazelcast member workers: %s", coordinatorParameters.getMemberWorkerCount()));
-        LOGGER.info(format("Total number of Hazelcast client workers: %s", coordinatorParameters.getClientWorkerCount()));
+        LOGGER.info(format("Total number of Hazelcast member workers: %s", clusterLayoutParameters.getMemberWorkerCount()));
+        LOGGER.info(format("Total number of Hazelcast client workers: %s", clusterLayoutParameters.getClientWorkerCount()));
 
         remoteClient.initTestSuite(testSuite);
 
@@ -239,12 +246,6 @@ public final class Coordinator {
             });
         }
         spawner.awaitCompletion();
-    }
-
-    private void initMemberWorkerCount() {
-        if (coordinatorParameters.getMemberWorkerCount() == -1) {
-            coordinatorParameters.setMemberWorkerCount(componentRegistry.agentCount());
-        }
     }
 
     private void initMemberHzConfig() {
@@ -350,12 +351,12 @@ public final class Coordinator {
     }
 
     private void startWorkers() {
-        int memberWorkerCount = coordinatorParameters.getMemberWorkerCount();
-        int clientWorkerCount = coordinatorParameters.getClientWorkerCount();
+        int memberWorkerCount = clusterLayoutParameters.getMemberWorkerCount();
+        int clientWorkerCount = clusterLayoutParameters.getClientWorkerCount();
         int totalWorkerCount = memberWorkerCount + clientWorkerCount;
 
         List<AgentMemberLayout> agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters,
-                coordinatorParameters.getDedicatedMemberMachineCount(), memberWorkerCount, clientWorkerCount);
+                clusterLayoutParameters.getDedicatedMemberMachineCount(), memberWorkerCount, clientWorkerCount);
 
         long started = System.nanoTime();
         try {

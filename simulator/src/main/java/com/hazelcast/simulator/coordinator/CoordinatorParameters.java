@@ -17,7 +17,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.test.TestPhase;
-import com.hazelcast.simulator.utils.CommandLineExitException;
 
 import java.io.File;
 
@@ -40,20 +39,9 @@ class CoordinatorParameters {
     private final boolean refreshJvm;
     private final boolean passiveMembers;
 
-    private final int dedicatedMemberMachineCount;
-    private final int clientWorkerCount;
-
-    private int memberWorkerCount;
-
-    @SuppressWarnings("checkstyle:parameternumber")
     public CoordinatorParameters(SimulatorProperties properties, File agentsFile, String workerClassPath,
                                  boolean monitorPerformance, boolean verifyEnabled, boolean parallel,
-                                 TestPhase lastTestPhaseToSync, boolean refreshJvm, int dedicatedMemberMachineCount,
-                                 int memberWorkerCount, int clientWorkerCount) {
-        if (dedicatedMemberMachineCount < 0) {
-            throw new CommandLineExitException("--dedicatedMemberMachines can't be smaller than 0");
-        }
-
+                                 TestPhase lastTestPhaseToSync, boolean refreshJvm) {
         this.simulatorProperties = properties;
         this.agentsFile = agentsFile;
         this.workerClassPath = workerClassPath;
@@ -63,12 +51,7 @@ class CoordinatorParameters {
         this.lastTestPhaseToSync = lastTestPhaseToSync;
 
         this.refreshJvm = refreshJvm;
-        this.passiveMembers = parseBoolean(simulatorProperties.get("PASSIVE_MEMBERS", "true"));
-
-        this.dedicatedMemberMachineCount = dedicatedMemberMachineCount;
-        this.clientWorkerCount = clientWorkerCount;
-
-        this.memberWorkerCount = memberWorkerCount;
+        this.passiveMembers = parseBoolean(properties.get("PASSIVE_MEMBERS", "true"));
     }
 
     public SimulatorProperties getSimulatorProperties() {
@@ -105,21 +88,5 @@ class CoordinatorParameters {
 
     public boolean isPassiveMembers() {
         return passiveMembers;
-    }
-
-    public int getDedicatedMemberMachineCount() {
-        return dedicatedMemberMachineCount;
-    }
-
-    public int getClientWorkerCount() {
-        return clientWorkerCount;
-    }
-
-    public int getMemberWorkerCount() {
-        return memberWorkerCount;
-    }
-
-    public void setMemberWorkerCount(int memberWorkerCount) {
-        this.memberWorkerCount = memberWorkerCount;
     }
 }

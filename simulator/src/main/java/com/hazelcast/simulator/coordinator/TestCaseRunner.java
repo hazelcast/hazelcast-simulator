@@ -44,6 +44,7 @@ final class TestCaseRunner {
     private final String prefix;
     private final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap;
     private final int sleepPeriodSeconds;
+    private final int clientWorkerCount;
 
     private StopThread stopThread;
 
@@ -61,6 +62,7 @@ final class TestCaseRunner {
         this.prefix = (testCaseId.isEmpty() ? "" : padRight(testCaseId, paddingLength + 1));
         this.testPhaseSyncMap = testPhaseSyncMap;
         this.sleepPeriodSeconds = sleepPeriodSeconds;
+        this.clientWorkerCount = coordinator.getClusterLayoutParameters().getClientWorkerCount();
     }
 
     boolean run() {
@@ -135,7 +137,7 @@ final class TestCaseRunner {
     }
 
     private void startTestCase() throws TimeoutException {
-        boolean isPassiveMembers = (coordinatorParameters.isPassiveMembers() && coordinatorParameters.getClientWorkerCount() > 0);
+        boolean isPassiveMembers = (coordinatorParameters.isPassiveMembers() && clientWorkerCount > 0);
 
         echo(format("Starting Test start (%s members)", (isPassiveMembers) ? "passive" : "active"));
         remoteClient.sendToAllWorkers(new StartTestOperation(testCaseId, isPassiveMembers));

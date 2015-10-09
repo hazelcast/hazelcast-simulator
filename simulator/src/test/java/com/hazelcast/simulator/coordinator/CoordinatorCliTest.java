@@ -182,7 +182,7 @@ public class CoordinatorCliTest {
 
         Coordinator coordinator = createCoordinator();
 
-        assertEquals(2, coordinator.getCoordinatorParameters().getDedicatedMemberMachineCount());
+        assertEquals(2, coordinator.getClusterLayoutParameters().getDedicatedMemberMachineCount());
     }
 
     @Test(expected = CommandLineExitException.class)
