@@ -7,52 +7,42 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
+import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static org.junit.Assert.assertEquals;
 
 /**
- * This tests the cas method: replace. So for optimistic concurrency control.
+ * Tests the cas method {@link Cache#replace(Object, Object, Object)} for optimistic concurrency control.
  *
- * We have a bunch of predefined keys, and we are going to concurrently increment the value
- * and we protect ourselves against lost updates using cas method replace.
+ * With a collection of predefined keys we concurrently increment the value.
+ * We protect ourselves against lost updates using the cas method {@link Cache#replace(Object, Object, Object)}.
  *
- * Locally we keep track of all increments, and if the sum of these local increments matches the
- * global increment, we are done
+ * Locally we keep track of all increments. We verify if the sum of these local increments matches the global increment.
  */
 public class CasICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(CasICacheTest.class);
 
     public String basename = CasICacheTest.class.getSimpleName();
-    public int threadCount = 10;
     public int keyCount = 1000;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 10000;
 
-    private final AtomicLong operations = new AtomicLong();
-    private IList<long[]> resultsPerWorker;
-    private TestContext testContext;
     private Cache<Integer, Long> cache;
+    private IList<long[]> resultsPerWorker;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         resultsPerWorker = hazelcastInstance.getList(basename);
 
@@ -78,26 +68,15 @@ public class CasICacheTest {
     @Warmup(global = true)
     public void warmup() throws Exception {
         Streamer<Integer, Long> streamer = StreamerFactory.getInstance(cache);
-        for (int k = 0; k < keyCount; k++) {
-            streamer.pushEntry(k, 0L);
+        for (int i = 0; i < keyCount; i++) {
+            streamer.pushEntry(i, 0L);
         }
         streamer.await();
-    }
-
-    @Run
-    public void run() {
-
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
     }
 
     @Verify
     public void verify() throws Exception {
         long[] amount = new long[keyCount];
-
         for (long[] increments : resultsPerWorker) {
             for (int i = 0; i < keyCount; i++) {
                 amount[i] += increments[i];
@@ -105,9 +84,9 @@ public class CasICacheTest {
         }
 
         int failures = 0;
-        for (int k = 0; k < keyCount; k++) {
-            long expected = amount[k];
-            long found = cache.get(k);
+        for (int i = 0; i < keyCount; i++) {
+            long expected = amount[i];
+            long found = cache.get(i);
             if (expected != found) {
                 failures++;
             }
@@ -115,38 +94,31 @@ public class CasICacheTest {
         assertEquals(failures + " key=>values have been incremented unExpected", 0, failures);
     }
 
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
     }
 
-    private class Worker implements Runnable {
-        private final Random random = new Random();
+    private class Worker extends AbstractMonotonicWorker {
+
         private final long[] increments = new long[keyCount];
 
-        public void run() {
-            long iteration = 0;
-            while (!testContext.isStopped()) {
-                int key = random.nextInt(keyCount);
-                long increment = random.nextInt(100);
+        @Override
+        public void timeStep() {
+            int key = randomInt(keyCount);
+            long increment = randomInt(100);
 
-                for (; ; ) {
-                    Long current = cache.get(key);
-                    if (cache.replace(key, current, current + increment)) {
-                        increments[key] += increment;
-                        break;
-                    }
-                }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
+            while (true) {
+                Long current = cache.get(key);
+                if (cache.replace(key, current, current + increment)) {
+                    increments[key] += increment;
+                    break;
                 }
             }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
+        }
+
+        @Override
+        protected void afterRun() {
             resultsPerWorker.add(increments);
         }
     }
