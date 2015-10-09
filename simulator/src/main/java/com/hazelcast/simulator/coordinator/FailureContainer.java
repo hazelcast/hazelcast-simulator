@@ -52,10 +52,11 @@ public class FailureContainer {
     }
 
     public void addFailureOperation(FailureOperation operation) {
-        if (operation.getType().isWorkerFinishedFailure()) {
-            finishedWorkersList.put(operation.getWorkerAddress(), operation.getType());
+        FailureType failureType = operation.getType();
+        if (failureType.isWorkerFinishedFailure()) {
+            finishedWorkersList.put(operation.getWorkerAddress(), failureType);
         }
-        if (operation.getType().isPoisonPill()) {
+        if (failureType.isPoisonPill()) {
             return;
         }
 
