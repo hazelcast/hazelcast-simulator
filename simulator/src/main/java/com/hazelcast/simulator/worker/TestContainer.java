@@ -305,9 +305,7 @@ public class TestContainer {
     private void invokeRunWithWorkerMethod(long now) throws Exception {
         bindOptionalProperty(this, testCase, OptionalTestProperties.THREAD_COUNT.propertyName);
 
-        String testId = (testContext.getTestId().isEmpty() ? "Default" : testContext.getTestId());
-
-        LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testId));
+        LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
         if (threadCount <= 0) {
             return;
         }
@@ -324,7 +322,7 @@ public class TestContainer {
         }
 
         // create one probe per test and inject it in all worker instances of the test
-        Probe probe = getOrCreateProbe(testId + "WorkerProbe");
+        Probe probe = getOrCreateProbe(testContext.getTestId() + "WorkerProbe");
         probe.startProbing(now);
 
         // spawn worker and wait for completion

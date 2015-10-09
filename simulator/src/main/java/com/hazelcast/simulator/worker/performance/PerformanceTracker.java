@@ -36,13 +36,11 @@ final class PerformanceTracker {
     private long lastOperationCount;
 
     PerformanceTracker(String testId, Collection<String> probeNames, long baseTime) {
-        String testName = getTestName(testId);
-
-        throughputFile = new File("throughput-" + testName + ".txt");
+        throughputFile = new File("throughput-" + testId + ".txt");
         writeThroughputHeader(throughputFile, false);
 
         for (String probeName : probeNames) {
-            histogramLogWriterMap.put(probeName, createHistogramLogWriter(testName, probeName, baseTime));
+            histogramLogWriterMap.put(probeName, createHistogramLogWriter(testId, probeName, baseTime));
         }
     }
 
@@ -94,11 +92,10 @@ final class PerformanceTracker {
     public Map<String, String> aggregateIntervalHistograms(String testId) {
         Map<String, String> probeResults = new HashMap<String, String>();
 
-        String testName = getTestName(testId);
-        HistogramLogWriter histogramLogWriter = createHistogramLogWriter(testName, "aggregated", 0);
+        HistogramLogWriter histogramLogWriter = createHistogramLogWriter(testId, "aggregated", 0);
         for (Map.Entry<String, Histogram> histogramEntry : intervalHistogramMap.entrySet()) {
             String probeName = histogramEntry.getKey();
-            HistogramLogReader histogramLogReader = createHistogramLogReader(testName, probeName);
+            HistogramLogReader histogramLogReader = createHistogramLogReader(testId, probeName);
             Histogram combined = new Histogram(MAXIMUM_LATENCY, LATENCY_PRECISION);
 
             Histogram histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
@@ -115,10 +112,6 @@ final class PerformanceTracker {
         }
 
         return probeResults;
-    }
-
-    private static String getTestName(String testId) {
-        return (testId.isEmpty() ? "default" : testId);
     }
 
     private static File getLatencyFile(String testName, String probeName) {

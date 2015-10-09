@@ -35,6 +35,7 @@ import java.util.Set;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static java.lang.String.format;
+import static java.util.Collections.singletonMap;
 
 public class TestSuite implements Serializable {
 
@@ -136,6 +137,17 @@ public class TestSuite implements Serializable {
         Properties properties = loadProperties(testPropertiesFile);
 
         Map<String, TestCase> testCases = createTestCases(properties);
+        if (testCases.size() == 1) {
+            // use classname instead of empty testId in single test scenarios
+            TestCase testCase = testCases.values().iterator().next();
+            if (testCase.getId().isEmpty()) {
+                String className = testCase.getClassname();
+                if (className != null && !className.isEmpty()) {
+                    String testId = className.substring(className.lastIndexOf('.') + 1);
+                    testCases = singletonMap(testId, new TestCase(testId, testCase.getProperties()));
+                }
+            }
+        }
 
         return createTestSuite(testPropertiesFile, testCases, propertiesOverrideString);
     }
