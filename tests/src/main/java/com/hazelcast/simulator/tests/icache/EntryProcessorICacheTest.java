@@ -7,15 +7,14 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
+import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
@@ -26,8 +25,6 @@ import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -39,21 +36,15 @@ public class EntryProcessorICacheTest {
 
     // properties
     public String basename = EntryProcessorICacheTest.class.getSimpleName();
-    public int threadCount = 10;
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
     public int maxProcessorDelayMs = 0;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 10000;
 
-    private final AtomicLong operations = new AtomicLong();
     private Cache<Integer, Long> cache;
     private IList<Map<Integer, Long>> resultsPerWorker;
-    private TestContext testContext;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
 
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
@@ -109,22 +100,13 @@ public class EntryProcessorICacheTest {
         assertEquals("Failures have been found", 0, failures);
     }
 
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int i = 0; i < threadCount; i++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
+    private class Worker extends AbstractMonotonicWorker {
 
-    private class Worker implements Runnable {
-        private final Random random = new Random();
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         public Worker() {
@@ -134,30 +116,21 @@ public class EntryProcessorICacheTest {
         }
 
         @Override
-        public void run() {
-            long iteration = 0;
-            while (!testContext.isStopped()) {
-                int key = random.nextInt(keyCount);
-                long increment = random.nextInt(100);
+        public void timeStep() {
+            int key = randomInt(keyCount);
+            long increment = randomInt(100);
 
-                int delayMs = 0;
-                if (maxProcessorDelayMs != 0) {
-                    delayMs = minProcessorDelayMs + random.nextInt(maxProcessorDelayMs);
-                }
-
-                cache.invoke(key, new IncrementEntryProcessor(increment, delayMs));
-                increment(key, increment);
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
+            int delayMs = 0;
+            if (maxProcessorDelayMs != 0) {
+                delayMs = minProcessorDelayMs + randomInt(maxProcessorDelayMs);
             }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
 
+            cache.invoke(key, new IncrementEntryProcessor(increment, delayMs));
+            increment(key, increment);
+        }
+
+        @Override
+        protected void afterRun() {
             // sleep to give time for the last EntryProcessor tasks to complete
             sleepMillis(maxProcessorDelayMs * 2);
             resultsPerWorker.add(result);
