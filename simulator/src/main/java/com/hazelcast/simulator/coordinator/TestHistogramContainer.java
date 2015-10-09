@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.zip.DataFormatException;
 
 import static java.lang.String.format;
 import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
@@ -27,7 +26,7 @@ public class TestHistogramContainer {
 
     private static final Logger LOGGER = Logger.getLogger(TestHistogramContainer.class);
 
-    private final ConcurrentMap<SimulatorAddress, ConcurrentMap<String, Map<String, String>>> workerTestHistogramMap
+    private final ConcurrentMap<SimulatorAddress, ConcurrentMap<String, Map<String, String>>> workerTestProbeHistogramMap
             = new ConcurrentHashMap<SimulatorAddress, ConcurrentMap<String, Map<String, String>>>();
 
     private final PerformanceStateContainer performanceStateContainer;
@@ -37,10 +36,10 @@ public class TestHistogramContainer {
     }
 
     public synchronized void addTestHistograms(SimulatorAddress workerAddress, String testId, Map<String, String> histograms) {
-        ConcurrentMap<String, Map<String, String>> testHistogramMap = workerTestHistogramMap.get(workerAddress);
+        ConcurrentMap<String, Map<String, String>> testHistogramMap = workerTestProbeHistogramMap.get(workerAddress);
         if (testHistogramMap == null) {
             testHistogramMap = new ConcurrentHashMap<String, Map<String, String>>();
-            workerTestHistogramMap.put(workerAddress, testHistogramMap);
+            workerTestProbeHistogramMap.put(workerAddress, testHistogramMap);
         }
         testHistogramMap.put(testId, histograms);
     }
@@ -57,7 +56,7 @@ public class TestHistogramContainer {
 
     synchronized Map<String, Result> aggregateHistogramsForTestCase(String testCaseId, PerformanceState state) {
         Map<String, Result> probeResults = new HashMap<String, Result>();
-        for (ConcurrentMap<String, Map<String, String>> testHistogramMap : workerTestHistogramMap.values()) {
+        for (ConcurrentMap<String, Map<String, String>> testHistogramMap : workerTestProbeHistogramMap.values()) {
             Map<String, String> probeHistogramMap = testHistogramMap.get(testCaseId);
             for (Map.Entry<String, String> mapEntry : probeHistogramMap.entrySet()) {
                 String probeName = mapEntry.getKey();
@@ -72,8 +71,8 @@ public class TestHistogramContainer {
                         result = new ResultImpl(histogram, state.getOperationCount(), state.getTotalThroughput());
                         probeResults.put(probeName, result);
                     }
-                } catch (DataFormatException e) {
-                    LOGGER.warn("Could not parse encoded histogram from test " + testCaseId + " of probe " + probeName);
+                } catch (Exception e) {
+                    LOGGER.warn("Could not decode histogram from test " + testCaseId + " of probe " + probeName);
                 }
             }
         }
