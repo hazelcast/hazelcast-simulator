@@ -121,14 +121,13 @@ public class ExpiryTest {
 
     private class Worker extends AbstractWorker<Operation> {
 
+        @SuppressWarnings("unchecked")
+        private final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
+        private final Counter counter = new Counter();
+
         public Worker() {
             super(operationSelectorBuilder);
         }
-
-        private final Counter counter = new Counter();
-
-        @SuppressWarnings("unchecked")
-        private final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
 
         @Override
         public void timeStep(Operation operation) {
