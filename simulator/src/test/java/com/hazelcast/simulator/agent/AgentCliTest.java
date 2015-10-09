@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.agent;
 
+import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
 import org.junit.Test;
@@ -10,6 +11,8 @@ import java.util.List;
 
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class AgentCliTest {
 
@@ -36,6 +39,11 @@ public class AgentCliTest {
 
         assertEquals(5, agent.getAddressIndex());
         assertEquals("127.0.0.1", agent.getPublicAddress());
+        assertNull(agent.getTestSuiteDir());
+
+        TestSuite testSuite = new TestSuite();
+        agent.setTestSuite(testSuite);
+        assertNotNull(agent.getTestSuiteDir());
     }
 
     @Test(expected = CommandLineExitException.class)

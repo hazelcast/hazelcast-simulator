@@ -31,6 +31,7 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
@@ -45,6 +46,7 @@ public class Agent {
     public static final File WORKERS_HOME = new File(getSimulatorHome(), "workers");
 
     private static final Logger LOGGER = Logger.getLogger(Agent.class);
+    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
 
     private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs = new ConcurrentHashMap<SimulatorAddress, WorkerJvm>();
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this, workerJVMs);
@@ -108,7 +110,6 @@ public class Agent {
     }
 
     public File getTestSuiteDir() {
-        TestSuite testSuite = this.testSuite;
         if (testSuite == null) {
             return null;
         }
@@ -190,9 +191,15 @@ public class Agent {
         public ShutdownThread() {
             super("AgentShutdownThread");
             setDaemon(true);
+
+            LOGGER.info("Shutting down agent!");
         }
 
         public void run() {
+            if (!SHUTDOWN_STARTED.compareAndSet(false, true)) {
+                return;
+            }
+
             LOGGER.info("Terminating workers");
             ThreadSpawner spawner = new ThreadSpawner("workerShutdown");
             for (final WorkerJvm jvm : new LinkedList<WorkerJvm>(workerJVMs.values())) {
