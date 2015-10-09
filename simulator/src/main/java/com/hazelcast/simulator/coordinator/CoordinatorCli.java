@@ -173,9 +173,9 @@ final class CoordinatorCli {
 
         ClusterLayoutParameters clusterLayoutParameters = new ClusterLayoutParameters(
                 options.valueOf(cli.dedicatedMemberMachinesSpec),
-                options.valueOf(cli.memberWorkerCountSpec),
-                options.valueOf(cli.clientWorkerCountSpec)
-        );
+                options.valueOf(cli.clientWorkerCountSpec),
+                options.valueOf(cli.memberWorkerCountSpec)
+                );
         if (clusterLayoutParameters.getDedicatedMemberMachineCount() < 0) {
             throw new CommandLineExitException("--dedicatedMemberMachines can't be smaller than 0");
         }
