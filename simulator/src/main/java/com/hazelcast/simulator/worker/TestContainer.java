@@ -5,7 +5,6 @@ import com.hazelcast.simulator.probes.probes.impl.ProbeImpl;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
-import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -16,17 +15,12 @@ import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
-import com.hazelcast.util.Clock;
-import org.HdrHistogram.Histogram;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -35,12 +29,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getValueFromNameAnnotation;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughputProbe;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.injectObjectToInstance;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
-import static com.hazelcast.simulator.worker.performance.PerformanceState.EMPTY_OPERATION_COUNT;
 import static java.lang.String.format;
 
 /**
@@ -103,11 +97,8 @@ public class TestContainer {
     private Method localTeardownMethod;
     private Method globalTeardownMethod;
 
-    private Method operationCountMethod;
-
-    private IWorker operationCountWorkerInstance;
-
-    private volatile boolean isRunning = true;
+    private long testStartedTimestamp;
+    private volatile boolean isRunning;
 
     public TestContainer(Object testObject, TestContext testContext, TestCase testCase) {
         if (testObject == null) {
@@ -129,37 +120,16 @@ public class TestContainer {
         return testContext;
     }
 
-    public Collection<String> getProbeNames() {
-        return probeMap.keySet();
+    public long getTestStartedTimestamp() {
+        return testStartedTimestamp;
     }
 
     public boolean isRunning() {
         return isRunning;
     }
 
-    public long getOperationCount() {
-        long operationCount = EMPTY_OPERATION_COUNT;
-        try {
-            Object testInstance = (operationCountWorkerInstance != null ? operationCountWorkerInstance : testClassInstance);
-            Long count = invokeMethod(testInstance, operationCountMethod);
-            if (count != null) {
-                operationCount = count;
-            }
-        } catch (Exception e) {
-            LOGGER.debug("Exception while retrieving operation count from " + testCase.getId() + ": " + e.getMessage());
-        }
-        return operationCount;
-    }
-
-    public Map<String, Histogram> getIntervalHistograms() {
-        Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
-        for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
-            Probe probe = entry.getValue();
-            if (!probe.isDisabled()) {
-                intervalHistograms.put(entry.getKey(), probe.getIntervalHistogram());
-            }
-        }
-        return intervalHistograms;
+    public Map<String, Probe> getProbeMap() {
+        return probeMap;
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
@@ -194,20 +164,14 @@ public class TestContainer {
     }
 
     private void run() throws Exception {
-        long now = Clock.currentTimeMillis();
-        for (Probe probe : probeMap.values()) {
-            probe.startProbing(now);
-        }
+        testStartedTimestamp = System.currentTimeMillis();
+        isRunning = true;
         if (runWithWorkerMethod != null) {
-            invokeRunWithWorkerMethod(now);
+            invokeRunWithWorkerMethod();
         } else {
             invokeMethod(testClassInstance, runMethod);
         }
         isRunning = false;
-        now = Clock.currentTimeMillis();
-        for (Probe probe : probeMap.values()) {
-            probe.stopProbing(now);
-        }
     }
 
     private void initMethods() {
@@ -233,8 +197,6 @@ public class TestContainer {
 
             localTeardownMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new TeardownFilter(false));
             globalTeardownMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new TeardownFilter(true));
-
-            operationCountMethod = getAtMostOneMethodWithoutArgs(testClassType, Performance.class, Long.TYPE);
         } catch (Exception e) {
             throw new IllegalTestException(e.getMessage());
         }
@@ -285,24 +247,24 @@ public class TestContainer {
     private void injectDependencies() {
         Field[] fields = testClassType.getDeclaredFields();
         for (Field field : fields) {
-            String probeName = getValueFromNameAnnotation(field);
             if (Probe.class.equals(field.getType())) {
-                Probe probe = getOrCreateProbe(probeName);
+                String probeName = getProbeName(field);
+                Probe probe = getOrCreateProbe(probeName, field);
                 injectObjectToInstance(testClassInstance, field, probe);
             }
         }
     }
 
-    private Probe getOrCreateProbe(String probeName) {
+    private Probe getOrCreateProbe(String probeName, Field field) {
         Probe probe = probeMap.get(probeName);
         if (probe == null) {
-            probe = new ProbeImpl();
+            probe = new ProbeImpl(isThroughputProbe(field));
             probeMap.put(probeName, probe);
         }
         return probe;
     }
 
-    private void invokeRunWithWorkerMethod(long now) throws Exception {
+    private void invokeRunWithWorkerMethod() throws Exception {
         bindOptionalProperty(this, testCase, OptionalTestProperties.THREAD_COUNT.propertyName);
 
         LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
@@ -316,26 +278,27 @@ public class TestContainer {
         Field testContextField = getField(workerClass, "testContext", TestContext.class);
         Field workerProbeField = getField(workerClass, "workerProbe", Probe.class);
 
-        operationCountMethod = getAtMostOneMethodWithoutArgs(workerClass, Performance.class, Long.TYPE);
-        if (operationCountMethod == null) {
-            operationCountMethod = getAtMostOneMethodWithoutArgs(AbstractWorker.class, Performance.class, Long.TYPE);
+        Probe probe = null;
+        if (workerProbeField != null) {
+            // create one probe per test and inject it in all worker instances of the test
+            probe = getOrCreateProbe(testContext.getTestId() + "WorkerProbe", workerProbeField);
         }
 
-        // create one probe per test and inject it in all worker instances of the test
-        Probe probe = getOrCreateProbe(testContext.getTestId() + "WorkerProbe");
-        probe.startProbing(now);
-
         // spawn worker and wait for completion
-        spawnWorkerThreads(testContextField, workerProbeField, probe);
+        IWorker worker = spawnWorkerThreads(testContextField, workerProbeField, probe);
 
         // call the afterCompletion method on a single instance of the worker
-        operationCountWorkerInstance.afterCompletion();
+        if (worker != null) {
+            worker.afterCompletion();
+        }
     }
 
-    private void spawnWorkerThreads(Field testContextField, Field workerProbeField, Probe probe) throws Exception {
+    private IWorker spawnWorkerThreads(Field testContextField, Field workerProbeField, Probe probe) throws Exception {
+        IWorker worker = null;
+
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
-            IWorker worker = invokeMethod(testClassInstance, runWithWorkerMethod);
+            worker = invokeMethod(testClassInstance, runWithWorkerMethod);
 
             if (testContextField != null) {
                 injectObjectToInstance(worker, testContextField, testContext);
@@ -346,11 +309,11 @@ public class TestContainer {
 
             bindOptionalProperty(worker, testCase, OptionalTestProperties.LOG_FREQUENCY.propertyName);
 
-            operationCountWorkerInstance = worker;
-
             spawner.spawn(worker);
         }
         spawner.awaitCompletion();
+
+        return worker;
     }
 
     boolean hasProbe(String probeName) {

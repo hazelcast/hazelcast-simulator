@@ -14,14 +14,14 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 import static org.junit.Assert.fail;
 
-public final class ExternalClientHelper {
+public final class ExternalClientUtils {
 
     private static final int SET_COUNT_DOWN_LATCH_RETRIES = 5;
     private static final int EXPECTED_RESULTS_MAX_RETRIES = 60;
 
-    private static final ILogger LOGGER = Logger.getLogger(ExternalClientHelper.class);
+    private static final ILogger LOGGER = Logger.getLogger(ExternalClientUtils.class);
 
-    private ExternalClientHelper() {
+    private ExternalClientUtils() {
     }
 
     public static void setCountDownLatch(ICountDownLatch countDownLatch, int value) {
@@ -40,7 +40,7 @@ public final class ExternalClientHelper {
         }
     }
 
-    public static void getThroughputResults(HazelcastInstance hazelcastInstance, Probe probe, int expectedResultSize) {
+    public static void getThroughputResults(HazelcastInstance hazelcastInstance, int expectedResultSize) {
         IList<String> throughputResults = getResultList(hazelcastInstance, "externalClientsThroughputResults",
                 expectedResultSize);
         int resultSize = throughputResults.size();
@@ -71,7 +71,6 @@ public final class ExternalClientHelper {
         }
 
         long avgDuration = Math.round(totalDuration / resultSize);
-        probe.setValues(avgDuration, totalInvocations);
         double performance = ((double) totalInvocations / avgDuration) * 1000;
         LOGGER.info(format("All external clients executed %d operations in %d ms (%.3f ops/s)",
                 totalInvocations, avgDuration, performance));

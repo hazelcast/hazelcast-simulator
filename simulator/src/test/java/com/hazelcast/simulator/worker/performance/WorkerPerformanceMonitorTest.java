@@ -5,7 +5,6 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.test.TestPhase;
-import com.hazelcast.simulator.tests.PerformanceMonitorExceptionTest;
 import com.hazelcast.simulator.tests.PerformanceMonitorProbeTest;
 import com.hazelcast.simulator.tests.PerformanceMonitorTest;
 import com.hazelcast.simulator.tests.SuccessTest;
@@ -23,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -64,9 +62,9 @@ public class WorkerPerformanceMonitorTest {
     @AfterClass
     public static void cleanUp() {
         deleteQuiet(new File("throughput.txt"));
-        deleteQuiet(new File("throughput-default.txt"));
-        deleteQuiet(new File("latency-default-DefaultWorkerProbe.txt"));
-        deleteQuiet(new File("latency-default-aggregated.txt"));
+        deleteQuiet(new File("throughput-DummyTestContext.txt"));
+        deleteQuiet(new File("latency-DummyTestContext-DummyTestContextWorkerProbe.txt"));
+        deleteQuiet(new File("latency-DummyTestContext-aggregated.txt"));
     }
 
     @Test
@@ -135,16 +133,6 @@ public class WorkerPerformanceMonitorTest {
         assertTrue(performanceMonitor.start());
 
         verifyServerConnector();
-    }
-
-    @Test
-    public void test_testWithException() {
-        addTest(new PerformanceMonitorExceptionTest());
-
-        assertTrue(performanceMonitor.start());
-        sleepMillis(500);
-
-        verifyNoMoreInteractions(serverConnector);
     }
 
     private void addTest(Object test) {

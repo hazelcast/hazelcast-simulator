@@ -83,7 +83,7 @@ public class TestHistogramContainer {
         for (Map.Entry<String, Result> entry : combinedResults.entrySet()) {
             String probeName = entry.getKey();
             Result result = entry.getValue();
-            LOGGER.info(format("Results for test %s of probe %s:%n%s", testId, probeName, result.toHumanString()));
+            LOGGER.info(format("%s Results of probe %s:%n%s", testId, probeName, result.toHumanString()));
         }
     }
 }

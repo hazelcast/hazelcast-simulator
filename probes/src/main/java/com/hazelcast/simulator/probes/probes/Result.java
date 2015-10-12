@@ -23,10 +23,6 @@ public interface Result {
 
     Histogram getHistogram();
 
-    long getInvocationCount();
-
-    double getThroughput();
-
     Result combine(Result other);
 
     String toHumanString();

@@ -14,7 +14,7 @@ public class DummyTestContext implements TestContext {
 
     @Override
     public String getTestId() {
-        return "";
+        return "DummyTestContext";
     }
 
     @Override

@@ -4,19 +4,16 @@ import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
-import com.hazelcast.simulator.test.annotations.Name;
-import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.worker.performance.PerformanceState;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
-import org.HdrHistogram.Histogram;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -350,9 +347,9 @@ public class TestContainerTest {
         assertTrue(testContainer.hasProbe("latencyProbe"));
 
         testContainer.invoke(TestPhase.RUN);
-        Map<String, Histogram> intervalHistograms = testContainer.getIntervalHistograms();
-        assertNotNull(intervalHistograms);
-        assertTrue(intervalHistograms.keySet().contains("latencyProbe"));
+        Map<String, Probe> probeMap = testContainer.getProbeMap();
+        assertTrue(probeMap.size() > 0);
+        assertTrue(probeMap.keySet().contains("latencyProbe"));
     }
 
     @Test
@@ -360,16 +357,8 @@ public class TestContainerTest {
         ProbeTest test = new ProbeTest();
         testContainer = createTestContainer(test);
 
-        assertNotNull(test.fooProbe);
+        assertNotNull(test.namedProbe);
         assertTrue(testContainer.hasProbe("explicitProbeInjectedToField"));
-    }
-
-    @Test
-    public void testProbeInjectDisabledToField() {
-        ProbeTest test = new ProbeTest();
-        createTestContainer(test);
-
-        assertNotNull(test.disabled);
     }
 
     @SuppressWarnings("unused")
@@ -380,9 +369,8 @@ public class TestContainerTest {
 
         private Probe latencyProbe;
 
-        @Name("explicitProbeInjectedToField")
-        private Probe fooProbe;
-        private Probe disabled;
+        @SimulatorProbe(name = "explicitProbeInjectedToField")
+        private Probe namedProbe;
 
         @Setup
         public void setUp(TestContext context) {
@@ -513,52 +501,6 @@ public class TestContainerTest {
         @Teardown(global = true)
         void globalTeardown() {
             globalTeardownCalled = true;
-        }
-    }
-
-    // ========================================================
-    // =================== performance ========================
-    // ========================================================
-
-    @Test
-    public void testPerformance() throws Exception {
-        PerformanceTest test = new PerformanceTest();
-        testContainer = createTestContainer(test);
-        long operationCount = testContainer.getOperationCount();
-
-        assertEquals(20, operationCount);
-    }
-
-    private static class PerformanceTest {
-
-        @Performance
-        public long getCount() {
-            return 20;
-        }
-
-        @Run
-        void run() {
-        }
-    }
-
-    @Test
-    public void testPerformanceWithException() throws Exception {
-        PerformanceExceptionTest test = new PerformanceExceptionTest();
-        testContainer = createTestContainer(test);
-        long operationCount = testContainer.getOperationCount();
-
-        assertEquals(PerformanceState.EMPTY_OPERATION_COUNT, operationCount);
-    }
-
-    private static class PerformanceExceptionTest {
-
-        @Performance
-        public long getCount() {
-            throw new RuntimeException("Should fail!");
-        }
-
-        @Run
-        void run() {
         }
     }
 

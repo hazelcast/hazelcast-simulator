@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.test.annotations.Name;
+import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -18,22 +18,28 @@ public final class AnnotationReflectionUtils {
     private AnnotationReflectionUtils() {
     }
 
-    public static String getValueFromNameAnnotation(Field field) {
-        Name nameAnnotation = field.getAnnotation(Name.class);
-        if (nameAnnotation != null) {
-            return nameAnnotation.value();
+    public static String getProbeName(Field field) {
+        if (field == null) {
+            return null;
+        }
+
+        SimulatorProbe probeAnnotation = field.getAnnotation(SimulatorProbe.class);
+        if (probeAnnotation != null && !SimulatorProbe.NULL.equals(probeAnnotation.name())) {
+            return probeAnnotation.name();
         }
         return field.getName();
     }
 
-    public static String getValueFromNameAnnotations(Annotation[] annotations, String defaultName) {
-        for (Annotation annotation : annotations) {
-            if (annotation.annotationType().equals(Name.class)) {
-                Name name = (Name) annotation;
-                return name.value();
-            }
+    public static boolean isThroughputProbe(Field field) {
+        if (field == null) {
+            return false;
         }
-        return defaultName;
+
+        SimulatorProbe probeAnnotation = field.getAnnotation(SimulatorProbe.class);
+        if (probeAnnotation != null) {
+            return probeAnnotation.useForThroughput();
+        }
+        return false;
     }
 
     /**

@@ -10,9 +10,6 @@ import com.hazelcast.simulator.probes.probes.Probe;
  * {@link com.hazelcast.simulator.test.TestContext TestContext} testContext;
  * {@link Probe IntervalProbe} intervalProbe;
  * <code>long</code> logFrequency;
- *
- * You have to implement a method with the {@link com.hazelcast.simulator.test.annotations.Performance} annotation, which will
- * be executed on a single worker instance (the last one which was created).
  */
 public interface IWorker extends Runnable {
 

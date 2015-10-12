@@ -228,6 +228,14 @@ public final class CommonUtils {
         }
     }
 
+    public static void joinThread(Thread thread) {
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            EmptyStatement.ignore(e);
+        }
+    }
+
     public static void sleepSeconds(int seconds) {
         try {
             TimeUnit.SECONDS.sleep(seconds);

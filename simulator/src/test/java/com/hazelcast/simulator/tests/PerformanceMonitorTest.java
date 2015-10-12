@@ -15,19 +15,17 @@
  */
 package com.hazelcast.simulator.tests;
 
-import com.hazelcast.simulator.test.annotations.Performance;
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 
 public class PerformanceMonitorTest {
 
-    private long operations;
-
-    @Performance
-    public long getOperationCount() {
-        return operations++;
-    }
+    @SimulatorProbe(useForThroughput = true)
+    private Probe performanceProbe;
 
     @Run
     void run() {
+        performanceProbe.recordValue(50);
     }
 }

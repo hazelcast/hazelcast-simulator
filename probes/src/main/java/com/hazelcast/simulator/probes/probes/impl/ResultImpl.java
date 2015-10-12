@@ -46,16 +46,6 @@ public class ResultImpl implements Result {
     }
 
     @Override
-    public long getInvocationCount() {
-        return invocations;
-    }
-
-    @Override
-    public double getThroughput() {
-        return throughput;
-    }
-
-    @Override
     public Result combine(Result other) {
         if (other == null) {
             return this;

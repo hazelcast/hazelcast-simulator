@@ -15,9 +15,9 @@ import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
@@ -97,6 +97,7 @@ public class SyntheticTest {
 
         // these fields will be injected by the TestContainer
         public TestContext testContext;
+        @SimulatorProbe(useForThroughput = true)
         public Probe workerProbe;
 
         private final List<Integer> partitionSequence = new ArrayList<Integer>();
@@ -142,11 +143,6 @@ public class SyntheticTest {
                 throw new IllegalStateException("The KeyLocality has been set to LOCAL, but the test is running on a client."
                         + " This doesn't make sense as no keys are stored on clients.");
             }
-        }
-
-        @Performance
-        public long getOperationCount() {
-            return workerProbe.getInvocationCount();
         }
 
         @Override

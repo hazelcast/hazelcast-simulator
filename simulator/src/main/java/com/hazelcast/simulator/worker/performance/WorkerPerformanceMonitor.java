@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.worker.performance;
 
+import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
-import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.worker.ClientWorker;
 import com.hazelcast.simulator.worker.MemberWorker;
 import com.hazelcast.simulator.worker.TestContainer;
@@ -17,14 +17,16 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
-import static com.hazelcast.simulator.worker.performance.PerformanceState.EMPTY_OPERATION_COUNT;
-import static com.hazelcast.simulator.worker.performance.PerformanceUtils.ONE_SECOND_IN_MILLIS;
+import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputHeader;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputStats;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * Monitors the performance of all running tests on {@link MemberWorker} and {@link ClientWorker} instances.
@@ -51,15 +53,11 @@ public class WorkerPerformanceMonitor {
     }
 
     public void shutdown() {
-        try {
-            thread.sendTestHistograms();
+        thread.sendTestHistograms();
 
-            thread.isRunning = false;
-            thread.interrupt();
-            thread.join();
-        } catch (InterruptedException e) {
-            EmptyStatement.ignore(e);
-        }
+        thread.isRunning = false;
+        thread.interrupt();
+        joinThread(thread);
     }
 
     private static final class MonitorThread extends Thread {
@@ -73,12 +71,6 @@ public class WorkerPerformanceMonitor {
         private final ServerConnector serverConnector;
         private final Collection<TestContainer> testContainers;
         private final long intervalNanos;
-
-        private long globalLastOpsCount;
-        private long globalLastTimestamp;
-
-        private long startedTimestamp;
-        private long lastTimestamp;
 
         private volatile boolean isRunning = true;
 
@@ -94,32 +86,20 @@ public class WorkerPerformanceMonitor {
         }
 
         @Override
-        public void start() {
-            startedTimestamp = System.currentTimeMillis();
-            globalLastTimestamp = startedTimestamp;
-            lastTimestamp = startedTimestamp;
-            super.start();
-        }
-
-        @Override
         public void run() {
             while (isRunning) {
-                long started = System.nanoTime();
+                long startedNanos = System.nanoTime();
+                long currentTimestamp = System.currentTimeMillis();
 
-                try {
-                    long currentTimestamp = System.currentTimeMillis();
-                    updatePerformanceStates(currentTimestamp);
-                    sendPerformanceStates();
-                    writeStatsToFiles(currentTimestamp);
-                } catch (Exception e) {
-                    LOGGER.fatal("Exception in WorkerPerformanceMonitorThread", e);
-                }
+                updatePerformanceStates(currentTimestamp);
+                sendPerformanceStates();
+                writeStatsToFiles(currentTimestamp);
 
-                long elapsedNanos = System.nanoTime() - started;
+                long elapsedNanos = System.nanoTime() - startedNanos;
                 if (intervalNanos > elapsedNanos) {
                     sleepNanos(intervalNanos - elapsedNanos);
                 } else {
-                    LOGGER.warn("WorkerPerformanceMonitorThread ran for " + TimeUnit.NANOSECONDS.toMillis(elapsedNanos) + " ms");
+                    LOGGER.warn("WorkerPerformanceMonitorThread.run() took " + NANOSECONDS.toMillis(elapsedNanos) + " ms");
                 }
             }
         }
@@ -139,32 +119,48 @@ public class WorkerPerformanceMonitor {
         }
 
         private void updatePerformanceStates(long currentTimestamp) {
-            long totalTimeDelta = currentTimestamp - startedTimestamp;
-            long intervalTimeDelta = currentTimestamp - lastTimestamp;
-
             for (TestContainer testContainer : testContainers) {
                 if (!testContainer.isRunning()) {
                     continue;
                 }
+                Map<String, Probe> probeMap = testContainer.getProbeMap();
+                Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
 
-                long currentOperationalCount = testContainer.getOperationCount();
-                Map<String, Histogram> intervalHistograms = testContainer.getIntervalHistograms();
-                if (currentOperationalCount == EMPTY_OPERATION_COUNT) {
-                    continue;
+                long intervalPercentileLatency = Long.MIN_VALUE;
+                long intervalMaxLatency = Long.MIN_VALUE;
+                long intervalOperationalCount = 0;
+
+                for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
+                    Probe probe = entry.getValue();
+                    Histogram intervalHistogram = probe.getIntervalHistogram();
+                    intervalHistograms.put(entry.getKey(), intervalHistogram);
+
+                    long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
+                    if (percentileValue > intervalPercentileLatency) {
+                        intervalPercentileLatency = percentileValue;
+                    }
+                    long maxValue = intervalHistogram.getMaxValue();
+                    if (maxValue > intervalMaxLatency) {
+                        intervalMaxLatency = maxValue;
+                    }
+                    if (probe.isThroughputProbe()) {
+                        intervalOperationalCount += intervalHistogram.getTotalCount();
+                    }
                 }
 
                 String testId = testContainer.getTestContext().getTestId();
-                PerformanceTracker tracker = getOrCreatePerformanceTracker(testContainer, testId);
-                tracker.update(totalTimeDelta, intervalTimeDelta, currentOperationalCount, intervalHistograms);
-            }
+                PerformanceTracker tracker = getOrCreatePerformanceTracker(testId, testContainer);
 
-            lastTimestamp = currentTimestamp;
+                tracker.update(intervalHistograms, intervalPercentileLatency, intervalMaxLatency,
+                        intervalOperationalCount, currentTimestamp);
+            }
         }
 
-        private PerformanceTracker getOrCreatePerformanceTracker(TestContainer testContainer, String testId) {
+        private PerformanceTracker getOrCreatePerformanceTracker(String testId, TestContainer testContainer) {
             PerformanceTracker tracker = trackerMap.get(testId);
             if (tracker == null) {
-                tracker = new PerformanceTracker(testId, testContainer.getProbeNames(), startedTimestamp);
+                Set<String> probeNames = testContainer.getProbeMap().keySet();
+                tracker = new PerformanceTracker(testId, probeNames, testContainer.getTestStartedTimestamp());
                 trackerMap.put(testId, tracker);
             }
             return tracker;
@@ -181,30 +177,27 @@ public class WorkerPerformanceMonitor {
         }
 
         private void writeStatsToFiles(long currentTimestamp) {
-            String timestamp = simpleDateFormat.format(new Date(currentTimestamp));
+            if (trackerMap.isEmpty()) {
+                return;
+            }
 
-            long runningTests = 0;
-            long globalDeltaOps = 0;
-            long deltaTimeMillis = currentTimestamp - globalLastTimestamp;
+            String dateString = simpleDateFormat.format(new Date(currentTimestamp));
+            long globalIntervalOperationCount = 0;
+            long globalOperationsCount = 0;
+            double globalIntervalThroughput = 0;
 
             // test performance stats
             for (PerformanceTracker stats : trackerMap.values()) {
-                globalDeltaOps += stats.getOperationCountDelta();
-                runningTests++;
+                stats.writeStatsToFile(dateString);
 
-                stats.writeStatsToFile(timestamp);
+                globalIntervalOperationCount += stats.getIntervalOperationCount();
+                globalOperationsCount += stats.getTotalOperationCount();
+                globalIntervalThroughput += stats.getIntervalThroughput();
             }
 
             // global performance stats
-            double globalOpsPerSecond = (globalDeltaOps * ONE_SECOND_IN_MILLIS) / (double) deltaTimeMillis;
-
-            globalLastOpsCount += globalDeltaOps;
-            globalLastTimestamp = currentTimestamp;
-
-            if (runningTests > 0) {
-                writeThroughputStats(globalThroughputFile, timestamp, globalLastOpsCount, globalDeltaOps, globalOpsPerSecond,
-                        runningTests, testContainers.size());
-            }
+            writeThroughputStats(globalThroughputFile, dateString, globalOperationsCount, globalIntervalOperationCount,
+                    globalIntervalThroughput, trackerMap.size(), testContainers.size());
         }
     }
 }

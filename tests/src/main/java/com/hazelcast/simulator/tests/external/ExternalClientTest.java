@@ -13,9 +13,9 @@ import com.hazelcast.util.EmptyStatement;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.tests.external.ExternalClientHelper.getLatencyResults;
-import static com.hazelcast.simulator.tests.external.ExternalClientHelper.getThroughputResults;
-import static com.hazelcast.simulator.tests.external.ExternalClientHelper.setCountDownLatch;
+import static com.hazelcast.simulator.tests.external.ExternalClientUtils.getLatencyResults;
+import static com.hazelcast.simulator.tests.external.ExternalClientUtils.getThroughputResults;
+import static com.hazelcast.simulator.tests.external.ExternalClientUtils.setCountDownLatch;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static java.lang.String.format;
 
@@ -81,16 +81,13 @@ public class ExternalClientTest {
 
         // just a single instance will collect the results from all external clients
         if (!isExternalResultsCollectorInstance) {
-            // disable probe
-            externalClientProbe.disable();
-
             LOGGER.info("Stopping non result collecting ExternalClientTest");
             return;
         }
 
         // get probe results
         LOGGER.info("Collecting results from external clients...");
-        getThroughputResults(hazelcastInstance, externalClientProbe, expectedResultSize);
+        getThroughputResults(hazelcastInstance, expectedResultSize);
         getLatencyResults(hazelcastInstance, externalClientProbe, expectedResultSize);
         LOGGER.info("Result collecting ExternalClientTest done!");
     }

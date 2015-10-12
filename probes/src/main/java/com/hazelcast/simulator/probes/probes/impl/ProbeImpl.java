@@ -20,7 +20,6 @@ import org.HdrHistogram.Histogram;
 import org.HdrHistogram.Recorder;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 /**
  * Measures the latency distribution of a test.
@@ -30,46 +29,24 @@ public class ProbeImpl implements Probe {
     public static final long MAXIMUM_LATENCY = TimeUnit.SECONDS.toMicros(60);
     public static final int LATENCY_PRECISION = 4;
 
-    private static final double ONE_SECOND_IN_MS = TimeUnit.SECONDS.toMillis(1);
-
-    private static final AtomicLongFieldUpdater<ProbeImpl> INVOCATIONS =
-            AtomicLongFieldUpdater.newUpdater(ProbeImpl.class, "invocations");
-
     private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, LATENCY_PRECISION);
     private final ThreadLocal<Long> threadLocalStarted = new ThreadLocal<Long>();
 
-    private long startedProbing;
+    private final boolean isThroughputProbe;
 
-    private boolean disabled;
-
-    @SuppressWarnings("all")
-    private volatile long invocations;
-    private volatile long durationMs;
-
-    @Override
-    public void startProbing(long timeStamp) {
-        startedProbing = timeStamp;
+    public ProbeImpl(boolean isThroughputProbe) {
+        this.isThroughputProbe = isThroughputProbe;
     }
 
     @Override
-    public void stopProbing(long timeStamp) {
-        if (timeStamp < 0) {
-            throw new IllegalArgumentException("timeStamp must be zero or positive.");
-        }
-        if (startedProbing == 0) {
-            throw new IllegalStateException("Can't get result as probe has not been started yet.");
-        }
-
-        long stopOrNow = (timeStamp == 0 ? System.currentTimeMillis() : timeStamp);
-        durationMs = stopOrNow - startedProbing;
-        if (durationMs < 0) {
-            throw new IllegalArgumentException("durationMs must be positive, but was " + durationMs);
-        }
+    public boolean isThroughputProbe() {
+        return isThroughputProbe;
     }
 
     @Override
     public void started() {
-        threadLocalStarted.set(System.nanoTime());
+        long now = System.nanoTime();
+        threadLocalStarted.set(now);
     }
 
     @Override
@@ -83,46 +60,12 @@ public class ProbeImpl implements Probe {
     }
 
     @Override
-    public void disable() {
-        disabled = true;
-    }
-
-    @Override
-    public boolean isDisabled() {
-        return disabled;
-    }
-
-    @Override
-    public void setValues(long durationMs, long invocations) {
-        if (durationMs < 1) {
-            throw new IllegalArgumentException("durationMs must be positive, but was " + durationMs);
-        }
-        if (invocations < 1) {
-            throw new IllegalArgumentException("invocations must be positive, but was " + invocations);
-        }
-
-        this.durationMs = durationMs;
-        INVOCATIONS.set(this, invocations);
-    }
-
-    @Override
     public void recordValue(long latencyNanos) {
         recorder.recordValue((int) TimeUnit.NANOSECONDS.toMicros(latencyNanos));
-        INVOCATIONS.incrementAndGet(this);
-    }
-
-    @Override
-    public long getInvocationCount() {
-        return invocations;
     }
 
     @Override
     public Histogram getIntervalHistogram() {
         return recorder.getIntervalHistogram();
-    }
-
-    @Override
-    public ResultImpl getResult() {
-        return new ResultImpl(recorder.getIntervalHistogram(), invocations, ((invocations * ONE_SECOND_IN_MS) / durationMs));
     }
 }

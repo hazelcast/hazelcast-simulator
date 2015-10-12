@@ -4,7 +4,7 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Performance;
+import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
@@ -28,6 +28,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     // these fields will be injected by the TestContainer
     TestContext testContext;
+    @SimulatorProbe(useForThroughput = true)
     Probe workerProbe;
 
     // these fields will be injected by test.properties of the test
@@ -61,11 +62,6 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         }
 
         afterRun();
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return workerProbe.getInvocationCount();
     }
 
     /**
@@ -130,7 +126,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
      * Calls {@link Random#nextInt(int)} on an internal Random instance.
      *
      * @param upperBond the bound on the random number to be returned.  Must be
-     *        positive.
+     *                  positive.
      * @return the next pseudo random, uniformly distributed {@code int} value between {@code 0} (inclusive) and {@code n}
      * (exclusive) from this random number generator's sequence
      */
