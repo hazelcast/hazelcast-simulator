@@ -17,15 +17,23 @@ package com.hazelcast.simulator.probes.probes;
 
 import org.HdrHistogram.Histogram;
 
-import javax.xml.stream.XMLStreamWriter;
+import java.util.Set;
 
 public interface Result {
 
-    Histogram getHistogram();
+    String getTestName();
 
-    Result combine(Result other);
+    long getInvocations();
 
-    String toHumanString();
+    double getThroughput();
 
-    void writeTo(XMLStreamWriter writer);
+    boolean isEmpty();
+
+    void addHistogram(String probeName, Histogram histogram);
+
+    Histogram getHistogram(String probeName);
+
+    Set<String> probeNames();
+
+    String toHumanString(String probeName);
 }

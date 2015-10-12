@@ -59,6 +59,7 @@
         <jgit.version>3.7.1.201504261725-r</jgit.version>
         <jopt.version>4.9</jopt.version>
         <reflections.version>0.9.10</reflections.version>
+        <xstream.version>1.4.5</xstream.version>
 
         <amazonaws.version>1.10.12</amazonaws.version>
         <jclouds.version>1.9.1</jclouds.version>

@@ -408,16 +408,4 @@ public final class FileUtils {
                     targetFile.getAbsolutePath()), e);
         }
     }
-
-    public static String getFileName(File file) {
-        return removeExtension(file.getName());
-    }
-
-    public static String removeExtension(String name) {
-        int dotPos = name.lastIndexOf('.');
-        if (dotPos != -1) {
-            name = name.substring(0, dotPos);
-        }
-        return name;
-    }
 }

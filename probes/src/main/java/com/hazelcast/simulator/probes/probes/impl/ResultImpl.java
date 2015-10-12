@@ -15,100 +15,97 @@
  */
 package com.hazelcast.simulator.probes.probes.impl;
 
-import com.hazelcast.simulator.probes.probes.ProbesResultXmlElements;
 import com.hazelcast.simulator.probes.probes.Result;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.HdrHistogram.Histogram;
-import org.apache.commons.codec.binary.Base64;
 
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Set;
 
-@SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+
 public class ResultImpl implements Result {
 
-    private final Histogram histogram;
+    private final String testName;
     private final long invocations;
     private final double throughput;
 
-    public ResultImpl(Histogram histogram, long invocations, double throughput) {
-        this.histogram = histogram.copy();
+    private final HashMap<String, Histogram> probeHistogramMap;
+
+    public ResultImpl(String testName, long invocations, double throughput) {
+        this.testName = testName;
         this.invocations = invocations;
         this.throughput = throughput;
+
+        this.probeHistogramMap = new HashMap<String, Histogram>();
     }
 
     @Override
-    public Histogram getHistogram() {
-        return histogram;
+    public String getTestName() {
+        return testName;
     }
 
     @Override
-    public Result combine(Result other) {
-        if (other == null) {
-            return this;
+    public long getInvocations() {
+        return invocations;
+    }
+
+    @Override
+    public double getThroughput() {
+        return throughput;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return probeHistogramMap.isEmpty();
+    }
+
+    @Override
+    public void addHistogram(String probeName, Histogram histogram) {
+        if (histogram == null) {
+            return;
         }
 
-        ResultImpl otherResult = (ResultImpl) other;
-        Histogram combinedHistogram = histogram.copy();
-        combinedHistogram.add(otherResult.histogram);
-        return new ResultImpl(combinedHistogram, invocations + otherResult.invocations, throughput + otherResult.throughput);
+        Histogram candidate = probeHistogramMap.get(probeName);
+        if (candidate == null) {
+            probeHistogramMap.put(probeName, histogram);
+            return;
+        }
+
+        candidate.add(histogram);
     }
 
     @Override
-    public String toHumanString() {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        PrintStream stream = new PrintStream(outputStream);
-        histogram.outputPercentileDistribution(stream, 1.0);
-        stream.flush();
-        return new String(outputStream.toByteArray());
+    public Histogram getHistogram(String probeName) {
+        return probeHistogramMap.get(probeName);
     }
 
     @Override
-    public void writeTo(XMLStreamWriter writer) {
-        Histogram tmp = histogram.copy();
-        int size = tmp.getNeededByteBufferCapacity();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-        int bytesWritten = tmp.encodeIntoCompressedByteBuffer(byteBuffer);
-        byteBuffer.rewind();
-        byteBuffer.limit(bytesWritten);
-        String encodedData = Base64.encodeBase64String(byteBuffer.array());
+    public Set<String> probeNames() {
+        return probeHistogramMap.keySet();
+    }
+
+    @Override
+    public String toHumanString(String probeName) {
+        Histogram histogram = probeHistogramMap.get(probeName);
+        if (histogram == null) {
+            return null;
+        }
+
+        ByteArrayOutputStream outputStream = null;
+        PrintStream stream = null;
         try {
-            writer.writeStartElement(ProbesResultXmlElements.INVOCATIONS.getName());
-            writer.writeCharacters(Long.toString(invocations));
-            writer.writeEndElement();
-            writer.writeStartElement(ProbesResultXmlElements.THROUGHPUT.getName());
-            writer.writeCharacters(Double.toString(throughput));
-            writer.writeEndElement();
-            writer.writeStartElement(ProbesResultXmlElements.LATENCY.getName());
-            writer.writeCData(encodedData);
-            writer.writeEndElement();
-        } catch (XMLStreamException e) {
-            throw new RuntimeException(e);
-        }
-    }
+            outputStream = new ByteArrayOutputStream();
+            stream = new PrintStream(outputStream);
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+            histogram.outputPercentileDistribution(stream, 1.0);
+            stream.flush();
 
-        ResultImpl that = (ResultImpl) o;
-        if (histogram != null ? !histogram.equals(that.histogram) : that.histogram != null) {
-            return false;
+            return new String(outputStream.toByteArray());
+        } finally {
+            closeQuietly(stream);
+            closeQuietly(outputStream);
         }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        return histogram != null ? histogram.hashCode() : 0;
     }
 }

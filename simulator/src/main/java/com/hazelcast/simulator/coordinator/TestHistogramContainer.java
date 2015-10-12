@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.probes.probes.ProbesResultXmlWriter;
+import com.hazelcast.simulator.probes.probes.ProbeXmlUtils;
 import com.hazelcast.simulator.probes.probes.Result;
 import com.hazelcast.simulator.probes.probes.impl.ResultImpl;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -46,16 +45,16 @@ public class TestHistogramContainer {
 
     void createProbeResults(String testSuiteId, String testCaseId) {
         PerformanceState performanceState = performanceStateContainer.getPerformanceStateForTestCase(testCaseId);
-        Map<String, Result> probesResult = aggregateHistogramsForTestCase(testCaseId, performanceState);
-        if (!probesResult.isEmpty()) {
+        Result result = aggregateHistogramsForTestCase(testCaseId, performanceState);
+        if (!result.isEmpty()) {
             String fileName = "probes-" + testSuiteId + "_" + testCaseId + ".xml";
-            ProbesResultXmlWriter.write(probesResult, new File(fileName));
-            logProbesResultInHumanReadableFormat(testCaseId, probesResult);
+            ProbeXmlUtils.toXml(result, new File(fileName));
+            logProbesResultInHumanReadableFormat(testCaseId, result);
         }
     }
 
-    synchronized Map<String, Result> aggregateHistogramsForTestCase(String testCaseId, PerformanceState state) {
-        Map<String, Result> probeResults = new HashMap<String, Result>();
+    synchronized Result aggregateHistogramsForTestCase(String testCaseId, PerformanceState state) {
+        Result result = new ResultImpl(testCaseId, state.getOperationCount(), state.getTotalThroughput());
         for (ConcurrentMap<String, Map<String, String>> testHistogramMap : workerTestProbeHistogramMap.values()) {
             Map<String, String> probeHistogramMap = testHistogramMap.get(testCaseId);
             for (Map.Entry<String, String> mapEntry : probeHistogramMap.entrySet()) {
@@ -64,26 +63,18 @@ public class TestHistogramContainer {
                 try {
                     ByteBuffer buffer = ByteBuffer.wrap(parseBase64Binary(encodedHistogram));
                     Histogram histogram = decodeFromCompressedByteBuffer(buffer, 0);
-                    Result result = probeResults.get(probeName);
-                    if (result != null) {
-                        result.getHistogram().add(histogram);
-                    } else {
-                        result = new ResultImpl(histogram, state.getOperationCount(), state.getTotalThroughput());
-                        probeResults.put(probeName, result);
-                    }
+                    result.addHistogram(probeName, histogram);
                 } catch (Exception e) {
                     LOGGER.warn("Could not decode histogram from test " + testCaseId + " of probe " + probeName);
                 }
             }
         }
-        return probeResults;
+        return result;
     }
 
-    private void logProbesResultInHumanReadableFormat(String testId, Map<String, Result> combinedResults) {
-        for (Map.Entry<String, Result> entry : combinedResults.entrySet()) {
-            String probeName = entry.getKey();
-            Result result = entry.getValue();
-            LOGGER.info(format("%s Results of probe %s:%n%s", testId, probeName, result.toHumanString()));
+    private void logProbesResultInHumanReadableFormat(String testId, Result result) {
+        for (String probeName : result.probeNames()) {
+            LOGGER.info(format("%s Results of probe %s:%n%s", testId, probeName, result.toHumanString(probeName)));
         }
     }
 }
