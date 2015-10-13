@@ -187,8 +187,8 @@ public class AgentSmokeTest {
     private static void createWorkers() {
         WorkerParameters workerParameters = new WorkerParameters(
                 new SimulatorProperties(),
-                60000,
                 true,
+                60000,
                 "",
                 "",
                 fileAsText("./simulator/src/test/resources/hazelcast.xml"),

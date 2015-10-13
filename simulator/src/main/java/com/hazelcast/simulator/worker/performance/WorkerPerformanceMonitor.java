@@ -33,15 +33,13 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  */
 public class WorkerPerformanceMonitor {
 
-    // TODO: make this configurable
-    private static final int DEFAULT_MONITORING_INTERVAL_SECONDS = 10;
-
     private final AtomicBoolean started = new AtomicBoolean();
 
     private final MonitorThread thread;
 
-    public WorkerPerformanceMonitor(ServerConnector serverConnector, Collection<TestContainer> testContainers) {
-        this.thread = new MonitorThread(serverConnector, testContainers);
+    public WorkerPerformanceMonitor(ServerConnector serverConnector, Collection<TestContainer> testContainers,
+                                    int workerPerformanceMonitorIntervalSeconds) {
+        this.thread = new MonitorThread(serverConnector, testContainers, workerPerformanceMonitorIntervalSeconds);
     }
 
     public boolean start() {
@@ -75,13 +73,14 @@ public class WorkerPerformanceMonitor {
 
         private volatile boolean isRunning = true;
 
-        private MonitorThread(ServerConnector serverConnector, Collection<TestContainer> testContainers) {
+        private MonitorThread(ServerConnector serverConnector, Collection<TestContainer> testContainers,
+                              int workerPerformanceMonitorIntervalSeconds) {
             super("WorkerPerformanceMonitorThread");
             setDaemon(true);
 
             this.serverConnector = serverConnector;
             this.testContainers = testContainers;
-            this.intervalNanos = TimeUnit.SECONDS.toNanos(DEFAULT_MONITORING_INTERVAL_SECONDS);
+            this.intervalNanos = TimeUnit.SECONDS.toNanos(workerPerformanceMonitorIntervalSeconds);
 
             writeThroughputHeader(globalThroughputFile, true);
         }

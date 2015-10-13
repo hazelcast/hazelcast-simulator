@@ -51,7 +51,7 @@ public class WorkerPerformanceMonitorTest {
         serverConnector = mock(ServerConnector.class);
         when(serverConnector.getAddress()).thenReturn(workerAddress);
 
-        performanceMonitor = new WorkerPerformanceMonitor(serverConnector, tests.values());
+        performanceMonitor = new WorkerPerformanceMonitor(serverConnector, tests.values(), 1);
     }
 
     @After

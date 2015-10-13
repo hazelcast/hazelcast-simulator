@@ -182,8 +182,8 @@ final class CoordinatorCli {
 
         WorkerParameters workerParameters = new WorkerParameters(
                 simulatorProperties,
-                options.valueOf(cli.workerStartupTimeoutSpec),
                 options.valueOf(cli.autoCreateHzInstanceSpec),
+                options.valueOf(cli.workerStartupTimeoutSpec),
                 options.valueOf(cli.workerVmOptionsSpec),
                 options.valueOf(cli.clientWorkerVmOptionsSpec),
                 loadMemberHzConfig(options, cli),

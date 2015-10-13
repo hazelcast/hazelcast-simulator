@@ -33,6 +33,7 @@ public class WorkerJvmSettings {
 
     private final boolean autoCreateHzInstance;
     private final int workerStartupTimeout;
+    private final int workerPerformanceMonitorIntervalSeconds;
 
     private final String profiler;
     private final String profilerSettings;
@@ -55,6 +56,7 @@ public class WorkerJvmSettings {
 
         this.autoCreateHzInstance = workerParameters.isAutoCreateHzInstance();
         this.workerStartupTimeout = workerParameters.getWorkerStartupTimeout();
+        this.workerPerformanceMonitorIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
 
         this.profiler = workerParameters.getProfiler().name();
         this.profilerSettings = workerParameters.getProfilerSettings();
@@ -89,6 +91,10 @@ public class WorkerJvmSettings {
         return workerStartupTimeout;
     }
 
+    public int getWorkerPerformanceMonitorIntervalSeconds() {
+        return workerPerformanceMonitorIntervalSeconds;
+    }
+
     public JavaProfiler getProfiler() {
         return JavaProfiler.valueOf(profiler);
     }
@@ -111,6 +117,7 @@ public class WorkerJvmSettings {
                 + ", log4jConfig='" + log4jConfig + '\''
                 + ", autoCreateHzInstance=" + autoCreateHzInstance
                 + ", workerStartupTimeout=" + workerStartupTimeout
+                + ", workerPerformanceMonitorIntervalSeconds=" + workerPerformanceMonitorIntervalSeconds
                 + ", profiler='" + profiler + '\''
                 + ", profilerSettings='" + profilerSettings + '\''
                 + ", numaCtl='" + numaCtl + '\''

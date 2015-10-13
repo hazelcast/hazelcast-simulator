@@ -70,7 +70,8 @@ public final class MemberWorker implements Worker {
     private final WorkerPerformanceMonitor workerPerformanceMonitor;
 
     private MemberWorker(WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort,
-                         boolean autoCreateHzInstance, String hConfigFile) throws Exception {
+                         boolean autoCreateHzInstance, int workerPerformanceMonitorIntervalSeconds, String hConfigFile)
+            throws Exception {
         this.type = type;
         this.publicAddress = publicAddress;
 
@@ -83,7 +84,8 @@ public final class MemberWorker implements Worker {
         workerConnector.start();
 
         WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getConfiguration().getProcessor();
-        workerPerformanceMonitor = new WorkerPerformanceMonitor(workerConnector, processor.getTests());
+        workerPerformanceMonitor = new WorkerPerformanceMonitor(workerConnector, processor.getTests(),
+                workerPerformanceMonitorIntervalSeconds);
 
         Runtime.getRuntime().addShutdownHook(new ShutdownThread());
 
@@ -185,6 +187,7 @@ public final class MemberWorker implements Worker {
             String hzConfigFile = System.getProperty("hzConfigFile");
 
             boolean autoCreateHzInstance = parseBoolean(System.getProperty("autoCreateHzInstance", "true"));
+            int workerPerformanceMonitorIntervalSeconds = parseInt(System.getProperty("workerPerformanceMonitorIntervalSeconds"));
 
             logHeader("Hazelcast Worker #" + workerIndex + " (" + type + ")");
             logInputArguments();
@@ -200,11 +203,13 @@ public final class MemberWorker implements Worker {
             LOGGER.info("Worker port: " + workerPort);
 
             LOGGER.info("autoCreateHzInstance: " + autoCreateHzInstance);
+            LOGGER.info("workerPerformanceMonitorIntervalSeconds: " + workerPerformanceMonitorIntervalSeconds);
 
             LOGGER.info("Hazelcast config file: " + hzConfigFile);
             LOGGER.info(fileAsText(new File(hzConfigFile)));
 
-            new MemberWorker(type, publicAddress, agentIndex, workerIndex, workerPort, autoCreateHzInstance, hzConfigFile);
+            new MemberWorker(type, publicAddress, agentIndex, workerIndex, workerPort, autoCreateHzInstance,
+                    workerPerformanceMonitorIntervalSeconds, hzConfigFile);
 
             logHeader("Successfully started Hazelcast Worker #" + workerIndex);
         } catch (Exception e) {

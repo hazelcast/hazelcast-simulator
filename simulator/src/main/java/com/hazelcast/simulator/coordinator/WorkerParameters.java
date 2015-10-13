@@ -23,8 +23,11 @@ import com.hazelcast.simulator.common.SimulatorProperties;
  */
 public class WorkerParameters {
 
-    private final int workerStartupTimeout;
+    private static final int DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS = 10;
+
     private final boolean autoCreateHzInstance;
+    private final int workerStartupTimeout;
+    private final int workerPerformanceMonitorIntervalSeconds;
 
     private final String memberJvmOptions;
     private final String clientJvmOptions;
@@ -37,11 +40,12 @@ public class WorkerParameters {
     private final String profilerSettings;
     private final String numaCtl;
 
-    public WorkerParameters(SimulatorProperties properties, int workerStartupTimeout, boolean autoCreateHzInstance,
+    public WorkerParameters(SimulatorProperties properties, boolean autoCreateHzInstance, int workerStartupTimeout,
                             String memberJvmOptions, String clientJvmOptions, String memberHzConfig, String clientHzConfig,
                             String log4jConfig) {
-        this.workerStartupTimeout = workerStartupTimeout;
         this.autoCreateHzInstance = autoCreateHzInstance;
+        this.workerStartupTimeout = workerStartupTimeout;
+        this.workerPerformanceMonitorIntervalSeconds = initWorkerPerformanceMonitorIntervalSeconds(properties);
 
         this.memberJvmOptions = memberJvmOptions;
         this.clientJvmOptions = clientJvmOptions;
@@ -53,6 +57,14 @@ public class WorkerParameters {
         this.profiler = initProfiler(properties);
         this.profilerSettings = initProfilerSettings(properties);
         this.numaCtl = properties.get("NUMA_CONTROL", "none");
+    }
+
+    private int initWorkerPerformanceMonitorIntervalSeconds(SimulatorProperties properties) {
+        String workerPerformanceMonitorIntervalSeconds = properties.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
+        if (workerPerformanceMonitorIntervalSeconds == null || workerPerformanceMonitorIntervalSeconds.isEmpty()) {
+            return DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS;
+        }
+        return Integer.parseInt(workerPerformanceMonitorIntervalSeconds);
     }
 
     private JavaProfiler initProfiler(SimulatorProperties properties) {
@@ -77,12 +89,16 @@ public class WorkerParameters {
         }
     }
 
+    public boolean isAutoCreateHzInstance() {
+        return autoCreateHzInstance;
+    }
+
     public int getWorkerStartupTimeout() {
         return workerStartupTimeout;
     }
 
-    public boolean isAutoCreateHzInstance() {
-        return autoCreateHzInstance;
+    public int getWorkerPerformanceMonitorIntervalSeconds() {
+        return workerPerformanceMonitorIntervalSeconds;
     }
 
     public String getMemberJvmOptions() {

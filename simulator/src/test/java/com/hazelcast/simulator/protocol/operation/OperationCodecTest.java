@@ -52,8 +52,8 @@ public class OperationCodecTest {
 
         WorkerParameters workerParameters = new WorkerParameters(
                 properties,
-                12345,
                 true,
+                12345,
                 "-verbose:gc -Xloggc:verbosegc.log",
                 "",
                 "<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n"

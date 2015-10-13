@@ -222,6 +222,7 @@ public class WorkerJvmLauncher {
         args.add("-DworkerIndex=" + workerIndex);
         args.add("-DworkerPort=" + workerPort);
         args.add("-DautoCreateHzInstance=" + workerJvmSettings.isAutoCreateHzInstance());
+        args.add("-DworkerPerformanceMonitorIntervalSeconds=" + workerJvmSettings.getWorkerPerformanceMonitorIntervalSeconds());
         args.add("-DhzConfigFile=" + hzConfigFile.getAbsolutePath());
 
         // add class name to start correct worker type
