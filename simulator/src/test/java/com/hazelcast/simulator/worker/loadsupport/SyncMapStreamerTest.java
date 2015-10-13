@@ -34,7 +34,7 @@ public class SyncMapStreamerTest {
         verifyNoMoreInteractions(map);
     }
 
-    @Test(timeout = 1000)
+    @Test(timeout = 10000)
     public void testPushEntry_withException() {
         doThrow(new IllegalArgumentException()).when(map).set(anyInt(), anyString());
 
