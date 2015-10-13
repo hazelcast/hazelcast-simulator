@@ -1,14 +1,12 @@
 package com.hazelcast.simulator.worker.tasks;
 
-import com.hazelcast.simulator.probes.Probe;
-
 /**
  * Interface for workers who are returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker} annotated test
  * methods.
  *
  * Your implementation will get the following (optional) fields injected by {@link com.hazelcast.simulator.worker.TestContainer}:
  * {@link com.hazelcast.simulator.test.TestContext TestContext} testContext;
- * {@link Probe IntervalProbe} intervalProbe;
+ * {@link com.hazelcast.simulator.probes.Probe Probe} workerProbe;
  * <code>long</code> logFrequency;
  */
 public interface IWorker extends Runnable {

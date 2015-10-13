@@ -5,8 +5,6 @@ import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
-import com.hazelcast.simulator.worker.ClientWorker;
-import com.hazelcast.simulator.worker.MemberWorker;
 import com.hazelcast.simulator.worker.TestContainer;
 import org.HdrHistogram.Histogram;
 import org.apache.log4j.Logger;
@@ -29,7 +27,8 @@ import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeT
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
- * Monitors the performance of all running tests on {@link MemberWorker} and {@link ClientWorker} instances.
+ * Monitors the performance of all running tests on {@link com.hazelcast.simulator.worker.MemberWorker}
+ * and {@link com.hazelcast.simulator.worker.ClientWorker} instances.
  */
 public class WorkerPerformanceMonitor {
 
