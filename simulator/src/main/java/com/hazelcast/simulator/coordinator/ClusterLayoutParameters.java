@@ -18,7 +18,7 @@ package com.hazelcast.simulator.coordinator;
 /**
  * Parameters for the layout of a Simulator cluster.
  */
-public class ClusterLayoutParameters {
+class ClusterLayoutParameters {
 
     private final int dedicatedMemberMachineCount;
     private final int clientWorkerCount;
