@@ -58,31 +58,11 @@ public class AgentOperationProcessor extends OperationProcessor {
         return SUCCESS;
     }
 
-    private ResponseType processCreateWorker(final CreateWorkerOperation operation) throws Exception {
+    private ResponseType processCreateWorker(CreateWorkerOperation operation) throws Exception {
         ArrayList<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
-        for (final WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
-            final WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerJvmSettings);
-            Future<Boolean> future = getExecutorService().submit(new Callable<Boolean>() {
-                @Override
-                public Boolean call() {
-                    try {
-                        launcher.launch();
-
-                        int workerIndex = workerJvmSettings.getWorkerIndex();
-                        int workerPort = WORKER_START_PORT + workerIndex;
-                        SimulatorAddress workerAddress = agent
-                                .getAgentConnector()
-                                .addWorker(workerIndex, "127.0.0.1", workerPort);
-
-                        WorkerType workerType = workerJvmSettings.getWorkerType();
-                        agent.getCoordinatorLogger().debug(format("Created %s worker %s", workerType, workerAddress));
-
-                        return true;
-                    } catch (Exception e) {
-                        return false;
-                    }
-                }
-            });
+        for (WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
+            WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerJvmSettings);
+            Future<Boolean> future = getExecutorService().submit(new LaunchWorkerCallable(launcher, workerJvmSettings));
             futures.add(future);
         }
         for (Future<Boolean> future : futures) {
@@ -101,5 +81,34 @@ public class AgentOperationProcessor extends OperationProcessor {
 
         File libDir = new File(testSuiteDir, "lib");
         ensureExistingDirectory(libDir);
+    }
+
+    private class LaunchWorkerCallable implements Callable<Boolean> {
+
+        private final WorkerJvmLauncher launcher;
+        private final WorkerJvmSettings workerJvmSettings;
+
+        public LaunchWorkerCallable(WorkerJvmLauncher launcher, WorkerJvmSettings workerJvmSettings) {
+            this.launcher = launcher;
+            this.workerJvmSettings = workerJvmSettings;
+        }
+
+        @Override
+        public Boolean call() {
+            try {
+                launcher.launch();
+
+                int workerIndex = workerJvmSettings.getWorkerIndex();
+                int workerPort = WORKER_START_PORT + workerIndex;
+                SimulatorAddress workerAddress = agent.getAgentConnector().addWorker(workerIndex, "127.0.0.1", workerPort);
+
+                WorkerType workerType = workerJvmSettings.getWorkerType();
+                agent.getCoordinatorLogger().debug(format("Created %s worker %s", workerType, workerAddress));
+
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
     }
 }
