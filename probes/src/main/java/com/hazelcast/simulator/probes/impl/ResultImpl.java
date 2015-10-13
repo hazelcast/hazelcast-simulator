@@ -97,12 +97,12 @@ public class ResultImpl implements Result {
         PrintStream stream = null;
         try {
             outputStream = new ByteArrayOutputStream();
-            stream = new PrintStream(outputStream);
+            stream = new PrintStream(outputStream, true, "UTF-8");
 
             histogram.outputPercentileDistribution(stream, 1.0);
-            stream.flush();
-
-            return new String(outputStream.toByteArray());
+            return new String(outputStream.toByteArray(), "UTF-8");
+        } catch (Exception e) {
+            return null;
         } finally {
             closeQuietly(stream);
             closeQuietly(outputStream);
