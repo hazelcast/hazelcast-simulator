@@ -11,24 +11,25 @@ import static java.io.File.createTempFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 public class JavaInstallationsRepositoryTest {
 
     private JavaInstallationsRepository repository;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         repository = new JavaInstallationsRepository();
         File file = writeToTempFile(""
-                        + "1.vendor=sun\n"
-                        + "1.version=1.5\n"
-                        + "1.javaHome=/tmp\n"
-                        + "2.vendor=sun\n"
-                        + "2.version=1.6\n"
-                        + "2.javaHome=/tmp\n"
-                        + "3.vendor=openjdk\n"
-                        + "3.version=1.5\n"
-                        + "3.javaHome=/tmp\n"
+                + "1.vendor=sun\n"
+                + "1.version=1.5\n"
+                + "1.javaHome=/tmp\n"
+                + "2.vendor=sun\n"
+                + "2.version=1.6\n"
+                + "2.javaHome=/tmp\n"
+                + "3.vendor=openjdk\n"
+                + "3.version=1.5\n"
+                + "3.javaHome=/tmp\n"
         );
         repository.load(file);
     }
@@ -64,49 +65,54 @@ public class JavaInstallationsRepositoryTest {
         assertNull(installation);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testLoad_invalidKeyFormat() throws IOException {
+    @Test(expected = JavaInstallationException.class)
+    public void testLoad_invalidKeyFormat() {
         File file = writeToTempFile("1=sun\n");
         repository.load(file);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testLoad_unknownKey() throws IOException {
+    @Test(expected = JavaInstallationException.class)
+    public void testLoad_unknownKey() {
         File file = writeToTempFile("1.foobar=sun\n");
         repository.load(file);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testLoad_missingVendor() throws IOException {
+    @Test(expected = JavaInstallationException.class)
+    public void testLoad_missingVendor() {
         File file = writeToTempFile(""
-                        + "1.version=1.5\n"
-                        + "1.javaHome=/tmp\n"
+                + "1.version=1.5\n"
+                + "1.javaHome=/tmp\n"
         );
         repository.load(file);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testLoad_missingVersion() throws IOException {
+    @Test(expected = JavaInstallationException.class)
+    public void testLoad_missingVersion() {
         File file = writeToTempFile(""
-                        + "1.vendor=sun\n"
-                        + "1.javaHome=/tmp\n"
+                + "1.vendor=sun\n"
+                + "1.javaHome=/tmp\n"
         );
         repository.load(file);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testLoad_missingJavaHome() throws IOException {
+    @Test(expected = JavaInstallationException.class)
+    public void testLoad_missingJavaHome() {
         File file = writeToTempFile(""
-                        + "1.vendor=sun\n"
-                        + "1.version=1.5\n"
+                + "1.vendor=sun\n"
+                + "1.version=1.5\n"
         );
         repository.load(file);
     }
 
-    private static File writeToTempFile(String text) throws IOException {
-        File file = createTempFile("test", "test");
-        file.deleteOnExit();
-        writeText(text, file);
-        return file;
+    private static File writeToTempFile(String text) {
+        try {
+            File file = createTempFile("test", "test");
+            file.deleteOnExit();
+            writeText(text, file);
+            return file;
+        } catch (IOException e) {
+            fail("Could not create temp file: " + e.getMessage());
+        }
+        return null;
     }
 }
