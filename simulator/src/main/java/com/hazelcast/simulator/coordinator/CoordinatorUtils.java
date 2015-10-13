@@ -46,6 +46,18 @@ final class CoordinatorUtils {
     private CoordinatorUtils() {
     }
 
+    static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
+        StringBuilder members = new StringBuilder();
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            String hostAddress = agentData.getPrivateAddress();
+            members.append("<").append(tagName).append(">")
+                    .append(hostAddress)
+                    .append(":").append(port)
+                    .append("</").append(tagName).append(">\n");
+        }
+        return members.toString();
+    }
+
     static int getPort(String memberHzConfig) {
         ByteArrayInputStream bis = null;
         try {
@@ -59,18 +71,6 @@ final class CoordinatorUtils {
         } finally {
             closeQuietly(bis);
         }
-    }
-
-    static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
-        StringBuilder members = new StringBuilder();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            String hostAddress = agentData.getPrivateAddress();
-            members.append("<").append(tagName).append(">")
-                    .append(hostAddress)
-                    .append(":").append(port)
-                    .append("</").append(tagName).append(">\n");
-        }
-        return members.toString();
     }
 
     public static List<AgentMemberLayout> initMemberLayout(ComponentRegistry registry, WorkerParameters parameters,
@@ -139,7 +139,7 @@ final class CoordinatorUtils {
     }
 
     private static AgentMemberLayout findNextAgentLayout(AtomicInteger currentIndex, List<AgentMemberLayout> agentMemberLayouts,
-                                                 AgentMemberMode excludedAgentMemberMode) {
+                                                         AgentMemberMode excludedAgentMemberMode) {
         int size = agentMemberLayouts.size();
         while (true) {
             AgentMemberLayout agentLayout = agentMemberLayouts.get(currentIndex.getAndIncrement() % size);

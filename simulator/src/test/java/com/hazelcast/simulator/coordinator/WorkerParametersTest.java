@@ -2,10 +2,17 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.utils.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -80,13 +87,47 @@ public class WorkerParametersTest {
     }
 
     @Test
-    public void testSetter() {
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null);
+    public void testInitMemberHzConfig() {
+        when(properties.get("MANAGEMENT_CENTER_URL")).thenReturn("http://localhost:8080");
+        when(properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL")).thenReturn("60");
 
-        workerParameters.setMemberHzConfig("newMemberHzConfig");
-        assertEquals("newMemberHzConfig", workerParameters.getMemberHzConfig());
+        String memberConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/hazelcast.xml");
+        ComponentRegistry componentRegistry = getComponentRegistryMock();
 
-        workerParameters.setClientHzConfig("newClientHzConfig");
-        assertEquals("newClientHzConfig", workerParameters.getClientHzConfig());
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, memberConfig, null, null);
+        assertTrue(workerParameters.getMemberHzConfig().contains("<!--MEMBERS-->"));
+        assertTrue(workerParameters.getMemberHzConfig().contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
+
+        workerParameters.initMemberHzConfig(componentRegistry, properties);
+        assertFalse(workerParameters.getMemberHzConfig().contains("<!--MEMBERS-->"));
+        assertFalse(workerParameters.getMemberHzConfig().contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
+    }
+
+    @Test
+    public void testInitClientHzConfig() {
+        String memberConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/hazelcast.xml");
+        String clientConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/client-hazelcast.xml");
+
+        ComponentRegistry componentRegistry = getComponentRegistryMock();
+
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, memberConfig, clientConfig,
+                null);
+        assertTrue(workerParameters.getClientHzConfig().contains("<!--MEMBERS-->"));
+
+        workerParameters.initClientHzConfig(componentRegistry);
+        assertFalse(workerParameters.getClientHzConfig().contains("<!--MEMBERS-->"));
+    }
+
+    private ComponentRegistry getComponentRegistryMock() {
+        List<AgentData> agents = new ArrayList<AgentData>();
+        for (int i = 1; i <= 5; i++) {
+            AgentData agentData = mock(AgentData.class);
+            when(agentData.getPrivateAddress()).thenReturn("192.168.0." + i);
+            agents.add(agentData);
+        }
+
+        ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
+        when(componentRegistry.getAgents()).thenReturn(agents);
+        return componentRegistry;
     }
 }

@@ -39,8 +39,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
@@ -184,8 +182,8 @@ public final class Coordinator {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
 
         clusterLayoutParameters.initMemberWorkerCount(componentRegistry.agentCount());
-        initMemberHzConfig();
-        initClientHzConfig();
+        workerParameters.initMemberHzConfig(componentRegistry, props);
+        workerParameters.initClientHzConfig(componentRegistry);
 
         int agentCount = componentRegistry.agentCount();
         LOGGER.info(format("Performance monitor enabled: %s", coordinatorParameters.isMonitorPerformance()));
@@ -247,30 +245,6 @@ public final class Coordinator {
             });
         }
         spawner.awaitCompletion();
-    }
-
-    private void initMemberHzConfig() {
-        String addressConfig = createAddressConfig("member", componentRegistry, getPort(workerParameters.getMemberHzConfig()));
-
-        String memberHzConfig = workerParameters.getMemberHzConfig();
-        memberHzConfig = memberHzConfig.replace("<!--MEMBERS-->", addressConfig);
-
-        String manCenterURL = props.get("MANAGEMENT_CENTER_URL").trim();
-        if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
-            String updateInterval = props.get("MANAGEMENT_CENTER_UPDATE_INTERVAL").trim();
-            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + "\"";
-            memberHzConfig = memberHzConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
-                    format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
-                            updateIntervalAttr, manCenterURL));
-        }
-        workerParameters.setMemberHzConfig(memberHzConfig);
-    }
-
-    private void initClientHzConfig() {
-        String addressConfig = createAddressConfig("address", componentRegistry, getPort(workerParameters.getMemberHzConfig()));
-
-        String clientHzConfig = workerParameters.getClientHzConfig().replace("<!--MEMBERS-->", addressConfig);
-        workerParameters.setClientHzConfig(clientHzConfig);
     }
 
     private void uploadUploadDirectory() {
