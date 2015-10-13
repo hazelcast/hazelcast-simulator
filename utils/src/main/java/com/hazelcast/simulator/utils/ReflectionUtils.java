@@ -30,22 +30,22 @@ public final class ReflectionUtils {
     /**
      * Gets the value for a static field.
      *
-     * @param clazz
-     * @param fieldName
-     * @param fieldType
-     * @return
+     * @param clazz     class which contains the field
+     * @param fieldName name of the field
+     * @param fieldType type of the field
+     * @return the value of the static field
      */
     public static Object getStaticFieldValue(Class clazz, String fieldName, Class fieldType) {
         Field field = getField(clazz, fieldName, fieldType);
         if (field == null) {
-            throw new RuntimeException(format("Field %s.%s is not found", clazz.getName(), fieldName));
+            throw new ReflectionException(format("Field %s.%s is not found", clazz.getName(), fieldName));
         }
 
         field.setAccessible(true);
         try {
             return field.get(null);
         } catch (IllegalAccessException e) {
-            throw new RuntimeException(format("Failed to access %s.%s", clazz.getName(), fieldName), e);
+            throw new ReflectionException(format("Failed to access %s.%s", clazz.getName(), fieldName), e);
         }
     }
 
@@ -70,7 +70,7 @@ public final class ReflectionUtils {
             if (e.getCause() instanceof Exception) {
                 throw (Exception) e.getCause();
             }
-            throw new RuntimeException(format("Error while invoking method %s on instance of type %s",
+            throw new ReflectionException(format("Error while invoking method %s on instance of type %s",
                     method.getName(), classInstance.getClass().getSimpleName()), e.getCause());
         }
     }
@@ -91,8 +91,9 @@ public final class ReflectionUtils {
     private static Field findField(Class classType, String fieldName, Class fieldType) {
         for (Field field : classType.getDeclaredFields()) {
             if (field.getName().equals(fieldName)) {
-                if (fieldType != null && field.getType().isAssignableFrom(fieldType)
-                        || (fieldType == null && field.getType().isPrimitive())) {
+                boolean isAssignableToType = (fieldType != null && field.getType().isAssignableFrom(fieldType));
+                boolean isPrimitiveType = (fieldType == null && field.getType().isPrimitive());
+                if (isAssignableToType || isPrimitiveType) {
                     return field;
                 }
             }
@@ -111,7 +112,7 @@ public final class ReflectionUtils {
             field.setAccessible(true);
             return (E) field.get(object);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ReflectionException(e);
         }
     }
 
@@ -120,7 +121,7 @@ public final class ReflectionUtils {
             field.setAccessible(true);
             field.set(classInstance, object);
         } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+            throw new ReflectionException(e);
         }
     }
 

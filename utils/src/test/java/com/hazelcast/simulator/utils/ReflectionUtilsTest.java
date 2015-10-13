@@ -136,7 +136,7 @@ public class ReflectionUtilsTest {
         getObjectFromField(null, "notEvaluated");
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = ReflectionException.class)
     public void testGetObjectFromField_notFound() {
         GetFieldTest getFieldTest = new GetFieldTest();
 
