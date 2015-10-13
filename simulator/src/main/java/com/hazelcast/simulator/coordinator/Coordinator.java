@@ -64,7 +64,8 @@ public final class Coordinator {
     private static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
     private static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
-    private static final int TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS = 5;
+    // TODO: make this dependent on configuration for WorkerPerformanceMonitor#DEFAULT_MONITORING_INTERVAL_SECONDS
+    private static final int TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS = 10;
     private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);

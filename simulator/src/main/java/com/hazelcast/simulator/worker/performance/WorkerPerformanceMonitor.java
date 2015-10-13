@@ -33,7 +33,8 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  */
 public class WorkerPerformanceMonitor {
 
-    private static final int DEFAULT_MONITORING_INTERVAL_SECONDS = 1;
+    // TODO: make this configurable
+    private static final int DEFAULT_MONITORING_INTERVAL_SECONDS = 10;
 
     private final AtomicBoolean started = new AtomicBoolean();
 
