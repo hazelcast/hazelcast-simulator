@@ -17,6 +17,7 @@ final class PerformanceUtils {
 
     private static final int HUNDRED = 100;
     private static final int TEN = 10;
+    private static final int THREE = 3;
 
     private PerformanceUtils() {
     }
@@ -43,7 +44,7 @@ final class PerformanceUtils {
 
     static int getNumberOfDigits(long number) {
         if (number >= HUNDRED) {
-            return 3;
+            return THREE;
         }
         if (number >= TEN) {
             return 2;
