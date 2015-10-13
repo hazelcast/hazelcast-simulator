@@ -108,24 +108,24 @@ public final class MemberWorker implements Worker {
     }
 
     private HazelcastInstance getHazelcastInstance() throws Exception {
-        HazelcastInstance hazelcastInstance = null;
+        HazelcastInstance instance = null;
         if (autoCreateHzInstance) {
             logHeader("Creating " + type + " HazelcastInstance");
             switch (type) {
                 case MEMBER:
-                    hazelcastInstance = createServerHazelcastInstance();
+                    instance = createServerHazelcastInstance();
                     break;
                 case CLIENT:
-                    hazelcastInstance = createClientHazelcastInstance();
+                    instance = createClientHazelcastInstance();
                     break;
                 default:
                     throw new IllegalStateException("Unknown WorkerType: " + type);
             }
             logHeader("Successfully created " + type + " HazelcastInstance");
 
-            warmupPartitions(hazelcastInstance);
+            warmupPartitions(instance);
         }
-        return hazelcastInstance;
+        return instance;
     }
 
     private HazelcastInstance createServerHazelcastInstance() throws Exception {

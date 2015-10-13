@@ -69,11 +69,11 @@ public class WorkerParameters {
     }
 
     private int initWorkerPerformanceMonitorIntervalSeconds(SimulatorProperties properties) {
-        String workerPerformanceMonitorIntervalSeconds = properties.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
-        if (workerPerformanceMonitorIntervalSeconds == null || workerPerformanceMonitorIntervalSeconds.isEmpty()) {
+        String intervalSeconds = properties.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
+        if (intervalSeconds == null || intervalSeconds.isEmpty()) {
             return DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS;
         }
-        return Integer.parseInt(workerPerformanceMonitorIntervalSeconds);
+        return Integer.parseInt(intervalSeconds);
     }
 
     private JavaProfiler initProfiler(SimulatorProperties properties) {

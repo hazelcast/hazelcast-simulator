@@ -50,10 +50,10 @@ public class ForwardToCoordinatorHandler extends SimpleChannelInboundHandler<Byt
 
     private void updateWorkerJvmLastSeenTimestamp(ByteBuf buffer) {
         SimulatorAddress sourceAddress = getSourceAddress(buffer);
-        AddressLevel addressLevel = sourceAddress.getAddressLevel();
-        if (addressLevel == AddressLevel.WORKER) {
+        AddressLevel sourceAddressLevel = sourceAddress.getAddressLevel();
+        if (sourceAddressLevel == AddressLevel.WORKER) {
             updateWorkerJvmLastSeenTimestamp(sourceAddress);
-        } else if (addressLevel == AddressLevel.TEST) {
+        } else if (sourceAddressLevel == AddressLevel.TEST) {
             updateWorkerJvmLastSeenTimestamp(sourceAddress.getParent());
         }
     }
