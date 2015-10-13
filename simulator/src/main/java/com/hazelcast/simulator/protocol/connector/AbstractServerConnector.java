@@ -173,7 +173,7 @@ abstract class AbstractServerConnector implements ServerConnector {
             while (true) {
                 try {
                     SimulatorMessage message = messageQueue.take();
-                    if (message == POISON_PILL) {
+                    if (POISON_PILL.equals(message)) {
                         break;
                     }
 
@@ -200,7 +200,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                 int queueSize = messageQueue.size();
                 while (queueSize > 0) {
                     SimulatorMessage message = messageQueue.peek();
-                    if (message != POISON_PILL) {
+                    if (!POISON_PILL.equals(message)) {
                         LOGGER.info(format("%d messages pending on messageQueue, first message: %s", queueSize, message));
                     }
                     sleepMillis(WAIT_FOR_EMPTY_QUEUE_MILLIS);
