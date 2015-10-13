@@ -8,6 +8,7 @@ import static com.hazelcast.simulator.probes.ProbeTestUtils.createProbeResult;
 import static com.hazelcast.simulator.probes.ProbeTestUtils.createRandomHistogram;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ResultImplTest {
@@ -53,5 +54,11 @@ public class ResultImplTest {
     public void testToHumanString() {
         Result result = createProbeResult(1);
         assertNotNull(result.toHumanString("probe1"));
+    }
+
+    @Test
+    public void testToHumanString_emptyResult() {
+        Result result = createProbeResult(0);
+        assertNull(result.toHumanString("probe1"));
     }
 }
