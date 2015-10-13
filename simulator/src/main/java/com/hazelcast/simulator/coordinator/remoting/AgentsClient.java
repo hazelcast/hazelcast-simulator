@@ -2,17 +2,16 @@ package com.hazelcast.simulator.coordinator.remoting;
 
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSecondsThrowException;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static java.lang.String.format;
 
@@ -29,7 +28,7 @@ public class AgentsClient {
     private final ExecutorService agentExecutor = createFixedThreadPool(100, AgentsClient.class);
     private final List<AgentClient> agents = new LinkedList<AgentClient>();
 
-    private Thread pokeThread;
+    private final PokeThread pokeThread = new PokeThread();
 
     public AgentsClient(List<AgentData> agentDataList) {
         for (AgentData agentData : agentDataList) {
@@ -42,18 +41,6 @@ public class AgentsClient {
         awaitAgentsReachable();
 
         // starts a poke thread which will repeatedly poke the agents to make sure they are not going to terminate themselves
-        pokeThread = new Thread() {
-            public void run() {
-                for (; ; ) {
-                    try {
-                        sleepSecondsThrowException(AGENT_KEEP_ALIVE_INTERVAL_SECONDS);
-                    } catch (RuntimeException e) {
-                        break;
-                    }
-                    asyncExecuteOnAllWorkers();
-                }
-            }
-        };
         pokeThread.start();
     }
 
@@ -107,24 +94,42 @@ public class AgentsClient {
     }
 
     public void shutdown() throws Exception {
-        if (pokeThread != null) {
-            pokeThread.interrupt();
-            pokeThread.join();
-        }
+        pokeThread.running = false;
+        pokeThread.interrupt();
+        pokeThread.join();
 
         agentExecutor.shutdown();
         agentExecutor.awaitTermination(EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    private void asyncExecuteOnAllWorkers(final Object... args) {
-        for (final AgentClient agentClient : agents) {
-            agentExecutor.submit(new Callable<Object>() {
+    private class PokeThread extends Thread {
 
-                @Override
-                public Object call() throws Exception {
-                    return agentClient.execute(args);
+        private volatile boolean running = true;
+
+        public void run() {
+            while (running) {
+                sleepSeconds(AGENT_KEEP_ALIVE_INTERVAL_SECONDS);
+                if (running) {
+                    executeOnAllWorkers();
                 }
-            });
+            }
+        }
+
+        private void executeOnAllWorkers(final Object... args) {
+            ThreadSpawner spawner = new ThreadSpawner("AgentsClientExecuteOnAllWorkers", true);
+            for (final AgentClient agentClient : agents) {
+                spawner.spawn(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            agentClient.execute(args);
+                        } catch (Exception e) {
+                            throw new CommandLineExitException("Could not execute on " + agentClient.getPublicAddress(), e);
+                        }
+                    }
+                });
+            }
+            spawner.awaitCompletion();
         }
     }
 }
