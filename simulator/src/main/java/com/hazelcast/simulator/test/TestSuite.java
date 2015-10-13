@@ -35,20 +35,64 @@ import java.util.Set;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static java.lang.String.format;
+import static java.util.Collections.singletonMap;
 
-@SuppressWarnings("checkstyle:visibilitymodifier")
 public class TestSuite implements Serializable {
 
-    private static final long serialVersionUID = 1;
+    private static final long serialVersionUID = 4945217305644718622L;
 
-    public final String id = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
-    public final List<TestCase> testCaseList = new LinkedList<TestCase>();
+    private final String id = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
+    private final List<TestCase> testCaseList = new LinkedList<TestCase>();
 
-    public Set<Failure.Type> tolerableFailures = Collections.emptySet();
+    private int durationSeconds;
+    private boolean waitForTestCase;
+    private boolean failFast;
 
-    public int durationSeconds;
-    public boolean waitForTestCase;
-    public boolean failFast;
+    private Set<FailureType> tolerableFailures = Collections.emptySet();
+
+    public String getId() {
+        return id;
+    }
+
+    public List<TestCase> getTestCaseList() {
+        return testCaseList;
+    }
+
+    public void setDurationSeconds(int durationSeconds) {
+        this.durationSeconds = durationSeconds;
+    }
+
+    public int getDurationSeconds() {
+        return durationSeconds;
+    }
+
+    public void setWaitForTestCase(boolean waitForTestCase) {
+        this.waitForTestCase = waitForTestCase;
+    }
+
+    public boolean isWaitForTestCase() {
+        return waitForTestCase;
+    }
+
+    public void setFailFast(boolean failFast) {
+        this.failFast = failFast;
+    }
+
+    public boolean isFailFast() {
+        return failFast;
+    }
+
+    public Set<FailureType> getTolerableFailures() {
+        return tolerableFailures;
+    }
+
+    public void setTolerableFailures(Set<FailureType> tolerableFailures) {
+        this.tolerableFailures = tolerableFailures;
+    }
+
+    public void addTest(TestCase testCase) {
+        testCaseList.add(testCase);
+    }
 
     public TestCase getTestCase(String testCaseId) {
         if (testCaseId == null) {
@@ -63,12 +107,19 @@ public class TestSuite implements Serializable {
         return null;
     }
 
-    public void addTest(TestCase testCase) {
-        testCaseList.add(testCase);
-    }
-
     public int size() {
         return testCaseList.size();
+    }
+
+    public int getMaxTestCaseIdLength() {
+        int maxLength = Integer.MIN_VALUE;
+        for (TestCase testCase : testCaseList) {
+            String testCaseId = testCase.getId();
+            if (testCaseId != null && !testCaseId.isEmpty() && testCaseId.length() > maxLength) {
+                maxLength = testCaseId.length();
+            }
+        }
+        return (maxLength > 0) ? maxLength : 0;
     }
 
     @Override
@@ -86,6 +137,17 @@ public class TestSuite implements Serializable {
         Properties properties = loadProperties(testPropertiesFile);
 
         Map<String, TestCase> testCases = createTestCases(properties);
+        if (testCases.size() == 1) {
+            // use classname instead of empty testId in single test scenarios
+            TestCase testCase = testCases.values().iterator().next();
+            if (testCase.getId().isEmpty()) {
+                String className = testCase.getClassname();
+                if (className != null && !className.isEmpty()) {
+                    String testId = className.substring(className.lastIndexOf('.') + 1);
+                    testCases = singletonMap(testId, new TestCase(testId, testCase.getProperties()));
+                }
+            }
+        }
 
         return createTestSuite(testPropertiesFile, testCases, propertiesOverrideString);
     }

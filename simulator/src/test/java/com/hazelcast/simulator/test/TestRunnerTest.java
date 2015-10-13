@@ -13,6 +13,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -46,6 +47,9 @@ public class TestRunnerTest {
 
         testRunner.run();
         assertNotNull(testRunner.getHazelcastInstance());
+
+        Set<TestPhase> testPhases = successTest.getTestPhases();
+        assertEquals(TestPhase.values().length, testPhases.size());
     }
 
     @Test

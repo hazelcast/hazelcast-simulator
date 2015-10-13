@@ -11,9 +11,9 @@ public class MessageAddress implements Serializable {
     public static final String RANDOM_WORKER_WITH_MEMBER = "Rm";
     public static final String WORKER_WITH_OLDEST_MEMBER = "O";
 
-    private String agentAddress;
-    private String workerAddress;
-    private String testAddress;
+    private final String agentAddress;
+    private final String workerAddress;
+    private final String testAddress;
 
     public MessageAddress(String agentAddress, String workerAddress, String testAddress) {
         this.agentAddress = agentAddress;

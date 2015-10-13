@@ -38,6 +38,9 @@ public final class CommonUtils {
 
     public static final String NEW_LINE = System.getProperty("line.separator");
 
+    private static final double ONE_HUNDRED = 100;
+    private static final int PERCENTAGE_FORMAT_LENGTH = 7;
+
     private static final String DEFAULT_DELIMITER = ", ";
     private static final String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
 
@@ -45,8 +48,21 @@ public final class CommonUtils {
     }
 
     /**
-     * Formats a number and adds padding to the left.
-     * It is very inefficient; but a lot easier to deal with the formatting API.
+     * Formats a percentage of two numbers and adds padding to the left.
+     *
+     * @param value     the value of the percentage
+     * @param baseValue the base value of the percentage
+     * @return the formatted percentage
+     */
+    public static String formatPercentage(long value, long baseValue) {
+        double percentage = (baseValue > 0 ? (ONE_HUNDRED * value) / baseValue : 0);
+        return formatDouble(percentage, PERCENTAGE_FORMAT_LENGTH);
+    }
+
+    /**
+     * Formats a double number and adds padding to the left.
+     *
+     * Very inefficient implementation, but a lot easier than to deal with the formatting API.
      *
      * @param number number to format
      * @param length width of padding
@@ -60,6 +76,15 @@ public final class CommonUtils {
         return padLeft(sb.toString(), length);
     }
 
+    /**
+     * Formats a long number and adds padding to the left.
+     *
+     * Very inefficient implementation, but a lot easier than to deal with the formatting API.
+     *
+     * @param number number to format
+     * @param length width of padding
+     * @return formatted number
+     */
     public static String formatLong(long number, int length) {
         StringBuilder sb = new StringBuilder();
         Formatter formatter = new Formatter(sb, Locale.US);
@@ -200,6 +225,14 @@ public final class CommonUtils {
             writer.close();
         } catch (XMLStreamException ignore) {
             EmptyStatement.ignore(ignore);
+        }
+    }
+
+    public static void joinThread(Thread thread) {
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            EmptyStatement.ignore(e);
         }
     }
 

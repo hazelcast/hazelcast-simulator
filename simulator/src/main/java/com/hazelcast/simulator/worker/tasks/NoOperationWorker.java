@@ -1,7 +1,5 @@
 package com.hazelcast.simulator.worker.tasks;
 
-import com.hazelcast.simulator.test.annotations.Performance;
-
 /**
  * Dummy worker which does nothing.
  *
@@ -16,10 +14,5 @@ public final class NoOperationWorker extends AbstractMonotonicWorker {
 
     @Override
     protected void timeStep() {
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return 0;
     }
 }

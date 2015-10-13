@@ -1,0 +1,53 @@
+package com.hazelcast.simulator.probes;
+
+import org.HdrHistogram.Histogram;
+import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Random;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
+public class HistogramTest {
+
+    public static final int LATENCY_RECORD_COUNT = 5000;
+    public static final int MAX_LATENCY = 30000;
+
+    private final Random random = new Random();
+
+    @Test
+    public void testHistogramSerialization() throws Exception {
+        Histogram original = new Histogram(MAX_LATENCY, 4);
+        populateHistogram(original);
+
+        // serialize
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayOutputStream);
+        outputStream.writeObject(original);
+        byte[] bytes = byteArrayOutputStream.toByteArray();
+
+        // de-serialize
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
+        ObjectInputStream inputStream = new ObjectInputStream(byteArrayInputStream);
+        Histogram read = (Histogram) inputStream.readObject();
+
+        assertEquals(original, read);
+        assertTrue(original.equals(read));
+        assertNotEquals(original.hashCode(), read.hashCode());
+        assertEquals(original.getNeededByteBufferCapacity(), read.copy().getNeededByteBufferCapacity());
+
+        // FIXME: this assert should not fail, see https://github.com/HdrHistogram/HdrHistogram/issues/60
+        assertNotEquals(original.getNeededByteBufferCapacity(), read.getNeededByteBufferCapacity());
+    }
+
+    private void populateHistogram(Histogram original) {
+        for (int i = 0; i < LATENCY_RECORD_COUNT; i++) {
+            original.recordValue(random.nextInt(MAX_LATENCY));
+        }
+    }
+}

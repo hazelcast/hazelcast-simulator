@@ -1,21 +1,13 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.common.messaging.Message;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
-import com.hazelcast.simulator.probes.probes.ProbesType;
-import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
-import com.hazelcast.simulator.probes.probes.impl.DisabledProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
-import com.hazelcast.simulator.test.annotations.Name;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Receive;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
@@ -24,7 +16,6 @@ import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.util.Map;
 
@@ -38,14 +29,12 @@ import static org.junit.Assert.assertTrue;
 public class TestContainerTest {
 
     private DummyTestContext testContext;
-    private ProbesConfiguration probesConfiguration;
     private TestCase testCase;
-    private TestContainer<DummyTestContext> testContainer;
+    private TestContainer testContainer;
 
     @Before
     public void setUp() {
         testContext = new DummyTestContext();
-        probesConfiguration = new ProbesConfiguration();
         testCase = new TestCase("TestContainerTest");
     }
 
@@ -56,7 +45,7 @@ public class TestContainerTest {
 
     @Test(expected = NullPointerException.class)
     public void testConstructor_testContext_isNull() {
-        new TestContainer<DummyTestContext>(new DummyTest(), null, probesConfiguration, null);
+        new TestContainer(new DummyTest(), null, null);
     }
 
     @Test
@@ -290,14 +279,14 @@ public class TestContainerTest {
     }
 
     @Test(expected = IllegalTestException.class)
-    public void testSetupWithSimpleProbeOnly() throws Exception {
-        createTestContainer(new SetupWithSimpleProbeOnly());
+    public void testSetupWithProbe() throws Exception {
+        createTestContainer(new SetupWithProbe());
     }
 
-    private static class SetupWithSimpleProbeOnly extends DummyTest {
+    private static class SetupWithProbe extends DummyTest {
 
         @Setup
-        public void setUp(SimpleProbe simpleProbe) {
+        public void setUp(Probe probe) {
         }
     }
 
@@ -350,66 +339,38 @@ public class TestContainerTest {
     }
 
     @Test
-    public void testProbeInjectSimpleProbeToField() throws Exception {
-        ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("throughputProbe", ProbesType.THROUGHPUT.getName());
-        testContainer = createTestContainer(test);
-
-        assertNotNull(test.throughputProbe);
-        assertTrue(testContainer.hasProbe("throughputProbe"));
-
-        testContainer.invoke(TestPhase.RUN);
-        Map<String, Result<?>> resultMap = testContainer.getProbeResults();
-        assertNotNull(resultMap);
-        assertTrue(resultMap.keySet().contains("throughputProbe"));
-    }
-
-    @Test
     public void testProbeInjectIntervalProbeToField() throws Exception {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("latencyProbe", ProbesType.HDR.getName());
         testContainer = createTestContainer(test);
 
         assertNotNull(test.latencyProbe);
         assertTrue(testContainer.hasProbe("latencyProbe"));
 
         testContainer.invoke(TestPhase.RUN);
-        Map<String, Result<?>> resultMap = testContainer.getProbeResults();
-        assertNotNull(resultMap);
-        assertTrue(resultMap.keySet().contains("latencyProbe"));
+        Map<String, Probe> probeMap = testContainer.getProbeMap();
+        assertTrue(probeMap.size() > 0);
+        assertTrue(probeMap.keySet().contains("latencyProbe"));
     }
 
     @Test
     public void testProbeInjectExplicitlyNamedProbeToField() {
         ProbeTest test = new ProbeTest();
-        probesConfiguration.addConfig("explicitProbeInjectedToField", ProbesType.THROUGHPUT.getName());
         testContainer = createTestContainer(test);
 
-        assertNotNull(test.fooProbe);
+        assertNotNull(test.namedProbe);
         assertTrue(testContainer.hasProbe("explicitProbeInjectedToField"));
-    }
-
-    @Test
-    public void testProbeInjectDisabledToField() {
-        ProbeTest test = new ProbeTest();
-        createTestContainer(test);
-
-        assertNotNull(test.disabled);
-        assertTrue(test.disabled instanceof DisabledProbe);
     }
 
     @SuppressWarnings("unused")
     private static class ProbeTest extends DummyTest {
 
         TestContext context;
-        SimpleProbe simpleProbe;
+        Probe simpleProbe;
 
-        private SimpleProbe throughputProbe;
-        private IntervalProbe latencyProbe;
+        private Probe latencyProbe;
 
-        @Name("explicitProbeInjectedToField")
-        private SimpleProbe fooProbe;
-        private IntervalProbe disabled;
+        @SimulatorProbe(name = "explicitProbeInjectedToField")
+        private Probe namedProbe;
 
         @Setup
         public void setUp(TestContext context) {
@@ -418,7 +379,6 @@ public class TestContainerTest {
 
         @Run
         public void run() {
-            throughputProbe.done();
             latencyProbe.started();
             latencyProbe.done();
         }
@@ -544,82 +504,12 @@ public class TestContainerTest {
         }
     }
 
-    // ========================================================
-    // =================== performance ========================
-    // ========================================================
-
-    @Test
-    public void testPerformance() throws Exception {
-        PerformanceTest test = new PerformanceTest();
-        testContainer = createTestContainer(test);
-        long count = testContainer.getOperationCount();
-
-        assertEquals(20, count);
-    }
-
-    private static class PerformanceTest {
-
-        @Performance
-        public long getCount() {
-            return 20;
-        }
-
-        @Run
-        void run() {
-        }
-    }
-
-    @Test
-    public void testPerformanceWithException() throws Exception {
-        PerformanceExceptionTest test = new PerformanceExceptionTest();
-        testContainer = createTestContainer(test);
-        long count = testContainer.getOperationCount();
-
-        assertEquals(-1, count);
-    }
-
-    private static class PerformanceExceptionTest {
-
-        @Performance
-        public long getCount() {
-            throw new RuntimeException("Should fail!");
-        }
-
-        @Run
-        void run() {
-        }
-    }
-
-    // ====================================================
-    // =================== receive ========================
-    // ====================================================
-
-    @Test
-    public void testMessageReceiver() throws Exception {
-        ReceiveTest test = new ReceiveTest();
-        testContainer = createTestContainer(test);
-        Message message = Mockito.mock(Message.class);
-        testContainer.sendMessage(message);
-
-        assertEquals(message, test.messagePassed);
-    }
-
-    private static class ReceiveTest extends DummyTest {
-
-        Message messagePassed;
-
-        @Receive
-        public void receive(Message message) {
-            messagePassed = message;
-        }
-    }
-
     // ==========================================================
     // =================== dummy classes ========================
     // ==========================================================
 
-    private <T> TestContainer<DummyTestContext> createTestContainer(T test) {
-        return new TestContainer<DummyTestContext>(test, testContext, probesConfiguration, testCase);
+    private <T> TestContainer createTestContainer(T test) {
+        return new TestContainer(test, testContext, testCase);
     }
 
     private static class DummyTest {

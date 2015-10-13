@@ -25,7 +25,7 @@ public final class VersionUtils {
      * The result is a positive integer if str1 is _numerically_ greater than str2.
      * The result is zero if the strings are _numerically_ equal.
      */
-    public static Integer versionCompare(String firstVersionString, String secondVersionString) {
+    public static int versionCompare(String firstVersionString, String secondVersionString) {
         if (firstVersionString.indexOf('-') != -1) {
             firstVersionString = firstVersionString.substring(0, firstVersionString.indexOf('-'));
         }

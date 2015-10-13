@@ -18,8 +18,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -60,9 +59,8 @@ public class IntIntMapTest {
     public boolean useSet = false;
 
     // probes
-    public IntervalProbe putLatency;
-    public IntervalProbe getLatency;
-    public SimpleProbe throughput;
+    public Probe putProbe;
+    public Probe getProbe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
@@ -116,24 +114,22 @@ public class IntIntMapTest {
             switch (operation) {
                 case PUT:
                     int value = randomValue();
-                    putLatency.started();
+                    putProbe.started();
                     if (useSet) {
                         map.set(key, value);
                     } else {
                         map.put(key, value);
                     }
-                    putLatency.done();
+                    putProbe.done();
                     break;
                 case GET:
-                    getLatency.started();
+                    getProbe.started();
                     map.get(key);
-                    getLatency.done();
+                    getProbe.done();
                     break;
                 default:
                     throw new UnsupportedOperationException();
             }
-
-            throughput.done();
         }
 
         private int randomKey() {

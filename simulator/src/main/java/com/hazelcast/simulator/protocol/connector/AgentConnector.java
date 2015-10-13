@@ -27,11 +27,6 @@ public final class AgentConnector extends AbstractServerConnector {
         this.serverConfiguration = configuration;
     }
 
-    @Override
-    protected void beforeShutdown() {
-        serverConfiguration.getProcessor().shutdown();
-    }
-
     /**
      * Creates an {@link AgentConnector} instance.
      *
@@ -39,7 +34,7 @@ public final class AgentConnector extends AbstractServerConnector {
      * @param workerJVMs map of WorkerJVM instances
      * @param port       the port for incoming connections
      */
-    public static AgentConnector createInstance(Agent agent, ConcurrentMap<String, WorkerJvm> workerJVMs, int port) {
+    public static AgentConnector createInstance(Agent agent, ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs, int port) {
         SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, ExceptionType.AGENT_EXCEPTION);
@@ -62,7 +57,8 @@ public final class AgentConnector extends AbstractServerConnector {
      * @return the {@link SimulatorAddress} of the Simulator Worker
      */
     public SimulatorAddress addWorker(int workerIndex, String workerHost, int workerPort) {
-        ClientConfiguration clientConfiguration = serverConfiguration.getClientConfiguration(workerIndex, workerHost, workerPort);
+        ClientConfiguration clientConfiguration = serverConfiguration.getClientConfiguration(workerIndex, workerHost, workerPort,
+                this);
         ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 

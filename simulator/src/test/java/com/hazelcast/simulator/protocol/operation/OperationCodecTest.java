@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.simulator.common.JavaProfiler;
-import com.hazelcast.simulator.coordinator.CoordinatorParameters;
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
@@ -15,7 +15,6 @@ import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstru
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class OperationCodecTest {
 
@@ -49,17 +48,23 @@ public class OperationCodecTest {
 
     @Test
     public void testCodec_withComplexOperation() {
-        CoordinatorParameters parameters = mock(CoordinatorParameters.class);
-        when(parameters.getMemberJvmOptions()).thenReturn("-verbose:gc -Xloggc:verbosegc.log");
-        when(parameters.getMemberHzConfig()).thenReturn("<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n"
-                + "  http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd\"\n"
-                + "  xmlns=\"http://www.hazelcast.com/schema/config\"\n"
-                + "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />");
-        when(parameters.isAutoCreateHzInstance()).thenReturn(true);
-        when(parameters.getWorkerStartupTimeout()).thenReturn(12345);
-        when(parameters.getProfiler()).thenReturn(JavaProfiler.FLIGHTRECORDER);
+        SimulatorProperties properties = mock(SimulatorProperties.class);
 
-        WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings(1, WorkerType.MEMBER, parameters);
+        WorkerParameters workerParameters = new WorkerParameters(
+                properties,
+                true,
+                12345,
+                "-verbose:gc -Xloggc:verbosegc.log",
+                "",
+                "<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n"
+                        + "  http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd\"\n"
+                        + "  xmlns=\"http://www.hazelcast.com/schema/config\"\n"
+                        + "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />",
+                "",
+                ""
+        );
+
+        WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings(1, WorkerType.MEMBER, workerParameters);
 
         CreateWorkerOperation operation = new CreateWorkerOperation(Collections.singletonList(workerJvmSettings));
         String json = OperationCodec.toJson(operation);

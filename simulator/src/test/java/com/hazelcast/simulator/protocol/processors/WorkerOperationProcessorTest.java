@@ -9,10 +9,14 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
+import com.hazelcast.simulator.protocol.operation.TerminateWorkersOperation;
 import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
+import com.hazelcast.simulator.worker.Worker;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +35,8 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class WorkerOperationProcessorTest {
@@ -44,8 +50,9 @@ public class WorkerOperationProcessorTest {
 
     private final TestExceptionLogger exceptionLogger = new TestExceptionLogger();
 
-    private final HazelcastInstance serverInstance = mock(HazelcastInstance.class);
-    private final HazelcastInstance clientInstance = mock(HazelcastInstance.class);
+    private final HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
+
+    private final Worker worker = mock(Worker.class);
 
     private Map<String, String> properties;
     private WorkerOperationProcessor processor;
@@ -58,10 +65,11 @@ public class WorkerOperationProcessorTest {
         when(defaultTestCase.getId()).thenReturn(DEFAULT_TEST_ID);
         when(defaultTestCase.getProperties()).thenReturn(properties);
 
-        when(serverInstance.getUserContext()).thenReturn(new ConcurrentHashMap<String, Object>());
-        when(clientInstance.getUserContext()).thenReturn(new ConcurrentHashMap<String, Object>());
+        when(hazelcastInstance.getUserContext()).thenReturn(new ConcurrentHashMap<String, Object>());
 
-        processor = new WorkerOperationProcessor(exceptionLogger, serverInstance, clientInstance);
+        when(worker.startPerformanceMonitor()).thenReturn(true);
+
+        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.MEMBER, hazelcastInstance, worker);
     }
 
     @Test
@@ -74,26 +82,37 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
+    public void process_TerminateWorkers() throws Exception {
+        TerminateWorkersOperation operation = new TerminateWorkersOperation();
+        processor.process(operation);
+
+        verify(worker).shutdown();
+        verifyNoMoreInteractions(worker);
+    }
+
+    @Test
     public void process_CreateTest() throws Exception {
-        ResponseType responseType = createTestCase(defaultTestCase);
+        ResponseType responseType = runCreateTestOperation(defaultTestCase);
 
         assertEquals(SUCCESS, responseType);
+        assertEquals(1, processor.getTests().size());
         exceptionLogger.assertNoException();
     }
 
     @Test
     public void process_CreateTest_sameTestIdTwice() throws Exception {
-        ResponseType responseType = createTestCase(defaultTestCase);
+        ResponseType responseType = runCreateTestOperation(defaultTestCase);
         assertEquals(SUCCESS, responseType);
 
-        responseType = createTestCase(defaultTestCase);
+        responseType = runCreateTestOperation(defaultTestCase);
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
         exceptionLogger.assertException(IllegalStateException.class);
     }
 
     @Test
     public void process_CreateTest_invalidTestId() {
-        ResponseType responseType = createTestCase(SuccessTest.class, "%&/?!");
+        TestCase testCase = createTestCase(SuccessTest.class, "%&/?!");
+        ResponseType responseType = runCreateTestOperation(testCase);
 
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
         exceptionLogger.assertException(IllegalArgumentException.class);
@@ -102,7 +121,7 @@ public class WorkerOperationProcessorTest {
     @Test
     public void process_CreateTest_invalidClassPath() {
         setTestCaseClass("not.found.SuccessTest");
-        ResponseType responseType = createTestCase(defaultTestCase);
+        ResponseType responseType = runCreateTestOperation(defaultTestCase);
 
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
         exceptionLogger.assertException(ClassNotFoundException.class);
@@ -110,7 +129,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_StartTest() {
-        createTestCase(defaultTestCase);
+        runCreateTestOperation(defaultTestCase);
         runPhase(DEFAULT_TEST_ID, TestPhase.SETUP);
         stopTest(DEFAULT_TEST_ID, 500);
         runTest(DEFAULT_TEST_ID);
@@ -122,17 +141,18 @@ public class WorkerOperationProcessorTest {
     public void process_StartTest_failingTest() {
         Class testClass = FailingTest.class;
         String testId = testClass.getSimpleName();
+        TestCase testCase = createTestCase(testClass, testId);
 
-        createTestCase(testClass, testId);
+        runCreateTestOperation(testCase);
         runPhase(testId, TestPhase.SETUP);
         runTest(testId);
 
-        exceptionLogger.assertException(RuntimeException.class);
+        exceptionLogger.assertException(TestException.class);
     }
 
     @Test
     public void process_StartTest_noSetUp() {
-        createTestCase(defaultTestCase);
+        runCreateTestOperation(defaultTestCase);
         runTest(DEFAULT_TEST_ID);
 
         // no setup was executed, so TestContext is null
@@ -148,9 +168,9 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_StartTest_passiveMember() {
-        processor = new WorkerOperationProcessor(exceptionLogger, serverInstance, null);
+        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.MEMBER, hazelcastInstance, worker);
 
-        createTestCase(defaultTestCase);
+        runCreateTestOperation(defaultTestCase);
         StartTestOperation operation = new StartTestOperation(DEFAULT_TEST_ID, true);
         ResponseType responseType = processor.process(operation);
         assertEquals(SUCCESS, responseType);
@@ -173,15 +193,17 @@ public class WorkerOperationProcessorTest {
     @Test
     public void process_StartTestPhase_failingTest() {
         String testId = "FailingTest";
-        createTestCase(FailingTest.class, testId);
+        TestCase testCase = createTestCase(FailingTest.class, testId);
+
+        runCreateTestOperation(testCase);
         runPhase(testId, TestPhase.GLOBAL_VERIFY);
 
-        exceptionLogger.assertException(RuntimeException.class);
+        exceptionLogger.assertException(AssertionError.class);
     }
 
     @Test
     public void process_StartTestPhase_oldPhaseStillRunning() {
-        createTestCase(defaultTestCase);
+        runCreateTestOperation(defaultTestCase);
         runPhase(DEFAULT_TEST_ID, TestPhase.SETUP);
 
         StartTestPhaseOperation operation = new StartTestPhaseOperation(DEFAULT_TEST_ID, TestPhase.RUN);
@@ -194,11 +216,11 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_StartTestPhase_removeTestAfterLocalTearDown() {
-        createTestCase(defaultTestCase);
+        runCreateTestOperation(defaultTestCase);
         runPhase(DEFAULT_TEST_ID, TestPhase.LOCAL_TEARDOWN);
 
         // we should be able to init the test again, after it has been removed
-        createTestCase(defaultTestCase);
+        runCreateTestOperation(defaultTestCase);
 
         exceptionLogger.assertNoException();
     }
@@ -207,16 +229,16 @@ public class WorkerOperationProcessorTest {
         properties.put("class", className);
     }
 
-    private ResponseType createTestCase(Class testClass, String testId) {
+    private TestCase createTestCase(Class testClass, String testId) {
         setTestCaseClass(testClass.getName());
         TestCase testCase = mock(TestCase.class);
         when(testCase.getId()).thenReturn(testId);
         when(testCase.getProperties()).thenReturn(properties);
 
-        return createTestCase(testCase);
+        return testCase;
     }
 
-    private ResponseType createTestCase(TestCase testCase) {
+    private ResponseType runCreateTestOperation(TestCase testCase) {
         SimulatorOperation operation = new CreateTestOperation(testCase);
         LOGGER.debug("Serialized operation: " + toJson(operation));
 

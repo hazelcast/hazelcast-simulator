@@ -3,7 +3,7 @@ package com.hazelcast.simulator.tests.syntheticmap;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -42,8 +42,8 @@ public class StringStringSyntheticMapTest {
     public double putProb = 0.1;
 
     // probes
-    public IntervalProbe putLatency;
-    public IntervalProbe getLatency;
+    public Probe putProbe;
+    public Probe getProbe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
@@ -101,14 +101,14 @@ public class StringStringSyntheticMapTest {
             switch (operation) {
                 case PUT:
                     String value = randomValue();
-                    putLatency.started();
+                    putProbe.started();
                     map.put(key, value);
-                    putLatency.done();
+                    putProbe.done();
                     break;
                 case GET:
-                    getLatency.started();
+                    getProbe.started();
                     map.get(key);
-                    getLatency.done();
+                    getProbe.done();
                     break;
                 default:
                     throw new UnsupportedOperationException();

@@ -20,8 +20,8 @@ public class TestSuiteTest {
                 + "atomicLongTest@threadCount=10";
 
         TestSuite testSuite = createTestSuite(txt);
-        assertEquals(1, testSuite.testCaseList.size());
-        TestCase testCase = testSuite.testCaseList.get(0);
+        assertEquals(1, testSuite.size());
+        TestCase testCase = testSuite.getTestCaseList().get(0);
         assertEquals("atomicLongTest", testCase.getId());
         assertEquals("AtomicLong", testCase.getClassname());
         assertEquals("10", testCase.getProperty("threadCount"));
@@ -56,7 +56,7 @@ public class TestSuiteTest {
         TestSuite testSuite = createTestSuite(txt);
         assertEquals(1, testSuite.size());
 
-        TestCase testCase = testSuite.testCaseList.get(0);
+        TestCase testCase = testSuite.getTestCaseList().get(0);
         assertNotNull(testCase);
         assertEquals("AtomicLong", testCase.getClassname());
         assertNotNull(testCase.toString());
@@ -122,12 +122,25 @@ public class TestSuiteTest {
         TestSuite testSuite = createTestSuite(txt, overrideProperties);
         assertEquals(1, testSuite.size());
 
-        TestCase testCase = testSuite.testCaseList.get(0);
+        TestCase testCase = testSuite.getTestCaseList().get(0);
         assertEquals("AtomicLong", testCase.getClassname());
         assertEquals("20", testCase.getProperty("threadCount"));
     }
 
-    static TestSuite createTestSuite(String txt) throws Exception {
+    @Test
+    public void testMaxCaseIdLength() {
+        TestSuite testSuite = new TestSuite();
+        testSuite.addTest(new TestCase("abc"));
+        testSuite.addTest(new TestCase("88888888"));
+        testSuite.addTest(new TestCase(null));
+        testSuite.addTest(new TestCase("abcDEF"));
+        testSuite.addTest(new TestCase(""));
+        testSuite.addTest(new TestCase("four"));
+
+        assertEquals(8, testSuite.getMaxTestCaseIdLength());
+    }
+
+    private static TestSuite createTestSuite(String txt) throws Exception {
         return createTestSuite(txt, "");
     }
 

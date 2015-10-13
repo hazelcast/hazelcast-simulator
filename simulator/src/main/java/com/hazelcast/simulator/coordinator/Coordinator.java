@@ -19,7 +19,6 @@ import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
-import com.hazelcast.simulator.coordinator.remoting.NewProtocolAgentsClient;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -34,17 +33,15 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getMaxTestCaseIdLength;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -61,20 +58,25 @@ import static java.lang.String.format;
 public final class Coordinator {
 
     static final File SIMULATOR_HOME = getSimulatorHome();
-    static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
-    static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
-    private static final int COOLDOWN_SECONDS = 10;
-    private static final int TEST_CASE_RUNNER_SLEEP_PERIOD = 30;
-    private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
+    private static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
+    private static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
+
+    private static final int TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS = 10;
+    private static final int PARALLEL_EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
-    int cooldownSeconds = COOLDOWN_SECONDS;
-    int testCaseRunnerSleepPeriod = TEST_CASE_RUNNER_SLEEP_PERIOD;
+    private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+    private final TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
 
-    private final CoordinatorParameters parameters;
+    private final CoordinatorParameters coordinatorParameters;
+    private final ClusterLayoutParameters clusterLayoutParameters;
+    private final WorkerParameters workerParameters;
     private final TestSuite testSuite;
+    private final FailureContainer failureContainer;
+
+    private final int testCaseRunnerSleepPeriodSeconds;
 
     private final ComponentRegistry componentRegistry;
 
@@ -82,71 +84,90 @@ public final class Coordinator {
     private final Bash bash;
 
     private AgentsClient agentsClient;
-    private NewProtocolAgentsClient newProtocolAgentsClient;
+    private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
-
-    private FailureMonitor failureMonitor;
-    private PerformanceMonitor performanceMonitor;
 
     private ExecutorService parallelExecutor;
 
-    public Coordinator(CoordinatorParameters parameters, TestSuite testSuite) {
-        this.parameters = parameters;
+    public Coordinator(CoordinatorParameters coordinatorParameters, ClusterLayoutParameters clusterLayoutParameters,
+                       WorkerParameters workerParameters, TestSuite testSuite) {
+        this(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite, TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS);
+    }
+
+    public Coordinator(CoordinatorParameters coordinatorParameters, ClusterLayoutParameters clusterLayoutParameters,
+                       WorkerParameters workerParameters, TestSuite testSuite, int testCaseRunnerSleepPeriodSeconds) {
+        this.coordinatorParameters = coordinatorParameters;
+        this.clusterLayoutParameters = clusterLayoutParameters;
+        this.workerParameters = workerParameters;
         this.testSuite = testSuite;
+        this.failureContainer = new FailureContainer(testSuite.getId());
 
-        this.componentRegistry = loadComponentRegister(parameters.getAgentsFile());
+        this.testCaseRunnerSleepPeriodSeconds = testCaseRunnerSleepPeriodSeconds;
 
-        this.props = parameters.getSimulatorProperties();
+        this.componentRegistry = loadComponentRegister(coordinatorParameters.getAgentsFile());
+
+        this.props = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(props);
     }
 
-    CoordinatorParameters getParameters() {
-        return parameters;
+    CoordinatorParameters getCoordinatorParameters() {
+        return coordinatorParameters;
+    }
+
+    ClusterLayoutParameters getClusterLayoutParameters() {
+        return clusterLayoutParameters;
+    }
+
+    WorkerParameters getWorkerParameters() {
+        return workerParameters;
     }
 
     TestSuite getTestSuite() {
         return testSuite;
     }
 
+    // just for testing
+    FailureContainer getFailureContainer() {
+        return failureContainer;
+    }
+
+    // just for testing
+    void setRemoteClient(RemoteClient remoteClient) {
+        this.remoteClient = remoteClient;
+    }
+
     private void run() throws Exception {
         try {
             initAgents();
 
-            failureMonitor = new FailureMonitor(agentsClient, testSuite.id);
-            failureMonitor.start();
-
             startWorkers();
-
-            performanceMonitor = new PerformanceMonitor(agentsClient);
 
             runTestSuite();
 
             logFailureInfo();
         } finally {
-            if (performanceMonitor != null) {
-                performanceMonitor.stop();
-            }
-
-            if (failureMonitor != null) {
-                failureMonitor.stop();
-            }
-
-            if (parallelExecutor != null) {
-                parallelExecutor.shutdown();
-                parallelExecutor.awaitTermination(EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            }
-
-            if (agentsClient != null) {
-                agentsClient.terminateWorkers();
-                agentsClient.stop();
-            }
-
-            if (coordinatorConnector != null) {
-                coordinatorConnector.shutdown();
-            }
-
-            killAgents();
+            shutdown();
         }
+    }
+
+    private void shutdown() throws Exception {
+        if (parallelExecutor != null) {
+            LOGGER.info("Shutdown of ExecutorService...");
+            parallelExecutor.shutdown();
+            parallelExecutor.awaitTermination(PARALLEL_EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        }
+
+        if (agentsClient != null) {
+            LOGGER.info("Shutdown of AgentsClient...");
+            agentsClient.shutdown();
+        }
+
+        if (coordinatorConnector != null) {
+            LOGGER.info("Shutdown of ClientConnector...");
+            coordinatorConnector.shutdown();
+        }
+
+        killAgents();
     }
 
     private void initAgents() {
@@ -161,23 +182,19 @@ public final class Coordinator {
             throw new CommandLineExitException("Could not start CoordinatorConnector", e);
         }
 
-        newProtocolAgentsClient = new NewProtocolAgentsClient(coordinatorConnector, componentRegistry);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
 
-        initMemberWorkerCount();
-        initMemberHzConfig();
-        initClientHzConfig();
+        clusterLayoutParameters.initMemberWorkerCount(componentRegistry.agentCount());
+        workerParameters.initMemberHzConfig(componentRegistry, props);
+        workerParameters.initClientHzConfig(componentRegistry);
 
         int agentCount = componentRegistry.agentCount();
-        LOGGER.info(format("Performance monitor enabled: %s", parameters.isMonitorPerformance()));
+        LOGGER.info(format("Performance monitor enabled: %s", coordinatorParameters.isMonitorPerformance()));
         LOGGER.info(format("Total number of agents: %s", agentCount));
-        LOGGER.info(format("Total number of Hazelcast member workers: %s", parameters.getMemberWorkerCount()));
-        LOGGER.info(format("Total number of Hazelcast client workers: %s", parameters.getClientWorkerCount()));
+        LOGGER.info(format("Total number of Hazelcast member workers: %s", clusterLayoutParameters.getMemberWorkerCount()));
+        LOGGER.info(format("Total number of Hazelcast client workers: %s", clusterLayoutParameters.getClientWorkerCount()));
 
-        try {
-            agentsClient.initTestSuite(testSuite);
-        } catch (Exception e) {
-            throw new CommandLineExitException("Could not init TestSuite", e);
-        }
+        remoteClient.initTestSuite(testSuite);
 
         uploadUploadDirectory();
         uploadWorkerClassPath();
@@ -220,7 +237,7 @@ public final class Coordinator {
     }
 
     private void startCoordinatorConnector() {
-        coordinatorConnector = new CoordinatorConnector();
+        coordinatorConnector = new CoordinatorConnector(performanceStateContainer, testHistogramContainer, failureContainer);
         ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
@@ -231,36 +248,6 @@ public final class Coordinator {
             });
         }
         spawner.awaitCompletion();
-    }
-
-    private void initMemberWorkerCount() {
-        if (parameters.getMemberWorkerCount() == -1) {
-            parameters.setMemberWorkerCount(componentRegistry.agentCount());
-        }
-    }
-
-    private void initMemberHzConfig() {
-        String addressConfig = createAddressConfig("member", componentRegistry, getPort(parameters));
-
-        String memberHzConfig = parameters.getMemberHzConfig();
-        memberHzConfig = memberHzConfig.replace("<!--MEMBERS-->", addressConfig);
-
-        String manCenterURL = props.get("MANAGEMENT_CENTER_URL").trim();
-        if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
-            String updateInterval = props.get("MANAGEMENT_CENTER_UPDATE_INTERVAL").trim();
-            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + "\"";
-            memberHzConfig = memberHzConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
-                    format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
-                            updateIntervalAttr, manCenterURL));
-        }
-        parameters.setMemberHzConfig(memberHzConfig);
-    }
-
-    private void initClientHzConfig() {
-        String addressConfig = createAddressConfig("address", componentRegistry, getPort(parameters));
-
-        String clientHzConfig = parameters.getClientHzConfig().replace("<!--MEMBERS-->", addressConfig);
-        parameters.setClientHzConfig(clientHzConfig);
     }
 
     private void uploadUploadDirectory() {
@@ -282,7 +269,7 @@ public final class Coordinator {
                             props.get("USER"),
                             ip,
                             getSimulatorVersion(),
-                            testSuite.id));
+                            testSuite.getId()));
                 }
                 LOGGER.info("    " + ip + " copied");
             }
@@ -293,7 +280,7 @@ public final class Coordinator {
     }
 
     private void uploadWorkerClassPath() {
-        String workerClassPath = parameters.getWorkerClassPath();
+        String workerClassPath = coordinatorParameters.getWorkerClassPath();
         if (workerClassPath == null) {
             return;
         }
@@ -311,7 +298,7 @@ public final class Coordinator {
                                     props.get("USER"),
                                     ip,
                                     getSimulatorVersion(),
-                                    testSuite.id));
+                                    testSuite.getId()));
                 }
                 LOGGER.info("    " + ip + " copied");
             }
@@ -322,7 +309,7 @@ public final class Coordinator {
     }
 
     private void uploadYourKitIfNeeded() {
-        if (parameters.getProfiler() != JavaProfiler.YOURKIT) {
+        if (workerParameters.getProfiler() != JavaProfiler.YOURKIT) {
             return;
         }
 
@@ -342,22 +329,26 @@ public final class Coordinator {
     }
 
     private void startWorkers() {
-        List<AgentMemberLayout> agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
-
-        int memberWorkerCount = parameters.getMemberWorkerCount();
-        int clientWorkerCount = parameters.getClientWorkerCount();
+        int memberWorkerCount = clusterLayoutParameters.getMemberWorkerCount();
+        int clientWorkerCount = clusterLayoutParameters.getClientWorkerCount();
         int totalWorkerCount = memberWorkerCount + clientWorkerCount;
+
+        List<AgentMemberLayout> agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters,
+                clusterLayoutParameters.getDedicatedMemberMachineCount(), memberWorkerCount, clientWorkerCount);
 
         long started = System.nanoTime();
         try {
             echo("Killing all remaining workers");
-            agentsClient.terminateWorkers();
+            remoteClient.terminateWorkers();
             echo("Successfully killed all remaining workers");
 
             echo("Starting %d workers (%d members, %d clients)", totalWorkerCount, memberWorkerCount, clientWorkerCount);
-            newProtocolAgentsClient.createWorkers(agentMemberLayouts);
+            remoteClient.createWorkers(agentMemberLayouts);
             echo("Successfully started workers");
         } catch (Exception e) {
+            while (failureContainer.getFailureCount() == 0) {
+                sleepSeconds(1);
+            }
             throw new CommandLineExitException("Failed to start workers", e);
         }
 
@@ -366,25 +357,26 @@ public final class Coordinator {
     }
 
     void runTestSuite() {
-        echo("Starting testsuite: %s", testSuite.id);
+        echo("Starting testsuite: %s", testSuite.getId());
         echo("Tests in testsuite: %s", testSuite.size());
-        echo("Running time per test: %s ", secondsToHuman(testSuite.durationSeconds));
-        echo("Expected total testsuite time: %s", secondsToHuman(testSuite.size() * testSuite.durationSeconds));
+        echo("Running time per test: %s ", secondsToHuman(testSuite.getDurationSeconds()));
+        echo("Expected total testsuite time: %s", secondsToHuman(testSuite.size() * testSuite.getDurationSeconds()));
 
         long started = System.nanoTime();
 
-        if (parameters.isParallel()) {
+        if (coordinatorParameters.isParallel()) {
             runParallel();
         } else {
             runSequential();
         }
 
-        terminateWorkers();
+        remoteClient.terminateWorkers();
+        waitForWorkerShutdown(componentRegistry.workerCount(), failureContainer.getFinishedWorkers());
 
-        // the coordinator needs to sleep some time to make sure that it will get failures if they are there
-        LOGGER.info("Starting cool down (10 sec)");
-        sleepSeconds(cooldownSeconds);
-        LOGGER.info("Finished cool down");
+        performanceStateContainer.logDetailedPerformanceInfo();
+        for (TestCase testCase : testSuite.getTestCaseList()) {
+            testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
+        }
 
         long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
         LOGGER.info(format("Total running time: %s seconds", duration));
@@ -393,21 +385,23 @@ public final class Coordinator {
     private void runParallel() {
         echo("Running %s tests parallel", testSuite.size());
 
-        final int maxTestCaseIdLength = getMaxTestCaseIdLength(testSuite.testCaseList);
-        final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testSuite.testCaseList.size());
+        final int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
+        final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(
+                coordinatorParameters.getLastTestPhaseToSync(), testSuite.size());
 
         parallelExecutor = createFixedThreadPool(testSuite.size(), Coordinator.class);
 
         List<Future> futures = new LinkedList<Future>();
-        for (final TestCase testCase : testSuite.testCaseList) {
+        for (final TestCase testCase : testSuite.getTestCaseList()) {
             Future future = parallelExecutor.submit(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this, agentsClient,
-                                failureMonitor, performanceMonitor, maxTestCaseIdLength, testPhaseSyncMap);
+                        TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this, remoteClient,
+                                failureContainer, performanceStateContainer, maxTestCaseIdLength, testPhaseSyncMap,
+                                testCaseRunnerSleepPeriodSeconds);
                         boolean success = runner.run();
-                        if (!success && testSuite.failFast) {
+                        if (!success && testSuite.isFailFast()) {
                             LOGGER.info("Aborting testsuite due to failure (not implemented yet)");
                             // FIXME: we should abort here as logged
                         }
@@ -430,47 +424,24 @@ public final class Coordinator {
     private void runSequential() {
         echo("Running %s tests sequentially", testSuite.size());
 
-        int maxTestCaseIdLength = getMaxTestCaseIdLength(testSuite.testCaseList);
+        int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
 
-        for (TestCase testCase : testSuite.testCaseList) {
-            TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this, agentsClient,
-                    failureMonitor, performanceMonitor, maxTestCaseIdLength, null);
+        for (TestCase testCase : testSuite.getTestCaseList()) {
+            TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this, remoteClient,
+                    failureContainer, performanceStateContainer, maxTestCaseIdLength, null, testCaseRunnerSleepPeriodSeconds);
             boolean success = runner.run();
-            if (!success && testSuite.failFast) {
+            if (!success && testSuite.isFailFast()) {
                 LOGGER.info("Aborting testsuite due to failure");
                 break;
             }
-            if (!success || parameters.isRefreshJvm()) {
-                terminateWorkers();
+            if (!success || coordinatorParameters.isRefreshJvm()) {
                 startWorkers();
             }
         }
     }
 
-    private ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(int testCount) {
-        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
-        boolean useTestCount = true;
-        for (TestPhase testPhase : TestPhase.values()) {
-            testPhaseSyncMap.put(testPhase, new CountDownLatch(useTestCount ? testCount : 0));
-            if (testPhase == parameters.getLastTestPhaseToSync()) {
-                useTestCount = false;
-            }
-        }
-        return testPhaseSyncMap;
-    }
-
-    private void terminateWorkers() {
-        try {
-            echo("Terminating workers");
-            agentsClient.terminateWorkers();
-            echo("All workers have been terminated");
-        } catch (Exception e) {
-            LOGGER.fatal("Could not terminate workers!", e);
-        }
-    }
-
     private void logFailureInfo() {
-        int failureCount = failureMonitor.getFailureCount();
+        int failureCount = failureContainer.getFailureCount();
         if (failureCount > 0) {
             LOGGER.fatal("-----------------------------------------------------------------------------");
             LOGGER.fatal(failureCount + " failures have been detected!!!");
@@ -514,7 +485,7 @@ public final class Coordinator {
     }
 
     private void echo(String msg) {
-        agentsClient.echo(msg);
+        remoteClient.logOnAllAgents(msg);
         LOGGER.info(msg);
     }
 
@@ -527,7 +498,7 @@ public final class Coordinator {
 
             Coordinator coordinator = CoordinatorCli.init(args);
 
-            LOGGER.info(format("Loading agents file: %s", coordinator.parameters.getAgentsFile().getAbsolutePath()));
+            LOGGER.info(format("Loading agents file: %s", coordinator.coordinatorParameters.getAgentsFile().getAbsolutePath()));
             LOGGER.info(format("HAZELCAST_VERSION_SPEC: %s", coordinator.props.getHazelcastVersionSpec()));
 
             coordinator.run();

@@ -1,8 +1,12 @@
 package com.hazelcast.simulator.common.messaging;
 
 import com.hazelcast.simulator.common.KeyValuePair;
+import org.junit.After;
 import org.junit.Test;
 
+import java.io.File;
+
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
@@ -11,9 +15,14 @@ import static org.junit.Assert.assertThat;
 
 public class MessagesFactoryTest {
 
+    @After
+    public void tearDown() {
+        deleteQuiet(new File("./logs"));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testBySpec_unknownMessageType() throws Exception {
-        MessagesFactory.bySpec("fooo", "Agent=*");
+        MessagesFactory.bySpec("foo", "Agent=*");
     }
 
     @Test
@@ -39,5 +48,4 @@ public class MessagesFactoryTest {
         assertNull(address.getWorkerAddress());
         assertNull(address.getTestAddress());
     }
-
 }

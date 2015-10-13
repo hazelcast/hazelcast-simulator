@@ -1,8 +1,5 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
 import com.hazelcast.simulator.test.TestCase;
 import org.junit.Test;
 
@@ -13,7 +10,6 @@ import java.util.Set;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperty;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.parseProbeConfiguration;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 
@@ -46,7 +42,6 @@ public class PropertyBindingSupportTest {
     @Test
     public void testBindOptionalProperty_propertyNotDefined() {
         testCase.setProperty("class", "willBeIgnored");
-        testCase.setProperty("probe-getLatency", "willBeIgnored");
         testCase.setProperty("notExist", "isOptional");
 
         bindOptionalProperty(bindPropertyTestClass, testCase, "propertyNotDefined");
@@ -55,7 +50,6 @@ public class PropertyBindingSupportTest {
     @Test
     public void testBindOptionalProperty_propertyNotFound() {
         testCase.setProperty("class", "willBeIgnored");
-        testCase.setProperty("probe-getLatency", "willBeIgnored");
         testCase.setProperty("notExist", "isOptional");
 
         bindOptionalProperty(bindPropertyTestClass, testCase, "notExist");
@@ -64,25 +58,10 @@ public class PropertyBindingSupportTest {
     @Test
     public void testBindOptionalProperty() {
         testCase.setProperty("class", "willBeIgnored");
-        testCase.setProperty("probe-getLatency", "willBeIgnored");
         testCase.setProperty("stringField", "foo");
 
         bindOptionalProperty(bindPropertyTestClass, testCase, "stringField");
         assertEquals("foo", bindPropertyTestClass.stringField);
-    }
-
-    @Test
-    public void testParseProbesConfiguration() {
-        testCase.setProperty("class", "foobar");
-        testCase.setProperty("probe1", "throughput");
-        testCase.setProperty("probe2", "hdr");
-
-        TestClassWithProbes testInstance = new TestClassWithProbes();
-
-        ProbesConfiguration config = parseProbeConfiguration(testInstance, testCase);
-        assertEquals("throughput", config.getConfig("probe1"));
-        assertEquals("hdr", config.getConfig("probe2"));
-        assertEquals(null, config.getConfig("notConfigured"));
     }
 
     @Test
@@ -164,12 +143,5 @@ public class PropertyBindingSupportTest {
         public static Object staticField;
 
         public String stringField;
-    }
-
-    @SuppressWarnings("unused")
-    private class TestClassWithProbes {
-
-        public SimpleProbe probe1;
-        public IntervalProbe probe2;
     }
 }

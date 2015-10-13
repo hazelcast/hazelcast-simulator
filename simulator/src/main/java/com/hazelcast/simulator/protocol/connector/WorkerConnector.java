@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.protocol.configuration.WorkerServerConfiguration;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -9,6 +10,8 @@ import com.hazelcast.simulator.protocol.exception.FileExceptionLogger;
 import com.hazelcast.simulator.protocol.exception.RemoteExceptionLogger;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
+import com.hazelcast.simulator.worker.Worker;
+import com.hazelcast.simulator.worker.WorkerType;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -27,30 +30,34 @@ public final class WorkerConnector extends AbstractServerConnector {
         this.workerServerConfiguration = configuration;
     }
 
-    @Override
-    protected void beforeShutdown() {
-    }
-
     /**
      * Creates a {@link WorkerConnector} instance.
      *
-     * @param addressIndex       the index of this Simulator Worker
      * @param parentAddressIndex the index of the parent Simulator Agent
+     * @param addressIndex       the index of this Simulator Worker
      * @param port               the port for incoming connections
+     * @param type               the {@link WorkerType} of this Simulator Worker
+     * @param hazelcastInstance  the {@link HazelcastInstance} for this Simulator Worker
+     * @param worker             the {@link Worker} instance of this Simulator Worker
      */
-    public static WorkerConnector createInstance(int addressIndex, int parentAddressIndex, int port) {
-        return createInstance(addressIndex, parentAddressIndex, port, false);
+    public static WorkerConnector createInstance(int parentAddressIndex, int addressIndex, int port, WorkerType type,
+                                                 HazelcastInstance hazelcastInstance, Worker worker) {
+        return createInstance(parentAddressIndex, addressIndex, port, type, hazelcastInstance, worker, false);
     }
 
     /**
      * Creates a {@link WorkerConnector} instance.
      *
-     * @param addressIndex       the index of this Simulator Worker
      * @param parentAddressIndex the index of the parent Simulator Agent
+     * @param addressIndex       the index of this Simulator Worker
      * @param port               the port for incoming connections
+     * @param type               the {@link WorkerType} of this Simulator Worker
+     * @param hazelcastInstance  the {@link HazelcastInstance} for this Simulator Worker
+     * @param worker             the {@link Worker} instance of this Simulator Worker
      * @param useRemoteLogger    determines if the {@link RemoteExceptionLogger} or {@link FileExceptionLogger} should be used
      */
-    public static WorkerConnector createInstance(int addressIndex, int parentAddressIndex, int port, boolean useRemoteLogger) {
+    public static WorkerConnector createInstance(int parentAddressIndex, int addressIndex, int port, WorkerType type,
+                                                 HazelcastInstance hazelcastInstance, Worker worker, boolean useRemoteLogger) {
         SimulatorAddress localAddress = new SimulatorAddress(WORKER, parentAddressIndex, addressIndex, 0);
 
         ExceptionLogger exceptionLogger;
@@ -59,7 +66,7 @@ public final class WorkerConnector extends AbstractServerConnector {
         } else {
             exceptionLogger = new FileExceptionLogger(localAddress, ExceptionType.WORKER_EXCEPTION);
         }
-        OperationProcessor processor = new WorkerOperationProcessor(exceptionLogger, null, null);
+        WorkerOperationProcessor processor = new WorkerOperationProcessor(exceptionLogger, type, hazelcastInstance, worker);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
         WorkerServerConfiguration configuration = new WorkerServerConfiguration(processor, futureMap, localAddress, port);

@@ -5,7 +5,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.query.TruePredicate;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -39,7 +39,7 @@ public class AllKeySetTest {
     public int valueLength = 1000;
     // a switch between using IMap.keySet() or IMap.keySet(true-predicate)
     public boolean usePredicate = false;
-    public IntervalProbe latency;
+    public Probe latency;
 
     private IMap<String, String> map;
     private HazelcastInstance targetInstance;
@@ -65,7 +65,7 @@ public class AllKeySetTest {
             streamer.pushEntry(key, value);
         }
         streamer.await();
-     }
+    }
 
     @RunWithWorker
     public Worker createWorker() {

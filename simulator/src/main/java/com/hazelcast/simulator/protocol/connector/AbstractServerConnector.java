@@ -43,7 +43,10 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractServerConnector.class);
 
-    private final EventLoopGroup group = new NioEventLoopGroup();
+    private static final SimulatorMessage POISON_PILL = new SimulatorMessage(null, null, 0, null, null);
+
+    private final EventLoopGroup bossGroup = new NioEventLoopGroup();
+    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
 
     private final AtomicLong messageIds = new AtomicLong();
     private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
@@ -74,13 +77,13 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private ServerBootstrap getServerBootstrap() {
         ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.group(group)
+        bootstrap.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .localAddress(new InetSocketAddress(configuration.getLocalPort()))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
-                        configuration.configurePipeline(channel.pipeline());
+                        configuration.configurePipeline(channel.pipeline(), AbstractServerConnector.this);
                     }
                 });
         return bootstrap;
@@ -88,15 +91,17 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public void shutdown() {
-        beforeShutdown();
-
         messageQueueThread.shutdown();
+        configuration.shutdown();
         channel.close().syncUninterruptibly();
 
-        group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
+        workerGroup.
+                shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)
+                .syncUninterruptibly();
+        bossGroup
+                .shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)
+                .syncUninterruptibly();
     }
-
-    protected abstract void beforeShutdown();
 
     @Override
     public SimulatorAddress getAddress() {
@@ -159,40 +164,49 @@ abstract class AbstractServerConnector implements ServerConnector {
 
         private static final int WAIT_FOR_EMPTY_QUEUE_MILLIS = 100;
 
-        private volatile boolean running = true;
-
         private MessageQueueThread() {
             super("ServerConnectorMessageQueueThread");
         }
 
         @Override
         public void run() {
-            while (running) {
+            while (true) {
                 try {
                     SimulatorMessage message = messageQueue.take();
+                    if (message == POISON_PILL) {
+                        break;
+                    }
+
                     Response response = writeAsync(message).get();
                     for (Map.Entry<SimulatorAddress, ResponseType> entry : response.entrySet()) {
                         if (!entry.getValue().equals(ResponseType.SUCCESS)) {
                             LOGGER.error("Got " + entry.getValue() + " on " + entry.getKey() + " for " + message);
                         }
                     }
-                } catch (InterruptedException e) {
-                    EmptyStatement.ignore(e);
                 } catch (Exception e) {
                     LOGGER.error("Error while sending message from messageQueue", e);
                     throw new SimulatorProtocolException("Error while sending message from messageQueue", e);
                 }
             }
+            if (!messageQueue.isEmpty()) {
+                LOGGER.error("messageQueue not empty after poison pill was processed: " + messageQueue.peek());
+            }
         }
 
         public void shutdown() {
             try {
-                while (messageQueue.size() > 0) {
-                    sleepMillis(WAIT_FOR_EMPTY_QUEUE_MILLIS);
-                }
-                running = false;
+                messageQueue.add(POISON_PILL);
 
-                messageQueueThread.interrupt();
+                int queueSize = messageQueue.size();
+                while (queueSize > 0) {
+                    SimulatorMessage message = messageQueue.peek();
+                    if (message != POISON_PILL) {
+                        LOGGER.info(format("%d messages pending on messageQueue, first message: %s", queueSize, message));
+                    }
+                    sleepMillis(WAIT_FOR_EMPTY_QUEUE_MILLIS);
+                    queueSize = messageQueue.size();
+                }
+
                 messageQueueThread.join();
             } catch (InterruptedException e) {
                 EmptyStatement.ignore(e);

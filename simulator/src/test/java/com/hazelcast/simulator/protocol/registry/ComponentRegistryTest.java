@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 
 public class ComponentRegistryTest {
 
-    private ComponentRegistry componentRegistry = new ComponentRegistry();
+    private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     @Test
     public void testAddAgent() {
@@ -104,6 +104,22 @@ public class ComponentRegistryTest {
             assertEquals(i + 1, workerData.getSettings().getWorkerIndex());
             assertEquals(WorkerType.MEMBER, workerData.getSettings().getWorkerType());
         }
+    }
+
+    @Test
+    public void testGetFirstWorker() {
+        SimulatorAddress parentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
+        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(2);
+
+        componentRegistry.addWorkers(parentAddress, settingsList);
+        assertEquals(2, componentRegistry.workerCount());
+
+        WorkerData workerData = componentRegistry.getFirstWorker();
+        assertEquals(1, workerData.getAddress().getWorkerIndex());
+        assertEquals(AddressLevel.WORKER, workerData.getAddress().getAddressLevel());
+
+        assertEquals(1, workerData.getSettings().getWorkerIndex());
+        assertEquals(WorkerType.MEMBER, workerData.getSettings().getWorkerType());
     }
 
     private List<WorkerJvmSettings> getWorkerJvmSettingsList(int workerCount) {

@@ -1,13 +1,14 @@
 package com.hazelcast.simulator.tests;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
+import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -44,25 +45,27 @@ public class GenericOperationTest {
     // properties
     public double priorityProb = 0.1;
     public int delayNs = 100 * 1000;
-    // probes
-    public IntervalProbe normalLatency;
-    public IntervalProbe priorityLatency;
-    public SimpleProbe throughput;
 
+    // probes
+    public Probe normalLatency;
+    public Probe priorityLatency;
 
     private OperationService operationService;
     private Address[] memberAddresses;
+
     private final OperationSelectorBuilder<PrioritySelector> operationSelectorBuilder
             = new OperationSelectorBuilder<PrioritySelector>();
-    private TestContext testContext;
+
+    private HazelcastInstance instance;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
-        this.testContext = testContext;
+        instance = testContext.getTargetInstance();
 
-        NodeEngineImpl nodeEngine = getNode(testContext.getTargetInstance()).nodeEngine;
+        Node node = getNode(instance);
         Method method = ReflectionUtils.getMethodByName(NodeEngineImpl.class, "getOperationService");
-        this.operationService = (OperationService) method.invoke(nodeEngine);
+        operationService = (OperationService) method.invoke(node.nodeEngine);
+
         operationSelectorBuilder
                 .addOperation(PrioritySelector.PRIORITY, priorityProb)
                 .addDefaultOperation(PrioritySelector.NORMAL);
@@ -70,19 +73,18 @@ public class GenericOperationTest {
 
     @Warmup
     public void warmup() {
-        Set<Member> memberSet = testContext.getTargetInstance().getCluster().getMembers();
+        Set<Member> memberSet = instance.getCluster().getMembers();
         memberAddresses = new Address[memberSet.size()];
 
-        int k = 0;
+        int i = 0;
         for (Member member : memberSet) {
-            memberAddresses[k] = new Address(member.getSocketAddress());
-            k++;
+            memberAddresses[i++] = new Address(member.getSocketAddress());
         }
     }
 
     @Teardown
     public void tearDown() throws Exception {
-        LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
+        LOGGER.info(getOperationCountInformation(instance));
     }
 
     @RunWithWorker
@@ -110,8 +112,6 @@ public class GenericOperationTest {
                 default:
                     throw new UnsupportedOperationException();
             }
-
-            throughput.done();
         }
 
         private Address randomAddress() {
@@ -121,16 +121,16 @@ public class GenericOperationTest {
         private void invokeNormalOperation(Address address) {
             GenericOperation operation = new GenericOperation(delayNs);
             normalLatency.started();
-            InternalCompletableFuture f = operationService.invokeOnTarget(null, operation, address);
-            f.getSafely();
+            InternalCompletableFuture future = operationService.invokeOnTarget(null, operation, address);
+            future.getSafely();
             normalLatency.done();
         }
 
         private void invokePriorityOperation(Address address) {
             GenericPriorityOperation operation = new GenericPriorityOperation(delayNs);
             priorityLatency.started();
-            InternalCompletableFuture f = operationService.invokeOnTarget(null, operation, address);
-            f.getSafely();
+            InternalCompletableFuture future = operationService.invokeOnTarget(null, operation, address);
+            future.getSafely();
             priorityLatency.done();
         }
     }
@@ -169,13 +169,14 @@ public class GenericOperationTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class GenericPriorityOperation extends GenericOperation implements UrgentSystemOperation {
+
+        public GenericPriorityOperation() {
+        }
 
         public GenericPriorityOperation(int delayNanos) {
             super(delayNanos);
-        }
-
-        public GenericPriorityOperation() {
         }
     }
 

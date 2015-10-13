@@ -5,13 +5,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class ThreadSpawnerTest {
@@ -84,19 +82,6 @@ public class ThreadSpawnerTest {
     public void testInterrupt() {
         ThreadSpawner spawner = new ThreadSpawner("AnyTestCaseId", true);
         spawner.spawn(sleepInfiniteRunnable);
-        spawner.interrupt();
-        spawner.awaitCompletion();
-    }
-
-    @Test
-    public void testGetStackTraces() {
-        ThreadSpawner spawner = new ThreadSpawner("AnyTestCaseId");
-        spawner.spawn(sleepInfiniteRunnable);
-        spawner.spawn(sleepInfiniteRunnable);
-
-        List<String> stackTraces = spawner.getStackTraces();
-        assertEquals(2, stackTraces.size());
-
         spawner.interrupt();
         spawner.awaitCompletion();
     }

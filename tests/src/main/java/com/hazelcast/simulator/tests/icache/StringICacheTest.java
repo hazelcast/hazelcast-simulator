@@ -19,24 +19,23 @@ import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
@@ -47,41 +46,34 @@ public class StringICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(StringICacheTest.class);
 
+    private enum Operation {
+        PUT,
+        GET
+    }
+
     // properties
     public String basename = StringICacheTest.class.getSimpleName();
-    public int threadCount = 10;
-    public int writePercentage = 10;
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 10000;
     public int valueCount = 10000;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 10000;
     // if we use the putAndGet (so returning a value) or the put (which returns void)
     public boolean useGetAndPut = true;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
-    public IntervalProbe putLatency;
-    public IntervalProbe getLatency;
+    public double putProb = 0.1;
+    public Probe putProbe;
+    public Probe getProbe;
 
+    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
+
+    private HazelcastInstance hazelcastInstance;
     private Cache<String, String> cache;
     private String[] keys;
     private String[] values;
-    private final AtomicLong operations = new AtomicLong();
-    private TestContext testContext;
-    private HazelcastInstance hazelcastInstance;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        if (writePercentage < 0) {
-            throw new IllegalArgumentException("Write percentage can't be smaller than 0");
-        }
-
-        if (writePercentage > 100) {
-            throw new IllegalArgumentException("Write percentage can't be larger than 100");
-        }
-
-        this.testContext = testContext;
         hazelcastInstance = testContext.getTargetInstance();
 
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
@@ -96,6 +88,9 @@ public class StringICacheTest {
             LOGGER.severe(hack);
         }
         cache = cacheManager.getCache(basename);
+
+        operationSelectorBuilder.addOperation(Operation.PUT, putProb)
+                .addDefaultOperation(Operation.GET);
     }
 
     @Teardown
@@ -107,91 +102,66 @@ public class StringICacheTest {
     public void warmup() throws InterruptedException {
         waitClusterSize(LOGGER, hazelcastInstance, minNumberOfMembers);
 
-        keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
+        keys = generateStringKeys(keyCount, keyLength, keyLocality, hazelcastInstance);
         values = generateStrings(valueCount, valueLength);
 
         Random random = new Random();
         Streamer<String, String> streamer = StreamerFactory.getInstance(cache);
-        for (int k = 0; k < keys.length; k++) {
-            String key = keys[random.nextInt(keyCount)];
+        for (String key : keys) {
             String value = values[random.nextInt(valueCount)];
             streamer.pushEntry(key, value);
         }
         streamer.await();
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractWorker<Operation> {
+
+        public Worker() {
+            super(operationSelectorBuilder);
         }
-        spawner.awaitCompletion();
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
-    }
-
-    private class Worker implements Runnable {
-        private final Random random = new Random();
 
         @Override
-        public void run() {
-            long iteration = 0;
-            while (!testContext.isStopped()) {
-                String key = randomKey();
+        public void timeStep(Operation operation) {
+            String key = randomKey();
 
-                if (shouldWrite(iteration)) {
-                    putLatency.started();
+            switch (operation) {
+                case PUT:
                     String value = randomValue();
+                    putProbe.started();
                     if (useGetAndPut) {
                         cache.getAndPut(key, value);
                     } else {
                         cache.put(key, value);
                     }
-                    putLatency.done();
-                } else {
-                    getLatency.started();
+                    putProbe.done();
+                    break;
+                case GET:
+                    getProbe.started();
                     cache.get(key);
-                    getLatency.done();
-                }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
+                    getProbe.done();
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
             }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
         }
 
         private String randomValue() {
-            return values[random.nextInt(values.length)];
+            return values[randomInt(values.length)];
         }
 
         private String randomKey() {
             int length = keys.length;
-            return keys[random.nextInt(length)];
-        }
-
-        private boolean shouldWrite(long iteration) {
-            if (writePercentage == 0) {
-                return false;
-            } else if (writePercentage == 100) {
-                return true;
-            } else {
-                return (iteration % 100) < writePercentage;
-            }
+            return keys[randomInt(length)];
         }
     }
 
     public static void main(String[] args) throws Exception {
         StringICacheTest test = new StringICacheTest();
-        test.writePercentage = 10;
         new TestRunner<StringICacheTest>(test).run();
     }
 }

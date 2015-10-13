@@ -1,9 +1,12 @@
 package com.hazelcast.simulator.protocol.configuration;
 
+import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.ClientConnector;
+import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.handler.ChannelCollectorHandler;
+import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.ForwardToWorkerHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
@@ -32,7 +35,7 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     public AgentServerConfiguration(AgentOperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
                                     SimulatorAddress localAddress, int port) {
-        super(futureMap, localAddress, port);
+        super(processor, futureMap, localAddress, port);
         this.localAddress = localAddress;
         this.processor = processor;
 
@@ -42,11 +45,12 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     @Override
     public ChannelGroup getChannelGroup() {
+        channelCollectorHandler.waitForAtLeastOneChannel();
         return channelCollectorHandler.getChannels();
     }
 
     @Override
-    public void configurePipeline(ChannelPipeline pipeline) {
+    public void configurePipeline(ChannelPipeline pipeline, ServerConnector serverConnector) {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, COORDINATOR));
         pipeline.addLast("collector", channelCollectorHandler);
@@ -56,6 +60,7 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, COORDINATOR, getFutureMap(),
                 getLocalAddressIndex()));
+        pipeline.addLast("exceptionHandler", new ExceptionHandler(serverConnector));
     }
 
     public void addWorker(int workerIndex, ClientConnector clientConnector) {
@@ -66,12 +71,9 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
         forwardToWorkerHandler.removeWorker(workerIndex);
     }
 
-    public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort) {
-        return new AgentClientConfiguration(processor, getFutureMap(), localAddress,
-                workerIndex, workerHost, workerPort, getChannelGroup());
-    }
-
-    public AgentOperationProcessor getProcessor() {
-        return processor;
+    public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort,
+                                                           AgentConnector agentConnector) {
+        return new AgentClientConfiguration(agentConnector, processor, getFutureMap(), localAddress,
+                workerIndex, workerHost, workerPort, channelCollectorHandler.getChannels());
     }
 }

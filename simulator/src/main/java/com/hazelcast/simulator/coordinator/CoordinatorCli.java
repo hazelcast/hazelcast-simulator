@@ -1,7 +1,8 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.AgentsFile;
-import com.hazelcast.simulator.test.Failure;
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -16,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_HOME;
-import static com.hazelcast.simulator.test.Failure.Type.fromPropertyValue;
+import static com.hazelcast.simulator.test.FailureType.fromPropertyValue;
 import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -84,7 +85,7 @@ final class CoordinatorCli {
 
     private final OptionSpec<String> tolerableFailureSpec = parser.accepts("tolerableFailure",
             String.format("Defines if tests should not fail when given failure is detected. List of known failures: %s",
-                    Failure.Type.getIdsAsString()))
+                    FailureType.getIdsAsString()))
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec parallelSpec = parser.accepts("parallel",
@@ -157,45 +158,53 @@ final class CoordinatorCli {
         CoordinatorCli cli = new CoordinatorCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
+        SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
+
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
-                loadSimulatorProperties(options, cli.propertiesFileSpec),
+                simulatorProperties,
                 loadAgentsFile(cli, options),
                 options.valueOf(cli.workerClassPathSpec),
                 options.has(cli.monitorPerformanceSpec),
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),
                 options.valueOf(cli.syncToTestPhaseSpec),
-                loadLog4jConfig(),
+                options.valueOf(cli.workerRefreshSpec)
+        );
+
+        ClusterLayoutParameters clusterLayoutParameters = new ClusterLayoutParameters(
+                options.valueOf(cli.dedicatedMemberMachinesSpec),
+                options.valueOf(cli.clientWorkerCountSpec),
+                options.valueOf(cli.memberWorkerCountSpec)
+                );
+        if (clusterLayoutParameters.getDedicatedMemberMachineCount() < 0) {
+            throw new CommandLineExitException("--dedicatedMemberMachines can't be smaller than 0");
+        }
+
+        WorkerParameters workerParameters = new WorkerParameters(
+                simulatorProperties,
+                options.valueOf(cli.autoCreateHzInstanceSpec),
+                options.valueOf(cli.workerStartupTimeoutSpec),
                 options.valueOf(cli.workerVmOptionsSpec),
                 options.valueOf(cli.clientWorkerVmOptionsSpec),
-                options.valueOf(cli.workerStartupTimeoutSpec),
-                options.valueOf(cli.autoCreateHzInstanceSpec),
-                options.valueOf(cli.workerRefreshSpec),
-                options.valueOf(cli.dedicatedMemberMachinesSpec),
-                options.valueOf(cli.memberWorkerCountSpec),
-                options.valueOf(cli.clientWorkerCountSpec),
                 loadMemberHzConfig(options, cli),
-                loadClientHzConfig(options, cli)
+                loadClientHzConfig(options, cli),
+                loadLog4jConfig()
         );
 
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec));
-        testSuite.durationSeconds = getDurationSeconds(options, cli);
-        testSuite.waitForTestCase = options.has(cli.waitForTestCaseSpec);
-        testSuite.failFast = options.valueOf(cli.failFastSpec);
-        testSuite.tolerableFailures = fromPropertyValue(options.valueOf(cli.tolerableFailureSpec));
-        if (testSuite.durationSeconds == 0 && !testSuite.waitForTestCase) {
+        testSuite.setDurationSeconds(getDurationSeconds(options, cli));
+        testSuite.setWaitForTestCase(options.has(cli.waitForTestCaseSpec));
+        testSuite.setFailFast(options.valueOf(cli.failFastSpec));
+        testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(cli.tolerableFailureSpec)));
+        if (testSuite.getDurationSeconds() == 0 && !testSuite.isWaitForTestCase()) {
             throw new CommandLineExitException("You need to define --duration or --waitForTestCase or both!");
         }
 
-        return new Coordinator(coordinatorParameters, testSuite);
+        return new Coordinator(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite);
     }
 
     private static File loadAgentsFile(CoordinatorCli cli, OptionSet options) {
         return getFile(cli.agentsFileSpec, options, "Agents file");
-    }
-
-    private static String loadLog4jConfig() {
-        return getFileAsTextFromWorkingDirOrBaseDir(SIMULATOR_HOME, "worker-log4j.xml", "Log4j configuration for worker");
     }
 
     private static String loadMemberHzConfig(OptionSet options, CoordinatorCli cli) {
@@ -208,6 +217,10 @@ final class CoordinatorCli {
         File file = getFile(cli.clientHzConfigFileSpec, options, "Worker Client Hazelcast config file");
         LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
+    }
+
+    private static String loadLog4jConfig() {
+        return getFileAsTextFromWorkingDirOrBaseDir(SIMULATOR_HOME, "worker-log4j.xml", "Log4j configuration for worker");
     }
 
     private static File getTestSuiteFile(OptionSet options) {
@@ -238,17 +251,13 @@ final class CoordinatorCli {
         String value = options.valueOf(cli.durationSpec);
         try {
             if (value.endsWith("s")) {
-                String sub = value.substring(0, value.length() - 1);
-                duration = Integer.parseInt(sub);
+                duration = parseDurationWithoutLastChar(TimeUnit.SECONDS, value);
             } else if (value.endsWith("m")) {
-                String sub = value.substring(0, value.length() - 1);
-                duration = (int) TimeUnit.MINUTES.toSeconds(Integer.parseInt(sub));
+                duration = parseDurationWithoutLastChar(TimeUnit.MINUTES, value);
             } else if (value.endsWith("h")) {
-                String sub = value.substring(0, value.length() - 1);
-                duration = (int) TimeUnit.HOURS.toSeconds(Integer.parseInt(sub));
+                duration = parseDurationWithoutLastChar(TimeUnit.HOURS, value);
             } else if (value.endsWith("d")) {
-                String sub = value.substring(0, value.length() - 1);
-                duration = (int) TimeUnit.DAYS.toSeconds(Integer.parseInt(sub));
+                duration = parseDurationWithoutLastChar(TimeUnit.DAYS, value);
             } else {
                 duration = Integer.parseInt(value);
             }
@@ -260,5 +269,10 @@ final class CoordinatorCli {
             throw new CommandLineExitException("duration must be a positive number, but was: " + duration);
         }
         return duration;
+    }
+
+    private static int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {
+        String sub = value.substring(0, value.length() - 1);
+        return (int) timeUnit.toSeconds(Integer.parseInt(sub));
     }
 }

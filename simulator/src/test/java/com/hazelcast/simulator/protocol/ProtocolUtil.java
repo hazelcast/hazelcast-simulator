@@ -1,6 +1,10 @@
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.agent.Agent;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
+import com.hazelcast.simulator.coordinator.FailureContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
@@ -17,24 +21,28 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ProtocolUtil {
+class ProtocolUtil {
 
     static final SimulatorOperation DEFAULT_OPERATION = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
 
@@ -88,11 +96,7 @@ public class ProtocolUtil {
     static void stopSimulatorComponents() {
         ThreadSpawner spawner = new ThreadSpawner("shutdownSimulatorComponents", true);
 
-        LOGGER.info("Shutdown of Coordinator...");
-        if (coordinatorConnector != null) {
-            coordinatorConnector.shutdown();
-            coordinatorConnector = null;
-        }
+        shutdownCoordinatorConnector();
 
         LOGGER.info("Shutdown of Agents...");
         shutdownServerConnectors(agentConnectors, spawner);
@@ -103,7 +107,16 @@ public class ProtocolUtil {
         LOGGER.info("Waiting for shutdown threads...");
         spawner.awaitCompletion();
 
+        deleteQuiet(new File("./logs"));
         LOGGER.info("Shutdown complete!");
+    }
+
+    static void shutdownCoordinatorConnector() {
+        LOGGER.info("Shutdown of Coordinator...");
+        if (coordinatorConnector != null) {
+            coordinatorConnector.shutdown();
+            coordinatorConnector = null;
+        }
     }
 
     private static <C extends ServerConnector> void shutdownServerConnectors(List<C> connectors, ThreadSpawner spawner) {
@@ -119,7 +132,8 @@ public class ProtocolUtil {
     }
 
     static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
-        WorkerConnector workerConnector = WorkerConnector.createInstance(addressIndex, parentAddressIndex, port, true);
+        WorkerConnector workerConnector = WorkerConnector.createInstance(parentAddressIndex, addressIndex, port,
+                WorkerType.MEMBER, null, null, true);
 
         OperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER);
         for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
@@ -134,7 +148,9 @@ public class ProtocolUtil {
         Agent agent = mock(Agent.class);
         when(agent.getAddressIndex()).thenReturn(addressIndex);
 
-        AgentConnector agentConnector = AgentConnector.createInstance(agent, null, port);
+        ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs = new ConcurrentHashMap<SimulatorAddress, WorkerJvm>();
+
+        AgentConnector agentConnector = AgentConnector.createInstance(agent, workerJVMs, port);
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
             agentConnector.addWorker(workerIndex, workerHost, workerStartPort + workerIndex);
         }
@@ -144,7 +160,11 @@ public class ProtocolUtil {
     }
 
     static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort, int numberOfAgents) {
-        CoordinatorConnector coordinatorConnector = new CoordinatorConnector();
+        PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+        TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
+        FailureContainer failureContainer = new FailureContainer("ProtocolUtil");
+        CoordinatorConnector coordinatorConnector = new CoordinatorConnector(performanceStateContainer, testHistogramContainer,
+                failureContainer);
         for (int i = 1; i <= numberOfAgents; i++) {
             coordinatorConnector.addAgent(i, agentHost, agentStartPort + i);
         }

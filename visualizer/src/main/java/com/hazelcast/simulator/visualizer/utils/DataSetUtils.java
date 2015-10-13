@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.visualizer.utils;
 
-import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.probes.probes.impl.HdrResult;
-import com.hazelcast.simulator.visualizer.data.SimpleHistogramDataSetContainer;
+import com.hazelcast.simulator.visualizer.data.SimulatorHistogramDataSet;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramIterationValue;
 import org.jfree.data.statistics.SimpleHistogramBin;
@@ -27,20 +25,14 @@ public final class DataSetUtils {
     private DataSetUtils() {
     }
 
-    public static SimpleHistogramDataSetContainer calculateSingleProbeDataSet(Result probeData, int accuracy,
-                                                                              double scalingPercentile) {
-        if (probeData instanceof HdrResult) {
-            return calcSingleProbeDataSet((HdrResult) probeData, accuracy, scalingPercentile);
+    public static SimulatorHistogramDataSet getHistogramDataSet(Histogram histogram, int accuracy, double scalingPercentile) {
+        if (histogram == null) {
+            return null;
         }
-        return null;
-    }
 
-    private static SimpleHistogramDataSetContainer calcSingleProbeDataSet(HdrResult probeData, long accuracy,
-                                                                          double scalingPercentile) {
-        SimpleHistogramDataSetContainer histogramDataSet = new SimpleHistogramDataSetContainer("key");
+        SimulatorHistogramDataSet histogramDataSet = new SimulatorHistogramDataSet("key");
         histogramDataSet.setAdjustForBinSize(false);
 
-        Histogram histogram = probeData.getHistogram();
         for (HistogramIterationValue value : histogram.linearBucketValues(accuracy)) {
             int values = (int) value.getCountAddedInThisIterationStep();
             if (values > 0) {

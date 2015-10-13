@@ -4,7 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.AbstractEntryProcessor;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -32,7 +32,7 @@ public class MapEntryProcessorTest {
     public int minProcessorDelayMs;
     public int maxProcessorDelayMs;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
-    public IntervalProbe probe;
+    public Probe probe;
 
     private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;

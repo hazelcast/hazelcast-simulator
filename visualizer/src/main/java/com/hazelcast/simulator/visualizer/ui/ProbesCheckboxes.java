@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.visualizer.ui;
 
-import com.hazelcast.simulator.visualizer.data.BenchmarkResults;
+import com.hazelcast.simulator.probes.Result;
 import com.hazelcast.simulator.visualizer.data.Model;
 
 import javax.swing.*;
@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class ProbesCheckboxes extends JPanel implements Model.BenchmarkChangeListener {
 
@@ -63,10 +62,9 @@ public class ProbesCheckboxes extends JPanel implements Model.BenchmarkChangeLis
 
     @Override
     public void benchmarkChanged(String benchmarkName) {
-        BenchmarkResults benchmarkResults = model.getBenchmarkResults(benchmarkName);
-        if (benchmarkResults != null) {
-            Set<String> probeNames = benchmarkResults.getProbeNames();
-            for (String probeName : probeNames) {
+        Result result = model.getBenchmarkResult(benchmarkName);
+        if (result != null) {
+            for (String probeName : result.probeNames()) {
                 addProbeIfNotExist(probeName);
             }
         }

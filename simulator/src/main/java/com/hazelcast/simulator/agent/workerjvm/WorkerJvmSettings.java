@@ -16,15 +16,13 @@
 package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.simulator.common.JavaProfiler;
-import com.hazelcast.simulator.coordinator.CoordinatorParameters;
+import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.worker.WorkerType;
-
-import java.io.Serializable;
 
 /**
  * Settings for a (single) Simulator Worker JVM.
  */
-public class WorkerJvmSettings implements Serializable {
+public class WorkerJvmSettings {
 
     private final int workerIndex;
     private final String workerType;
@@ -35,32 +33,34 @@ public class WorkerJvmSettings implements Serializable {
 
     private final boolean autoCreateHzInstance;
     private final int workerStartupTimeout;
+    private final int workerPerformanceMonitorIntervalSeconds;
 
     private final String profiler;
     private final String profilerSettings;
     private final String numaCtl;
 
-    public WorkerJvmSettings(int workerIndex, WorkerType workerType, CoordinatorParameters parameters) {
+    public WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters) {
         this.workerIndex = workerIndex;
         this.workerType = workerType.name();
 
         switch (workerType) {
             case MEMBER:
-                this.jvmOptions = parameters.getMemberJvmOptions();
-                this.hazelcastConfig = parameters.getMemberHzConfig();
+                this.jvmOptions = workerParameters.getMemberJvmOptions();
+                this.hazelcastConfig = workerParameters.getMemberHzConfig();
                 break;
             default:
-                this.jvmOptions = parameters.getClientJvmOptions();
-                this.hazelcastConfig = parameters.getClientHzConfig();
+                this.jvmOptions = workerParameters.getClientJvmOptions();
+                this.hazelcastConfig = workerParameters.getClientHzConfig();
         }
-        this.log4jConfig = parameters.getLog4jConfig();
+        this.log4jConfig = workerParameters.getLog4jConfig();
 
-        this.autoCreateHzInstance = parameters.isAutoCreateHzInstance();
-        this.workerStartupTimeout = parameters.getWorkerStartupTimeout();
+        this.autoCreateHzInstance = workerParameters.isAutoCreateHzInstance();
+        this.workerStartupTimeout = workerParameters.getWorkerStartupTimeout();
+        this.workerPerformanceMonitorIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
 
-        this.profiler = parameters.getProfiler().name();
-        this.profilerSettings = parameters.getProfilerSettings();
-        this.numaCtl = parameters.getNumaCtl();
+        this.profiler = workerParameters.getProfiler().name();
+        this.profilerSettings = workerParameters.getProfilerSettings();
+        this.numaCtl = workerParameters.getNumaCtl();
     }
 
     public int getWorkerIndex() {
@@ -91,6 +91,10 @@ public class WorkerJvmSettings implements Serializable {
         return workerStartupTimeout;
     }
 
+    public int getWorkerPerformanceMonitorIntervalSeconds() {
+        return workerPerformanceMonitorIntervalSeconds;
+    }
+
     public JavaProfiler getProfiler() {
         return JavaProfiler.valueOf(profiler);
     }
@@ -113,6 +117,7 @@ public class WorkerJvmSettings implements Serializable {
                 + ", log4jConfig='" + log4jConfig + '\''
                 + ", autoCreateHzInstance=" + autoCreateHzInstance
                 + ", workerStartupTimeout=" + workerStartupTimeout
+                + ", workerPerformanceMonitorIntervalSeconds=" + workerPerformanceMonitorIntervalSeconds
                 + ", profiler='" + profiler + '\''
                 + ", profilerSettings='" + profilerSettings + '\''
                 + ", numaCtl='" + numaCtl + '\''

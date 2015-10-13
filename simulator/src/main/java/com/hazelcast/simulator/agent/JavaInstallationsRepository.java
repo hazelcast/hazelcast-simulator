@@ -27,7 +27,7 @@ import java.util.Properties;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static java.lang.String.format;
 
-public class JavaInstallationsRepository {
+class JavaInstallationsRepository {
 
     private final List<JavaInstallation> installationList = new LinkedList<JavaInstallation>();
 
@@ -49,9 +49,8 @@ public class JavaInstallationsRepository {
 
     private Properties loadProperties(File propertiesFile) {
         Properties properties = new Properties();
-
         try {
-            final FileInputStream fis = new FileInputStream(propertiesFile);
+            FileInputStream fis = new FileInputStream(propertiesFile);
             try {
                 properties.load(fis);
             } finally {

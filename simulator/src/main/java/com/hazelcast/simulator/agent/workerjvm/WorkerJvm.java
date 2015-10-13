@@ -15,53 +15,38 @@
  */
 package com.hazelcast.simulator.agent.workerjvm;
 
-import com.hazelcast.simulator.worker.WorkerType;
-import com.hazelcast.simulator.worker.commands.CommandRequest;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.io.File;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class WorkerJvm {
 
-    private final BlockingQueue<CommandRequest> commandQueue = new LinkedBlockingQueue<CommandRequest>();
-
+    private final SimulatorAddress address;
     private final String id;
-    private final int index;
-
     private final File workerHome;
-    private final WorkerType type;
 
     private volatile long lastSeen = System.currentTimeMillis();
-    private volatile boolean detectFailure = true;
-
     private volatile boolean oomeDetected;
-
+    private volatile boolean isFinished;
     private volatile Process process;
-    private volatile String memberAddress;
+    private volatile String hzAddress;
 
-    public WorkerJvm(String id, int index, File workerHome, WorkerType type) {
+    public WorkerJvm(SimulatorAddress address, String id, File workerHome) {
+        this.address = address;
         this.id = id;
-        this.index = index;
         this.workerHome = workerHome;
-        this.type = type;
+    }
+
+    public SimulatorAddress getAddress() {
+        return address;
     }
 
     public String getId() {
         return id;
     }
 
-    public int getIndex() {
-        return index;
-    }
-
     public File getWorkerHome() {
         return workerHome;
-    }
-
-    public WorkerType getType() {
-        return type;
     }
 
     public long getLastSeen() {
@@ -72,20 +57,20 @@ public class WorkerJvm {
         this.lastSeen = System.currentTimeMillis();
     }
 
-    public boolean shouldDetectFailure() {
-        return detectFailure;
-    }
-
-    public void stopDetectFailure() {
-        this.detectFailure = false;
-    }
-
     public boolean isOomeDetected() {
         return oomeDetected;
     }
 
     public void setOomeDetected() {
         this.oomeDetected = true;
+    }
+
+    public boolean isFinished() {
+        return isFinished;
+    }
+
+    public void setFinished() {
+        isFinished = true;
     }
 
     public Process getProcess() {
@@ -96,28 +81,11 @@ public class WorkerJvm {
         this.process = process;
     }
 
-    public String getMemberAddress() {
-        return memberAddress;
+    public String getHazelcastAddress() {
+        return hzAddress;
     }
 
-    public void setMemberAddress(String memberAddress) {
-        this.memberAddress = memberAddress;
-    }
-
-    public void addCommandRequest(CommandRequest request) {
-        commandQueue.add(request);
-    }
-
-    public void drainCommandRequests(List<CommandRequest> commands) {
-        commandQueue.drainTo(commands);
-    }
-
-    @Override
-    public String toString() {
-        return "WorkerJvm{"
-                + "id='" + id + '\''
-                + ", memberAddress='" + memberAddress + '\''
-                + ", workerHome=" + workerHome
-                + '}';
+    public void setHzAddress(String memberAddress) {
+        this.hzAddress = memberAddress;
     }
 }

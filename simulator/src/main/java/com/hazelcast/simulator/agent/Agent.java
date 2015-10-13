@@ -15,24 +15,23 @@
  */
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.agent.remoting.AgentMessageProcessor;
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.common.CoordinatorLogger;
-import com.hazelcast.simulator.coordinator.Coordinator;
 import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.util.EmptyStatement;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
@@ -44,11 +43,13 @@ import static java.lang.String.format;
 
 public class Agent {
 
-    private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
+    public static final File WORKERS_HOME = new File(getSimulatorHome(), "workers");
 
-    private final ConcurrentMap<String, WorkerJvm> workerJVMs = new ConcurrentHashMap<String, WorkerJvm>();
-    private final WorkerJvmManager workerJvmManager = new WorkerJvmManager(this, workerJVMs);
-    private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this);
+    private static final Logger LOGGER = Logger.getLogger(Agent.class);
+    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
+
+    private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs = new ConcurrentHashMap<SimulatorAddress, WorkerJvm>();
+    private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this, workerJVMs);
 
     private final int addressIndex;
     private final String publicAddress;
@@ -65,7 +66,7 @@ public class Agent {
     private volatile TestSuite testSuite;
 
     public Agent(int addressIndex, String publicAddress, String cloudProvider, String cloudIdentity, String cloudCredential) {
-        ensureExistingDirectory(WorkerJvmManager.WORKERS_HOME);
+        ensureExistingDirectory(WORKERS_HOME);
 
         this.addressIndex = addressIndex;
         this.publicAddress = publicAddress;
@@ -79,8 +80,7 @@ public class Agent {
 
         this.coordinatorLogger = new CoordinatorLogger(agentConnector);
 
-        workerJvmFailureMonitor.start();
-        workerJvmManager.start();
+        Runtime.getRuntime().addShutdownHook(new ShutdownThread());
 
         LOGGER.info("Simulator Agent is ready for action!");
     }
@@ -101,18 +101,8 @@ public class Agent {
         return coordinatorLogger;
     }
 
-    public void initTestSuite(TestSuite testSuite) {
+    public void setTestSuite(TestSuite testSuite) {
         this.testSuite = testSuite;
-
-        File testSuiteDir = new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
-        ensureExistingDirectory(testSuiteDir);
-
-        File libDir = new File(testSuiteDir, "lib");
-        ensureExistingDirectory(libDir);
-    }
-
-    public void echo(String msg) {
-        LOGGER.info(msg);
     }
 
     public TestSuite getTestSuite() {
@@ -120,37 +110,31 @@ public class Agent {
     }
 
     public File getTestSuiteDir() {
-        TestSuite testSuite = this.testSuite;
         if (testSuite == null) {
             return null;
         }
-        return new File(WorkerJvmManager.WORKERS_HOME, testSuite.id);
+        return new File(WORKERS_HOME, testSuite.getId());
     }
 
-    public WorkerJvmFailureMonitor getWorkerJvmFailureMonitor() {
-        return workerJvmFailureMonitor;
-    }
-
-    public WorkerJvmManager getWorkerJvmManager() {
-        return workerJvmManager;
+    public void terminateWorkerJvm(WorkerJvm jvm) {
+        try {
+            // this sends SIGTERM on *nix
+            jvm.getProcess().destroy();
+            jvm.getProcess().waitFor();
+        } catch (Exception e) {
+            LOGGER.fatal("Failed to destroy worker process: " + jvm, e);
+        }
     }
 
     void shutdown() {
+        workerJvmFailureMonitor.shutdown();
         agentConnector.shutdown();
-        try {
-            agentRemoteService.shutdown();
-        } catch (IOException e) {
-            EmptyStatement.ignore(e);
-        }
-        workerJvmManager.shutdown();
+        agentRemoteService.shutdown();
     }
 
     private AgentRemoteService getAgentRemoteService() {
         try {
-            AgentMessageProcessor messageProcessor = new AgentMessageProcessor(workerJvmManager);
-            AgentRemoteService remoteService = new AgentRemoteService(this, messageProcessor);
-            remoteService.start();
-            return remoteService;
+            return new AgentRemoteService();
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to start REST server", e);
         }
@@ -200,5 +184,35 @@ public class Agent {
 
     private static void logSystemProperty(String name) {
         LOGGER.info(format("%s=%s", name, System.getProperty(name)));
+    }
+
+    private final class ShutdownThread extends Thread {
+
+        public ShutdownThread() {
+            super("AgentShutdownThread");
+            setDaemon(true);
+
+            LOGGER.info("Shutting down agent!");
+        }
+
+        public void run() {
+            if (!SHUTDOWN_STARTED.compareAndSet(false, true)) {
+                return;
+            }
+
+            LOGGER.info("Terminating workers");
+            ThreadSpawner spawner = new ThreadSpawner("workerShutdown");
+            for (final WorkerJvm jvm : new LinkedList<WorkerJvm>(workerJVMs.values())) {
+                spawner.spawn(new Runnable() {
+                    @Override
+                    public void run() {
+                        terminateWorkerJvm(jvm);
+                        workerJVMs.remove(jvm.getAddress());
+                    }
+                });
+            }
+            spawner.awaitCompletion();
+            LOGGER.info("Finished terminating workers");
+        }
     }
 }

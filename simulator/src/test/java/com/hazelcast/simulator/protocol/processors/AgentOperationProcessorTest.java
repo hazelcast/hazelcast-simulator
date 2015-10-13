@@ -56,7 +56,7 @@ public class AgentOperationProcessorTest {
     }
 
     @Test
-    public void process_createWorker() throws Exception {
+    public void testCreateWorkerOperation() throws Exception {
         WorkerJvmLauncher workerJvmLauncher = mock(WorkerJvmLauncher.class);
         whenNew(WorkerJvmLauncher.class).withAnyArguments().thenReturn(workerJvmLauncher);
 

@@ -153,8 +153,8 @@ public final class FileUtils {
         }
     }
 
-    public static void appendText(String text, String file) {
-        appendText(text, new File(file));
+    public static void appendText(String text, String fileName) {
+        appendText(text, new File(fileName));
     }
 
     public static void appendText(String text, File file) {
@@ -407,17 +407,5 @@ public final class FileUtils {
             throw new FileUtilsException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
                     targetFile.getAbsolutePath()), e);
         }
-    }
-
-    public static String getFileName(File file) {
-        return removeExtension(file.getName());
-    }
-
-    public static String removeExtension(String name) {
-        int dotPos = name.lastIndexOf('.');
-        if (dotPos != -1) {
-            name = name.substring(0, dotPos);
-        }
-        return name;
     }
 }

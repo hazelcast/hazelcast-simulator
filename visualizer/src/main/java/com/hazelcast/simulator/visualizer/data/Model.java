@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.visualizer.data;
 
+import com.hazelcast.simulator.probes.Result;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EventListener;
@@ -25,11 +27,11 @@ import java.util.Set;
 
 public class Model {
 
-    private final Map<String, BenchmarkResults> benchmarks = new HashMap<String, BenchmarkResults>();
+    private final Map<String, Result> benchmarks = new HashMap<String, Result>();
     private final List<BenchmarkChangeListener> listeners = new ArrayList<BenchmarkChangeListener>();
 
-    public void addBenchmarkResults(BenchmarkResults benchmarkResults) {
-        String name = benchmarkResults.getName();
+    public void addResults(Result benchmarkResults) {
+        String name = benchmarkResults.getTestName();
         benchmarks.put(name, benchmarkResults);
         changed(name);
     }
@@ -38,7 +40,7 @@ public class Model {
         return Collections.unmodifiableSet(benchmarks.keySet());
     }
 
-    public BenchmarkResults getBenchmarkResults(String name) {
+    public Result getBenchmarkResult(String name) {
         return benchmarks.get(name);
     }
 

@@ -16,12 +16,14 @@
 package com.hazelcast.simulator.tests;
 
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static org.junit.Assert.fail;
 
 public class FailingTest {
 
@@ -39,7 +41,7 @@ public class FailingTest {
 
     @Verify
     void verify() {
-        throw new RuntimeException("This test should fail");
+        fail("Expected exception in verify method");
     }
 
     @Run
@@ -47,7 +49,7 @@ public class FailingTest {
         if (!context.isStopped()) {
             sleepSeconds(1);
 
-            throw new RuntimeException("This test should fail");
+            throw new TestException("This test should fail");
         }
     }
 }

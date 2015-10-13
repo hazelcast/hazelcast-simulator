@@ -4,10 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICountDownLatch;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrProbe;
-import com.hazelcast.simulator.probes.probes.impl.HdrResult;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -16,9 +13,9 @@ import com.hazelcast.util.EmptyStatement;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.tests.external.ExternalClientHelper.getLatencyResults;
-import static com.hazelcast.simulator.tests.external.ExternalClientHelper.getThroughputResults;
-import static com.hazelcast.simulator.tests.external.ExternalClientHelper.setCountDownLatch;
+import static com.hazelcast.simulator.tests.external.ExternalClientUtils.getLatencyResults;
+import static com.hazelcast.simulator.tests.external.ExternalClientUtils.getThroughputResults;
+import static com.hazelcast.simulator.tests.external.ExternalClientUtils.setCountDownLatch;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static java.lang.String.format;
 
@@ -32,8 +29,7 @@ public class ExternalClientTest {
     public int waitIntervalSeconds = 60;
     public int expectedResultSize = 0;
 
-    SimpleProbe externalClientThroughput;
-    IntervalProbe<HdrResult, HdrProbe> externalClientLatency;
+    Probe externalClientProbe;
 
     private HazelcastInstance hazelcastInstance;
     private boolean isExternalResultsCollectorInstance;
@@ -85,18 +81,14 @@ public class ExternalClientTest {
 
         // just a single instance will collect the results from all external clients
         if (!isExternalResultsCollectorInstance) {
-            // disable probes
-            externalClientThroughput.disable();
-            externalClientLatency.disable();
-
             LOGGER.info("Stopping non result collecting ExternalClientTest");
             return;
         }
 
         // get probe results
         LOGGER.info("Collecting results from external clients...");
-        getThroughputResults(hazelcastInstance, externalClientThroughput, expectedResultSize);
-        getLatencyResults(hazelcastInstance, externalClientLatency, expectedResultSize);
+        getThroughputResults(hazelcastInstance, expectedResultSize);
+        getLatencyResults(hazelcastInstance, externalClientProbe, expectedResultSize);
         LOGGER.info("Result collecting ExternalClientTest done!");
     }
 }

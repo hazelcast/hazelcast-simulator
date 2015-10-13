@@ -1,5 +1,8 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.coordinator.FailureContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.CoordinatorClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -28,10 +31,17 @@ import static com.hazelcast.simulator.protocol.operation.OperationType.getOperat
  */
 public class CoordinatorConnector {
 
-    private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
-    private final CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(exceptionLogger);
-    private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
     private final AtomicLong messageIds = new AtomicLong();
+    private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
+    private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
+
+    private final CoordinatorOperationProcessor processor;
+
+    public CoordinatorConnector(PerformanceStateContainer performanceStateContainer,
+                                TestHistogramContainer testHistogramContainer, FailureContainer failureContainer) {
+        this.processor = new CoordinatorOperationProcessor(exceptionLogger, performanceStateContainer, testHistogramContainer,
+                failureContainer);
+    }
 
     /**
      * Disconnects from all Simulator Agent instances.
@@ -47,6 +57,8 @@ public class CoordinatorConnector {
             });
         }
         spawner.awaitCompletion();
+
+        processor.shutdown();
     }
 
     /**

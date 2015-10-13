@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.utils;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -148,24 +147,6 @@ public class ThreadSpawner {
         for (Thread thread : threads) {
             thread.interrupt();
         }
-    }
-
-    /**
-     * Gets the stacktraces of all running threads.
-     *
-     * @return a {@link List} of stacktraces
-     */
-    public List<String> getStackTraces() {
-        StringBuilder sb = new StringBuilder();
-        List<String> stackTraces = new ArrayList<String>(threads.size());
-        for (Thread thread : threads) {
-            sb.setLength(0);
-            for (StackTraceElement stackTraceElement : thread.getStackTrace()) {
-                sb.append(stackTraceElement);
-            }
-            stackTraces.add(sb.toString());
-        }
-        return stackTraces;
     }
 
     private String getName(String prefix) {

@@ -29,7 +29,7 @@ public class AggregatedDataSet extends AbstractIntervalXYDataset implements Inte
     private long autoScaleValue;
     private int noOfSeries;
 
-    public void addNewSeries(SimpleHistogramDataSetContainer dataSet, String key) {
+    public void addNewSeries(SimulatorHistogramDataSet dataSet, String key) {
         autoScaleValue = Math.max(autoScaleValue, dataSet.getAutoScaleValue());
         addNewSeries((IntervalXYDataset) dataSet, key);
     }

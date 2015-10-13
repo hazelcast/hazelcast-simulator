@@ -1,8 +1,6 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestCase;
 import org.apache.log4j.Logger;
 
@@ -24,18 +22,6 @@ public final class PropertyBindingSupport {
     private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);
 
     private PropertyBindingSupport() {
-    }
-
-    public static ProbesConfiguration parseProbeConfiguration(Object testInstance, TestCase testCase) {
-        ProbesConfiguration configuration = new ProbesConfiguration();
-        for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
-            String property = entry.getKey();
-            Field field = findPropertyField(testInstance.getClass(), property);
-            if (field != null && isProbeField(field)) {
-                configuration.addConfig(property, entry.getValue());
-            }
-        }
-        return configuration;
     }
 
     /**
@@ -164,8 +150,7 @@ public final class PropertyBindingSupport {
     }
 
     private static boolean isProbeField(Field field) {
-        Class<?> fieldClass = field.getType();
-        return fieldClass.equals(IntervalProbe.class) || fieldClass.equals(SimpleProbe.class);
+        return Probe.class.equals(field.getType());
     }
 
     private static boolean setValue(Object object, String value, Field field) throws IllegalAccessException {

@@ -1,38 +1,161 @@
 package com.hazelcast.simulator.worker.performance;
 
-import com.hazelcast.simulator.worker.commands.PerformanceState;
+import com.hazelcast.simulator.test.TestException;
+import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramLogReader;
+import org.HdrHistogram.HistogramLogWriter;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import javax.xml.bind.DatatypeConverter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.Deflater;
 
-public class PerformanceTracker {
+import static com.hazelcast.simulator.probes.impl.ProbeImpl.LATENCY_PRECISION;
+import static com.hazelcast.simulator.probes.impl.ProbeImpl.MAXIMUM_LATENCY;
+import static com.hazelcast.simulator.worker.performance.PerformanceUtils.ONE_SECOND_IN_MILLIS;
+import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputHeader;
+import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputStats;
 
-    private static final long ONE_SECOND_IN_MILLIS = SECONDS.toMillis(1);
+final class PerformanceTracker {
 
-    private long startedTimestamp;
+    private final File throughputFile;
+    private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
+    private final long testStartedTimestamp;
+
     private long lastTimestamp;
-    private long lastOperationCount;
 
-    public void start() {
-        long now = System.currentTimeMillis();
-        startedTimestamp = now;
-        lastTimestamp = now;
-    }
+    private Map<String, Histogram> intervalHistogramMap;
 
-    public PerformanceState update(long currentOperationalCount) {
-        if (currentOperationalCount == -1) {
-            return new PerformanceState();
+    private long intervalPercentileLatency;
+    private long intervalMaxLatency;
+
+    private long intervalOperationCount;
+    private long totalOperationCount;
+
+    private double intervalThroughput;
+    private double totalThroughput;
+
+    PerformanceTracker(String testId, Collection<String> probeNames, long testStartedTimestamp) {
+        throughputFile = new File("throughput-" + testId + ".txt");
+        writeThroughputHeader(throughputFile, false);
+
+        for (String probeName : probeNames) {
+            histogramLogWriterMap.put(probeName, createHistogramLogWriter(testId, probeName, testStartedTimestamp));
         }
 
-        long now = System.currentTimeMillis();
-        long opDelta = currentOperationalCount - lastOperationCount;
-        long intervalTimeDelta = now - lastTimestamp;
-        long totalTimeDelta = now - startedTimestamp;
-        double intervalThroughput = (opDelta * ONE_SECOND_IN_MILLIS) / (double) intervalTimeDelta;
-        double totalThroughput = (currentOperationalCount * ONE_SECOND_IN_MILLIS / (double) totalTimeDelta);
+        this.testStartedTimestamp = testStartedTimestamp;
+        this.lastTimestamp = testStartedTimestamp;
+    }
 
-        lastTimestamp = now;
-        lastOperationCount = currentOperationalCount;
+    long getIntervalOperationCount() {
+        return intervalOperationCount;
+    }
 
-        return new PerformanceState(currentOperationalCount, intervalThroughput, totalThroughput);
+    public long getTotalOperationCount() {
+        return totalOperationCount;
+    }
+
+    double getIntervalThroughput() {
+        return intervalThroughput;
+    }
+
+    void update(Map<String, Histogram> intervalHistograms, long intervalPercentileLatency, long intervalMaxLatency,
+                long intervalOperationCount, long currentTimestamp) {
+        this.intervalHistogramMap = intervalHistograms;
+
+        this.intervalPercentileLatency = intervalPercentileLatency;
+        this.intervalMaxLatency = intervalMaxLatency;
+
+        this.intervalOperationCount = intervalOperationCount;
+        this.totalOperationCount += intervalOperationCount;
+
+        long intervalTimeDelta = currentTimestamp - lastTimestamp;
+        long totalTimeDelta = currentTimestamp - testStartedTimestamp;
+
+        this.intervalThroughput = (intervalOperationCount * ONE_SECOND_IN_MILLIS) / (double) intervalTimeDelta;
+        this.totalThroughput = (totalOperationCount * ONE_SECOND_IN_MILLIS / (double) totalTimeDelta);
+
+        this.lastTimestamp = currentTimestamp;
+    }
+
+    void writeStatsToFile(String timestamp) {
+        writeThroughputStats(throughputFile, timestamp, totalOperationCount, intervalOperationCount, intervalThroughput, 0, 0);
+
+        for (Map.Entry<String, Histogram> histogramEntry : intervalHistogramMap.entrySet()) {
+            String probeName = histogramEntry.getKey();
+            HistogramLogWriter histogramLogWriter = histogramLogWriterMap.get(probeName);
+
+            Histogram intervalHistogram = histogramEntry.getValue();
+            histogramLogWriter.outputIntervalHistogram(intervalHistogram);
+        }
+    }
+
+    PerformanceState createPerformanceState() {
+        return new PerformanceState(totalOperationCount, intervalThroughput, totalThroughput,
+                intervalPercentileLatency, intervalMaxLatency);
+    }
+
+    Map<String, String> aggregateIntervalHistograms(String testId) {
+        Map<String, String> probeResults = new HashMap<String, String>();
+
+        HistogramLogWriter histogramLogWriter = createHistogramLogWriter(testId, "aggregated", 0);
+        for (Map.Entry<String, Histogram> histogramEntry : intervalHistogramMap.entrySet()) {
+            String probeName = histogramEntry.getKey();
+            HistogramLogReader histogramLogReader = createHistogramLogReader(testId, probeName);
+            Histogram combined = new Histogram(MAXIMUM_LATENCY, LATENCY_PRECISION);
+
+            Histogram histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
+            while (histogram != null) {
+                combined.add(histogram);
+                histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
+            }
+
+            histogramLogWriter.outputComment("probeName=" + probeName);
+            histogramLogWriter.outputIntervalHistogram(combined);
+
+            String encodedHistogram = getEncodedHistogram(combined);
+            probeResults.put(probeName, encodedHistogram);
+        }
+
+        return probeResults;
+    }
+
+    private static HistogramLogWriter createHistogramLogWriter(String testId, String probeName, long baseTime) {
+        try {
+            File latencyFile = getLatencyFile(testId, probeName);
+            HistogramLogWriter histogramLogWriter = new HistogramLogWriter(latencyFile);
+            histogramLogWriter.setBaseTime(baseTime);
+            histogramLogWriter.outputComment("[Latency histograms for " + testId + "." + probeName + "]");
+            histogramLogWriter.outputLogFormatVersion();
+            histogramLogWriter.outputLegend();
+            return histogramLogWriter;
+        } catch (IOException e) {
+            throw new TestException("Could not initialize HistogramLogWriter for test " + testId, e);
+        }
+    }
+
+    private static HistogramLogReader createHistogramLogReader(String testName, String probeName) {
+        try {
+            File latencyFile = getLatencyFile(testName, probeName);
+            return new HistogramLogReader(latencyFile);
+        } catch (IOException e) {
+            throw new TestException("Could not initialize HistogramLogReader for test " + testName, e);
+        }
+    }
+
+    private static String getEncodedHistogram(Histogram combined) {
+        ByteBuffer targetBuffer = ByteBuffer.allocate(combined.getNeededByteBufferCapacity());
+        int compressedLength = combined.encodeIntoCompressedByteBuffer(targetBuffer, Deflater.BEST_COMPRESSION);
+        byte[] compressedArray = Arrays.copyOf(targetBuffer.array(), compressedLength);
+        return DatatypeConverter.printBase64Binary(compressedArray);
+    }
+
+    private static File getLatencyFile(String testId, String probeName) {
+        return new File("latency-" + testId + "-" + probeName + ".txt");
     }
 }

@@ -19,7 +19,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.probes.probes.ProbesConfiguration;
 import com.hazelcast.simulator.worker.TestContainer;
 import org.apache.log4j.Logger;
 
@@ -72,7 +71,7 @@ public class TestRunner<E> {
             bindProperties(test, testCase, null);
         }
 
-        this.testInvoker = new TestContainer<TestContext>(test, testContext, new ProbesConfiguration(), testCase);
+        this.testInvoker = new TestContainer(test, testContext, testCase);
         this.test = test;
     }
 
@@ -183,10 +182,12 @@ public class TestRunner<E> {
         LOGGER.info("Finished " + testPhase.desc());
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     private final class StopThread extends Thread {
 
-        private volatile int defaultSleepInterval = 5;
+        private static final int DEFAULT_SLEEP_INTERVAL = 5;
+        private static final float ONE_HUNDRED = 100f;
+
+        private volatile int defaultSleepInterval = DEFAULT_SLEEP_INTERVAL;
 
         @Override
         public void run() {
@@ -198,12 +199,12 @@ public class TestRunner<E> {
                 sleepSeconds(sleepInterval);
 
                 int elapsed = i * sleepInterval;
-                float percentage = elapsed * 100f / durationSeconds;
+                float percentage = elapsed * ONE_HUNDRED / durationSeconds;
                 LOGGER.info(format("Running %d of %d seconds %-4.2f percent complete", elapsed, durationSeconds, percentage));
             }
 
             sleepSeconds(durationSeconds % sleepInterval);
-            testContext.stopped = true;
+            testContext.stop();
             LOGGER.info("Notified test to stop");
         }
     }

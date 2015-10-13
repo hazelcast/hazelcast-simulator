@@ -2,9 +2,9 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Performance;
+import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
@@ -23,17 +23,16 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
-    private static final int DEFAULT_LOG_FREQUENCY = 10000;
-
     final Random random = new Random();
     final OperationSelector<O> selector;
 
     // these fields will be injected by the TestContainer
     TestContext testContext;
-    IntervalProbe intervalProbe;
+    @SimulatorProbe(useForThroughput = true)
+    Probe workerProbe;
 
     // these fields will be injected by test.properties of the test
-    long logFrequency = DEFAULT_LOG_FREQUENCY;
+    long logFrequency;
 
     // local variables
     long iteration;
@@ -55,19 +54,14 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         beforeRun();
 
         while (!testContext.isStopped() && !isWorkerStopped) {
-            intervalProbe.started();
+            workerProbe.started();
             timeStep(selector.select());
-            intervalProbe.done();
+            workerProbe.done();
 
             increaseIteration();
         }
 
         afterRun();
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return intervalProbe.getInvocationCount();
     }
 
     /**
@@ -132,7 +126,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
      * Calls {@link Random#nextInt(int)} on an internal Random instance.
      *
      * @param upperBond the bound on the random number to be returned.  Must be
-     *        positive.
+     *                  positive.
      * @return the next pseudo random, uniformly distributed {@code int} value between {@code 0} (inclusive) and {@code n}
      * (exclusive) from this random number generator's sequence
      */

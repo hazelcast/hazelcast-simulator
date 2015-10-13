@@ -11,13 +11,13 @@ import com.hazelcast.core.Partition;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Performance;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
@@ -68,8 +68,6 @@ public class SyntheticTest {
     public byte asyncBackupCount = 1;
     public long backupDelayNanos = 1000 * 1000;
     public boolean randomizeBackupDelay = true;
-    public int logFrequency = 1000000;
-    public int performanceUpdateFrequency = 100;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int keyCount = 1000;
     public int syncFrequency = 1;
@@ -99,7 +97,8 @@ public class SyntheticTest {
 
         // these fields will be injected by the TestContainer
         public TestContext testContext;
-        public IntervalProbe intervalProbe;
+        @SimulatorProbe(useForThroughput = true)
+        public Probe workerProbe;
 
         private final List<Integer> partitionSequence = new ArrayList<Integer>();
         private final List<ICompletableFuture> futureList = new ArrayList<ICompletableFuture>(syncFrequency);
@@ -146,11 +145,6 @@ public class SyntheticTest {
             }
         }
 
-        @Performance
-        public long getOperationCount() {
-            return intervalProbe.getInvocationCount();
-        }
-
         @Override
         public void run() {
             try {
@@ -167,7 +161,7 @@ public class SyntheticTest {
         private void timeStep() throws Exception {
             ICompletableFuture<Object> future = invokeOnNextPartition();
             if (syncInvocation) {
-                intervalProbe.started();
+                workerProbe.started();
                 if (syncFrequency == 1) {
                     future.get();
                 } else {
@@ -179,15 +173,12 @@ public class SyntheticTest {
                         futureList.clear();
                     }
                 }
-                intervalProbe.done();
+                workerProbe.done();
             } else {
                 future.andThen(this);
             }
 
             iteration++;
-            if (iteration % logFrequency == 0) {
-                LOGGER.info(Thread.currentThread().getName() + " at iteration: " + iteration);
-            }
         }
 
         private ICompletableFuture<Object> invokeOnNextPartition() throws Exception {
@@ -224,7 +215,7 @@ public class SyntheticTest {
 
         @Override
         public void onResponse(Object response) {
-            intervalProbe.done();
+            workerProbe.done();
         }
 
         @Override

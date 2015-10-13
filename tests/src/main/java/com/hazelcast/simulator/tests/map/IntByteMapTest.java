@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -52,8 +52,8 @@ public class IntByteMapTest {
     public double putProb = 0.3;
 
     // probes
-    public IntervalProbe putLatency;
-    public IntervalProbe getLatency;
+    public Probe putProbe;
+    public Probe getProbe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
@@ -116,14 +116,14 @@ public class IntByteMapTest {
             switch (operation) {
                 case PUT:
                     byte[] value = values[getRandom().nextInt(values.length)];
-                    putLatency.started();
+                    putProbe.started();
                     map.put(key, value);
-                    putLatency.done();
+                    putProbe.done();
                     break;
                 case GET:
-                    getLatency.started();
+                    getProbe.started();
                     map.get(key);
-                    getLatency.done();
+                    getProbe.done();
                     break;
                 default:
                     throw new UnsupportedOperationException();

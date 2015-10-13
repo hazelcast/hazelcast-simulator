@@ -1,22 +1,39 @@
+/*
+ * Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.JavaProfiler;
-import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.WorkerType;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getMaxTestCaseIdLength;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -26,14 +43,19 @@ import static org.mockito.Mockito.when;
 
 public class CoordinatorUtilsTest {
 
-    private final CoordinatorParameters parameters = mock(CoordinatorParameters.class);
-    private final ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
-
-    private int dedicatedMemberMachineCount = 0;
-    private int memberWorkerCount = 0;
-    private int clientWorkerCount = 0;
+    private final WorkerParameters workerParameters = mock(WorkerParameters.class);
+    private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private List<AgentMemberLayout> agentMemberLayouts;
+
+    @Before
+    public void setUp() {
+        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
+        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
+        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
+
+        when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
+    }
 
     @Test
     public void testConstructor() throws Exception {
@@ -44,19 +66,13 @@ public class CoordinatorUtilsTest {
     public void testGetPort() {
         String memberConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/hazelcast.xml");
 
-        CoordinatorParameters parameters = mock(CoordinatorParameters.class);
-        when(parameters.getMemberHzConfig()).thenReturn(memberConfig);
-
-        int port = getPort(parameters);
+        int port = getPort(memberConfig);
         assertEquals(5701, port);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGetPort_withException() {
-        CoordinatorParameters parameters = mock(CoordinatorParameters.class);
-        when(parameters.getMemberHzConfig()).thenReturn("");
-
-        getPort(parameters);
+        getPort("");
     }
 
     @Test
@@ -78,24 +94,8 @@ public class CoordinatorUtilsTest {
     }
 
     @Test
-    public void testMaxCaseIdLength() {
-        List<TestCase> testCases = new ArrayList<TestCase>();
-        testCases.add(new TestCase("abc"));
-        testCases.add(new TestCase("88888888"));
-        testCases.add(new TestCase(null));
-        testCases.add(new TestCase("abcDEF"));
-        testCases.add(new TestCase(""));
-        testCases.add(new TestCase("four"));
-
-        assertEquals(8, getMaxTestCaseIdLength(testCases));
-    }
-
-    @Test
     public void testInitMemberLayout_dedicatedMemberCountEqualsAgentCount() {
-        dedicatedMemberMachineCount = 3;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 3, 0, 0);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MEMBER, 0, 0);
@@ -103,19 +103,12 @@ public class CoordinatorUtilsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInitMemberLayout_dedicatedMemberCountHigherThanAgentCount() {
-        dedicatedMemberMachineCount = 5;
-        initMocks();
-
-        initMemberLayout(componentRegistry, parameters);
+        initMemberLayout(componentRegistry, workerParameters, 5, 0, 0);
     }
 
     @Test
     public void testInitMemberLayout_agentCountSufficientForDedicatedMembersAndClientWorkers() {
-        dedicatedMemberMachineCount = 2;
-        clientWorkerCount = 1;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 2, 0, 1);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MEMBER, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.CLIENT, 0, 1);
@@ -123,19 +116,12 @@ public class CoordinatorUtilsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInitMemberLayout_agentCountNotSufficientForDedicatedMembersAndClientWorkers() {
-        dedicatedMemberMachineCount = 3;
-        clientWorkerCount = 1;
-        initMocks();
-
-        initMemberLayout(componentRegistry, parameters);
+        initMemberLayout(componentRegistry, workerParameters, 3, 0, 1);
     }
 
     @Test
     public void testInitMemberLayout_singleMemberWorker() {
-        memberWorkerCount = 1;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 1, 0);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 1, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 0, 0);
@@ -143,10 +129,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testInitMemberLayout_memberWorkerOverflow() {
-        memberWorkerCount = 4;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 4, 0);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 2, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 1, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 1, 0);
@@ -154,10 +137,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testInitMemberLayout_singleClientWorker() {
-        clientWorkerCount = 1;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 0, 1);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 0, 1);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 0, 0);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 0, 0);
@@ -165,10 +145,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testClientWorkerOverflow() {
-        clientWorkerCount = 5;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 0, 5);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 0, 2);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 0, 2);
         assertAgentMemberLayout(2, AgentMemberMode.MIXED, 0, 1);
@@ -176,12 +153,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testInitMemberLayout_dedicatedAndMixedWorkers1() {
-        dedicatedMemberMachineCount = 1;
-        memberWorkerCount = 2;
-        clientWorkerCount = 3;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 1, 2, 3);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 2, 0);
         assertAgentMemberLayout(1, AgentMemberMode.CLIENT, 0, 2);
         assertAgentMemberLayout(2, AgentMemberMode.CLIENT, 0, 1);
@@ -189,35 +161,30 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testInitMemberLayout_dedicatedAndMixedWorkers2() {
-        dedicatedMemberMachineCount = 2;
-        memberWorkerCount = 2;
-        clientWorkerCount = 3;
-        initMocks();
-
-        agentMemberLayouts = initMemberLayout(componentRegistry, parameters);
+        agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 2, 2, 3);
         assertAgentMemberLayout(0, AgentMemberMode.MEMBER, 1, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MEMBER, 1, 0);
         assertAgentMemberLayout(2, AgentMemberMode.CLIENT, 0, 3);
     }
 
-    private void initMocks() {
-        // ComponentRegistry
-        List<AgentData> agents = new ArrayList<AgentData>(3);
-        agents.add(new AgentData(1, "192.168.0.1", "192.168.0.1"));
-        agents.add(new AgentData(2, "192.168.0.2", "192.168.0.2"));
-        agents.add(new AgentData(3, "192.168.0.3", "192.168.0.3"));
+    @Test(timeout = 10000)
+    public void testWaitForWorkerShutdown() {
+        final ConcurrentHashMap<String, Boolean> finishedWorkers = new ConcurrentHashMap<String, Boolean>();
+        finishedWorkers.put("A", true);
 
-        when(componentRegistry.getAgents()).thenReturn(agents);
-        when(componentRegistry.agentCount()).thenReturn(3);
+        ThreadSpawner spawner = new ThreadSpawner("testWaitForFinishedWorker", true);
+        spawner.spawn(new Runnable() {
+            @Override
+            public void run() {
+                sleepSeconds(1);
+                finishedWorkers.put("B", true);
+                sleepSeconds(1);
+                finishedWorkers.put("C", true);
+            }
+        });
 
-        // CoordinatorParameters
-        SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
-
-        when(parameters.getSimulatorProperties()).thenReturn(simulatorProperties);
-        when(parameters.getProfiler()).thenReturn(JavaProfiler.NONE);
-        when(parameters.getDedicatedMemberMachineCount()).thenReturn(dedicatedMemberMachineCount);
-        when(parameters.getMemberWorkerCount()).thenReturn(memberWorkerCount);
-        when(parameters.getClientWorkerCount()).thenReturn(clientWorkerCount);
+        waitForWorkerShutdown(3, finishedWorkers.keySet());
+        spawner.awaitCompletion();
     }
 
     private void assertAgentMemberLayout(int index, AgentMemberMode mode, int memberCount, int clientCount) {

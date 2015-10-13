@@ -44,7 +44,7 @@ public class CountdownWatchTest {
 
         Thread.sleep(delay / 2 + 1);
         assertTrue(watch.isDone());
-        assertThat(watch.getRemainingMs(), is(0l));
+        assertThat(watch.getRemainingMs(), is(0L));
         assertTrue(middle == 0 || middle > watch.getRemainingMs());
     }
 
@@ -52,6 +52,6 @@ public class CountdownWatchTest {
     public void nonNegativeRemainingWhenDone() throws Exception {
         CountdownWatch watch = CountdownWatch.started(1);
         Thread.sleep(10);
-        assertThat(watch.getRemainingMs(), is(0l));
+        assertThat(watch.getRemainingMs(), is(0L));
     }
 }

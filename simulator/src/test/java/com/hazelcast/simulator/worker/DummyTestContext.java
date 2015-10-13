@@ -3,9 +3,9 @@ package com.hazelcast.simulator.worker;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.test.TestContext;
 
-class DummyTestContext implements TestContext {
+public class DummyTestContext implements TestContext {
 
-    volatile boolean isStopped;
+    private volatile boolean isStopped;
 
     @Override
     public HazelcastInstance getTargetInstance() {
@@ -14,7 +14,7 @@ class DummyTestContext implements TestContext {
 
     @Override
     public String getTestId() {
-        return "";
+        return "DummyTestContext";
     }
 
     @Override

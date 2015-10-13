@@ -47,9 +47,6 @@ public class AtomicReferenceTest {
     // properties
     public String basename = AtomicReferenceTest.class.getSimpleName();
     public int countersLength = 1000;
-    public int threadCount = 10;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 1000;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int valueCount = 1000;
     public int valueLength = 512;

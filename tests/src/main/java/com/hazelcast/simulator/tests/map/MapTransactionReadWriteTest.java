@@ -5,25 +5,23 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.selector.OperationSelector;
+import com.hazelcast.simulator.worker.loadsupport.Streamer;
+import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
 
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
@@ -40,13 +38,10 @@ public class MapTransactionReadWriteTest {
 
     // properties
     public String basename = MapTransactionReadWriteTest.class.getSimpleName();
-    public int threadCount = 10;
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 10000;
     public int valueCount = 10000;
-    public int logFrequency = 10000;
-    public int performanceUpdateFrequency = 1;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public int minNumberOfMembers = 0;
 
@@ -54,21 +49,17 @@ public class MapTransactionReadWriteTest {
     public boolean useSet = false;
 
     // probes
-    public IntervalProbe putLatency;
-    public IntervalProbe getLatency;
-    public SimpleProbe throughput;
+    public Probe putProbe;
+    public Probe getProbe;
 
-    private final AtomicLong operations = new AtomicLong();
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
-    private TestContext testContext;
     private HazelcastInstance targetInstance;
     private IMap<Integer, Integer> map;
     private int[] keys;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
-        this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename + "-" + testContext.getTestId());
 
@@ -87,92 +78,71 @@ public class MapTransactionReadWriteTest {
         keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, targetInstance);
 
         Random random = new Random();
+        Streamer<Integer, Integer> streamer = StreamerFactory.getInstance(map);
         for (int key : keys) {
             int value = random.nextInt(Integer.MAX_VALUE);
-            map.put(key, value);
+            streamer.pushEntry(key, value);
         }
+        streamer.await();
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
-            spawner.spawn(new Worker());
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractWorker<Operation> {
+
+        public Worker() {
+            super(builder);
         }
-        spawner.awaitCompletion();
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
-    }
-
-    private class Worker implements Runnable {
-        private final OperationSelector<Operation> selector = builder.build();
-        private final Random random = new Random();
 
         @Override
-        public void run() {
-            long iteration = 0;
-            while (!testContext.isStopped()) {
+        public void timeStep(Operation operation) {
+            final int key = randomKey();
+            final int value = randomValue();
 
-                final int key = randomKey();
-                final int value = randomValue();
-
-                switch (selector.select()) {
-                    case PUT:
-                        putLatency.started();
-                        targetInstance.executeTransaction(new TransactionalTask<Object>() {
-                            @Override
-                            public Object execute(TransactionalTaskContext transactionalTaskContext) throws TransactionException {
-                                TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
-                                if (useSet) {
-                                    txMap.set(key, value);
-                                } else {
-                                    txMap.put(key, value);
-                                }
-                                return null;
-                            }
-                        });
-                        putLatency.done();
-                        break;
-                    case GET:
-                        getLatency.started();
-                        targetInstance.executeTransaction(new TransactionalTask<Object>() {
-                            @Override
-                            public Object execute(TransactionalTaskContext transactionalTaskContext) throws TransactionException {
-                                TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
+            switch (operation) {
+                case PUT:
+                    putProbe.started();
+                    targetInstance.executeTransaction(new TransactionalTask<Object>() {
+                        @Override
+                        public Object execute(TransactionalTaskContext transactionalTaskContext) throws TransactionException {
+                            TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
+                            if (useSet) {
+                                txMap.set(key, value);
+                            } else {
                                 txMap.put(key, value);
-                                return null;
                             }
-                        }) ;
-                        getLatency.done();
-                        break;
-                    default:
-                        throw new UnsupportedOperationException();
-                }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
-
-                throughput.done();
+                            return null;
+                        }
+                    });
+                    putProbe.done();
+                    break;
+                case GET:
+                    getProbe.started();
+                    targetInstance.executeTransaction(new TransactionalTask<Object>() {
+                        @Override
+                        public Object execute(TransactionalTaskContext transactionalTaskContext) throws TransactionException {
+                            TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
+                            txMap.put(key, value);
+                            return null;
+                        }
+                    });
+                    getProbe.done();
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
             }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
         }
 
         private int randomKey() {
             int length = keys.length;
-            return keys[random.nextInt(length)];
+            return keys[randomInt(length)];
         }
 
         private int randomValue() {
-            return random.nextInt(Integer.MAX_VALUE);
+            return randomInt(Integer.MAX_VALUE);
         }
     }
 

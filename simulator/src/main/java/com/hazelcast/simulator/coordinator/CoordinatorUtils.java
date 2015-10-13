@@ -1,10 +1,25 @@
+/*
+ * Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
@@ -12,31 +27,23 @@ import org.apache.log4j.Logger;
 import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 
-public final class CoordinatorUtils {
+final class CoordinatorUtils {
+
+    private static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorUtils.class);
 
     private CoordinatorUtils() {
-    }
-
-    static int getPort(CoordinatorParameters parameters) {
-        ByteArrayInputStream bis = null;
-        try {
-            byte[] configString = parameters.getMemberHzConfig().getBytes("UTF-8");
-            bis = new ByteArrayInputStream(configString);
-            Config config = new XmlConfigBuilder(bis).build();
-
-            return config.getNetworkConfig().getPort();
-        } catch (Exception e) {
-            throw new CommandLineExitException("Could not get port from settings", e);
-        } finally {
-            closeQuietly(bis);
-        }
     }
 
     static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
@@ -51,23 +58,25 @@ public final class CoordinatorUtils {
         return members.toString();
     }
 
-    static int getMaxTestCaseIdLength(List<TestCase> testCaseList) {
-        int maxLength = Integer.MIN_VALUE;
-        for (TestCase testCase : testCaseList) {
-            String testCaseId = testCase.getId();
-            if (testCaseId != null && !testCaseId.isEmpty() && testCaseId.length() > maxLength) {
-                maxLength = testCaseId.length();
-            }
+    static int getPort(String memberHzConfig) {
+        ByteArrayInputStream bis = null;
+        try {
+            byte[] configString = memberHzConfig.getBytes("UTF-8");
+            bis = new ByteArrayInputStream(configString);
+            Config config = new XmlConfigBuilder(bis).build();
+
+            return config.getNetworkConfig().getPort();
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not get port from settings", e);
+        } finally {
+            closeQuietly(bis);
         }
-        return (maxLength > 0) ? maxLength : 0;
     }
 
-    public static List<AgentMemberLayout> initMemberLayout(ComponentRegistry registry, CoordinatorParameters parameters) {
+    public static List<AgentMemberLayout> initMemberLayout(ComponentRegistry registry, WorkerParameters parameters,
+                                                           int dedicatedMemberMachineCount,
+                                                           int memberWorkerCount, int clientWorkerCount) {
         int agentCount = registry.agentCount();
-        int dedicatedMemberMachineCount = parameters.getDedicatedMemberMachineCount();
-        int memberWorkerCount = parameters.getMemberWorkerCount();
-        int clientWorkerCount = parameters.getClientWorkerCount();
-
         if (dedicatedMemberMachineCount > agentCount) {
             throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
                     dedicatedMemberMachineCount, agentCount));
@@ -129,8 +138,8 @@ public final class CoordinatorUtils {
         }
     }
 
-    static AgentMemberLayout findNextAgentLayout(AtomicInteger currentIndex, List<AgentMemberLayout> agentMemberLayouts,
-                                                 AgentMemberMode excludedAgentMemberMode) {
+    private static AgentMemberLayout findNextAgentLayout(AtomicInteger currentIndex, List<AgentMemberLayout> agentMemberLayouts,
+                                                         AgentMemberMode excludedAgentMemberMode) {
         int size = agentMemberLayouts.size();
         while (true) {
             AgentMemberLayout agentLayout = agentMemberLayouts.get(currentIndex.getAndIncrement() % size);
@@ -138,5 +147,25 @@ public final class CoordinatorUtils {
                 return agentLayout;
             }
         }
+    }
+
+    static ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(TestPhase latestTestPhaseToSync, int testCount) {
+        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
+        boolean useTestCount = true;
+        for (TestPhase testPhase : TestPhase.values()) {
+            testPhaseSyncMap.put(testPhase, new CountDownLatch(useTestCount ? testCount : 0));
+            if (testPhase == latestTestPhaseToSync) {
+                useTestCount = false;
+            }
+        }
+        return testPhaseSyncMap;
+    }
+
+    static void waitForWorkerShutdown(int expectedFinishedWorkerCount, Set<String> finishedWorkers) {
+        LOGGER.info(format("Waiting for shutdown of %d workers...", expectedFinishedWorkerCount));
+        while (finishedWorkers.size() < expectedFinishedWorkerCount) {
+            sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
+        }
+        LOGGER.info("Shutdown of all workers completed...");
     }
 }

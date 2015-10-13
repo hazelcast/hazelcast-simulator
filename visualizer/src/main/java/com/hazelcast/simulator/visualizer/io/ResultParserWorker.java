@@ -15,21 +15,15 @@
  */
 package com.hazelcast.simulator.visualizer.io;
 
-import com.hazelcast.simulator.probes.probes.ProbesResultXmlReader;
-import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.visualizer.data.BenchmarkResults;
+import com.hazelcast.simulator.probes.Result;
+import com.hazelcast.simulator.probes.xml.ResultXmlUtils;
 import com.hazelcast.simulator.visualizer.data.Model;
 
 import javax.swing.*;
 import java.io.File;
-import java.io.FileInputStream;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
-import static com.hazelcast.simulator.utils.FileUtils.getFileName;
-
-public class ResultParserWorker extends SwingWorker<BenchmarkResults, Void> {
+public class ResultParserWorker extends SwingWorker<Result, Void> {
 
     private final File file;
     private final Model model;
@@ -40,28 +34,15 @@ public class ResultParserWorker extends SwingWorker<BenchmarkResults, Void> {
     }
 
     @Override
-    protected BenchmarkResults doInBackground() throws Exception {
-        FileInputStream fileInputStream = null;
-        try {
-            fileInputStream = new FileInputStream(file);
-            Map<String, Result> probeResultMap = ProbesResultXmlReader.read(fileInputStream);
-            String filename = getFileName(file);
-
-            BenchmarkResults benchmarkResults = new BenchmarkResults(filename);
-            for (Map.Entry<String, Result> entry : probeResultMap.entrySet()) {
-                benchmarkResults.addProbeData(entry.getKey(), entry.getValue());
-            }
-            return benchmarkResults;
-        } finally {
-            closeQuietly(fileInputStream);
-        }
+    protected Result doInBackground() throws Exception {
+        return ResultXmlUtils.fromXml(file);
     }
 
     @Override
     protected void done() {
         try {
-            BenchmarkResults results = get();
-            model.addBenchmarkResults(results);
+            Result result = get();
+            model.addResults(result);
         } catch (InterruptedException e) {
             throw new ResultParserException(e);
         } catch (ExecutionException e) {

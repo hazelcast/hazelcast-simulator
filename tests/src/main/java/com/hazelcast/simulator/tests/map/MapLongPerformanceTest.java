@@ -2,11 +2,9 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.probes.probes.IntervalProbe;
-import com.hazelcast.simulator.probes.probes.SimpleProbe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Name;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -30,21 +28,14 @@ public class MapLongPerformanceTest {
     public double writeProb = 0.1;
 
     // probes
-    private SimpleProbe setProbe;
-    private IntervalProbe intervalProbe;
-    private SimpleProbe getProbe;
+    public Probe probe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private IMap<Integer, Long> map;
 
     @Setup
-    public void setUp(TestContext testContext, @Name("latencyProbe") IntervalProbe intervalProbe,
-                      @Name("set") SimpleProbe setProbe, @Name("get") SimpleProbe getProbe) {
-        this.intervalProbe = intervalProbe;
-        this.setProbe = setProbe;
-        this.getProbe = getProbe;
-
+    public void setUp(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         map = hazelcastInstance.getMap(basename + "-" + testContext.getTestId());
 
@@ -84,22 +75,20 @@ public class MapLongPerformanceTest {
 
             switch (operation) {
                 case PUT:
-                    intervalProbe.started();
+                    probe.started();
                     try {
                         map.set(key, System.currentTimeMillis());
                     } finally {
-                        intervalProbe.done();
+                        probe.done();
                     }
-                    setProbe.done();
                     break;
                 case GET:
-                    intervalProbe.started();
+                    probe.started();
                     try {
                         map.get(key);
                     } finally {
-                        intervalProbe.done();
+                        probe.done();
                     }
-                    getProbe.done();
                     break;
                 default:
                     throw new UnsupportedOperationException();

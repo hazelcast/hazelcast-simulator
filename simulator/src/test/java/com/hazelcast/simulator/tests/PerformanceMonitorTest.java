@@ -15,32 +15,17 @@
  */
 package com.hazelcast.simulator.tests;
 
-import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.Performance;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.Setup;
-
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 
 public class PerformanceMonitorTest {
 
-    private TestContext context;
-    private long operations;
-
-    @Setup
-    public void setUp(TestContext context) {
-        this.context = context;
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return operations++;
-    }
+    @SimulatorProbe(useForThroughput = true)
+    private Probe performanceProbe;
 
     @Run
     void run() {
-        while (!context.isStopped()) {
-            sleepSeconds(1);
-        }
+        performanceProbe.recordValue(50);
     }
 }

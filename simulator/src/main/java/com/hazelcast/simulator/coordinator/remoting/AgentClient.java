@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.coordinator.remoting;
 
-import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import org.apache.log4j.Logger;
 
@@ -17,7 +16,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSecondsThrowException;
 import static java.lang.String.format;
 
-public class AgentClient {
+class AgentClient {
 
     private static final int CREATE_SOCKET_MAX_RETRIES = 30;
     private static final int LOG_FAILURE_AS_WARNING_THRESHOLD = 10;
@@ -35,12 +34,11 @@ public class AgentClient {
     }
 
     @SuppressWarnings("unchecked")
-    <E> E execute(AgentRemoteService.Service service, Object... args) throws Exception {
+    <E> E execute(Object... args) throws Exception {
         Socket socket = newSocket();
 
         try {
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            oos.writeObject(service);
             for (Object arg : args) {
                 oos.writeObject(arg);
             }

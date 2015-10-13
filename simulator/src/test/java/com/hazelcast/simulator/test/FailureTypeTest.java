@@ -4,9 +4,9 @@ import org.junit.Test;
 
 import java.util.Set;
 
-import static com.hazelcast.simulator.test.Failure.Type.WORKER_EXCEPTION;
-import static com.hazelcast.simulator.test.Failure.Type.WORKER_EXIT;
-import static com.hazelcast.simulator.test.Failure.Type.fromPropertyValue;
+import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
+import static com.hazelcast.simulator.test.FailureType.WORKER_EXIT;
+import static com.hazelcast.simulator.test.FailureType.fromPropertyValue;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
@@ -20,26 +20,26 @@ public class FailureTypeTest {
 
     @Test
     public void testFromPropertyValue_null() throws Exception {
-        Set<Failure.Type> types = fromPropertyValue(null);
+        Set<FailureType> types = fromPropertyValue(null);
         assertThat(types, is(empty()));
     }
 
     @Test
     public void testFromPropertyValue_empty() throws Exception {
-        Set<Failure.Type> types = fromPropertyValue("");
+        Set<FailureType> types = fromPropertyValue("");
         assertThat(types, is(empty()));
     }
 
     @Test
     public void testFromPropertyValue_singleValue() throws Exception {
-        Set<Failure.Type> types = fromPropertyValue("workerException");
+        Set<FailureType> types = fromPropertyValue("workerException");
         assertThat(types, hasSize(1));
         assertThat(types, contains(WORKER_EXCEPTION));
     }
 
     @Test
     public void testFromPropertyValue_twoValues() throws Exception {
-        Set<Failure.Type> types = fromPropertyValue("workerException, workerExit");
+        Set<FailureType> types = fromPropertyValue("workerException, workerExit");
         assertThat(types, hasSize(2));
         assertThat(types, containsInAnyOrder(WORKER_EXCEPTION, WORKER_EXIT));
     }
@@ -51,19 +51,19 @@ public class FailureTypeTest {
 
     @Test
     public void testGetIdsAsString() {
-        String idsAsString = Failure.Type.getIdsAsString();
-        Failure.Type[] types = Failure.Type.values();
+        String idsAsString = FailureType.getIdsAsString();
+        FailureType[] types = FailureType.values();
 
-        for (Failure.Type type : types) {
+        for (FailureType type : types) {
             assertTrue(idsAsString.contains(type.getId()));
         }
     }
 
     @Test
     public void testToString() {
-        Failure.Type[] types = Failure.Type.values();
+        FailureType[] types = FailureType.values();
 
-        for (Failure.Type type : types) {
+        for (FailureType type : types) {
             assertNotNull(type.toString());
         }
     }

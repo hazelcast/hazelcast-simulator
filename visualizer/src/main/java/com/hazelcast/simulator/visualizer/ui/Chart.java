@@ -15,12 +15,11 @@
  */
 package com.hazelcast.simulator.visualizer.ui;
 
-import com.hazelcast.simulator.probes.probes.Result;
+import com.hazelcast.simulator.probes.Result;
 import com.hazelcast.simulator.visualizer.data.AggregatedDataSet;
-import com.hazelcast.simulator.visualizer.data.BenchmarkResults;
 import com.hazelcast.simulator.visualizer.data.Model;
-import com.hazelcast.simulator.visualizer.data.SimpleHistogramDataSetContainer;
-import org.apache.log4j.Logger;
+import com.hazelcast.simulator.visualizer.data.SimulatorHistogramDataSet;
+import org.HdrHistogram.Histogram;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -34,7 +33,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.Set;
 
-import static com.hazelcast.simulator.visualizer.utils.DataSetUtils.calculateSingleProbeDataSet;
+import static com.hazelcast.simulator.visualizer.utils.DataSetUtils.getHistogramDataSet;
 import static com.hazelcast.simulator.visualizer.utils.ListenerUtils.addHorizontalMouseListener;
 import static com.hazelcast.simulator.visualizer.utils.ListenerUtils.addVerticalMouseListener;
 
@@ -45,8 +44,6 @@ public class Chart extends JPanel {
     private static final int VERTICAL_SLIDER_MINIMUM = 100;
 
     private static final float ALPHA = 0.65f;
-
-    private static final Logger LOGGER = Logger.getLogger(Chart.class);
 
     private final JSlider mainHorizontalSlider = new JSlider();
     private final JSlider fineHorizontalSlider = new JSlider();
@@ -144,15 +141,14 @@ public class Chart extends JPanel {
         AggregatedDataSet aggregatedDataSet = new AggregatedDataSet();
         Set<String> benchmarkNames = model.getBenchmarkNames();
         for (String benchmarkName : benchmarkNames) {
-            BenchmarkResults benchmarkResults = model.getBenchmarkResults(benchmarkName);
+            Result result = model.getBenchmarkResult(benchmarkName);
             for (String selectedProbe : selectedProbes) {
-                Result probeData = benchmarkResults.getProbeData(selectedProbe);
-                if (probeData == null) {
-                    LOGGER.warn("Couldn't find probe " + selectedProbe + " in benchmark " + benchmarkName);
+                Histogram histogram = result.getHistogram(selectedProbe);
+                if (histogram == null) {
                     continue;
                 }
                 String name = benchmarkName + " - " + selectedProbe;
-                SimpleHistogramDataSetContainer dataSet = calculateSingleProbeDataSet(probeData, accuracy, scalingPercentile);
+                SimulatorHistogramDataSet dataSet = getHistogramDataSet(histogram, accuracy, scalingPercentile);
                 if (dataSet != null) {
                     aggregatedDataSet.addNewSeries(dataSet, name);
                 }

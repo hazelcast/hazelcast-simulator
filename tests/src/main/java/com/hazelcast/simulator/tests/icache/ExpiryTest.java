@@ -23,26 +23,23 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.test.annotations.Performance;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.CacheManager;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 import java.io.Serializable;
-import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -72,21 +69,18 @@ public class ExpiryTest {
     public double getProb = 0.2;
     public double getAsyncProb = 0.1;
 
-    public int performanceUpdateFrequency = 10000;
+    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private TestContext testContext;
-    private HazelcastInstance hazelcastInstance;
-    private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
-    private AtomicLong operations = new AtomicLong();
+    private IList<Counter> results;
     private CacheManager cacheManager;
 
     private ExpiryPolicy expiryPolicy;
     private CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
 
     @Setup
-    public void setup(TestContext textConTx) {
-        testContext = textConTx;
-        hazelcastInstance = testContext.getTargetInstance();
+    public void setup(TestContext testContext) {
+        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        results = hazelcastInstance.getList(basename);
 
         cacheManager = createCacheManager(hazelcastInstance);
         expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
@@ -102,72 +96,8 @@ public class ExpiryTest {
         cacheManager.createCache(basename, config);
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int i = 0; i < threadCount; i++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
-
-    private class Worker implements Runnable {
-        private final OperationSelector<Operation> selector = operationSelectorBuilder.build();
-        private final Random random = new Random();
-        private final Counter counter = new Counter();
-        @SuppressWarnings("unchecked")
-        private final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
-
-        public void run() {
-            long iteration = 0;
-            while (!testContext.isStopped()) {
-                int key = random.nextInt(keyCount);
-
-                Operation operation = selector.select();
-                switch (operation) {
-                    case PUT:
-                        cache.put(key, random.nextLong(), expiryPolicy);
-                        counter.putExpiry++;
-                        break;
-                    case PUT_ASYNC:
-                        cache.putAsync(key, random.nextLong(), expiryPolicy);
-                        counter.putAsyncExpiry++;
-                        break;
-                    case GET:
-                        cache.get(key, expiryPolicy);
-                        counter.getExpiry++;
-                        break;
-                    case GET_ASYNC:
-                        Future<Long> f = cache.getAsync(key, expiryPolicy);
-                        try {
-                            f.get();
-                            counter.getAsyncExpiry++;
-                        } catch (Exception e) {
-                            throw new TestException(e);
-                        }
-                        break;
-                    default:
-                        throw new UnsupportedOperationException("Unknown operation " + operation);
-                }
-                if (iteration % performanceUpdateFrequency == 0) {
-                    operations.addAndGet(performanceUpdateFrequency);
-                }
-                iteration++;
-            }
-            operations.addAndGet(iteration % performanceUpdateFrequency);
-            hazelcastInstance.getList(basename).add(counter);
-        }
-    }
-
-    @Performance
-    public long getOperationCount() {
-        return operations.get();
-    }
-
     @Verify(global = true)
     public void globalVerify() throws Exception {
-
-        IList<Counter> results = hazelcastInstance.getList(basename);
         Counter totalCounter = new Counter();
         for (Counter counter : results) {
             totalCounter.add(counter);
@@ -184,11 +114,67 @@ public class ExpiryTest {
         assertEquals(basename + ": cache size not 0", 0, cache.size());
     }
 
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractWorker<Operation> {
+
+        @SuppressWarnings("unchecked")
+        private final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
+        private final Counter counter = new Counter();
+
+        public Worker() {
+            super(operationSelectorBuilder);
+        }
+
+        @Override
+        public void timeStep(Operation operation) {
+            int key = randomInt(keyCount);
+
+            switch (operation) {
+                case PUT:
+                    cache.put(key, getRandom().nextLong(), expiryPolicy);
+                    counter.putExpiry++;
+                    break;
+                case PUT_ASYNC:
+                    cache.putAsync(key, getRandom().nextLong(), expiryPolicy);
+                    counter.putAsyncExpiry++;
+                    break;
+                case GET:
+                    cache.get(key, expiryPolicy);
+                    counter.getExpiry++;
+                    break;
+                case GET_ASYNC:
+                    Future<Long> future = cache.getAsync(key, expiryPolicy);
+                    try {
+                        future.get();
+                        counter.getAsyncExpiry++;
+                    } catch (Exception e) {
+                        throw new TestException(e);
+                    }
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unknown operation " + operation);
+            }
+        }
+
+        @Override
+        protected void afterRun() {
+            results.add(counter);
+
+            // sleep to give time for expiration
+            sleepMillis(expiryDuration * 2);
+        }
+    }
+
     private static class Counter implements Serializable {
-        public long putExpiry;
-        public long putAsyncExpiry;
-        public long getExpiry;
-        public long getAsyncExpiry;
+
+        private long putExpiry;
+        private long putAsyncExpiry;
+        private long getExpiry;
+        private long getAsyncExpiry;
 
         public void add(Counter c) {
             putExpiry += c.putExpiry;

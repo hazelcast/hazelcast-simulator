@@ -163,7 +163,6 @@ public class ReliableTopicTest {
         public void writeData(ObjectDataOutput out) throws IOException {
             out.writeUTF(thread);
             out.writeLong(value);
-
         }
 
         @Override
