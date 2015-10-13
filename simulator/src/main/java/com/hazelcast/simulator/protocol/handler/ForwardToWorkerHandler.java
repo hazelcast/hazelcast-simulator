@@ -73,7 +73,9 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
 
         Response response = new Response(messageId, getSourceAddress(buffer));
         if (workerAddressIndex == 0) {
-            LOGGER.debug(format("[%d] %s forwarding message to all workers", messageId, addressLevel));
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace(format("[%d] %s forwarding message to all workers", messageId, addressLevel));
+            }
             List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
             for (ClientConnector clientConnector : worker.values()) {
                 buffer.retain();
@@ -94,7 +96,9 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
                 ctx.writeAndFlush(response);
                 return;
             }
-            LOGGER.debug(format("[%d] %s forwarding message to worker %d", messageId, addressLevel, workerAddressIndex));
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace(format("[%d] %s forwarding message to worker %d", messageId, addressLevel, workerAddressIndex));
+            }
             buffer.retain();
             response.addResponse(clientConnector.write(buffer));
         }
@@ -111,7 +115,9 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
             return;
         }
 
-        LOGGER.debug(format("[%d] %s forwarding response to worker %d", messageId, addressLevel, workerAddressIndex));
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(format("[%d] %s forwarding response to worker %d", messageId, addressLevel, workerAddressIndex));
+        }
         buffer.retain();
         clientConnector.forwardToChannel(buffer);
     }

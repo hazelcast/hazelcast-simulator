@@ -68,8 +68,10 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
     private void decodeSimulatorMessage(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out) {
         long messageId = SimulatorMessageCodec.getMessageId(buffer);
         AddressLevel dstAddressLevel = AddressLevel.fromInt(SimulatorMessageCodec.getDestinationAddressLevel(buffer));
-        LOGGER.debug(format("[%d] %s %s received a message for addressLevel %s", messageId, addressLevel, localAddress,
-                dstAddressLevel));
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(format("[%d] %s %s received a message for addressLevel %s", messageId, addressLevel, localAddress,
+                    dstAddressLevel));
+        }
 
         if (dstAddressLevel == addressLevel) {
             SimulatorMessage message = SimulatorMessageCodec.decodeSimulatorMessage(buffer);
@@ -90,8 +92,10 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
     private void decodeResponse(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out) {
         long messageId = ResponseCodec.getMessageId(buffer);
         AddressLevel dstAddressLevel = AddressLevel.fromInt(ResponseCodec.getDestinationAddressLevel(buffer));
-        LOGGER.debug(format("[%d] %s %s received a response for addressLevel %s", messageId, addressLevel, localAddress,
-                dstAddressLevel));
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(format("[%d] %s %s received a response for addressLevel %s", messageId, addressLevel, localAddress,
+                    dstAddressLevel));
+        }
 
         if (dstAddressLevel == addressLevel || dstAddressLevel.isParentAddressLevel(addressLevel)) {
             Response response = ResponseCodec.decodeResponse(buffer);

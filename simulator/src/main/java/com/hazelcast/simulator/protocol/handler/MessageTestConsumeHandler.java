@@ -55,18 +55,24 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, SimulatorMessage msg) {
-        LOGGER.debug(format("[%d] %s MessageTestConsumeHandler is consuming message...", msg.getMessageId(), localAddress));
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(format("[%d] %s MessageTestConsumeHandler is consuming message...", msg.getMessageId(), localAddress));
+        }
 
         Response response = new Response(msg);
         int testAddressIndex = ctx.attr(forwardAddressIndex).get();
         if (testAddressIndex == 0) {
-            LOGGER.debug(format("[%d] forwarding message to all tests", msg.getMessageId()));
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace(format("[%d] forwarding message to all tests", msg.getMessageId()));
+            }
             for (Map.Entry<Integer, OperationProcessor> entry : testProcessors.entrySet()) {
                 ResponseType responseType = entry.getValue().process(fromSimulatorMessage(msg));
                 response.addResponse(testAddresses.get(entry.getKey()), responseType);
             }
         } else {
-            LOGGER.debug(format("[%d] forwarding message to test %d", msg.getMessageId(), testAddressIndex));
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace(format("[%d] forwarding message to test %d", msg.getMessageId(), testAddressIndex));
+            }
             OperationProcessor processor = testProcessors.get(testAddressIndex);
             if (processor == null) {
                 response.addResponse(localAddress, FAILURE_TEST_NOT_FOUND);

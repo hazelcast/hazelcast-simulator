@@ -38,8 +38,10 @@ public class ForwardToCoordinatorHandler extends SimpleChannelInboundHandler<Byt
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final ByteBuf buffer) throws Exception {
         if (isSimulatorMessage(buffer)) {
-            long messageId = getMessageId(buffer);
-            LOGGER.debug(format("[%d] %s %s forwarding message to parent", messageId, addressLevel, localAddress));
+            if (LOGGER.isTraceEnabled()) {
+                long messageId = getMessageId(buffer);
+                LOGGER.trace(format("[%d] %s %s forwarding message to parent", messageId, addressLevel, localAddress));
+            }
 
             updateWorkerJvmLastSeenTimestamp(buffer);
 
