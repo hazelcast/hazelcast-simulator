@@ -41,7 +41,7 @@ final class HistogramConverter implements Converter {
             byte[] bytes = decodeBase64(encodedHistogram);
             return decodeFromCompressedByteBuffer(ByteBuffer.wrap(bytes), 0);
         } catch (Exception e) {
-            throw new RuntimeException("Could not parse histogram");
+            throw new IllegalArgumentException("Could not parse histogram", e);
         }
     }
 }
