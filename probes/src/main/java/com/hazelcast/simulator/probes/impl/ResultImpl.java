@@ -21,6 +21,7 @@ import org.HdrHistogram.Histogram;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -31,7 +32,7 @@ public class ResultImpl implements Result {
     private final long invocations;
     private final double throughput;
 
-    private final HashMap<String, Histogram> probeHistogramMap;
+    private final Map<String, Histogram> probeHistogramMap;
 
     public ResultImpl(String testName, long invocations, double throughput) {
         this.testName = testName;
