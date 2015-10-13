@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.visualizer.ui;
 
-import com.hazelcast.simulator.probes.probes.Result;
+import com.hazelcast.simulator.probes.Result;
 import com.hazelcast.simulator.visualizer.data.Model;
 
 import javax.swing.*;

@@ -2,7 +2,7 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.Probe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.worker.selector.OperationSelector;

@@ -15,8 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.Deflater;
 
-import static com.hazelcast.simulator.probes.probes.impl.ProbeImpl.LATENCY_PRECISION;
-import static com.hazelcast.simulator.probes.probes.impl.ProbeImpl.MAXIMUM_LATENCY;
+import static com.hazelcast.simulator.probes.impl.ProbeImpl.LATENCY_PRECISION;
+import static com.hazelcast.simulator.probes.impl.ProbeImpl.MAXIMUM_LATENCY;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.ONE_SECOND_IN_MILLIS;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputHeader;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputStats;

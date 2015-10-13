@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.probes.probes.Probe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestCase;
 import org.apache.log4j.Logger;
 

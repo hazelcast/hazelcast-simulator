@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.probes.probes.Probe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;

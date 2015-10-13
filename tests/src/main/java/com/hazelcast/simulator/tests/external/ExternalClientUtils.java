@@ -5,7 +5,7 @@ import com.hazelcast.core.ICountDownLatch;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.probes.Probe;
+import com.hazelcast.simulator.probes.Probe;
 
 import java.util.concurrent.TimeUnit;
 

@@ -15,8 +15,8 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.zip.Deflater;
 
-import static com.hazelcast.simulator.probes.probes.impl.ProbeImpl.LATENCY_PRECISION;
-import static com.hazelcast.simulator.probes.probes.impl.ProbeImpl.MAXIMUM_LATENCY;
+import static com.hazelcast.simulator.probes.impl.ProbeImpl.LATENCY_PRECISION;
+import static com.hazelcast.simulator.probes.impl.ProbeImpl.MAXIMUM_LATENCY;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertFalse;

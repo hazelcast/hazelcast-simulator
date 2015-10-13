@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.worker.tasks;
 
-import com.hazelcast.simulator.probes.probes.Probe;
+import com.hazelcast.simulator.probes.Probe;
 
 /**
  * Interface for workers who are returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker} annotated test

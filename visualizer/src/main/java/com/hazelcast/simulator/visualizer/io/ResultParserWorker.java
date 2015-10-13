@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.visualizer.io;
 
-import com.hazelcast.simulator.probes.probes.ProbeXmlUtils;
-import com.hazelcast.simulator.probes.probes.Result;
+import com.hazelcast.simulator.probes.Result;
+import com.hazelcast.simulator.probes.xml.ResultXmlUtils;
 import com.hazelcast.simulator.visualizer.data.Model;
 
 import javax.swing.*;
@@ -35,7 +35,7 @@ public class ResultParserWorker extends SwingWorker<Result, Void> {
 
     @Override
     protected Result doInBackground() throws Exception {
-        return ProbeXmlUtils.fromXml(file);
+        return ResultXmlUtils.fromXml(file);
     }
 
     @Override

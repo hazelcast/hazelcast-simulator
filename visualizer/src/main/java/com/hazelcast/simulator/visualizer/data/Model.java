@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.visualizer.data;
 
-import com.hazelcast.simulator.probes.probes.Result;
+import com.hazelcast.simulator.probes.Result;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.probes.probes.impl;
+package com.hazelcast.simulator.probes.impl;
 
-import com.hazelcast.simulator.probes.probes.Probe;
+import com.hazelcast.simulator.probes.Probe;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.Recorder;
 

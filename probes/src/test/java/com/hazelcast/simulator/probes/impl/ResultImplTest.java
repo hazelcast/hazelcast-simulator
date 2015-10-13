@@ -1,11 +1,11 @@
-package com.hazelcast.simulator.probes.probes.impl;
+package com.hazelcast.simulator.probes.impl;
 
-import com.hazelcast.simulator.probes.probes.Result;
+import com.hazelcast.simulator.probes.Result;
 import org.HdrHistogram.Histogram;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.probes.probes.utils.ResultTestUtils.createProbeResult;
-import static com.hazelcast.simulator.probes.probes.utils.ResultTestUtils.createRandomHistogram;
+import static com.hazelcast.simulator.probes.ProbeTestUtils.createProbeResult;
+import static com.hazelcast.simulator.probes.ProbeTestUtils.createRandomHistogram;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;

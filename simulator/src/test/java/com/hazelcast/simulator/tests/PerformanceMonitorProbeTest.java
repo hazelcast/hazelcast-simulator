@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.tests;
 
-import com.hazelcast.simulator.probes.probes.Probe;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.utils.EmptyStatement;

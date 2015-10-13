@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.probes.probes.ProbeXmlUtils;
-import com.hazelcast.simulator.probes.probes.Result;
-import com.hazelcast.simulator.probes.probes.impl.ResultImpl;
+import com.hazelcast.simulator.probes.Result;
+import com.hazelcast.simulator.probes.impl.ResultImpl;
+import com.hazelcast.simulator.probes.xml.ResultXmlUtils;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.HdrHistogram.Histogram;
@@ -48,7 +48,7 @@ public class TestHistogramContainer {
         Result result = aggregateHistogramsForTestCase(testCaseId, performanceState);
         if (!result.isEmpty()) {
             String fileName = "probes-" + testSuiteId + "_" + testCaseId + ".xml";
-            ProbeXmlUtils.toXml(result, new File(fileName));
+            ResultXmlUtils.toXml(result, new File(fileName));
             logProbesResultInHumanReadableFormat(testCaseId, result);
         }
     }

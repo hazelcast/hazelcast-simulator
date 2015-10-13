@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.probes.probes;
+package com.hazelcast.simulator.probes;
 
 import org.HdrHistogram.Histogram;
 import org.junit.Test;

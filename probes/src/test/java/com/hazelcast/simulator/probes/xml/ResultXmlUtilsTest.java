@@ -1,22 +1,23 @@
-package com.hazelcast.simulator.probes.probes;
+package com.hazelcast.simulator.probes.xml;
 
-import com.hazelcast.simulator.probes.probes.impl.ResultImpl;
+import com.hazelcast.simulator.probes.Result;
+import com.hazelcast.simulator.probes.impl.ResultImpl;
 import com.thoughtworks.xstream.converters.ConversionException;
 import org.junit.AfterClass;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.probes.probes.ProbeXmlUtils.fromXml;
-import static com.hazelcast.simulator.probes.probes.ProbeXmlUtils.toXml;
-import static com.hazelcast.simulator.probes.probes.utils.ResultTestUtils.assertEqualsResult;
-import static com.hazelcast.simulator.probes.probes.utils.ResultTestUtils.cleanup;
-import static com.hazelcast.simulator.probes.probes.utils.ResultTestUtils.createProbeResult;
-import static com.hazelcast.simulator.probes.probes.utils.ResultTestUtils.getResultFile;
-import static com.hazelcast.simulator.probes.probes.utils.ResultTestUtils.serializeAndDeserializeAgain;
+import static com.hazelcast.simulator.probes.ProbeTestUtils.assertEqualsResult;
+import static com.hazelcast.simulator.probes.ProbeTestUtils.cleanup;
+import static com.hazelcast.simulator.probes.ProbeTestUtils.createProbeResult;
+import static com.hazelcast.simulator.probes.ProbeTestUtils.getResultFile;
+import static com.hazelcast.simulator.probes.ProbeTestUtils.serializeAndDeserializeAgain;
+import static com.hazelcast.simulator.probes.xml.ResultXmlUtils.fromXml;
+import static com.hazelcast.simulator.probes.xml.ResultXmlUtils.toXml;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
-public class ProbeXmlUtilsTest {
+public class ResultXmlUtilsTest {
 
     @AfterClass
     public static void tearDown() {
@@ -25,7 +26,7 @@ public class ProbeXmlUtilsTest {
 
     @Test
     public void constructorReader() throws Exception {
-        invokePrivateConstructor(ProbeXmlUtils.class);
+        invokePrivateConstructor(ResultXmlUtils.class);
     }
 
     @Test

@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates {@link com.hazelcast.simulator.probes.probes.Probe} fields.
+ * Annotates {@link com.hazelcast.simulator.probes.Probe} fields.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
