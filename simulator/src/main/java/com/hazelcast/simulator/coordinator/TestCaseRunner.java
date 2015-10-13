@@ -44,6 +44,7 @@ final class TestCaseRunner {
     private final String prefix;
     private final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap;
     private final int sleepPeriodSeconds;
+    private final int logPerformanceInterval;
     private final int clientWorkerCount;
 
     private StopThread stopThread;
@@ -62,6 +63,7 @@ final class TestCaseRunner {
         this.prefix = (testCaseId.isEmpty() ? "" : padRight(testCaseId, paddingLength + 1));
         this.testPhaseSyncMap = testPhaseSyncMap;
         this.sleepPeriodSeconds = sleepPeriodSeconds;
+        this.logPerformanceInterval = coordinator.getWorkerParameters().getWorkerPerformanceMonitorIntervalSeconds();
         this.clientWorkerCount = coordinator.getClusterLayoutParameters().getClientWorkerCount();
     }
 
@@ -223,7 +225,7 @@ final class TestCaseRunner {
 
         private void logProgress(int elapsed, int sleepSeconds) {
             String msg = format("Running %s %s%% complete", secondsToHuman(elapsed), formatPercentage(elapsed, sleepSeconds));
-            if (coordinatorParameters.isMonitorPerformance()) {
+            if (coordinatorParameters.isMonitorPerformance() && elapsed % logPerformanceInterval == 0) {
                 msg += performanceStateContainer.getPerformanceNumbers(testCaseId);
             }
 

@@ -62,9 +62,8 @@ public final class Coordinator {
     private static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
     private static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
-    // TODO: make this dependent on configuration for WorkerPerformanceMonitor#DEFAULT_MONITORING_INTERVAL_SECONDS
     private static final int TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS = 10;
-    private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
+    private static final int PARALLEL_EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
@@ -115,8 +114,12 @@ public final class Coordinator {
         return coordinatorParameters;
     }
 
-    public ClusterLayoutParameters getClusterLayoutParameters() {
+    ClusterLayoutParameters getClusterLayoutParameters() {
         return clusterLayoutParameters;
+    }
+
+    WorkerParameters getWorkerParameters() {
+        return workerParameters;
     }
 
     TestSuite getTestSuite() {
@@ -151,7 +154,7 @@ public final class Coordinator {
         if (parallelExecutor != null) {
             LOGGER.info("Shutdown of ExecutorService...");
             parallelExecutor.shutdown();
-            parallelExecutor.awaitTermination(EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            parallelExecutor.awaitTermination(PARALLEL_EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
 
         if (agentsClient != null) {
