@@ -34,7 +34,7 @@ public class WorkerParametersTest {
     @Test
     public void testConstructor() {
         WorkerParameters workerParameters = new WorkerParameters(properties, true, 2342, "memberJvmOptions", "clientJvmOptions",
-                "memberHzConfig", "clientHzConfig", "log4jConfig");
+                "memberHzConfig", "clientHzConfig", "log4jConfig", false);
 
         assertEquals(2342, workerParameters.getWorkerStartupTimeout());
         assertEquals(1234, workerParameters.getWorkerPerformanceMonitorIntervalSeconds());
@@ -57,7 +57,7 @@ public class WorkerParametersTest {
         properties = mock(SimulatorProperties.class);
         when(properties.get("PROFILER")).thenReturn("");
 
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
 
         assertEquals(JavaProfiler.NONE, workerParameters.getProfiler());
     }
@@ -68,7 +68,7 @@ public class WorkerParametersTest {
         when(properties.get("PROFILER")).thenReturn(JavaProfiler.YOURKIT.name());
         when(properties.get("YOURKIT_SETTINGS")).thenReturn("yourKitSettings");
 
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
 
         assertEquals(JavaProfiler.YOURKIT, workerParameters.getProfiler());
         assertEquals("yourKitSettings", workerParameters.getProfilerSettings());
@@ -80,7 +80,7 @@ public class WorkerParametersTest {
         when(properties.get("PROFILER")).thenReturn(JavaProfiler.VTUNE.name());
         when(properties.get("VTUNE_SETTINGS", "")).thenReturn("vtuneSettings");
 
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
 
         assertEquals(JavaProfiler.VTUNE, workerParameters.getProfiler());
         assertEquals("vtuneSettings", workerParameters.getProfilerSettings());
@@ -94,7 +94,8 @@ public class WorkerParametersTest {
         String memberConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/hazelcast.xml");
         ComponentRegistry componentRegistry = getComponentRegistryMock();
 
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, memberConfig, null, null);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, memberConfig, null, null,
+                false);
         assertTrue(workerParameters.getMemberHzConfig().contains("<!--MEMBERS-->"));
         assertTrue(workerParameters.getMemberHzConfig().contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
 
@@ -111,7 +112,7 @@ public class WorkerParametersTest {
         ComponentRegistry componentRegistry = getComponentRegistryMock();
 
         WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, memberConfig, clientConfig,
-                null);
+                null, false);
         assertTrue(workerParameters.getClientHzConfig().contains("<!--MEMBERS-->"));
 
         workerParameters.initClientHzConfig(componentRegistry);

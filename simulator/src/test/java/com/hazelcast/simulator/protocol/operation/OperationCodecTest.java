@@ -61,7 +61,8 @@ public class OperationCodecTest {
                         + "  xmlns=\"http://www.hazelcast.com/schema/config\"\n"
                         + "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />",
                 "",
-                ""
+                "",
+                false
         );
 
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings(1, WorkerType.MEMBER, workerParameters);

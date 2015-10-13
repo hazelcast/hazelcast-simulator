@@ -164,7 +164,6 @@ final class CoordinatorCli {
                 simulatorProperties,
                 loadAgentsFile(cli, options),
                 options.valueOf(cli.workerClassPathSpec),
-                options.has(cli.monitorPerformanceSpec),
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),
                 options.valueOf(cli.syncToTestPhaseSpec),
@@ -188,7 +187,8 @@ final class CoordinatorCli {
                 options.valueOf(cli.clientWorkerVmOptionsSpec),
                 loadMemberHzConfig(options, cli),
                 loadClientHzConfig(options, cli),
-                loadLog4jConfig()
+                loadLog4jConfig(),
+                options.has(cli.monitorPerformanceSpec)
         );
 
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec));

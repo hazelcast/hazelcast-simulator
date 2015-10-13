@@ -32,7 +32,6 @@ public class WorkerParameters {
 
     private final boolean autoCreateHzInstance;
     private final int workerStartupTimeout;
-    private final int workerPerformanceMonitorIntervalSeconds;
 
     private final String memberJvmOptions;
     private final String clientJvmOptions;
@@ -41,16 +40,18 @@ public class WorkerParameters {
     private String clientHzConfig;
     private final String log4jConfig;
 
+    private final boolean monitorPerformance;
+    private final int workerPerformanceMonitorIntervalSeconds;
+
     private final JavaProfiler profiler;
     private final String profilerSettings;
     private final String numaCtl;
 
     public WorkerParameters(SimulatorProperties properties, boolean autoCreateHzInstance, int workerStartupTimeout,
                             String memberJvmOptions, String clientJvmOptions, String memberHzConfig, String clientHzConfig,
-                            String log4jConfig) {
+                            String log4jConfig, boolean monitorPerformance) {
         this.autoCreateHzInstance = autoCreateHzInstance;
         this.workerStartupTimeout = workerStartupTimeout;
-        this.workerPerformanceMonitorIntervalSeconds = initWorkerPerformanceMonitorIntervalSeconds(properties);
 
         this.memberJvmOptions = memberJvmOptions;
         this.clientJvmOptions = clientJvmOptions;
@@ -58,6 +59,9 @@ public class WorkerParameters {
         this.memberHzConfig = memberHzConfig;
         this.clientHzConfig = clientHzConfig;
         this.log4jConfig = log4jConfig;
+
+        this.monitorPerformance = monitorPerformance;
+        this.workerPerformanceMonitorIntervalSeconds = initWorkerPerformanceMonitorIntervalSeconds(properties);
 
         this.profiler = initProfiler(properties);
         this.profilerSettings = initProfilerSettings(properties);
@@ -102,10 +106,6 @@ public class WorkerParameters {
         return workerStartupTimeout;
     }
 
-    public int getWorkerPerformanceMonitorIntervalSeconds() {
-        return workerPerformanceMonitorIntervalSeconds;
-    }
-
     public String getMemberJvmOptions() {
         return memberJvmOptions;
     }
@@ -124,6 +124,14 @@ public class WorkerParameters {
 
     public String getLog4jConfig() {
         return log4jConfig;
+    }
+
+    public boolean isMonitorPerformance() {
+        return monitorPerformance;
+    }
+
+    public int getWorkerPerformanceMonitorIntervalSeconds() {
+        return workerPerformanceMonitorIntervalSeconds;
     }
 
     public JavaProfiler getProfiler() {

@@ -143,7 +143,6 @@ public class CoordinatorRunTestSuiteTest {
                 simulatorProperties,
                 new File(AgentsFile.NAME),
                 "",
-                monitorPerformance,
                 verifyEnabled,
                 parallel,
                 TestPhase.SETUP,
@@ -152,6 +151,7 @@ public class CoordinatorRunTestSuiteTest {
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
+        when(workerParameters.isMonitorPerformance()).thenReturn(monitorPerformance);
         when(workerParameters.getWorkerPerformanceMonitorIntervalSeconds()).thenReturn(3);
 
         Coordinator coordinator = new Coordinator(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite, 3);

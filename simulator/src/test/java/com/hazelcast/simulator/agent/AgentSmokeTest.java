@@ -193,7 +193,8 @@ public class AgentSmokeTest {
                 "",
                 fileAsText("./simulator/src/test/resources/hazelcast.xml"),
                 "",
-                fileAsText("./dist/src/main/dist/conf/worker-log4j.xml")
+                fileAsText("./dist/src/main/dist/conf/worker-log4j.xml"),
+                false
         );
 
         AgentData agentData = new AgentData(1, AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);

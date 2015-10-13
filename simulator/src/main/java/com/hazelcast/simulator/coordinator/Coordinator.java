@@ -108,6 +108,16 @@ public final class Coordinator {
 
         this.props = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(props);
+
+        int agentCount = componentRegistry.agentCount();
+        clusterLayoutParameters.initMemberWorkerCount(agentCount);
+        workerParameters.initMemberHzConfig(componentRegistry, props);
+        workerParameters.initClientHzConfig(componentRegistry);
+
+        LOGGER.info(format("Performance monitor enabled: %s", workerParameters.isMonitorPerformance()));
+        LOGGER.info(format("Total number of agents: %s", agentCount));
+        LOGGER.info(format("Total number of Hazelcast member workers: %s", clusterLayoutParameters.getMemberWorkerCount()));
+        LOGGER.info(format("Total number of Hazelcast client workers: %s", clusterLayoutParameters.getClientWorkerCount()));
     }
 
     CoordinatorParameters getCoordinatorParameters() {
@@ -183,17 +193,6 @@ public final class Coordinator {
         }
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
-
-        clusterLayoutParameters.initMemberWorkerCount(componentRegistry.agentCount());
-        workerParameters.initMemberHzConfig(componentRegistry, props);
-        workerParameters.initClientHzConfig(componentRegistry);
-
-        int agentCount = componentRegistry.agentCount();
-        LOGGER.info(format("Performance monitor enabled: %s", coordinatorParameters.isMonitorPerformance()));
-        LOGGER.info(format("Total number of agents: %s", agentCount));
-        LOGGER.info(format("Total number of Hazelcast member workers: %s", clusterLayoutParameters.getMemberWorkerCount()));
-        LOGGER.info(format("Total number of Hazelcast client workers: %s", clusterLayoutParameters.getClientWorkerCount()));
-
         remoteClient.initTestSuite(testSuite);
 
         uploadUploadDirectory();

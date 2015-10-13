@@ -31,7 +31,6 @@ class CoordinatorParameters {
     private final File agentsFile;
     private final String workerClassPath;
 
-    private final boolean monitorPerformance;
     private final boolean verifyEnabled;
     private final boolean parallel;
     private final TestPhase lastTestPhaseToSync;
@@ -40,12 +39,11 @@ class CoordinatorParameters {
     private final boolean passiveMembers;
 
     public CoordinatorParameters(SimulatorProperties properties, File agentsFile, String workerClassPath,
-                                 boolean monitorPerformance, boolean verifyEnabled, boolean parallel,
+                                 boolean verifyEnabled, boolean parallel,
                                  TestPhase lastTestPhaseToSync, boolean refreshJvm) {
         this.simulatorProperties = properties;
         this.agentsFile = agentsFile;
         this.workerClassPath = workerClassPath;
-        this.monitorPerformance = monitorPerformance;
         this.verifyEnabled = verifyEnabled;
         this.parallel = parallel;
         this.lastTestPhaseToSync = lastTestPhaseToSync;
@@ -64,10 +62,6 @@ class CoordinatorParameters {
 
     public String getWorkerClassPath() {
         return workerClassPath;
-    }
-
-    public boolean isMonitorPerformance() {
-        return monitorPerformance;
     }
 
     public boolean isVerifyEnabled() {
