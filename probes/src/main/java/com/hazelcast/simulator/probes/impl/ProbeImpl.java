@@ -62,7 +62,7 @@ public class ProbeImpl implements Probe {
     @Override
     public void recordValue(long latencyNanos) {
         int latencyMicros = (int) TimeUnit.NANOSECONDS.toMicros(latencyNanos);
-        recorder.recordValue(latencyMicros > MAXIMUM_LATENCY ? MAXIMUM_LATENCY : latencyMicros);
+        recorder.recordValue(latencyMicros > MAXIMUM_LATENCY ? MAXIMUM_LATENCY : (latencyMicros < 0 ? 0 : latencyMicros));
     }
 
     @Override
