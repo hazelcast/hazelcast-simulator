@@ -111,22 +111,22 @@ public class AnnotationReflectionUtilsTest {
         assertNull(method);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = ReflectionException.class)
     public void testGetAtMostOneVoidMethodWithoutArgs_multipleMethodsFound() {
         getAtMostOneVoidMethodWithoutArgs(AnnotationTestClass.class, Run.class);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = ReflectionException.class)
     public void testGetAtMostOneVoidMethodWithoutArgs_staticMethodsFound() {
         getAtMostOneVoidMethodWithoutArgs(AnnotationTestClass.class, RunWithWorker.class);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = ReflectionException.class)
     public void testGetAtMostOneVoidMethodWithoutArgs_wrongReturnTypeArgsFound() {
         getAtMostOneMethodWithoutArgs(AnnotationTestClass.class, Warmup.class, String.class);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = ReflectionException.class)
     public void testGetAtMostOneVoidMethodWithoutArgs_methodsWithArgsFound() {
         getAtMostOneVoidMethodWithoutArgs(AnnotationTestClass.class, Setup.class);
     }

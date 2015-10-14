@@ -160,14 +160,14 @@ public final class AnnotationReflectionUtils {
 
     private static void assertAtMostOne(List<Method> methods, Class classType, Class<? extends Annotation> annotation) {
         if (methods.size() > 1) {
-            throw new RuntimeException(
-                    format("Too many methods on class %s with annotation %s", classType.getName(), annotation.getName()));
+            throw new ReflectionException(format("Too many methods on class %s with annotation %s", classType.getName(),
+                    annotation.getName()));
         }
     }
 
     private static void assertNotStatic(Method method) {
         if (Modifier.isStatic(method.getModifiers())) {
-            throw new RuntimeException(format("Method  %s can't be static", method.getName()));
+            throw new ReflectionException(format("Method  %s can't be static", method.getName()));
         }
     }
 
@@ -179,7 +179,7 @@ public final class AnnotationReflectionUtils {
         if (returnType.isAssignableFrom(method.getReturnType())) {
             return;
         }
-        throw new RuntimeException(format("Method %s.%s should have returnType %s", classType, method, returnType));
+        throw new ReflectionException(format("Method %s.%s should have returnType %s", classType, method, returnType));
     }
 
     private static void assertNoArgs(Method method) {
@@ -187,6 +187,6 @@ public final class AnnotationReflectionUtils {
             return;
         }
 
-        throw new RuntimeException(format("Method '%s' can't have any args", method));
+        throw new ReflectionException(format("Method '%s' can't have any args", method));
     }
 }
