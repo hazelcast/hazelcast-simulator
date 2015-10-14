@@ -15,16 +15,13 @@
  */
 package com.hazelcast.simulator.test;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class TestCase implements Serializable {
-
-    private static final long serialVersionUID = -437106085438420327L;
+public class TestCase {
 
     private final String id;
     private final Map<String, String> properties = new HashMap<String, String>();

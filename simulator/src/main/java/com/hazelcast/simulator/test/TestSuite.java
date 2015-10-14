@@ -21,7 +21,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -37,9 +36,7 @@ import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static java.lang.String.format;
 import static java.util.Collections.singletonMap;
 
-public class TestSuite implements Serializable {
-
-    private static final long serialVersionUID = 4945217305644718622L;
+public class TestSuite {
 
     private final String id = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
     private final List<TestCase> testCaseList = new LinkedList<TestCase>();
