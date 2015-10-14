@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+
 /**
  * Responsible for spawning and waiting for threads.
  *
@@ -129,14 +131,11 @@ public class ThreadSpawner {
             try {
                 thread.join();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                throw rethrow(e);
             }
         }
         if (caughtException != null) {
-            if (caughtException instanceof RuntimeException) {
-                throw (RuntimeException) caughtException;
-            }
-            throw new RuntimeException(caughtException);
+            throw rethrow(caughtException);
         }
     }
 

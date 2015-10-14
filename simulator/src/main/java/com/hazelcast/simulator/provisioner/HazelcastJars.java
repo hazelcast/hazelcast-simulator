@@ -48,7 +48,6 @@ public class HazelcastJars {
         ensureExistingDirectory(hazelcastJarsDir);
 
         LOGGER.info("Hazelcast version-spec: " + versionSpec);
-
         if (versionSpec.equals("outofthebox") || versionSpec.equals("bringmyown")) {
             // we don't need to do anything
             return;
@@ -124,7 +123,7 @@ public class HazelcastJars {
         final Matcher matcher = pattern.matcher(mavenMetadata);
 
         if (!matcher.find()) {
-            throw new RuntimeException("Could not find " + tag + " in " + mavenMetadata);
+            throw new CommandLineExitException("Could not find " + tag + " in " + mavenMetadata);
         }
 
         return matcher.group(1);

@@ -20,13 +20,12 @@ import org.apache.log4j.Logger;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
 public final class TestUtils {
-
-    public static final long VERIFY_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(1);
 
     private static final int ASSERT_TRUE_EVENTUALLY_INITIAL_SLEEP_MILLIS = 100;
     private static final float ASSERT_TRUE_EVENTUALLY_SLEEP_FACTOR = 1.5f;
@@ -100,7 +99,7 @@ public final class TestUtils {
                 try {
                     task.run();
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw rethrow(e);
                 }
                 return;
             } catch (AssertionError e) {
@@ -125,7 +124,7 @@ public final class TestUtils {
      *
      * Uses the default timeout of {@link #ASSERT_TRUE_EVENTUALLY_TIMEOUT} milliseconds.
      *
-     * @param task           AssertTask to execute
+     * @param task AssertTask to execute
      * @throws NullPointerException if task is null.
      */
     public static void assertTrueEventually(AssertTask task) {

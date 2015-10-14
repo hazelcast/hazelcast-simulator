@@ -8,14 +8,14 @@ public class JavaInstallationExceptionTest {
 
     @Test
     public void testConstructor() {
-        JavaInstallationException exception = new JavaInstallationException("expected");
+        Exception exception = new JavaInstallationException("expected");
         assertEquals("expected", exception.getMessage());
     }
 
     @Test
     public void testConstructor_withCause() {
         Throwable cause = new RuntimeException();
-        JavaInstallationException exception = new JavaInstallationException(cause);
+        Exception exception = new JavaInstallationException(cause);
         assertEquals(cause, exception.getCause());
     }
 }

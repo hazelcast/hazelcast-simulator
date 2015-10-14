@@ -405,7 +405,7 @@ public final class Coordinator {
                             // FIXME: we should abort here as logged
                         }
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new CommandLineExitException(e);
                     }
                 }
             });

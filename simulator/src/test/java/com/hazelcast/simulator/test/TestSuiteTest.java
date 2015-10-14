@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.utils.BindException;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.Test;
 
 import java.io.File;
@@ -158,7 +159,7 @@ public class TestSuiteTest {
         assertNotNull(testSuite.toString());
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = CommandLineExitException.class)
     public void propertiesNotFound() throws Exception {
         loadTestSuite(new File("notFound"), "", null);
     }

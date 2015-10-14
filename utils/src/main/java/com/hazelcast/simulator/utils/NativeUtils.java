@@ -27,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 public final class NativeUtils {
@@ -82,10 +83,8 @@ public final class NativeUtils {
                     LOGGER.debug("Bash output:" + NEW_LINE + sb);
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw rethrow(e);
         }
     }
 

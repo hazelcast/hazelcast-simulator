@@ -136,7 +136,7 @@ public final class CommonUtils {
         try {
             TimeUnit.SECONDS.sleep(seconds);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw rethrow(e);
         }
     }
 
@@ -144,7 +144,7 @@ public final class CommonUtils {
         try {
             TimeUnit.MILLISECONDS.sleep(millis);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw rethrow(e);
         }
     }
 

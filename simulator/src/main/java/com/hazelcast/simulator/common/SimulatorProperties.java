@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
@@ -73,7 +74,7 @@ public class SimulatorProperties {
             inputStream = new FileInputStream(file);
             properties.load(inputStream);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw rethrow(e);
         } finally {
             closeQuietly(inputStream);
         }

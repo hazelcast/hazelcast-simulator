@@ -24,6 +24,10 @@ public class CommandLineExitException extends RuntimeException {
         super(message);
     }
 
+    public CommandLineExitException(Throwable cause) {
+        super(cause);
+    }
+
     public CommandLineExitException(String message, Throwable cause) {
         super(message, cause);
     }

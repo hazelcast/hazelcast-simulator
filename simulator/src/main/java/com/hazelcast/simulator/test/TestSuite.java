@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.utils.BindException;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.File;
@@ -166,7 +167,7 @@ public class TestSuite {
 
             return properties;
         } catch (IOException e) {
-            throw new RuntimeException(format("Failed to load testsuite property file [%s]", file.getAbsolutePath()), e);
+            throw new CommandLineExitException(format("Failed to load testsuite property file [%s]", file.getAbsolutePath()), e);
         } finally {
             closeQuietly(reader);
         }

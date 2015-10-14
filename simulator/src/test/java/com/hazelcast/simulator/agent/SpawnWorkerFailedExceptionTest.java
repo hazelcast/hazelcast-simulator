@@ -15,7 +15,7 @@ public class SpawnWorkerFailedExceptionTest {
 
     @Test
     public void testConstructor_withMessageAndCause() throws Exception {
-        Exception cause = new RuntimeException("cause");
+        Throwable cause = new RuntimeException("cause");
         Exception exception = new SpawnWorkerFailedException("test", cause);
 
         assertEquals("test", exception.getMessage());

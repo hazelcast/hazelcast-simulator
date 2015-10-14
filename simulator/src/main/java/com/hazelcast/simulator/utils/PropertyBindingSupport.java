@@ -339,6 +339,6 @@ public final class PropertyBindingSupport {
             }
         }
 
-        throw new RuntimeException(format("Could not find enum value %s.%s", type.getSimpleName(), value));
+        throw new BindException(format("Could not find enum value %s.%s", type.getSimpleName(), value));
     }
 }

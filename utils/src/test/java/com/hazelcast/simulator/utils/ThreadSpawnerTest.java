@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static org.junit.Assert.assertTrue;
 
@@ -94,13 +95,13 @@ public class ThreadSpawnerTest {
         spawner.spawn(new Runnable() {
             @Override
             public void run() {
-                throw new RuntimeException("Expected exception");
+                throw new CommandLineExitException("Expected exception");
             }
         });
         spawner.awaitCompletion();
 
         assertTrue(exceptionFile.exists());
-        FileUtils.deleteQuiet(exceptionFile);
+        deleteQuiet(exceptionFile);
     }
 
     @Test(expected = RuntimeException.class)
