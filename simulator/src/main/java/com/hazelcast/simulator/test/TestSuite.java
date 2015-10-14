@@ -55,10 +55,6 @@ public class TestSuite {
         id = (testSuiteId == null) ? createId() : testSuiteId;
     }
 
-    public String createId() {
-        return new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
-    }
-
     public String getId() {
         return id;
     }
@@ -260,5 +256,9 @@ public class TestSuite {
         List<String> testcaseIds = new LinkedList<String>(testCases.keySet());
         Collections.sort(testcaseIds);
         return testcaseIds;
+    }
+
+    private static String createId() {
+        return new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
     }
 }
