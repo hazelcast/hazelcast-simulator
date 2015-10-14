@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.nextKeyOwnedBy;
-import static com.hazelcast.simulator.utils.CommonUtils.humanReadableByteCount;
+import static com.hazelcast.simulator.utils.FormatUtils.humanReadableByteCount;
 import static java.lang.String.format;
 
 /**

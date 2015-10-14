@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.apache.log4j.Logger;
 
@@ -10,10 +9,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
-import static com.hazelcast.simulator.utils.CommonUtils.formatLong;
-import static com.hazelcast.simulator.utils.CommonUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
+import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
+import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
 import static java.lang.String.format;
 
@@ -75,7 +75,7 @@ public class PerformanceStateContainer {
             return;
         }
 
-        appendText(totalOperationCount + CommonUtils.NEW_LINE, PERFORMANCE_FILE_NAME);
+        appendText(totalOperationCount + NEW_LINE, PERFORMANCE_FILE_NAME);
         LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
                 formatPercentage(1, 1),
                 formatLong(totalOperationCount, THROUGHPUT_FORMAT_LENGTH),

@@ -2,12 +2,8 @@ package com.hazelcast.simulator.utils;
 
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.CommonUtils.join;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
@@ -21,19 +17,6 @@ public class CommonUtils_MiscTest {
     @Test
     public void testConstructor() throws Exception {
         invokePrivateConstructor(CommonUtils.class);
-    }
-
-    @Test
-    public void testJoin() throws Exception {
-        Iterable<String> input = Arrays.asList("one", "two", "three");
-        String joined = join(input);
-        assertEquals("one, two, three", joined);
-    }
-
-    @Test
-    public void testJoinEmptyString() throws Exception {
-        String joined = join(Collections.EMPTY_LIST);
-        assertEquals("", joined);
     }
 
     @Test

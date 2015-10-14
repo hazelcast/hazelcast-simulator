@@ -2,10 +2,10 @@ package com.hazelcast.simulator.worker.performance;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.utils.CommonUtils.fillString;
-import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
-import static com.hazelcast.simulator.utils.CommonUtils.formatLong;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
+import static com.hazelcast.simulator.utils.FormatUtils.fillString;
+import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
+import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 

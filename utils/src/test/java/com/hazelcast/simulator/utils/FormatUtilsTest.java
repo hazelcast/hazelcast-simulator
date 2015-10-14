@@ -2,20 +2,30 @@ package com.hazelcast.simulator.utils;
 
 import org.junit.Test;
 
-import static com.hazelcast.simulator.utils.CommonUtils.fillString;
-import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
-import static com.hazelcast.simulator.utils.CommonUtils.formatLong;
-import static com.hazelcast.simulator.utils.CommonUtils.formatPercentage;
-import static com.hazelcast.simulator.utils.CommonUtils.humanReadableByteCount;
-import static com.hazelcast.simulator.utils.CommonUtils.padLeft;
-import static com.hazelcast.simulator.utils.CommonUtils.padRight;
-import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
+import java.util.Arrays;
+import java.util.Collections;
+
+import static com.hazelcast.simulator.utils.FormatUtils.fillString;
+import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
+import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
+import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
+import static com.hazelcast.simulator.utils.FormatUtils.humanReadableByteCount;
+import static com.hazelcast.simulator.utils.FormatUtils.join;
+import static com.hazelcast.simulator.utils.FormatUtils.padLeft;
+import static com.hazelcast.simulator.utils.FormatUtils.padRight;
+import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
+import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class CommonUtils_FormatTest {
+public class FormatUtilsTest {
+
+    @Test
+    public void testConstructor() throws Exception {
+        invokePrivateConstructor(FormatUtils.class);
+    }
 
     @Test
     public void testFormatPercentage() {
@@ -176,5 +186,18 @@ public class CommonUtils_FormatTest {
     public void testHumanReadableByteCount_GigaByte_NoSI() {
         String actual = humanReadableByteCount(Integer.MAX_VALUE, true);
         assertEqualsStringFormat("Expected %s, but was %s", "2.1 GB", actual);
+    }
+
+    @Test
+    public void testJoin() throws Exception {
+        Iterable<String> input = Arrays.asList("one", "two", "three");
+        String joined = join(input);
+        assertEquals("one, two, three", joined);
+    }
+
+    @Test
+    public void testJoinEmptyString() throws Exception {
+        String joined = join(Collections.EMPTY_LIST);
+        assertEquals("", joined);
     }
 }

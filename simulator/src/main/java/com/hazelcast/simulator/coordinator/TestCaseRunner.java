@@ -16,10 +16,10 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.simulator.utils.CommonUtils.formatPercentage;
-import static com.hazelcast.simulator.utils.CommonUtils.padRight;
-import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
+import static com.hazelcast.simulator.utils.FormatUtils.padRight;
+import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static java.lang.String.format;
 
 /**

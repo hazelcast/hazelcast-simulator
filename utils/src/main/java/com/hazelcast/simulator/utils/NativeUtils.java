@@ -25,9 +25,9 @@ import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 
-import static com.hazelcast.simulator.utils.CommonUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 public final class NativeUtils {
 

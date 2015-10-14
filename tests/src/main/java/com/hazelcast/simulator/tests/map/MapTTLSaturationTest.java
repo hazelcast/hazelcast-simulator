@@ -32,8 +32,8 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.CommonUtils.humanReadableByteCount;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.simulator.utils.FormatUtils.humanReadableByteCount;
 
 public class MapTTLSaturationTest {
 

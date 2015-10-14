@@ -28,13 +28,13 @@ import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getHazelcastJ
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.CommonUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
+import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static java.lang.String.format;

@@ -40,10 +40,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-import static com.hazelcast.simulator.utils.CommonUtils.fillString;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeObject;
+import static com.hazelcast.simulator.utils.FormatUtils.fillString;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;

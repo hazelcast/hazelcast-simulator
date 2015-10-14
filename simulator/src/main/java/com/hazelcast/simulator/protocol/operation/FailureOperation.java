@@ -5,7 +5,7 @@ import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestSuite;
 
-import static com.hazelcast.simulator.utils.CommonUtils.NEW_LINE;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 public class FailureOperation implements SimulatorOperation {
 

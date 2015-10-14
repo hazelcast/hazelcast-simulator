@@ -5,7 +5,7 @@ import com.hazelcast.simulator.common.KeyValuePair;
 import java.io.Serializable;
 import java.util.Set;
 
-import static com.hazelcast.simulator.utils.CommonUtils.NEW_LINE;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 public abstract class Message implements Serializable {
 

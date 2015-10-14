@@ -35,8 +35,8 @@ import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
-import static com.hazelcast.simulator.utils.CommonUtils.humanReadableByteCount;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.FormatUtils.humanReadableByteCount;
 
 public class ExpiryICacheTest {
 

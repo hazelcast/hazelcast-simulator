@@ -2,7 +2,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.utils.CommonUtils;
+import com.hazelcast.simulator.utils.FormatUtils;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.junit.After;
 import org.junit.Before;
@@ -107,7 +107,7 @@ public class PerformanceStateContainerTest {
         performanceStateContainer.logDetailedPerformanceInfo();
 
         String performance = fileAsText(PERFORMANCE_FILE);
-        assertEquals("4500" + CommonUtils.NEW_LINE, performance);
+        assertEquals("4500" + FormatUtils.NEW_LINE, performance);
     }
 
     @Test
