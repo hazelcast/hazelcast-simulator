@@ -56,11 +56,18 @@ public class WorkerJvmSettings {
 
         this.autoCreateHzInstance = workerParameters.isAutoCreateHzInstance();
         this.workerStartupTimeout = workerParameters.getWorkerStartupTimeout();
-        this.workerPerformanceMonitorIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
+        this.workerPerformanceMonitorIntervalSeconds = initWorkerPerformanceMonitorIntervalSeconds(workerParameters);
 
         this.profiler = workerParameters.getProfiler().name();
         this.profilerSettings = workerParameters.getProfilerSettings();
         this.numaCtl = workerParameters.getNumaCtl();
+    }
+
+    private int initWorkerPerformanceMonitorIntervalSeconds(WorkerParameters workerParameters) {
+        if (workerParameters.isMonitorPerformance()) {
+            return workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
+        }
+        return -1;
     }
 
     public int getWorkerIndex() {

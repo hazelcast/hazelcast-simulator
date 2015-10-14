@@ -121,6 +121,8 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testInitMemberLayout_singleMemberWorker() {
+        when(workerParameters.isMonitorPerformance()).thenReturn(true);
+
         agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 1, 0);
         assertAgentMemberLayout(0, AgentMemberMode.MIXED, 1, 0);
         assertAgentMemberLayout(1, AgentMemberMode.MIXED, 0, 0);

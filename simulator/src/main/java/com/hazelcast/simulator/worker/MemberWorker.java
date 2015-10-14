@@ -83,13 +83,19 @@ public final class MemberWorker implements Worker {
         workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort, type, hazelcastInstance, this);
         workerConnector.start();
 
-        WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getConfiguration().getProcessor();
-        workerPerformanceMonitor = new WorkerPerformanceMonitor(workerConnector, processor.getTests(),
-                workerPerformanceMonitorIntervalSeconds);
+        workerPerformanceMonitor = initWorkerPerformanceMonitor(workerPerformanceMonitorIntervalSeconds);
 
         Runtime.getRuntime().addShutdownHook(new ShutdownThread());
 
         signalStartToAgent(hazelcastInstance);
+    }
+
+    private WorkerPerformanceMonitor initWorkerPerformanceMonitor(int workerPerformanceMonitorIntervalSeconds) {
+        if (workerPerformanceMonitorIntervalSeconds < 1) {
+            return null;
+        }
+        WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getConfiguration().getProcessor();
+        return new WorkerPerformanceMonitor(workerConnector, processor.getTests(), workerPerformanceMonitorIntervalSeconds);
     }
 
     @Override
@@ -99,12 +105,17 @@ public final class MemberWorker implements Worker {
 
     @Override
     public boolean startPerformanceMonitor() {
+        if (workerPerformanceMonitor == null) {
+            return false;
+        }
         return workerPerformanceMonitor.start();
     }
 
     @Override
     public void shutdownPerformanceMonitor() {
-        workerPerformanceMonitor.shutdown();
+        if (workerPerformanceMonitor != null) {
+            workerPerformanceMonitor.shutdown();
+        }
     }
 
     private HazelcastInstance getHazelcastInstance() throws Exception {
