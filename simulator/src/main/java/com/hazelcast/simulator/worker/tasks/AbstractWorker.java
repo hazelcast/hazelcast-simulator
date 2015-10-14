@@ -23,11 +23,12 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
+    // these fields will be injected by test.properties of the test
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    public long logFrequency;
+
     final Random random = new Random();
     final OperationSelector<O> selector;
-
-    // these fields will be injected by test.properties of the test
-    public long logFrequency;
 
     // these fields will be injected by the TestContainer
     TestContext testContext;
