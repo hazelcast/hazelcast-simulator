@@ -91,12 +91,12 @@ public class TestSuite {
         return failFast;
     }
 
-    public Set<FailureType> getTolerableFailures() {
-        return tolerableFailures;
-    }
-
     public void setTolerableFailures(Set<FailureType> tolerableFailures) {
         this.tolerableFailures = tolerableFailures;
+    }
+
+    public Set<FailureType> getTolerableFailures() {
+        return tolerableFailures;
     }
 
     public void addTest(TestCase testCase) {
@@ -149,12 +149,10 @@ public class TestSuite {
         if (testCases.size() == 1) {
             // use classname instead of empty testId in single test scenarios
             TestCase testCase = testCases.values().iterator().next();
-            if (testCase.getId().isEmpty()) {
-                String className = testCase.getClassname();
-                if (className != null && !className.isEmpty()) {
-                    String testId = className.substring(className.lastIndexOf('.') + 1);
-                    testCases = singletonMap(testId, new TestCase(testId, testCase.getProperties()));
-                }
+            String className = testCase.getClassname();
+            if (testCase.getId().isEmpty() && className != null) {
+                String testId = className.substring(className.lastIndexOf('.') + 1);
+                testCases = singletonMap(testId, new TestCase(testId, testCase.getProperties()));
             }
         }
 
@@ -182,13 +180,17 @@ public class TestSuite {
         Map<String, TestCase> testCases = new HashMap<String, TestCase>();
         for (String property : properties.stringPropertyNames()) {
             String value = (String) properties.get(property);
-            int indexOfAt = property.indexOf('@');
 
+            int indexOfAt = property.indexOf('@');
             String testCaseId = "";
             String field = property;
             if (indexOfAt > -1) {
                 testCaseId = property.substring(0, indexOfAt);
                 field = property.substring(indexOfAt + 1);
+            }
+
+            if (value.isEmpty()) {
+                throw new IllegalArgumentException(format("Value of property %s in testId [%s] is empty!", property, testCaseId));
             }
 
             TestCase testCase = getOrCreateTestCase(testCases, testCaseId);

@@ -4,11 +4,14 @@ import com.hazelcast.simulator.utils.BindException;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -21,6 +24,7 @@ public class TestSuiteTest {
 
         assertNotNull(testSuite.getId());
         assertTrue(testSuite.getTestCaseList().isEmpty());
+        assertEquals(0, testSuite.getMaxTestCaseIdLength());
     }
 
     @Test
@@ -29,6 +33,28 @@ public class TestSuiteTest {
 
         assertEquals("TestSuiteTest", testSuite.getId());
         assertTrue(testSuite.getTestCaseList().isEmpty());
+        assertEquals(0, testSuite.getMaxTestCaseIdLength());
+    }
+
+    @Test
+    public void testSetter() {
+        TestSuite testSuite = new TestSuite();
+
+        assertEquals(0, testSuite.getDurationSeconds());
+        assertFalse(testSuite.isWaitForTestCase());
+        assertFalse(testSuite.isFailFast());
+        assertTrue(testSuite.getTolerableFailures().isEmpty());
+
+        Set<FailureType> tolerableFailures = Collections.singleton(FailureType.NETTY_EXCEPTION);
+        testSuite.setDurationSeconds(23);
+        testSuite.setWaitForTestCase(true);
+        testSuite.setFailFast(true);
+        testSuite.setTolerableFailures(tolerableFailures);
+
+        assertEquals(23, testSuite.getDurationSeconds());
+        assertTrue(testSuite.isWaitForTestCase());
+        assertTrue(testSuite.isFailFast());
+        assertEquals(tolerableFailures, testSuite.getTolerableFailures());
     }
 
     @Test
@@ -92,6 +118,21 @@ public class TestSuiteTest {
     @Test(expected = BindException.class)
     public void loadTestSuite_missingClassName_withTestCaseId() throws Exception {
         String txt = "TestCase@threadCount=10";
+
+        createTestSuite(txt);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void loadTestSuite_emptyClassName() throws Exception {
+        String txt = "class=";
+
+        createTestSuite(txt);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void loadTestSuite_emptyProperty() throws Exception {
+        String txt = "class=AtomicLong\n"
+                + "threadCount=";
 
         createTestSuite(txt);
     }
