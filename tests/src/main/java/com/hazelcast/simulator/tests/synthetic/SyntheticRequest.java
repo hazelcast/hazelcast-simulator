@@ -18,7 +18,7 @@ public class SyntheticRequest extends PartitionClientRequest {
     public SyntheticRequest() {
     }
 
-    public SyntheticRequest(int syncBackupCount, int asyncBackupCount, long backupDelayNanos, String serviceName) {
+    public SyntheticRequest(int syncBackupCount, int asyncBackupCount, long backupDelayNanos) {
         this.syncBackupCount = syncBackupCount;
         this.asyncBackupCount = asyncBackupCount;
         this.backupDelayNanos = backupDelayNanos;

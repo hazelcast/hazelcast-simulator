@@ -24,7 +24,6 @@ import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import com.hazelcast.spi.OperationService;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,7 +91,7 @@ public class SyntheticTest {
     }
 
     // FIXME get rid of this suppression via a proper @InjectProbe annotation
-    @SuppressFBWarnings({"UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", "NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"})
+    //@SuppressFBWarnings({"UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", "NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"})
     private class Worker implements IWorker, ExecutionCallback<Object> {
 
         // these fields will be injected by the TestContainer
@@ -184,7 +183,7 @@ public class SyntheticTest {
         private ICompletableFuture<Object> invokeOnNextPartition() throws Exception {
             int partitionId = nextPartitionId();
             if (isClient) {
-                SyntheticRequest request = new SyntheticRequest(syncBackupCount, asyncBackupCount, backupDelayNanos, null);
+                SyntheticRequest request = new SyntheticRequest(syncBackupCount, asyncBackupCount, backupDelayNanos);
                 request.setLocalPartitionId(partitionId);
                 Address target = clientPartitionService.getPartitionOwner(partitionId);
                 return clientInvocationService.invokeOnTarget(request, target);
