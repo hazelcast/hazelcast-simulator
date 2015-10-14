@@ -129,43 +129,43 @@ public class GitSupport {
     }
 
     private File getBaseDir(String basePath) {
-        File baseDir;
+        File tmpBaseDir;
         if (basePath == null) {
-            baseDir = getDefaultBaseDir();
-            if (baseDir.exists()) {
-                if (!baseDir.isDirectory()) {
+            tmpBaseDir = getDefaultBaseDir();
+            if (tmpBaseDir.exists()) {
+                if (!tmpBaseDir.isDirectory()) {
                     throw new CommandLineExitException(
-                            "Default directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
-                            + ". This path already exists, but it isn't a directory. "
-                            + "Please configure the directory explicitly via 'simulator.properties'"
+                            "Default directory for building Hazelcast from GIT is " + tmpBaseDir.getAbsolutePath()
+                            + ". This path already exists, but it isn't a directory."
+                            + " Please configure the directory explicitly via 'simulator.properties'"
                             + " or remove the existing path.");
-                } else if (!baseDir.canWrite()) {
+                } else if (!tmpBaseDir.canWrite()) {
                     throw new CommandLineExitException(
-                            "Default directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
+                            "Default directory for building Hazelcast from GIT is " + tmpBaseDir.getAbsolutePath()
                             + ". This path already exists, but it isn't writable. "
                             + "Please configure the directory explicitly via 'simulator.properties' or check access rights.");
                 }
             }
         } else {
-            baseDir = new File(basePath);
-            if (baseDir.exists()) {
-                if (!baseDir.isDirectory()) {
-                    throw new CommandLineExitException("Directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
-                            + ". This path already exists, but it isn't a directory.");
-                } else if (!baseDir.canWrite()) {
-                    throw new CommandLineExitException("Directory for building Hazelcast from GIT is " + baseDir.getAbsolutePath()
-                            + ". This path already exists, but it isn't writable.");
+            tmpBaseDir = new File(basePath);
+            if (tmpBaseDir.exists()) {
+                if (!tmpBaseDir.isDirectory()) {
+                    throw new CommandLineExitException("Directory for building Hazelcast from GIT is "
+                            + tmpBaseDir.getAbsolutePath() + ". This path already exists, but it isn't a directory.");
+                } else if (!tmpBaseDir.canWrite()) {
+                    throw new CommandLineExitException("Directory for building Hazelcast from GIT is "
+                            + tmpBaseDir.getAbsolutePath() + ". This path already exists, but it isn't writable.");
                 }
             }
         }
-        if (!baseDir.exists()) {
-            ensureExistingDirectory(baseDir);
-            if (!baseDir.exists()) {
+        if (!tmpBaseDir.exists()) {
+            ensureExistingDirectory(tmpBaseDir);
+            if (!tmpBaseDir.exists()) {
                 throw new CommandLineExitException("Cannot create a directory for building Hazelcast form GIT."
-                        + " Directory is set to " + baseDir.getAbsolutePath() + ". Please check access rights.");
+                        + " Directory is set to " + tmpBaseDir.getAbsolutePath() + ". Please check access rights.");
             }
         }
-        return baseDir;
+        return tmpBaseDir;
     }
 
     private File getCacheDirectory(String fullSha1) {

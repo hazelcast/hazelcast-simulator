@@ -133,8 +133,8 @@ public class ListenerICacheTest {
         LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads");
 
         ICacheEntryListener totalEvents = new ICacheEntryListener();
-        for (ICacheEntryListener listener : listeners) {
-            totalEvents.add(listener);
+        for (ICacheEntryListener entryListener : listeners) {
+            totalEvents.add(entryListener);
         }
         LOGGER.info(basename + ": totalEvents " + totalEvents);
 

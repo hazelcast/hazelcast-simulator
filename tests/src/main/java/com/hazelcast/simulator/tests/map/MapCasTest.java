@@ -59,8 +59,8 @@ public class MapCasTest {
     public void verify() throws Exception {
         long[] amount = new long[keyCount];
 
-        for (Map<Integer, Long> map : resultsPerWorker.values()) {
-            for (Map.Entry<Integer, Long> entry : map.entrySet()) {
+        for (Map<Integer, Long> workerResult : resultsPerWorker.values()) {
+            for (Map.Entry<Integer, Long> entry : workerResult.entrySet()) {
                 amount[entry.getKey()] += entry.getValue();
             }
         }
