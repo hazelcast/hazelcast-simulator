@@ -58,8 +58,8 @@ public class Agent {
     private final String cloudIdentity;
     private final String cloudCredential;
 
-    private final AgentRemoteService agentRemoteService;
     private final AgentConnector agentConnector;
+    private final AgentRemoteService agentRemoteService;
 
     private final CoordinatorLogger coordinatorLogger;
 
@@ -74,9 +74,10 @@ public class Agent {
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
 
-        this.agentRemoteService = getAgentRemoteService();
         this.agentConnector = AgentConnector.createInstance(this, workerJVMs, Ports.AGENT_PORT);
         this.agentConnector.start();
+
+        this.agentRemoteService = getAgentRemoteService();
 
         this.coordinatorLogger = new CoordinatorLogger(agentConnector);
 
