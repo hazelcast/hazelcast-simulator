@@ -27,16 +27,6 @@ public class UseAllMemoryMessage extends RunnableMessage {
     }
 
     @Override
-    public boolean disableMemberFailureDetection() {
-        return super.disableMemberFailureDetection();
-    }
-
-    @Override
-    public boolean removeFromAgentList() {
-        return super.removeFromAgentList();
-    }
-
-    @Override
     public void run() {
         Thread thread = new Thread() {
             @Override
