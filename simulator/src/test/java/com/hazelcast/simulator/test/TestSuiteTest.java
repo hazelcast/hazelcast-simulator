@@ -11,8 +11,25 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class TestSuiteTest {
+
+    @Test
+    public void testConstructor() {
+        TestSuite testSuite = new TestSuite();
+
+        assertNotNull(testSuite.getId());
+        assertTrue(testSuite.getTestCaseList().isEmpty());
+    }
+
+    @Test
+    public void testConstructor_withTestSuiteId() {
+        TestSuite testSuite = new TestSuite("TestSuiteTest");
+
+        assertEquals("TestSuiteTest", testSuite.getId());
+        assertTrue(testSuite.getTestCaseList().isEmpty());
+    }
 
     @Test
     public void loadTestSuite_singleTestWithTestName() throws Exception {
@@ -102,7 +119,7 @@ public class TestSuiteTest {
 
     @Test(expected = RuntimeException.class)
     public void propertiesNotFound() throws Exception {
-        loadTestSuite(new File("notFound"), "");
+        loadTestSuite(new File("notFound"), "", null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -149,6 +166,6 @@ public class TestSuiteTest {
         file.deleteOnExit();
         writeText(txt, file);
 
-        return loadTestSuite(file, overrideProperties);
+        return loadTestSuite(file, overrideProperties, null);
     }
 }

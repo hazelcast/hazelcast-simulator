@@ -68,6 +68,10 @@ final class CoordinatorCli {
                     + " Use ';' as separator for multiple entries. The wildcard '*' can also be used.")
             .withRequiredArg().ofType(String.class);
 
+    private final OptionSpec<String> testSuiteIdSpec = parser.accepts("testSuiteId",
+            "Defines the ID of the testsuite. If not set the actual date will be used.")
+            .withRequiredArg().ofType(String.class);
+
     private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
             "If defined performance of tests is tracked.");
 
@@ -191,7 +195,8 @@ final class CoordinatorCli {
                 options.has(cli.monitorPerformanceSpec)
         );
 
-        TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec));
+        TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec),
+                options.valueOf(cli.testSuiteIdSpec));
         testSuite.setDurationSeconds(getDurationSeconds(options, cli));
         testSuite.setWaitForTestCase(options.has(cli.waitForTestCaseSpec));
         testSuite.setFailFast(options.valueOf(cli.failFastSpec));

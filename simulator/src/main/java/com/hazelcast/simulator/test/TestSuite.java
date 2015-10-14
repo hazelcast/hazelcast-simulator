@@ -38,14 +38,26 @@ import static java.util.Collections.singletonMap;
 
 public class TestSuite {
 
-    private final String id = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
     private final List<TestCase> testCaseList = new LinkedList<TestCase>();
+    private final String id;
 
     private int durationSeconds;
     private boolean waitForTestCase;
     private boolean failFast;
 
     private Set<FailureType> tolerableFailures = Collections.emptySet();
+
+    public TestSuite() {
+        this(null);
+    }
+
+    public TestSuite(String testSuiteId) {
+        id = (testSuiteId == null) ? createId() : testSuiteId;
+    }
+
+    public String createId() {
+        return new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
+    }
 
     public String getId() {
         return id;
@@ -130,7 +142,7 @@ public class TestSuite {
                 + '}';
     }
 
-    public static TestSuite loadTestSuite(File testPropertiesFile, String propertiesOverrideString) {
+    public static TestSuite loadTestSuite(File testPropertiesFile, String propertiesOverrideString, String testSuiteId) {
         Properties properties = loadProperties(testPropertiesFile);
 
         Map<String, TestCase> testCases = createTestCases(properties);
@@ -146,7 +158,7 @@ public class TestSuite {
             }
         }
 
-        return createTestSuite(testPropertiesFile, testCases, propertiesOverrideString);
+        return createTestSuite(testPropertiesFile, testCases, propertiesOverrideString, testSuiteId);
     }
 
     @SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
@@ -200,10 +212,11 @@ public class TestSuite {
         return testCase;
     }
 
-    private static TestSuite createTestSuite(File file, Map<String, TestCase> testCases, String propertiesOverrideString) {
+    private static TestSuite createTestSuite(File file, Map<String, TestCase> testCases, String propertiesOverrideString,
+                                             String testSuiteId) {
         Map<String, String> propertiesOverride = parseProperties(propertiesOverrideString);
 
-        TestSuite testSuite = new TestSuite();
+        TestSuite testSuite = new TestSuite(testSuiteId);
         for (String testcaseId : getTestCaseIds(testCases)) {
             TestCase testcase = testCases.get(testcaseId);
             testcase.override(propertiesOverride);
