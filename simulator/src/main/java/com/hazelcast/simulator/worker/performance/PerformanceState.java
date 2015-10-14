@@ -9,8 +9,8 @@ public class PerformanceState {
 
     public static final double INTERVAL_LATENCY_PERCENTILE = 0.999;
 
-    public static final long EMPTY_OPERATION_COUNT = -1;
-    public static final double EMPTY_THROUGHPUT = -1;
+    private static final long EMPTY_OPERATION_COUNT = -1;
+    private static final double EMPTY_THROUGHPUT = -1;
 
     private long operationCount;
     private double intervalThroughput;

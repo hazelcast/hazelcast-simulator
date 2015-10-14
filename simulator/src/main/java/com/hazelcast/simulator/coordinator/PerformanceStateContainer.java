@@ -14,7 +14,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.formatDouble;
 import static com.hazelcast.simulator.utils.CommonUtils.formatLong;
 import static com.hazelcast.simulator.utils.CommonUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.worker.performance.PerformanceState.EMPTY_OPERATION_COUNT;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
 import static java.lang.String.format;
 
@@ -41,7 +40,7 @@ public class PerformanceStateContainer {
 
     String getPerformanceNumbers(String testCaseId) {
         PerformanceState performanceState = getPerformanceStateForTestCase(testCaseId);
-        if (performanceState.getOperationCount() == EMPTY_OPERATION_COUNT) {
+        if (performanceState.isEmpty() || performanceState.getOperationCount() < 1) {
             return " (performance not available)";
         }
         return String.format("%s ops %s ops/s %s µs (%sth) %s µs (max)",
@@ -71,18 +70,16 @@ public class PerformanceStateContainer {
         calculatePerformanceStates(totalPerformanceState, agentPerformanceStateMap);
 
         long totalOperationCount = totalPerformanceState.getOperationCount();
-        if (totalOperationCount == EMPTY_OPERATION_COUNT) {
+        if (totalOperationCount < 1) {
             LOGGER.info("Performance information is not available!");
             return;
         }
 
         appendText(totalOperationCount + CommonUtils.NEW_LINE, PERFORMANCE_FILE_NAME);
-        if (totalOperationCount > 0) {
-            LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
-                    formatPercentage(1, 1),
-                    formatLong(totalOperationCount, THROUGHPUT_FORMAT_LENGTH),
-                    formatDouble(totalPerformanceState.getTotalThroughput(), THROUGHPUT_FORMAT_LENGTH)));
-        }
+        LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
+                formatPercentage(1, 1),
+                formatLong(totalOperationCount, THROUGHPUT_FORMAT_LENGTH),
+                formatDouble(totalPerformanceState.getTotalThroughput(), THROUGHPUT_FORMAT_LENGTH)));
 
         for (Map.Entry<SimulatorAddress, PerformanceState> entry : agentPerformanceStateMap.entrySet()) {
             SimulatorAddress agentAddress = entry.getKey();
