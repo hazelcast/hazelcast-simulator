@@ -54,9 +54,9 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         beforeRun();
 
         while (!testContext.isStopped() && !isWorkerStopped) {
-            workerProbe.started();
+            long started = System.nanoTime();
             timeStep(selector.select());
-            workerProbe.done();
+            workerProbe.recordValue(System.nanoTime() - started);
 
             increaseIteration();
         }
