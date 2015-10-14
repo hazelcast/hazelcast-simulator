@@ -110,7 +110,7 @@ public class IntByteMapTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             int key = keys[randomInt(keys.length)];
 
             switch (operation) {

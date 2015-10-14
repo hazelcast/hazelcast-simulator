@@ -188,7 +188,7 @@ public class NetworkTest {
         }
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             Connection connection = nextConnection();
             byte[] payload = makePayload(payloadSize);
             Packet requestPacket = new Packet(payload, workerId);

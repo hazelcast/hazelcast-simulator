@@ -127,7 +127,7 @@ public class SerializationStrategyTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             switch (operation) {
                 case GET_BY_KEY:
                     throw new UnsupportedOperationException("Not implemented yet");

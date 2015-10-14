@@ -202,7 +202,7 @@ public class TestContainerTest {
             return new AbstractWorker<Operation>(BUILDER) {
 
                 @Override
-                protected void timeStep(Operation operation) {
+                protected void timeStep(Operation operation) throws Exception {
                     runWithWorkerCalled = true;
                 }
             };

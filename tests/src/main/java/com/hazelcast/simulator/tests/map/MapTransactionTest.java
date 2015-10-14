@@ -95,7 +95,7 @@ public class MapTransactionTest {
         private final long[] increments = new long[keyCount];
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             final int key = randomInt(keyCount);
             final int increment = randomInt(100);
 

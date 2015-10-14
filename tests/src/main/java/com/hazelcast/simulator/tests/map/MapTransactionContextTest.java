@@ -38,7 +38,7 @@ public class MapTransactionContextTest {
     private class Worker extends AbstractMonotonicWorker {
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             int key = nextRandom(0, range / 2);
 
             TransactionOptions transactionOptions = new TransactionOptions()

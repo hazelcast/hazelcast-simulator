@@ -99,7 +99,7 @@ public class MapReduceTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             switch (operation) {
                 case MAP_REDUCE:
                     mapReduce();

@@ -422,7 +422,7 @@ public class MapComplexPredicateTest {
         }
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             long startTime = System.nanoTime();
             Set<Map.Entry<String, ComplexDomainObject>> entries = map.entrySet(predicate);
             long durationNanos = System.nanoTime() - startTime;

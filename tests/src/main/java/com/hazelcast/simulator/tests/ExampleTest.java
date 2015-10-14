@@ -85,7 +85,7 @@ public class ExampleTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             int key = randomInt(maxKeys);
             switch (operation) {
                 case PUT:

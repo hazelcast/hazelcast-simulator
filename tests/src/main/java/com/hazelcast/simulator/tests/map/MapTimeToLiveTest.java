@@ -116,7 +116,7 @@ public class MapTimeToLiveTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             try {
                 int key = randomInt(keyCount);
                 int value;

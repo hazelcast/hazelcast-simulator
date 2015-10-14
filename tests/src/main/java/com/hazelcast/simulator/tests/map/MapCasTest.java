@@ -96,7 +96,7 @@ public class MapCasTest {
         }
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             Integer key = randomInt(keyCount);
             long incrementValue = randomInt(100);
 

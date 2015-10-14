@@ -75,7 +75,7 @@ public class AllKeySetTest {
     private class Worker extends AbstractMonotonicWorker {
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             latency.started();
             Set<String> result;
             if (usePredicate) {

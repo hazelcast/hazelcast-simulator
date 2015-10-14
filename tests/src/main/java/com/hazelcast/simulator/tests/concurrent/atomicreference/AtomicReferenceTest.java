@@ -110,7 +110,7 @@ public class AtomicReferenceTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             IAtomicReference<Object> counter = getRandomCounter();
             switch (operation) {
                 case PUT:

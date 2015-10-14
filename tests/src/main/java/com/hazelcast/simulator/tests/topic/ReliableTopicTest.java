@@ -109,7 +109,7 @@ public class ReliableTopicTest {
         }
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             ITopic<MessageEntity> topic = getRandomTopic();
             AtomicLong counter = counterMap.get(topic);
             MessageEntity msg = new MessageEntity(id, counter.incrementAndGet());

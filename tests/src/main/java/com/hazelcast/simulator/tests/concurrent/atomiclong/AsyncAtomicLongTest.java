@@ -148,7 +148,7 @@ public class AsyncAtomicLongTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             if (isClient(targetInstance)) {
                 return;
             }

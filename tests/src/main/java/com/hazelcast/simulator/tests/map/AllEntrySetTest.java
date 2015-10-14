@@ -76,7 +76,7 @@ public class AllEntrySetTest {
     private class Worker extends AbstractMonotonicWorker {
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             latency.started();
             Set<Map.Entry<String, String>> result;
             if (usePredicate) {

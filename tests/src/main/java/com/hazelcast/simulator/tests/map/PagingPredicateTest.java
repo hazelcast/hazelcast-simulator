@@ -72,7 +72,7 @@ public class PagingPredicateTest {
     private class SequentialWorker extends BaseWorker {
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             createNewPredicateIfNeeded();
             evaluatePredicate();
             predicate.nextPage();
@@ -82,7 +82,7 @@ public class PagingPredicateTest {
     private class RandomWorker extends BaseWorker {
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             createNewPredicateIfNeeded();
             goToRandomPage();
             evaluatePredicate();

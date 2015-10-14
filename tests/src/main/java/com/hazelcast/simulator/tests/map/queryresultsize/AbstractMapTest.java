@@ -151,7 +151,7 @@ abstract class AbstractMapTest {
         protected long localExceptionCounter;
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             localOperationCounter++;
             try {
                 mapOperation();

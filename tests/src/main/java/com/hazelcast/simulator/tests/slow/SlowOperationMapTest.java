@@ -164,7 +164,7 @@ public class SlowOperationMapTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             int key = randomKey();
 
             switch (operation) {

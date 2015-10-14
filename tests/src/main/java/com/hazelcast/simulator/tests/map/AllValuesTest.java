@@ -75,7 +75,7 @@ public class AllValuesTest {
     private class Worker extends AbstractMonotonicWorker {
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             latency.started();
             Collection<String> result;
             if (usePredicate) {

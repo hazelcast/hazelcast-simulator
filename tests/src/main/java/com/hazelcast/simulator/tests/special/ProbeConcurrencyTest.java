@@ -37,7 +37,7 @@ public class ProbeConcurrencyTest {
         private int operationCount;
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             if (++operationCount >= maxOperations) {
                 stopWorker();
             }

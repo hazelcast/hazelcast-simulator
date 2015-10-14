@@ -155,7 +155,7 @@ public class ListenerICacheTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             int expiryDuration = randomInt(maxExpiryDurationMs);
             ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
 

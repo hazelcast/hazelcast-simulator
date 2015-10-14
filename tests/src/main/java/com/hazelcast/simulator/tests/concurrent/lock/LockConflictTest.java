@@ -92,7 +92,7 @@ public class LockConflictTest {
         private final long[] localIncrements = new long[keyCount];
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             List<KeyIncrementPair> potentialLocks = getPotentialLocks();
             List<KeyIncrementPair> locked = getLocks(potentialLocks);
             incrementLockedValues(locked);

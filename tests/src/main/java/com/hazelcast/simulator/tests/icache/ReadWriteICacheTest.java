@@ -129,7 +129,7 @@ public class ReadWriteICacheTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             int key = randomInt(keyCount);
 
             switch (operation) {

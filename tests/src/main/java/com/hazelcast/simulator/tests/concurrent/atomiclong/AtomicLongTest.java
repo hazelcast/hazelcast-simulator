@@ -124,7 +124,7 @@ public class AtomicLongTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             IAtomicLong counter = getRandomCounter();
 
             switch (operation) {

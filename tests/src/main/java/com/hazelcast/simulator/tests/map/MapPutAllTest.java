@@ -86,7 +86,7 @@ public class MapPutAllTest {
     private class Worker extends AbstractMonotonicWorker {
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             Map<String, String> insertMap = randomMap();
             if (usePutAll) {
                 map.putAll(insertMap);

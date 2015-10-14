@@ -78,7 +78,7 @@ public class SqlPredicateTest {
         private Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
 
         @Override
-        protected void timeStep() {
+        protected void timeStep() throws Exception {
             metronome.waitForNext();
             map.values(sqlPredicate);
         }

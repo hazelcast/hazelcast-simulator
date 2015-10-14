@@ -101,7 +101,7 @@ public class MangleICacheTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation) throws Exception {
             switch (operation) {
                 case CLOSE_CACHING_PROVIDER:
                     closeCachingProvider();
