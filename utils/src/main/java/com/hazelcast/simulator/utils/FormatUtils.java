@@ -15,6 +15,13 @@ public final class FormatUtils {
     private static final int PERCENTAGE_FORMAT_LENGTH = 7;
     private static final String DEFAULT_DELIMITER = ", ";
 
+    private static final int SECONDS_PER_MINUTE = 60;
+    private static final int MINUTES_PER_HOUR = 60;
+    private static final int HOURS_PER_DAY = 24;
+
+    private static final int SI_BYTES_FACTOR = 1000;
+    private static final int IEC_BYTES_FACTOR = 1024;
+
     private FormatUtils() {
     }
 
@@ -87,27 +94,25 @@ public final class FormatUtils {
         return new String(array);
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     public static String secondsToHuman(long seconds) {
         long time = seconds;
 
-        long s = time % 60;
-        time /= 60;
+        long s = time % SECONDS_PER_MINUTE;
+        time /= SECONDS_PER_MINUTE;
 
-        long m = time % 60;
-        time /= 60;
+        long m = time % MINUTES_PER_HOUR;
+        time /= MINUTES_PER_HOUR;
 
-        long h = time % 24;
-        time /= 24;
+        long h = time % HOURS_PER_DAY;
+        time /= HOURS_PER_DAY;
 
         long days = time;
 
         return format("%02dd %02dh %02dm %02ds", days, h, m, s);
     }
 
-    @SuppressWarnings("checkstyle:magicnumber")
     public static String humanReadableByteCount(long bytes, boolean si) {
-        int unit = si ? 1000 : 1024;
+        int unit = si ? SI_BYTES_FACTOR : IEC_BYTES_FACTOR;
         if (bytes < unit) {
             return bytes + " B";
         }
