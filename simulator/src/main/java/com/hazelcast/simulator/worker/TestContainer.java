@@ -61,12 +61,16 @@ public class TestContainer {
         OptionalTestProperties(String propertyName) {
             this.propertyName = propertyName;
         }
+
+        public String getPropertyName() {
+            return propertyName;
+        }
     }
 
     static {
         Set<String> optionalTestProperties = new HashSet<String>();
         for (OptionalTestProperties optionalTestProperty : OptionalTestProperties.values()) {
-            optionalTestProperties.add(optionalTestProperty.propertyName);
+            optionalTestProperties.add(optionalTestProperty.getPropertyName());
         }
         OPTIONAL_TEST_PROPERTIES = Collections.unmodifiableSet(optionalTestProperties);
     }
@@ -265,7 +269,7 @@ public class TestContainer {
     }
 
     private void invokeRunWithWorkerMethod() throws Exception {
-        bindOptionalProperty(this, testCase, OptionalTestProperties.THREAD_COUNT.propertyName);
+        bindOptionalProperty(this, testCase, OptionalTestProperties.THREAD_COUNT.getPropertyName());
 
         LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
         if (threadCount <= 0) {
@@ -307,7 +311,7 @@ public class TestContainer {
                 injectObjectToInstance(worker, workerProbeField, probe);
             }
 
-            bindOptionalProperty(worker, testCase, OptionalTestProperties.LOG_FREQUENCY.propertyName);
+            bindOptionalProperty(worker, testCase, OptionalTestProperties.LOG_FREQUENCY.getPropertyName());
 
             spawner.spawn(worker);
         }
