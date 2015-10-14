@@ -26,13 +26,13 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     final Random random = new Random();
     final OperationSelector<O> selector;
 
+    // these fields will be injected by test.properties of the test
+    public long logFrequency;
+
     // these fields will be injected by the TestContainer
     TestContext testContext;
     @SimulatorProbe(useForThroughput = true)
     Probe workerProbe;
-
-    // these fields will be injected by test.properties of the test
-    long logFrequency;
 
     // local variables
     long iteration;
