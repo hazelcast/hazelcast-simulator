@@ -79,7 +79,7 @@ public class TxnQueueWithLockTest {
                             LOGGER.severe(basename + ": Exception in txn " + counter, txnException);
                         } catch (Exception rollException) {
                             // TODO: Bad exception handling
-                            counter.failedRoles++;
+                            counter.failedRollbacks++;
                             LOGGER.severe(basename + ": Exception in roll " + counter, rollException);
                         }
                     } finally {

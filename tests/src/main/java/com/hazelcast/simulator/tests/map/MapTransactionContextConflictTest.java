@@ -106,22 +106,21 @@ public class MapTransactionContextConflictTest {
                     for (KeyIncrementPair p : putIncrements) {
                         localIncrements[p.key] += p.increment;
                     }
-                } catch (TransactionException e) {
-                    LOGGER.warning(basename + ": commit fail. tried key increments=" + putIncrements + " " + e.getMessage());
+                } catch (TransactionException commitException) {
+                    LOGGER.warning(basename + ": commit failed. tried key increments=" + putIncrements, commitException);
                     if (throwCommitException) {
-                        throw new TestException(e);
+                        throw new TestException(commitException);
                     }
 
                     try {
                         context.rollbackTransaction();
                         count.rolled++;
-
-                    } catch (TransactionException rollBack) {
-                        LOGGER.warning(basename + ": rollback fail " + rollBack.getMessage(), rollBack);
-                        count.failedRoles++;
+                    } catch (TransactionException rollBackException) {
+                        LOGGER.warning(basename + ": rollback failed " + rollBackException.getMessage(), rollBackException);
+                        count.failedRollbacks++;
 
                         if (throwRollBackException) {
-                            throw new TestException(rollBack);
+                            throw new TestException(rollBackException);
                         }
                     }
                 }

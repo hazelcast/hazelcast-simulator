@@ -9,4 +9,8 @@ class IllegalTestException extends RuntimeException {
     public IllegalTestException(String message) {
         super(message);
     }
+
+    public IllegalTestException(Throwable cause) {
+        super(cause);
+    }
 }

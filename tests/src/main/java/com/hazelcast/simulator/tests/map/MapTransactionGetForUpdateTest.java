@@ -101,20 +101,20 @@ public class MapTransactionGetForUpdateTest {
                 } catch (Exception commitFailedException) {
                     if (context != null) {
                         try {
-                            LOGGER.warning(basename + ": commit   fail key=" + key + " inc=" + increment, commitFailedException);
-
+                            LOGGER.warning(basename + ": commit failed key=" + key + " inc=" + increment, commitFailedException);
                             if (rethrowAllException) {
                                 throw new TestException(commitFailedException);
                             }
 
                             context.rollbackTransaction();
                             count.rolled++;
-                        } catch (Exception rollBackFailed) {
-                            LOGGER.warning(basename + ": rollback fail key=" + key + " inc=" + increment, rollBackFailed);
-                            count.failedRoles++;
+                        } catch (Exception rollBackFailedException) {
+                            LOGGER.warning(basename + ": rollback failed key=" + key + " inc=" + increment,
+                                    rollBackFailedException);
+                            count.failedRollbacks++;
 
                             if (rethrowRollBackException) {
-                                throw new TestException(commitFailedException);
+                                throw new TestException(rollBackFailedException);
                             }
                         }
                     }

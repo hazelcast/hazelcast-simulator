@@ -182,10 +182,6 @@ public class TestContainer {
         try {
             runMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Run.class);
             runWithWorkerMethod = getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, IWorker.class);
-            if ((runMethod == null) == (runWithWorkerMethod == null)) {
-                throw new IllegalTestException(format("Test must contain either %s or %s method",
-                        Run.class, RunWithWorker.class));
-            }
 
             setupMethod = getAtMostOneVoidMethodSkipArgsCheck(testClassType, Setup.class);
             if (setupMethod != null) {
@@ -202,7 +198,10 @@ public class TestContainer {
             localTeardownMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new TeardownFilter(false));
             globalTeardownMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Teardown.class, new TeardownFilter(true));
         } catch (Exception e) {
-            throw new IllegalTestException(e.getMessage());
+            throw new IllegalTestException(e);
+        }
+        if ((runMethod == null) == (runWithWorkerMethod == null)) {
+            throw new IllegalTestException(format("Test must contain either %s or %s method", Run.class, RunWithWorker.class));
         }
 
         injectDependencies();

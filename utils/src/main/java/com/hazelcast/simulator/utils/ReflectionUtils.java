@@ -71,7 +71,7 @@ public final class ReflectionUtils {
                 throw (Exception) e.getCause();
             }
             throw new ReflectionException(format("Error while invoking method %s on instance of type %s",
-                    method.getName(), classInstance.getClass().getSimpleName()), e.getCause());
+                    method.getName(), classInstance.getClass().getSimpleName()), e);
         }
     }
 

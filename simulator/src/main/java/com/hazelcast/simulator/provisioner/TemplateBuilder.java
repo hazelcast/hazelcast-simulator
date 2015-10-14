@@ -3,7 +3,6 @@ package com.hazelcast.simulator.provisioner;
 import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.configuration.Ports;
-import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
@@ -75,11 +74,7 @@ class TemplateBuilder {
     }
 
     private Template buildTemplate() {
-        try {
-            return compute.templateBuilder().from(spec).build();
-        } catch (IllegalArgumentException e) {
-            throw new CommandLineExitException(e.getMessage());
-        }
+        return compute.templateBuilder().from(spec).build();
     }
 
     private int[] inboundPorts() {
