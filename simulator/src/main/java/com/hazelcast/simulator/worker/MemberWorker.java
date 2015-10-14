@@ -285,7 +285,9 @@ public final class MemberWorker implements Worker {
             hazelcastInstance.shutdown();
 
             LOGGER.info("Stopping WorkerPerformanceMonitor");
-            workerPerformanceMonitor.shutdown();
+            if (workerPerformanceMonitor != null) {
+                workerPerformanceMonitor.shutdown();
+            }
 
             LOGGER.info("Stopping WorkerConnector...");
             workerConnector.shutdown();
