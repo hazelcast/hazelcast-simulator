@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.worker.tasks;
 
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+
 /**
  * Monotonic version of {@link AbstractWorker}.
  *
@@ -14,7 +16,11 @@ public abstract class AbstractMonotonicWorker extends AbstractWorker {
 
         while (!testContext.isStopped() && !isWorkerStopped) {
             long started = System.nanoTime();
-            timeStep();
+            try {
+                timeStep();
+            } catch (Exception e) {
+                throw rethrow(e);
+            }
             workerProbe.recordValue(System.nanoTime() - started);
 
             increaseIteration();
@@ -38,5 +44,5 @@ public abstract class AbstractMonotonicWorker extends AbstractWorker {
      *
      * Won't be called if an error occurs in {@link #beforeRun()}.
      */
-    protected abstract void timeStep();
+    protected abstract void timeStep() throws Exception;
 }

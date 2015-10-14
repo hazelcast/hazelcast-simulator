@@ -4,6 +4,8 @@ import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+
 /**
  * Asynchronous version of {@link AbstractWorker}.
  *
@@ -22,7 +24,11 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
     @Override
     public final void run() {
         while (!testContext.isStopped() && !isWorkerStopped) {
-            timeStep(selector.select());
+            try {
+                timeStep(selector.select());
+            } catch (Exception e) {
+                throw rethrow(e);
+            }
         }
     }
 

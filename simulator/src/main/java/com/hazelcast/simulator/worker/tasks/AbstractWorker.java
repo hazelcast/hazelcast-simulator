@@ -10,6 +10,8 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
 import java.util.Random;
 
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+
 /**
  * Abstract worker class which is returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker} annotated test
  * methods.
@@ -56,7 +58,11 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
         while (!testContext.isStopped() && !isWorkerStopped) {
             long started = System.nanoTime();
-            timeStep(selector.select());
+            try {
+                timeStep(selector.select());
+            } catch (Exception e) {
+                throw rethrow(e);
+            }
             workerProbe.recordValue(System.nanoTime() - started);
 
             increaseIteration();
@@ -96,7 +102,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
      *
      * @param operation The selected operation for this iteration
      */
-    protected abstract void timeStep(O operation);
+    protected abstract void timeStep(O operation) throws Exception;
 
     /**
      * Override this method if you need to execute code on each worker after {@link #run()} is called.

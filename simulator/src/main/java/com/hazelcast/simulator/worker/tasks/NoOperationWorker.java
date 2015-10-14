@@ -13,6 +13,6 @@ public final class NoOperationWorker extends AbstractMonotonicWorker {
     }
 
     @Override
-    protected void timeStep() {
+    protected void timeStep() throws Exception {
     }
 }
