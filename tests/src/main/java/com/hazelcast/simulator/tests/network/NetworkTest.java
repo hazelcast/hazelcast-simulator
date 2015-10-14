@@ -201,7 +201,7 @@ public class NetworkTest {
                 responseFuture.get(requestTimeout, requestTimeUnit);
             } catch (Exception e) {
                 throw new TestException("Failed to receive request from connection %s within timeout %d %s", connection,
-                        requestTimeout, requestTimeUnit);
+                        requestTimeout, requestTimeUnit, e);
             }
             responseFuture.reset();
         }
@@ -238,12 +238,11 @@ public class NetworkTest {
         }
 
         private void handleRequest(Packet packet) {
-            // it is a request, then we send back a response.
+            // it is a request, then we send back a response
             byte[] requestPayload = packet.toByteArray();
             byte[] responsePayload = null;
             if (requestPayload != null && returnPayload) {
                 responsePayload = new byte[requestPayload.length];
-                //  arraycopy(originalPayload, 0, responsePayload, 0, originalPayload.length);
                 addHeadTailMarkers(responsePayload);
             }
             Packet response = new Packet(responsePayload, packet.getPartitionId());
@@ -279,8 +278,8 @@ public class NetworkTest {
             long foundSequence = readLong(payload, 3);
             long expectedSequence = sequenceCounter.get() + 1;
             if (expectedSequence != foundSequence) {
-                throw new IllegalArgumentException("Unexpected sequence id, expected:" + expectedSequence
-                        + "found:" + foundSequence);
+                throw new IllegalArgumentException("Unexpected sequence id, expected: " + expectedSequence
+                        + "found: " + foundSequence);
             }
             sequenceCounter.set(expectedSequence);
         }
@@ -297,8 +296,8 @@ public class NetworkTest {
             }
 
             if (foundPayloadSize != expectedPayloadSize) {
-                throw new IllegalArgumentException("Unexpected payload size; expected:" + expectedPayloadSize
-                        + " but found:" + foundPayloadSize);
+                throw new IllegalArgumentException("Unexpected payload size; expected: " + expectedPayloadSize
+                        + " but found: " + foundPayloadSize);
             }
         }
     }

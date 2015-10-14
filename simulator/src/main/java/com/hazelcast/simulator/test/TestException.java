@@ -19,5 +19,10 @@ public class TestException extends RuntimeException {
 
     public TestException(String message, Object... args) {
         super(format(message, args));
+
+        Object lastArg = args[args.length - 1];
+        if (lastArg instanceof Throwable) {
+            initCause((Throwable) lastArg);
+        }
     }
 }
