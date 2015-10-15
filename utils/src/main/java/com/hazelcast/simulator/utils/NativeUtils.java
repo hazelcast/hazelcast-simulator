@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.InvocationTargetException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -35,25 +34,6 @@ public final class NativeUtils {
     private static final Logger LOGGER = Logger.getLogger(NativeUtils.class);
 
     private NativeUtils() {
-    }
-
-    /**
-     * http://stackoverflow.com/questions/35842/how-can-a-java-program-get-its-own-process-id
-     *
-     * @return the PID of this JVM or <tt>null</tt>
-     */
-    public static Integer getPIDorNull() {
-        Integer pidFromManagementBean = getPidFromManagementBean();
-        return pidFromManagementBean != null ? pidFromManagementBean : getPidViaReflection();
-    }
-
-    public static void kill(int pid) {
-        LOGGER.info("Sending -9 signal to PID " + pid);
-        try {
-            Runtime.getRuntime().exec("/bin/kill -9 " + pid + " >/dev/null");
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     public static void execute(String command) {
@@ -88,8 +68,31 @@ public final class NativeUtils {
         }
     }
 
-    private static Integer getPidFromManagementBean() {
+    public static void kill(int pid) {
+        LOGGER.info("Sending -9 signal to PID " + pid);
+        try {
+            Runtime.getRuntime().exec("/bin/kill -9 " + pid + " >/dev/null");
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * http://stackoverflow.com/questions/35842/how-can-a-java-program-get-its-own-process-id
+     *
+     * @return the PID of this JVM or <tt>null</tt>
+     */
+    public static Integer getPIDorNull() {
+        Integer pidFromManagementBean = getPidFromManagementBean();
+        return (pidFromManagementBean != null) ? pidFromManagementBean : getPidViaReflection();
+    }
+
+    static Integer getPidFromManagementBean() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
+        return getPidFromBeanString(name);
+    }
+
+    static Integer getPidFromBeanString(String name) {
         int indexOf = name.indexOf('@');
         if (indexOf == -1) {
             return null;
@@ -103,31 +106,23 @@ public final class NativeUtils {
         }
     }
 
-    private static Integer getPidViaReflection() {
+    static Integer getPidViaReflection() {
         try {
             java.lang.management.RuntimeMXBean runtime = java.lang.management.ManagementFactory.getRuntimeMXBean();
             java.lang.reflect.Field jvm = runtime.getClass().getDeclaredField("jvm");
             jvm.setAccessible(true);
-            sun.management.VMManagement mgmt = (sun.management.VMManagement) jvm.get(runtime);
-            java.lang.reflect.Method pidMethod = mgmt.getClass().getDeclaredMethod("getProcessId");
+            sun.management.VMManagement management = (sun.management.VMManagement) jvm.get(runtime);
+            java.lang.reflect.Method pidMethod = management.getClass().getDeclaredMethod("getProcessId");
             pidMethod.setAccessible(true);
-            return (Integer) pidMethod.invoke(mgmt);
-        } catch (IllegalAccessException e) {
-            LOGGER.warn(e);
-            return null;
-        } catch (InvocationTargetException e) {
-            LOGGER.warn(e);
-            return null;
-        } catch (NoSuchMethodException e) {
-            LOGGER.warn(e);
-            return null;
-        } catch (NoSuchFieldException e) {
+
+            return (Integer) pidMethod.invoke(management);
+        } catch (Exception e) {
             LOGGER.warn(e);
             return null;
         }
     }
 
-    public static class BashStreamGobbler extends Thread {
+    private static class BashStreamGobbler extends Thread {
 
         private final InputStreamReader inputStreamReader;
         private final BufferedReader reader;
