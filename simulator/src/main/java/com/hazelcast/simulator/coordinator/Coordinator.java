@@ -358,8 +358,7 @@ public final class Coordinator {
     void runTestSuite() {
         echo("Starting testsuite: %s", testSuite.getId());
         echo("Tests in testsuite: %s", testSuite.size());
-        echo("Running time per test: %s ", secondsToHuman(testSuite.getDurationSeconds()));
-        echo("Expected total testsuite time: %s", secondsToHuman(testSuite.size() * testSuite.getDurationSeconds()));
+        logTestSuiteDuration();
 
         long started = System.nanoTime();
 
@@ -379,6 +378,21 @@ public final class Coordinator {
 
         long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
         LOGGER.info(format("Total running time: %s seconds", duration));
+    }
+
+    private void logTestSuiteDuration() {
+        int testDuration = testSuite.getDurationSeconds();
+        if (testDuration > 0) {
+            echo("Running time per test: %s ", secondsToHuman(testDuration));
+            int totalDuration = (coordinatorParameters.isParallel()) ? testSuite.size() * testDuration : testDuration;
+            if (testSuite.isWaitForTestCase()) {
+                echo("Testsuite will run until tests are finished for a maximum time of:  %s", secondsToHuman(totalDuration));
+            } else {
+                echo("Expected total testsuite time: %s", secondsToHuman(totalDuration));
+            }
+        } else if (testSuite.isWaitForTestCase()) {
+            echo("Testsuite will run until tests are finished");
+        }
     }
 
     private void runParallel() {
