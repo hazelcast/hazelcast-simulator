@@ -6,12 +6,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValueInternal;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getMethodByName;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getStaticFieldValue;
-import static com.hazelcast.simulator.utils.ReflectionUtils.injectObjectToInstance;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
+import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
+import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValueInternal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -21,67 +23,8 @@ import static org.junit.Assert.assertTrue;
 public class ReflectionUtilsTest {
 
     @Test
-    public void testGetStaticFieldValue() throws Exception {
-        int result = (Integer) getStaticFieldValue(StaticClass.class, "staticField", int.class);
-        assertEquals(StaticClass.staticField, result);
-    }
-
-    static class StaticClass {
-        static int staticField = 10;
-    }
-
-    @Test
     public void testConstructor() throws Exception {
         invokePrivateConstructor(ReflectionUtils.class);
-    }
-
-    @Test
-    public void testInvokePrivateConstructor() throws Exception {
-        assertFalse(PrivateConstructorTest.hasBeenConstructed);
-
-        invokePrivateConstructor(PrivateConstructorTest.class);
-
-        assertTrue(PrivateConstructorTest.hasBeenConstructed);
-    }
-
-    @Test
-    public void testGetMethodByName() {
-        Method method = getMethodByName(InvokeMethodTest.class, "testMethod");
-        assertNotNull(method);
-        assertEquals(Void.TYPE, method.getReturnType());
-    }
-
-    @Test
-    public void testGetMethodByNameNotFound() {
-        Method method = getMethodByName(InvokeMethodTest.class, "testMethodNotFound");
-        assertNull(method);
-    }
-
-    @Test()
-    public void testInvokeMethodNull() throws Exception {
-        assertNull(invokeMethod(new InvokeMethodTest(), null));
-    }
-
-    @Test
-    public void testInvokeMethod() throws Exception {
-        assertFalse(InvokeMethodTest.hasBeenInvoked);
-
-        Method method = getMethodByName(InvokeMethodTest.class, "testMethod");
-        invokeMethod(new InvokeMethodTest(), method);
-
-        assertTrue(InvokeMethodTest.hasBeenInvoked);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvokeMethodThrowsException() throws Exception {
-        Method method = getMethodByName(InvokeMethodTest.class, "throwExceptionMethod");
-        invokeMethod(new InvokeMethodTest(), method);
-    }
-
-    @Test(expected = IllegalAccessException.class)
-    public void testInvokeMethodPrivate() throws Exception {
-        Method method = getMethodByName(InvokeMethodTest.class, "cannotAccessMethod");
-        invokeMethod(new InvokeMethodTest(), method);
     }
 
     @Test
@@ -118,50 +61,144 @@ public class ReflectionUtilsTest {
     }
 
     @Test
-    public void testGetObjectFromField() {
+    public void testSetFieldValue() {
+        SetFieldTest setFieldTest = new SetFieldTest();
+        assertNull(setFieldTest.injectField);
+
+        Field field = getField(SetFieldTest.class, "injectField", Object.class);
+        assertNotNull(field);
+
+        setFieldValue(setFieldTest, field, 154915782);
+        assertEquals(154915782, setFieldTest.injectField);
+    }
+
+    @Test
+    public void testGetFieldValue() {
         GetFieldTest getFieldTest = new GetFieldTest();
 
-        Boolean bool = getObjectFromField(getFieldTest, "booleanField");
+        Boolean bool = getFieldValue(getFieldTest, "booleanField");
         assertNotNull(bool);
         assertFalse(bool);
 
         getFieldTest.booleanField = true;
-        bool = getObjectFromField(getFieldTest, "booleanField");
+        bool = getFieldValue(getFieldTest, "booleanField");
         assertNotNull(bool);
         assertTrue(bool);
     }
 
     @Test(expected = NullPointerException.class)
-    public void testGetObjectFromField_nullObject() {
-        getObjectFromField(null, "notEvaluated");
+    public void testGetFieldValue_nullObject() {
+        getFieldValue(null, "notEvaluated");
     }
 
     @Test(expected = ReflectionException.class)
-    public void testGetObjectFromField_notFound() {
+    public void testGetFieldValue_notFound() {
         GetFieldTest getFieldTest = new GetFieldTest();
 
-        getObjectFromField(getFieldTest, "intField");
+        getFieldValue(getFieldTest, "intField");
     }
 
     @Test
-    public void testInjectObjectToInstance() {
-        InjectTest injectTest = new InjectTest();
-        assertNull(injectTest.injectField);
-
-        Field field = getField(InjectTest.class, "injectField", Object.class);
-        assertNotNull(field);
-
-        injectObjectToInstance(injectTest, field, 154915782);
-        assertEquals(154915782, injectTest.injectField);
+    public void testGetStaticFieldValue() throws Exception {
+        int result = getStaticFieldValue(StaticClass.class, "staticField", int.class);
+        assertEquals(StaticClass.staticField, result);
     }
 
-    private static final class PrivateConstructorTest {
+    @Test(expected = ReflectionException.class)
+    public void testGetStaticFieldValue_nullField() throws Exception {
+        int result = getStaticFieldValue(StaticClass.class, "notFound", int.class);
+        assertEquals(StaticClass.staticField, result);
+    }
 
-        private static boolean hasBeenConstructed;
+    @Test
+    public void testGetMethodByName() {
+        Method method = getMethodByName(InvokeMethodTest.class, "testMethod");
+        assertNotNull(method);
+        assertEquals(Void.TYPE, method.getReturnType());
+    }
 
-        private PrivateConstructorTest() {
-            hasBeenConstructed = true;
-        }
+    @Test
+    public void testGetMethodByNameNotFound() {
+        Method method = getMethodByName(InvokeMethodTest.class, "testMethodNotFound");
+        assertNull(method);
+    }
+
+    @Test(expected = AssertionError.class)
+    public void testInvokeMethodThrowsError() throws Exception {
+        Method method = getMethodByName(InvokeMethodTest.class, "throwErrorMethod");
+        invokeMethod(new InvokeMethodTest(), method);
+    }
+
+    @Test(expected = IllegalAccessException.class)
+    public void testInvokeMethodPrivate() throws Exception {
+        Method method = getMethodByName(InvokeMethodTest.class, "cannotAccessMethod");
+        invokeMethod(new InvokeMethodTest(), method);
+    }
+
+    @Test()
+    public void testInvokeMethodNull() throws Exception {
+        assertNull(invokeMethod(new InvokeMethodTest(), null));
+    }
+
+    @Test
+    public void testInvokeMethod() throws Exception {
+        assertFalse(InvokeMethodTest.hasBeenInvoked);
+
+        Method method = getMethodByName(InvokeMethodTest.class, "testMethod");
+        invokeMethod(new InvokeMethodTest(), method);
+
+        assertTrue(InvokeMethodTest.hasBeenInvoked);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvokeMethodThrowsException() throws Exception {
+        Method method = getMethodByName(InvokeMethodTest.class, "throwExceptionMethod");
+        invokeMethod(new InvokeMethodTest(), method);
+    }
+
+    @Test
+    public void testInvokePrivateConstructor() throws Exception {
+        assertFalse(PrivateConstructorTest.hasBeenConstructed);
+
+        invokePrivateConstructor(PrivateConstructorTest.class);
+
+        assertTrue(PrivateConstructorTest.hasBeenConstructed);
+    }
+
+    @Test(expected = ReflectionException.class)
+    public void testSetFieldValueInternal_privateField() {
+        SetFieldTest setFieldTest = new SetFieldTest();
+        Field field = getField(SetFieldTest.class, "injectField", Object.class);
+        setFieldValueInternal(setFieldTest, field, "value");
+    }
+
+    @Test(expected = ReflectionException.class)
+    public void testGetFieldValueInternal_privateField() {
+        Field field = getField(StaticClass.class, "staticField", int.class);
+        getFieldValueInternal(null, field, "StaticClass", "staticField");
+    }
+
+    @SuppressWarnings("unused")
+    private static final class GetFieldTest extends GetFieldParent {
+
+        private boolean booleanField;
+    }
+
+    @SuppressWarnings("unused")
+    private static class GetFieldParent {
+
+        private static int intField;
+    }
+
+    private static final class StaticClass {
+
+        private static int staticField = 10;
+    }
+
+    @SuppressWarnings("unused")
+    private static final class SetFieldTest {
+
+        private Object injectField;
     }
 
     @SuppressWarnings("unused")
@@ -177,25 +214,20 @@ public class ReflectionUtilsTest {
             throw new IllegalArgumentException("expected exception");
         }
 
+        public void throwErrorMethod() {
+            throw new AssertionError("expected exception");
+        }
+
         private void cannotAccessMethod() {
         }
     }
 
-    @SuppressWarnings("unused")
-    private static final class GetFieldTest extends GetFieldParent {
+    private static final class PrivateConstructorTest {
 
-        private boolean booleanField;
-    }
+        private static boolean hasBeenConstructed;
 
-    @SuppressWarnings("unused")
-    private static class GetFieldParent {
-
-        private static int intField;
-    }
-
-    @SuppressWarnings("unused")
-    private static final class InjectTest {
-
-        private Object injectField;
+        private PrivateConstructorTest() {
+            hasBeenConstructed = true;
+        }
     }
 }

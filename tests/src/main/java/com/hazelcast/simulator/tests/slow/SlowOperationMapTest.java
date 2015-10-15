@@ -42,7 +42,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;
 import static org.junit.Assert.assertNotNull;
@@ -96,7 +96,7 @@ public class SlowOperationMapTest {
 
         // try to find the slowOperationDetector instance (since Hazelcast 3.5)
         if (isMemberNode(hazelcastInstance)) {
-            slowOperationDetector = getObjectFromField(getOperationService(hazelcastInstance), "slowOperationDetector");
+            slowOperationDetector = getFieldValue(getOperationService(hazelcastInstance), "slowOperationDetector");
             if (slowOperationDetector == null) {
                 fail(basename + ": This test needs Hazelcast 3.5 or newer");
             }
@@ -133,7 +133,7 @@ public class SlowOperationMapTest {
         }
         long putCount = putCounter.get();
         long getCount = getCounter.get();
-        Map<Integer, Object> slowOperationLogs = getObjectFromField(slowOperationDetector, "slowOperationLogs");
+        Map<Integer, Object> slowOperationLogs = getFieldValue(slowOperationDetector, "slowOperationLogs");
 
         int expected = (int) (Math.min(putCount, 1) + Math.min(getCount, 1));
         long operationCount = putCount + getCount;

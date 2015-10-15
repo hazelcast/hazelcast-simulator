@@ -35,7 +35,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKey;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 
 /**
  * The SyntheticTest can be used to test features like back pressure.
@@ -123,7 +123,7 @@ public class SyntheticTest {
 
                 operationService = null;
                 clientInvocationService = hazelcastClientProxy.client.getInvocationService();
-                clientPartitionService = getObjectFromField(partitionService, "partitionService");
+                clientPartitionService = getFieldValue(partitionService, "partitionService");
             } else {
                 operationService = HazelcastTestUtils.getOperationService(targetInstance);
                 clientInvocationService = null;

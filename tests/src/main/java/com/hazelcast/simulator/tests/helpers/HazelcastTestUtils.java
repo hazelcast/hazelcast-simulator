@@ -46,7 +46,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import static com.hazelcast.simulator.utils.ReflectionUtils.getObjectFromField;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
 import static java.lang.String.format;
 import static org.junit.Assert.fail;
@@ -223,7 +223,7 @@ public final class HazelcastTestUtils {
     private static HazelcastInstanceImpl getHazelcastInstanceImpl(HazelcastInstance hz) {
         HazelcastInstanceImpl impl = null;
         if (hz instanceof HazelcastInstanceProxy) {
-            return getObjectFromField(hz, "original");
+            return getFieldValue(hz, "original");
         } else if (hz instanceof HazelcastInstanceImpl) {
             impl = (HazelcastInstanceImpl) hz;
         }

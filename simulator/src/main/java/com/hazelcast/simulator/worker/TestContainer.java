@@ -33,8 +33,8 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeNa
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughputProbe;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
-import static com.hazelcast.simulator.utils.ReflectionUtils.injectObjectToInstance;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
+import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
 import static java.lang.String.format;
 
 /**
@@ -253,7 +253,7 @@ public class TestContainer {
             if (Probe.class.equals(field.getType())) {
                 String probeName = getProbeName(field);
                 Probe probe = getOrCreateProbe(probeName, field);
-                injectObjectToInstance(testClassInstance, field, probe);
+                setFieldValue(testClassInstance, field, probe);
             }
         }
     }
@@ -304,10 +304,10 @@ public class TestContainer {
             worker = invokeMethod(testClassInstance, runWithWorkerMethod);
 
             if (testContextField != null) {
-                injectObjectToInstance(worker, testContextField, testContext);
+                setFieldValue(worker, testContextField, testContext);
             }
             if (workerProbeField != null) {
-                injectObjectToInstance(worker, workerProbeField, probe);
+                setFieldValue(worker, workerProbeField, probe);
             }
 
             bindOptionalProperty(worker, testCase, OptionalTestProperties.LOG_FREQUENCY.getPropertyName());

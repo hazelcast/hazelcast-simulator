@@ -67,10 +67,8 @@ abstract class AbstractMapTest {
         Float resultLimitFactor = 1.15f;
         try {
             Class queryResultSizeLimiterClazz = getQueryResultSizeLimiterClass();
-            minResultSizeLimit = (Integer) getStaticFieldValue(
-                    queryResultSizeLimiterClazz, "MINIMUM_MAX_RESULT_LIMIT", int.class);
-            resultLimitFactor = (Float) getStaticFieldValue(
-                    queryResultSizeLimiterClazz, "MAX_RESULT_LIMIT_FACTOR", float.class);
+            minResultSizeLimit = getStaticFieldValue(queryResultSizeLimiterClazz, "MINIMUM_MAX_RESULT_LIMIT", int.class);
+            resultLimitFactor = getStaticFieldValue(queryResultSizeLimiterClazz, "MAX_RESULT_LIMIT_FACTOR", float.class);
         } catch (Exception e) {
             LOGGER.warning(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
         }

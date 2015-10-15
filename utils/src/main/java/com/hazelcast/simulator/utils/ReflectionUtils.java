@@ -27,6 +27,40 @@ public final class ReflectionUtils {
     private ReflectionUtils() {
     }
 
+    public static Field getField(Class classType, String fieldName, Class fieldType) {
+        Field field;
+        do {
+            field = findField(classType, fieldName, fieldType);
+            if (field != null) {
+                return field;
+            }
+            classType = classType.getSuperclass();
+        } while (classType != null);
+
+        return null;
+    }
+
+    public static void setFieldValue(Object instance, Field field, Object value) {
+        field.setAccessible(true);
+        setFieldValueInternal(instance, field, value);
+    }
+
+    public static <E> E getFieldValue(Object instance, String fieldName) {
+        if (instance == null) {
+            throw new NullPointerException("Object to retrieve field from can't be null");
+        }
+
+        Field field;
+        Class<?> clazz = instance.getClass();
+        try {
+            field = clazz.getDeclaredField(fieldName);
+            field.setAccessible(true);
+        } catch (Exception e) {
+            throw new ReflectionException(e);
+        }
+        return getFieldValueInternal(instance, field, clazz.getName(), fieldName);
+    }
+
     /**
      * Gets the value for a static field.
      *
@@ -35,24 +69,30 @@ public final class ReflectionUtils {
      * @param fieldType type of the field
      * @return the value of the static field
      */
-    public static Object getStaticFieldValue(Class clazz, String fieldName, Class fieldType) {
+    public static <E> E getStaticFieldValue(Class clazz, String fieldName, Class fieldType) {
         Field field = getField(clazz, fieldName, fieldType);
         if (field == null) {
             throw new ReflectionException(format("Field %s.%s is not found", clazz.getName(), fieldName));
         }
 
         field.setAccessible(true);
-        try {
-            return field.get(null);
-        } catch (IllegalAccessException e) {
-            throw new ReflectionException(format("Failed to access %s.%s", clazz.getName(), fieldName), e);
-        }
+        return getFieldValueInternal(null, field, clazz.getName(), fieldName);
     }
 
-    public static <E> void invokePrivateConstructor(Class<E> classType) throws Exception {
-        Constructor<E> constructor = classType.getDeclaredConstructor();
-        constructor.setAccessible(true);
-        constructor.newInstance();
+    /**
+     * Searches a method by name.
+     *
+     * @param clazz      Class to scan
+     * @param methodName Name of the method
+     * @return the found method or <tt>null</tt> if no method was found
+     */
+    public static Method getMethodByName(Class clazz, String methodName) {
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (method.getName().equals(methodName)) {
+                return method;
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -67,25 +107,31 @@ public final class ReflectionUtils {
             if (e.getCause() instanceof Error) {
                 throw (Error) e.getCause();
             }
-            if (e.getCause() instanceof Exception) {
-                throw (Exception) e.getCause();
-            }
-            throw new ReflectionException(format("Error while invoking method %s on instance of type %s",
-                    method.getName(), classInstance.getClass().getSimpleName()), e);
+            throw (Exception) e.getCause();
         }
     }
 
-    public static Field getField(Class classType, String fieldName, Class fieldType) {
-        Field field;
-        do {
-            field = findField(classType, fieldName, fieldType);
-            if (field != null) {
-                return field;
-            }
-            classType = classType.getSuperclass();
-        } while (classType != null);
+    public static <E> void invokePrivateConstructor(Class<E> classType) throws Exception {
+        Constructor<E> constructor = classType.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        constructor.newInstance();
+    }
 
-        return null;
+    static void setFieldValueInternal(Object instance, Field field, Object value) {
+        try {
+            field.set(instance, value);
+        } catch (IllegalAccessException e) {
+            throw new ReflectionException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    static <E> E getFieldValueInternal(Object instance, Field field, String className, String fieldName) {
+        try {
+            return (E) field.get(instance);
+        } catch (IllegalAccessException e) {
+            throw new ReflectionException(format("Failed to access %s.%s", className, fieldName), e);
+        }
     }
 
     private static Field findField(Class classType, String fieldName, Class fieldType) {
@@ -96,46 +142,6 @@ public final class ReflectionUtils {
                 if (isAssignableToType || isPrimitiveType) {
                     return field;
                 }
-            }
-        }
-        return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <E> E getObjectFromField(Object object, String fieldName) {
-        if (object == null) {
-            throw new NullPointerException("Object to retrieve field from can't be null");
-        }
-
-        try {
-            Field field = object.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            return (E) field.get(object);
-        } catch (Exception e) {
-            throw new ReflectionException(e);
-        }
-    }
-
-    public static void injectObjectToInstance(Object classInstance, Field field, Object object) {
-        try {
-            field.setAccessible(true);
-            field.set(classInstance, object);
-        } catch (IllegalAccessException e) {
-            throw new ReflectionException(e);
-        }
-    }
-
-    /**
-     * Searches a method by name.
-     *
-     * @param classType  Class to scan
-     * @param methodName Name of the method
-     * @return the found method or <tt>null</tt> if no method was found
-     */
-    public static Method getMethodByName(Class classType, String methodName) {
-        for (Method method : classType.getDeclaredMethods()) {
-            if (method.getName().equals(methodName)) {
-                return method;
             }
         }
         return null;
