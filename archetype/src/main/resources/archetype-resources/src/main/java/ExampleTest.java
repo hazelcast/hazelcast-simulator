@@ -24,8 +24,8 @@ public class ExampleTest {
     private static final ILogger LOGGER = Logger.getLogger(ExampleTest.class);
 
     // properties
-    public double putProb = 0.5;
     public int maxKeys = 1000;
+    public double putProb = 0.5;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
@@ -37,7 +37,7 @@ public class ExampleTest {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap("exampleMap");
 
-        LOGGER.info("Map name is:" + map.getName());
+        LOGGER.info("Map name is: " + map.getName());
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProb)
@@ -45,7 +45,7 @@ public class ExampleTest {
     }
 
     @Teardown
-    public void tearDown() throws Exception {
+    public void tearDown() {
         LOGGER.info("======== TEAR DOWN =========");
         map.destroy();
         LOGGER.info("======== THE END =========");
@@ -54,13 +54,13 @@ public class ExampleTest {
     @Warmup
     public void warmup() {
         LOGGER.info("======== WARMUP =========");
-        LOGGER.info("Map size is:" + map.size());
+        LOGGER.info("Map size is: " + map.size());
     }
 
     @Verify
     public void verify() {
         LOGGER.info("======== VERIFYING =========");
-        LOGGER.info("Map size is:" + map.size());
+        LOGGER.info("Map size is: " + map.size());
 
         for (int i = 0; i < maxKeys; i++) {
             String actualValue = map.get(i);
@@ -93,10 +93,9 @@ public class ExampleTest {
                     map.get(key);
                     break;
                 default:
-                    throw new UnsupportedOperationException("Unknown operation" + operation);
+                    throw new UnsupportedOperationException("Unknown operation: " + operation);
             }
         }
-
     }
 
     public static void main(String[] args) throws Exception {
