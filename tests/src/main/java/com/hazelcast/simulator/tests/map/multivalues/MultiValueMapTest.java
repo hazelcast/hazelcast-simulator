@@ -22,40 +22,40 @@ import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Level;
 
 import static java.lang.Math.abs;
 import static org.junit.Assert.assertEquals;
 
-
 public class MultiValueMapTest {
+
     private static final ILogger LOGGER = Logger.getLogger(MultiValueMapTest.class);
     private static final ThrottlingLogger THROTTLING_LOGGER = ThrottlingLogger.newLogger(LOGGER, 5000);
-
-    private OperationSelectorBuilder<Operation> operationSelectorBuilder;
 
     private enum Operation {
         PUT,
         QUERY,
     }
-    private IMap<Integer, SillySequence> map;
 
-    public Probe queryProbe;
     public String basename = MultiValueMapTest.class.getSimpleName();
-    public boolean useIndex;
     public int keyCount = 100000;
     public int maxNestedValues = 100;
     public double putProbability = 0.5;
+    public boolean useIndex;
+
+    public Probe queryProbe;
+
+    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
+
+    private IMap<Integer, SillySequence> map;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
 
-        operationSelectorBuilder = new OperationSelectorBuilder<Operation>()
+        operationSelectorBuilder
                 .addOperation(Operation.PUT, putProbability)
                 .addDefaultOperation(Operation.QUERY);
     }
-
 
     @Warmup(global = true)
     public void warmup() throws InterruptedException {
@@ -81,6 +81,7 @@ public class MultiValueMapTest {
     }
 
     private class Worker extends AbstractWorker<Operation> {
+
         public Worker(OperationSelectorBuilder<Operation> operationSelectorBuilder) {
             super(operationSelectorBuilder);
         }
@@ -91,16 +92,15 @@ public class MultiValueMapTest {
 
         @Override
         protected void timeStep(Operation operation) throws Exception {
+            int key = getRandomKey();
+
             switch (operation) {
-                case PUT: {
-                    int key = getRandomKey();
+                case PUT:
                     int count = key % maxNestedValues;
                     SillySequence sillySequence = new SillySequence(key, count);
                     map.put(key, sillySequence);
                     break;
-                }
-                case QUERY: {
-                    int key = getRandomKey();
+                case QUERY:
                     Predicate predicate = Predicates.equal("payloadField[*]", key);
                     queryProbe.started();
                     Collection<SillySequence> result = null;
@@ -109,11 +109,13 @@ public class MultiValueMapTest {
                     } finally {
                         queryProbe.done();
                     }
-                    THROTTLING_LOGGER.log(Level.INFO, "Query 'payloadField[*]= " + key + "' returned " + result.size() + " results.");
-                    for (SillySequence sillySequence : result) {
-                        assertValidSequence(sillySequence);
+                    THROTTLING_LOGGER.info("Query 'payloadField[*]= " + key + "' returned " + result.size() + " results.");
+                    for (SillySequence resultSillySequence : result) {
+                        assertValidSequence(resultSillySequence);
                     }
-                }
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unsupported operation: " + operation);
             }
         }
 
@@ -132,12 +134,13 @@ public class MultiValueMapTest {
         }
     }
 
-    static class SillySequence implements DataSerializable {
+    @SuppressWarnings("unused")
+    private static class SillySequence implements DataSerializable {
+
         int count;
         Collection<Integer> payloadField;
 
         SillySequence() {
-
         }
 
         SillySequence(int from, int count) {
@@ -150,12 +153,12 @@ public class MultiValueMapTest {
             }
         }
 
-        public Collection<Integer> getPayload() {
-            return payloadField;
-        }
-
         public int getCount() {
             return count;
+        }
+
+        public Collection<Integer> getPayload() {
+            return payloadField;
         }
 
         @Override
@@ -170,5 +173,4 @@ public class MultiValueMapTest {
             payloadField = in.readObject();
         }
     }
-
 }
