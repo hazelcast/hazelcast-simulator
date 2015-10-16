@@ -8,8 +8,12 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINER;
+import static java.util.logging.Level.FINEST;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atMost;
@@ -23,6 +27,7 @@ public class ThrottlingLoggerTest {
 
     private static final String MESSAGE = "message";
 
+    private ILogger iLoggerMock = mock(ILogger.class);
     private ThrottlingLogger throttlingLogger;
 
     @Test(expected = IllegalArgumentException.class)
@@ -32,55 +37,79 @@ public class ThrottlingLoggerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testRateCannotBeZero() {
-        ILogger logger = mock(ILogger.class);
-        ThrottlingLogger.newLogger(logger, 0);
+        ThrottlingLogger.newLogger(iLoggerMock, 0);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testRateCannotBeNegative() {
-        ILogger logger = mock(ILogger.class);
-        ThrottlingLogger.newLogger(logger, -1);
+        ThrottlingLogger.newLogger(iLoggerMock, -1);
     }
 
     @Test
     public void testThrottling() {
-        final long testDurationNanos = SECONDS.toNanos(2);
+        long testDurationNanos = SECONDS.toNanos(2);
         long rateMs = 100;
         int threadCount = 2;
 
-        ILogger logger = mock(ILogger.class);
-        when(logger.isLoggable(SEVERE)).thenReturn(true);
-        throttlingLogger = ThrottlingLogger.newLogger(logger, rateMs);
+        when(iLoggerMock.isLoggable(SEVERE)).thenReturn(true);
+        throttlingLogger = ThrottlingLogger.newLogger(iLoggerMock, rateMs);
 
         startLoggingThreadsAndAwait(threadCount, testDurationNanos);
-        assertRightNumberOfInvocation(logger, testDurationNanos, rateMs);
+        assertRightNumberOfInvocation(iLoggerMock, testDurationNanos, rateMs);
     }
 
     @Test
     public void testIgnoredLevelsAreNotCounted() {
-        ILogger logger = mock(ILogger.class);
-        when(logger.isLoggable(SEVERE)).thenReturn(true);
-        when(logger.isLoggable(INFO)).thenReturn(false);
-        throttlingLogger = ThrottlingLogger.newLogger(logger, 1000);
+        when(iLoggerMock.isLoggable(WARNING)).thenReturn(true);
+        when(iLoggerMock.isLoggable(INFO)).thenReturn(false);
+        throttlingLogger = ThrottlingLogger.newLogger(iLoggerMock, 1000);
 
         for (int i = 0; i < 1000; i++) {
-            throttlingLogger.log(INFO, MESSAGE);
+            throttlingLogger.info(MESSAGE);
         }
-        verify(logger, never()).log(INFO, MESSAGE);
+        verify(iLoggerMock, never()).log(INFO, MESSAGE);
 
-        throttlingLogger.log(SEVERE, MESSAGE);
-        verify(logger, times(1)).log(SEVERE, MESSAGE);
+        throttlingLogger.warn(MESSAGE);
+        verify(iLoggerMock, times(1)).log(WARNING, MESSAGE);
+    }
+
+    @Test
+    public void testFine() {
+        when(iLoggerMock.isLoggable(FINE)).thenReturn(true);
+        throttlingLogger = ThrottlingLogger.newLogger(iLoggerMock, 1000);
+
+        throttlingLogger.fine(MESSAGE);
+        verify(iLoggerMock, times(1)).log(FINE, MESSAGE);
+    }
+
+    @Test
+    public void testFiner() {
+        when(iLoggerMock.isLoggable(FINER)).thenReturn(true);
+        throttlingLogger = ThrottlingLogger.newLogger(iLoggerMock, 1000);
+
+        throttlingLogger.finer(MESSAGE);
+        verify(iLoggerMock, times(1)).log(FINER, MESSAGE);
+    }
+
+    @Test
+    public void testFinest() {
+        when(iLoggerMock.isLoggable(FINEST)).thenReturn(true);
+        throttlingLogger = ThrottlingLogger.newLogger(iLoggerMock, 1000);
+
+        throttlingLogger.finest(MESSAGE);
+        verify(iLoggerMock, times(1)).log(FINEST, MESSAGE);
     }
 
     private void assertRightNumberOfInvocation(ILogger logger, long testDurationNanos, long rateMs) {
         int mostInvocation = (int) ((NANOSECONDS.toMillis(testDurationNanos) / rateMs) + 1);
-        verify(logger, atMost(mostInvocation)).log(SEVERE, MESSAGE);
+
         verify(logger, atLeast(1)).log(SEVERE, MESSAGE);
+        verify(logger, atMost(mostInvocation)).log(SEVERE, MESSAGE);
     }
 
-    private void startLoggingThreadsAndAwait(int threadCount, final long testDurationNanos) {
-        final CountDownLatch latch = new CountDownLatch(threadCount);
-        final long startTime = System.nanoTime();
+    private void startLoggingThreadsAndAwait(int threadCount, long testDurationNanos) {
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        long startTime = System.nanoTime();
         for (int i = 0; i < threadCount; i++) {
             startLoggerThread(startTime, testDurationNanos, latch);
         }
@@ -97,7 +126,7 @@ public class ThrottlingLoggerTest {
             @Override
             public void run() {
                 do {
-                    throttlingLogger.log(SEVERE, MESSAGE);
+                    throttlingLogger.severe(MESSAGE);
                 } while (System.nanoTime() < startTime + testDurationNanos);
                 finishLatch.countDown();
             }
