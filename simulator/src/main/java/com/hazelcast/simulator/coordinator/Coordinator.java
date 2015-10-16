@@ -18,7 +18,6 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.remoting.AgentsClient;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -83,7 +82,6 @@ public final class Coordinator {
     private final SimulatorProperties props;
     private final Bash bash;
 
-    private AgentsClient agentsClient;
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
@@ -167,24 +165,16 @@ public final class Coordinator {
             parallelExecutor.awaitTermination(PARALLEL_EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
 
-        if (agentsClient != null) {
-            LOGGER.info("Shutdown of AgentsClient...");
-            agentsClient.shutdown();
-        }
-
         if (coordinatorConnector != null) {
             LOGGER.info("Shutdown of ClientConnector...");
             coordinatorConnector.shutdown();
         }
 
-        killAgents();
+        stopAgents();
     }
 
     private void initAgents() {
         startAgents();
-
-        agentsClient = new AgentsClient(componentRegistry.getAgents());
-        agentsClient.start();
 
         try {
             startCoordinatorConnector();
@@ -233,6 +223,8 @@ public final class Coordinator {
         }
         bash.ssh(ip, format("nohup hazelcast-simulator-%s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
                 getSimulatorVersion(), mandatoryParameters, optionalParameters));
+
+        bash.ssh(ip, format("hazelcast-simulator-%s/bin/.await-file-exists agent.pid", getSimulatorVersion()));
     }
 
     private void startCoordinatorConnector() {
@@ -466,27 +458,28 @@ public final class Coordinator {
         LOGGER.info("-----------------------------------------------------------------------------");
     }
 
-    private void killAgents() {
+    private void stopAgents() {
         ThreadSpawner spawner = new ThreadSpawner("killAgents", true);
         final String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(props);
 
-        echoLocal("Killing %s Agents", componentRegistry.agentCount());
+        echoLocal("Stopping %s Agents", componentRegistry.agentCount());
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echoLocal("Killing Agent %s", agentData.getPublicAddress());
-                    bash.killAllJavaProcesses(agentData.getPublicAddress());
+                    String ip = agentData.getPublicAddress();
+                    echoLocal("Stopping Agent %s", ip);
+                    bash.ssh(ip, format("hazelcast-simulator-%s/bin/.kill-from-pid-file agent.pid", getSimulatorVersion()));
 
                     if (startHarakiriMonitorCommand != null) {
-                        LOGGER.info(format("Starting HarakiriMonitor on %s", agentData.getPublicAddress()));
-                        bash.ssh(agentData.getPublicAddress(), startHarakiriMonitorCommand);
+                        LOGGER.info(format("Starting HarakiriMonitor on %s", ip));
+                        bash.ssh(ip, startHarakiriMonitorCommand);
                     }
                 }
             });
         }
         spawner.awaitCompletion();
-        echoLocal("Successfully killed %s Agents", componentRegistry.agentCount());
+        echoLocal("Successfully stopped %s Agents", componentRegistry.agentCount());
     }
 
     private void echoLocal(String msg, Object... args) {

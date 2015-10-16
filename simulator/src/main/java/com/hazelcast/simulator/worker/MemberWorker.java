@@ -72,18 +72,20 @@ public final class MemberWorker implements Worker {
     private MemberWorker(WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort,
                          boolean autoCreateHzInstance, int workerPerformanceMonitorIntervalSeconds, String hConfigFile)
             throws Exception {
+        SHUTDOWN_STARTED.set(false);
+
         this.type = type;
         this.publicAddress = publicAddress;
 
         this.autoCreateHzInstance = autoCreateHzInstance;
         this.hzConfigFile = hConfigFile;
 
-        hazelcastInstance = getHazelcastInstance();
+        this.hazelcastInstance = getHazelcastInstance();
 
-        workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort, type, hazelcastInstance, this);
-        workerConnector.start();
+        this.workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort, type, hazelcastInstance, this);
+        this.workerConnector.start();
 
-        workerPerformanceMonitor = initWorkerPerformanceMonitor(workerPerformanceMonitorIntervalSeconds);
+        this.workerPerformanceMonitor = initWorkerPerformanceMonitor(workerPerformanceMonitorIntervalSeconds);
 
         Runtime.getRuntime().addShutdownHook(new ShutdownThread());
 

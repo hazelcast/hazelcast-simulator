@@ -21,7 +21,7 @@ public class AgentCliTest {
     private Agent agent;
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (agent != null) {
             agent.shutdown();
         }

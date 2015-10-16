@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.common.CoordinatorLogger;
@@ -23,22 +22,26 @@ import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestSuite;
-import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.NativeUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static java.lang.String.format;
 
 public class Agent {
@@ -47,6 +50,8 @@ public class Agent {
 
     private static final Logger LOGGER = Logger.getLogger(Agent.class);
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
+
+    private final File pidFile = new File("agent.pid");
 
     private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs = new ConcurrentHashMap<SimulatorAddress, WorkerJvm>();
     private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this, workerJVMs);
@@ -59,13 +64,12 @@ public class Agent {
     private final String cloudCredential;
 
     private final AgentConnector agentConnector;
-    private final AgentRemoteService agentRemoteService;
-
     private final CoordinatorLogger coordinatorLogger;
 
     private volatile TestSuite testSuite;
 
     public Agent(int addressIndex, String publicAddress, String cloudProvider, String cloudIdentity, String cloudCredential) {
+        SHUTDOWN_STARTED.set(false);
         ensureExistingDirectory(WORKERS_HOME);
 
         this.addressIndex = addressIndex;
@@ -77,13 +81,22 @@ public class Agent {
         this.agentConnector = AgentConnector.createInstance(this, workerJVMs, Ports.AGENT_PORT);
         this.agentConnector.start();
 
-        this.agentRemoteService = getAgentRemoteService();
-
         this.coordinatorLogger = new CoordinatorLogger(agentConnector);
 
-        Runtime.getRuntime().addShutdownHook(new ShutdownThread());
+        Runtime.getRuntime().addShutdownHook(new ShutdownThread(true));
+
+        createPidFile();
 
         LOGGER.info("Simulator Agent is ready for action!");
+    }
+
+    private void createPidFile() {
+        deleteQuiet(pidFile);
+        Integer pid = NativeUtils.getPIDorNull();
+        if (pid == null) {
+            pid = -1;
+        }
+        writeText("" + pid, pidFile);
     }
 
     public int getAddressIndex() {
@@ -127,18 +140,10 @@ public class Agent {
         }
     }
 
-    void shutdown() {
-        workerJvmFailureMonitor.shutdown();
-        agentConnector.shutdown();
-        agentRemoteService.shutdown();
-    }
-
-    private AgentRemoteService getAgentRemoteService() {
-        try {
-            return new AgentRemoteService();
-        } catch (Exception e) {
-            throw new CommandLineExitException("Failed to start REST server", e);
-        }
+    void shutdown() throws Exception {
+        ShutdownThread thread = new ShutdownThread(false);
+        thread.start();
+        thread.awaitShutdown();
     }
 
     public static void main(String[] args) {
@@ -189,13 +194,24 @@ public class Agent {
 
     private final class ShutdownThread extends Thread {
 
-        public ShutdownThread() {
+        private final CountDownLatch shutdownComplete = new CountDownLatch(1);
+
+        private final boolean shutdownLog4j;
+
+        public ShutdownThread(boolean shutdownLog4j) {
             super("AgentShutdownThread");
             setDaemon(true);
+
+            this.shutdownLog4j = shutdownLog4j;
 
             LOGGER.info("Shutting down agent!");
         }
 
+        public void awaitShutdown() throws Exception {
+            shutdownComplete.await();
+        }
+
+        @Override
         public void run() {
             if (!SHUTDOWN_STARTED.compareAndSet(false, true)) {
                 return;
@@ -214,6 +230,23 @@ public class Agent {
             }
             spawner.awaitCompletion();
             LOGGER.info("Finished terminating workers");
+
+            LOGGER.info("Stopping WorkerJvmFailureMonitor...");
+            workerJvmFailureMonitor.shutdown();
+
+            LOGGER.info("Stopping AgentConnector...");
+            agentConnector.shutdown();
+
+            LOGGER.info("Removing PID file...");
+            deleteQuiet(pidFile);
+
+            if (shutdownLog4j) {
+                // makes sure that log4j will always flush the log buffers
+                LOGGER.info("Stopping log4j...");
+                LogManager.shutdown();
+            }
+
+            shutdownComplete.countDown();
         }
     }
 }

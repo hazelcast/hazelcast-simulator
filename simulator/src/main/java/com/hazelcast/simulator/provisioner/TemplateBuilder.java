@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.provisioner;
 
-import com.hazelcast.simulator.agent.remoting.AgentRemoteService;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.configuration.Ports;
 import org.apache.log4j.Logger;
@@ -81,7 +80,6 @@ class TemplateBuilder {
         List<Integer> ports = new ArrayList<Integer>();
         ports.add(SSH_PORT);
         ports.add(Ports.AGENT_PORT);
-        ports.add(AgentRemoteService.PORT);
         for (int port = HAZELCAST_PORT_RANGE_START; port < HAZELCAST_PORT_RANGE_END; port++) {
             ports.add(port);
         }
@@ -121,8 +119,6 @@ class TemplateBuilder {
                 SSH_PORT, SSH_PORT, CIDR_RANGE);
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
                 Ports.AGENT_PORT, Ports.AGENT_PORT, CIDR_RANGE);
-        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                AgentRemoteService.PORT, AgentRemoteService.PORT, CIDR_RANGE);
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
                 HAZELCAST_PORT_RANGE_START, HAZELCAST_PORT_RANGE_END, CIDR_RANGE);
     }
