@@ -41,11 +41,10 @@ public enum AddressLevel {
     }
 
     public static AddressLevel fromInt(int intValue) {
-        try {
-            return ADDRESS_LEVELS[intValue];
-        } catch (Exception e) {
+        if (intValue < 0 || intValue > ADDRESS_LEVELS.length - 1) {
             throw new IllegalArgumentException("Unknown address level: " + intValue);
         }
+        return ADDRESS_LEVELS[intValue];
     }
 
     public int toInt() {

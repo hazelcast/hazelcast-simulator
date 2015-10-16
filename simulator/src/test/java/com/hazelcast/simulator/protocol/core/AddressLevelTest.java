@@ -28,7 +28,12 @@ public class AddressLevelTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testFromInt_invalid() {
+    public void testFromInt_negative() {
         fromInt(-1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testFromInt_invalid() {
+        fromInt(4);
     }
 }
