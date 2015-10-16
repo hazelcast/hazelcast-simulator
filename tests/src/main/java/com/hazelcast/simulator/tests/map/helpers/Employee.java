@@ -4,6 +4,7 @@ import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Random;
 
+@SuppressWarnings("unused")
 public class Employee implements Serializable, Comparable<Employee> {
 
     public static final int MAX_AGE = 75;
@@ -15,10 +16,9 @@ public class Employee implements Serializable, Comparable<Employee> {
     private int id;
     private String name;
     private int age;
-    private boolean active;
     private double salary;
+    private boolean active;
 
-    @SuppressWarnings("unused")
     public Employee() {
     }
 
@@ -27,23 +27,22 @@ public class Employee implements Serializable, Comparable<Employee> {
         randomizeProperties();
     }
 
-    @SuppressWarnings("unused")
     public Employee(String name, int age, boolean live, double salary) {
         this.name = name;
         this.age = age;
-        this.active = live;
         this.salary = salary;
+        this.active = live;
     }
 
     public static String getRandomName() {
         return Employee.NAMES[RANDOM.nextInt(Employee.NAMES.length)];
     }
 
-    public void randomizeProperties() {
+    public final void randomizeProperties() {
         name = NAMES[RANDOM.nextInt(NAMES.length)];
         age = RANDOM.nextInt(MAX_AGE);
-        active = RANDOM.nextBoolean();
         salary = RANDOM.nextDouble() * MAX_SALARY;
+        active = RANDOM.nextBoolean();
     }
 
     public int getId() {

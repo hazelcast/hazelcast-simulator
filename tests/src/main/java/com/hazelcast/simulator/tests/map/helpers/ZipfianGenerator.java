@@ -293,7 +293,7 @@ public class ZipfianGenerator extends IntegerGenerator {
      * etc.) If you want the popular items scattered throughout the item space, use ScrambledZipfianGenerator instead.
      */
     @Override
-    public int nextInt() {
+    public final int nextInt() {
         return (int) nextLong(items);
     }
 
