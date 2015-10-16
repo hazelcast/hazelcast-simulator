@@ -7,7 +7,7 @@ import static java.lang.Math.max;
  */
 public class PerformanceState {
 
-    public static final double INTERVAL_LATENCY_PERCENTILE = 0.999;
+    public static final double INTERVAL_LATENCY_PERCENTILE = 99.9;
 
     private static final long EMPTY_OPERATION_COUNT = -1;
     private static final double EMPTY_THROUGHPUT = -1;

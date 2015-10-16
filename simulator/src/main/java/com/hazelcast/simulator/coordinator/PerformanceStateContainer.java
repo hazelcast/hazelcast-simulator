@@ -26,7 +26,6 @@ public class PerformanceStateContainer {
 
     private static final int THROUGHPUT_FORMAT_LENGTH = 15;
     private static final int LATENCY_FORMAT_LENGTH = 10;
-    private static final int PERCENTILE_FORMAT_FACTOR = 100;
 
     private static final Logger LOGGER = Logger.getLogger(PerformanceStateContainer.class);
 
@@ -47,7 +46,7 @@ public class PerformanceStateContainer {
                 formatLong(performanceState.getOperationCount(), THROUGHPUT_FORMAT_LENGTH),
                 formatDouble(performanceState.getIntervalThroughput(), THROUGHPUT_FORMAT_LENGTH),
                 formatLong(performanceState.getIntervalPercentileLatency(), LATENCY_FORMAT_LENGTH),
-                INTERVAL_LATENCY_PERCENTILE * PERCENTILE_FORMAT_FACTOR,
+                INTERVAL_LATENCY_PERCENTILE,
                 formatLong(performanceState.getIntervalMaxLatency(), LATENCY_FORMAT_LENGTH)
         );
     }
