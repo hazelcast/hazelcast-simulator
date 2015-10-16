@@ -17,7 +17,6 @@
 package com.hazelcast.simulator.tests.map.helpers;
 
 import com.hazelcast.simulator.tests.helpers.IntegerGenerator;
-import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.hashFNV64;
 
@@ -37,9 +36,7 @@ public class ScrambledZipfianGenerator extends IntegerGenerator {
     public static final double USED_ZIPFIAN_CONSTANT = 0.99;
     public static final long ITEM_COUNT = 10000000000L;
 
-    private static final Logger LOGGER = Logger.getLogger(ScrambledZipfianGenerator.class);
-
-    private  ZipfianGenerator gen;
+    private ZipfianGenerator gen;
     private long min;
     private long max;
     private long itemCount;
