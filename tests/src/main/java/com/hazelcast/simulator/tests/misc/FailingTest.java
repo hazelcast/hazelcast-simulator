@@ -3,6 +3,7 @@ package com.hazelcast.simulator.tests.misc;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -34,7 +35,7 @@ public class FailingTest {
     @Run
     public void run() {
         if ("Exception".equals(failure)) {
-            ExceptionReporter.report(testContext.getTestId(), new RuntimeException("Wanted exception"));
+            ExceptionReporter.report(testContext.getTestId(), new TestException("Wanted exception"));
         } else if ("OOME".equals(failure)) {
             List<byte[]> list = new LinkedList<byte[]>();
             for (; ; ) {

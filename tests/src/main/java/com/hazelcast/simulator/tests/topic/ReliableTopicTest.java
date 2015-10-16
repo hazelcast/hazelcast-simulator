@@ -12,6 +12,7 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializableFactory;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -205,9 +206,9 @@ public class ReliableTopicTest {
             long expectedValue = previousValue + 1;
             if (expectedValue != actualValue) {
                 failures.incrementAndGet();
-                ExceptionReporter.report(testContext.getTestId(),
-                        new RuntimeException(format("There is unexpected gap or equality between values. Expected %d, but was %d",
-                                expectedValue, actualValue)));
+                ExceptionReporter.report(testContext.getTestId(), new TestException(format(
+                        "There is an unexpected gap or equality between values. Expected %d, but was %d",
+                        expectedValue, actualValue)));
             }
 
             values.put(threadId, actualValue);
