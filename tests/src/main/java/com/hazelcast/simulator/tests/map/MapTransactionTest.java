@@ -102,7 +102,7 @@ public class MapTransactionTest {
             try {
                 targetInstance.executeTransaction(transactionOptions, new TransactionalTask<Object>() {
                     @Override
-                    public Object execute(TransactionalTaskContext txContext) throws TransactionException {
+                    public Object execute(TransactionalTaskContext txContext) {
                         TransactionalMap<Integer, Long> txMap = txContext.getMap(basename);
                         Long value;
                         if (getForUpdate) {

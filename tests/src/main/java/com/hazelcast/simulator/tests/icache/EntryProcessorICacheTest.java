@@ -20,7 +20,6 @@ import javax.cache.Cache;
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.processor.EntryProcessor;
-import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -152,7 +151,7 @@ public class EntryProcessorICacheTest {
         }
 
         @Override
-        public Object process(MutableEntry<Integer, Long> entry, Object... arguments) throws EntryProcessorException {
+        public Object process(MutableEntry<Integer, Long> entry, Object... arguments) {
             if (delayMs > 0) {
                 sleepMillis(delayMs);
             }

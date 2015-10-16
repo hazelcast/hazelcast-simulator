@@ -17,7 +17,6 @@ import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
-import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
 
@@ -107,7 +106,7 @@ public class MapTransactionReadWriteTest {
                     putProbe.started();
                     targetInstance.executeTransaction(new TransactionalTask<Object>() {
                         @Override
-                        public Object execute(TransactionalTaskContext transactionalTaskContext) throws TransactionException {
+                        public Object execute(TransactionalTaskContext transactionalTaskContext) {
                             TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
                             if (useSet) {
                                 txMap.set(key, value);
@@ -123,7 +122,7 @@ public class MapTransactionReadWriteTest {
                     getProbe.started();
                     targetInstance.executeTransaction(new TransactionalTask<Object>() {
                         @Override
-                        public Object execute(TransactionalTaskContext transactionalTaskContext) throws TransactionException {
+                        public Object execute(TransactionalTaskContext transactionalTaskContext) {
                             TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
                             txMap.put(key, value);
                             return null;
