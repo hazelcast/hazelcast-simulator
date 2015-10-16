@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValueInternal;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isPublic;
@@ -108,17 +109,13 @@ public final class PropertyBindingSupport {
     private static Object findPropertyObjectInPath(Object object, String property, String[] path) {
         Field field;
         for (int i = 0; i < path.length - 1; i++) {
+            Class<?> clazz = object.getClass();
             String element = path[i];
-            field = findPropertyField(object.getClass(), element);
+            field = findPropertyField(clazz, element);
             if (field == null) {
                 throw new BindException(format("Failed to find field [%s] in property [%s]", element, property));
             }
-            try {
-                object = field.get(object);
-            } catch (IllegalAccessException e) {
-                throw new BindException(format("IllegalAccessException while binding property [%s] to field [%s]",
-                        property, field), e);
-            }
+            object = getFieldValueInternal(object, field, clazz.getName(), property);
             if (object == null) {
                 throw new BindException(format("Failed to bind to property [%s] encountered a null value at field [%s]",
                         property, field));
