@@ -32,6 +32,8 @@ public enum AddressLevel {
     WORKER(2),
     TEST(3);
 
+    private static final AddressLevel[] ADDRESS_LEVELS = new AddressLevel[]{COORDINATOR, AGENT, WORKER, TEST};
+
     private final int intValue;
 
     AddressLevel(int intValue) {
@@ -39,17 +41,10 @@ public enum AddressLevel {
     }
 
     public static AddressLevel fromInt(int intValue) {
-        switch (intValue) {
-            case 0:
-                return COORDINATOR;
-            case 1:
-                return AGENT;
-            case 2:
-                return WORKER;
-            case 3:
-                return TEST;
-            default:
-                throw new IllegalArgumentException("Unknown address level: " + intValue);
+        try {
+            return ADDRESS_LEVELS[intValue];
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Unknown address level: " + intValue);
         }
     }
 
