@@ -90,7 +90,6 @@ final class ZipfianUtils {
 
             hashVal = hashVal ^ octet;
             hashVal = hashVal * FNV_PRIME_32;
-            //hashVal = hashVal ^ octet;
         }
         return Math.abs(hashVal);
     }
@@ -111,7 +110,6 @@ final class ZipfianUtils {
 
             hashVal = hashVal ^ octet;
             hashVal = hashVal * FNV_PRIME_64;
-            //hashVal = hashVal ^ octet;
         }
         return Math.abs(hashVal);
     }

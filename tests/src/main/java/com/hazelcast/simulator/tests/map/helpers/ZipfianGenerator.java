@@ -145,7 +145,6 @@ public class ZipfianGenerator extends IntegerGenerator {
         zeta2theta = zeta(2, theta);
 
         alpha = 1.0 / (1.0 - theta);
-        //zeta = zeta(items, theta);
         this.zeta = zeta;
         countForZeta = items;
         eta = (1 - Math.pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / this.zeta);
@@ -248,7 +247,6 @@ public class ZipfianGenerator extends IntegerGenerator {
 
     private void recomputeZetaAndEta(long itemCount) {
         if (itemCount > countForZeta) {
-            //LOGGER.warn(format("Incrementally Zipfian distribution. (itemCount=%d countForZeta=%d)", itemCount, countForZeta));
 
             // we have added more items. can compute zeta incrementally, which is cheaper
             zeta = zeta(countForZeta, itemCount, theta, zeta);
@@ -308,13 +306,6 @@ public class ZipfianGenerator extends IntegerGenerator {
         return nextLong(items);
     }
 
-    public static void main(String[] args) {
-        new ZipfianGenerator(ScrambledZipfianGenerator.ITEM_COUNT);
-    }
-
-    /**
-     * TODO: Implement ZipfianGenerator.mean()
-     */
     @Override
     public double mean() {
         throw new UnsupportedOperationException("Not implemented!");

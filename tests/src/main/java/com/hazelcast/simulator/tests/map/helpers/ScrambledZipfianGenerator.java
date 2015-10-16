@@ -113,14 +113,4 @@ public class ScrambledZipfianGenerator extends IntegerGenerator {
     public double mean() {
         return ((double) (min + max)) / 2.0;
     }
-
-    public static void main(String[] args) {
-        double newZetan = ZipfianGenerator.zetaStatic(ITEM_COUNT, ZipfianGenerator.ZIPFIAN_CONSTANT);
-        LOGGER.info("zetan: " + newZetan);
-
-        //ScrambledZipfianGenerator gen = new ScrambledZipfianGenerator(10000);
-        //for (int i = 0; i < 1000000; i++) {
-        //    LOGGER.info(gen.nextInt());
-        //}
-    }
 }
