@@ -32,8 +32,12 @@ public abstract class OperationProcessor {
     private final ExecutorService executorService;
 
     OperationProcessor(ExceptionLogger exceptionLogger) {
+        this(exceptionLogger, Executors.newFixedThreadPool(EXECUTOR_SERVICE_THREAD_POOL_SIZE));
+    }
+
+    OperationProcessor(ExceptionLogger exceptionLogger, ExecutorService executorService) {
         this.exceptionLogger = exceptionLogger;
-        this.executorService = Executors.newFixedThreadPool(EXECUTOR_SERVICE_THREAD_POOL_SIZE);
+        this.executorService = executorService;
     }
 
     public void shutdown() {

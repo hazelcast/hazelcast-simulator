@@ -4,7 +4,6 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.junit.Test;
-import org.powermock.reflect.Whitebox;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -20,16 +19,15 @@ public class OperationProcessorTest {
 
     @Test
     public void testShutdown_withInterruptedException() throws Exception {
-        OperationProcessor processor = new OperationProcessor(null) {
+        ExecutorService executorService = mock(ExecutorService.class);
+        when(executorService.awaitTermination(anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException("expected"));
+
+        OperationProcessor processor = new OperationProcessor(null, executorService) {
             @Override
             protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception {
                 return null;
             }
         };
-
-        ExecutorService executorService = mock(ExecutorService.class);
-        when(executorService.awaitTermination(anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException("expected"));
-        Whitebox.setInternalState(processor, "executorService", executorService);
 
         processor.shutdown();
 
