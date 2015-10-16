@@ -22,7 +22,6 @@ import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestSuite;
-import com.hazelcast.simulator.utils.NativeUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -42,6 +41,7 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
+import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static java.lang.String.format;
 
 public class Agent {
@@ -92,11 +92,7 @@ public class Agent {
 
     private void createPidFile() {
         deleteQuiet(pidFile);
-        Integer pid = NativeUtils.getPIDorNull();
-        if (pid == null) {
-            pid = -1;
-        }
-        writeText("" + pid, pidFile);
+        writeText("" + getPID(), pidFile);
     }
 
     public int getAddressIndex() {

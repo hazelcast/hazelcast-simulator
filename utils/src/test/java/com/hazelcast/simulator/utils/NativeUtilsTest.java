@@ -6,7 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.utils.NativeUtils.getPIDorNull;
+import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static com.hazelcast.simulator.utils.NativeUtils.getPidFromBeanString;
 import static com.hazelcast.simulator.utils.NativeUtils.getPidFromManagementBean;
 import static com.hazelcast.simulator.utils.NativeUtils.getPidViaReflection;
@@ -48,7 +48,7 @@ public class NativeUtilsTest {
     @Test
     public void testGetPIDorNull() {
         // we should have at least one implementation which works on each build system
-        Integer pid = getPIDorNull();
+        Integer pid = getPID();
         assertNotNull(pid);
     }
 

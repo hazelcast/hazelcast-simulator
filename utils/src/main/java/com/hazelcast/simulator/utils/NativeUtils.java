@@ -80,11 +80,18 @@ public final class NativeUtils {
     /**
      * http://stackoverflow.com/questions/35842/how-can-a-java-program-get-its-own-process-id
      *
-     * @return the PID of this JVM or <tt>null</tt>
+     * @return the PID of this JVM or <tt>-1</tt> if not PID was retrieved
      */
-    public static Integer getPIDorNull() {
-        Integer pidFromManagementBean = getPidFromManagementBean();
-        return (pidFromManagementBean != null) ? pidFromManagementBean : getPidViaReflection();
+    public static int getPID() {
+        Integer pid = getPidFromManagementBean();
+        if (pid != null) {
+            return pid;
+        }
+        pid = getPidViaReflection();
+        if (pid != null) {
+            return pid;
+        }
+        return -1;
     }
 
     static Integer getPidFromManagementBean() {

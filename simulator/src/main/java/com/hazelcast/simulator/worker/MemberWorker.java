@@ -27,7 +27,6 @@ import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.utils.NativeUtils;
 import com.hazelcast.simulator.worker.performance.WorkerPerformanceMonitor;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -44,6 +43,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowExceptio
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeObject;
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
+import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
@@ -205,7 +205,7 @@ public final class MemberWorker implements Worker {
             logHeader("Hazelcast Worker #" + workerIndex + " (" + type + ")");
             logInputArguments();
             logInterestingSystemProperties();
-            LOGGER.info("process ID: " + NativeUtils.getPIDorNull());
+            LOGGER.info("process ID: " + getPID());
 
             LOGGER.info("Worker id: " + workerId);
             LOGGER.info("Worker type: " + type);
