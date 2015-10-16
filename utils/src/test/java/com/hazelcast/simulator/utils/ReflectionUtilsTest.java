@@ -9,7 +9,6 @@ import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValueInternal;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getMethodByName;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getStaticFieldValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
@@ -100,13 +99,13 @@ public class ReflectionUtilsTest {
 
     @Test
     public void testGetStaticFieldValue() throws Exception {
-        int result = getStaticFieldValue(StaticClass.class, "staticField", int.class);
+        int result = ReflectionUtils.<Integer>getStaticFieldValue(StaticClass.class, "staticField", int.class);
         assertEquals(StaticClass.staticField, result);
     }
 
     @Test(expected = ReflectionException.class)
     public void testGetStaticFieldValue_nullField() throws Exception {
-        int result = getStaticFieldValue(StaticClass.class, "notFound", int.class);
+        int result = ReflectionUtils.<Integer>getStaticFieldValue(StaticClass.class, "notFound", int.class);
         assertEquals(StaticClass.staticField, result);
     }
 
