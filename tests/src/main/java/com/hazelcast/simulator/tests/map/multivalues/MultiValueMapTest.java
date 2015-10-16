@@ -8,6 +8,7 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -31,17 +32,15 @@ public class MultiValueMapTest {
     private static final ILogger LOGGER = Logger.getLogger(MultiValueMapTest.class);
     private static final ThrottlingLogger THROTTLING_LOGGER = ThrottlingLogger.newLogger(LOGGER, 5000);
 
-
     private OperationSelectorBuilder<Operation> operationSelectorBuilder;
 
     private enum Operation {
         PUT,
         QUERY,
     }
-
     private IMap<Integer, SillySequence> map;
 
-
+    public Probe queryProbe;
     public String basename = MultiValueMapTest.class.getSimpleName();
     public boolean useIndex;
     public int keyCount = 100000;
@@ -103,7 +102,13 @@ public class MultiValueMapTest {
                 case QUERY: {
                     int key = getRandomKey();
                     Predicate predicate = Predicates.equal("payloadField[*]", key);
-                    Collection<SillySequence> result = map.values(predicate);
+                    queryProbe.started();
+                    Collection<SillySequence> result = null;
+                    try {
+                        result = map.values(predicate);
+                    } finally {
+                        queryProbe.done();
+                    }
                     THROTTLING_LOGGER.log(Level.INFO, "Query 'payloadField[*]= " + key + "' returned " + result.size() + " results.");
                     for (SillySequence sillySequence : result) {
                         assertValidSequence(sillySequence);
