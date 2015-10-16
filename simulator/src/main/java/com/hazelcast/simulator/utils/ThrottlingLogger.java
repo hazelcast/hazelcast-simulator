@@ -10,6 +10,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 /**
  * Delegating Logger. It throttles the rate messages are logged.
  */
+@SuppressWarnings("unused")
 public final class ThrottlingLogger {
 
     private final AtomicLong nextMessageNotBefore = new AtomicLong();
@@ -31,6 +32,30 @@ public final class ThrottlingLogger {
 
     public static ThrottlingLogger newLogger(ILogger delegate, long maximumRateMs) {
         return new ThrottlingLogger(delegate, maximumRateMs);
+    }
+
+    public void finest(String message) {
+        log(Level.FINEST, message);
+    }
+
+    public void finer(String message) {
+        log(Level.FINER, message);
+    }
+
+    public void fine(String message) {
+        log(Level.FINE, message);
+    }
+
+    public void info(String message) {
+        log(Level.INFO, message);
+    }
+
+    public void warn(String message) {
+        log(Level.WARNING, message);
+    }
+
+    public void severe(String message) {
+        log(Level.SEVERE, message);
     }
 
     public void log(Level level, String message) {
