@@ -23,8 +23,8 @@ public class CreateTestOperation implements SimulatorOperation {
 
     @Override
     public String toString() {
-        return "CreateTestOperation{" +
-                "testId='" + testId + '\'' +
-                '}';
+        return "CreateTestOperation{"
+                + "testId='" + testId + '\''
+                + '}';
     }
 }
