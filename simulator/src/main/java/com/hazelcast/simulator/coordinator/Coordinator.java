@@ -32,12 +32,14 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.FINISHED_WORKER_TIMEOUT_SECONDS;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
@@ -361,7 +363,10 @@ public final class Coordinator {
         }
 
         remoteClient.terminateWorkers();
-        waitForWorkerShutdown(componentRegistry.workerCount(), failureContainer.getFinishedWorkers());
+        Set<String> finishedWorkers = failureContainer.getFinishedWorkers();
+        if (!waitForWorkerShutdown(componentRegistry.workerCount(), finishedWorkers, FINISHED_WORKER_TIMEOUT_SECONDS)) {
+            LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
+        }
 
         performanceStateContainer.logDetailedPerformanceInfo();
         for (TestCase testCase : testSuite.getTestCaseList()) {

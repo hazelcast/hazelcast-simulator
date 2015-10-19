@@ -36,6 +36,7 @@ import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorker
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -185,8 +186,17 @@ public class CoordinatorUtilsTest {
             }
         });
 
-        waitForWorkerShutdown(3, finishedWorkers.keySet());
-        spawner.awaitCompletion();
+        boolean success = waitForWorkerShutdown(3, finishedWorkers.keySet(), CoordinatorUtils.FINISHED_WORKER_TIMEOUT_SECONDS);
+        assertTrue(success);
+    }
+
+    @Test(timeout = 10000)
+    public void testWaitForWorkerShutdown_withTimeout() {
+        final ConcurrentHashMap<String, Boolean> finishedWorkers = new ConcurrentHashMap<String, Boolean>();
+        finishedWorkers.put("A", true);
+
+        boolean success = waitForWorkerShutdown(3, finishedWorkers.keySet(), 1);
+        assertFalse(success);
     }
 
     private void assertAgentMemberLayout(int index, AgentMemberMode mode, int memberCount, int clientCount) {

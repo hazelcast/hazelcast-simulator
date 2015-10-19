@@ -4,7 +4,9 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Collections.synchronizedList;
@@ -66,5 +68,16 @@ public class ComponentRegistry {
 
     public WorkerData getFirstWorker() {
         return workers.get(0);
+    }
+
+    public Set<String> getMissingWorkers(Set<String> finishedWorkers) {
+        Set<String> missingWorkers = new HashSet<String>();
+        for (WorkerData worker : workers) {
+            String workerAddress = worker.getAddress().toString();
+            if (!finishedWorkers.contains(workerAddress)) {
+                missingWorkers.add(workerAddress);
+            }
+        }
+        return missingWorkers;
     }
 }

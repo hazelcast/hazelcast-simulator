@@ -7,7 +7,9 @@ import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -120,6 +122,27 @@ public class ComponentRegistryTest {
 
         assertEquals(1, workerData.getSettings().getWorkerIndex());
         assertEquals(WorkerType.MEMBER, workerData.getSettings().getWorkerType());
+    }
+
+    @Test
+    public void testGetMissingWorkers() {
+        SimulatorAddress parentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
+        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(5);
+
+        componentRegistry.addWorkers(parentAddress, settingsList);
+        assertEquals(5, componentRegistry.workerCount());
+
+        Set<String> finishedWorkers = new HashSet<String>();
+        for (WorkerJvmSettings workerJvmSettings : settingsList) {
+            SimulatorAddress workerAddress = parentAddress.getChild(workerJvmSettings.getWorkerIndex());
+            finishedWorkers.add(workerAddress.toString());
+            if (finishedWorkers.size() == 3) {
+                break;
+            }
+        }
+
+        Set<String> missingWorkers = componentRegistry.getMissingWorkers(finishedWorkers);
+        assertEquals(2, missingWorkers.size());
     }
 
     private List<WorkerJvmSettings> getWorkerJvmSettingsList(int workerCount) {
