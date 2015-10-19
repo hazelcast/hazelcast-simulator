@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.tests.misc;
+package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
