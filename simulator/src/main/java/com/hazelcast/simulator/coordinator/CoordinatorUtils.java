@@ -169,12 +169,16 @@ final class CoordinatorUtils {
         while (finishedWorkers.size() < expectedFinishedWorkerCount && System.currentTimeMillis() < timeoutTimestamp) {
             sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
         }
-        if (finishedWorkers.size() == expectedFinishedWorkerCount) {
+        int remainingWorkers = expectedFinishedWorkerCount - finishedWorkers.size();
+        if (remainingWorkers > 0) {
+            LOGGER.warn(format("Aborted waiting for shutdown of all workers (%d still running)...", remainingWorkers));
+            return false;
+        } else if (remainingWorkers == 0) {
             LOGGER.info("Shutdown of all workers completed...");
             return true;
         }
-        int remainingWorkers = expectedFinishedWorkerCount - finishedWorkers.size();
-        LOGGER.warn(format("Aborted waiting for shutdown of all workers (%d still running)...", remainingWorkers));
-        return false;
+        LOGGER.warn(format("More workers finished than expected (%d/%d): %s", finishedWorkers.size(), expectedFinishedWorkerCount,
+                finishedWorkers));
+        return true;
     }
 }
