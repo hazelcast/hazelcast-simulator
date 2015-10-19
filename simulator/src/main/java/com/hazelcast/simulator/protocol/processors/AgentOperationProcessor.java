@@ -65,10 +65,10 @@ public class AgentOperationProcessor extends OperationProcessor {
     public void shutdown() {
         super.shutdown();
         try {
-            LOGGER.info("Shutdown of ExecutorService in OperationProcessor...");
+            LOGGER.info("Shutdown of ExecutorService in AgentOperationProcessor...");
             executorService.shutdown();
             executorService.awaitTermination(EXECUTOR_SERVICE_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            LOGGER.info("Shutdown of ExecutorService in OperationProcessor completed!");
+            LOGGER.info("Shutdown of ExecutorService in AgentOperationProcessor completed!");
         } catch (InterruptedException e) {
             EmptyStatement.ignore(e);
         }
