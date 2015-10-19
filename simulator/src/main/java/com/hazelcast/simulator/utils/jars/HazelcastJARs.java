@@ -7,6 +7,8 @@ import com.hazelcast.simulator.utils.FileUtilsException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,19 +32,16 @@ public class HazelcastJARs {
 
     private static final Logger LOGGER = Logger.getLogger(HazelcastJARs.class);
 
+    private final Map<String, File> versionSpecDirs = new HashMap<String, File>();
+
     private final Bash bash;
     private final GitSupport gitSupport;
-    private final String versionSpec;
-
-    private final File hazelcastJarsDir;
 
     HazelcastJARs(Bash bash, GitSupport gitSupport, String versionSpec) {
         this.bash = bash;
         this.gitSupport = gitSupport;
-        this.versionSpec = versionSpec;
 
-        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
-        this.hazelcastJarsDir = new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString());
+        addVersionSpec(versionSpec);
     }
 
     public static HazelcastJARs newInstance(Bash bash, SimulatorProperties properties) {
@@ -50,13 +49,42 @@ public class HazelcastJARs {
     }
 
     public void prepare(boolean prepareEnterpriseJARs) {
+        for (Map.Entry<String, File> versionSpecEntry : versionSpecDirs.entrySet()) {
+            prepare(versionSpecEntry.getKey(), versionSpecEntry.getValue(), prepareEnterpriseJARs);
+        }
+    }
+
+    public void upload(String ip, String simulatorHome) {
+        for (Map.Entry<String, File> stringFileEntry : versionSpecDirs.entrySet()) {
+            String versionSpec = stringFileEntry.getKey();
+            if (OUT_OF_THE_BOX.equals(versionSpec)) {
+                // upload Hazelcast JARs
+                bash.uploadToAgentSimulatorDir(ip, simulatorHome + "/lib/hazelcast*", "lib");
+            } else if (!BRING_MY_OWN.equals(versionSpec)) {
+                // upload the actual Hazelcast JARs that are going to be used by the worker
+                bash.uploadToAgentSimulatorDir(ip, stringFileEntry.getValue() + "/*.jar", "lib");
+            }
+        }
+    }
+
+    // just for testing
+    String getAbsolutePath(String versionSpec) {
+        return versionSpecDirs.get(versionSpec).getAbsolutePath();
+    }
+
+    private void addVersionSpec(String versionSpec) {
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        versionSpecDirs.put(versionSpec, new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString()).getAbsoluteFile());
+    }
+
+    private void prepare(String versionSpec, File targetDir, boolean prepareEnterpriseJARs) {
         LOGGER.info("Hazelcast version-spec: " + versionSpec);
-        if (versionSpec.equals(OUT_OF_THE_BOX) || versionSpec.equals(BRING_MY_OWN)) {
+        if (OUT_OF_THE_BOX.equals(versionSpec) || BRING_MY_OWN.equals(versionSpec)) {
             // we don't need to do anything
             return;
         }
 
-        ensureExistingDirectory(hazelcastJarsDir);
+        ensureExistingDirectory(targetDir);
 
         if (versionSpec.startsWith(GIT_VERSION_PREFIX)) {
             if (prepareEnterpriseJARs) {
@@ -64,47 +92,32 @@ public class HazelcastJARs {
                         "Hazelcast Enterprise is currently not supported when HAZELCAST_VERSION_SPEC is set to Git.");
             }
             String revision = versionSpec.substring(GIT_VERSION_PREFIX.length());
-            gitRetrieve(revision);
+            gitRetrieve(targetDir, revision);
         } else if (versionSpec.startsWith(MAVEN_VERSION_PREFIX)) {
             String version = versionSpec.substring(MAVEN_VERSION_PREFIX.length());
             if (prepareEnterpriseJARs) {
-                mavenRetrieve("hazelcast-enterprise", version);
-                mavenRetrieve("hazelcast-enterprise-client", version);
+                mavenRetrieve(targetDir, "hazelcast-enterprise", version);
+                mavenRetrieve(targetDir, "hazelcast-enterprise-client", version);
             } else {
-                mavenRetrieve("hazelcast", version);
-                mavenRetrieve("hazelcast-client", version);
-                mavenRetrieve("hazelcast-wm", version);
+                mavenRetrieve(targetDir, "hazelcast", version);
+                mavenRetrieve(targetDir, "hazelcast-client", version);
+                mavenRetrieve(targetDir, "hazelcast-wm", version);
             }
         } else {
-            throw new CommandLineExitException("Unrecognized version spec: " + versionSpec);
+            throw new CommandLineExitException("Unrecognized version spec: " + versionSpecDirs);
         }
     }
 
-    public void upload(String ip, String simulatorHome) {
-        if (OUT_OF_THE_BOX.equals(versionSpec)) {
-            // upload Hazelcast JARs
-            bash.uploadToAgentSimulatorDir(ip, simulatorHome + "/lib/hazelcast*", "lib");
-        } else if (!BRING_MY_OWN.equals(versionSpec)) {
-            // upload the actual Hazelcast JARs that are going to be used by the worker
-            bash.uploadToAgentSimulatorDir(ip, hazelcastJarsDir.getAbsolutePath() + "/*.jar", "lib");
-        }
-    }
-
-    // just for testing
-    String getAbsolutePath() {
-        return hazelcastJarsDir.getAbsolutePath();
-    }
-
-    private void gitRetrieve(String revision) {
+    private void gitRetrieve(File targetDir, String revision) {
         File[] files = gitSupport.checkout(revision);
-        copyFilesToDirectory(files, hazelcastJarsDir.getAbsoluteFile());
+        copyFilesToDirectory(files, targetDir);
     }
 
-    private void mavenRetrieve(String artifact, String version) {
+    private void mavenRetrieve(File targetDir, String artifact, String version) {
         File artifactFile = getArtifactFile(artifact, version);
         if (artifactFile.exists()) {
             LOGGER.info("Using artifact: " + artifactFile + " from local maven repository");
-            bash.execute(format("cp %s %s", artifactFile.getAbsolutePath(), hazelcastJarsDir.getAbsolutePath()));
+            bash.execute(format("cp %s %s", artifactFile.getAbsolutePath(), targetDir));
             return;
         }
 
@@ -115,7 +128,7 @@ public class HazelcastJARs {
         } else {
             url = getReleaseUrl(artifact, version);
         }
-        bash.download(hazelcastJarsDir.getAbsolutePath(), url);
+        bash.download(targetDir.getAbsolutePath(), url);
     }
 
     File getArtifactFile(String artifact, String version) {

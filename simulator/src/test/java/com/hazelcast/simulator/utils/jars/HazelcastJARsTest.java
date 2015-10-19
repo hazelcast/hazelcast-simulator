@@ -112,9 +112,11 @@ public class HazelcastJARsTest {
     @Test
     public void testUpload() {
         HazelcastJARs hazelcastJARs = getHazelcastJARs("maven=3.6");
+        String targetDir = hazelcastJARs.getAbsolutePath("maven=3.6");
+
         hazelcastJARs.upload("127.0.0.1", "simulatorHome");
 
-        verify(bash, times(1)).uploadToAgentSimulatorDir(eq("127.0.0.1"), contains(hazelcastJARs.getAbsolutePath()), anyString());
+        verify(bash, times(1)).uploadToAgentSimulatorDir(eq("127.0.0.1"), contains(targetDir), anyString());
         verifyNoMoreInteractions(bash);
     }
 
