@@ -173,12 +173,8 @@ final class CoordinatorUtils {
         if (remainingWorkers > 0) {
             LOGGER.warn(format("Aborted waiting for shutdown of all workers (%d still running)...", remainingWorkers));
             return false;
-        } else if (remainingWorkers == 0) {
-            LOGGER.info("Shutdown of all workers completed...");
-            return true;
         }
-        LOGGER.warn(format("More workers finished than expected (%d/%d): %s", finishedWorkers.size(), expectedFinishedWorkerCount,
-                finishedWorkers));
+        LOGGER.info("Shutdown of all workers completed...");
         return true;
     }
 }
