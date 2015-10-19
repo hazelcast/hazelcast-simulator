@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.provisioner.git;
+package com.hazelcast.simulator.utils.jars;
 
 import com.hazelcast.simulator.provisioner.Bash;
 import org.junit.Before;

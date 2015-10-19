@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.provisioner.git;
+package com.hazelcast.simulator.utils.jars;
 
 import com.hazelcast.simulator.provisioner.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -9,7 +9,7 @@ import java.io.File;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static java.lang.String.format;
 
-public class BuildSupport {
+class BuildSupport {
 
     private static final Logger LOGGER = Logger.getLogger(BuildSupport.class);
 

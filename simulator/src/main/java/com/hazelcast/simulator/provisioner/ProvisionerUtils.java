@@ -1,9 +1,6 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.provisioner.git.BuildSupport;
-import com.hazelcast.simulator.provisioner.git.GitSupport;
-import com.hazelcast.simulator.provisioner.git.HazelcastJARFinder;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 
 import java.io.File;
@@ -29,19 +26,6 @@ final class ProvisionerUtils {
             throw new CommandLineExitException(format("Could not find %s: %s", INIT_SH_SCRIPT_NAME, initScript));
         }
         return initScript;
-    }
-
-    static HazelcastJars getHazelcastJars(Bash bash, SimulatorProperties properties) {
-        return new HazelcastJars(bash, createGitSupport(bash, properties), properties.getHazelcastVersionSpec());
-    }
-
-    private static GitSupport createGitSupport(Bash bash, SimulatorProperties properties) {
-        String mvnExec = properties.get("MVN_EXECUTABLE");
-        BuildSupport buildSupport = new BuildSupport(bash, new HazelcastJARFinder(), mvnExec);
-        String gitBuildDirectory = properties.get("GIT_BUILD_DIR");
-        String customGitRepositories = properties.get("GIT_CUSTOM_REPOSITORIES");
-
-        return new GitSupport(buildSupport, customGitRepositories, gitBuildDirectory);
     }
 
     static void ensureNotStaticCloudProvider(SimulatorProperties properties, String action) {

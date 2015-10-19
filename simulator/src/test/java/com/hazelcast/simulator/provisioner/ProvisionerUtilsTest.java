@@ -9,7 +9,6 @@ import java.io.File;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.INIT_SH_SCRIPT_NAME;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureNotStaticCloudProvider;
-import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getHazelcastJars;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
@@ -58,14 +57,6 @@ public class ProvisionerUtilsTest {
     @Test(expected = CommandLineExitException.class)
     public void testGetInitScriptFile_notExists() {
         getInitScriptFile(".");
-    }
-
-    @Test
-    public void testGetHazelcastJars() {
-        Bash bash = mock(Bash.class);
-        SimulatorProperties properties = mock(SimulatorProperties.class);
-
-        getHazelcastJars(bash, properties);
     }
 
     @Test

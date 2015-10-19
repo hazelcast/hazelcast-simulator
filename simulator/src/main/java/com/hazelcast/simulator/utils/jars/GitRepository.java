@@ -1,6 +1,6 @@
-package com.hazelcast.simulator.provisioner.git;
+package com.hazelcast.simulator.utils.jars;
 
-public class GitRepository {
+class GitRepository {
 
     private final String name;
     private final String url;

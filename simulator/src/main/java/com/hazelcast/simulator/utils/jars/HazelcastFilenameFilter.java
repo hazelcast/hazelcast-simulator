@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.provisioner.git;
+package com.hazelcast.simulator.utils.jars;
 
 import java.io.File;
 import java.io.FilenameFilter;

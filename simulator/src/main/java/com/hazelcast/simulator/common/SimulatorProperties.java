@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.common;
 
-import com.hazelcast.simulator.provisioner.HazelcastJars;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
@@ -14,6 +13,8 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static com.hazelcast.simulator.utils.jars.HazelcastJARs.GIT_VERSION_PREFIX;
+import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static java.lang.String.format;
 
 /**
@@ -43,8 +44,8 @@ public class SimulatorProperties {
     /**
      * Initializes the SimulatorProperties.
      *
-     * @param file the file to load the properties from. If the file is <code>null</code>, then first the simulator.properties
-     *             in the working directory is checked.
+     * @param file the file to load the properties from. If the file is <code>null</code>,
+     *             then first the simulator.properties in the working directory is checked.
      */
     public void init(File file) {
         if (file == null) {
@@ -82,8 +83,8 @@ public class SimulatorProperties {
 
     public void forceGit(String gitRevision) {
         if (gitRevision != null && !gitRevision.isEmpty()) {
-            forcedHazelcastVersionSpec = HazelcastJars.GIT_VERSION_PREFIX + gitRevision;
-            LOGGER.info("Overriding Hazelcast version to GIT revision " + gitRevision);
+            forcedHazelcastVersionSpec = GIT_VERSION_PREFIX + gitRevision;
+            LOGGER.info("Overriding Hazelcast version to Git revision " + gitRevision);
         }
     }
 
@@ -93,7 +94,7 @@ public class SimulatorProperties {
 
     public String getHazelcastVersionSpec() {
         if (forcedHazelcastVersionSpec == null) {
-            return get("HAZELCAST_VERSION_SPEC", "outofthebox");
+            return get("HAZELCAST_VERSION_SPEC", OUT_OF_THE_BOX);
         } else {
             return forcedHazelcastVersionSpec;
         }

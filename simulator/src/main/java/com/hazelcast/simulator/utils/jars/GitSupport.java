@@ -1,5 +1,7 @@
-package com.hazelcast.simulator.provisioner.git;
+package com.hazelcast.simulator.utils.jars;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.provisioner.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.api.Git;
@@ -21,19 +23,29 @@ import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
-public class GitSupport {
+class GitSupport {
 
     private static final String HAZELCAST_MAIN_REPO_URL = "https://github.com/hazelcast/hazelcast.git";
+
     private static final Logger LOGGER = Logger.getLogger(GitSupport.class);
 
     private final BuildSupport buildSupport;
     private final File baseDir;
     private final Set<GitRepository> customRepositories;
 
-    public GitSupport(BuildSupport buildSupport, String customRepositories, String basePath) {
+    private GitSupport(BuildSupport buildSupport, String customRepositories, String basePath) {
         this.buildSupport = buildSupport;
         this.baseDir = getBaseDir(basePath);
         this.customRepositories = getCustomRepositories(customRepositories);
+    }
+
+    public static GitSupport newInstance(Bash bash, SimulatorProperties properties) {
+        String mvnExec = properties.get("MVN_EXECUTABLE");
+        String customGitRepositories = properties.get("GIT_CUSTOM_REPOSITORIES");
+        String gitBuildDirectory = properties.get("GIT_BUILD_DIR");
+
+        BuildSupport buildSupport = new BuildSupport(bash, new HazelcastJARFinder(), mvnExec);
+        return new GitSupport(buildSupport, customGitRepositories, gitBuildDirectory);
     }
 
     public File[] checkout(String revision) {
@@ -117,9 +129,9 @@ public class GitSupport {
             fetchAllRepositories(git);
             fullSha1 = checkoutRevision(git, revision);
         } catch (GitAPIException e) {
-            throw new CommandLineExitException("Error while fetching sources from GIT", e);
+            throw new CommandLineExitException("Error while fetching sources from Git", e);
         } catch (IOException e) {
-            throw new CommandLineExitException("Error while fetching sources from GIT", e);
+            throw new CommandLineExitException("Error while fetching sources from Git", e);
         } finally {
             if (git != null) {
                 git.close();
@@ -135,25 +147,25 @@ public class GitSupport {
             if (tmpBaseDir.exists()) {
                 if (!tmpBaseDir.isDirectory()) {
                     throw new CommandLineExitException(
-                            "Default directory for building Hazelcast from GIT is " + tmpBaseDir.getAbsolutePath()
-                            + ". This path already exists, but it isn't a directory."
-                            + " Please configure the directory explicitly via 'simulator.properties'"
-                            + " or remove the existing path.");
+                            "Default directory for building Hazelcast from Git is " + tmpBaseDir.getAbsolutePath()
+                                    + ". This path already exists, but it isn't a directory."
+                                    + " Please configure the directory explicitly via 'simulator.properties'"
+                                    + " or remove the existing path.");
                 } else if (!tmpBaseDir.canWrite()) {
                     throw new CommandLineExitException(
-                            "Default directory for building Hazelcast from GIT is " + tmpBaseDir.getAbsolutePath()
-                            + ". This path already exists, but it isn't writable. "
-                            + "Please configure the directory explicitly via 'simulator.properties' or check access rights.");
+                            "Default directory for building Hazelcast from Git is " + tmpBaseDir.getAbsolutePath()
+                                    + ". This path already exists, but it isn't writable. "
+                                    + "Please configure the directory explicitly via 'simulator.properties' or check access rights.");
                 }
             }
         } else {
             tmpBaseDir = new File(basePath);
             if (tmpBaseDir.exists()) {
                 if (!tmpBaseDir.isDirectory()) {
-                    throw new CommandLineExitException("Directory for building Hazelcast from GIT is "
+                    throw new CommandLineExitException("Directory for building Hazelcast from Git is "
                             + tmpBaseDir.getAbsolutePath() + ". This path already exists, but it isn't a directory.");
                 } else if (!tmpBaseDir.canWrite()) {
-                    throw new CommandLineExitException("Directory for building Hazelcast from GIT is "
+                    throw new CommandLineExitException("Directory for building Hazelcast from Git is "
                             + tmpBaseDir.getAbsolutePath() + ". This path already exists, but it isn't writable.");
                 }
             }
@@ -161,7 +173,7 @@ public class GitSupport {
         if (!tmpBaseDir.exists()) {
             ensureExistingDirectory(tmpBaseDir);
             if (!tmpBaseDir.exists()) {
-                throw new CommandLineExitException("Cannot create a directory for building Hazelcast form GIT."
+                throw new CommandLineExitException("Cannot create a directory for building Hazelcast from Git."
                         + " Directory is set to " + tmpBaseDir.getAbsolutePath() + ". Please check access rights.");
             }
         }
@@ -196,7 +208,7 @@ public class GitSupport {
     private Git cloneIfNecessary(File src) throws GitAPIException, IOException {
         Git git;
         if (!isValidLocalRepository(src)) {
-            LOGGER.info("Cloning Hazelcast GIT repository to " + src.getAbsolutePath() + " This might take a while.");
+            LOGGER.info("Cloning Hazelcast Git repository to " + src.getAbsolutePath() + ". This might take a while...");
             git = Git.cloneRepository().setURI(HAZELCAST_MAIN_REPO_URL).setDirectory(src).call();
         } else {
             git = Git.open(src);

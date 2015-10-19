@@ -11,6 +11,7 @@ import java.io.File;
 
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -145,7 +146,7 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testGetHazelcastVersionSpec() throws Exception {
-        assertTrue(simulatorProperties.getHazelcastVersionSpec().equals("outofthebox"));
+        assertEquals(OUT_OF_THE_BOX, simulatorProperties.getHazelcastVersionSpec());
     }
 
     @Test
