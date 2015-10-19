@@ -45,7 +45,7 @@ public abstract class OperationProcessor {
                 default:
                     return processOperation(operationType, operation);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             exceptionLogger.log(e);
             return EXCEPTION_DURING_OPERATION_EXECUTION;
         }
