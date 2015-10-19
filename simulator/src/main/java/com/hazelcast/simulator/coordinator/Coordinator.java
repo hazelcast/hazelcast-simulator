@@ -66,6 +66,8 @@ public final class Coordinator {
     private static final int TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS = 10;
     private static final int PARALLEL_EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
+    private static final String HORIZONTAL_RULER = "----------------------------------------------------------------------------";
+
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
@@ -453,14 +455,14 @@ public final class Coordinator {
     private void logFailureInfo() {
         int failureCount = failureContainer.getFailureCount();
         if (failureCount > 0) {
-            LOGGER.fatal("-----------------------------------------------------------------------------");
+            LOGGER.fatal(HORIZONTAL_RULER);
             LOGGER.fatal(failureCount + " failures have been detected!!!");
-            LOGGER.fatal("-----------------------------------------------------------------------------");
+            LOGGER.fatal(HORIZONTAL_RULER);
             throw new CommandLineExitException(failureCount + " failures have been detected");
         }
-        LOGGER.info("-----------------------------------------------------------------------------");
+        LOGGER.info(HORIZONTAL_RULER);
         LOGGER.info("No failures have been detected!");
-        LOGGER.info("-----------------------------------------------------------------------------");
+        LOGGER.info(HORIZONTAL_RULER);
     }
 
     private void stopAgents() {

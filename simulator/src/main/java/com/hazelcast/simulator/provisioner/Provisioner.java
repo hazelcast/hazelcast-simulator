@@ -44,6 +44,8 @@ public final class Provisioner {
     private static final int MACHINE_WARMUP_WAIT_SECONDS = 10;
     private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
+    private static final String INDENTATION = "    ";
+
     private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
@@ -108,7 +110,7 @@ public final class Provisioner {
     void listMachines() {
         echo("Provisioned machines (from " + AgentsFile.NAME + "):");
         String machines = fileAsText(agentsFile);
-        echo("    " + machines);
+        echo(INDENTATION + machines);
     }
 
     void download(final String target) {
@@ -261,7 +263,7 @@ public final class Provisioner {
                     String privateIpAddress = node.getPrivateAddresses().iterator().next();
                     String publicIpAddress = node.getPublicAddresses().iterator().next();
 
-                    echo("    " + publicIpAddress + " LAUNCHED");
+                    echo(INDENTATION + publicIpAddress + " LAUNCHED");
                     appendText(publicIpAddress + "," + privateIpAddress + "\n", agentsFile);
 
                     componentRegistry.addAgent(publicIpAddress, privateIpAddress);
@@ -416,20 +418,20 @@ public final class Provisioner {
         public void run() {
             // install Java if needed
             if (!"outofthebox".equals(props.get("JDK_FLAVOR"))) {
-                echo("    " + ip + " JAVA INSTALLATION STARTED...");
+                echo(INDENTATION + ip + " JAVA INSTALLATION STARTED...");
                 bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
                 bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
                 bash.ssh(ip, "bash install-java.sh");
-                echo("    " + ip + " JAVA INSTALLED");
+                echo(INDENTATION + ip + " JAVA INSTALLED");
             }
 
-            echo("    " + ip + " SIMULATOR INSTALLATION STARTED...");
+            echo(INDENTATION + ip + " SIMULATOR INSTALLATION STARTED...");
             installSimulator(ip);
-            echo("    " + ip + " SIMULATOR INSTALLED");
+            echo(INDENTATION + ip + " SIMULATOR INSTALLED");
 
             if (startHarakiriMonitorCommand != null) {
                 bash.ssh(ip, startHarakiriMonitorCommand);
-                echo("    " + ip + " HARAKIRI MONITOR STARTED");
+                echo(INDENTATION + ip + " HARAKIRI MONITOR STARTED");
             }
         }
 

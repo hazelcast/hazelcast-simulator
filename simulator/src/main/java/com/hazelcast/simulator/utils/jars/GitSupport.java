@@ -26,6 +26,8 @@ import static com.hazelcast.simulator.utils.FileUtils.newFile;
 class GitSupport {
 
     private static final String HAZELCAST_MAIN_REPO_URL = "https://github.com/hazelcast/hazelcast.git";
+    private static final String CONFIG_REMOTE = "remote";
+    private static final String CONFIG_URL = "url";
 
     private static final Logger LOGGER = Logger.getLogger(GitSupport.class);
 
@@ -86,9 +88,9 @@ class GitSupport {
         StoredConfig config = git.getRepository().getConfig();
         Set<GitRepository> customRepositoriesCopy = new HashSet<GitRepository>(customRepositories);
 
-        Set<String> existingRemoteRepoNames = config.getSubsections("remote");
+        Set<String> existingRemoteRepoNames = config.getSubsections(CONFIG_REMOTE);
         for (String remoteName : existingRemoteRepoNames) {
-            String url = config.getString("remote", remoteName, "url");
+            String url = config.getString(CONFIG_REMOTE, remoteName, CONFIG_URL);
             boolean isConfigured = customRepositoriesCopy.remove(new GitRepository(remoteName, url));
             if (!isConfigured && isCustomRepository(remoteName)) {
                 removeRepository(config, remoteName);
@@ -105,15 +107,15 @@ class GitSupport {
         String url = repository.getUrl();
         String name = repository.getName();
         LOGGER.info("Adding a new custom repository " + url);
-        config.setString("remote", name, "url", url);
+        config.setString(CONFIG_REMOTE, name, CONFIG_URL, url);
         RefSpec refSpec = new RefSpec()
                 .setForceUpdate(true)
                 .setSourceDestination(Constants.R_HEADS + "*", Constants.R_REMOTES + name + "/*");
-        config.setString("remote", name, "fetch", refSpec.toString());
+        config.setString(CONFIG_REMOTE, name, "fetch", refSpec.toString());
     }
 
     private void removeRepository(StoredConfig config, String remoteName) {
-        config.unsetSection("remote", remoteName);
+        config.unsetSection(CONFIG_REMOTE, remoteName);
     }
 
     private boolean isCustomRepository(String remoteName) {

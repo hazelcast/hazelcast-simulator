@@ -20,6 +20,8 @@ import static java.lang.reflect.Modifier.isStatic;
  */
 public final class PropertyBindingSupport {
 
+    private static final String NULL_LITERAL = "null";
+
     private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);
 
     private PropertyBindingSupport() {
@@ -222,7 +224,7 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindByte(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
+        if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
             field.set(object, Byte.parseByte(value));
@@ -230,7 +232,7 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindShort(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
+        if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
             field.set(object, Short.parseShort(value));
@@ -238,7 +240,7 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindInteger(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
+        if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
             field.set(object, Integer.parseInt(value));
@@ -246,7 +248,7 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindLong(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
+        if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
             field.set(object, Long.parseLong(value));
@@ -254,7 +256,7 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindFloat(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
+        if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
             field.set(object, Float.parseFloat(value));
@@ -262,7 +264,7 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindDouble(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
+        if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
             field.set(object, Double.parseDouble(value));
@@ -280,7 +282,7 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindBoolean(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
+        if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else if ("true".equals(value)) {
             field.set(object, true);
@@ -292,7 +294,7 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindClass(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
+        if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
             try {
@@ -304,7 +306,7 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindString(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
+        if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
             field.set(object, value);
@@ -312,7 +314,7 @@ public final class PropertyBindingSupport {
     }
 
     private static void bindEnum(Object object, String value, Field field) throws IllegalAccessException {
-        if ("null".equals(value)) {
+        if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
             try {

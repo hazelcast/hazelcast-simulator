@@ -239,9 +239,10 @@ public class WorkerJvmLauncher {
     }
 
     private void addProfilerSettings(WorkerJvm workerJvm, List<String> args) {
+        String javaExecutable = "java";
         switch (workerJvmSettings.getProfiler()) {
             case YOURKIT:
-                args.add("java");
+                args.add(javaExecutable);
                 String agentSetting = workerJvmSettings.getProfilerSettings()
                         .replace("${SIMULATOR_HOME}", SIMULATOR_HOME.getAbsolutePath())
                         .replace("${WORKER_HOME}", workerJvm.getWorkerHome().getAbsolutePath());
@@ -249,17 +250,17 @@ public class WorkerJvmLauncher {
                 break;
             case FLIGHTRECORDER:
             case HPROF:
-                args.add("java");
+                args.add(javaExecutable);
                 args.add(workerJvmSettings.getProfilerSettings());
                 break;
             case PERF:
             case VTUNE:
                 // perf and vtune command always need to be in front of the java command
                 args.add(workerJvmSettings.getProfilerSettings());
-                args.add("java");
+                args.add(javaExecutable);
                 break;
             default:
-                args.add("java");
+                args.add(javaExecutable);
         }
     }
 
