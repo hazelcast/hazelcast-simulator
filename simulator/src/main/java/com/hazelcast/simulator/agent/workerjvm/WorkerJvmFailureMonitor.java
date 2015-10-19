@@ -19,6 +19,7 @@ import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.test.FailureType;
 import org.apache.log4j.Logger;
@@ -187,11 +188,17 @@ public class WorkerJvmFailureMonitor {
                     jvm.getHazelcastAddress(), jvm.getId(), testId, agent.getTestSuite(), cause);
             LOGGER.error(format("Detected failure on worker %s: %s", jvm.getId(), operation.getLogMessage(++failureCount)));
 
-            Response response = agent.getAgentConnector().write(SimulatorAddress.COORDINATOR, operation);
-            if (response.getFirstErrorResponseType() != ResponseType.SUCCESS) {
-                LOGGER.fatal(format("Could not send failure to coordinator! %s", operation));
-            } else {
-                LOGGER.info("Failure successfully sent to Coordinator!");
+            try {
+                Response response = agent.getAgentConnector().write(SimulatorAddress.COORDINATOR, operation);
+                if (response.getFirstErrorResponseType() != ResponseType.SUCCESS) {
+                    LOGGER.fatal(format("Could not send failure to coordinator! %s", operation));
+                } else {
+                    LOGGER.info("Failure successfully sent to Coordinator!");
+                }
+            } catch (SimulatorProtocolException e) {
+                if (!isInterrupted()) {
+                    LOGGER.fatal(format("Could not send failure to coordinator! %s", operation), e);
+                }
             }
         }
     }
