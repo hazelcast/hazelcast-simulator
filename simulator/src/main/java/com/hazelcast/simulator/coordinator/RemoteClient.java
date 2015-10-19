@@ -141,8 +141,7 @@ public class RemoteClient {
             ResponseType responseType = responseTypeEntry.getValue();
             if (responseType != ResponseType.SUCCESS) {
                 SimulatorAddress source = responseTypeEntry.getKey();
-                throw new CommandLineExitException(format("Could not execute %s on %s (%s)",
-                        operation, source, responseType));
+                throw new CommandLineExitException(format("Could not execute %s on %s (%s)", operation, source, responseType));
             }
         }
     }

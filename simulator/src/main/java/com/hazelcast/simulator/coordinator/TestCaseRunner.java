@@ -102,7 +102,7 @@ final class TestCaseRunner {
 
             return (failureContainer.getFailureCount() == oldFailureCount);
         } catch (Exception e) {
-            LOGGER.fatal("Exception in TestCaseRunner", e);
+            LOGGER.error("Exception in TestCaseRunner: " + e.getMessage());
             return false;
         }
     }

@@ -118,6 +118,10 @@ public class WorkerJvmFailureMonitor {
                 String testId = content.substring(0, indexOf);
                 String cause = content.substring(indexOf + 1);
 
+                if (testId.isEmpty() || "null".equals(testId)) {
+                    testId = null;
+                }
+
                 // we delete the exception file so that we don't detect the same exception again
                 deleteQuiet(exceptionFile);
 

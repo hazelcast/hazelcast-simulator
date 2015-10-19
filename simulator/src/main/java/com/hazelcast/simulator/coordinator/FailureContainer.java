@@ -62,7 +62,7 @@ public class FailureContainer {
 
         failureOperations.add(operation);
 
-        LOGGER.warn(operation.getLogMessage(failureOperations.size()));
+        LOGGER.error(operation.getLogMessage(failureOperations.size()));
         appendText(operation.getFileMessage(), file);
     }
 }

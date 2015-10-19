@@ -20,4 +20,11 @@ public class CreateTestOperation implements SimulatorOperation {
     public TestCase getTestCase() {
         return new TestCase(testId, properties);
     }
+
+    @Override
+    public String toString() {
+        return "CreateTestOperation{" +
+                "testId='" + testId + '\'' +
+                '}';
+    }
 }
