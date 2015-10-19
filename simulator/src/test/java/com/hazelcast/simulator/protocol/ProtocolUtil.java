@@ -22,6 +22,7 @@ import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.util.ExceptionUtil;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -80,17 +81,22 @@ class ProtocolUtil {
     }
 
     static void startSimulatorComponents(int numberOfAgents, int numberOfWorkers, int numberOfTests) {
-        for (int agentIndex = 1; agentIndex <= numberOfAgents; agentIndex++) {
-            int workerStartPort = WORKER_START_PORT + (100 * (agentIndex - 1));
-            for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
-                workerConnectors.add(startWorker(workerIndex, agentIndex, workerStartPort + workerIndex, numberOfTests));
+        try {
+            for (int agentIndex = 1; agentIndex <= numberOfAgents; agentIndex++) {
+                int workerStartPort = WORKER_START_PORT + (100 * (agentIndex - 1));
+                for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
+                    workerConnectors.add(startWorker(workerIndex, agentIndex, workerStartPort + workerIndex, numberOfTests));
+                }
+
+                int agentPort = AGENT_START_PORT + agentIndex;
+                agentConnectors.add(startAgent(agentIndex, agentPort, "127.0.0.1", workerStartPort, numberOfWorkers));
             }
 
-            int agentPort = AGENT_START_PORT + agentIndex;
-            agentConnectors.add(startAgent(agentIndex, agentPort, "127.0.0.1", workerStartPort, numberOfWorkers));
+            coordinatorConnector = startCoordinator("127.0.0.1", AGENT_START_PORT, numberOfAgents);
+        } catch (Exception e) {
+            LOGGER.error("Exception in ProtocolUtil.startSimulatorComponents()", e);
+            throw ExceptionUtil.rethrow(e);
         }
-
-        coordinatorConnector = startCoordinator("127.0.0.1", AGENT_START_PORT, numberOfAgents);
     }
 
     static void stopSimulatorComponents() {
