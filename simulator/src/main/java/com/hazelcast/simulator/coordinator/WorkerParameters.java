@@ -33,6 +33,8 @@ public class WorkerParameters {
     private final boolean autoCreateHzInstance;
     private final int workerStartupTimeout;
 
+    private final String hazelcastVersionSpec;
+
     private final String memberJvmOptions;
     private final String clientJvmOptions;
 
@@ -52,6 +54,8 @@ public class WorkerParameters {
                             String log4jConfig, boolean monitorPerformance) {
         this.autoCreateHzInstance = autoCreateHzInstance;
         this.workerStartupTimeout = workerStartupTimeout;
+
+        this.hazelcastVersionSpec = properties.getHazelcastVersionSpec();
 
         this.memberJvmOptions = memberJvmOptions;
         this.clientJvmOptions = clientJvmOptions;
@@ -104,6 +108,10 @@ public class WorkerParameters {
 
     public int getWorkerStartupTimeout() {
         return workerStartupTimeout;
+    }
+
+    public String getHazelcastVersionSpec() {
+        return hazelcastVersionSpec;
     }
 
     public String getMemberJvmOptions() {

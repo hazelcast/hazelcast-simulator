@@ -5,6 +5,7 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,6 +27,7 @@ public class WorkerParametersTest {
     @Before
     public void setUp() throws Exception {
         properties = mock(SimulatorProperties.class);
+        when(properties.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.OUT_OF_THE_BOX);
         when(properties.get(eq("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"))).thenReturn("1234");
         when(properties.get("PROFILER")).thenReturn(JavaProfiler.NONE.name());
         when(properties.get(eq("NUMA_CONTROL"), anyString())).thenReturn("none");
@@ -36,9 +38,10 @@ public class WorkerParametersTest {
         WorkerParameters workerParameters = new WorkerParameters(properties, true, 2342, "memberJvmOptions", "clientJvmOptions",
                 "memberHzConfig", "clientHzConfig", "log4jConfig", false);
 
+        assertTrue(workerParameters.isAutoCreateHzInstance());
         assertEquals(2342, workerParameters.getWorkerStartupTimeout());
         assertEquals(1234, workerParameters.getWorkerPerformanceMonitorIntervalSeconds());
-        assertTrue(workerParameters.isAutoCreateHzInstance());
+        assertEquals(HazelcastJARs.OUT_OF_THE_BOX, workerParameters.getHazelcastVersionSpec());
 
         assertEquals("memberJvmOptions", workerParameters.getMemberJvmOptions());
         assertEquals("clientJvmOptions", workerParameters.getClientJvmOptions());

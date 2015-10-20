@@ -24,6 +24,7 @@ import static com.hazelcast.simulator.utils.FileUtils.readObject;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
+import static com.hazelcast.simulator.utils.jars.HazelcastJARs.directoryForVersionSpec;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
@@ -265,10 +266,11 @@ public class WorkerJvmLauncher {
     }
 
     private String getClasspath() {
-        File libDir = new File(agent.getTestSuiteDir(), "lib");
-        return CLASSPATH + CLASSPATH_SEPARATOR
-                + SIMULATOR_HOME + "/user-lib/*" + CLASSPATH_SEPARATOR
-                + new File(libDir, "*").getAbsolutePath();
+        String hzVersionDirectory = directoryForVersionSpec(workerJvmSettings.getHazelcastVersionSpec());
+        return CLASSPATH
+                + CLASSPATH_SEPARATOR + SIMULATOR_HOME + "/hz-lib/" + hzVersionDirectory + "/*"
+                + CLASSPATH_SEPARATOR + SIMULATOR_HOME + "/user-lib/*"
+                + CLASSPATH_SEPARATOR + new File(agent.getTestSuiteDir(), "lib/*").getAbsolutePath();
     }
 
     private List<String> getJvmOptions() {

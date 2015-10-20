@@ -26,6 +26,7 @@ public class WorkerJvmSettings {
 
     private final int workerIndex;
     private final String workerType;
+    private final String hazelcastVersionSpec;
 
     private final String jvmOptions;
     private final String hazelcastConfig;
@@ -42,6 +43,7 @@ public class WorkerJvmSettings {
     public WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters) {
         this.workerIndex = workerIndex;
         this.workerType = workerType.name();
+        this.hazelcastVersionSpec = workerParameters.getHazelcastVersionSpec();
 
         switch (workerType) {
             case MEMBER:
@@ -76,6 +78,10 @@ public class WorkerJvmSettings {
 
     public WorkerType getWorkerType() {
         return WorkerType.valueOf(workerType);
+    }
+
+    public String getHazelcastVersionSpec() {
+        return hazelcastVersionSpec;
     }
 
     public String getJvmOptions() {

@@ -14,7 +14,9 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.BRING_MY_OWN;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
+import static com.hazelcast.simulator.utils.jars.HazelcastJARs.directoryForVersionSpec;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
@@ -40,6 +42,14 @@ public class HazelcastJARsTest {
     public void testNewInstance() {
         SimulatorProperties properties = mock(SimulatorProperties.class);
         HazelcastJARs.newInstance(bash, properties);
+    }
+
+    @Test
+    public void testDirectoryForVersionSpec() {
+        assertNull(directoryForVersionSpec(BRING_MY_OWN));
+        assertEquals("outofthebox", directoryForVersionSpec(OUT_OF_THE_BOX));
+        assertEquals("git-tag-3.6", directoryForVersionSpec("git=tag=3.6"));
+        assertEquals("maven-3.6", directoryForVersionSpec("maven=3.6"));
     }
 
     @Test
@@ -110,21 +120,35 @@ public class HazelcastJARsTest {
     }
 
     @Test
+    public void testPurge() {
+        HazelcastJARs hazelcastJARs = getHazelcastJARs(OUT_OF_THE_BOX);
+
+        hazelcastJARs.purge("127.0.0.1");
+
+        verify(bash, times(1)).sshQuiet(eq("127.0.0.1"), anyString());
+        verifyNoMoreInteractions(bash);
+    }
+
+    @Test
     public void testUpload() {
         HazelcastJARs hazelcastJARs = getHazelcastJARs("maven=3.6");
-        String targetDir = hazelcastJARs.getAbsolutePath("maven=3.6");
+        String sourceDir = hazelcastJARs.getAbsolutePath("maven=3.6");
+        String targetDir = directoryForVersionSpec("maven=3.6");
 
         hazelcastJARs.upload("127.0.0.1", "simulatorHome");
 
-        verify(bash, times(1)).uploadToAgentSimulatorDir(eq("127.0.0.1"), contains(targetDir), anyString());
+        verify(bash, times(1)).ssh(eq("127.0.0.1"), contains(targetDir));
+        verify(bash, times(1)).uploadToAgentSimulatorDir(eq("127.0.0.1"), contains(sourceDir), anyString());
         verifyNoMoreInteractions(bash);
     }
 
     @Test
     public void testUpload_outOfTheBox() {
+        String targetDir = directoryForVersionSpec(OUT_OF_THE_BOX);
         HazelcastJARs hazelcastJARs = getHazelcastJARs(OUT_OF_THE_BOX);
         hazelcastJARs.upload("127.0.0.1", "simulatorHome");
 
+        verify(bash, times(1)).ssh(eq("127.0.0.1"), contains(targetDir));
         verify(bash, times(1)).uploadToAgentSimulatorDir(eq("127.0.0.1"), contains("simulatorHome"), anyString());
         verifyNoMoreInteractions(bash);
     }

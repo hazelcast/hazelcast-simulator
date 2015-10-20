@@ -361,6 +361,7 @@ public final class Provisioner {
         bash.uploadToAgentSimulatorDir(ip, SIMULATOR_HOME + "/user-lib/", "user-lib/");
 
         // upload Hazelcast JARs
+        hazelcastJARs.purge(ip);
         hazelcastJARs.upload(ip, SIMULATOR_HOME);
 
         String initScript = loadInitScript();

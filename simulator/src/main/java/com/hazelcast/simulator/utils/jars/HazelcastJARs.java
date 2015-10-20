@@ -13,6 +13,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getText;
@@ -48,21 +49,42 @@ public class HazelcastJARs {
         return new HazelcastJARs(bash, GitSupport.newInstance(bash, properties), properties.getHazelcastVersionSpec());
     }
 
+    public static String directoryForVersionSpec(String versionSpec) {
+        if (BRING_MY_OWN.equals(versionSpec)) {
+            return null;
+        }
+        if (OUT_OF_THE_BOX.equals(versionSpec)) {
+            return "outofthebox";
+        }
+        return versionSpec.replace('=', '-');
+    }
+
     public void prepare(boolean prepareEnterpriseJARs) {
         for (Map.Entry<String, File> versionSpecEntry : versionSpecDirs.entrySet()) {
             prepare(versionSpecEntry.getKey(), versionSpecEntry.getValue(), prepareEnterpriseJARs);
         }
     }
 
+    public void purge(String ip) {
+        bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", getSimulatorVersion()));
+    }
+
     public void upload(String ip, String simulatorHome) {
         for (Map.Entry<String, File> stringFileEntry : versionSpecDirs.entrySet()) {
             String versionSpec = stringFileEntry.getKey();
+
+            // create target directory
+            String versionDir = directoryForVersionSpec(versionSpec);
+            if (versionDir != null) {
+                bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/hz-lib/%s", getSimulatorVersion(), versionDir));
+            }
+
             if (OUT_OF_THE_BOX.equals(versionSpec)) {
                 // upload Hazelcast JARs
-                bash.uploadToAgentSimulatorDir(ip, simulatorHome + "/lib/hazelcast*", "lib");
+                bash.uploadToAgentSimulatorDir(ip, simulatorHome + "/lib/hazelcast*", "hz-lib/outofthebox");
             } else if (!BRING_MY_OWN.equals(versionSpec)) {
                 // upload the actual Hazelcast JARs that are going to be used by the worker
-                bash.uploadToAgentSimulatorDir(ip, stringFileEntry.getValue() + "/*.jar", "lib");
+                bash.uploadToAgentSimulatorDir(ip, stringFileEntry.getValue() + "/*.jar", "hz-lib/" + versionDir);
             }
         }
     }
