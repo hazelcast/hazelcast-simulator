@@ -16,8 +16,8 @@ if [ -d /mnt/ephemeral ] ; then
         echo "[/mnt/ephemeral/] exists, creating [/mnt/ephemeral/workers]"
         rm -fr hazelcast-simulator-${version}/workers
         sudo mkdir /mnt/ephemeral/workers
-        sudo chown -R ${user}  /mnt/ephemeral/workers/
-        ln -s  /mnt/ephemeral/workers/ hazelcast-simulator-${version}/workers
+        sudo chown -R ${user} /mnt/ephemeral/workers/
+        ln -s /mnt/ephemeral/workers/ hazelcast-simulator-${version}/workers
      fi
 else
     echo "[/mnt/ephemeral/] is not found. Skipping linking workers to ephemeral drive."
