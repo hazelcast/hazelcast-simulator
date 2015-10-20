@@ -127,4 +127,88 @@ public class SimulatorAddressTest {
     public void testToString() {
         assertNotNull(address.toString());
     }
+
+    @Test
+    public void testFromString_Coordinator() {
+        SimulatorAddress expectedAddress = SimulatorAddress.COORDINATOR;
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_singleAgent() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.AGENT, 5, 0, 0);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_allAgents() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.AGENT, 0, 0, 0);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_singleAgent_singleWorker() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.WORKER, 3, 7, 0);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_singleAgent_allWorkers() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.WORKER, 3, 0, 0);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_allAgents_singleWorker() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.WORKER, 0, 8, 0);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_allAgents_allWorkers() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.WORKER, 0, 0, 0);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_singleAgent_singleWorker_singleTest() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.TEST, 3, 2, 6);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_singleAgent_singleWorker_allTests() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.TEST, 3, 2, 0);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_singleAgent_allWorkers_singleTest() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.TEST, 9, 0, 3);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_singleAgent_allWorkers_allTests() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.TEST, 9, 0, 0);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_allAgents_allWorkers_singleTest() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.TEST, 0, 0, 17);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
+    public void testFromString_allAgents_allWorkers_allTests() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.TEST, 0, 0, 108);
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    private void assertToAndFromStringEquals(SimulatorAddress expectedAddress) {
+        String addressString = expectedAddress.toString();
+        SimulatorAddress actualAddress = SimulatorAddress.fromString(addressString);
+        assertEquals(expectedAddress, actualAddress);
+    }
 }

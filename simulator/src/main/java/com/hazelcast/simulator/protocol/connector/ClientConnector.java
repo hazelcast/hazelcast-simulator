@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.connector;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
+import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
@@ -19,6 +20,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +28,8 @@ import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration
 import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.getMessageIdFromFutureKey;
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.getSourceFromFutureKey;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getMessageId;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getSourceAddress;
 import static java.lang.String.format;
@@ -80,6 +84,15 @@ public class ClientConnector {
     public void shutdown() {
         channel.close().syncUninterruptibly();
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
+
+        // take care about eventually pending ResponseFuture instances
+        for (Map.Entry<String, ResponseFuture> futureEntry : futureMap.entrySet()) {
+            String futureKey = futureEntry.getKey();
+            LOGGER.warn(format("ResponseFuture %s still running after shutdown!", futureKey));
+            Response response = new Response(getMessageIdFromFutureKey(futureKey), getSourceFromFutureKey(futureKey));
+            response.addResponse(configuration.getLocalAddress(), ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
+            futureEntry.getValue().set(response);
+        }
     }
 
     public ClientConfiguration getConfiguration() {

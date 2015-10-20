@@ -188,9 +188,15 @@ public class WorkerJvmFailureMonitor {
         }
 
         private void sendFailureOperation(String message, FailureType type, WorkerJvm jvm, String testId, String cause) {
-            FailureOperation operation = new FailureOperation(message, type, jvm.getAddress(), agent.getPublicAddress(),
+            SimulatorAddress workerAddress = jvm.getAddress();
+            FailureOperation operation = new FailureOperation(message, type, workerAddress, agent.getPublicAddress(),
                     jvm.getHazelcastAddress(), jvm.getId(), testId, agent.getTestSuite(), cause);
             LOGGER.error(format("Detected failure on worker %s: %s", jvm.getId(), operation.getLogMessage(++failureCount)));
+
+            if (type.isWorkerFinishedFailure()) {
+                LOGGER.info(format("Removing failed worker %s from configuration...", workerAddress));
+                agent.getAgentConnector().removeWorker(workerAddress.getWorkerIndex());
+            }
 
             try {
                 Response response = agent.getAgentConnector().write(SimulatorAddress.COORDINATOR, operation);

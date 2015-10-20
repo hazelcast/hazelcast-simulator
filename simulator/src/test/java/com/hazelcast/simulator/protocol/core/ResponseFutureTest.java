@@ -7,7 +7,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.getMessageIdFromFutureKey;
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.getSourceFromFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -23,6 +26,30 @@ public class ResponseFutureTest {
 
     private final ResponseFuture future = createInstance(new ConcurrentHashMap<String, ResponseFuture>(), "key");
     private final FutureSetter futureSetter = new FutureSetter(DEFAULT_RESULT, DEFAULT_TIMEOUT_MS);
+
+    @Test
+    public void testCreateFutureKey() {
+        String futureKey = createFutureKey(COORDINATOR, 42, 23);
+        assertTrue(futureKey.contains(COORDINATOR.toString()));
+        assertTrue(futureKey.contains("42"));
+        assertTrue(futureKey.contains("23"));
+    }
+
+    @Test
+    public void testGetSourceFromFutureKey() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.WORKER, 4, 8, 0);
+        String futureKey = createFutureKey(expectedAddress, 42, 23);
+        SimulatorAddress actualAddress = getSourceFromFutureKey(futureKey);
+        assertEquals(expectedAddress, actualAddress);
+    }
+
+    @Test
+    public void testGetMessageIdFromFutureKey() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.TEST, 4, 8, 23);
+        String futureKey = createFutureKey(expectedAddress, 42, 23);
+        long messageId = getMessageIdFromFutureKey(futureKey);
+        assertEquals(42, messageId);
+    }
 
     @Test(expected = UnsupportedOperationException.class)
     public void testCancel() {

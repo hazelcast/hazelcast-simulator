@@ -5,6 +5,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static java.lang.Long.parseLong;
 import static java.lang.String.format;
 
 /**
@@ -48,6 +49,16 @@ public final class ResponseFuture implements Future<Response> {
      */
     public static String createFutureKey(SimulatorAddress source, long messageId, int remoteAddressIndex) {
         return source + "-" + messageId + "-" + remoteAddressIndex;
+    }
+
+    public static SimulatorAddress getSourceFromFutureKey(String futureKey) {
+        String sourceString = futureKey.substring(0, futureKey.indexOf('-'));
+        return SimulatorAddress.fromString(sourceString);
+    }
+
+    public static long getMessageIdFromFutureKey(String futureKey) {
+        String messageIdString = futureKey.substring(futureKey.indexOf('-') + 1, futureKey.lastIndexOf('-'));
+        return parseLong(messageIdString);
     }
 
     @Override
