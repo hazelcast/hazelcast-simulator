@@ -46,7 +46,7 @@ public class ComponentRegistry {
 
     public AgentData getFirstAgent() {
         if (agents.size() == 0) {
-            throw new CommandLineExitException("No agents registered!");
+            throw new CommandLineExitException("No agents running!");
         }
         return agents.get(0);
     }
@@ -81,7 +81,7 @@ public class ComponentRegistry {
 
     public WorkerData getFirstWorker() {
         if (workers.size() == 0) {
-            throw new CommandLineExitException("No workers registered!");
+            throw new CommandLineExitException("No workers running!");
         }
         return workers.get(0);
     }
