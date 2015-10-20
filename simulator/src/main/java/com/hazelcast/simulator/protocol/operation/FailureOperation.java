@@ -38,8 +38,8 @@ public class FailureOperation implements SimulatorOperation {
         return FailureType.valueOf(type);
     }
 
-    public String getWorkerAddress() {
-        return workerAddress;
+    public SimulatorAddress getWorkerAddress() {
+        return SimulatorAddress.fromString(workerAddress);
     }
 
     public String getTestId() {

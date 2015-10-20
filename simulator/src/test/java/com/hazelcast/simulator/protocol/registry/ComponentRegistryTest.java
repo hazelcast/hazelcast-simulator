@@ -132,16 +132,16 @@ public class ComponentRegistryTest {
         componentRegistry.addWorkers(parentAddress, settingsList);
         assertEquals(5, componentRegistry.workerCount());
 
-        Set<String> finishedWorkers = new HashSet<String>();
+        Set<SimulatorAddress> finishedWorkers = new HashSet<SimulatorAddress>();
         for (WorkerJvmSettings workerJvmSettings : settingsList) {
             SimulatorAddress workerAddress = parentAddress.getChild(workerJvmSettings.getWorkerIndex());
-            finishedWorkers.add(workerAddress.toString());
+            finishedWorkers.add(workerAddress);
             if (finishedWorkers.size() == 3) {
                 break;
             }
         }
 
-        Set<String> missingWorkers = componentRegistry.getMissingWorkers(finishedWorkers);
+        Set<SimulatorAddress> missingWorkers = componentRegistry.getMissingWorkers(finishedWorkers);
         assertEquals(2, missingWorkers.size());
     }
 

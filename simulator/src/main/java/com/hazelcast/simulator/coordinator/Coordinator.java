@@ -19,6 +19,7 @@ import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.provisioner.Bash;
@@ -365,7 +366,7 @@ public final class Coordinator {
         }
 
         remoteClient.terminateWorkers();
-        Set<String> finishedWorkers = failureContainer.getFinishedWorkers();
+        Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
         if (!waitForWorkerShutdown(componentRegistry.workerCount(), finishedWorkers, FINISHED_WORKER_TIMEOUT_SECONDS)) {
             LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
         }

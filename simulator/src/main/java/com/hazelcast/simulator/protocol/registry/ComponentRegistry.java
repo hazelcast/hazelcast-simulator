@@ -70,10 +70,10 @@ public class ComponentRegistry {
         return workers.get(0);
     }
 
-    public Set<String> getMissingWorkers(Set<String> finishedWorkers) {
-        Set<String> missingWorkers = new HashSet<String>();
+    public Set<SimulatorAddress> getMissingWorkers(Set<SimulatorAddress> finishedWorkers) {
+        Set<SimulatorAddress> missingWorkers = new HashSet<SimulatorAddress>();
         for (WorkerData worker : workers) {
-            String workerAddress = worker.getAddress().toString();
+            SimulatorAddress workerAddress = worker.getAddress();
             if (!finishedWorkers.contains(workerAddress)) {
                 missingWorkers.add(workerAddress);
             }

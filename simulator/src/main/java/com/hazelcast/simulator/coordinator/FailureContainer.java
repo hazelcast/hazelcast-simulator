@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.test.FailureType;
 import org.apache.log4j.Logger;
@@ -22,7 +23,8 @@ public class FailureContainer {
     private static final Logger LOGGER = Logger.getLogger(FailureContainer.class);
 
     private final BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
-    private final ConcurrentMap<String, FailureType> finishedWorkersList = new ConcurrentHashMap<String, FailureType>();
+    private final ConcurrentMap<SimulatorAddress, FailureType> finishedWorkersList
+            = new ConcurrentHashMap<SimulatorAddress, FailureType>();
 
     private final File file;
 
@@ -47,7 +49,7 @@ public class FailureContainer {
         return failureOperations;
     }
 
-    public Set<String> getFinishedWorkers() {
+    public Set<SimulatorAddress> getFinishedWorkers() {
         return finishedWorkersList.keySet();
     }
 

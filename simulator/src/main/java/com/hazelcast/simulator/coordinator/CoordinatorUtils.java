@@ -17,6 +17,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestPhase;
@@ -163,7 +164,8 @@ final class CoordinatorUtils {
         return testPhaseSyncMap;
     }
 
-    static boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, Set<String> finishedWorkers, int timeoutSeconds) {
+    static boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, Set<SimulatorAddress> finishedWorkers,
+                                         int timeoutSeconds) {
         LOGGER.info(format("Waiting %d seconds for shutdown of %d workers...", expectedFinishedWorkerCount, timeoutSeconds));
         long timeoutTimestamp = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
         while (finishedWorkers.size() < expectedFinishedWorkerCount && System.currentTimeMillis() < timeoutTimestamp) {
