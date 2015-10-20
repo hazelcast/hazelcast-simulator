@@ -20,10 +20,16 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
  */
 public class FailingTest {
 
+    public enum Failure {
+        EXCEPTION,
+        OOME,
+        EXIT
+    }
+
     private static final ILogger LOGGER = Logger.getLogger(FailingTest.class);
 
     // properties
-    public String failure = "Exception";
+    public Failure failure = Failure.EXCEPTION;
 
     private TestContext testContext;
 
@@ -34,21 +40,27 @@ public class FailingTest {
 
     @Run
     public void run() {
-        if ("Exception".equals(failure)) {
-            ExceptionReporter.report(testContext.getTestId(), new TestException("Wanted exception"));
-        } else if ("OOME".equals(failure)) {
-            List<byte[]> list = new LinkedList<byte[]>();
-            for (; ; ) {
-                try {
-                    list.add(new byte[100 * 1000 * 1000]);
-                } catch (OutOfMemoryError ignored) {
-                    EmptyStatement.ignore(ignored);
-                    break;
+        switch (failure) {
+            case EXCEPTION:
+                ExceptionReporter.report(testContext.getTestId(), new TestException("Wanted exception"));
+                break;
+            case OOME:
+                List<byte[]> list = new LinkedList<byte[]>();
+                for (; ; ) {
+                    try {
+                        list.add(new byte[100 * 1000 * 1000]);
+                    } catch (OutOfMemoryError ignored) {
+                        EmptyStatement.ignore(ignored);
+                        break;
+                    }
                 }
-            }
-            LOGGER.severe("We should never reach this code! List size: " + list.size());
-        } else if ("Exit".equals(failure)) {
-            exitWithError();
+                LOGGER.severe("We should never reach this code! List size: " + list.size());
+                break;
+            case EXIT:
+                exitWithError();
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown failure " + failure);
         }
     }
 
