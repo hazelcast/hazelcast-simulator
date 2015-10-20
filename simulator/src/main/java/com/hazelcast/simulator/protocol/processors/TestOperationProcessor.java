@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -17,7 +18,8 @@ public class TestOperationProcessor extends OperationProcessor {
     }
 
     @Override
-    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception {
+    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
+                                            SimulatorAddress sourceAddress) throws Exception {
         switch (operationType) {
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;

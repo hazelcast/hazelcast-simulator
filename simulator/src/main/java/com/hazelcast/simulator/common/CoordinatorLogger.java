@@ -72,7 +72,7 @@ public class CoordinatorLogger {
     }
 
     private void log(String message, Level level) {
-        LogOperation operation = new LogOperation(serverConnector.getAddress(), message, level);
+        LogOperation operation = new LogOperation(message, level);
         serverConnector.submit(COORDINATOR, operation);
     }
 }

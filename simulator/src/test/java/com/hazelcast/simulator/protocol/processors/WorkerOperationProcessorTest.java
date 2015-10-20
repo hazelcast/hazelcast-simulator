@@ -29,6 +29,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURIN
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.TEST_PHASE_IS_RUNNING;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -75,7 +76,7 @@ public class WorkerOperationProcessorTest {
     @Test
     public void process_unsupportedCommand() throws Exception {
         SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation);
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
         exceptionLogger.assertNoException();
@@ -84,7 +85,7 @@ public class WorkerOperationProcessorTest {
     @Test
     public void process_TerminateWorkers() throws Exception {
         TerminateWorkersOperation operation = new TerminateWorkersOperation();
-        processor.process(operation);
+        processor.process(operation, COORDINATOR);
 
         verify(worker).shutdown();
         verifyNoMoreInteractions(worker);
@@ -172,7 +173,7 @@ public class WorkerOperationProcessorTest {
 
         runCreateTestOperation(defaultTestCase);
         StartTestOperation operation = new StartTestOperation(DEFAULT_TEST_ID, true);
-        ResponseType responseType = processor.process(operation);
+        ResponseType responseType = processor.process(operation, COORDINATOR);
         assertEquals(SUCCESS, responseType);
 
         waitForPhaseCompletion(DEFAULT_TEST_ID, TestPhase.RUN);
@@ -207,7 +208,7 @@ public class WorkerOperationProcessorTest {
         runPhase(DEFAULT_TEST_ID, TestPhase.SETUP);
 
         StartTestPhaseOperation operation = new StartTestPhaseOperation(DEFAULT_TEST_ID, TestPhase.RUN);
-        processor.process(operation);
+        processor.process(operation, COORDINATOR);
 
         runPhase(DEFAULT_TEST_ID, TestPhase.LOCAL_VERIFY, EXCEPTION_DURING_OPERATION_EXECUTION);
 
@@ -242,7 +243,7 @@ public class WorkerOperationProcessorTest {
         SimulatorOperation operation = new CreateTestOperation(testCase);
         LOGGER.debug("Serialized operation: " + toJson(operation));
 
-        return processor.process(operation);
+        return processor.process(operation, COORDINATOR);
     }
 
     private void waitForPhaseCompletion(String testId, TestPhase testPhase) {
@@ -250,7 +251,7 @@ public class WorkerOperationProcessorTest {
         ResponseType responseType;
         do {
             sleepMillis(100);
-            responseType = processor.process(operation);
+            responseType = processor.process(operation, COORDINATOR);
             if (responseType == null) {
                 fail("Got null response on IsPhaseCompletedCommand");
             }
@@ -264,7 +265,7 @@ public class WorkerOperationProcessorTest {
 
     private void runPhase(String testId, TestPhase testPhase, ResponseType expectedResponseType) {
         StartTestPhaseOperation operation = new StartTestPhaseOperation(testId, testPhase);
-        ResponseType responseType = processor.process(operation);
+        ResponseType responseType = processor.process(operation, COORDINATOR);
 
         assertEquals(expectedResponseType, responseType);
 
@@ -273,7 +274,7 @@ public class WorkerOperationProcessorTest {
 
     private void runTest(String testId) {
         StartTestOperation operation = new StartTestOperation(testId, false);
-        processor.process(operation);
+        processor.process(operation, COORDINATOR);
 
         waitForPhaseCompletion(testId, TestPhase.RUN);
     }
@@ -284,7 +285,7 @@ public class WorkerOperationProcessorTest {
             public void run() {
                 sleepMillis(delayMs);
                 StopTestOperation operation = new StopTestOperation(testId);
-                processor.process(operation);
+                processor.process(operation, COORDINATOR);
             }
         };
         stopThread.start();

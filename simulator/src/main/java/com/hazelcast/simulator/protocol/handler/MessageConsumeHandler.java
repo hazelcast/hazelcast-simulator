@@ -41,7 +41,7 @@ public class MessageConsumeHandler extends SimpleChannelInboundHandler<Simulator
                     localAddress));
         }
 
-        ResponseType responseType = processor.process(fromSimulatorMessage(msg));
+        ResponseType responseType = processor.process(fromSimulatorMessage(msg), msg.getSource());
         ctx.writeAndFlush(new Response(messageId, msg.getSource(), localAddress, responseType));
     }
 }

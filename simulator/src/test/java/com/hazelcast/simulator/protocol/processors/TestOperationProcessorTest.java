@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -26,7 +27,7 @@ public class TestOperationProcessorTest {
     @Test
     public void testProcessOperation_UnsupportedOperation() throws Exception {
         SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation);
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
     }

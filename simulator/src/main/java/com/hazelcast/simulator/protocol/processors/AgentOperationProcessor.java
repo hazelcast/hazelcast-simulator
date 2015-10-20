@@ -75,7 +75,8 @@ public class AgentOperationProcessor extends OperationProcessor {
     }
 
     @Override
-    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception {
+    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
+                                            SimulatorAddress sourceAddress) throws Exception {
         switch (operationType) {
             case CREATE_WORKER:
                 return processCreateWorker((CreateWorkerOperation) operation);

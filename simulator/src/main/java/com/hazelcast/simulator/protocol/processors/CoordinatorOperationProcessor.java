@@ -4,6 +4,7 @@ import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.ExceptionOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
@@ -36,16 +37,17 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
     }
 
     @Override
-    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception {
+    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
+                                            SimulatorAddress sourceAddress) throws Exception {
         switch (operationType) {
             case EXCEPTION:
                 processException((ExceptionOperation) operation);
                 break;
             case PERFORMANCE_STATE:
-                processPerformanceState((PerformanceStateOperation) operation);
+                processPerformanceState((PerformanceStateOperation) operation, sourceAddress);
                 break;
             case TEST_HISTOGRAMS:
-                processTestHistogram((TestHistogramOperation) operation);
+                processTestHistogram((TestHistogramOperation) operation, sourceAddress);
                 break;
             case FAILURE:
                 processFailure((FailureOperation) operation);
@@ -60,13 +62,12 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
         exceptionLogger.logOperation(operation);
     }
 
-    private void processPerformanceState(PerformanceStateOperation operation) {
-        performanceStateContainer.updatePerformanceState(operation.getWorkerAddress(), operation.getPerformanceStates());
+    private void processPerformanceState(PerformanceStateOperation operation, SimulatorAddress sourceAddress) {
+        performanceStateContainer.updatePerformanceState(sourceAddress, operation.getPerformanceStates());
     }
 
-    private void processTestHistogram(TestHistogramOperation operation) {
-        testHistogramContainer.addTestHistograms(operation.getWorkerAddress(), operation.getTestId(),
-                operation.getProbeHistograms());
+    private void processTestHistogram(TestHistogramOperation operation, SimulatorAddress sourceAddress) {
+        testHistogramContainer.addTestHistograms(sourceAddress, operation.getTestId(), operation.getProbeHistograms());
     }
 
     private void processFailure(FailureOperation operation) {

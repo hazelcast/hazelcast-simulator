@@ -6,6 +6,7 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
@@ -61,7 +63,8 @@ public class AgentOperationProcessorTest {
 
         AgentOperationProcessor processor = new AgentOperationProcessor(exceptionLogger, null, null, executorService) {
             @Override
-            protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception {
+            protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
+                                                    SimulatorAddress sourceAddress) throws Exception {
                 return null;
             }
         };
@@ -76,7 +79,7 @@ public class AgentOperationProcessorTest {
     @Test
     public void testProcessOperation_UnsupportedOperation() throws Exception {
         SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation);
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
     }
@@ -90,7 +93,7 @@ public class AgentOperationProcessorTest {
         workerJvmSettings.add(mock(WorkerJvmSettings.class));
 
         SimulatorOperation operation = new CreateWorkerOperation(workerJvmSettings);
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation);
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(SUCCESS, responseType);
     }

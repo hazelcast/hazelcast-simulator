@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.IsPhaseCompletedOperation;
@@ -67,7 +68,8 @@ public class WorkerOperationProcessor extends OperationProcessor {
     }
 
     @Override
-    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception {
+    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
+                                            SimulatorAddress sourceAddress) throws Exception {
         switch (operationType) {
             case TERMINATE_WORKERS:
                 processTerminateWorkers();

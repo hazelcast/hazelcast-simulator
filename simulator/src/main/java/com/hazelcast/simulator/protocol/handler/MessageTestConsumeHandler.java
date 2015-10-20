@@ -66,7 +66,7 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
                 LOGGER.trace(format("[%d] forwarding message to all tests", msg.getMessageId()));
             }
             for (Map.Entry<Integer, OperationProcessor> entry : testProcessors.entrySet()) {
-                ResponseType responseType = entry.getValue().process(fromSimulatorMessage(msg));
+                ResponseType responseType = entry.getValue().process(fromSimulatorMessage(msg), msg.getSource());
                 response.addResponse(testAddresses.get(entry.getKey()), responseType);
             }
         } else {
@@ -77,7 +77,7 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
             if (processor == null) {
                 response.addResponse(localAddress, FAILURE_TEST_NOT_FOUND);
             } else {
-                ResponseType responseType = processor.process(fromSimulatorMessage(msg));
+                ResponseType responseType = processor.process(fromSimulatorMessage(msg), msg.getSource());
                 response.addResponse(testAddresses.get(testAddressIndex), responseType);
             }
         }

@@ -67,7 +67,6 @@ public class CoordinatorLoggerTest {
 
     private void verifyServerConnector() {
         verify(serverConnector).submit(eq(SimulatorAddress.COORDINATOR), any(LogOperation.class));
-        verify(serverConnector).getAddress();
         verifyNoMoreInteractions(serverConnector);
     }
 }

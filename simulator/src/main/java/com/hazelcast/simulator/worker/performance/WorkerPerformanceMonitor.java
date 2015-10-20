@@ -110,8 +110,7 @@ public class WorkerPerformanceMonitor {
 
                 Map<String, String> histograms = tracker.aggregateIntervalHistograms(testId);
                 if (!histograms.isEmpty()) {
-                    TestHistogramOperation operation = new TestHistogramOperation(serverConnector.getAddress(), testId,
-                            histograms);
+                    TestHistogramOperation operation = new TestHistogramOperation(testId, histograms);
                     serverConnector.write(SimulatorAddress.COORDINATOR, operation);
                 }
             }
@@ -166,7 +165,7 @@ public class WorkerPerformanceMonitor {
         }
 
         private void sendPerformanceStates() {
-            PerformanceStateOperation operation = new PerformanceStateOperation(serverConnector.getAddress());
+            PerformanceStateOperation operation = new PerformanceStateOperation();
             for (Map.Entry<String, PerformanceTracker> trackerEntry : trackerMap.entrySet()) {
                 String testId = trackerEntry.getKey();
                 PerformanceTracker stats = trackerEntry.getValue();

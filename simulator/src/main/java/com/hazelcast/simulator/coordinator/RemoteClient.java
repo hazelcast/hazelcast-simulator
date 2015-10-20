@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_AGENTS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_WORKERS;
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static java.lang.String.format;
@@ -46,7 +45,7 @@ public class RemoteClient {
     }
 
     public void logOnAllAgents(String message) {
-        coordinatorConnector.write(ALL_AGENTS, new LogOperation(COORDINATOR, message));
+        coordinatorConnector.write(ALL_AGENTS, new LogOperation(message));
     }
 
     public void createWorkers(List<AgentMemberLayout> agentLayouts) {

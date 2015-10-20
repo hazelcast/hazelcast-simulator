@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
@@ -29,7 +30,7 @@ public abstract class OperationProcessor {
     public void shutdown() {
     }
 
-    public final ResponseType process(SimulatorOperation operation) {
+    public final ResponseType process(SimulatorOperation operation, SimulatorAddress sourceAddress) {
         OperationType operationType = getOperationType(operation);
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(getClass().getSimpleName() + ".process(" + operation.getClass().getSimpleName() + ")");
@@ -40,10 +41,10 @@ public abstract class OperationProcessor {
                     processIntegrationTest((IntegrationTestOperation) operation);
                     break;
                 case LOG:
-                    processLog((LogOperation) operation);
+                    processLog((LogOperation) operation, sourceAddress);
                     break;
                 default:
-                    return processOperation(operationType, operation);
+                    return processOperation(operationType, operation, sourceAddress);
             }
         } catch (Throwable e) {
             exceptionLogger.log(e);
@@ -58,9 +59,10 @@ public abstract class OperationProcessor {
         }
     }
 
-    private void processLog(LogOperation operation) {
-        LOGGER.log(operation.getLevel(), format("[%s] %s", operation.getSource(), operation.getMessage()));
+    private void processLog(LogOperation operation, SimulatorAddress sourceAddress) {
+        LOGGER.log(operation.getLevel(), format("[%s] %s", sourceAddress, operation.getMessage()));
     }
 
-    protected abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation) throws Exception;
+    protected abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
+                                                     SimulatorAddress sourceAddress) throws Exception;
 }
