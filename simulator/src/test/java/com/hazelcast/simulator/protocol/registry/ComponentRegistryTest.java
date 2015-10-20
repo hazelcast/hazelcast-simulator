@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.registry;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.Test;
 
@@ -66,6 +67,11 @@ public class ComponentRegistryTest {
         assertEquals("192.168.0.3", agents.get(1).getPrivateAddress());
     }
 
+    @Test(expected = CommandLineExitException.class)
+    public void testGetFirstAgent_noAgents() {
+        componentRegistry.getFirstAgent();
+    }
+
     @Test
     public void testAddWorkers() {
         SimulatorAddress parentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
@@ -78,7 +84,19 @@ public class ComponentRegistryTest {
     }
 
     @Test
-    public void testRemoveWorker() {
+    public void testRemoveWorker_viaSimulatorAddress() {
+        SimulatorAddress parentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
+        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(5);
+
+        componentRegistry.addWorkers(parentAddress, settingsList);
+        assertEquals(5, componentRegistry.workerCount());
+
+        componentRegistry.removeWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 3, 0));
+        assertEquals(4, componentRegistry.workerCount());
+    }
+
+    @Test
+    public void testRemoveWorker_viaWorkerData() {
         SimulatorAddress parentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
         List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(5);
 
@@ -122,6 +140,11 @@ public class ComponentRegistryTest {
 
         assertEquals(1, workerData.getSettings().getWorkerIndex());
         assertEquals(WorkerType.MEMBER, workerData.getSettings().getWorkerType());
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testGetFirstWorker_noWorkers() {
+        componentRegistry.getFirstWorker();
     }
 
     @Test

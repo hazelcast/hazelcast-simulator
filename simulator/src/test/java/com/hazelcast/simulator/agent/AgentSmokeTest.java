@@ -76,7 +76,7 @@ public class AgentSmokeTest {
 
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
         TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
-        failureContainer = new FailureContainer("agentSmokeTest");
+        failureContainer = new FailureContainer("agentSmokeTest", null);
 
         coordinatorConnector = new CoordinatorConnector(performanceStateContainer, testHistogramContainer, failureContainer);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);

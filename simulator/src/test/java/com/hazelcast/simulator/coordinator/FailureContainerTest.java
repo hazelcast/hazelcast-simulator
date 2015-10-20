@@ -3,6 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.FailureType;
 import org.junit.After;
 import org.junit.Before;
@@ -16,10 +17,12 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class FailureContainerTest {
 
-    private FailureContainer failureContainer = new FailureContainer("testSuite");
+    private ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
+    private FailureContainer failureContainer = new FailureContainer("testSuite", componentRegistry);
 
     private FailureOperation exceptionOperation;
     private FailureOperation oomOperation;

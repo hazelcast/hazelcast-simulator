@@ -24,7 +24,7 @@ public class CoordinatorOperationProcessorTest {
         LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
         TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
-        FailureContainer failureContainer = new FailureContainer("CoordinatorOperationProcessorTest");
+        FailureContainer failureContainer = new FailureContainer("CoordinatorOperationProcessorTest", null);
         processor = new CoordinatorOperationProcessor(exceptionLogger, performanceStateContainer, testHistogramContainer,
                 failureContainer);
     }

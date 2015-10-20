@@ -78,11 +78,11 @@ public final class Coordinator {
     private final ClusterLayoutParameters clusterLayoutParameters;
     private final WorkerParameters workerParameters;
     private final TestSuite testSuite;
-    private final FailureContainer failureContainer;
 
     private final int testCaseRunnerSleepPeriodSeconds;
 
     private final ComponentRegistry componentRegistry;
+    private final FailureContainer failureContainer;
 
     private final SimulatorProperties props;
     private final Bash bash;
@@ -103,11 +103,11 @@ public final class Coordinator {
         this.clusterLayoutParameters = clusterLayoutParameters;
         this.workerParameters = workerParameters;
         this.testSuite = testSuite;
-        this.failureContainer = new FailureContainer(testSuite.getId());
 
         this.testCaseRunnerSleepPeriodSeconds = testCaseRunnerSleepPeriodSeconds;
 
         this.componentRegistry = loadComponentRegister(coordinatorParameters.getAgentsFile());
+        this.failureContainer = new FailureContainer(testSuite.getId(), componentRegistry);
 
         this.props = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(props);

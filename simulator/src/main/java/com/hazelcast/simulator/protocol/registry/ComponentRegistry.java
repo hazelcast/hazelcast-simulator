@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,6 +45,9 @@ public class ComponentRegistry {
     }
 
     public AgentData getFirstAgent() {
+        if (agents.size() == 0) {
+            throw new CommandLineExitException("No agents registered!");
+        }
         return agents.get(0);
     }
 
@@ -51,6 +55,15 @@ public class ComponentRegistry {
         for (WorkerJvmSettings settings : settingsList) {
             WorkerData workerData = new WorkerData(parentAddress, settings);
             workers.add(workerData);
+        }
+    }
+
+    public void removeWorker(SimulatorAddress workerAddress) {
+        for (WorkerData workerData : workers) {
+            if (workerData.getAddress().equals(workerAddress)) {
+                workers.remove(workerData);
+                break;
+            }
         }
     }
 
@@ -67,6 +80,9 @@ public class ComponentRegistry {
     }
 
     public WorkerData getFirstWorker() {
+        if (workers.size() == 0) {
+            throw new CommandLineExitException("No workers registered!");
+        }
         return workers.get(0);
     }
 
