@@ -3,7 +3,6 @@ package com.hazelcast.simulator.utils;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperty;
 import static org.junit.Assert.assertEquals;
@@ -75,30 +74,46 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
 
     @Test
     public void bindProperty_enum() {
-        bindProperty(bindPropertyTestClass, "enumField", TimeUnit.HOURS.name());
-        assertEquals(bindPropertyTestClass.enumField, TimeUnit.HOURS);
+        bindProperty(bindPropertyTestClass, "enumField", BindPropertyTestClass.BindPropertyEnum.HOURS.name());
+        assertEquals(bindPropertyTestClass.enumField, BindPropertyTestClass.BindPropertyEnum.HOURS);
     }
 
     @Test
     public void bindProperty_enum_caseInsensitive() {
         bindProperty(bindPropertyTestClass, "enumField", "dAyS");
-        assertEquals(bindPropertyTestClass.enumField, TimeUnit.DAYS);
+        assertEquals(bindPropertyTestClass.enumField, BindPropertyTestClass.BindPropertyEnum.DAYS);
+    }
+
+    @Test
+    public void bindProperty_enum_privateEnumClass() {
+        bindProperty(bindPropertyTestClass, "privateEnumField", BindPropertyTestClass.PrivateBindPropertyEnum.PRIVATE.name());
+        assertEquals(bindPropertyTestClass.privateEnumField, BindPropertyTestClass.PrivateBindPropertyEnum.PRIVATE);
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_enum_notFound() {
+    public void bindProperty_enum_fieldNotFound() {
         bindProperty(bindPropertyTestClass, "enumField", "notExist");
     }
 
     @SuppressWarnings("unused")
-    private class BindPropertyTestClass {
+    private static class BindPropertyTestClass {
+
+        public enum BindPropertyEnum {
+            DAYS,
+            HOURS
+        }
+
+        private enum PrivateBindPropertyEnum {
+            PRIVATE
+        }
 
         public boolean booleanField;
         public Boolean booleanObjectField;
 
         public Object objectField;
         public String stringField;
-        public TimeUnit enumField;
+        public BindPropertyEnum enumField;
+        public PrivateBindPropertyEnum privateEnumField;
 
         public Class clazz;
     }
