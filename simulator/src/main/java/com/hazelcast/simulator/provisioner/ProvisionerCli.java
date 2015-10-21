@@ -24,20 +24,11 @@ import joptsimple.OptionSpec;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
-import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 
 final class ProvisionerCli {
 
     private final OptionParser parser = new OptionParser();
-
-    private final OptionSpec<String> gitSpec = parser.accepts("git",
-            "Overrides the HAZELCAST_VERSION_SPEC property and forces Provisioner to build Hazelcast JARs from a given Git"
-                    + " version. This makes it easier to run a test with different versions of Hazelcast, e.g." + NEW_LINE
-                    + "     --git f0288f713                to use the Git revision f0288f713" + NEW_LINE
-                    + "     --git myRepository/myBranch    to use branch myBranch from a repository myRepository." + NEW_LINE
-                    + "You can specify custom repositories in 'simulator.properties'.")
-            .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<Integer> scaleSpec = parser.accepts("scale",
             "Number of Simulator machines to scale to. If the number of machines already exists, the call is ignored. If the"
@@ -69,10 +60,6 @@ final class ProvisionerCli {
                     + " '$SIMULATOR_HOME/conf/" + PROPERTIES_FILE_NAME + "'.")
             .withRequiredArg().ofType(String.class);
 
-    private final OptionSpec<Boolean> enterpriseEnabledSpec = parser.accepts("enterpriseEnabled",
-            "Use JARs of Hazelcast Enterprise Edition.")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
-
     private ProvisionerCli() {
     }
 
@@ -81,11 +68,6 @@ final class ProvisionerCli {
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
         SimulatorProperties properties = loadSimulatorProperties(options, cli.propertiesFileSpec);
-        if (options.has(cli.gitSpec)) {
-            String git = options.valueOf(cli.gitSpec);
-            properties.forceGit(git);
-        }
-
         return new Provisioner(properties);
     }
 
@@ -96,11 +78,9 @@ final class ProvisionerCli {
         try {
             if (options.has(cli.scaleSpec)) {
                 int size = options.valueOf(cli.scaleSpec);
-                boolean enterpriseEnabled = options.valueOf(cli.enterpriseEnabledSpec);
-                provisioner.scale(size, enterpriseEnabled);
+                provisioner.scale(size);
             } else if (options.has(cli.installSpec)) {
-                boolean enterpriseEnabled = options.valueOf(cli.enterpriseEnabledSpec);
-                provisioner.installSimulator(enterpriseEnabled);
+                provisioner.installSimulator();
             } else if (options.has(cli.listAgentsSpec)) {
                 provisioner.listMachines();
             } else if (options.has(cli.downloadSpec)) {

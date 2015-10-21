@@ -43,6 +43,7 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
@@ -156,6 +157,18 @@ final class CoordinatorCli {
             "The startup timeout in seconds for a worker.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
+    private final OptionSpec<String> gitSpec = parser.accepts("git",
+            "Overrides the HAZELCAST_VERSION_SPEC property and forces Provisioner to build Hazelcast JARs from a given Git"
+                    + " version. This makes it easier to run a test with different versions of Hazelcast, e.g." + NEW_LINE
+                    + "     --git f0288f713                to use the Git revision f0288f713" + NEW_LINE
+                    + "     --git myRepository/myBranch    to use branch myBranch from a repository myRepository." + NEW_LINE
+                    + "You can specify custom repositories in 'simulator.properties'.")
+            .withRequiredArg().ofType(String.class);
+
+    private final OptionSpec<Boolean> enterpriseEnabledSpec = parser.accepts("enterpriseEnabled",
+            "Use JARs of Hazelcast Enterprise Edition.")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+
     private final OptionSpec<String> licenseKeySpec = parser.accepts("licenseKey",
             "Sets the license key for Hazelcast Enterprise Edition.")
             .withRequiredArg().ofType(String.class);
@@ -189,11 +202,15 @@ final class CoordinatorCli {
         ComponentRegistry componentRegistry = loadComponentRegister(getAgentsFile(cli, options));
 
         SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
+        if (options.has(cli.gitSpec)) {
+            String git = options.valueOf(cli.gitSpec);
+            simulatorProperties.forceGit(git);
+        }
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
                 simulatorProperties,
                 options.valueOf(cli.workerClassPathSpec),
-                false,
+                options.valueOf(cli.enterpriseEnabledSpec),
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),
                 options.valueOf(cli.workerRefreshSpec),

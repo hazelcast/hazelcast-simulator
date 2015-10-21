@@ -24,7 +24,6 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
@@ -57,7 +56,6 @@ import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static java.lang.String.format;
-import static java.util.Collections.singleton;
 
 public final class Provisioner {
 
@@ -79,7 +77,6 @@ public final class Provisioner {
     private final Bash bash;
 
     private final File initScriptFile;
-    private final HazelcastJARs hazelcastJARs;
 
     private ComputeService compute;
 
@@ -89,10 +86,9 @@ public final class Provisioner {
         this.bash = new Bash(props);
 
         this.initScriptFile = getInitScriptFile(SIMULATOR_HOME);
-        this.hazelcastJARs = HazelcastJARs.newInstance(bash, props, singleton(props.getHazelcastVersionSpec()));
     }
 
-    void scale(int size, boolean enterpriseEnabled) {
+    void scale(int size) {
         ProvisionerUtils.ensureNotStaticCloudProvider(props, "scale");
 
         int agentSize = componentRegistry.agentCount();
@@ -102,15 +98,14 @@ public final class Provisioner {
             echo("Desired number of machines: " + (agentSize + delta));
             echo("Ignoring spawn machines, desired number of machines already exists.");
         } else if (delta > 0) {
-            scaleUp(delta, enterpriseEnabled);
+            scaleUp(delta);
         } else {
             scaleDown(-delta);
         }
     }
 
-    void installSimulator(boolean enableEnterprise) {
+    void installSimulator() {
         echoImportant("Installing Simulator on %s machines", componentRegistry.agentCount());
-        hazelcastJARs.prepare(enableEnterprise);
 
         ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
@@ -244,7 +239,7 @@ public final class Provisioner {
         echo("Done!");
     }
 
-    private void scaleUp(int delta, boolean enterpriseEnabled) {
+    private void scaleUp(int delta) {
         echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
         echo("Current number of machines: " + componentRegistry.agentCount());
         echo("Desired number of machines: " + (componentRegistry.agentCount() + delta));
@@ -263,8 +258,6 @@ public final class Provisioner {
             String jdkVersion = props.get("JDK_VERSION", "7");
             LOGGER.info(format("JDK spec: %s %s", jdkFlavor, jdkVersion));
         }
-
-        hazelcastJARs.prepare(enterpriseEnabled);
 
         compute = new ComputeServiceBuilder(props).build();
         echo("Created compute");
@@ -379,9 +372,8 @@ public final class Provisioner {
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/tests/", "tests");
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/user-lib/", "user-lib/");
 
-        // upload Hazelcast JARs
+        // purge Hazelcast JARs
         bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", getSimulatorVersion()));
-        hazelcastJARs.upload(ip, SIMULATOR_HOME);
 
         String initScript = loadInitScript();
         bash.ssh(ip, initScript);

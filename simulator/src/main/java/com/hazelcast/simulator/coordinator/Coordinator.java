@@ -27,6 +27,7 @@ import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.apache.log4j.Logger;
 
 import java.util.Set;
@@ -72,6 +73,7 @@ public final class Coordinator {
     private final Bash bash;
 
     private final ClusterLayout clusterLayout;
+    private final HazelcastJARs hazelcastJARs;
 
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
@@ -90,6 +92,7 @@ public final class Coordinator {
         this.bash = new Bash(simulatorProperties);
 
         this.clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+        this.hazelcastJARs = HazelcastJARs.newInstance(bash, simulatorProperties, clusterLayout.getVersionSpecs());
 
         logConfiguration();
     }
@@ -161,7 +164,7 @@ public final class Coordinator {
     }
 
     private void uploadFiles() {
-        CoordinatorUploader uploader = new CoordinatorUploader(componentRegistry, bash, testSuite.getId(), null,
+        CoordinatorUploader uploader = new CoordinatorUploader(componentRegistry, bash, testSuite.getId(), hazelcastJARs,
                 coordinatorParameters.isEnterpriseEnabled(), coordinatorParameters.getWorkerClassPath(),
                 workerParameters.getProfiler());
         uploader.run();
