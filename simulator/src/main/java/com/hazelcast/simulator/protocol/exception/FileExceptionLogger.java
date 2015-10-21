@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 /**
  * Stores exception to local files.
@@ -32,7 +33,7 @@ public class FileExceptionLogger extends AbstractExceptionLogger {
             return;
         }
 
-        writeText(operation.getTestId() + "\n" + operation.getStacktrace(), tmpFile);
+        writeText(operation.getTestId() + NEW_LINE + operation.getStacktrace(), tmpFile);
 
         File file = new File(targetFileName);
         rename(tmpFile, file);

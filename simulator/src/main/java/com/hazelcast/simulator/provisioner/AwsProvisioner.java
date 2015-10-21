@@ -123,7 +123,7 @@ public class AwsProvisioner {
         request.setListeners(listeners);
 
         CreateLoadBalancerResult lbResult = elb.createLoadBalancer(request);
-        appendText(lbResult.getDNSName() + "\n", elbFile);
+        appendText(lbResult.getDNSName() + NEW_LINE, elbFile);
 
         return request.getLoadBalancerName();
     }

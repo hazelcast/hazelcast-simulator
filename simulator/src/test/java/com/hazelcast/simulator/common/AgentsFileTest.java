@@ -15,6 +15,7 @@ import static com.hazelcast.simulator.common.AgentsFile.load;
 import static com.hazelcast.simulator.common.AgentsFile.save;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static java.io.File.createTempFile;
 import static org.junit.Assert.assertEquals;
@@ -65,7 +66,7 @@ public class AgentsFileTest {
 
     @Test
     public void testLoad_fileContainsEmptyLines() {
-        writeText("\n192.168.1.1\n\n", agentsFile);
+        writeText(NEW_LINE + "192.168.1.1" + NEW_LINE + NEW_LINE, agentsFile);
 
         componentRegistry = load(agentsFile);
         assertEquals(1, componentRegistry.agentCount());
@@ -77,7 +78,7 @@ public class AgentsFileTest {
 
     @Test
     public void testLoad_fileContainsComments() {
-        writeText("192.168.1.1#foo\n#bar", agentsFile);
+        writeText("192.168.1.1#foo" + NEW_LINE + "#bar", agentsFile);
 
         componentRegistry = load(agentsFile);
         assertEquals(1, componentRegistry.agentCount());

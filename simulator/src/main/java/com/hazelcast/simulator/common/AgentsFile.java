@@ -8,6 +8,7 @@ import java.io.File;
 
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 
 /**
@@ -31,7 +32,7 @@ public final class AgentsFile {
         ComponentRegistry componentRegistry = new ComponentRegistry();
 
         String content = fileAsText(agentFile);
-        String[] addresses = content.split("\n");
+        String[] addresses = content.split(NEW_LINE);
         int lineNumber = 1;
         for (String line : addresses) {
             int indexOfComment = line.indexOf('#');
@@ -69,9 +70,9 @@ public final class AgentsFile {
             String privateAddress = agentData.getPrivateAddress();
 
             if (publicAddress.equals(privateAddress)) {
-                sb.append(publicAddress).append('\n');
+                sb.append(publicAddress).append(NEW_LINE);
             } else {
-                sb.append(publicAddress).append(',').append(privateAddress).append('\n');
+                sb.append(publicAddress).append(',').append(privateAddress).append(NEW_LINE);
             }
         }
         writeText(sb.toString(), agentsFile);

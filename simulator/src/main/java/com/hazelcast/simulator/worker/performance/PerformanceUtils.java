@@ -36,8 +36,9 @@ final class PerformanceUtils {
         if (totalTests > 0) {
             dataString += " %s/%s";
         }
+        dataString += "%n";
         int fieldLength = getNumberOfDigits(totalTests);
-        appendText(format(dataString + "\n", timestamp, formatLong(opsSum, NUMBER_FORMAT_LENGTH),
+        appendText(format(dataString, timestamp, formatLong(opsSum, NUMBER_FORMAT_LENGTH),
                 formatLong(opsDelta, NUMBER_FORMAT_LENGTH), formatDouble(opsPerSecDelta, NUMBER_FORMAT_LENGTH),
                 formatLong(numberOfTests, NUMBER_FORMAT_LENGTH - fieldLength), formatLong(totalTests, fieldLength)), file);
     }

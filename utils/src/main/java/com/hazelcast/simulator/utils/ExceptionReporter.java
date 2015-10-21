@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 /**
  * Responsible for writing an exception to a file. Every exception file will have a unique name.
@@ -73,7 +74,7 @@ public final class ExceptionReporter {
             return;
         }
 
-        writeText(testId + "\n" + throwableToString(cause), tmpFile);
+        writeText(testId + NEW_LINE + throwableToString(cause), tmpFile);
 
         File file = new File(targetFileName);
         rename(tmpFile, file);

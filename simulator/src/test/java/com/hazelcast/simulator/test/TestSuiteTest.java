@@ -11,6 +11,7 @@ import java.util.Set;
 
 import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -60,7 +61,7 @@ public class TestSuiteTest {
 
     @Test
     public void loadTestSuite_singleTestWithTestName() throws Exception {
-        String txt = "atomicLongTest@class=AtomicLong\n"
+        String txt = "atomicLongTest@class=AtomicLong" + NEW_LINE
                 + "atomicLongTest@threadCount=10";
 
         TestSuite testSuite = createTestSuite(txt);
@@ -73,9 +74,9 @@ public class TestSuiteTest {
 
     @Test
     public void loadTestSuite_multipleCases() throws Exception {
-        String txt = "atomicLongTest@class=AtomicLong\n"
-                + "atomicLongTest@threadCount=10\n"
-                + "atomicBooleanTest@class=AtomicBoolean\n"
+        String txt = "atomicLongTest@class=AtomicLong" + NEW_LINE
+                + "atomicLongTest@threadCount=10" + NEW_LINE
+                + "atomicBooleanTest@class=AtomicBoolean" + NEW_LINE
                 + "atomicBooleanTest@threadCount=20";
 
         TestSuite testSuite = createTestSuite(txt);
@@ -94,7 +95,7 @@ public class TestSuiteTest {
 
     @Test
     public void loadTestSuite_singleTest() throws Exception {
-        String txt = "class=AtomicLong\n"
+        String txt = "class=AtomicLong" + NEW_LINE
                 + "threadCount=10";
 
         TestSuite testSuite = createTestSuite(txt);
@@ -132,7 +133,7 @@ public class TestSuiteTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void loadTestSuite_emptyProperty() throws Exception {
-        String txt = "class=AtomicLong\n"
+        String txt = "class=AtomicLong" + NEW_LINE
                 + "threadCount=";
 
         createTestSuite(txt);
@@ -166,14 +167,14 @@ public class TestSuiteTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidTestCaseId() throws Exception {
-        String txt = "In$valid@class=AtomicLong\n";
+        String txt = "In$valid@class=AtomicLong" + NEW_LINE;
 
         createTestSuite(txt);
     }
 
     @Test
     public void overrideProperties() throws Exception {
-        String txt = "class=AtomicLong\n"
+        String txt = "class=AtomicLong" + NEW_LINE
                 + "threadCount=10";
 
         String overrideProperties = "threadCount=20";

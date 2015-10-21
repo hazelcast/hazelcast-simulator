@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.utils.jars;
 
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+
 class GitRepository {
 
     private final String name;
@@ -25,8 +27,8 @@ class GitRepository {
         String[] repoSplit = repositoryString.split("=");
         if (repoSplit.length != 2) {
             throw new IllegalArgumentException("Invalid Repository " + repositoryString
-                    + "\nRepository has to be in this format: <name>=<url>, e.g.\n"
-                    + "jaromir=https://github.com/hazelcast/hazelcast-simulator.git");
+                    + NEW_LINE + "Repository has to be in this format: <name>=<url>, e.g."
+                    + NEW_LINE + "jaromir=https://github.com/hazelcast/hazelcast-simulator.git");
         }
         String name = repoSplit[0].trim();
         if (name.isEmpty()) {

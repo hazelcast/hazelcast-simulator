@@ -8,6 +8,7 @@ import java.net.SocketException;
 import java.util.Enumeration;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 public final class HostAddressPicker {
 
@@ -76,10 +77,10 @@ public final class HostAddressPicker {
     private static Exception getException(NetworkInterface networkInterface, SocketException e) {
         Exception savedException;
         StringBuilder sb = new StringBuilder("Error during pickHostAddress()");
-        sb.append("\ndisplayName: ").append(networkInterface.getDisplayName());
-        sb.append("\nname: ").append(networkInterface.getName());
+        sb.append(NEW_LINE).append("displayName: ").append(networkInterface.getDisplayName());
+        sb.append(NEW_LINE).append("name: ").append(networkInterface.getName());
         for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
-            sb.append("\ninterfaceAddress: ").append(interfaceAddress.getAddress());
+            sb.append(NEW_LINE).append("interfaceAddress: ").append(interfaceAddress.getAddress());
         }
         savedException = new IllegalStateException(sb.toString(), e);
         return savedException;

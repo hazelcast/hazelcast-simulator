@@ -5,6 +5,7 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import java.io.File;
 
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 class HazelcastJARFinder {
 
@@ -49,12 +50,12 @@ class HazelcastJARFinder {
         if (files.length > 1) {
             StringBuilder sb = new StringBuilder("Path ")
                     .append(pathToTarget.getAbsolutePath())
-                    .append("contains more than one JAR which seems to be Hazelcast JAR: \n");
+                    .append("contains more than one JAR which seems to be Hazelcast JAR: ").append(NEW_LINE);
             for (File file : files) {
-                sb.append(file.getName()).append('\n');
+                sb.append(file.getName()).append(NEW_LINE);
             }
-            sb.append("This is probably a bug, please create a new bug report with this message. "
-                    + "https://github.com/hazelcast/hazelcast-simulator/issues/new");
+            sb.append("This is probably a bug, please create a new bug report with this message."
+                    + " https://github.com/hazelcast/hazelcast-simulator/issues/new");
             throw new CommandLineExitException(sb.toString());
         }
     }

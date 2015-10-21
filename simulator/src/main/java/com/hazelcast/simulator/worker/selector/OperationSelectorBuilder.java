@@ -3,6 +3,7 @@ package com.hazelcast.simulator.worker.selector;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 
 /**
@@ -97,7 +98,7 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
     private void probabilityMismatch() {
         StringBuilder sb = new StringBuilder(format("Sum of operation probabilities should be exactly 1.0, but is %f", probSum));
         for (Map.Entry<T, Double> entry : operations.entrySet()) {
-            sb.append("\nOperation: ").append(entry.getKey()).append(", Probability: ").append(entry.getValue());
+            sb.append(NEW_LINE).append("Operation: ").append(entry.getKey()).append(", Probability: ").append(entry.getValue());
         }
         throw new IllegalStateException(sb.toString());
     }

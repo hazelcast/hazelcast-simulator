@@ -48,7 +48,7 @@ public class ExceptionOperation implements SimulatorOperation {
         }
         sb.append(type);
         if (cause != null) {
-            String[] lines = cause.split("\n");
+            String[] lines = cause.split(NEW_LINE);
             if (lines.length > 0) {
                 sb.append('[');
                 sb.append(lines[0]);

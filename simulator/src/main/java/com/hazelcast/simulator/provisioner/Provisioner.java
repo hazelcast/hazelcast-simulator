@@ -320,12 +320,12 @@ public final class Provisioner {
 
         if (destroyedCount != count) {
             throw new IllegalStateException("Terminated " + destroyedCount + " of " + count
-                    + "\n1) You are trying to terminate physical hardware that you own (unsupported feature)"
-                    + "\n2) If and only if you are using AWS our Harakiri Monitor might have terminated them"
-                    + "\n3) You have not payed you bill and your instances have been terminated by your cloud provider"
-                    + "\n4) You have terminated your own instances (perhaps via some console interface)"
-                    + "\n5) Someone else has terminated your instances"
-                    + "\nPlease try again!");
+                    + NEW_LINE + "1) You are trying to terminate physical hardware that you own (unsupported feature)"
+                    + NEW_LINE + "2) If and only if you are using AWS our Harakiri Monitor might have terminated them"
+                    + NEW_LINE + "3) You have not payed you bill and your instances have been terminated by your cloud provider"
+                    + NEW_LINE + "4) You have terminated your own instances (perhaps via some console interface)"
+                    + NEW_LINE + "5) Someone else has terminated your instances"
+                    + NEW_LINE + "Please try again!");
         }
     }
 

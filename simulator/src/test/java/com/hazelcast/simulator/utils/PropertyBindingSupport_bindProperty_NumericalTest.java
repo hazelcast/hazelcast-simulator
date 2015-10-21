@@ -2,6 +2,7 @@ package com.hazelcast.simulator.utils;
 
 import org.junit.Test;
 
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -70,7 +71,7 @@ public class PropertyBindingSupport_bindProperty_NumericalTest {
 
     @Test
     public void bindProperty_int_whitespace() {
-        bindProperty(bindPropertyTestClass, "intField", "10\n");
+        bindProperty(bindPropertyTestClass, "intField", "10" + NEW_LINE);
         assertEquals(10, bindPropertyTestClass.intField);
     }
 

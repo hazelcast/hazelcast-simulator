@@ -16,6 +16,7 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.util.Arrays.asList;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
@@ -68,14 +69,14 @@ class ComputeServiceBuilder {
     private void ensurePublicPrivateKeyExist() {
         File publicKey = newFile("~", ".ssh", "id_rsa.pub");
         if (!publicKey.exists()) {
-            throw new CommandLineExitException("Could not found public key: " + publicKey.getAbsolutePath() + "\n"
+            throw new CommandLineExitException("Could not found public key: " + publicKey.getAbsolutePath() + NEW_LINE
                     + "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
 
         File privateKey = newFile("~", ".ssh", "id_rsa");
         if (!privateKey.exists()) {
             throw new CommandLineExitException("Public key " + publicKey.getAbsolutePath() + " was found, "
-                    + "but private key: " + privateKey.getAbsolutePath() + " is missing\n"
+                    + "but private key: " + privateKey.getAbsolutePath() + " is missing" + NEW_LINE
                     + "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
     }

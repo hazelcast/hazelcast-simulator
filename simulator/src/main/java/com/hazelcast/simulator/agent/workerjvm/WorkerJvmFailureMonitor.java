@@ -37,6 +37,7 @@ import static com.hazelcast.simulator.test.FailureType.WORKER_TIMEOUT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 
 public class WorkerJvmFailureMonitor {
@@ -114,7 +115,7 @@ public class WorkerJvmFailureMonitor {
             for (File exceptionFile : exceptionFiles) {
                 String content = fileAsText(exceptionFile);
 
-                int indexOf = content.indexOf('\n');
+                int indexOf = content.indexOf(NEW_LINE);
                 String testId = content.substring(0, indexOf);
                 String cause = content.substring(indexOf + 1);
 

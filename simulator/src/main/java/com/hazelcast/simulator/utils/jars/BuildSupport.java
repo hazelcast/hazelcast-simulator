@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 
 class BuildSupport {
@@ -71,9 +72,10 @@ class BuildSupport {
     }
 
     private void logFilenames(File[] jars) {
-        StringBuilder sb = new StringBuilder("Hazelcast has been built successfully. JARs found:\n");
+        StringBuilder sb = new StringBuilder("Hazelcast has been built successfully. JARs found:");
+        sb.append(NEW_LINE);
         for (File jar : jars) {
-            sb.append(jar.getName()).append('\n');
+            sb.append(jar.getName()).append(NEW_LINE);
         }
         LOGGER.info(sb.toString());
     }

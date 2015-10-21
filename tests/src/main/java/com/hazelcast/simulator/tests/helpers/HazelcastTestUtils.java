@@ -46,6 +46,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
 import static java.lang.String.format;
@@ -74,12 +75,13 @@ public final class HazelcastTestUtils {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("total partitions:").append(totalPartitions).append("\n");
+        sb.append("total partitions: ").append(totalPartitions).append(NEW_LINE);
         for (Map.Entry<Member, Integer> entry : partitionCountMap.entrySet()) {
             Member member = entry.getKey();
             long count = entry.getValue();
             double percentage = count * 100d / totalPartitions;
-            sb.append(member).append(" total=").append(count).append(" percentage=").append(percentage).append("%\n");
+            sb.append(member).append(" total: ").append(count)
+                    .append(" percentage: ").append(percentage).append('%').append(NEW_LINE);
         }
         return sb.toString();
     }
@@ -93,14 +95,14 @@ public final class HazelcastTestUtils {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("total operations: ").append(totalOps).append("\n");
+        sb.append("total operations: ").append(totalOps).append(NEW_LINE);
         for (Map.Entry<Member, Long> entry : operationCountMap.entrySet()) {
             Member member = entry.getKey();
             long opsOnMember = entry.getValue();
             double percentage = opsOnMember * 100d / totalOps;
             sb.append(member)
                     .append(" operations: ").append(opsOnMember)
-                    .append(" percentage: ").append(percentage).append("%\n");
+                    .append(" percentage: ").append(percentage).append('%').append(NEW_LINE);
         }
         return sb.toString();
     }

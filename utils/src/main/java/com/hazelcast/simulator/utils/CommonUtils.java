@@ -28,6 +28,8 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+
 public final class CommonUtils {
 
     private static final String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
@@ -173,12 +175,12 @@ public final class CommonUtils {
             String logMessage = throwable.getMessage();
             if (throwable.getCause() != null) {
                 String throwableString = throwableToString(throwable.getCause());
-                logMessage += "\n" + throwableString;
+                logMessage += NEW_LINE + throwableString;
             }
             logger.fatal(logMessage);
         } else {
             String throwableString = throwableToString(throwable);
-            logger.fatal(msg + "\n" + throwableString);
+            logger.fatal(msg + NEW_LINE + throwableString);
         }
         System.exit(1);
     }

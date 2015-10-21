@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -118,11 +119,11 @@ public class TestRunnerTest {
     @Test
     public void withHazelcastConfigFile() throws Exception {
         File configFile = File.createTempFile("config", "xml");
-        FileUtils.appendText("<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n" +
-                "                               http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd\"\n" +
-                "           xmlns=\"http://www.hazelcast.com/schema/config\"\n" +
-                "           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-                "</hazelcast>", configFile);
+        FileUtils.appendText("<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config" + NEW_LINE
+                + "                               http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd\"" + NEW_LINE
+                + "           xmlns=\"http://www.hazelcast.com/schema/config\"" + NEW_LINE
+                + "           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" + NEW_LINE
+                + "</hazelcast>", configFile);
 
         testRunner.withHazelcastConfigFile(configFile);
     }

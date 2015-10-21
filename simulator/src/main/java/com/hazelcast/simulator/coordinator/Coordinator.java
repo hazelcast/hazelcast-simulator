@@ -59,6 +59,8 @@ import static java.lang.String.format;
 
 public final class Coordinator {
 
+    public static final String HORIZONTAL_RULER = "----------------------------------------------------------------------------";
+
     static final File SIMULATOR_HOME = getSimulatorHome();
 
     private static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
@@ -66,8 +68,6 @@ public final class Coordinator {
 
     private static final int TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS = 10;
     private static final int PARALLEL_EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
-
-    private static final String HORIZONTAL_RULER = "----------------------------------------------------------------------------";
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 

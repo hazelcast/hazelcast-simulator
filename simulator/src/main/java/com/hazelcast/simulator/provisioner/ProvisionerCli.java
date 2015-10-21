@@ -9,6 +9,7 @@ import joptsimple.OptionSpec;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 
 final class ProvisionerCli {
@@ -17,9 +18,9 @@ final class ProvisionerCli {
 
     private final OptionSpec<String> gitSpec = parser.accepts("git",
             "Overrides the HAZELCAST_VERSION_SPEC property and forces Provisioner to build Hazelcast JARs from a given Git"
-                    + " version. This makes it easier to run a test with different versions of Hazelcast, e.g.\n"
-                    + "     --git f0288f713                to use the Git revision f0288f713\n"
-                    + "     --git myRepository/myBranch    to use branch myBranch from a repository myRepository.\n"
+                    + " version. This makes it easier to run a test with different versions of Hazelcast, e.g." + NEW_LINE
+                    + "     --git f0288f713                to use the Git revision f0288f713" + NEW_LINE
+                    + "     --git myRepository/myBranch    to use branch myBranch from a repository myRepository." + NEW_LINE
                     + "You can specify custom repositories in 'simulator.properties'.")
             .withRequiredArg().ofType(String.class);
 

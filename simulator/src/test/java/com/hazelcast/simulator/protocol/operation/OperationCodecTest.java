@@ -11,6 +11,7 @@ import org.junit.Test;
 import java.util.Collections;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -56,9 +57,9 @@ public class OperationCodecTest {
                 12345,
                 "-verbose:gc -Xloggc:verbosegc.log",
                 "",
-                "<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config\n"
-                        + "  http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd\"\n"
-                        + "  xmlns=\"http://www.hazelcast.com/schema/config\"\n"
+                "<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config" + NEW_LINE
+                        + "  http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd\"" + NEW_LINE
+                        + "  xmlns=\"http://www.hazelcast.com/schema/config\"" + NEW_LINE
                         + "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />",
                 "",
                 "",
