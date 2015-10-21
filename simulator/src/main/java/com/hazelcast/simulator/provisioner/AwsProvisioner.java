@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 
 /**
@@ -243,7 +244,7 @@ public class AwsProvisioner {
 
         for (Reservation reservation : result.getReservations()) {
             for (Instance reserved : reservation.getInstances()) {
-                appendText(reserved.getPublicIpAddress() + "," + reserved.getPrivateIpAddress() + "\n", agentsFile);
+                appendText(reserved.getPublicIpAddress() + ',' + reserved.getPrivateIpAddress() + NEW_LINE, agentsFile);
             }
         }
     }
@@ -265,7 +266,7 @@ public class AwsProvisioner {
             return true;
 
         } catch (AmazonServiceException e) {
-            LOGGER.fatal("Exception in isBalancerAlive(" + name + ")", e);
+            LOGGER.fatal("Exception in isBalancerAlive(" + name + ')', e);
         }
         return false;
     }

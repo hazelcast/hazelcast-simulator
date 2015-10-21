@@ -71,14 +71,14 @@ public class FailureOperation implements SimulatorOperation {
         sb.append(type);
 
         if (cause != null) {
-            String[] lines = cause.split("\n");
+            String[] lines = cause.split(NEW_LINE);
             if (lines.length > 0) {
-                sb.append("[");
+                sb.append('[');
                 sb.append(lines[0]);
-                sb.append("]");
+                sb.append(']');
             }
         } else {
-            sb.append("[").append(message).append("]");
+            sb.append('[').append(message).append(']');
         }
 
         return sb.toString();
@@ -87,7 +87,7 @@ public class FailureOperation implements SimulatorOperation {
     public String getFileMessage() {
         StringBuilder sb = new StringBuilder();
         sb.append("Failure[").append(NEW_LINE);
-        sb.append("   message='").append(message).append("'").append(NEW_LINE);
+        sb.append("   message='").append(message).append('\'').append(NEW_LINE);
         sb.append("   type=").append(type).append(NEW_LINE);
         sb.append("   timestamp=").append(timestamp).append(NEW_LINE);
         sb.append("   workerAddress=").append(workerAddress).append(NEW_LINE);
@@ -111,7 +111,7 @@ public class FailureOperation implements SimulatorOperation {
         }
 
         sb.append("   cause=").append(cause != null ? cause.trim() : "null").append(NEW_LINE);
-        sb.append("]\n");
+        sb.append("]").append(NEW_LINE);
 
         return sb.toString();
     }

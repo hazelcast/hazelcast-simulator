@@ -110,7 +110,7 @@ class GitSupport {
         config.setString(CONFIG_REMOTE, name, CONFIG_URL, url);
         RefSpec refSpec = new RefSpec()
                 .setForceUpdate(true)
-                .setSourceDestination(Constants.R_HEADS + "*", Constants.R_REMOTES + name + "/*");
+                .setSourceDestination(Constants.R_HEADS + '*', Constants.R_REMOTES + name + "/*");
         config.setString(CONFIG_REMOTE, name, "fetch", refSpec.toString());
     }
 

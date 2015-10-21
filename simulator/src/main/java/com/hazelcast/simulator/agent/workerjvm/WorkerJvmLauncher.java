@@ -92,7 +92,7 @@ public class WorkerJvmLauncher {
         WorkerType type = workerJvmSettings.getWorkerType();
 
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, agent.getAddressIndex(), workerIndex, 0);
-        String workerId = "worker-" + agent.getPublicAddress() + "-" + workerIndex + "-" + type.toLowerCase();
+        String workerId = "worker-" + agent.getPublicAddress() + '-' + workerIndex + '-' + type.toLowerCase();
         File workerHome = new File(testSuiteDir, workerId);
         ensureExistingDirectory(workerHome);
 
@@ -154,7 +154,7 @@ public class WorkerJvmLauncher {
         StringBuilder sb = new StringBuilder();
         sb.append("#!/bin/bash").append(NEW_LINE);
         for (String arg : args) {
-            sb.append(arg).append(" ");
+            sb.append(arg).append(' ');
         }
         sb.append("> worker.out 2> worker.err").append(NEW_LINE);
 
@@ -163,8 +163,8 @@ public class WorkerJvmLauncher {
 
     private void copyResourcesToWorkerId(String workerId) {
         String testSuiteId = agent.getTestSuite().getId();
-        File uploadDirectory = new File(WORKERS_PATH + "/" + testSuiteId + "/upload/");
-        if (!uploadDirectory.exists()) {
+        File uploadDirectory = new File(WORKERS_PATH + '/' + testSuiteId + "/upload/");
+        if (!uploadDirectory.exists() || !uploadDirectory.isDirectory()) {
             LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
             return;
         }

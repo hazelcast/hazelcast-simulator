@@ -130,7 +130,7 @@ final class PerformanceTracker {
             File latencyFile = getLatencyFile(testId, probeName);
             HistogramLogWriter histogramLogWriter = new HistogramLogWriter(latencyFile);
             histogramLogWriter.setBaseTime(baseTime);
-            histogramLogWriter.outputComment("[Latency histograms for " + testId + "." + probeName + "]");
+            histogramLogWriter.outputComment("[Latency histograms for " + testId + '.' + probeName + ']');
             histogramLogWriter.outputLogFormatVersion();
             histogramLogWriter.outputLegend();
             return histogramLogWriter;
@@ -156,6 +156,6 @@ final class PerformanceTracker {
     }
 
     private static File getLatencyFile(String testId, String probeName) {
-        return new File("latency-" + testId + "-" + probeName + ".txt");
+        return new File("latency-" + testId + '-' + probeName + ".txt");
     }
 }

@@ -106,7 +106,7 @@ class TemplateBuilder {
 
         Set<SecurityGroup> securityGroups = securityGroupApi.describeSecurityGroupsInRegion(region, securityGroup);
         if (!securityGroups.isEmpty()) {
-            LOGGER.info("Security group: '" + securityGroup + "' is found in region '" + region + "'");
+            LOGGER.info("Security group: '" + securityGroup + "' is found in region '" + region + '\'');
             return;
         }
 

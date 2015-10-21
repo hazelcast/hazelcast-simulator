@@ -57,7 +57,7 @@ class ComputeServiceBuilder {
         try {
             return ContextBuilder.newBuilder(cloudProvider);
         } catch (NoSuchElementException e) {
-            throw new CommandLineExitException("Unrecognized cloud-provider [" + cloudProvider + "]");
+            throw new CommandLineExitException("Unrecognized cloud-provider [" + cloudProvider + ']');
         }
     }
 

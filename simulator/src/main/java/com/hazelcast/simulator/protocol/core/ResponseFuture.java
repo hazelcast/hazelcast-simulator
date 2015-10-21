@@ -48,7 +48,7 @@ public final class ResponseFuture implements Future<Response> {
      * @return the key for the {@link ResponseFuture} map
      */
     public static String createFutureKey(SimulatorAddress source, long messageId, int remoteAddressIndex) {
-        return source + "-" + messageId + "-" + remoteAddressIndex;
+        return source.toString() + '-' + messageId + '-' + remoteAddressIndex;
     }
 
     public static SimulatorAddress getSourceFromFutureKey(String futureKey) {

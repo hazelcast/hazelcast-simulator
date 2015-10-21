@@ -55,7 +55,7 @@ final class MessagesFactory {
         Constructor<? extends Message> constructor = INSTANCE.noAttributeConstructors.get(messageTypeSpec);
 
         if (constructor == null) {
-            throw new IllegalArgumentException("Unknown message type " + messageTypeSpec + ".");
+            throw new IllegalArgumentException("Unknown message type " + messageTypeSpec + '.');
         }
         return createInstance(constructor, messageAddress, null);
     }
@@ -71,7 +71,7 @@ final class MessagesFactory {
         Constructor<? extends Message> constructor = INSTANCE.attributeConstructors.get(messageTypeSpec);
 
         if (constructor == null) {
-            throw new IllegalArgumentException("Unknown message type " + messageTypeSpec + ".");
+            throw new IllegalArgumentException("Unknown message type " + messageTypeSpec + '.');
         }
         return createInstance(constructor, messageAddress, attribute);
     }

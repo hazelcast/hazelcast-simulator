@@ -33,7 +33,7 @@ public abstract class OperationProcessor {
     public final ResponseType process(SimulatorOperation operation, SimulatorAddress sourceAddress) {
         OperationType operationType = getOperationType(operation);
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(getClass().getSimpleName() + ".process(" + operation.getClass().getSimpleName() + ")");
+            LOGGER.trace(getClass().getSimpleName() + ".process(" + operation.getClass().getSimpleName() + ')');
         }
         try {
             switch (operationType) {

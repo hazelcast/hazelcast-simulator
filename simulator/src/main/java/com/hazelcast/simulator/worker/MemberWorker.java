@@ -178,7 +178,7 @@ public final class MemberWorker implements Worker {
         String address;
         if (type == WorkerType.MEMBER) {
             InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getInetSocketAddress();
-            address = socketAddress.getAddress().getHostAddress() + ":" + socketAddress.getPort();
+            address = socketAddress.getAddress().getHostAddress() + ':' + socketAddress.getPort();
         } else {
             address = "client:" + publicAddress;
         }
@@ -202,7 +202,7 @@ public final class MemberWorker implements Worker {
             boolean autoCreateHzInstance = parseBoolean(System.getProperty("autoCreateHzInstance", "true"));
             int workerPerformanceMonitorIntervalSeconds = parseInt(System.getProperty("workerPerformanceMonitorIntervalSeconds"));
 
-            logHeader("Hazelcast Worker #" + workerIndex + " (" + type + ")");
+            logHeader("Hazelcast Worker #" + workerIndex + " (" + type + ')');
             logInputArguments();
             logInterestingSystemProperties();
             LOGGER.info("process ID: " + getPID());
@@ -260,7 +260,7 @@ public final class MemberWorker implements Worker {
 
     private static void logHeader(String header) {
         StringBuilder builder = new StringBuilder();
-        builder.append(DASHES).append(" ").append(header).append(" ").append(DASHES);
+        builder.append(DASHES).append(' ').append(header).append(' ').append(DASHES);
 
         String dashes = fillString(builder.length(), '-');
         LOGGER.info(dashes);

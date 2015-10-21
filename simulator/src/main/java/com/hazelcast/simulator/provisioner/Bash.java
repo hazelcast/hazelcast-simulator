@@ -6,6 +6,7 @@ import com.hazelcast.simulator.utils.NativeUtils;
 import java.io.File;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 
 public class Bash {
@@ -33,15 +34,14 @@ public class Bash {
      * @param url  the url that is downloaded
      */
     public void download(String path, String url) {
-        execute("if type \"wget\" > /dev/null; \n"
-                + "then \n"
-                + "\twget --no-verbose --directory-prefix=" + path + " " + url + " \n"
-                + "else\n"
-                + "\t\t\n"
-                + "\tpushd .\n"
-                + "\tcd " + path + "\t\n"
-                + "\tcurl -O " + url + "\n"
-                + "\tpopd\n"
+        execute("if type \"wget\" > /dev/null;" + NEW_LINE
+                + "then" + NEW_LINE
+                + "\twget --no-verbose --directory-prefix=" + path + ' ' + url + NEW_LINE
+                + "else" + NEW_LINE
+                + "\tpushd ." + NEW_LINE
+                + "\tcd " + path + NEW_LINE
+                + "\tcurl -O " + url + NEW_LINE
+                + "\tpopd" + NEW_LINE
                 + "fi");
     }
 

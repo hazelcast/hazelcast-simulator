@@ -6,6 +6,7 @@ import com.hazelcast.simulator.test.TestCase;
 import java.util.Date;
 
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 /**
  * Reports an exception which occurred on a Simulator component.
@@ -59,27 +60,27 @@ public class ExceptionOperation implements SimulatorOperation {
 
     public String getFileLog(TestCase testCase) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Failure[\n");
-        sb.append("   message='").append(ExceptionType.valueOf(type).getHumanReadable()).append("'\n");
-        sb.append("   type=").append(type).append("\n");
-        sb.append("   address=").append(address).append("\n");
-        sb.append("   time=").append(new Date(time)).append("\n");
+        sb.append("Failure[").append(NEW_LINE);
+        sb.append("   message='").append(ExceptionType.valueOf(type).getHumanReadable()).append('\'').append(NEW_LINE);
+        sb.append("   type=").append(type).append(NEW_LINE);
+        sb.append("   address=").append(address).append(NEW_LINE);
+        sb.append("   time=").append(new Date(time)).append(NEW_LINE);
 
         if (testCase != null) {
             String prefix = "   test=";
-            for (String testCaseLine : testCase.toString().split("\n")) {
-                sb.append(prefix).append(testCaseLine).append("\n");
+            for (String testCaseLine : testCase.toString().split(NEW_LINE)) {
+                sb.append(prefix).append(testCaseLine).append(NEW_LINE);
                 prefix = "    ";
             }
         } else if (testId != null) {
-            sb.append("   test=").append(testId).append(" unknown").append("\n");
+            sb.append("   test=").append(testId).append(" unknown").append(NEW_LINE);
         } else {
-            sb.append("   test=null\n");
+            sb.append("   test=null").append(NEW_LINE);
         }
 
-        sb.append("   cause=").append(cause != null ? cause : "null").append("\n");
-        sb.append("   stacktrace=").append(stacktrace != null ? stacktrace : "null\n");
-        sb.append("]");
+        sb.append("   cause=").append(cause != null ? cause : "null").append(NEW_LINE);
+        sb.append("   stacktrace=").append(stacktrace != null ? stacktrace : "null" + NEW_LINE);
+        sb.append(']');
 
         return sb.toString();
     }

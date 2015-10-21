@@ -47,7 +47,7 @@ public class TestHistogramContainer {
         PerformanceState performanceState = performanceStateContainer.getPerformanceStateForTestCase(testCaseId);
         Result result = aggregateHistogramsForTestCase(testCaseId, performanceState);
         if (!result.isEmpty()) {
-            String fileName = "probes-" + testSuiteId + "_" + testCaseId + ".xml";
+            String fileName = "probes-" + testSuiteId + '_' + testCaseId + ".xml";
             ResultXmlUtils.toXml(result, new File(fileName));
             logProbesResultInHumanReadableFormat(testCaseId, result);
         }

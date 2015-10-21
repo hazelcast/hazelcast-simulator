@@ -162,7 +162,7 @@ public class WorkerParameters {
         String manCenterURL = properties.get("MANAGEMENT_CENTER_URL").trim();
         if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
             String updateInterval = properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL").trim();
-            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + "\"";
+            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + '"';
             memberHzConfig = memberHzConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
                     format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
                             updateIntervalAttr, manCenterURL));

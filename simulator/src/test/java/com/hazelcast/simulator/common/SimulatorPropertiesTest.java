@@ -210,7 +210,7 @@ public class SimulatorPropertiesTest {
     }
 
     private void initProperty(String key, Object value) {
-        appendText(key + "=" + value, workingDirFile);
+        appendText(key + '=' + value, workingDirFile);
         simulatorProperties.init(null);
     }
 }

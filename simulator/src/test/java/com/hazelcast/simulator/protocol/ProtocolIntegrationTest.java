@@ -272,7 +272,7 @@ public class ProtocolIntegrationTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_LogOperation_SingleAgent() {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 1, 0, 0);
-        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!");
+        SimulatorOperation operation = new LogOperation("Please log me on " + destination + '!');
 
         Response response = sendFromCoordinator(destination, operation);
 
@@ -282,7 +282,7 @@ public class ProtocolIntegrationTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_LogOperation_SingleWorker() {
         SimulatorAddress destination = new SimulatorAddress(WORKER, 1, 1, 0);
-        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.WARN);
+        SimulatorOperation operation = new LogOperation("Please log me on " + destination + '!', Level.WARN);
 
         Response response = sendFromCoordinator(destination, operation);
 
@@ -292,7 +292,7 @@ public class ProtocolIntegrationTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_LogOperation_SingleTest() {
         SimulatorAddress destination = new SimulatorAddress(TEST, 1, 1, 1);
-        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.ERROR);
+        SimulatorOperation operation = new LogOperation("Please log me on " + destination + '!', Level.ERROR);
 
         Response response = sendFromCoordinator(destination, operation);
 
@@ -305,7 +305,7 @@ public class ProtocolIntegrationTest {
         SimulatorAddress source = worker.getAddress().getChild(1);
         SimulatorAddress destination = COORDINATOR;
 
-        SimulatorOperation operation = new LogOperation("Please log me on " + destination + "!", Level.FATAL);
+        SimulatorOperation operation = new LogOperation("Please log me on " + destination + '!', Level.FATAL);
 
         Response response = worker.write(source, destination, operation);
 

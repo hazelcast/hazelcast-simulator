@@ -39,18 +39,18 @@ public class MessageAddress implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder("MessageAddress{");
+        String message = "MessageAddress{";
         if (agentAddress != null) {
-            builder.append("agentAddress='").append(agentAddress).append("'");
+            message += "agentAddress='" + agentAddress + '\'';
         }
         if (workerAddress != null) {
-            builder.append(",workerAddress='").append(workerAddress).append("'");
+            message += "workerAddress='" + workerAddress + '\'';
         }
         if (testAddress != null) {
-            builder.append(",testAddress='").append(testAddress).append("'");
+            message += "testAddress='" + testAddress + '\'';
         }
-        builder.append("}");
-        return builder.toString();
+        message += '}';
+        return message;
     }
 
     public static class MessageAddressBuilder {
