@@ -54,10 +54,9 @@ public class FormatUtilsTest {
         assertEquals("-9,223,372,036,854,775,808", formatLong(Long.MIN_VALUE, 0));
         assertEquals("    -9,223,372,036,854,775,808", formatLong(Long.MIN_VALUE, 30));
 
-        // Tests with Long.MAX_VALUE fail (maybe some overflow in the formatter)
-        //assertEquals("9,223,372,036,854,775,808", formatLong(Long.MAX_VALUE, -30));
-        //assertEquals("9,223,372,036,854,775,808", formatLong(Long.MAX_VALUE, 0));
-        //assertEquals("     9,223,372,036,854,775,808", formatLong(Long.MAX_VALUE, 30));
+        assertEquals("9,223,372,036,854,775,807", formatLong(Long.MAX_VALUE, -30));
+        assertEquals("9,223,372,036,854,775,807", formatLong(Long.MAX_VALUE, 0));
+        assertEquals("     9,223,372,036,854,775,807", formatLong(Long.MAX_VALUE, 30));
     }
 
     @Test

@@ -1,11 +1,10 @@
 package com.hazelcast.simulator.utils;
 
-import java.util.Arrays;
-import java.util.Formatter;
 import java.util.Iterator;
 import java.util.Locale;
 
 import static java.lang.String.format;
+import static java.util.Arrays.fill;
 
 public final class FormatUtils {
 
@@ -47,11 +46,7 @@ public final class FormatUtils {
      * @return formatted number
      */
     public static String formatDouble(double number, int length) {
-        StringBuilder sb = new StringBuilder();
-        Formatter formatter = new Formatter(sb, Locale.US);
-        formatter.format("%,.2f", number);
-
-        return padLeft(sb.toString(), length);
+        return padLeft(format(Locale.US, "%,.2f", number), length);
     }
 
     /**
@@ -64,25 +59,21 @@ public final class FormatUtils {
      * @return formatted number
      */
     public static String formatLong(long number, int length) {
-        StringBuilder sb = new StringBuilder();
-        Formatter formatter = new Formatter(sb, Locale.US);
-        formatter.format("%,d", number);
-
-        return padLeft(sb.toString(), length);
+        return padLeft(format(Locale.US, "%,d", number), length);
     }
 
     public static String padRight(String argument, int length) {
         if (length <= 0) {
             return argument;
         }
-        return String.format("%-" + length + "s", argument);
+        return format("%-" + length + "s", argument);
     }
 
     public static String padLeft(String argument, int length) {
         if (length <= 0) {
             return argument;
         }
-        return String.format("%" + length + "s", argument);
+        return format("%" + length + "s", argument);
     }
 
     public static String fillString(int length, char charToFill) {
@@ -90,25 +81,25 @@ public final class FormatUtils {
             return "";
         }
         char[] array = new char[length];
-        Arrays.fill(array, charToFill);
+        fill(array, charToFill);
         return new String(array);
     }
 
     public static String secondsToHuman(long seconds) {
         long time = seconds;
 
-        long s = time % SECONDS_PER_MINUTE;
+        long moduloSeconds = time % SECONDS_PER_MINUTE;
         time /= SECONDS_PER_MINUTE;
 
-        long m = time % MINUTES_PER_HOUR;
+        long minutes = time % MINUTES_PER_HOUR;
         time /= MINUTES_PER_HOUR;
 
-        long h = time % HOURS_PER_DAY;
+        long hours = time % HOURS_PER_DAY;
         time /= HOURS_PER_DAY;
 
         long days = time;
 
-        return format("%02dd %02dh %02dm %02ds", days, h, m, s);
+        return format("%02dd %02dh %02dm %02ds", days, hours, minutes, moduloSeconds);
     }
 
     public static String humanReadableByteCount(long bytes, boolean si) {
@@ -129,8 +120,8 @@ public final class FormatUtils {
         StringBuilder builder = new StringBuilder();
         Iterator<?> iterator = collection.iterator();
         while (iterator.hasNext()) {
-            Object o = iterator.next();
-            builder.append(o);
+            Object entry = iterator.next();
+            builder.append(entry);
             if (iterator.hasNext()) {
                 builder.append(delimiter);
             }
