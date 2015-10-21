@@ -156,7 +156,7 @@ public class ThreadSpawner {
             idGenerator = result == null ? idGenerator : result;
         }
 
-        return prefix + "-" + idGenerator.incrementAndGet();
+        return prefix + '-' + idGenerator.incrementAndGet();
     }
 
     private static class ThrowExceptionThread extends Thread {
