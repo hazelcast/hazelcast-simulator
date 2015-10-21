@@ -60,7 +60,7 @@ public class MapTransactionReadWriteTest {
     @Setup
     public void setup(TestContext testContext) throws Exception {
         targetInstance = testContext.getTargetInstance();
-        map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+        map = targetInstance.getMap(basename + '-' + testContext.getTestId());
 
         builder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }

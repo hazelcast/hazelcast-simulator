@@ -68,11 +68,11 @@ public class LockTest {
     }
 
     private String getLockId(long key) {
-        return basename + "-" + testContext.getTestId() + "-" + key;
+        return basename + '-' + testContext.getTestId() + '-' + key;
     }
 
     private String getAccountId(long key) {
-        return basename + "-" + testContext.getTestId() + "-" + key;
+        return basename + '-' + testContext.getTestId() + '-' + key;
     }
 
     @Verify

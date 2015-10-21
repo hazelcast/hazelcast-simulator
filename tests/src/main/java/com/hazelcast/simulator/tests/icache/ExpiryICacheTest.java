@@ -127,7 +127,7 @@ public class ExpiryICacheTest {
         LOGGER.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
         LOGGER.info(basename + " used = " + humanReadableByteCount(baseLineUsed, true) + " = " + baseLineUsed);
         LOGGER.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-        LOGGER.info(basename + " usedOfMax = " + usedOfMax + "%");
+        LOGGER.info(basename + " usedOfMax = " + usedOfMax + '%');
     }
 
     public static void main(String[] args) throws Exception {

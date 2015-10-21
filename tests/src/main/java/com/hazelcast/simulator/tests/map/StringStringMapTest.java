@@ -75,7 +75,7 @@ public class StringStringMapTest {
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
+        map = testContext.getTargetInstance().getMap(basename + '-' + testContext.getTestId());
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
                 .addOperation(Operation.SET, setProb)

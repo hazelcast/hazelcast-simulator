@@ -64,8 +64,8 @@ public class SerializationStrategyTest {
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
-        map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
-        uniqueStrings = testContext.getTargetInstance().getSet(basename + "-" + testContext.getTestId());
+        map = testContext.getTargetInstance().getMap(basename + '-' + testContext.getTestId());
+        uniqueStrings = testContext.getTargetInstance().getSet(basename + '-' + testContext.getTestId());
 
         operationSelectorBuilder.addOperation(Operation.GET_BY_STRING_INDEX, getByStringIndexProb)
                 .addOperation(Operation.GET_BY_INT_INDEX, getByIntIndexProb)

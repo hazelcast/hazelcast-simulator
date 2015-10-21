@@ -60,7 +60,7 @@ public class TxnQueueWithLockTest {
                     try {
                         ctx.beginTransaction();
 
-                        TransactionalQueue<Integer> queue = ctx.getQueue(basename + "q");
+                        TransactionalQueue<Integer> queue = ctx.getQueue(basename + 'q');
                         queue.offer(1);
 
                         ILock secondLock = instance.getLock(basename + "l2");
@@ -97,7 +97,7 @@ public class TxnQueueWithLockTest {
 
     @Verify(global = true)
     public void verify() {
-        IQueue queue = instance.getQueue(basename + "q");
+        IQueue queue = instance.getQueue(basename + 'q');
         ILock firstLock = instance.getLock(basename + "l1");
         ILock secondLock = instance.getLock(basename + "l2");
 

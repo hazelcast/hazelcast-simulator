@@ -38,7 +38,7 @@ public class MapCasTest {
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
-        map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+        map = targetInstance.getMap(basename + '-' + testContext.getTestId());
         resultsPerWorker = targetInstance.getMap("ResultMap" + testContext.getTestId());
     }
 

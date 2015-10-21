@@ -60,7 +60,7 @@ public class QueueTest {
 
         queues = new IQueue[queueLength];
 
-        String prefix = basename + "-" + testContext.getTestId() + "-";
+        String prefix = basename + '-' + testContext.getTestId() + '-';
         String[] names = generateStringKeys(prefix, queueLength, prefix.length() + 5, keyLocality, targetInstance);
         for (int i = 0; i < queues.length; i++) {
             queues[i] = targetInstance.getQueue(names[i]);

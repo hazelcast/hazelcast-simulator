@@ -54,9 +54,9 @@ public class ProducerConsumerTest {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
-        produced = targetInstance.getAtomicLong(basename + "-" + testContext.getTestId() + ":Produced");
-        consumed = targetInstance.getAtomicLong(basename + "-" + testContext.getTestId() + ":Consumed");
-        workQueue = targetInstance.getQueue(basename + "-" + testContext.getTestId() + ":WorkQueue");
+        produced = targetInstance.getAtomicLong(basename + '-' + testContext.getTestId() + ":Produced");
+        consumed = targetInstance.getAtomicLong(basename + '-' + testContext.getTestId() + ":Consumed");
+        workQueue = targetInstance.getQueue(basename + '-' + testContext.getTestId() + ":WorkQueue");
     }
 
     @Teardown

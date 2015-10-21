@@ -82,7 +82,7 @@ abstract class AbstractDomainObject implements DomainObject {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{"
+        return getClass().getSimpleName() + '{'
                 + "key='" + key + '\''
                 + ", stringVal='" + stringVal + '\''
                 + ", doubleVal=" + doubleVal

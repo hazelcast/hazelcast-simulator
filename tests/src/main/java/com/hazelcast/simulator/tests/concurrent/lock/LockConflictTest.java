@@ -185,7 +185,7 @@ public class LockConflictTest {
         }
 
         private ILock getLock(KeyIncrementPair keyIncrementPair) {
-            return hazelcastInstance.getLock(basename + "l" + keyIncrementPair.key);
+            return hazelcastInstance.getLock(basename + 'l' + keyIncrementPair.key);
         }
 
         @Override

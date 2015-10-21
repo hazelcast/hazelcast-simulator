@@ -59,7 +59,7 @@ public class HttpLoadTest {
         this.testContext = testContext;
         id = testContext.getTestId();
 
-        baseRul = "http://" + serverIp + ":" + serverPort + "/";
+        baseRul = "http://" + serverIp + ':' + serverPort + '/';
 
         operationSelectorBuilder
                 .addOperation(RequestType.GET_REQUEST, getRequestProb)
@@ -93,7 +93,7 @@ public class HttpLoadTest {
             try {
                 for (int key = 0; key < maxKeys; key++) {
                     int val = random.nextInt();
-                    String res = putRequest("key/" + key + "/" + val);
+                    String res = putRequest("key/" + key + '/' + val);
                     putKeyValues.put(key, res);
                 }
             } catch (Exception e) {
@@ -109,7 +109,7 @@ public class HttpLoadTest {
                     switch (requestSelector.select()) {
                         case PUT_REQUEST:
                             int val = random.nextInt();
-                            res = putRequest("key/" + key + "/" + val);
+                            res = putRequest("key/" + key + '/' + val);
                             putKeyValues.put(key, res);
                             break;
 

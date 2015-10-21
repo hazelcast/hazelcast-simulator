@@ -72,7 +72,7 @@ public class IntIntMapTest {
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
+        map = testContext.getTargetInstance().getMap(basename + '-' + testContext.getTestId());
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }

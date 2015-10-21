@@ -64,8 +64,8 @@ public class ExecutorTest {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         executors = new IExecutorService[executorCount];
-        for (int k = 0; k < executors.length; k++) {
-            executors[k] = targetInstance.getExecutorService(basename + "-" + testContext.getTestId() + "-" + k);
+        for (int i = 0; i < executors.length; i++) {
+            executors[i] = targetInstance.getExecutorService(basename + '-' + testContext.getTestId() + '-' + i);
         }
 
         executedCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":ExecutedCounter");

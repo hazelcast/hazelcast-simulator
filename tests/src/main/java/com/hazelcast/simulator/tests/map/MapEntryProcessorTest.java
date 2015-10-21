@@ -47,7 +47,7 @@ public class MapEntryProcessorTest {
         }
 
         targetInstance = testContext.getTargetInstance();
-        map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+        map = targetInstance.getMap(basename + '-' + testContext.getTestId());
         resultsPerWorker = targetInstance.getList(basename + "ResultMap" + testContext.getTestId());
     }
 

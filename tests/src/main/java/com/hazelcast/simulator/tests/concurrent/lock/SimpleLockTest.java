@@ -14,6 +14,7 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Random;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -90,11 +91,11 @@ public class SimpleLockTest {
     @Verify
     public void verify() {
         int value = 0;
-        for (int k = 0; k < maxAccounts; k++) {
-            ILock lock = targetInstance.getLock(basename + k);
-            IAtomicLong account = targetInstance.getAtomicLong(basename + k);
+        for (int i = 0; i < maxAccounts; i++) {
+            ILock lock = targetInstance.getLock(basename + i);
+            IAtomicLong account = targetInstance.getAtomicLong(basename + i);
 
-            LOGGER.info(account + " " + account.get());
+            LOGGER.info(format("%s %d", account, account.get()));
 
             assertFalse(basename + ": Lock should be unlocked", lock.isLocked());
             assertTrue(basename + ": Amount is < 0 ", account.get() >= 0);

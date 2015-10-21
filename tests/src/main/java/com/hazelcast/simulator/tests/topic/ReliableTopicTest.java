@@ -60,7 +60,7 @@ public class ReliableTopicTest {
         topics = new ITopic[topicCount];
         listeners = new LinkedList<MessageListenerImpl>();
 
-        String[] names = generateStringKeys(basename + "-" + testContext.getTestId(), topicCount, keyLocality, targetInstance);
+        String[] names = generateStringKeys(basename + '-' + testContext.getTestId(), topicCount, keyLocality, targetInstance);
 
         int listenerIdCounter = 0;
         for (int i = 0; i < topics.length; i++) {

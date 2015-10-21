@@ -45,7 +45,7 @@ public class MapTTLSaturationTest {
     public double maxHeapUsagePercentage = 80;
 
     private TestContext testContext;
-    private IMap map;
+    private IMap<Long, Long> map;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
@@ -62,7 +62,7 @@ public class MapTTLSaturationTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
@@ -81,7 +81,7 @@ public class MapTTLSaturationTest {
             LOGGER.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
             LOGGER.info(basename + " used = " + humanReadableByteCount(baseLineUsed, true) + " = " + baseLineUsed);
             LOGGER.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-            LOGGER.info(basename + " usedOfMax = " + usedOfMax + "%");
+            LOGGER.info(basename + " usedOfMax = " + usedOfMax + '%');
 
             int counter = 1;
             Random random = new Random();
@@ -93,13 +93,13 @@ public class MapTTLSaturationTest {
 
                     sleepMillis(10000);
                 } else {
-                    for (int k = 0; k < 1000; k++) {
+                    for (int i = 0; i < 1000; i++) {
                         counter++;
                         if (counter % 100000 == 0) {
                             LOGGER.info("at:" + counter + " heap used: " + usedPercentage + " % map.size:" + map.size());
                         }
                         long key = random.nextLong();
-                        map.put(key, 0, 24, TimeUnit.HOURS);
+                        map.put(key, 0L, 24, TimeUnit.HOURS);
                     }
                 }
             }
@@ -115,7 +115,7 @@ public class MapTTLSaturationTest {
             LOGGER.info(basename + " free = " + humanReadableByteCount(free, true) + " = " + free);
             LOGGER.info(basename + " used = " + humanReadableByteCount(nowUsed, true) + " = " + nowUsed);
             LOGGER.info(basename + " max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-            LOGGER.info(basename + " usedOfMax = " + usedOfMax + "%");
+            LOGGER.info(basename + " usedOfMax = " + usedOfMax + '%');
             LOGGER.info(basename + " map size:" + map.size());
         }
     }
@@ -132,7 +132,7 @@ public class MapTTLSaturationTest {
         LOGGER.info(basename + "free = " + humanReadableByteCount(free, true) + " = " + free);
         LOGGER.info(basename + "used = " + humanReadableByteCount(used, true) + " = " + used);
         LOGGER.info(basename + "max = " + humanReadableByteCount(maxBytes, true) + " = " + maxBytes);
-        LOGGER.info(basename + "usedOfMax = " + usedOfMax + "%");
+        LOGGER.info(basename + "usedOfMax = " + usedOfMax + '%');
     }
 
     public static void main(String[] args) throws Exception {

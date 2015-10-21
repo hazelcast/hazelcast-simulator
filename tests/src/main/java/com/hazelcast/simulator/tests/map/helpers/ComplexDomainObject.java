@@ -6,6 +6,8 @@ import com.hazelcast.nio.serialization.PortableWriter;
 
 import java.io.IOException;
 
+import static java.lang.String.format;
+
 @SuppressWarnings({"unused", "checkstyle:explicitinitialization", "checkstyle:methodcount", "checkstyle:methodlength",
         "checkstyle:methodname", "checkstyle:membername", "checkstyle:parametername"})
 public class ComplexDomainObject implements Portable {
@@ -867,7 +869,7 @@ public class ComplexDomainObject implements Portable {
     }
 
     public String getQuickSearchKey() {
-        return this.copy_code_id + "_" + this.media_id + "_" + this.brand_id;
+        return format("%d_%d_%d", copy_code_id, media_id, brand_id);
     }
 
     @Override
@@ -1324,9 +1326,11 @@ public class ComplexDomainObject implements Portable {
 
     @Override
     public String toString() {
-        return "QuickSearch [Title=" + title
+        return "ComplexDomainObject{"
+                + "title=" + title
                 + ", copy_code=" + copy_code
                 + ", copy_code_id=" + copy_code_id
-                + ", film_length=" + film_length + "]";
+                + ", film_length=" + film_length
+                + '}';
     }
 }

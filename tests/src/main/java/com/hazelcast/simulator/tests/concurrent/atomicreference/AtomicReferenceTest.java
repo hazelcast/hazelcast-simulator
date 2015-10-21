@@ -74,7 +74,7 @@ public class AtomicReferenceTest {
         }
 
         counters = getCounters();
-        String[] names = generateStringKeys(basename + "-" + context.getTestId(), countersLength, keyLocality, targetInstance);
+        String[] names = generateStringKeys(basename + '-' + context.getTestId(), countersLength, keyLocality, targetInstance);
         for (int i = 0; i < counters.length; i++) {
             IAtomicReference<Object> atomicReference = targetInstance.getAtomicReference(names[i]);
             atomicReference.set(values[random.nextInt(values.length)]);

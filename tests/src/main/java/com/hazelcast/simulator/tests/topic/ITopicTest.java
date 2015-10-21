@@ -55,7 +55,7 @@ public class ITopicTest {
         topics = new ITopic[topicCount];
         listeners = new LinkedList<TopicListener>();
         for (int topicIndex = 0; topicIndex < topics.length; topicIndex++) {
-            ITopic<Long> topic = targetInstance.getTopic(basename + "-" + testContext.getTestId() + "-" + topicIndex);
+            ITopic<Long> topic = targetInstance.getTopic(basename + '-' + testContext.getTestId() + '-' + topicIndex);
             topics[topicIndex] = topic;
 
             for (int listenerIndex = 0; listenerIndex < listenersPerTopic; listenerIndex++) {

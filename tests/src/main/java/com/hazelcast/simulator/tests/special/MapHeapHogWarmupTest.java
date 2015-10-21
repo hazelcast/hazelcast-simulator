@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.nextKeyOwnedBy;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.FormatUtils.humanReadableByteCount;
 import static java.lang.String.format;
 
@@ -134,11 +135,12 @@ public class MapHeapHogWarmupTest {
         long totalFree = max - used;
         double usedOfMax = 100.0 * ((double) used / (double) max);
 
-        sb.append("\nfree = ").append(humanReadableByteCount(free, true)).append(" (").append(free).append(")")
-                .append("\ntotal free = ").append(humanReadableByteCount(totalFree, true))
-                .append(" (").append(totalFree).append(")")
-                .append("\nused = ").append(humanReadableByteCount(used, true)).append(" (").append(used).append(")")
-                .append("\nmax = ").append(humanReadableByteCount(max, true)).append(" (").append(max).append(")")
-                .append('\n').append(format("usedOfMax = %.2f%%", usedOfMax));
+        sb.append(NEW_LINE).append("free = ").append(humanReadableByteCount(free, true)).append(" (").append(free).append(')')
+                .append(NEW_LINE).append("total free = ").append(humanReadableByteCount(totalFree, true))
+                .append(" (").append(totalFree).append(')')
+                .append(NEW_LINE).append("used = ").append(humanReadableByteCount(used, true))
+                .append(" (").append(used).append(')')
+                .append(NEW_LINE).append("max = ").append(humanReadableByteCount(max, true)).append(" (").append(max).append(')')
+                .append(NEW_LINE).append(format("usedOfMax = %.2f%%", usedOfMax));
     }
 }

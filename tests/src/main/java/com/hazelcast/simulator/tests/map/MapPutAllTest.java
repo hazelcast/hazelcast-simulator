@@ -42,29 +42,29 @@ public class MapPutAllTest {
     public boolean usePutAll = true;
 
     private IMap<String, String> map;
-    private HazelcastInstance instance;
+    private HazelcastInstance targetInstance;
     private Map<String, String>[] inputMaps;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
-        instance = testContext.getTargetInstance();
-        map = testContext.getTargetInstance().getMap(basename + "-" + testContext.getTestId());
+        targetInstance = testContext.getTargetInstance();
+        map = targetInstance.getMap(basename + '-' + testContext.getTestId());
     }
 
     @Teardown
     public void tearDown() throws Exception {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(instance));
+        LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = false)
     @SuppressWarnings("unchecked")
     public void warmup() throws InterruptedException {
-        waitClusterSize(LOGGER, instance, minNumberOfMembers);
+        waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
 
         String[] keys = new String[itemCount];
         for (int i = 0; i < keys.length; i++) {
-            keys[i] = generateStringKey(keySize, keyLocality, instance);
+            keys[i] = generateStringKey(keySize, keyLocality, targetInstance);
         }
 
         inputMaps = new Map[mapCount];

@@ -36,7 +36,7 @@ public class MapRaceTest {
     public void setUp(TestContext testContext) throws Exception {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
-        map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+        map = targetInstance.getMap(basename + '-' + testContext.getTestId());
         resultMap = targetInstance.getMap(basename + "ResultMap" + testContext.getTestId());
     }
 

@@ -43,7 +43,7 @@ public class GrowingMapTest {
 
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         idGenerator = hazelcastInstance.getIdGenerator(testContext.getTestId() + ":IdGenerator");
-        map = hazelcastInstance.getMap(basename + "-" + testContext.getTestId());
+        map = hazelcastInstance.getMap(basename + '-' + testContext.getTestId());
     }
 
     @Run

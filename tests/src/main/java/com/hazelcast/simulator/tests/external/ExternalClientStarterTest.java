@@ -57,7 +57,7 @@ public class ExternalClientStarterTest {
                     .replace("$IP_ADDRESS", ipAddress)
                     .replace("$UUID", UUID.randomUUID().toString());
 
-            String tmpLogFileName = logFileName + "_" + i;
+            String tmpLogFileName = logFileName + '_' + i;
 
             LOGGER.info(format("Starting external client: %s %s &>> %s.log", binaryName, tmpArguments, tmpLogFileName));
             bash.execute(format("../upload/%s %s &>> %s.log &", binaryName, tmpArguments, tmpLogFileName));

@@ -45,7 +45,7 @@ public class SqlPredicateTest {
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.targetInstance = testContext.getTargetInstance();
-        this.map = targetInstance.getMap(basename + "-" + testContext.getTestId());
+        this.map = targetInstance.getMap(basename + '-' + testContext.getTestId());
     }
 
     @Teardown
