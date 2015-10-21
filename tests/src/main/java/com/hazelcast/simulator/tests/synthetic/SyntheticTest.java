@@ -1,11 +1,17 @@
 package com.hazelcast.simulator.tests.synthetic;
 
+import com.hazelcast.client.impl.HazelcastClientProxy;
+import com.hazelcast.client.proxy.PartitionServiceProxy;
+import com.hazelcast.client.spi.ClientInvocationService;
+import com.hazelcast.client.spi.ClientPartitionService;
+import com.hazelcast.client.spi.impl.ClientInvocation;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.Partition;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.nio.Address;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
@@ -30,6 +36,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKey;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 
 /**
  * The SyntheticTest can be used to test features like back pressure.
@@ -100,21 +107,20 @@ public class SyntheticTest {
 
         private final boolean isClient;
         private final OperationService operationService;
-        //private final ClientInvocationService clientInvocationService;
-        //private final ClientPartitionService clientPartitionService;
+        private final ClientInvocationService clientInvocationService;
+        private final ClientPartitionService clientPartitionService;
 
         private int partitionIndex;
         private long iteration;
 
         public Worker() {
-            isClient = isClient(targetInstance);
-            checkClientKeyLocality();
-
-            if (isClient) {
+            if (isClient(targetInstance)) {
                 throw new IllegalArgumentException("SyntheticTest doesn't support clients at the moment");
             }
 
-            /*
+            isClient = isClient(targetInstance);
+            checkClientKeyLocality();
+
             if (isClient) {
                 HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy) targetInstance;
                 PartitionServiceProxy partitionService
@@ -124,13 +130,10 @@ public class SyntheticTest {
                 clientInvocationService = hazelcastClientProxy.client.getInvocationService();
                 clientPartitionService = getFieldValue(partitionService, "partitionService");
             } else {
-            */
-            operationService = HazelcastTestUtils.getOperationService(targetInstance);
-            /*
+                operationService = HazelcastTestUtils.getOperationService(targetInstance);
                 clientInvocationService = null;
                 clientPartitionService = null;
             }
-            */
 
             for (int i = 0; i < keyCount; i++) {
                 Integer key = generateIntKey(keyCount, keyLocality, targetInstance);
@@ -185,14 +188,15 @@ public class SyntheticTest {
 
         private ICompletableFuture<Object> invokeOnNextPartition() throws Exception {
             int partitionId = nextPartitionId();
-            /*
             if (isClient) {
+                // FIXME: we have to create an invocation instead of a request
                 SyntheticRequest request = new SyntheticRequest(syncBackupCount, asyncBackupCount, backupDelayNanos);
                 request.setLocalPartitionId(partitionId);
+                ClientInvocation invocation = new ClientInvocation(null, null);
                 Address target = clientPartitionService.getPartitionOwner(partitionId);
-                return clientInvocationService.invokeOnTarget(request, target);
+                // FIXME: the new invokeOnTarget is void, so we don't get a future here!
+                clientInvocationService.invokeOnTarget(invocation, target);
             }
-            */
             SyntheticOperation operation = new SyntheticOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
             return operationService.invokeOnPartition(serviceName, operation, partitionId);
         }
