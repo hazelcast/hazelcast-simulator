@@ -50,12 +50,12 @@ final class CoordinatorUtils {
     }
 
     static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
-        String members = "";
+        StringBuilder members = new StringBuilder();
         for (AgentData agentData : componentRegistry.getAgents()) {
             String hostAddress = agentData.getPrivateAddress();
-            members += format("<%s>%s:%d</%s>%n", tagName, hostAddress, port, tagName);
+            members.append(format("<%s>%s:%d</%s>%n", tagName, hostAddress, port, tagName));
         }
-        return members;
+        return members.toString();
     }
 
     static int getPort(String memberHzConfig) {
