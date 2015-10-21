@@ -150,7 +150,7 @@ public class HazelcastJARs {
         } else {
             url = getReleaseUrl(artifact, version);
         }
-        bash.download(targetDir.getAbsolutePath(), url);
+        bash.download(url, targetDir.getAbsolutePath());
     }
 
     File getArtifactFile(String artifact, String version) {

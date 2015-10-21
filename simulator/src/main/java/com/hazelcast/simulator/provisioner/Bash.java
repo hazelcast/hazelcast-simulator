@@ -27,54 +27,45 @@ public class Bash {
         execute(command + " || true");
     }
 
-    /**
-     * Downloads the content of the url to the target path.
-     *
-     * @param path the directory where the content is stored
-     * @param url  the url that is downloaded
-     */
-    public void download(String path, String url) {
-        execute("if type \"wget\" > /dev/null;" + NEW_LINE
-                + "then" + NEW_LINE
-                + "\twget --no-verbose --directory-prefix=" + path + ' ' + url + NEW_LINE
-                + "else" + NEW_LINE
-                + "\tpushd ." + NEW_LINE
-                + "\tcd " + path + NEW_LINE
-                + "\tcurl -O " + url + NEW_LINE
-                + "\tpopd" + NEW_LINE
-                + "fi");
+    public void ssh(String ip, String command) {
+        String sshCommand = format("ssh %s %s@%s \"%s\"", sshOptions, user, ip, command);
+        execute(sshCommand);
     }
 
-    public void uploadToAgentSimulatorDir(String ip, String src, String target) {
-        String syncCommand = format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/%s",
-                sshOptions, src, user, ip, getSimulatorVersion(), target);
-
-        execute(syncCommand);
-    }
-
-    public void scpToRemote(String ip, File src, String target) {
-        scpToRemote(ip, src.getAbsolutePath(), target);
-    }
-
-    public void scpToRemote(String ip, String src, String target) {
-        String command = format("scp -r %s %s %s@%s:%s", sshOptions, src, user, ip, target);
-        execute(command);
+    public void sshQuiet(String ip, String command) {
+        ssh(ip, command + " || true");
     }
 
     public void killAllJavaProcesses(String ip) {
         sshQuiet(ip, "killall -9 java");
     }
 
-    public void sshQuiet(String ip, String command) {
-        ssh(ip, command + " || true", false);
+    /**
+     * Downloads the content of the url to the target path.
+     *
+     * @param url    the url that is downloaded
+     * @param target the directory where the content will be stored
+     */
+    public void download(String url, String target) {
+        execute("if type \"wget\" > /dev/null;" + NEW_LINE
+                + "then" + NEW_LINE
+                + "\twget --no-verbose --directory-prefix=" + target + ' ' + url + NEW_LINE
+                + "else" + NEW_LINE
+                + "\tpushd ." + NEW_LINE
+                + "\tcd " + target + NEW_LINE
+                + "\tcurl -O " + url + NEW_LINE
+                + "\tpopd" + NEW_LINE
+                + "fi");
     }
 
-    public void ssh(String ip, String command) {
-        ssh(ip, command, false);
+    public void uploadToAgentSimulatorDir(String ip, String src, String target) {
+        String command = format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/%s", sshOptions, src, user, ip,
+                getSimulatorVersion(), target);
+        execute(command);
     }
 
-    public void ssh(String ip, String command, boolean verbose) {
-        String sshCommand = format("ssh%s %s %s@%s \"%s\"", verbose ? "-vv" : "", sshOptions, user, ip, command);
-        execute(sshCommand);
+    public void scpToRemote(String ip, File src, String target) {
+        String command = format("scp -r %s %s %s@%s:%s", sshOptions, src.getAbsolutePath(), user, ip, target);
+        execute(command);
     }
 }
