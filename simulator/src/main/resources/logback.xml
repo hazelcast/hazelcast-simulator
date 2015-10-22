@@ -10,6 +10,13 @@
         </encoder>
     </appender>
 
+    <appender name="NETTY" class="ch.qos.logback.core.FileAppender">
+        <file>logs/netty.log</file>
+        <encoder>
+            <pattern>%d %-5p [%c] [%thread] %m%n</pattern>
+        </encoder>
+    </appender>
+
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/jclouds.log</file>
         <encoder>
@@ -38,8 +45,12 @@
         </encoder>
     </appender>
 
-    <root level="INFO">
-    </root>
+    <root level="INFO" />
+
+    <logger name="io.netty" level="INFO">
+        <appender-ref ref="NETTY"/>
+        <appender-ref ref="STDOUT"/>
+    </logger>
 
     <logger name="org.jclouds" level="DEBUG">
         <appender-ref ref="FILE"/>
