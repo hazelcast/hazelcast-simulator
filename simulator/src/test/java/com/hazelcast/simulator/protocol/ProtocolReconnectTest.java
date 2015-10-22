@@ -7,7 +7,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.protocol.ProtocolUtil.AGENT_START_PORT;
@@ -44,7 +43,6 @@ public class ProtocolReconnectTest {
         resetLogLevel();
     }
 
-    @Ignore
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void connectTwice() {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 1, 0, 0);
@@ -74,7 +72,6 @@ public class ProtocolReconnectTest {
         }
     }
 
-    @Ignore
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void reconnect() {
         SimulatorAddress destination = new SimulatorAddress(AGENT, 1, 0, 0);
