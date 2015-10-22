@@ -42,7 +42,7 @@ import static java.lang.String.format;
 
 public class WorkerJvmFailureMonitor {
 
-    private static final long LAST_SEEN_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(30);
+    private static final int LAST_SEEN_TIMEOUT_SECONDS = 30;
 
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmFailureMonitor.class);
 
@@ -157,7 +157,7 @@ public class WorkerJvmFailureMonitor {
 
         private void detectInactivity(WorkerJvm workerJvm) {
             long elapsed = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - workerJvm.getLastSeen());
-            if (elapsed > LAST_SEEN_TIMEOUT_MILLIS) {
+            if (elapsed > LAST_SEEN_TIMEOUT_SECONDS) {
                 sendFailureOperation(format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT, workerJvm);
             }
         }
