@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2014, Hazelcast, Inc. All Rights Reserved.
+ * Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,18 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import org.apache.log4j.Logger;
+
+import static com.hazelcast.simulator.protocol.core.ResponseCodec.isResponse;
+import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.isSimulatorMessage;
+import static java.lang.String.format;
 
 @ChannelHandler.Sharable
 public class MagicByteHandler extends ChannelInboundHandlerAdapter {
 
-    private static final int MAGIC_BYTES_REQUEST = 0xA5E1CA57;
-    private static final int MAGIC_BYTES_RESPONSE = 0x3E5D0B5E;
+    private static final int MINIMUM_BYTE_BUFFER_SIZE = 8;
+
+    private static final Logger LOGGER = Logger.getLogger(MagicByteHandler.class);
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
@@ -34,17 +40,20 @@ public class MagicByteHandler extends ChannelInboundHandlerAdapter {
         }
 
         ByteBuf buf = (ByteBuf) obj;
-        if (buf.readableBytes() < 8) {
+        if (buf.readableBytes() < MINIMUM_BYTE_BUFFER_SIZE) {
             return;
         }
 
-        int magic = buf.getInt(4);
-        if (magic != MAGIC_BYTES_REQUEST && magic != MAGIC_BYTES_RESPONSE) {
+        if (!isSimulatorMessage(buf) && !isResponse(buf)) {
+            LOGGER.warn(format("Invalid connection from %s (no magic bytes found)", ctx.channel().remoteAddress()));
             buf.clear();
             ctx.close();
             return;
         }
 
+        // the connection is valid so we remove this handler and forward the buffer to the pipeline
+        LOGGER.info(format("Valid connection from %s (magic bytes found)", ctx.channel().remoteAddress()));
+        ctx.pipeline().remove(this);
         ctx.fireChannelRead(obj);
     }
 }
