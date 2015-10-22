@@ -4,6 +4,7 @@ import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
+import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionType;
@@ -41,7 +42,10 @@ public final class AgentConnector extends AbstractServerConnector {
         AgentOperationProcessor processor = new AgentOperationProcessor(exceptionLogger, agent, workerJVMs);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
-        AgentServerConfiguration configuration = new AgentServerConfiguration(processor, futureMap, localAddress, port);
+        ConnectionManager connectionManager = new ConnectionManager();
+        AgentServerConfiguration configuration = new AgentServerConfiguration(processor, futureMap,
+                connectionManager, localAddress, port);
+
         AgentConnector connector = new AgentConnector(configuration);
 
         exceptionLogger.setServerConnector(connector);

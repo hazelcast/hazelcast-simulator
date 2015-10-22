@@ -5,6 +5,7 @@ import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.CoordinatorClientConfiguration;
+import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -34,6 +35,7 @@ public class CoordinatorConnector {
     private final AtomicLong messageIds = new AtomicLong();
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
+    private final ConnectionManager connectionManager = new ConnectionManager();
 
     private final CoordinatorOperationProcessor processor;
 
@@ -69,7 +71,8 @@ public class CoordinatorConnector {
      * @param agentPort  the port of the Simulator Agent
      */
     public void addAgent(int agentIndex, String agentHost, int agentPort) {
-        ClientConfiguration clientConfiguration = new CoordinatorClientConfiguration(processor, agentIndex, agentHost, agentPort);
+        ClientConfiguration clientConfiguration = new CoordinatorClientConfiguration(connectionManager, processor,
+                agentIndex, agentHost, agentPort);
         ClientConnector client = new ClientConnector(clientConfiguration);
         client.start();
 

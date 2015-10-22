@@ -1,12 +1,14 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.protocol.configuration.ServerConfiguration;
+import com.hazelcast.simulator.protocol.core.ConnectionListener;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
+import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.util.EmptyStatement;
 import io.netty.bootstrap.ServerBootstrap;
@@ -83,6 +85,8 @@ abstract class AbstractServerConnector implements ServerConnector {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
+                        ConnectionListener connectionListener = configuration.getConnectionManager();
+                        channel.pipeline().addLast(new ConnectionListenerHandler(connectionListener));
                         configuration.configurePipeline(channel.pipeline(), AbstractServerConnector.this);
                     }
                 });

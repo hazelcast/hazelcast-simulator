@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.handler;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.log4j.Logger;
@@ -14,6 +15,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 /**
  * Handles uncaught exceptions in the channel pipeline.
  */
+@ChannelHandler.Sharable
 public class ExceptionHandler extends ChannelHandlerAdapter {
 
     private static final Logger LOGGER = Logger.getLogger(ExceptionHandler.class);

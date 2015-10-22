@@ -1,9 +1,9 @@
 package com.hazelcast.simulator.protocol.configuration;
 
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.handler.ChannelCollectorHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
@@ -25,31 +25,35 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
 
     private final SimulatorAddress localAddress;
 
-    private final ChannelCollectorHandler channelCollectorHandler;
     private final MessageConsumeHandler messageConsumeHandler;
     private final MessageTestConsumeHandler messageTestConsumeHandler;
+    private final ConnectionManager connectionManager;
 
     public WorkerServerConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
-                                     SimulatorAddress localAddress, int port) {
+                                     ConnectionManager connectionManager, SimulatorAddress localAddress, int port) {
         super(processor, futureMap, localAddress, port);
         this.localAddress = localAddress;
 
-        this.channelCollectorHandler = new ChannelCollectorHandler();
         this.messageConsumeHandler = new MessageConsumeHandler(localAddress, processor);
         this.messageTestConsumeHandler = new MessageTestConsumeHandler(localAddress);
+        this.connectionManager = connectionManager;
     }
 
     @Override
     public ChannelGroup getChannelGroup() {
-        channelCollectorHandler.waitForAtLeastOneChannel();
-        return channelCollectorHandler.getChannels();
+        connectionManager.waitForAtLeastOneChannel();
+        return connectionManager.getChannels();
+    }
+
+    @Override
+    public ConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline, ServerConnector serverConnector) {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, localAddress.getParent()));
-        pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("messageConsumeHandler", messageConsumeHandler);

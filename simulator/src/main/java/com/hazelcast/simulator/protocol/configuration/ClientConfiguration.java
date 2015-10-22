@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.configuration;
 
+import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import io.netty.channel.ChannelPipeline;
@@ -59,4 +60,6 @@ public interface ClientConfiguration {
      * @return the {@link ResponseFuture} map
      */
     ConcurrentMap<String, ResponseFuture> getFutureMap();
+
+    ConnectionManager getConnectionManager();
 }

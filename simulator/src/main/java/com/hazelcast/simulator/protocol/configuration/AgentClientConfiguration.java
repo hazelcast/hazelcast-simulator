@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.configuration;
 
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
+import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
@@ -13,7 +14,6 @@ import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.group.ChannelGroup;
 
 import java.util.concurrent.ConcurrentMap;
 
@@ -24,14 +24,17 @@ public class AgentClientConfiguration extends AbstractClientConfiguration {
     private final ForwardToCoordinatorHandler forwardToCoordinatorHandler;
     private final MessageConsumeHandler messageConsumeHandler;
     private final ExceptionHandler exceptionHandler;
+    private final ConnectionManager connectionManager;
 
     public AgentClientConfiguration(AgentConnector agentConnector, AgentOperationProcessor processor,
                                     ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress,
-                                    int workerIndex, String workerHost, int workerPort, ChannelGroup channelGroup) {
+                                    int workerIndex, String workerHost, int workerPort, ConnectionManager connectionManager) {
         super(futureMap, localAddress, workerIndex, workerHost, workerPort);
         this.localAddress = localAddress;
+        this.connectionManager = connectionManager;
 
-        this.forwardToCoordinatorHandler = new ForwardToCoordinatorHandler(localAddress, channelGroup, processor.getWorkerJVMs());
+        this.forwardToCoordinatorHandler = new ForwardToCoordinatorHandler(localAddress, connectionManager,
+                processor.getWorkerJVMs());
         this.messageConsumeHandler = new MessageConsumeHandler(localAddress, processor);
         this.exceptionHandler = new ExceptionHandler(agentConnector);
     }
@@ -46,5 +49,10 @@ public class AgentClientConfiguration extends AbstractClientConfiguration {
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, getRemoteAddress(), getFutureMap()));
         pipeline.addLast("messageConsumeHandler", messageConsumeHandler);
         pipeline.addLast("exceptionHandler", exceptionHandler);
+    }
+
+    @Override
+    public ConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 }

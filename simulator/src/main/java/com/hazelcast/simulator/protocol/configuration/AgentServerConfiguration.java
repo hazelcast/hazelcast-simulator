@@ -3,11 +3,12 @@ package com.hazelcast.simulator.protocol.configuration;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.ClientConnector;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.handler.ChannelCollectorHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.ForwardToWorkerHandler;
+import com.hazelcast.simulator.protocol.handler.MagicByteHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
@@ -30,30 +31,35 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     private final SimulatorAddress localAddress;
     private final AgentOperationProcessor processor;
 
-    private final ChannelCollectorHandler channelCollectorHandler;
     private final ForwardToWorkerHandler forwardToWorkerHandler;
+    private final ConnectionManager connectionManager;
 
     public AgentServerConfiguration(AgentOperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
-                                    SimulatorAddress localAddress, int port) {
+                                    ConnectionManager connectionManager, SimulatorAddress localAddress, int port) {
         super(processor, futureMap, localAddress, port);
         this.localAddress = localAddress;
         this.processor = processor;
 
-        this.channelCollectorHandler = new ChannelCollectorHandler();
         this.forwardToWorkerHandler = new ForwardToWorkerHandler(localAddress);
+        this.connectionManager = connectionManager;
     }
 
     @Override
     public ChannelGroup getChannelGroup() {
-        channelCollectorHandler.waitForAtLeastOneChannel();
-        return channelCollectorHandler.getChannels();
+        connectionManager.waitForAtLeastOneChannel();
+        return connectionManager.getChannels();
+    }
+
+    @Override
+    public ConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline, ServerConnector serverConnector) {
+        pipeline.addLast("check", new MagicByteHandler());
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, COORDINATOR));
-        pipeline.addLast("collector", channelCollectorHandler);
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("forwardToWorkerHandler", forwardToWorkerHandler);
@@ -74,6 +80,6 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort,
                                                            AgentConnector agentConnector) {
         return new AgentClientConfiguration(agentConnector, processor, getFutureMap(), localAddress,
-                workerIndex, workerHost, workerPort, channelCollectorHandler.getChannels());
+                workerIndex, workerHost, workerPort, connectionManager);
     }
 }
