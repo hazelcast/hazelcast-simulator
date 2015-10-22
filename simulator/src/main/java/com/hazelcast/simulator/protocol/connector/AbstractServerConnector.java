@@ -1,18 +1,21 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.protocol.configuration.ServerConfiguration;
+import com.hazelcast.simulator.protocol.core.ChannelPipelineConfigurator;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
+import com.hazelcast.simulator.protocol.handler.MagicByteHandler;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.util.EmptyStatement;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -83,7 +86,12 @@ abstract class AbstractServerConnector implements ServerConnector {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
-                        configuration.configurePipeline(channel.pipeline(), AbstractServerConnector.this);
+                        channel.pipeline().addLast(new MagicByteHandler(new ChannelPipelineConfigurator() {
+                            @Override
+                            public void configureChannelPipeline(ChannelPipeline pipeline) {
+                                configuration.configurePipeline(pipeline, AbstractServerConnector.this);
+                            }
+                        }));
                     }
                 });
         return bootstrap;
