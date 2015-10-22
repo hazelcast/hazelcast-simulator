@@ -24,14 +24,12 @@ public class AgentClientConfiguration extends AbstractClientConfiguration {
     private final ForwardToCoordinatorHandler forwardToCoordinatorHandler;
     private final MessageConsumeHandler messageConsumeHandler;
     private final ExceptionHandler exceptionHandler;
-    private final ConnectionManager connectionManager;
 
-    public AgentClientConfiguration(AgentConnector agentConnector, AgentOperationProcessor processor,
-                                    ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress,
-                                    int workerIndex, String workerHost, int workerPort, ConnectionManager connectionManager) {
+    public AgentClientConfiguration(AgentConnector agentConnector, ConnectionManager connectionManager,
+                                    AgentOperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
+                                    SimulatorAddress localAddress, int workerIndex, String workerHost, int workerPort) {
         super(futureMap, localAddress, workerIndex, workerHost, workerPort);
         this.localAddress = localAddress;
-        this.connectionManager = connectionManager;
 
         this.forwardToCoordinatorHandler = new ForwardToCoordinatorHandler(localAddress, connectionManager,
                 processor.getWorkerJVMs());
@@ -49,10 +47,5 @@ public class AgentClientConfiguration extends AbstractClientConfiguration {
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, getRemoteAddress(), getFutureMap()));
         pipeline.addLast("messageConsumeHandler", messageConsumeHandler);
         pipeline.addLast("exceptionHandler", exceptionHandler);
-    }
-
-    @Override
-    public ConnectionManager getConnectionManager() {
-        return connectionManager;
     }
 }

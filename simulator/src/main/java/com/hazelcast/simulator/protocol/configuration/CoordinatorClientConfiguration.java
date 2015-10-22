@@ -23,9 +23,8 @@ public class CoordinatorClientConfiguration extends AbstractClientConfiguration 
 
     private final ConnectionManager connectionManager;
 
-    public CoordinatorClientConfiguration(ConnectionManager connectionManager, OperationProcessor processor, int agentIndex,
-                                          String agentHost, int agentPort) {
-
+    public CoordinatorClientConfiguration(ConnectionManager connectionManager, OperationProcessor processor,
+                                          int agentIndex, String agentHost, int agentPort) {
         super(new ConcurrentHashMap<String, ResponseFuture>(), SimulatorAddress.COORDINATOR, agentIndex, agentHost, agentPort);
         this.localAddress = SimulatorAddress.COORDINATOR;
         this.connectionManager = connectionManager;
@@ -42,10 +41,5 @@ public class CoordinatorClientConfiguration extends AbstractClientConfiguration 
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, getRemoteAddress(), getFutureMap()));
         pipeline.addLast("messageConsumeHandler", messageConsumeHandler);
-    }
-
-    @Override
-    public ConnectionManager getConnectionManager() {
-        return connectionManager;
     }
 }

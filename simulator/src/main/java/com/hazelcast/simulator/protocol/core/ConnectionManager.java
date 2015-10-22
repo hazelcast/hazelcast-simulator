@@ -24,22 +24,13 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * Manages incoming client connections so we can send messages to them.
+ */
 public class ConnectionManager implements ConnectionListener {
 
     private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
-
-    public void waitForAtLeastOneChannel() {
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException ignored) {
-            EmptyStatement.ignore(ignored);
-        }
-    }
-
-    public ChannelGroup getChannels() {
-        return channels;
-    }
 
     @Override
     public void connected(Channel channel) {
@@ -51,5 +42,17 @@ public class ConnectionManager implements ConnectionListener {
     @Override
     public void disconnected(Channel channel) {
         channels.remove(channel);
+    }
+
+    public void waitForAtLeastOneChannel() {
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException ignored) {
+            EmptyStatement.ignore(ignored);
+        }
+    }
+
+    public ChannelGroup getChannels() {
+        return channels;
     }
 }

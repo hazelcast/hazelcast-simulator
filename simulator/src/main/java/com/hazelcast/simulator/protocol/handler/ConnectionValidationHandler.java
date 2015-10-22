@@ -26,12 +26,18 @@ import static com.hazelcast.simulator.protocol.core.ResponseCodec.isResponse;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.isSimulatorMessage;
 import static java.lang.String.format;
 
+/**
+ * Validates new connections by checking the magic bytes of the first incoming {@link ByteBuf}.
+ *
+ * Removes itself from the channel pipeline after successful validation, since big {@link ByteBuf}
+ * can be split up into several chunks and just the first one contains the magic bytes.
+ */
 @ChannelHandler.Sharable
-public class MagicByteHandler extends ChannelInboundHandlerAdapter {
+public class ConnectionValidationHandler extends ChannelInboundHandlerAdapter {
 
     private static final int MINIMUM_BYTE_BUFFER_SIZE = 8;
 
-    private static final Logger LOGGER = Logger.getLogger(MagicByteHandler.class);
+    private static final Logger LOGGER = Logger.getLogger(ConnectionValidationHandler.class);
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
@@ -46,7 +52,6 @@ public class MagicByteHandler extends ChannelInboundHandlerAdapter {
 
         if (!isSimulatorMessage(buf) && !isResponse(buf)) {
             LOGGER.warn(format("Invalid connection from %s (no magic bytes found)", ctx.channel().remoteAddress()));
-            buf.clear();
             ctx.close();
             return;
         }

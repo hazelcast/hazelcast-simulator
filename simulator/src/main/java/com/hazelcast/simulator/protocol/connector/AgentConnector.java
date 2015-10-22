@@ -43,8 +43,8 @@ public final class AgentConnector extends AbstractServerConnector {
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
         ConnectionManager connectionManager = new ConnectionManager();
-        AgentServerConfiguration configuration = new AgentServerConfiguration(processor, futureMap,
-                connectionManager, localAddress, port);
+        AgentServerConfiguration configuration = new AgentServerConfiguration(processor, futureMap, connectionManager,
+                localAddress, port);
 
         AgentConnector connector = new AgentConnector(configuration);
 

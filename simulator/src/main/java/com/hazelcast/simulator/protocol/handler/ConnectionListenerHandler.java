@@ -22,6 +22,9 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
+/**
+ * Listens for new connections and registers them in the configured {@link ConnectionListener}.
+ */
 public class ConnectionListenerHandler extends ChannelInboundHandlerAdapter {
 
     private final ConnectionListener connectionListener;

@@ -6,9 +6,10 @@ import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
+import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.ForwardToWorkerHandler;
-import com.hazelcast.simulator.protocol.handler.MagicByteHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
@@ -51,13 +52,9 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     }
 
     @Override
-    public ConnectionManager getConnectionManager() {
-        return connectionManager;
-    }
-
-    @Override
     public void configurePipeline(ChannelPipeline pipeline, ServerConnector serverConnector) {
-        pipeline.addLast("check", new MagicByteHandler());
+        pipeline.addLast("connectionValidationHandler", new ConnectionValidationHandler());
+        pipeline.addLast("connectionListenerHandler", new ConnectionListenerHandler(connectionManager));
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, COORDINATOR));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
@@ -79,7 +76,7 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
 
     public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort,
                                                            AgentConnector agentConnector) {
-        return new AgentClientConfiguration(agentConnector, processor, getFutureMap(), localAddress,
-                workerIndex, workerHost, workerPort, connectionManager);
+        return new AgentClientConfiguration(agentConnector, connectionManager, processor, getFutureMap(), localAddress,
+                workerIndex, workerHost, workerPort);
     }
 }

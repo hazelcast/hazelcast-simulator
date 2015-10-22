@@ -18,7 +18,12 @@ package com.hazelcast.simulator.protocol.core;
 
 import io.netty.channel.Channel;
 
+/**
+ * Listener for incoming connections.
+ */
 public interface ConnectionListener {
+
     void connected(Channel channel);
+
     void disconnected(Channel channel);
 }
