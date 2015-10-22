@@ -4,6 +4,7 @@ import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.TestProcessorManager;
 import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
 import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
@@ -29,7 +30,7 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
     private final ConnectionManager connectionManager;
     private final SimulatorAddress localAddress;
 
-    private final MessageTestConsumeHandler messageTestConsumeHandler;
+    private final TestProcessorManager testProcessorManager;
 
     public WorkerServerConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
                                      ConnectionManager connectionManager, SimulatorAddress localAddress, int port) {
@@ -38,7 +39,7 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
         this.connectionManager = connectionManager;
         this.localAddress = localAddress;
 
-        this.messageTestConsumeHandler = new MessageTestConsumeHandler(localAddress);
+        this.testProcessorManager = new TestProcessorManager(localAddress);
     }
 
     @Override
@@ -57,17 +58,17 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
         pipeline.addLast("testProtocolDecoder", new SimulatorProtocolDecoder(localAddress.getChild(0)));
-        pipeline.addLast("testMessageConsumeHandler", messageTestConsumeHandler);
+        pipeline.addLast("testMessageConsumeHandler", new MessageTestConsumeHandler(testProcessorManager, localAddress));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, localAddress.getParent(), getFutureMap(),
                 getLocalAddressIndex()));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(serverConnector));
     }
 
     public void addTest(int testIndex, OperationProcessor processor) {
-        messageTestConsumeHandler.addTest(testIndex, processor);
+        testProcessorManager.addTest(testIndex, processor);
     }
 
     public void removeTest(int testIndex) {
-        messageTestConsumeHandler.removeTest(testIndex);
+        testProcessorManager.removeTest(testIndex);
     }
 }

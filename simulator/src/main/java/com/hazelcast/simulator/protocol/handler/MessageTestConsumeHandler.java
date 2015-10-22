@@ -1,21 +1,15 @@
 package com.hazelcast.simulator.protocol.handler;
 
 import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.core.TestProcessorManager;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
 import org.apache.log4j.Logger;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
-import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
-import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.fromSimulatorMessage;
 import static java.lang.String.format;
 
@@ -28,29 +22,13 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
     private static final Logger LOGGER = Logger.getLogger(MessageTestConsumeHandler.class);
 
     private final AttributeKey<Integer> forwardAddressIndex = AttributeKey.valueOf("forwardAddressIndex");
-    private final ConcurrentMap<Integer, SimulatorAddress> testAddresses = new ConcurrentHashMap<Integer, SimulatorAddress>();
-    private final ConcurrentMap<Integer, OperationProcessor> testProcessors
-            = new ConcurrentHashMap<Integer, OperationProcessor>();
 
+    private final TestProcessorManager testProcessorManager;
     private final SimulatorAddress localAddress;
-    private final int agentIndex;
-    private final int workerIndex;
 
-    public MessageTestConsumeHandler(SimulatorAddress localAddress) {
+    public MessageTestConsumeHandler(TestProcessorManager testProcessorManager, SimulatorAddress localAddress) {
+        this.testProcessorManager = testProcessorManager;
         this.localAddress = localAddress;
-        this.agentIndex = localAddress.getAgentIndex();
-        this.workerIndex = localAddress.getWorkerIndex();
-    }
-
-    public void addTest(int testIndex, OperationProcessor processor) {
-        SimulatorAddress testAddress = new SimulatorAddress(TEST, agentIndex, workerIndex, testIndex);
-        testAddresses.put(testIndex, testAddress);
-        testProcessors.put(testIndex, processor);
-    }
-
-    public void removeTest(int testIndex) {
-        testAddresses.remove(testIndex);
-        testProcessors.remove(testIndex);
     }
 
     @Override
@@ -65,21 +43,12 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(format("[%d] forwarding message to all tests", msg.getMessageId()));
             }
-            for (Map.Entry<Integer, OperationProcessor> entry : testProcessors.entrySet()) {
-                ResponseType responseType = entry.getValue().process(fromSimulatorMessage(msg), msg.getSource());
-                response.addResponse(testAddresses.get(entry.getKey()), responseType);
-            }
+            testProcessorManager.processOnAllTests(response, fromSimulatorMessage(msg), msg.getSource());
         } else {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(format("[%d] forwarding message to test %d", msg.getMessageId(), testAddressIndex));
             }
-            OperationProcessor processor = testProcessors.get(testAddressIndex);
-            if (processor == null) {
-                response.addResponse(localAddress, FAILURE_TEST_NOT_FOUND);
-            } else {
-                ResponseType responseType = processor.process(fromSimulatorMessage(msg), msg.getSource());
-                response.addResponse(testAddresses.get(testAddressIndex), responseType);
-            }
+            testProcessorManager.processOnTest(response, fromSimulatorMessage(msg), msg.getSource(), testAddressIndex);
         }
         ctx.writeAndFlush(response);
     }
