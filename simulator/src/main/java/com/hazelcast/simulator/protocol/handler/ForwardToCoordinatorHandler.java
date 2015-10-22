@@ -2,11 +2,11 @@ package com.hazelcast.simulator.protocol.handler;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
+import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.group.ChannelGroup;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.ConcurrentMap;
@@ -23,15 +23,15 @@ public class ForwardToCoordinatorHandler extends SimpleChannelInboundHandler<Byt
     private final SimulatorAddress localAddress;
     private final AddressLevel addressLevel;
 
-    private final ChannelGroup channelGroup;
+    private final ConnectionManager connectionManager;
     private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs;
 
-    public ForwardToCoordinatorHandler(SimulatorAddress localAddress, ChannelGroup channelGroup,
+    public ForwardToCoordinatorHandler(SimulatorAddress localAddress, ConnectionManager connectionManager,
                                        ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs) {
         this.localAddress = localAddress;
         this.addressLevel = localAddress.getAddressLevel();
 
-        this.channelGroup = channelGroup;
+        this.connectionManager = connectionManager;
         this.workerJVMs = workerJVMs;
     }
 
@@ -46,7 +46,7 @@ public class ForwardToCoordinatorHandler extends SimpleChannelInboundHandler<Byt
             updateWorkerJvmLastSeenTimestamp(buffer);
 
             buffer.retain();
-            channelGroup.writeAndFlush(buffer);
+            connectionManager.getChannels().writeAndFlush(buffer);
         }
     }
 

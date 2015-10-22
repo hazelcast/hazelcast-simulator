@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.configuration;
 
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
@@ -73,4 +74,6 @@ public interface ServerConfiguration {
      * @return the {@link ResponseFuture} map
      */
     ConcurrentMap<String, ResponseFuture> getFutureMap();
+
+    ConnectionManager getConnectionManager();
 }
