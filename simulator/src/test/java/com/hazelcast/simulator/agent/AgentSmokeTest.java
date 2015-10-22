@@ -25,6 +25,7 @@ import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.WorkerType;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -35,6 +36,7 @@ import java.util.Collections;
 import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -51,6 +53,8 @@ public class AgentSmokeTest {
     private static final int TEST_RUNTIME_SECONDS = Integer.parseInt(System.getProperty("testRuntimeSeconds", "5"));
 
     private static final Logger LOGGER = Logger.getLogger(AgentSmokeTest.class);
+    private static final Logger ROOT_LOGGER = Logger.getRootLogger();
+    private static final AtomicReference<Level> LOGGER_LEVEL = new AtomicReference<Level>();
 
     private static String userDir;
     private static AgentStarter agentStarter;
@@ -62,6 +66,10 @@ public class AgentSmokeTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        if (LOGGER_LEVEL.compareAndSet(null, ROOT_LOGGER.getLevel())) {
+            ROOT_LOGGER.setLevel(Level.TRACE);
+        }
+
         userDir = System.getProperty("user.dir");
 
         System.setProperty("user.dir", "./dist/src/main/dist");
@@ -101,6 +109,11 @@ public class AgentSmokeTest {
             deleteQuiet(new File("./logs"));
             deleteQuiet(new File("./workers"));
             deleteQuiet(new File("./failures-agentSmokeTest.txt"));
+
+            Level level = LOGGER_LEVEL.get();
+            if (level != null && LOGGER_LEVEL.compareAndSet(level, null)) {
+                ROOT_LOGGER.setLevel(level);
+            }
         }
     }
 
