@@ -26,7 +26,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
@@ -50,8 +49,8 @@ public class WorkerJvmFailureMonitor {
 
     private int failureCount;
 
-    public WorkerJvmFailureMonitor(Agent agent, ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs) {
-        monitorThread = new MonitorThread(agent, workerJVMs);
+    public WorkerJvmFailureMonitor(Agent agent, WorkerJvmManager workerJvmManager) {
+        monitorThread = new MonitorThread(agent, workerJvmManager);
         monitorThread.start();
     }
 
@@ -63,22 +62,22 @@ public class WorkerJvmFailureMonitor {
     private class MonitorThread extends Thread {
 
         private final Agent agent;
-        private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs;
+        private final WorkerJvmManager workerJvmManager;
 
         private volatile boolean running = true;
 
-        public MonitorThread(Agent agent, ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs) {
+        public MonitorThread(Agent agent, WorkerJvmManager workerJvmManager) {
             super("WorkerJvmFailureMonitorThread");
             setDaemon(true);
 
             this.agent = agent;
-            this.workerJVMs = workerJVMs;
+            this.workerJvmManager = workerJvmManager;
         }
 
         public void run() {
             while (running) {
                 try {
-                    for (WorkerJvm workerJvm : workerJVMs.values()) {
+                    for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
                         detectFailures(workerJvm);
                     }
                 } catch (Exception e) {
@@ -97,8 +96,7 @@ public class WorkerJvmFailureMonitor {
                 return;
             }
             detectOomeFailure(workerJvm);
-            // FIXME: until the worker response is detected properly we will disable this check
-            //detectInactivity(workerJvm);
+            detectInactivity(workerJvm);
             detectUnexpectedExit(workerJvm);
         }
 
@@ -179,8 +177,7 @@ public class WorkerJvmFailureMonitor {
                 return;
             }
 
-            agent.terminateWorkerJvm(workerJvm);
-            workerJVMs.remove(workerJvm.getAddress());
+            workerJvmManager.shutdown(workerJvm);
 
             sendFailureOperation(format("Worker terminated with exit code %d instead of 0", exitCode), WORKER_EXIT, workerJvm);
         }

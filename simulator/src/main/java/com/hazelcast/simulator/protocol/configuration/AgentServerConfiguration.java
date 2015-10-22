@@ -1,8 +1,10 @@
 package com.hazelcast.simulator.protocol.configuration;
 
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.ClientConnector;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -29,20 +31,21 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
  */
 public class AgentServerConfiguration extends AbstractServerConfiguration {
 
+    private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
+
     private final SimulatorAddress localAddress;
     private final AgentOperationProcessor processor;
-
-    private final ForwardToWorkerHandler forwardToWorkerHandler;
     private final ConnectionManager connectionManager;
+    private final WorkerJvmManager workerJvmManager;
 
     public AgentServerConfiguration(AgentOperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
-                                    ConnectionManager connectionManager, SimulatorAddress localAddress, int port) {
+                                    ConnectionManager connectionManager, WorkerJvmManager workerJvmManager,
+                                    SimulatorAddress localAddress, int port) {
         super(processor, futureMap, localAddress, port);
         this.localAddress = localAddress;
         this.processor = processor;
-
-        this.forwardToWorkerHandler = new ForwardToWorkerHandler(localAddress);
         this.connectionManager = connectionManager;
+        this.workerJvmManager = workerJvmManager;
     }
 
     @Override
@@ -59,7 +62,7 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, COORDINATOR));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("forwardToWorkerHandler", forwardToWorkerHandler);
+        pipeline.addLast("forwardToWorkerHandler", new ForwardToWorkerHandler(localAddress, clientConnectorManager));
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, COORDINATOR, getFutureMap(),
                 getLocalAddressIndex()));
@@ -67,16 +70,16 @@ public class AgentServerConfiguration extends AbstractServerConfiguration {
     }
 
     public void addWorker(int workerIndex, ClientConnector clientConnector) {
-        forwardToWorkerHandler.addWorker(workerIndex, clientConnector);
+        clientConnectorManager.addClient(workerIndex, clientConnector);
     }
 
     public void removeWorker(int workerIndex) {
-        forwardToWorkerHandler.removeWorker(workerIndex);
+        clientConnectorManager.removeClient(workerIndex);
     }
 
     public AgentClientConfiguration getClientConfiguration(int workerIndex, String workerHost, int workerPort,
                                                            AgentConnector agentConnector) {
-        return new AgentClientConfiguration(agentConnector, connectionManager, processor, getFutureMap(), localAddress,
-                workerIndex, workerHost, workerPort);
+        return new AgentClientConfiguration(agentConnector, connectionManager, workerJvmManager, processor, getFutureMap(),
+                localAddress, workerIndex, workerHost, workerPort);
     }
 }

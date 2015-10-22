@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol.handler;
 
 import com.hazelcast.simulator.protocol.connector.ClientConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
+import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseCodec;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
@@ -16,7 +17,6 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.hazelcast.simulator.protocol.core.ResponseCodec.isResponse;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_WORKER_NOT_FOUND;
@@ -33,25 +33,14 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
 
     private final AttributeKey<Integer> forwardAddressIndex = AttributeKey.valueOf("forwardAddressIndex");
 
-    private final ConcurrentHashMap<Integer, ClientConnector> worker = new ConcurrentHashMap<Integer, ClientConnector>();
-
+    private final ClientConnectorManager clientConnectorManager;
     private final SimulatorAddress localAddress;
     private final AddressLevel addressLevel;
 
-    public ForwardToWorkerHandler(SimulatorAddress localAddress) {
+    public ForwardToWorkerHandler(SimulatorAddress localAddress, ClientConnectorManager clientConnectorManager) {
+        this.clientConnectorManager = clientConnectorManager;
         this.localAddress = localAddress;
         this.addressLevel = localAddress.getAddressLevel();
-    }
-
-    public void addWorker(int workerIndex, ClientConnector clientConnector) {
-        worker.put(workerIndex, clientConnector);
-    }
-
-    public void removeWorker(int workerIndex) {
-        ClientConnector clientConnector = worker.remove(workerIndex);
-        if (clientConnector != null) {
-            clientConnector.shutdown();
-        }
     }
 
     @Override
@@ -77,7 +66,7 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
                 LOGGER.trace(format("[%d] %s forwarding message to all workers", messageId, addressLevel));
             }
             List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
-            for (ClientConnector clientConnector : worker.values()) {
+            for (ClientConnector clientConnector : clientConnectorManager.getClientConnectors()) {
                 buffer.retain();
                 futureList.add(clientConnector.writeAsync(buffer));
             }
@@ -89,7 +78,7 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
                 throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
             }
         } else {
-            ClientConnector clientConnector = worker.get(workerAddressIndex);
+            ClientConnector clientConnector = clientConnectorManager.get(workerAddressIndex);
             if (clientConnector == null) {
                 LOGGER.error(format("[%d] %s worker %d not found!", messageId, addressLevel, workerAddressIndex));
                 response.addResponse(localAddress, FAILURE_WORKER_NOT_FOUND);
@@ -108,7 +97,7 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
     private void forwardResponse(ChannelHandlerContext ctx, ByteBuf buffer, int workerAddressIndex) {
         long messageId = ResponseCodec.getMessageId(buffer);
 
-        ClientConnector clientConnector = worker.get(workerAddressIndex);
+        ClientConnector clientConnector = clientConnectorManager.get(workerAddressIndex);
         if (clientConnector == null) {
             LOGGER.error(format("[%d] %s worker %d not found!", messageId, addressLevel, workerAddressIndex));
             ctx.writeAndFlush(new Response(messageId, localAddress, localAddress, FAILURE_WORKER_NOT_FOUND));

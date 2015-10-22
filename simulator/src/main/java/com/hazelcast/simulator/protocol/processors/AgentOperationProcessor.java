@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -18,7 +18,6 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -41,24 +40,19 @@ public class AgentOperationProcessor extends OperationProcessor {
     private static final Logger LOGGER = Logger.getLogger(AgentOperationProcessor.class);
 
     private final Agent agent;
-    private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs;
+    private final WorkerJvmManager workerJvmManager;
     private final ExecutorService executorService;
 
-    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent,
-                                   ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs) {
-        this(exceptionLogger, agent, workerJVMs, Executors.newFixedThreadPool(EXECUTOR_SERVICE_THREAD_POOL_SIZE));
+    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerJvmManager workerJvmManager) {
+        this(exceptionLogger, agent, workerJvmManager, Executors.newFixedThreadPool(EXECUTOR_SERVICE_THREAD_POOL_SIZE));
     }
 
-    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent,
-                                   ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs, ExecutorService executorService) {
+    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerJvmManager workerJvmManager,
+                                   ExecutorService executorService) {
         super(exceptionLogger);
         this.agent = agent;
-        this.workerJVMs = workerJVMs;
+        this.workerJvmManager = workerJvmManager;
         this.executorService = executorService;
-    }
-
-    public ConcurrentMap<SimulatorAddress, WorkerJvm> getWorkerJVMs() {
-        return workerJVMs;
     }
 
     @Override
@@ -92,7 +86,7 @@ public class AgentOperationProcessor extends OperationProcessor {
     private ResponseType processCreateWorker(CreateWorkerOperation operation) throws Exception {
         ArrayList<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
         for (WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
-            WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJVMs, workerJvmSettings);
+            WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvmManager, workerJvmSettings);
             Future<Boolean> future = executorService.submit(new LaunchWorkerCallable(launcher, workerJvmSettings));
             futures.add(future);
         }

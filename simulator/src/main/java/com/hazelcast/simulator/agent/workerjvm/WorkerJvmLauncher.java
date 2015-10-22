@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -42,17 +41,16 @@ public class WorkerJvmLauncher {
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
     private final Agent agent;
-    private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs;
+    private final WorkerJvmManager workerJvmManager;
     private final WorkerJvmSettings workerJvmSettings;
 
     private File hzConfigFile;
     private File log4jFile;
     private File testSuiteDir;
 
-    public WorkerJvmLauncher(Agent agent, ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs,
-                             WorkerJvmSettings workerJvmSettings) {
+    public WorkerJvmLauncher(Agent agent, WorkerJvmManager workerJvmManager, WorkerJvmSettings workerJvmSettings) {
         this.agent = agent;
-        this.workerJVMs = workerJVMs;
+        this.workerJvmManager = workerJvmManager;
         this.workerJvmSettings = workerJvmSettings;
     }
 
@@ -113,7 +111,7 @@ public class WorkerJvmLauncher {
         Process process = processBuilder.start();
         workerJvm.setProcess(process);
         copyResourcesToWorkerId(workerId);
-        workerJVMs.put(workerAddress, workerJvm);
+        workerJvmManager.add(workerAddress, workerJvm);
 
         return workerJvm;
     }

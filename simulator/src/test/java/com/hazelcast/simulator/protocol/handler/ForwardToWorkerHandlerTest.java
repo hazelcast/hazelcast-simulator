@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.handler;
 
 import com.hazelcast.simulator.protocol.core.AddressLevel;
+import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseCodec;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -42,7 +43,8 @@ public class ForwardToWorkerHandlerTest {
 
         when(ctx.attr(forwardAddressIndex)).thenReturn(forwardAddressIndexAttribute);
 
-        forwardToWorkerHandler = new ForwardToWorkerHandler(SimulatorAddress.COORDINATOR);
+        ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
+        forwardToWorkerHandler = new ForwardToWorkerHandler(SimulatorAddress.COORDINATOR, clientConnectorManager);
     }
 
     @After

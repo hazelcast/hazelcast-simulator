@@ -15,21 +15,16 @@
  */
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestSuite;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.LinkedList;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -53,8 +48,8 @@ public class Agent {
 
     private final File pidFile = new File("agent.pid");
 
-    private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs = new ConcurrentHashMap<SimulatorAddress, WorkerJvm>();
-    private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this, workerJVMs);
+    private final WorkerJvmManager workerJvmManager = new WorkerJvmManager();
+    private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this, workerJvmManager);
 
     private final int addressIndex;
     private final String publicAddress;
@@ -78,7 +73,7 @@ public class Agent {
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
 
-        this.agentConnector = AgentConnector.createInstance(this, workerJVMs, Ports.AGENT_PORT);
+        this.agentConnector = AgentConnector.createInstance(this, workerJvmManager, Ports.AGENT_PORT);
         this.agentConnector.start();
 
         this.coordinatorLogger = new CoordinatorLogger(agentConnector);
@@ -124,16 +119,6 @@ public class Agent {
             return null;
         }
         return new File(WORKERS_HOME, testSuite.getId());
-    }
-
-    public void terminateWorkerJvm(WorkerJvm jvm) {
-        try {
-            // this sends SIGTERM on *nix
-            jvm.getProcess().destroy();
-            jvm.getProcess().waitFor();
-        } catch (Exception e) {
-            LOGGER.fatal("Failed to destroy worker process: " + jvm, e);
-        }
     }
 
     void shutdown() throws Exception {
@@ -213,19 +198,8 @@ public class Agent {
                 return;
             }
 
-            LOGGER.info("Terminating workers");
-            ThreadSpawner spawner = new ThreadSpawner("workerShutdown");
-            for (final WorkerJvm jvm : new LinkedList<WorkerJvm>(workerJVMs.values())) {
-                spawner.spawn(new Runnable() {
-                    @Override
-                    public void run() {
-                        terminateWorkerJvm(jvm);
-                        workerJVMs.remove(jvm.getAddress());
-                    }
-                });
-            }
-            spawner.awaitCompletion();
-            LOGGER.info("Finished terminating workers");
+            LOGGER.info("Stopping workers...");
+            workerJvmManager.shutdown();
 
             LOGGER.info("Stopping WorkerJvmFailureMonitor...");
             workerJvmFailureMonitor.shutdown();

@@ -15,15 +15,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CoordinatorClientConfiguration extends AbstractClientConfiguration {
 
+    private final OperationProcessor processor;
     private final SimulatorAddress localAddress;
-
-    private final MessageConsumeHandler messageConsumeHandler;
 
     public CoordinatorClientConfiguration(OperationProcessor processor, int agentIndex, String agentHost, int agentPort) {
         super(new ConcurrentHashMap<String, ResponseFuture>(), SimulatorAddress.COORDINATOR, agentIndex, agentHost, agentPort);
+        this.processor = processor;
         this.localAddress = SimulatorAddress.COORDINATOR;
-
-        this.messageConsumeHandler = new MessageConsumeHandler(localAddress, processor);
     }
 
     @Override
@@ -33,6 +31,6 @@ public class CoordinatorClientConfiguration extends AbstractClientConfiguration 
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, getRemoteAddress(), getFutureMap()));
-        pipeline.addLast("messageConsumeHandler", messageConsumeHandler);
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
     }
 }

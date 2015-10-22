@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
@@ -31,20 +31,20 @@ public final class AgentConnector extends AbstractServerConnector {
     /**
      * Creates an {@link AgentConnector} instance.
      *
-     * @param agent      instance of this Simulator Agent
-     * @param workerJVMs map of WorkerJVM instances
-     * @param port       the port for incoming connections
+     * @param agent            instance of this Simulator Agent
+     * @param workerJvmManager manager for WorkerJVM instances
+     * @param port             the port for incoming connections
      */
-    public static AgentConnector createInstance(Agent agent, ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs, int port) {
+    public static AgentConnector createInstance(Agent agent, WorkerJvmManager workerJvmManager, int port) {
         SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, ExceptionType.AGENT_EXCEPTION);
-        AgentOperationProcessor processor = new AgentOperationProcessor(exceptionLogger, agent, workerJVMs);
+        AgentOperationProcessor processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         ConnectionManager connectionManager = new ConnectionManager();
 
         AgentServerConfiguration configuration = new AgentServerConfiguration(processor, futureMap, connectionManager,
-                localAddress, port);
+                workerJvmManager, localAddress, port);
 
         AgentConnector connector = new AgentConnector(configuration);
 

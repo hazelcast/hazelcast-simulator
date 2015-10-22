@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -154,9 +153,9 @@ class ProtocolUtil {
         Agent agent = mock(Agent.class);
         when(agent.getAddressIndex()).thenReturn(addressIndex);
 
-        ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs = new ConcurrentHashMap<SimulatorAddress, WorkerJvm>();
+        WorkerJvmManager workerJvmManager = new WorkerJvmManager();
 
-        AgentConnector agentConnector = AgentConnector.createInstance(agent, workerJVMs, port);
+        AgentConnector agentConnector = AgentConnector.createInstance(agent, workerJvmManager, port);
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
             agentConnector.addWorker(workerIndex, workerHost, workerStartPort + workerIndex);
         }

@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.handler;
 
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseCodec;
@@ -35,11 +36,17 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
     private final SimulatorAddress localAddress;
     private final AddressLevel addressLevel;
     private final int addressLevelValue;
+    private final WorkerJvmManager workerJvmManager;
 
     public SimulatorProtocolDecoder(SimulatorAddress localAddress) {
+        this(localAddress, null);
+    }
+
+    public SimulatorProtocolDecoder(SimulatorAddress localAddress, WorkerJvmManager workerJvmManager) {
         this.localAddress = localAddress;
         this.addressLevel = localAddress.getAddressLevel();
         this.addressLevelValue = addressLevel.toInt();
+        this.workerJvmManager = workerJvmManager;
     }
 
     @Override
@@ -102,6 +109,10 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(format("[%d] %s %s received %s", response.getMessageId(), addressLevel, localAddress, response));
             }
+            if (workerJvmManager != null) {
+                workerJvmManager.updateLastSeenTimestamp(response);
+            }
+
             out.add(response);
         } else {
             int addressIndex = ResponseCodec.getChildAddressIndex(buffer, addressLevelValue);

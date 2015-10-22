@@ -25,20 +25,20 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class WorkerServerConfiguration extends AbstractServerConfiguration {
 
+    private final OperationProcessor processor;
+    private final ConnectionManager connectionManager;
     private final SimulatorAddress localAddress;
 
-    private final MessageConsumeHandler messageConsumeHandler;
     private final MessageTestConsumeHandler messageTestConsumeHandler;
-    private final ConnectionManager connectionManager;
 
     public WorkerServerConfiguration(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
                                      ConnectionManager connectionManager, SimulatorAddress localAddress, int port) {
         super(processor, futureMap, localAddress, port);
+        this.processor = processor;
+        this.connectionManager = connectionManager;
         this.localAddress = localAddress;
 
-        this.messageConsumeHandler = new MessageConsumeHandler(localAddress, processor);
         this.messageTestConsumeHandler = new MessageTestConsumeHandler(localAddress);
-        this.connectionManager = connectionManager;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, localAddress.getParent()));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("messageConsumeHandler", messageConsumeHandler);
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
         pipeline.addLast("testProtocolDecoder", new SimulatorProtocolDecoder(localAddress.getChild(0)));
         pipeline.addLast("testMessageConsumeHandler", messageTestConsumeHandler);
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, localAddress.getParent(), getFutureMap(),
