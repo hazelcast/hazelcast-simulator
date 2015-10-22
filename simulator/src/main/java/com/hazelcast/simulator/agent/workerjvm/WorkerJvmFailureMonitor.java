@@ -97,7 +97,8 @@ public class WorkerJvmFailureMonitor {
                 return;
             }
             detectOomeFailure(workerJvm);
-            detectInactivity(workerJvm);
+            // FIXME: until the worker response is detected properly we will disable this check
+            //detectInactivity(workerJvm);
             detectUnexpectedExit(workerJvm);
         }
 
