@@ -1,9 +1,7 @@
 package com.hazelcast.simulator.protocol.configuration;
 
-import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
@@ -21,20 +19,15 @@ public class CoordinatorClientConfiguration extends AbstractClientConfiguration 
 
     private final MessageConsumeHandler messageConsumeHandler;
 
-    private final ConnectionManager connectionManager;
-
-    public CoordinatorClientConfiguration(ConnectionManager connectionManager, OperationProcessor processor,
-                                          int agentIndex, String agentHost, int agentPort) {
+    public CoordinatorClientConfiguration(OperationProcessor processor, int agentIndex, String agentHost, int agentPort) {
         super(new ConcurrentHashMap<String, ResponseFuture>(), SimulatorAddress.COORDINATOR, agentIndex, agentHost, agentPort);
         this.localAddress = SimulatorAddress.COORDINATOR;
-        this.connectionManager = connectionManager;
 
         this.messageConsumeHandler = new MessageConsumeHandler(localAddress, processor);
     }
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
-        pipeline.addLast(new ConnectionListenerHandler(connectionManager));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, getRemoteAddress()));
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());

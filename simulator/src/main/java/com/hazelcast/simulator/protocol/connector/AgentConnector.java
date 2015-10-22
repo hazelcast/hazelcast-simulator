@@ -41,8 +41,8 @@ public final class AgentConnector extends AbstractServerConnector {
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, ExceptionType.AGENT_EXCEPTION);
         AgentOperationProcessor processor = new AgentOperationProcessor(exceptionLogger, agent, workerJVMs);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
-
         ConnectionManager connectionManager = new ConnectionManager();
+
         AgentServerConfiguration configuration = new AgentServerConfiguration(processor, futureMap, connectionManager,
                 localAddress, port);
 

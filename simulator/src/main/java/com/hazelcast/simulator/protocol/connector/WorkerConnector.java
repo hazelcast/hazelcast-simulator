@@ -69,10 +69,10 @@ public final class WorkerConnector extends AbstractServerConnector {
         }
         WorkerOperationProcessor processor = new WorkerOperationProcessor(exceptionLogger, type, hazelcastInstance, worker);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
-
         ConnectionManager connectionManager = new ConnectionManager();
-        WorkerServerConfiguration configuration = new WorkerServerConfiguration(processor, futureMap,
-                connectionManager, localAddress, port);
+
+        WorkerServerConfiguration configuration = new WorkerServerConfiguration(processor, futureMap, connectionManager,
+                localAddress, port);
 
         WorkerConnector connector = new WorkerConnector(configuration);
 
