@@ -71,14 +71,14 @@ public class TestCase {
     public String toString() {
         StringBuilder sb = new StringBuilder("TestCase{");
         sb.append(NEW_LINE).append("    ").append("id=").append(id);
-        sb.append(NEW_LINE).append("    , ").append("class=").append(getClassname());
+        sb.append(',').append(NEW_LINE).append("    ").append("class=").append(getClassname());
 
         List<String> keys = new LinkedList<String>(properties.keySet());
         Collections.sort(keys);
 
         for (String key : keys) {
             if (!"class".equals(key)) {
-                sb.append(NEW_LINE).append("    , ").append(key).append('=').append(properties.get(key));
+                sb.append(',').append(NEW_LINE).append("    ").append(key).append('=').append(properties.get(key));
             }
         }
         sb.append(NEW_LINE).append('}');
