@@ -125,10 +125,21 @@ public class CoordinatorRunTestSuiteTest {
         verifyRemoteClient(coordinator);
     }
 
-    @Test
-    public void runTestSuite_withException() throws Exception {
-        doThrow(new RuntimeException("expected")).when(remoteClient).sendToAllWorkers(any(SimulatorOperation.class));
+    @Test(expected = IllegalStateException.class)
+    public void runTestSuiteSequential_withException() throws Exception {
+        doThrow(new IllegalStateException("expected")).when(remoteClient).sendToAllWorkers(any(SimulatorOperation.class));
         testSuite.setDurationSeconds(1);
+        parallel = false;
+
+        Coordinator coordinator = createCoordinator();
+        coordinator.runTestSuite();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void runTestSuiteParallel_withException() throws Exception {
+        doThrow(new IllegalStateException("expected")).when(remoteClient).sendToAllWorkers(any(SimulatorOperation.class));
+        testSuite.setDurationSeconds(1);
+        parallel = true;
 
         Coordinator coordinator = createCoordinator();
         coordinator.runTestSuite();

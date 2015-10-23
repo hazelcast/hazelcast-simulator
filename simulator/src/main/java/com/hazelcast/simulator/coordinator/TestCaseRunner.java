@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.simulator.coordinator.Coordinator.HORIZONTAL_RULER;
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FormatUtils.padRight;
@@ -79,8 +79,6 @@ final class TestCaseRunner {
     }
 
     boolean run() {
-        LOGGER.info(format("%s%nRunning Test: %s%n%s%n%s", HORIZONTAL_RULER, testCaseId, testCase, HORIZONTAL_RULER));
-
         int oldFailureCount = failureContainer.getFailureCount();
         try {
             initTestCase();
@@ -104,8 +102,7 @@ final class TestCaseRunner {
 
             return (failureContainer.getFailureCount() == oldFailureCount);
         } catch (Exception e) {
-            LOGGER.error(format("%s in TestCaseRunner: %s", e.getClass().getSimpleName(), e.getMessage()));
-            return false;
+            throw rethrow(e);
         }
     }
 

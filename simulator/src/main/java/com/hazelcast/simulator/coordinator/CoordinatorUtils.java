@@ -103,7 +103,7 @@ final class CoordinatorUtils {
 
         // log the layout
         for (AgentMemberLayout agentMemberLayout : agentMemberLayouts) {
-            LOGGER.info(format("    Agent %s members: %d clients: %d mode: %s",
+            LOGGER.info(format("    Agent %s members: %d, clients: %d, mode: %s",
                     agentMemberLayout.getPublicAddress(),
                     agentMemberLayout.getCount(WorkerType.MEMBER),
                     agentMemberLayout.getCount(WorkerType.CLIENT),
@@ -149,7 +149,11 @@ final class CoordinatorUtils {
         }
     }
 
-    static ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(TestPhase latestTestPhaseToSync, int testCount) {
+    static ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(boolean isParallel, int testCount,
+                                                                        TestPhase latestTestPhaseToSync) {
+        if (!isParallel) {
+            return null;
+        }
         ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
         boolean useTestCount = true;
         for (TestPhase testPhase : TestPhase.values()) {
@@ -175,5 +179,9 @@ final class CoordinatorUtils {
         }
         LOGGER.info("Shutdown of all workers completed...");
         return true;
+    }
+
+    static long getElapsedSeconds(long started) {
+        return TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
     }
 }

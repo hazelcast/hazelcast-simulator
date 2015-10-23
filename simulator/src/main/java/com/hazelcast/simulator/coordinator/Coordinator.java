@@ -31,16 +31,14 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.FINISHED_WORKER_TIMEOUT_SECONDS;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
@@ -48,10 +46,11 @@ import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
@@ -59,14 +58,10 @@ import static java.lang.String.format;
 
 public final class Coordinator {
 
-    public static final String HORIZONTAL_RULER = "----------------------------------------------------------------------------";
-
     static final File SIMULATOR_HOME = getSimulatorHome();
 
     private static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
     private static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
-
-    private static final int PARALLEL_EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
@@ -86,8 +81,6 @@ public final class Coordinator {
 
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
-
-    private ExecutorService parallelExecutor;
 
     public Coordinator(CoordinatorParameters coordinatorParameters, ClusterLayoutParameters clusterLayoutParameters,
                        WorkerParameters workerParameters, TestSuite testSuite) {
@@ -143,45 +136,19 @@ public final class Coordinator {
 
     private void run() throws Exception {
         try {
-            initAgents();
+            uploadFiles();
 
+            startAgents();
             startWorkers();
 
             runTestSuite();
-
             logFailureInfo();
         } finally {
             shutdown();
         }
     }
 
-    private void shutdown() throws Exception {
-        if (parallelExecutor != null) {
-            LOGGER.info("Shutdown of ExecutorService...");
-            parallelExecutor.shutdown();
-            parallelExecutor.awaitTermination(PARALLEL_EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        }
-
-        if (coordinatorConnector != null) {
-            LOGGER.info("Shutdown of ClientConnector...");
-            coordinatorConnector.shutdown();
-        }
-
-        stopAgents();
-    }
-
-    private void initAgents() {
-        startAgents();
-
-        try {
-            startCoordinatorConnector();
-        } catch (Exception e) {
-            throw new CommandLineExitException("Could not start CoordinatorConnector", e);
-        }
-
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
-        remoteClient.initTestSuite(testSuite);
-
+    private void uploadFiles() {
         uploadUploadDirectory();
         uploadWorkerClassPath();
         uploadYourKitIfNeeded();
@@ -190,7 +157,6 @@ public final class Coordinator {
 
     private void startAgents() {
         echoLocal("Starting %s Agents", componentRegistry.agentCount());
-
         ThreadSpawner spawner = new ThreadSpawner("startAgents", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
@@ -201,8 +167,16 @@ public final class Coordinator {
             });
         }
         spawner.awaitCompletion();
-
         echoLocal("Successfully started agents on %s boxes", componentRegistry.agentCount());
+
+        try {
+            startCoordinatorConnector();
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not start CoordinatorConnector", e);
+        }
+
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        remoteClient.initTestSuite(testSuite);
     }
 
     private void startAgent(int addressIndex, String ip) {
@@ -340,21 +314,39 @@ public final class Coordinator {
             throw new CommandLineExitException("Failed to start workers", e);
         }
 
-        long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
-        LOGGER.info((format("Successfully started a grand total of %s worker JVMs after %s ms", totalWorkerCount, durationMs)));
+        long elapsed = getElapsedSeconds(started);
+        LOGGER.info((format("Successfully started a grand total of %s worker JVMs after %s seconds", totalWorkerCount, elapsed)));
     }
 
     void runTestSuite() {
+        boolean isParallel = coordinatorParameters.isParallel();
+        int testCount = testSuite.size();
+        int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
+
+        TestPhase lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
+        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncs = getTestPhaseSyncMap(isParallel, testCount, lastTestPhaseToSync);
+
         echo("Starting testsuite: %s", testSuite.getId());
-        echo("Tests in testsuite: %s", testSuite.size());
         logTestSuiteDuration();
 
-        long started = System.nanoTime();
+        echo(HORIZONTAL_RULER);
+        echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
+        echo(HORIZONTAL_RULER);
 
-        if (coordinatorParameters.isParallel()) {
-            runParallel();
+        List<TestCaseRunner> testCaseRunners = new ArrayList<TestCaseRunner>(testCount);
+        for (TestCase testCase : testSuite.getTestCaseList()) {
+            echo(format("Configuration for test: %s%n%s", testCase.getId(), testCase));
+            TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this, remoteClient, failureContainer,
+                    performanceStateContainer, maxTestCaseIdLength, testPhaseSyncs);
+            testCaseRunners.add(runner);
+        }
+        echo(HORIZONTAL_RULER);
+
+        long started = System.nanoTime();
+        if (isParallel) {
+            runParallel(testCaseRunners);
         } else {
-            runSequential();
+            runSequential(testCaseRunners);
         }
 
         remoteClient.terminateWorkers(true);
@@ -368,8 +360,7 @@ public final class Coordinator {
             testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
         }
 
-        long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
-        LOGGER.info(format("Total running time: %s seconds", duration));
+        echo(format("Total running time: %s seconds", getElapsedSeconds(started)));
     }
 
     private void logTestSuiteDuration() {
@@ -387,52 +378,29 @@ public final class Coordinator {
         }
     }
 
-    private void runParallel() {
-        echo("Running %s tests parallel", testSuite.size());
-
-        final int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
-        final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(
-                coordinatorParameters.getLastTestPhaseToSync(), testSuite.size());
-
-        parallelExecutor = createFixedThreadPool(testSuite.size(), Coordinator.class);
-
-        List<Future> futures = new LinkedList<Future>();
-        for (final TestCase testCase : testSuite.getTestCaseList()) {
-            Future future = parallelExecutor.submit(new Runnable() {
+    private void runParallel(List<TestCaseRunner> testCaseRunners) {
+        ThreadSpawner spawner = new ThreadSpawner("runParallel", true);
+        for (final TestCaseRunner runner : testCaseRunners) {
+            spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this, remoteClient,
-                                failureContainer, performanceStateContainer, maxTestCaseIdLength, testPhaseSyncMap);
                         boolean success = runner.run();
                         if (!success && testSuite.isFailFast()) {
                             LOGGER.info("Aborting testsuite due to failure (not implemented yet)");
                             // FIXME: we should abort here as logged
                         }
                     } catch (Exception e) {
-                        throw new CommandLineExitException(e);
+                        throw rethrow(e);
                     }
                 }
             });
-            futures.add(future);
         }
-        try {
-            for (Future future : futures) {
-                future.get();
-            }
-        } catch (Exception e) {
-            throw new CommandLineExitException("Could not execute tests in parallel", e);
-        }
+        spawner.awaitCompletion();
     }
 
-    private void runSequential() {
-        echo("Running %s tests sequentially", testSuite.size());
-
-        int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
-
-        for (TestCase testCase : testSuite.getTestCaseList()) {
-            TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this, remoteClient,
-                    failureContainer, performanceStateContainer, maxTestCaseIdLength, null);
+    private void runSequential(List<TestCaseRunner> testCaseRunners) {
+        for (TestCaseRunner runner : testCaseRunners) {
             boolean success = runner.run();
             if (!success && testSuite.isFailFast()) {
                 LOGGER.info("Aborting testsuite due to failure");
@@ -455,6 +423,15 @@ public final class Coordinator {
         LOGGER.info(HORIZONTAL_RULER);
         LOGGER.info("No failures have been detected!");
         LOGGER.info(HORIZONTAL_RULER);
+    }
+
+    private void shutdown() throws Exception {
+        if (coordinatorConnector != null) {
+            LOGGER.info("Shutdown of ClientConnector...");
+            coordinatorConnector.shutdown();
+        }
+
+        stopAgents();
     }
 
     private void stopAgents() {
