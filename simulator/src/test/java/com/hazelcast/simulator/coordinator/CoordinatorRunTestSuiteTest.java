@@ -150,7 +150,7 @@ public class CoordinatorRunTestSuiteTest {
         when(workerParameters.isMonitorPerformance()).thenReturn(monitorPerformance);
         when(workerParameters.getWorkerPerformanceMonitorIntervalSeconds()).thenReturn(3);
 
-        Coordinator coordinator = new Coordinator(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite, 3);
+        Coordinator coordinator = new Coordinator(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite);
         coordinator.setRemoteClient(remoteClient);
 
         return coordinator;
@@ -203,6 +203,6 @@ public class CoordinatorRunTestSuiteTest {
             verify(remoteClient, atMost(waitForPhaseCompletionTimes))
                     .waitForPhaseCompletion(anyString(), eq("CoordinatorTest2"), any(TestPhase.class));
         }
-        verify(remoteClient, times(1)).terminateWorkers();
+        verify(remoteClient, times(1)).terminateWorkers(true);
     }
 }

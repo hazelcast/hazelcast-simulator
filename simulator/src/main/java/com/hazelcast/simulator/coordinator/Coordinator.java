@@ -66,7 +66,6 @@ public final class Coordinator {
     private static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
     private static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
-    private static final int TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS = 30;
     private static final int PARALLEL_EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
@@ -78,8 +77,6 @@ public final class Coordinator {
     private final ClusterLayoutParameters clusterLayoutParameters;
     private final WorkerParameters workerParameters;
     private final TestSuite testSuite;
-
-    private final int testCaseRunnerSleepPeriodSeconds;
 
     private final ComponentRegistry componentRegistry;
     private final FailureContainer failureContainer;
@@ -94,17 +91,10 @@ public final class Coordinator {
 
     public Coordinator(CoordinatorParameters coordinatorParameters, ClusterLayoutParameters clusterLayoutParameters,
                        WorkerParameters workerParameters, TestSuite testSuite) {
-        this(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite, TEST_CASE_RUNNER_SLEEP_PERIOD_SECONDS);
-    }
-
-    public Coordinator(CoordinatorParameters coordinatorParameters, ClusterLayoutParameters clusterLayoutParameters,
-                       WorkerParameters workerParameters, TestSuite testSuite, int testCaseRunnerSleepPeriodSeconds) {
         this.coordinatorParameters = coordinatorParameters;
         this.clusterLayoutParameters = clusterLayoutParameters;
         this.workerParameters = workerParameters;
         this.testSuite = testSuite;
-
-        this.testCaseRunnerSleepPeriodSeconds = testCaseRunnerSleepPeriodSeconds;
 
         this.componentRegistry = loadComponentRegister(coordinatorParameters.getAgentsFile());
         this.failureContainer = new FailureContainer(testSuite.getId(), componentRegistry);
@@ -117,7 +107,9 @@ public final class Coordinator {
         workerParameters.initMemberHzConfig(componentRegistry, props);
         workerParameters.initClientHzConfig(componentRegistry);
 
-        LOGGER.info(format("Performance monitor enabled: %s", workerParameters.isMonitorPerformance()));
+        boolean performanceEnabled = workerParameters.isMonitorPerformance();
+        int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
+        LOGGER.info(format("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds));
         LOGGER.info(format("Total number of agents: %s", agentCount));
         LOGGER.info(format("Total number of Hazelcast member workers: %s", clusterLayoutParameters.getMemberWorkerCount()));
         LOGGER.info(format("Total number of Hazelcast client workers: %s", clusterLayoutParameters.getClientWorkerCount()));
@@ -335,7 +327,7 @@ public final class Coordinator {
         long started = System.nanoTime();
         try {
             echo("Killing all remaining workers");
-            remoteClient.terminateWorkers();
+            remoteClient.terminateWorkers(false);
             echo("Successfully killed all remaining workers");
 
             echo("Starting %d workers (%d members, %d clients)", totalWorkerCount, memberWorkerCount, clientWorkerCount);
@@ -365,7 +357,7 @@ public final class Coordinator {
             runSequential();
         }
 
-        remoteClient.terminateWorkers();
+        remoteClient.terminateWorkers(true);
         Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
         if (!waitForWorkerShutdown(componentRegistry.workerCount(), finishedWorkers, FINISHED_WORKER_TIMEOUT_SECONDS)) {
             LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
@@ -411,8 +403,7 @@ public final class Coordinator {
                 public void run() {
                     try {
                         TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, Coordinator.this, remoteClient,
-                                failureContainer, performanceStateContainer, maxTestCaseIdLength, testPhaseSyncMap,
-                                testCaseRunnerSleepPeriodSeconds);
+                                failureContainer, performanceStateContainer, maxTestCaseIdLength, testPhaseSyncMap);
                         boolean success = runner.run();
                         if (!success && testSuite.isFailFast()) {
                             LOGGER.info("Aborting testsuite due to failure (not implemented yet)");
@@ -441,7 +432,7 @@ public final class Coordinator {
 
         for (TestCase testCase : testSuite.getTestCaseList()) {
             TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this, remoteClient,
-                    failureContainer, performanceStateContainer, maxTestCaseIdLength, null, testCaseRunnerSleepPeriodSeconds);
+                    failureContainer, performanceStateContainer, maxTestCaseIdLength, null);
             boolean success = runner.run();
             if (!success && testSuite.isFailFast()) {
                 LOGGER.info("Aborting testsuite due to failure");

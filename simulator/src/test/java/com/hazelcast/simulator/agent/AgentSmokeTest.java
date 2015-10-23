@@ -180,7 +180,7 @@ public class AgentSmokeTest {
         runPhase(testCase, TestPhase.LOCAL_TEARDOWN);
 
         LOGGER.info("Terminating workers...");
-        remoteClient.terminateWorkers();
+        remoteClient.terminateWorkers(true);
 
         LOGGER.info("Testcase done!");
     }

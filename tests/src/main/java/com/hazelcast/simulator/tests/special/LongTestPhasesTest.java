@@ -7,8 +7,6 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 
-import java.util.concurrent.TimeUnit;
-
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
 /**
@@ -16,30 +14,38 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
  */
 public class LongTestPhasesTest {
 
-    private static final int TWO_MINUTES = (int) TimeUnit.MINUTES.toSeconds(2);
+    // properties
+    public boolean allPhases = false;
+    public int sleepSeconds = 120;
 
     @Setup
     public void setUp(TestContext testContext) {
-        sleepSeconds(TWO_MINUTES);
+        sleepConditional();
     }
 
     @Teardown
     public void tearDown() {
-        sleepSeconds(TWO_MINUTES);
+        sleepConditional();
     }
 
     @Warmup(global = false)
     public void warmup() {
-        sleepSeconds(TWO_MINUTES);
+        sleepConditional();
     }
 
     @Verify(global = false)
     public void verify() {
-        sleepSeconds(TWO_MINUTES);
+        sleepConditional();
     }
 
     @Run
     public void run() {
-        sleepSeconds(TWO_MINUTES);
+        sleepSeconds(sleepSeconds);
+    }
+
+    private void sleepConditional() {
+        if (allPhases) {
+            sleepSeconds(sleepSeconds);
+        }
     }
 }

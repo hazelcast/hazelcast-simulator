@@ -26,15 +26,19 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_AGENTS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_WORKERS;
+import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static java.lang.String.format;
 
 public class RemoteClient {
 
-    private static final int WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS = 5;
+    private static final int WORKER_POKE_INTERVAL_SECONDS = 10;
+    private static final int WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(RemoteClient.class);
+
+    private final WorkerPokeThread workerPokeThread = new WorkerPokeThread();
 
     private final CoordinatorConnector coordinatorConnector;
     private final ComponentRegistry componentRegistry;
@@ -48,7 +52,13 @@ public class RemoteClient {
         coordinatorConnector.write(ALL_AGENTS, new LogOperation(message));
     }
 
+    public void logOnAllWorkers(String message) {
+        coordinatorConnector.write(ALL_WORKERS, new LogOperation(message));
+    }
+
     public void createWorkers(List<AgentMemberLayout> agentLayouts) {
+        workerPokeThread.start();
+
         createWorkersByType(agentLayouts, true);
         createWorkersByType(agentLayouts, false);
     }
@@ -90,7 +100,13 @@ public class RemoteClient {
         spawner.awaitCompletion();
     }
 
-    public void terminateWorkers() {
+    public void terminateWorkers(boolean stopPokeThread) {
+        if (stopPokeThread) {
+            workerPokeThread.running = false;
+            workerPokeThread.interrupt();
+            joinThread(workerPokeThread);
+        }
+
         sendToAllWorkers(new TerminateWorkersOperation());
     }
 
@@ -99,7 +115,7 @@ public class RemoteClient {
     }
 
     public void waitForPhaseCompletion(String prefix, String testId, TestPhase testPhase) {
-        long start = System.nanoTime();
+        long started = System.nanoTime();
         IsPhaseCompletedOperation operation = new IsPhaseCompletedOperation(testId, testPhase);
         for (; ; ) {
             Response response = coordinatorConnector.write(ALL_WORKERS, operation);
@@ -114,7 +130,7 @@ public class RemoteClient {
             if (complete) {
                 return;
             }
-            long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start);
+            long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
             LOGGER.info(prefix + "Waiting " + secondsToHuman(duration) + " for " + testPhase.desc() + " completion");
             sleepSeconds(WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS);
         }
@@ -141,6 +157,24 @@ public class RemoteClient {
             if (responseType != ResponseType.SUCCESS) {
                 SimulatorAddress source = responseTypeEntry.getKey();
                 throw new CommandLineExitException(format("Could not execute %s on %s (%s)", operation, source, responseType));
+            }
+        }
+    }
+
+    private class WorkerPokeThread extends Thread {
+
+        private volatile boolean running = true;
+
+        public WorkerPokeThread() {
+            super("WorkerPokeThread");
+            setDaemon(true);
+        }
+
+        @Override
+        public void run() {
+            while (running) {
+                logOnAllWorkers("Poked by Coordinator...");
+                sleepSeconds(WORKER_POKE_INTERVAL_SECONDS);
             }
         }
     }

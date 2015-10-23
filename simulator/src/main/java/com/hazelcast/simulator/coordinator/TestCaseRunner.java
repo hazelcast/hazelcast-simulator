@@ -21,6 +21,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FormatUtils.padRight;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 /**
@@ -28,6 +29,8 @@ import static java.lang.String.format;
  * by having multiple TestCaseRunners in parallel.
  */
 final class TestCaseRunner {
+
+    private static final int SLEEP_PERIOD_SECONDS = 30;
 
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
     private static final ConcurrentMap<TestPhase, Object> LOG_TEST_PHASE_COMPLETION = new ConcurrentHashMap<TestPhase, Object>();
@@ -45,9 +48,9 @@ final class TestCaseRunner {
     private final String prefix;
     private final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap;
 
-    private final int sleepPeriodSeconds;
     private final boolean monitorPerformance;
     private final int logPerformanceInterval;
+    private final int sleepPeriodSeconds;
 
     private final int clientWorkerCount;
 
@@ -55,7 +58,7 @@ final class TestCaseRunner {
 
     TestCaseRunner(TestCase testCase, TestSuite testSuite, Coordinator coordinator, RemoteClient remoteClient,
                    FailureContainer failureContainer, PerformanceStateContainer performanceStateContainer, int paddingLength,
-                   ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap, int sleepPeriodSeconds) {
+                   ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap) {
         this.testCase = testCase;
         this.testSuite = testSuite;
         this.coordinatorParameters = coordinator.getCoordinatorParameters();
@@ -66,11 +69,11 @@ final class TestCaseRunner {
         this.testCaseId = testCase.getId();
         this.prefix = (testCaseId.isEmpty() ? "" : padRight(testCaseId, paddingLength + 1));
         this.testPhaseSyncMap = testPhaseSyncMap;
-        this.sleepPeriodSeconds = sleepPeriodSeconds;
 
         WorkerParameters workerParameters = coordinator.getWorkerParameters();
         this.monitorPerformance = workerParameters.isMonitorPerformance();
         this.logPerformanceInterval = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
+        this.sleepPeriodSeconds = (monitorPerformance ? min(SLEEP_PERIOD_SECONDS, logPerformanceInterval) : SLEEP_PERIOD_SECONDS);
 
         this.clientWorkerCount = coordinator.getClusterLayoutParameters().getClientWorkerCount();
     }
@@ -205,19 +208,14 @@ final class TestCaseRunner {
 
         private void sleepUntilFailure(int sleepSeconds) {
             int sleepLoops = sleepSeconds / sleepPeriodSeconds;
-            for (int i = 1; i <= sleepLoops; i++) {
+            for (int i = 1; i <= sleepLoops && isRunning; i++) {
                 if (failureContainer.hasCriticalFailure(nonCriticalFailures)) {
                     echo("Critical Failure detected, aborting execution of test");
                     return;
                 }
 
                 sleepSeconds(sleepPeriodSeconds);
-
                 logProgress(sleepPeriodSeconds * i, sleepSeconds);
-
-                if (!isRunning) {
-                    break;
-                }
             }
 
             if (isRunning) {
