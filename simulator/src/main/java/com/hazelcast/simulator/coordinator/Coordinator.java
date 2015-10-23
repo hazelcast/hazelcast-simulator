@@ -366,10 +366,10 @@ public final class Coordinator {
     private void logTestSuiteDuration() {
         int testDuration = testSuite.getDurationSeconds();
         if (testDuration > 0) {
-            echo("Running time per test: %s ", secondsToHuman(testDuration));
-            int totalDuration = (coordinatorParameters.isParallel()) ? testSuite.size() * testDuration : testDuration;
+            echo("Running time per test: %s", secondsToHuman(testDuration));
+            int totalDuration = (coordinatorParameters.isParallel()) ? testDuration : testDuration * testSuite.size();
             if (testSuite.isWaitForTestCase()) {
-                echo("Testsuite will run until tests are finished for a maximum time of:  %s", secondsToHuman(totalDuration));
+                echo("Testsuite will run until tests are finished for a maximum time of: %s", secondsToHuman(totalDuration));
             } else {
                 echo("Expected total testsuite time: %s", secondsToHuman(totalDuration));
             }
