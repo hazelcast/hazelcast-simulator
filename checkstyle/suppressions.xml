@@ -15,6 +15,10 @@
     <!-- Suppress duplicate checking of copyright notice -->
     <suppress checks="StrictDuplicateCode" files="\.java" lines="1-15"/>
 
+    <!-- Suppress checking of copyright notice -->
+    <suppress checks="Header" files="Zipfian.*\.java"/>
+    <suppress checks="Header" files="IntegerGenerator\.java"/>
+
     <!-- Suppress some checks for JUnit tests -->
     <suppress checks="MethodName" files="Test\.java$"/>
     <suppress checks="TypeName" files="Test\.java$"/>
