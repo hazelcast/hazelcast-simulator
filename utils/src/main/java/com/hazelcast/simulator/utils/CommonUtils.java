@@ -54,7 +54,7 @@ public final class CommonUtils {
         if (throwable instanceof RuntimeException) {
             throw (RuntimeException) throwable;
         } else {
-            throw new RuntimeException(throwable);
+            throw new CommandLineExitException(throwable);
         }
     }
 
