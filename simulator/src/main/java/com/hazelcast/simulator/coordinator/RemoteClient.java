@@ -33,8 +33,8 @@ import static java.lang.String.format;
 
 public class RemoteClient {
 
+    private static final int WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS = 5;
     private static final int WORKER_POKE_INTERVAL_SECONDS = 10;
-    private static final int WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(RemoteClient.class);
 
