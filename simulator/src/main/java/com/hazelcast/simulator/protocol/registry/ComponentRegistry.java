@@ -6,6 +6,7 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,9 +60,11 @@ public class ComponentRegistry {
     }
 
     public void removeWorker(SimulatorAddress workerAddress) {
-        for (WorkerData workerData : workers) {
+        Iterator<WorkerData> iterator = workers.iterator();
+        while (iterator.hasNext()) {
+            WorkerData workerData = iterator.next();
             if (workerData.getAddress().equals(workerAddress)) {
-                workers.remove(workerData);
+                iterator.remove();
                 break;
             }
         }
