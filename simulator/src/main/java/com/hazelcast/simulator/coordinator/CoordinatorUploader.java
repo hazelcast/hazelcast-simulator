@@ -12,8 +12,9 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.List;
 
+import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_HOME;
+import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_VERSION;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getElapsedSeconds;
-import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
@@ -25,10 +26,10 @@ class CoordinatorUploader {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorUploader.class);
 
+    private final String simulatorHome = SIMULATOR_HOME.getAbsolutePath();
+
     private final ComponentRegistry componentRegistry;
     private final Bash bash;
-
-    private final String simulatorHome;
 
     private final HazelcastJARs hazelcastJARs;
     private final boolean isEnterpriseEnabled;
@@ -38,13 +39,10 @@ class CoordinatorUploader {
 
     private final JavaProfiler javaProfiler;
 
-    public CoordinatorUploader(ComponentRegistry componentRegistry, Bash bash, String testSuiteId, String simulatorHome,
-                               HazelcastJARs hazelcastJARs, boolean isEnterpriseEnabled, String workerClassPath,
-                               JavaProfiler javaProfiler) {
+    public CoordinatorUploader(ComponentRegistry componentRegistry, Bash bash, String testSuiteId, HazelcastJARs hazelcastJARs,
+                               boolean isEnterpriseEnabled, String workerClassPath, JavaProfiler javaProfiler) {
         this.componentRegistry = componentRegistry;
         this.bash = bash;
-
-        this.simulatorHome = simulatorHome;
 
         this.hazelcastJARs = hazelcastJARs;
         this.isEnterpriseEnabled = isEnterpriseEnabled;
@@ -85,7 +83,7 @@ class CoordinatorUploader {
                 @Override
                 public void run() {
                     hazelcastJARs.upload(ip, simulatorHome);
-                    LOGGER.info("    Agent " + ip + " done");
+                    logAgentDone(ip);
                 }
             });
         }
@@ -114,7 +112,7 @@ class CoordinatorUploader {
                         for (File sourceFile : sourceFiles) {
                             bash.uploadToRemoteSimulatorDir(ip, sourceFile.getAbsolutePath(), targetPath);
                         }
-                        LOGGER.info("    Agent " + ip + " done");
+                        logAgentDone(ip);
                     }
                 });
             }
@@ -145,7 +143,7 @@ class CoordinatorUploader {
                         for (File sourceFile : sourceFiles) {
                             bash.uploadToRemoteSimulatorDir(ip, sourceFile.getAbsolutePath(), targetPath);
                         }
-                        LOGGER.info("    Agent " + ip + " done");
+                        logAgentDone(ip);
                     }
                 });
             }
@@ -171,13 +169,17 @@ class CoordinatorUploader {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/yourkit", getSimulatorVersion()));
+                    bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/yourkit", SIMULATOR_VERSION));
                     bash.uploadToRemoteSimulatorDir(ip, simulatorHome + "/yourkit/", "yourkit");
-                    LOGGER.info("    Agent " + ip + " done");
+                    logAgentDone(ip);
                 }
             });
         }
         spawner.awaitCompletion();
         LOGGER.info(format("Finished upload of YourKit to agents (%d seconds)", getElapsedSeconds(started)));
+    }
+
+    private void logAgentDone(String ip) {
+        LOGGER.info("    Agent " + ip + " done");
     }
 }

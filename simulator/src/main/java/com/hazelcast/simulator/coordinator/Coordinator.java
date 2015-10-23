@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -36,6 +35,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.FINISHED_WORKER_TIMEOUT_SECONDS;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getTestPhaseSyncMap;
@@ -57,6 +58,7 @@ import static java.lang.String.format;
 public final class Coordinator {
 
     static final File SIMULATOR_HOME = getSimulatorHome();
+    static final String SIMULATOR_VERSION = getSimulatorVersion();
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
@@ -95,12 +97,7 @@ public final class Coordinator {
         workerParameters.initMemberHzConfig(componentRegistry, props);
         workerParameters.initClientHzConfig(componentRegistry);
 
-        boolean performanceEnabled = workerParameters.isMonitorPerformance();
-        int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
-        LOGGER.info(format("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds));
-        LOGGER.info(format("Total number of agents: %s", agentCount));
-        LOGGER.info(format("Total number of Hazelcast member workers: %s", clusterLayoutParameters.getMemberWorkerCount()));
-        LOGGER.info(format("Total number of Hazelcast client workers: %s", clusterLayoutParameters.getClientWorkerCount()));
+        logHeader(agentCount);
     }
 
     CoordinatorParameters getCoordinatorParameters() {
@@ -129,6 +126,23 @@ public final class Coordinator {
         this.remoteClient = remoteClient;
     }
 
+    private void logHeader(int agentCount) {
+        echoLocal("Hazelcast Simulator Coordinator");
+        echoLocal("Version: %s, Commit: %s, Build Time: %s", SIMULATOR_VERSION, getCommitIdAbbrev(), getBuildTime());
+        echoLocal("SIMULATOR_HOME: %s", SIMULATOR_HOME);
+
+        boolean performanceEnabled = workerParameters.isMonitorPerformance();
+        int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
+        echoLocal("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds);
+
+        echoLocal("Total number of agents: %s", agentCount);
+        echoLocal("Total number of Hazelcast member workers: %s", clusterLayoutParameters.getMemberWorkerCount());
+        echoLocal("Total number of Hazelcast client workers: %s", clusterLayoutParameters.getClientWorkerCount());
+
+        echoLocal("Loading agents file: %s", coordinatorParameters.getAgentsFile().getAbsolutePath());
+        echoLocal("HAZELCAST_VERSION_SPEC: %s", props.getHazelcastVersionSpec());
+    }
+
     private void run() throws Exception {
         try {
             uploadFiles();
@@ -144,9 +158,8 @@ public final class Coordinator {
     }
 
     private void uploadFiles() {
-        CoordinatorUploader uploader = new CoordinatorUploader(componentRegistry, bash, testSuite.getId(),
-                SIMULATOR_HOME.getAbsolutePath(), null, false, coordinatorParameters.getWorkerClassPath(),
-                workerParameters.getProfiler());
+        CoordinatorUploader uploader = new CoordinatorUploader(componentRegistry, bash, testSuite.getId(), null, false,
+                coordinatorParameters.getWorkerClassPath(), workerParameters.getProfiler());
         uploader.run();
     }
 
@@ -188,9 +201,9 @@ public final class Coordinator {
                     props.get("CLOUD_CREDENTIAL"));
         }
         bash.ssh(ip, format("nohup hazelcast-simulator-%s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
-                getSimulatorVersion(), mandatoryParameters, optionalParameters));
+                SIMULATOR_VERSION, mandatoryParameters, optionalParameters));
 
-        bash.ssh(ip, format("hazelcast-simulator-%s/bin/.await-file-exists agent.pid", getSimulatorVersion()));
+        bash.ssh(ip, format("hazelcast-simulator-%s/bin/.await-file-exists agent.pid", SIMULATOR_VERSION));
     }
 
     private void startCoordinatorConnector() {
@@ -362,7 +375,7 @@ public final class Coordinator {
                 public void run() {
                     String ip = agentData.getPublicAddress();
                     echoLocal("Stopping Agent %s", ip);
-                    bash.ssh(ip, format("hazelcast-simulator-%s/bin/.kill-from-pid-file agent.pid", getSimulatorVersion()));
+                    bash.ssh(ip, format("hazelcast-simulator-%s/bin/.kill-from-pid-file agent.pid", SIMULATOR_VERSION));
 
                     if (startHarakiriMonitorCommand != null) {
                         LOGGER.info(format("Starting HarakiriMonitor on %s", ip));
@@ -390,16 +403,7 @@ public final class Coordinator {
 
     public static void main(String[] args) {
         try {
-            LOGGER.info("Hazelcast Simulator Coordinator");
-            LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
-                    getSimulatorVersion(), GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
-            LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
-
             Coordinator coordinator = CoordinatorCli.init(args);
-
-            LOGGER.info(format("Loading agents file: %s", coordinator.coordinatorParameters.getAgentsFile().getAbsolutePath()));
-            LOGGER.info(format("HAZELCAST_VERSION_SPEC: %s", coordinator.props.getHazelcastVersionSpec()));
-
             coordinator.run();
         } catch (Exception e) {
             exitWithError(LOGGER, "Failed to run testsuite", e);

@@ -15,7 +15,6 @@ import static com.hazelcast.simulator.common.JavaProfiler.NONE;
 import static com.hazelcast.simulator.common.JavaProfiler.YOURKIT;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.doThrow;
@@ -32,7 +31,6 @@ public class CoordinatorUploaderTest {
     private HazelcastJARs hazelcastJARs = mock(HazelcastJARs.class);
 
     private String testSuiteId = "testSuiteId";
-    private String simulatorHome = getSimulatorHome().getAbsolutePath();
 
     private File notExists = new File("/notExists");
     private File uploadDirectory = new File("./upload");
@@ -49,13 +47,8 @@ public class CoordinatorUploaderTest {
         ensureExistingDirectory(uploadDirectory);
         ensureExistingDirectory(workerClassPathFile);
 
-        coordinatorUploader = new CoordinatorUploader(
-                componentRegistry, bash,
-                testSuiteId, simulatorHome,
-                hazelcastJARs, false,
-                workerClassPath,
-                YOURKIT
-        );
+        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, false, workerClassPath,
+                YOURKIT);
     }
 
     @After
@@ -113,8 +106,7 @@ public class CoordinatorUploaderTest {
 
     @Test
     public void testUploadWorkerClassPath_workerClassPathIsNull() {
-        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, simulatorHome, hazelcastJARs, false,
-                null, YOURKIT);
+        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, false, null, YOURKIT);
 
         coordinatorUploader.uploadWorkerClassPath();
 
@@ -123,7 +115,7 @@ public class CoordinatorUploaderTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testUploadWorkerClassPath_workerClassPathNotExists() {
-        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, simulatorHome, hazelcastJARs, false,
+        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, false,
                 notExists.getAbsolutePath(), YOURKIT);
 
         coordinatorUploader.uploadWorkerClassPath();
@@ -140,8 +132,8 @@ public class CoordinatorUploaderTest {
 
     @Test
     public void testUploadYourKit_noYourKitProfiler() {
-        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, simulatorHome, hazelcastJARs, false,
-                workerClassPath, NONE);
+        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, false, workerClassPath,
+                NONE);
 
         coordinatorUploader.uploadYourKit();
 
