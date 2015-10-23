@@ -180,7 +180,7 @@ public class AgentSmokeTest {
         runPhase(testCase, TestPhase.LOCAL_TEARDOWN);
 
         LOGGER.info("Terminating workers...");
-        remoteClient.terminateWorkers(true);
+        remoteClient.terminateWorkers(false);
 
         LOGGER.info("Testcase done!");
     }
@@ -202,7 +202,7 @@ public class AgentSmokeTest {
         AgentMemberLayout agentLayout = new AgentMemberLayout(agentData, AgentMemberMode.MEMBER);
         agentLayout.addWorker(WorkerType.MEMBER, workerParameters);
 
-        remoteClient.createWorkers(Collections.singletonList(agentLayout));
+        remoteClient.createWorkers(Collections.singletonList(agentLayout), false);
     }
 
     private static void runPhase(TestCase testCase, TestPhase testPhase) throws TimeoutException {

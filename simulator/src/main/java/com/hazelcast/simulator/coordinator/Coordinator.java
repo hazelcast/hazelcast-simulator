@@ -331,7 +331,7 @@ public final class Coordinator {
             echo("Successfully killed all remaining workers");
 
             echo("Starting %d workers (%d members, %d clients)", totalWorkerCount, memberWorkerCount, clientWorkerCount);
-            remoteClient.createWorkers(agentMemberLayouts);
+            remoteClient.createWorkers(agentMemberLayouts, true);
             echo("Successfully started workers");
         } catch (Exception e) {
             while (failureContainer.getFailureCount() == 0) {

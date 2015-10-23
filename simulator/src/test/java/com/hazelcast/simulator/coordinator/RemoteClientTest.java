@@ -70,7 +70,7 @@ public class RemoteClientTest {
         List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 3);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
-        remoteClient.createWorkers(memberLayouts);
+        remoteClient.createWorkers(memberLayouts, false);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class RemoteClientTest {
         List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
-        remoteClient.createWorkers(memberLayouts);
+        remoteClient.createWorkers(memberLayouts, false);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -90,7 +90,7 @@ public class RemoteClientTest {
         List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
-        remoteClient.createWorkers(memberLayouts);
+        remoteClient.createWorkers(memberLayouts, false);
     }
 
     @Test(expected = SimulatorProtocolException.class)
@@ -100,7 +100,7 @@ public class RemoteClientTest {
         List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
-        remoteClient.createWorkers(memberLayouts);
+        remoteClient.createWorkers(memberLayouts, false);
     }
 
     @Test

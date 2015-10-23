@@ -56,8 +56,10 @@ public class RemoteClient {
         coordinatorConnector.write(ALL_WORKERS, new LogOperation(message));
     }
 
-    public void createWorkers(List<AgentMemberLayout> agentLayouts) {
-        workerPokeThread.start();
+    public void createWorkers(List<AgentMemberLayout> agentLayouts, boolean startPokeThread) {
+        if (startPokeThread) {
+            workerPokeThread.start();
+        }
 
         createWorkersByType(agentLayouts, true);
         createWorkersByType(agentLayouts, false);
