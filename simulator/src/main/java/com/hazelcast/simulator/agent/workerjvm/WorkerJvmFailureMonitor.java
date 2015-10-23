@@ -41,7 +41,7 @@ import static java.lang.String.format;
 
 public class WorkerJvmFailureMonitor {
 
-    private static final int LAST_SEEN_TIMEOUT_SECONDS = 30;
+    private static final int LAST_SEEN_TIMEOUT_SECONDS = 60;
 
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmFailureMonitor.class);
 
