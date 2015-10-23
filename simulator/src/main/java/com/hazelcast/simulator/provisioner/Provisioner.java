@@ -35,6 +35,7 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
+import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
@@ -401,9 +402,9 @@ public final class Provisioner {
     }
 
     private void echoImportant(String s, Object... args) {
-        echo("==============================================================");
+        echo(HORIZONTAL_RULER);
         echo(s, args);
-        echo("==============================================================");
+        echo(HORIZONTAL_RULER);
     }
 
     private final class InstallNodeTask implements Runnable {
