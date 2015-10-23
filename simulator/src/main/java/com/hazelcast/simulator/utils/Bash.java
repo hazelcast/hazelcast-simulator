@@ -1,7 +1,6 @@
-package com.hazelcast.simulator.provisioner;
+package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.utils.NativeUtils;
 
 import java.io.File;
 

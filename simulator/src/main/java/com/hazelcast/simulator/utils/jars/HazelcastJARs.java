@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.utils.jars;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.provisioner.Bash;
+import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtilsException;
 import org.apache.log4j.Logger;
